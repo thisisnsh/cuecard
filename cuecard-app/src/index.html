@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CueCard - Slide Notes</title>
+    <script type="module" src="/main.js" defer></script>
+  </head>
+
+  <body>
+    <main class="container">
+      <header class="header">
+        <h1>CueCard</h1>
+        <div class="auth-section" id="auth-section">
+          <button class="auth-btn login-btn" id="login-btn" style="display: none;">
+            Sign in with Nishant
+          </button>
+          <button class="auth-btn logout-btn" id="logout-btn" style="display: none;">
+            Sign out
+          </button>
+        </div>
+      </header>
+
+      <section class="auth-prompt" id="auth-prompt" style="display: none;">
+        <div class="auth-icon">🔐</div>
+        <p>Sign in with Google to access your presentation notes.</p>
+        <button class="auth-btn primary" id="auth-prompt-btn">
+          Sign in with Google
+        </button>
+      </section>
+
+      <section class="slide-info" id="slide-info">
+        <div class="waiting-message" id="waiting-message">
+          <div class="waiting-icon">📑</div>
+          <p>Waiting for slide data...</p>
+          <p class="hint">Open a Google Slides presentation with the CueCard extension installed.</p>
+        </div>
+
+        <div class="slide-details" id="slide-details" style="display: none;">
+          <div class="presentation-title" id="presentation-title"></div>
+          <div class="slide-number">
+            Slide <span id="slide-number">-</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="notes-section" id="notes-section" style="display: none;">
+        <h2>Speaker Notes</h2>
+        <div class="notes-content" id="notes-content">
+          <p class="no-notes">No notes available for this slide.</p>
+        </div>
+      </section>
+
+      <footer class="footer">
+        <p>Listening on port 3000</p>
+      </footer>
+    </main>
+  </body>
+</html>

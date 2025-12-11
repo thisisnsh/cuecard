@@ -1,0 +1,337 @@
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color: #1a1a2e;
+  background-color: #f8f9fa;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+}
+
+.container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 20px;
+}
+
+.header h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+/* Auth buttons */
+.auth-section {
+  display: flex;
+  gap: 8px;
+}
+
+.auth-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.auth-btn.login-btn,
+.auth-btn.primary {
+  background: #4285f4;
+  color: white;
+}
+
+.auth-btn.login-btn:hover,
+.auth-btn.primary:hover {
+  background: #3367d6;
+}
+
+.auth-btn.logout-btn {
+  background: #f1f3f4;
+  color: #5f6368;
+}
+
+.auth-btn.logout-btn:hover {
+  background: #e8eaed;
+}
+
+/* Auth prompt section */
+.auth-prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  margin-bottom: 20px;
+}
+
+.auth-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+}
+
+.auth-prompt p {
+  font-size: 1rem;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.auth-prompt .auth-btn {
+  padding: 12px 24px;
+  font-size: 1rem;
+}
+
+/* Slide Info Section */
+.slide-info {
+  flex: 0 0 auto;
+  margin-bottom: 20px;
+}
+
+.waiting-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  color: #666;
+}
+
+.waiting-icon {
+  font-size: 3rem;
+  margin-bottom: 16px;
+  opacity: 0.7;
+}
+
+.waiting-message p {
+  font-size: 1.1rem;
+  margin-bottom: 8px;
+}
+
+.waiting-message .hint {
+  font-size: 0.9rem;
+  color: #999;
+}
+
+.slide-details {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.presentation-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1a1a2e;
+  margin-bottom: 8px;
+}
+
+.slide-number {
+  font-size: 0.95rem;
+  color: #666;
+}
+
+.slide-number span {
+  font-weight: 600;
+  color: #4a6cf7;
+}
+
+/* Notes Section */
+.notes-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  overflow: hidden;
+}
+
+.notes-section h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.notes-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.notes-text {
+  font-size: 1.1rem;
+  line-height: 1.7;
+  color: #333;
+  white-space: pre-wrap;
+}
+
+.no-notes {
+  color: #999;
+  font-style: italic;
+  text-align: center;
+  padding: 20px;
+}
+
+/* Footer */
+.footer {
+  margin-top: auto;
+  padding-top: 20px;
+  text-align: center;
+}
+
+.footer p {
+  font-size: 0.85rem;
+  color: #999;
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color: #e0e0e0;
+    background-color: #1a1a2e;
+  }
+
+  .header {
+    border-bottom-color: #333;
+  }
+
+  .header h1 {
+    color: #e0e0e0;
+  }
+
+  .status-indicator {
+    background: #1b3a1b;
+  }
+
+  .status-dot {
+    background: #66bb6a;
+  }
+
+  .status-text {
+    color: #81c784;
+  }
+
+  .slide-details,
+  .notes-section {
+    background: #252542;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+
+  .presentation-title {
+    color: #e0e0e0;
+  }
+
+  .slide-number {
+    color: #aaa;
+  }
+
+  .slide-number span {
+    color: #6b8cff;
+  }
+
+  .notes-section h2 {
+    color: #aaa;
+  }
+
+  .notes-text {
+    color: #d0d0d0;
+  }
+
+  .no-notes {
+    color: #777;
+  }
+
+  .waiting-message {
+    color: #888;
+  }
+
+  .waiting-message .hint {
+    color: #666;
+  }
+
+  .footer p {
+    color: #666;
+  }
+
+  .auth-prompt {
+    background: #252542;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+
+  .auth-prompt p {
+    color: #aaa;
+  }
+
+  .auth-btn.logout-btn {
+    background: #3a3a5a;
+    color: #ccc;
+  }
+
+  .auth-btn.logout-btn:hover {
+    background: #4a4a6a;
+  }
+}
+
+/* Scrollbar styling */
+.notes-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.notes-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.notes-content::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+.notes-content::-webkit-scrollbar-thumb:hover {
+  background: #aaa;
+}
+
+@media (prefers-color-scheme: dark) {
+  .notes-content::-webkit-scrollbar-thumb {
+    background: #444;
+  }
+
+  .notes-content::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+}

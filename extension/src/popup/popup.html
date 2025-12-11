@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Slides Tracker</h1>
+
+    <div class="status-section">
+      <div class="status-row">
+        <span class="label">Server Status:</span>
+        <span id="server-status" class="status">Checking...</span>
+      </div>
+
+      <div class="status-row">
+        <span class="label">Current Slide:</span>
+        <span id="current-slide" class="value">-</span>
+      </div>
+
+      <div class="status-row">
+        <span class="label">Presentation:</span>
+        <span id="presentation-title" class="value">-</span>
+      </div>
+    </div>
+
+    <div class="info">
+      <p>This extension tracks Google Slides and sends slide info to localhost:3000</p>
+    </div>
+
+    <div class="actions">
+      <button id="refresh-btn">Refresh Status</button>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

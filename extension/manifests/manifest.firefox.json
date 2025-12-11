@@ -1,0 +1,58 @@
+{
+  "manifest_version": 3,
+  "name": "Google Slides Tracker",
+  "version": "1.0.0",
+  "description": "Tracks Google Slides presentations and slide changes",
+
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "slides-tracker@example.com",
+      "strict_min_version": "109.0"
+    }
+  },
+
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
+
+  "host_permissions": [
+    "https://docs.google.com/presentation/*",
+    "http://localhost:3000/*"
+  ],
+
+  "content_scripts": [
+    {
+      "matches": [
+        "https://docs.google.com/presentation/d/*/edit*",
+        "https://docs.google.com/presentation/d/*/present*",
+        "https://docs.google.com/presentation/d/*/view*",
+        "https://docs.google.com/presentation/d/*/pub*"
+      ],
+      "js": ["src/content/content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "background": {
+    "scripts": ["src/background/background.js"],
+    "type": "module"
+  },
+
+  "action": {
+    "default_popup": "src/popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  }
+}
