@@ -52,11 +52,11 @@ body {
   -webkit-appearance: none;
   background-color: #000000;
   background-image: none;
-  -webkit-border-radius: 8px;
-  border-radius: 8px;
+  -webkit-border-radius: 0 16px 16px 16px;
+  border-radius: 0 16px 16px 16px;
   -webkit-box-sizing: border-box;
   box-sizing: border-box;
-  border: 1px solid var(--text-primary);
+  border: 2px solid var(--text-primary);
   color: var(--text-primary);
   cursor: pointer;
   font-size: 14px;
@@ -75,7 +75,6 @@ body {
   max-width: min-content;
   min-width: min-content;
   margin-top: 12px;
-  margin-bottom: 12px;
 }
 
 .gsi-material-button .gsi-material-button-icon {
@@ -117,6 +116,7 @@ body {
   position: absolute;
   right: 0;
   top: 0;
+  pointer-events: none;
 }
 
 .gsi-material-button:disabled {
@@ -199,6 +199,17 @@ body {
   font-weight: 700;
   color: var(--text-primary);
   line-height: 1;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.version-text {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  opacity: 0.6;
+  margin-bottom: 2px;
 }
 
 .welcome-subtext {
@@ -230,6 +241,7 @@ body {
 /* Add Notes View */
 #view-add-notes {
   height: 100%;
+  position: relative;
 }
 
 .notes-input {
@@ -244,14 +256,36 @@ body {
   color: var(--text-secondary);
   line-height: 1.2;
   padding-top: 24px;
+  padding-bottom: 24px;
 }
 
 .notes-input::placeholder {
   color: var(--text-secondary);
 }
 
-#view-add-notes .action-link {
-  margin-top: 16px;
+/* Gradient overlays for notes input */
+#view-add-notes::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 24px;
+  background: linear-gradient(to bottom, var(--bg-primary) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+#view-add-notes::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 24px;
+  background: linear-gradient(to top, var(--bg-primary) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 1;
 }
 
 /* Notes Display View */

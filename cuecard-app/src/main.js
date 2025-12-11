@@ -1,11 +1,16 @@
-const { invoke } = window.__TAURI__.core;
-const { listen } = window.__TAURI__.event;
-const { open } = window.__TAURI__.shell;
+// Check if Tauri is available
+if (!window.__TAURI__) {
+  console.error("Tauri runtime not available! Make sure you're running the app with 'npm run tauri dev' or as a built Tauri app.");
+}
+
+const { invoke } = window.__TAURI__?.core || {};
+const { listen } = window.__TAURI__?.event || {};
+const { open } = window.__TAURI__?.shell || {};
 
 // DOM Elements
 let authBtn;
 let viewInitial, viewAddNotes, viewNotes;
-let linkGoBack;
+let linkGoBack, backSeparator;
 let notesInput, notesContent;
 let welcomeSubtext;
 let privacyLink, websiteLink;
@@ -18,17 +23,26 @@ let manualNotes = ''; // Notes pasted by the user
 
 // Initialize the app
 window.addEventListener("DOMContentLoaded", async () => {
+  console.log("App initializing...");
+  
   // Get DOM elements
   authBtn = document.getElementById("auth-btn");
   viewInitial = document.getElementById("view-initial");
   viewAddNotes = document.getElementById("view-add-notes");
   viewNotes = document.getElementById("view-notes");
   linkGoBack = document.getElementById("link-go-back");
+  backSeparator = document.getElementById("back-separator");
   notesInput = document.getElementById("notes-input");
   notesContent = document.getElementById("notes-content");
   welcomeSubtext = document.getElementById("welcome-subtext");
   privacyLink = document.getElementById("privacy-link");
   websiteLink = document.getElementById("website-link");
+  
+  console.log("DOM elements loaded:", {
+    authBtn: !!authBtn,
+    privacyLink: !!privacyLink,
+    websiteLink: !!websiteLink
+  });
 
   // Set up navigation handlers
   setupNavigation();
@@ -46,16 +60,22 @@ window.addEventListener("DOMContentLoaded", async () => {
   await checkCurrentSlide();
 
   // Listen for slide updates from the backend
-  await listen("slide-update", (event) => {
-    console.log("Received slide update:", event.payload);
-    handleSlideUpdate(event.payload);
-  });
+  if (listen) {
+    await listen("slide-update", (event) => {
+      console.log("Received slide update:", event.payload);
+      handleSlideUpdate(event.payload);
+    });
+  }
 
   // Listen for auth status changes
-  await listen("auth-status", (event) => {
-    console.log("Auth status changed:", event.payload);
-    updateAuthUI(event.payload.authenticated, event.payload.user_name);
-  });
+  if (listen) {
+    await listen("auth-status", (event) => {
+      console.log("Auth status changed:", event.payload);
+      updateAuthUI(event.payload.authenticated, event.payload.user_name);
+    });
+  }
+  
+  console.log("App initialization complete!");
 });
 
 // Navigation Handlers
@@ -93,7 +113,9 @@ function setupNavigation() {
 
 // Auth Handlers
 function setupAuth() {
-  authBtn.addEventListener("click", async () => {
+  authBtn.addEventListener("click", async (e) => {
+    console.log("Auth button clicked", { isAuthenticated });
+    e.stopPropagation(); // Prevent event from bubbling to viewInitial
     if (isAuthenticated) {
       await handleLogout();
     } else {
@@ -104,6 +126,10 @@ function setupAuth() {
 
 // Check authentication status
 async function checkAuthStatus() {
+  if (!invoke) {
+    console.log("Tauri not available, skipping auth check");
+    return;
+  }
   try {
     const status = await invoke("get_auth_status");
     // Try to get user info if authenticated
@@ -153,6 +179,11 @@ function updateAuthUI(authenticated, name = '') {
 // Handle login
 async function handleLogin() {
   try {
+    if (!invoke) {
+      console.error("Tauri invoke API not available");
+      alert("Please run the app in Tauri mode");
+      return;
+    }
     await invoke("start_login");
   } catch (error) {
     console.error("Error starting login:", error);
@@ -161,6 +192,10 @@ async function handleLogin() {
 
 // Handle logout
 async function handleLogout() {
+  if (!invoke) {
+    console.error("Tauri invoke API not available");
+    return;
+  }
   try {
     await invoke("logout");
     updateAuthUI(false, '');
@@ -175,6 +210,10 @@ async function handleLogout() {
 
 // Check if there's already slide data
 async function checkCurrentSlide() {
+  if (!invoke) {
+    console.log("Tauri not available, skipping slide check");
+    return;
+  }
   try {
     const slide = await invoke("get_current_slide");
     if (slide) {
@@ -209,6 +248,15 @@ function showView(viewName) {
   viewInitial.classList.add('hidden');
   viewAddNotes.classList.add('hidden');
   viewNotes.classList.add('hidden');
+
+  // Show/hide the back button in footer based on view
+  if (viewName === 'add-notes') {
+    linkGoBack.classList.remove('hidden');
+    backSeparator.classList.remove('hidden');
+  } else {
+    linkGoBack.classList.add('hidden');
+    backSeparator.classList.add('hidden');
+  }
 
   // Show the requested view
   switch (viewName) {
@@ -263,17 +311,31 @@ function escapeHtml(text) {
 
 // Footer Handlers
 function setupFooter() {
-  privacyLink.addEventListener("click", async () => {
+  privacyLink.addEventListener("click", async (e) => {
+    e.preventDefault();
+    console.log("Privacy link clicked");
     try {
-      await open("https://cuecard.app/privacy");
+      if (!open) {
+        console.error("Tauri shell API not available");
+        window.open("https://cuecard.dev/privacy", "_blank", "noopener,noreferrer");
+        return;
+      }
+      await open("https://cuecard.dev/privacy");
     } catch (error) {
       console.error("Error opening privacy policy:", error);
     }
   });
 
-  websiteLink.addEventListener("click", async () => {
+  websiteLink.addEventListener("click", async (e) => {
+    e.preventDefault();
+    console.log("Website link clicked");
     try {
-      await open("https://cuecard.app");
+      if (!open) {
+        console.error("Tauri shell API not available");
+        window.open("https://cuecard.dev", "_blank", "noopener,noreferrer");
+        return;
+      }
+      await open("https://cuecard.dev");
     } catch (error) {
       console.error("Error opening website:", error);
     }
