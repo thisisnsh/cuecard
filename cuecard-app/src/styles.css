@@ -75,6 +75,7 @@ body {
   max-width: min-content;
   min-width: min-content;
   margin-top: 12px;
+  margin-bottom: 24px;
 }
 
 .gsi-material-button .gsi-material-button-icon {
@@ -157,7 +158,7 @@ body {
 .content {
   flex: 1;
   overflow-y: auto;
-  padding: 0 18px 24px 18px;
+  padding: 0 18px 0 18px;
 }
 
 /* Views */
