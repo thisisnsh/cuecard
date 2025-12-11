@@ -46,57 +46,10 @@ body {
 .app-container {
   height: 100vh;
   background: var(--bg-primary);
+  border-radius: var(--border-radius);
   overflow: hidden;
   display: flex;
   flex-direction: column;
-}
-
-/* Custom Title Bar */
-.title-bar {
-  height: var(--title-bar-height);
-  background: transparent;
-  display: flex;
-  align-items: center;
-  padding: 0 12px;
-  flex-shrink: 0;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-.title-bar-buttons {
-  display: flex;
-  gap: 8px;
-}
-
-.title-bar-button {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  border: none;
-  cursor: pointer;
-  transition: opacity 0.15s ease, filter 0.15s ease;
-  padding: 0;
-  outline: none;
-}
-
-.title-bar-button.close {
-  background: var(--btn-close);
-}
-
-.title-bar-button.minimize {
-  background: var(--btn-minimize);
-}
-
-.title-bar-button.maximize {
-  background: var(--btn-zoom);
-}
-
-.title-bar-button:hover {
-  filter: brightness(1.2);
-}
-
-.title-bar-button:active {
-  filter: brightness(0.9);
 }
 
 /* Google Sign-in Button */
@@ -135,7 +88,7 @@ body {
 
 .gsi-material-button .gsi-material-button-icon {
   height: 20px;
-  margin-right: 8px;
+  margin-right: 10px;
   min-width: 20px;
   width: 20px;
 }
@@ -149,7 +102,7 @@ body {
   -webkit-flex-wrap: nowrap;
   flex-wrap: nowrap;
   height: 100%;
-  justify-content: flex-end;
+  justify-content: space-between;
   position: relative;
   width: 100%;
 }
