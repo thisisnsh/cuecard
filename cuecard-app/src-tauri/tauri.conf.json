@@ -10,15 +10,16 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "CueCard - Slide Notes",
-        "width": 400,
-        "height": 600,
+        "title": "CueCard",
+        "width": 488,
+        "height": 376,
         "resizable": true,
         "minWidth": 300,
-        "minHeight": 400,
+        "minHeight": 200,
         "center": true,
         "alwaysOnTop": true,
         "transparent": true,
+        "decorations": false,
         "visibleOnAllWorkspaces": true
       }
     ],

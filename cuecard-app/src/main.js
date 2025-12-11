@@ -1,56 +1,55 @@
 const { invoke } = window.__TAURI__.core;
 const { listen } = window.__TAURI__.event;
+const { getCurrentWindow } = window.__TAURI__.window;
 
 // DOM Elements
-let waitingMessage;
-let slideDetails;
-let notesSection;
-let presentationTitle;
-let slideNumber;
-let notesContent;
-let loginBtn;
-let logoutBtn;
-let authPrompt;
-let authPromptBtn;
-let slideInfo;
-let opacitySlider;
-let opacityValue;
+let btnClose, btnMinimize, btnZoom;
+let authBtn;
+let slideIndicator;
+let viewInitial, viewAddNotes, viewNotes;
+let linkPasteNotes, linkGoBack;
+let notesInput, notesContent;
+
+// State
+let isAuthenticated = false;
+let currentView = 'initial'; // 'initial', 'add-notes', 'notes'
+let manualNotes = ''; // Notes pasted by the user
 
 // Initialize the app
 window.addEventListener("DOMContentLoaded", async () => {
   // Get DOM elements
-  waitingMessage = document.querySelector("#waiting-message");
-  slideDetails = document.querySelector("#slide-details");
-  notesSection = document.querySelector("#notes-section");
-  presentationTitle = document.querySelector("#presentation-title");
-  slideNumber = document.querySelector("#slide-number");
-  notesContent = document.querySelector("#notes-content");
-  loginBtn = document.querySelector("#login-btn");
-  logoutBtn = document.querySelector("#logout-btn");
-  authPrompt = document.querySelector("#auth-prompt");
-  authPromptBtn = document.querySelector("#auth-prompt-btn");
-  slideInfo = document.querySelector("#slide-info");
-  opacitySlider = document.querySelector("#opacity-slider");
-  opacityValue = document.querySelector("#opacity-value");
+  btnClose = document.getElementById("btn-close");
+  btnMinimize = document.getElementById("btn-minimize");
+  btnZoom = document.getElementById("btn-zoom");
+  authBtn = document.getElementById("auth-btn");
+  slideIndicator = document.getElementById("slide-indicator");
+  viewInitial = document.getElementById("view-initial");
+  viewAddNotes = document.getElementById("view-add-notes");
+  viewNotes = document.getElementById("view-notes");
+  linkPasteNotes = document.getElementById("link-paste-notes");
+  linkGoBack = document.getElementById("link-go-back");
+  notesInput = document.getElementById("notes-input");
+  notesContent = document.getElementById("notes-content");
 
-  // Set up auth button handlers
-  loginBtn.addEventListener("click", handleLogin);
-  logoutBtn.addEventListener("click", handleLogout);
-  authPromptBtn.addEventListener("click", handleLogin);
+  // Set up window control handlers
+  setupWindowControls();
 
-  // Set up opacity slider handler
-  opacitySlider.addEventListener("input", handleOpacityChange);
+  // Set up navigation handlers
+  setupNavigation();
+
+  // Set up auth handlers
+  setupAuth();
 
   // Check auth status on load
   await checkAuthStatus();
 
-  // Check for existing slide data on load
+  // Check for existing slide data
   await checkCurrentSlide();
 
   // Listen for slide updates from the backend
   await listen("slide-update", (event) => {
     console.log("Received slide update:", event.payload);
-    updateUI(event.payload);
+    handleSlideUpdate(event.payload);
   });
 
   // Listen for auth status changes
@@ -60,11 +59,78 @@ window.addEventListener("DOMContentLoaded", async () => {
   });
 });
 
+// Window Control Handlers
+function setupWindowControls() {
+  const appWindow = getCurrentWindow();
+
+  btnClose.addEventListener("click", async () => {
+    await appWindow.close();
+  });
+
+  btnMinimize.addEventListener("click", async () => {
+    await appWindow.minimize();
+  });
+
+  btnZoom.addEventListener("click", async () => {
+    const isMaximized = await appWindow.isMaximized();
+    if (isMaximized) {
+      await appWindow.unmaximize();
+    } else {
+      await appWindow.maximize();
+    }
+  });
+}
+
+// Navigation Handlers
+function setupNavigation() {
+  linkPasteNotes.addEventListener("click", (e) => {
+    e.preventDefault();
+    showView('add-notes');
+    notesInput.focus();
+  });
+
+  linkGoBack.addEventListener("click", (e) => {
+    e.preventDefault();
+    // If user has entered notes, show them
+    const notes = notesInput.value.trim();
+    if (notes) {
+      manualNotes = notes;
+      displayNotes(notes);
+      showView('notes');
+    } else {
+      showView('initial');
+    }
+  });
+
+  // Handle Enter in notes input to submit
+  notesInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && e.ctrlKey) {
+      const notes = notesInput.value.trim();
+      if (notes) {
+        manualNotes = notes;
+        displayNotes(notes);
+        showView('notes');
+      }
+    }
+  });
+}
+
+// Auth Handlers
+function setupAuth() {
+  authBtn.addEventListener("click", async () => {
+    if (isAuthenticated) {
+      await handleLogout();
+    } else {
+      await handleLogin();
+    }
+  });
+}
+
 // Check authentication status
 async function checkAuthStatus() {
   try {
-    const isAuthenticated = await invoke("get_auth_status");
-    updateAuthUI(isAuthenticated);
+    const status = await invoke("get_auth_status");
+    updateAuthUI(status);
   } catch (error) {
     console.error("Error checking auth status:", error);
     updateAuthUI(false);
@@ -72,19 +138,9 @@ async function checkAuthStatus() {
 }
 
 // Update UI based on auth status
-function updateAuthUI(isAuthenticated) {
-  if (isAuthenticated) {
-    loginBtn.style.display = "none";
-    logoutBtn.style.display = "block";
-    authPrompt.style.display = "none";
-    slideInfo.style.display = "block";
-  } else {
-    loginBtn.style.display = "block";
-    logoutBtn.style.display = "none";
-    authPrompt.style.display = "flex";
-    slideInfo.style.display = "none";
-    notesSection.style.display = "none";
-  }
+function updateAuthUI(authenticated) {
+  isAuthenticated = authenticated;
+  authBtn.textContent = authenticated ? "Sign Out" : "Sign in with Google";
 }
 
 // Handle login
@@ -101,6 +157,12 @@ async function handleLogout() {
   try {
     await invoke("logout");
     updateAuthUI(false);
+    // Clear slide indicator
+    slideIndicator.innerHTML = '';
+    // Reset to initial view if viewing slide notes
+    if (currentView === 'notes' && !manualNotes) {
+      showView('initial');
+    }
   } catch (error) {
     console.error("Error logging out:", error);
   }
@@ -112,64 +174,103 @@ async function checkCurrentSlide() {
     const slide = await invoke("get_current_slide");
     if (slide) {
       const notes = await invoke("get_current_notes");
-      updateUI({ slide_data: slide, notes });
+      handleSlideUpdate({ slide_data: slide, notes });
     }
   } catch (error) {
     console.error("Error checking current slide:", error);
   }
 }
 
-// Update the UI with slide data
-function updateUI(data) {
+// Handle slide update from Google Slides
+function handleSlideUpdate(data) {
   const { slide_data, notes } = data;
 
   if (!slide_data) {
-    showWaitingState();
     return;
   }
 
-  // Hide waiting message, show slide details
-  waitingMessage.style.display = "none";
-  slideDetails.style.display = "block";
-  notesSection.style.display = "block";
+  // Update slide indicator in title bar
+  updateSlideIndicator(slide_data);
 
-  // Update slide info
-  presentationTitle.textContent = slide_data.title || "Untitled Presentation";
-  slideNumber.textContent = slide_data.slideNumber || slide_data.slide_number || "-";
-
-  // Update notes
+  // Display the notes
   if (notes && notes.trim()) {
-    notesContent.innerHTML = `<div class="notes-text">${escapeHtml(notes)}</div>`;
-  } else {
-    notesContent.innerHTML = `<p class="no-notes">No notes available for this slide.</p>`;
+    displayNotes(notes);
+    showView('notes');
   }
 }
 
-// Show waiting state
-function showWaitingState() {
-  waitingMessage.style.display = "flex";
-  slideDetails.style.display = "none";
-  notesSection.style.display = "none";
+// Update slide indicator in title bar
+function updateSlideIndicator(slideData) {
+  const slideNum = slideData.slideNumber || slideData.slide_number || 1;
+  let title = slideData.title || "Untitled";
+  
+  // Truncate title if too long
+  if (title.length > 20) {
+    title = title.substring(0, 17) + " ...";
+  }
+
+  slideIndicator.innerHTML = `
+    <span class="slide-number">[Slide ${slideNum}]</span>
+    <span class="slide-name">${escapeHtml(title)}</span>
+  `;
+}
+
+// Show a specific view
+function showView(viewName) {
+  currentView = viewName;
+
+  // Hide all views
+  viewInitial.classList.add('hidden');
+  viewAddNotes.classList.add('hidden');
+  viewNotes.classList.add('hidden');
+
+  // Show the requested view
+  switch (viewName) {
+    case 'initial':
+      viewInitial.classList.remove('hidden');
+      break;
+    case 'add-notes':
+      viewAddNotes.classList.remove('hidden');
+      break;
+    case 'notes':
+      viewNotes.classList.remove('hidden');
+      break;
+  }
+}
+
+// Display notes with syntax highlighting
+function displayNotes(text) {
+  const highlighted = highlightNotes(text);
+  notesContent.innerHTML = highlighted;
+}
+
+// Highlight timestamps and action tags in notes
+function highlightNotes(text) {
+  // Escape HTML first
+  let safe = escapeHtml(text);
+
+  // Pattern for timestamps like [00:23], [01:23], [1:30:45]
+  const timestampPattern = /\[(\d{1,2}:\d{2}(?::\d{2})?)\]/g;
+  
+  // Pattern for action tags like [laugh], [pause], [sign], etc.
+  const actionPattern = /\[(laugh|pause|sign|applause|music|silence|cough|sigh|gasp)\]/gi;
+
+  // Replace timestamps - they appear on their own line
+  safe = safe.replace(timestampPattern, '<span class="timestamp">[$1]</span>');
+  
+  // Replace action tags - they appear inline
+  safe = safe.replace(actionPattern, '<span class="action-tag">[$1]</span>');
+
+  // Convert line breaks
+  safe = safe.replace(/\n\n/g, '</p><p class="paragraph">');
+  safe = safe.replace(/\n/g, '<br>');
+
+  return `<p class="paragraph">${safe}</p>`;
 }
 
 // Escape HTML to prevent XSS
 function escapeHtml(text) {
   const div = document.createElement("div");
   div.textContent = text;
-  return div.innerHTML.replace(/\n/g, "<br>");
-}
-
-// Handle opacity slider change
-async function handleOpacityChange(event) {
-  const opacityPercent = parseInt(event.target.value);
-  const opacity = opacityPercent / 100;
-
-  // Update the display value
-  opacityValue.textContent = `${opacityPercent}%`;
-
-  try {
-    await invoke("set_window_opacity", { opacity });
-  } catch (error) {
-    console.error("Error setting window opacity:", error);
-  }
+  return div.innerHTML;
 }

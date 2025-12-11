@@ -4,64 +4,52 @@
     <meta charset="UTF-8" />
     <link rel="stylesheet" href="styles.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CueCard - Slide Notes</title>
+    <title>CueCard</title>
     <script type="module" src="/main.js" defer></script>
   </head>
 
   <body>
-    <main class="container">
-      <header class="header">
-        <h1>CueCard</h1>
-        <div class="header-controls">
-          <div class="transparency-control">
-            <label for="opacity-slider">Opacity:</label>
-            <input type="range" id="opacity-slider" min="10" max="100" value="100" step="5">
-            <span id="opacity-value">100%</span>
-          </div>
-          <div class="auth-section" id="auth-section">
-            <button class="auth-btn login-btn" id="login-btn" style="display: none;">
-              Sign in with Google
-            </button>
-            <button class="auth-btn logout-btn" id="logout-btn" style="display: none;">
-              Sign out
-            </button>
-          </div>
+    <div class="app-container">
+      <!-- Custom Title Bar -->
+      <header class="title-bar">
+        <div class="window-controls">
+          <button class="window-btn close" id="btn-close" title="Close"></button>
+          <button class="window-btn minimize" id="btn-minimize" title="Minimize"></button>
+          <button class="window-btn zoom" id="btn-zoom" title="Zoom"></button>
+        </div>
+        <div class="title-center">
+          <span class="app-title">CueCard</span>
+          <span class="slide-indicator" id="slide-indicator"></span>
+        </div>
+        <div class="title-right">
+          <button class="auth-btn" id="auth-btn">Sign in with Google</button>
         </div>
       </header>
 
-      <section class="auth-prompt" id="auth-prompt" style="display: none;">
-        <div class="auth-icon">🔐</div>
-        <p>Sign in with Google to access your presentation notes.</p>
-        <button class="auth-btn primary" id="auth-prompt-btn">
-          Sign in with Google
-        </button>
-      </section>
+      <!-- Main Content Area -->
+      <main class="content">
+        <!-- Initial View (Welcome Screen) -->
+        <section class="view" id="view-initial">
+          <h1 class="welcome-heading">Welcome Human!</h1>
+          <p class="welcome-subtext">Your hidden speaker notes for meetings, presentations, and even dates.</p>
+          <a href="#" class="action-link" id="link-paste-notes">Paste your notes here or open slides.google.com</a>
+        </section>
 
-      <section class="slide-info" id="slide-info">
-        <div class="waiting-message" id="waiting-message">
-          <div class="waiting-icon">📑</div>
-          <p>Waiting for slide data...</p>
-          <p class="hint">Open a Google Slides presentation with the CueCard extension installed.</p>
-        </div>
+        <!-- Add Notes View -->
+        <section class="view hidden" id="view-add-notes">
+          <textarea 
+            class="notes-input" 
+            id="notes-input" 
+            placeholder="Paste your notes here..."
+          ></textarea>
+          <a href="#" class="action-link" id="link-go-back">Click to go back</a>
+        </section>
 
-        <div class="slide-details" id="slide-details" style="display: none;">
-          <div class="presentation-title" id="presentation-title"></div>
-          <div class="slide-number">
-            Slide <span id="slide-number">-</span>
-          </div>
-        </div>
-      </section>
-
-      <section class="notes-section" id="notes-section" style="display: none;">
-        <h2>Speaker Notes</h2>
-        <div class="notes-content" id="notes-content">
-          <p class="no-notes">No notes available for this slide.</p>
-        </div>
-      </section>
-
-      <footer class="footer">
-        <p>Listening on port 3000</p>
-      </footer>
-    </main>
+        <!-- Notes Display View -->
+        <section class="view hidden" id="view-notes">
+          <div class="notes-content" id="notes-content"></div>
+        </section>
+      </main>
+    </div>
   </body>
 </html>
