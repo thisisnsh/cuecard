@@ -14,6 +14,7 @@ let linkGoBack, backSeparator;
 let notesInput, notesContent, slideInfo;
 let welcomeSubtext;
 let privacyLink, websiteLink;
+let refreshBtn;
 
 // State
 let isAuthenticated = false;
@@ -39,6 +40,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   welcomeSubtext = document.getElementById("welcome-subtext");
   privacyLink = document.getElementById("privacy-link");
   websiteLink = document.getElementById("website-link");
+  refreshBtn = document.getElementById("refresh-btn");
   
   console.log("DOM elements loaded:", {
     authBtn: !!authBtn,
@@ -54,6 +56,9 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   // Set up footer handlers
   setupFooter();
+
+  // Set up refresh button handler
+  setupRefreshButton();
 
   // Check auth status on load
   await checkAuthStatus();
@@ -102,18 +107,6 @@ function setupNavigation() {
     currentSlideData = null;
     showView('initial');
   });
-
-  // // Handle Enter in notes input to submit
-  // notesInput.addEventListener("keydown", (e) => {
-  //   if (e.key === "Enter" && e.ctrlKey) {
-  //     const notes = notesInput.value.trim();
-  //     if (notes) {
-  //       manualNotes = notes;
-  //       displayNotes(notes);
-  //       showView('notes');
-  //     }
-  //   }
-  // });
 }
 
 // Auth Handlers
@@ -125,6 +118,37 @@ function setupAuth() {
       await handleLogout();
     } else {
       await handleLogin();
+    }
+  });
+}
+
+// Refresh Button Handler
+function setupRefreshButton() {
+  if (!refreshBtn) return;
+  
+  refreshBtn.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!invoke) {
+      console.error("Tauri invoke API not available");
+      return;
+    }
+    
+    // Add loading state
+    refreshBtn.classList.add('loading');
+    refreshBtn.disabled = true;
+    
+    try {
+      console.log("Refreshing notes...");
+      await invoke("refresh_notes");
+      console.log("Notes refreshed successfully");
+    } catch (error) {
+      console.error("Error refreshing notes:", error);
+    } finally {
+      // Remove loading state
+      refreshBtn.classList.remove('loading');
+      refreshBtn.disabled = false;
     }
   });
 }
@@ -175,9 +199,14 @@ function updateAuthUI(authenticated, name = '') {
       slidesLink.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        // Show notes view if we have slide data
+        // Show notes view with slide data or default message
         if (currentSlideData) {
           showView('notes');
+        } else {
+          // Show notes view with default message when no slide is open
+          displayNotes('Open a Google Slides presentation to see your speaker notes here...');
+          slideInfo.textContent = 'No Slide Open';
+          showView('notes');          
         }
       });
     }
@@ -304,9 +333,10 @@ function displayNotes(text, slideData = null) {
   
   // Update slide info if available
   if (slideData && slideInfo) {
-    const slideName = slideData.slide_name || 'Untitled Slide';
-    const slideNumber = slideData.slide_number || '?';
-    slideInfo.textContent = `${slideName} • Slide ${slideNumber}`;
+    // Use camelCase property names (as sent by backend with serde rename_all = "camelCase")
+    const presentationTitle = slideData.title || 'Untitled Presentation';
+    const slideNumber = slideData.slideNumber || '?';
+    slideInfo.textContent = `${presentationTitle} • Slide ${slideNumber}`;
   } else if (slideInfo) {
     slideInfo.textContent = '';
   }

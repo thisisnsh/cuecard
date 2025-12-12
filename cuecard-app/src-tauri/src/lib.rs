@@ -29,6 +29,8 @@ static CURRENT_SLIDE: Lazy<Arc<RwLock<Option<SlideData>>>> =
     Lazy::new(|| Arc::new(RwLock::new(None)));
 static SLIDE_NOTES: Lazy<Arc<RwLock<HashMap<String, String>>>> =
     Lazy::new(|| Arc::new(RwLock::new(HashMap::new())));
+static CURRENT_PRESENTATION_ID: Lazy<Arc<RwLock<Option<String>>>> =
+    Lazy::new(|| Arc::new(RwLock::new(None)));
 static APP_HANDLE: Lazy<Arc<RwLock<Option<AppHandle>>>> =
     Lazy::new(|| Arc::new(RwLock::new(None)));
 static OAUTH_TOKENS: Lazy<Arc<RwLock<Option<OAuthTokens>>>> =
@@ -93,21 +95,57 @@ async fn health_handler() -> Json<serde_json::Value> {
 async fn slides_handler(Json(slide_data): Json<SlideData>) -> Result<Json<ApiResponse>, StatusCode> {
     println!("Received slide change: {:?}", slide_data);
 
+    // Check if presentation changed - if so, prefetch all notes
+    let presentation_changed = {
+        let current_pres = CURRENT_PRESENTATION_ID.read();
+        current_pres.as_ref() != Some(&slide_data.presentation_id)
+    };
+
+    if presentation_changed {
+        println!("New presentation detected: {}", slide_data.presentation_id);
+        // Update current presentation ID
+        {
+            let mut current_pres = CURRENT_PRESENTATION_ID.write();
+            *current_pres = Some(slide_data.presentation_id.clone());
+        }
+        // Clear old notes cache and prefetch all notes for new presentation
+        {
+            let mut notes_cache = SLIDE_NOTES.write();
+            notes_cache.clear();
+        }
+        // Prefetch all notes in the background
+        let presentation_id = slide_data.presentation_id.clone();
+        tokio::spawn(async move {
+            let _ = prefetch_all_notes(&presentation_id).await;
+        });
+    }
+
     // Store the current slide
     {
         let mut current = CURRENT_SLIDE.write();
         *current = Some(slide_data.clone());
     }
 
-    // Fetch notes from Google Slides API
-    let notes = fetch_slide_notes(&slide_data.presentation_id, &slide_data.slide_id).await;
-
-    // Cache the notes
-    if let Some(ref note_text) = notes {
-        let mut notes_cache = SLIDE_NOTES.write();
+    // Try to get notes from cache first, otherwise fetch
+    let notes = {
+        let notes_cache = SLIDE_NOTES.read();
         let key = format!("{}:{}", slide_data.presentation_id, slide_data.slide_id);
-        notes_cache.insert(key, note_text.clone());
-    }
+        notes_cache.get(&key).cloned()
+    };
+
+    let notes = match notes {
+        Some(n) => Some(n),
+        None => {
+            // Not in cache, fetch and cache it
+            let fetched = fetch_slide_notes(&slide_data.presentation_id, &slide_data.slide_id).await;
+            if let Some(ref note_text) = fetched {
+                let mut notes_cache = SLIDE_NOTES.write();
+                let key = format!("{}:{}", slide_data.presentation_id, slide_data.slide_id);
+                notes_cache.insert(key, note_text.clone());
+            }
+            fetched
+        }
+    };
 
     // Emit event to frontend
     if let Some(app) = APP_HANDLE.read().as_ref() {
@@ -370,6 +408,96 @@ async fn get_valid_access_token() -> Option<String> {
     Some(access_token)
 }
 
+// Prefetch all notes for a presentation
+async fn prefetch_all_notes(presentation_id: &str) -> Result<(), String> {
+    let access_token = match get_valid_access_token().await {
+        Some(token) => token,
+        None => {
+            println!("Not authenticated. Cannot prefetch notes.");
+            return Err("Not authenticated".to_string());
+        }
+    };
+
+    let url = format!(
+        "https://slides.googleapis.com/v1/presentations/{}",
+        presentation_id
+    );
+
+    let client = reqwest::Client::new();
+    let response = match client
+        .get(&url)
+        .header("Authorization", format!("Bearer {}", access_token))
+        .send()
+        .await
+    {
+        Ok(r) => r,
+        Err(e) => {
+            eprintln!("Error fetching slides API for prefetch: {}", e);
+            return Err(e.to_string());
+        }
+    };
+
+    if !response.status().is_success() {
+        let status = response.status();
+        let error_body = response.text().await.unwrap_or_default();
+        eprintln!("Slides API error during prefetch: {} - {}", status, error_body);
+        return Err(format!("API error: {}", status));
+    }
+
+    let json: serde_json::Value = match response.json().await {
+        Ok(j) => j,
+        Err(e) => {
+            eprintln!("Failed to parse slides response during prefetch: {}", e);
+            return Err(e.to_string());
+        }
+    };
+
+    // Extract notes for all slides
+    let slides = match json.get("slides").and_then(|s| s.as_array()) {
+        Some(s) => s,
+        None => return Ok(()),
+    };
+
+    let mut notes_cache = SLIDE_NOTES.write();
+    let mut count = 0;
+
+    for slide in slides {
+        if let Some(obj_id) = slide.get("objectId").and_then(|o| o.as_str()) {
+            if let Some(notes_text) = extract_notes_from_slide(slide) {
+                let key = format!("{}:{}", presentation_id, obj_id);
+                notes_cache.insert(key, notes_text);
+                count += 1;
+            }
+        }
+    }
+
+    println!("Prefetched {} slide notes for presentation {}", count, presentation_id);
+    Ok(())
+}
+
+// Extract notes from a single slide JSON object
+fn extract_notes_from_slide(slide: &serde_json::Value) -> Option<String> {
+    let notes = slide
+        .get("slideProperties")?
+        .get("notesPage")?
+        .get("pageElements")?
+        .as_array()?;
+
+    for element in notes {
+        if let Some(shape) = element.get("shape") {
+            if let Some(placeholder) = shape.get("placeholder") {
+                if placeholder.get("type")?.as_str()? == "BODY" {
+                    if let Some(text) = shape.get("text") {
+                        return extract_text_from_text_elements(text);
+                    }
+                }
+            }
+        }
+    }
+
+    None
+}
+
 // Fetch notes from Google Slides API using OAuth2
 async fn fetch_slide_notes(presentation_id: &str, slide_id: &str) -> Option<String> {
     let access_token = match get_valid_access_token().await {
@@ -597,6 +725,45 @@ async fn start_login(app: AppHandle) -> Result<(), String> {
 fn logout() {
     let mut tokens = OAUTH_TOKENS.write();
     *tokens = None;
+}
+
+// Tauri command to refresh notes for current slide/presentation
+#[tauri::command]
+async fn refresh_notes(app: AppHandle) -> Result<Option<String>, String> {
+    let current_slide = {
+        CURRENT_SLIDE.read().clone()
+    };
+
+    let slide_data = match current_slide {
+        Some(s) => s,
+        None => return Err("No current slide".to_string()),
+    };
+
+    // Clear cache for this presentation and refetch all notes
+    {
+        let mut notes_cache = SLIDE_NOTES.write();
+        // Remove all notes for this presentation
+        notes_cache.retain(|k, _| !k.starts_with(&format!("{}:", slide_data.presentation_id)));
+    }
+
+    // Refetch all notes
+    let _ = prefetch_all_notes(&slide_data.presentation_id).await;
+
+    // Get notes for current slide
+    let notes = {
+        let notes_cache = SLIDE_NOTES.read();
+        let key = format!("{}:{}", slide_data.presentation_id, slide_data.slide_id);
+        notes_cache.get(&key).cloned()
+    };
+
+    // Emit event to frontend with refreshed notes
+    let event = SlideUpdateEvent {
+        slide_data: slide_data.clone(),
+        notes: notes.clone(),
+    };
+    let _ = app.emit("slide-update", event);
+
+    Ok(notes)
 }
 
 // Tauri command to set window opacity/transparency
@@ -847,6 +1014,7 @@ pub fn run() {
             get_user_info,
             start_login,
             logout,
+            refresh_notes,
             set_window_opacity,
             get_window_opacity,
             set_screenshot_protection

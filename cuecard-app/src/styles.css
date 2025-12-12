@@ -297,14 +297,55 @@ body {
   flex-direction: column;
 }
 
+.slide-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 18px;
+  padding-bottom: 8px;
+  flex-shrink: 0;
+}
+
 .slide-info {
   font-size: 12px;
   font-weight: 500;
   color: var(--text-secondary);
   letter-spacing: 0.25px;
-  padding-top: 18px;
-  padding-bottom: 8px;
-  flex-shrink: 0;
+}
+
+.refresh-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: var(--text-secondary);
+  opacity: 0.6;
+  transition: opacity 0.15s ease, transform 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.refresh-btn:hover {
+  opacity: 1;
+}
+
+.refresh-btn:active {
+  transform: rotate(180deg);
+}
+
+.refresh-btn.loading {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .notes-content {
@@ -324,7 +365,7 @@ body {
 #view-notes::before {
   content: '';
   position: absolute;
-  top: 38px; /* After slide-info (padding-top 18px + text ~12px + padding-bottom 8px) */
+  top: 40px; /* After slide-header (padding-top 18px + content ~14px + padding-bottom 8px) */
   left: 0;
   right: 0;
   height: 24px;
