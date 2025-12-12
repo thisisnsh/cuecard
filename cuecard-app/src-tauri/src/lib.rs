@@ -23,7 +23,9 @@ extern crate objc;
 const GOOGLE_AUTH_URL: &str = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL: &str = "https://oauth2.googleapis.com/token";
 const REDIRECT_URI: &str = "http://127.0.0.1:3642/oauth/callback";
-const SCOPES: &str = "https://www.googleapis.com/auth/presentations.readonly https://www.googleapis.com/auth/userinfo.profile";
+// Split scopes for incremental authorization
+const SCOPE_PROFILE: &str = "https://www.googleapis.com/auth/userinfo.profile";
+const SCOPE_SLIDES: &str = "https://www.googleapis.com/auth/presentations.readonly";
 
 // Global state
 static CURRENT_SLIDE: Lazy<Arc<RwLock<Option<SlideData>>>> =
@@ -36,12 +38,16 @@ static APP_HANDLE: Lazy<Arc<RwLock<Option<AppHandle>>>> =
     Lazy::new(|| Arc::new(RwLock::new(None)));
 static OAUTH_TOKENS: Lazy<Arc<RwLock<Option<OAuthTokens>>>> =
     Lazy::new(|| Arc::new(RwLock::new(None)));
+static PENDING_OAUTH_SCOPE: Lazy<Arc<RwLock<Option<String>>>> =
+    Lazy::new(|| Arc::new(RwLock::new(None)));
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OAuthTokens {
     pub access_token: String,
     pub refresh_token: Option<String>,
     pub expires_at: Option<i64>,
+    #[serde(default)]
+    pub granted_scopes: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -80,6 +86,7 @@ struct GoogleTokenResponse {
     access_token: String,
     refresh_token: Option<String>,
     expires_in: Option<i64>,
+    scope: Option<String>,
 }
 
 // Health check endpoint
@@ -170,12 +177,22 @@ async fn oauth_login_handler() -> Result<Redirect, StatusCode> {
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
 
+    // Get the pending scope or default to both
+    let scope_url = {
+        let pending = PENDING_OAUTH_SCOPE.read();
+        match pending.as_deref() {
+            Some("profile") => SCOPE_PROFILE.to_string(),
+            Some("slides") => SCOPE_SLIDES.to_string(),
+            _ => format!("{} {}", SCOPE_PROFILE, SCOPE_SLIDES),
+        }
+    };
+
     let auth_url = format!(
-        "{}?client_id={}&redirect_uri={}&response_type=code&scope={}&access_type=offline&prompt=consent",
+        "{}?client_id={}&redirect_uri={}&response_type=code&scope={}&access_type=offline&prompt=consent&include_granted_scopes=true",
         GOOGLE_AUTH_URL,
         urlencoding::encode(&client_id),
         urlencoding::encode(REDIRECT_URI),
-        urlencoding::encode(SCOPES)
+        urlencoding::encode(&scope_url)
     );
 
     Ok(Redirect::temporary(&auth_url))
@@ -216,12 +233,36 @@ async fn oauth_callback_handler(Query(params): Query<OAuthCallback>) -> Html<Str
 
     // Exchange code for tokens
     match exchange_code_for_tokens(&code).await {
-        Ok(tokens) => {
-            // Store tokens
+        Ok(mut new_tokens) => {
+            // Get the pending scope that was requested
+            let pending_scope = {
+                let mut pending = PENDING_OAUTH_SCOPE.write();
+                pending.take()
+            };
+
+            // Merge with existing tokens if present (for incremental authorization)
             {
                 let mut oauth = OAUTH_TOKENS.write();
-                *oauth = Some(tokens);
+                if let Some(ref existing) = *oauth {
+                    // Keep existing refresh token if new one is not provided
+                    if new_tokens.refresh_token.is_none() {
+                        new_tokens.refresh_token = existing.refresh_token.clone();
+                    }
+                    // Merge scopes
+                    for scope in &existing.granted_scopes {
+                        if !new_tokens.granted_scopes.contains(scope) {
+                            new_tokens.granted_scopes.push(scope.clone());
+                        }
+                    }
+                }
+                *oauth = Some(new_tokens);
             }
+
+            // Get the final granted scopes for response
+            let granted_scopes: Vec<String> = {
+                let oauth = OAUTH_TOKENS.read();
+                oauth.as_ref().map(|t| t.granted_scopes.clone()).unwrap_or_default()
+            };
 
             // Save tokens to persistent storage
             if let Some(app) = APP_HANDLE.read().as_ref() {
@@ -249,11 +290,13 @@ async fn oauth_callback_handler(Query(params): Query<OAuthCallback>) -> Html<Str
                 None
             };
 
-            // Notify frontend
+            // Notify frontend with granted scopes
             if let Some(app) = APP_HANDLE.read().as_ref() {
                 let _ = app.emit("auth-status", serde_json::json!({
                     "authenticated": true,
-                    "user_name": user_name
+                    "user_name": user_name,
+                    "granted_scopes": granted_scopes,
+                    "requested_scope": pending_scope
                 }));
             }
 
@@ -320,10 +363,17 @@ async fn exchange_code_for_tokens(code: &str) -> Result<OAuthTokens, String> {
         .expires_in
         .map(|secs| chrono::Utc::now().timestamp() + secs);
 
+    // Parse the scopes from the response
+    let granted_scopes: Vec<String> = token_response
+        .scope
+        .map(|s| s.split_whitespace().map(|s| s.to_string()).collect())
+        .unwrap_or_default();
+
     Ok(OAuthTokens {
         access_token: token_response.access_token,
         refresh_token: token_response.refresh_token,
         expires_at,
+        granted_scopes,
     })
 }
 
@@ -368,7 +418,13 @@ async fn refresh_access_token() -> Result<(), String> {
         .expires_in
         .map(|secs| chrono::Utc::now().timestamp() + secs);
 
-    // Update tokens (keep existing refresh token if new one not provided)
+    // Parse any new scopes from the response
+    let new_scopes: Vec<String> = token_response
+        .scope
+        .map(|s| s.split_whitespace().map(|s| s.to_string()).collect())
+        .unwrap_or_default();
+
+    // Update tokens (keep existing refresh token and merge scopes if new one not provided)
     {
         let mut tokens = OAUTH_TOKENS.write();
         if let Some(ref mut t) = *tokens {
@@ -377,6 +433,14 @@ async fn refresh_access_token() -> Result<(), String> {
                 t.refresh_token = token_response.refresh_token;
             }
             t.expires_at = expires_at;
+            // Merge new scopes with existing ones
+            if !new_scopes.is_empty() {
+                for scope in new_scopes {
+                    if !t.granted_scopes.contains(&scope) {
+                        t.granted_scopes.push(scope);
+                    }
+                }
+            }
         }
     }
 
@@ -705,6 +769,31 @@ fn get_auth_status() -> bool {
     OAUTH_TOKENS.read().is_some()
 }
 
+// Tauri command to get granted scopes
+#[tauri::command]
+fn get_granted_scopes() -> Vec<String> {
+    OAUTH_TOKENS
+        .read()
+        .as_ref()
+        .map(|t| t.granted_scopes.clone())
+        .unwrap_or_default()
+}
+
+// Tauri command to check if a specific scope is granted
+#[tauri::command]
+fn has_scope(scope: String) -> bool {
+    let scope_url = match scope.as_str() {
+        "profile" => SCOPE_PROFILE,
+        "slides" => SCOPE_SLIDES,
+        _ => return false,
+    };
+    OAUTH_TOKENS
+        .read()
+        .as_ref()
+        .map(|t| t.granted_scopes.iter().any(|s| s == scope_url))
+        .unwrap_or(false)
+}
+
 // Tauri command to get user info from Google
 #[tauri::command]
 async fn get_user_info() -> Result<serde_json::Value, String> {
@@ -734,19 +823,34 @@ async fn get_user_info() -> Result<serde_json::Value, String> {
 }
 
 // Tauri command to initiate login - opens browser directly
+// scope parameter can be "profile" or "slides"
 #[tauri::command]
-async fn start_login(app: AppHandle) -> Result<(), String> {
-    println!("Starting OAuth2 login flow...");
+async fn start_login(app: AppHandle, scope: String) -> Result<(), String> {
+    println!("Starting OAuth2 login flow for scope: {}", scope);
 
     let client_id = std::env::var("GOOGLE_CLIENT_ID").map_err(|_| "GOOGLE_CLIENT_ID not set")?;
     println!("Using Client ID: {}", client_id);
 
+    // Determine which scope(s) to request
+    let scope_url = match scope.as_str() {
+        "profile" => SCOPE_PROFILE.to_string(),
+        "slides" => SCOPE_SLIDES.to_string(),
+        _ => format!("{} {}", SCOPE_PROFILE, SCOPE_SLIDES),
+    };
+
+    // Store the pending scope for the callback
+    {
+        let mut pending = PENDING_OAUTH_SCOPE.write();
+        *pending = Some(scope.clone());
+    }
+
+    // Use include_granted_scopes=true for incremental authorization
     let auth_url = format!(
-        "{}?client_id={}&redirect_uri={}&response_type=code&scope={}&access_type=offline&prompt=consent",
+        "{}?client_id={}&redirect_uri={}&response_type=code&scope={}&access_type=offline&prompt=consent&include_granted_scopes=true",
         GOOGLE_AUTH_URL,
         urlencoding::encode(&client_id),
         urlencoding::encode(REDIRECT_URI),
-        urlencoding::encode(SCOPES)
+        urlencoding::encode(&scope_url)
     );
     println!("Opening browser to URL: {}", auth_url);
 
@@ -1064,6 +1168,8 @@ pub fn run() {
             get_current_slide,
             get_current_notes,
             get_auth_status,
+            get_granted_scopes,
+            has_scope,
             get_user_info,
             start_login,
             logout,

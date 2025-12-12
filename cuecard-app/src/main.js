@@ -14,7 +14,14 @@ let appStore = null;
 const STORAGE_KEYS = {
   SETTINGS_OPACITY: 'settings_opacity',
   SETTINGS_SCREENSHOT_PROTECTION: 'settings_screenshot_protection',
-  ADD_NOTES_CONTENT: 'add_notes_content'
+  ADD_NOTES_CONTENT: 'add_notes_content',
+  GRANTED_SCOPES: 'granted_scopes'
+};
+
+// Scope constants (must match backend)
+const SCOPES = {
+  PROFILE: 'https://www.googleapis.com/auth/userinfo.profile',
+  SLIDES: 'https://www.googleapis.com/auth/presentations.readonly'
 };
 
 // Initialize the store
@@ -76,6 +83,40 @@ async function saveNotesToStorage() {
     await setStoredValue(STORAGE_KEYS.ADD_NOTES_CONTENT, notes);
     console.log("Saved notes to storage");
   }
+}
+
+// Get granted scopes from storage
+async function getGrantedScopes() {
+  const scopes = await getStoredValue(STORAGE_KEYS.GRANTED_SCOPES);
+  return scopes || [];
+}
+
+// Save granted scopes to storage
+async function saveGrantedScopes(scopes) {
+  await setStoredValue(STORAGE_KEYS.GRANTED_SCOPES, scopes);
+  console.log("Saved granted scopes:", scopes);
+}
+
+// Check if a specific scope is granted
+async function hasScope(scopeType) {
+  const scopes = await getGrantedScopes();
+  const scopeUrl = scopeType === 'profile' ? SCOPES.PROFILE : SCOPES.SLIDES;
+  return scopes.includes(scopeUrl);
+}
+
+// Add a scope to the granted scopes list
+async function addGrantedScope(scopeUrl) {
+  const scopes = await getGrantedScopes();
+  if (!scopes.includes(scopeUrl)) {
+    scopes.push(scopeUrl);
+    await saveGrantedScopes(scopes);
+  }
+}
+
+// Clear all granted scopes (for logout)
+async function clearGrantedScopes() {
+  await setStoredValue(STORAGE_KEYS.GRANTED_SCOPES, []);
+  console.log("Cleared granted scopes");
 }
 
 // DOM Elements
@@ -195,9 +236,30 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   // Listen for auth status changes
   if (listen) {
-    await listen("auth-status", (event) => {
+    await listen("auth-status", async (event) => {
       console.log("Auth status changed:", event.payload);
+
+      // Save granted scopes if provided
+      if (event.payload.granted_scopes && Array.isArray(event.payload.granted_scopes)) {
+        await saveGrantedScopes(event.payload.granted_scopes);
+      }
+
       updateAuthUI(event.payload.authenticated, event.payload.user_name);
+
+      // If slides scope was just granted and we requested it, show the notes view
+      if (event.payload.requested_scope === 'slides' && event.payload.authenticated) {
+        const hasSlidesScope = await hasScope('slides');
+        if (hasSlidesScope) {
+          // Show notes view with slide data or default message
+          if (currentSlideData) {
+            showView('notes');
+          } else {
+            displayNotes('Open a Google Slides presentation to see notes here...');
+            slideInfo.textContent = 'No Slide Open';
+            showView('notes');
+          }
+        }
+      }
     });
   }
 
@@ -604,7 +666,7 @@ async function checkAuthStatus() {
   }
   try {
     const status = await invoke("get_auth_status");
-    // Try to get user info if authenticated
+    // Try to get user info and granted scopes if authenticated
     let name = '';
     if (status) {
       try {
@@ -612,6 +674,17 @@ async function checkAuthStatus() {
         name = userInfo?.name || '';
       } catch (e) {
         console.log("Could not get user info:", e);
+      }
+
+      // Sync granted scopes from backend
+      try {
+        const scopes = await invoke("get_granted_scopes");
+        if (scopes && Array.isArray(scopes)) {
+          await saveGrantedScopes(scopes);
+          console.log("Synced granted scopes from backend:", scopes);
+        }
+      } catch (e) {
+        console.log("Could not get granted scopes:", e);
       }
     }
     updateAuthUI(status, name);
@@ -683,9 +756,19 @@ function updateAuthUI(authenticated, name = '') {
     // Add click handler for Google Slides link
     const slidesLink = document.getElementById('slides-link');
     if (slidesLink) {
-      slidesLink.addEventListener('click', (e) => {
+      slidesLink.addEventListener('click', async (e) => {
         e.preventDefault();
         e.stopPropagation();
+
+        // Check if we have slides scope
+        const hasSlidesScope = await hasScope('slides');
+        if (!hasSlidesScope) {
+          // Request slides scope
+          console.log("Slides scope not granted, requesting...");
+          await handleLogin('slides');
+          return;
+        }
+
         // Show notes view with slide data or default message
         if (currentSlideData) {
           showView('notes');
@@ -714,15 +797,17 @@ function updateAuthUI(authenticated, name = '') {
   }
 }
 
-// Handle login
-async function handleLogin() {
+// Handle login with specific scope
+// scope: 'profile' for basic auth, 'slides' for Google Slides access
+async function handleLogin(scope = 'profile') {
   try {
     if (!invoke) {
       console.error("Tauri invoke API not available");
       alert("Please run the app in Tauri mode");
       return;
     }
-    await invoke("start_login");
+    console.log(`Starting login with scope: ${scope}`);
+    await invoke("start_login", { scope });
   } catch (error) {
     console.error("Error starting login:", error);
   }
@@ -736,6 +821,8 @@ async function handleLogout() {
   }
   try {
     await invoke("logout");
+    // Clear granted scopes from local storage
+    await clearGrantedScopes();
     updateAuthUI(false, '');
     // Reset to initial view if viewing slide notes
     if (currentView === 'notes' && !manualNotes) {
