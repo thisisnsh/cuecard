@@ -6,7 +6,7 @@ Browser extension that tracks Google Slides presentations and sends slide inform
 
 - Detects when a Google Slides presentation is opened
 - Tracks slide changes in both **edit mode** and **slideshow/presentation mode**
-- Sends slide data to `localhost:3000/slides?query={slideInfo}`
+- Sends slide data to `localhost:3642/slides?query={slideInfo}`
 - Works on Chrome, Firefox, Edge, and Safari
 
 ## API Payload
@@ -14,7 +14,7 @@ Browser extension that tracks Google Slides presentations and sends slide inform
 When a slide is opened or changed, the extension sends a GET request:
 
 ```
-GET http://localhost:3000/slides?query={encodedJSON}
+GET http://localhost:3642/slides?query={encodedJSON}
 ```
 
 The `query` parameter contains URL-encoded JSON:
@@ -103,7 +103,7 @@ extension/
 
 ### Testing
 
-1. Make sure your local server is running at `localhost:3000`
+1. Make sure your local server is running at `localhost:3642`
 2. Add a `/slides` endpoint that accepts GET requests with a `query` parameter
 3. Load the extension in your browser
 4. Open any Google Slides presentation
@@ -125,8 +125,8 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-app.listen(3000, () => {
-  console.log('Server running on http://localhost:3000');
+app.listen(3642, () => {
+  console.log('Server running on http://localhost:3642');
 });
 ```
 

@@ -1,7 +1,7 @@
 // Google Slides Tracker - Background Service Worker
 // Monitors connection status and manages extension state
 
-const API_ENDPOINT = 'http://localhost:3000';
+const API_ENDPOINT = 'http://localhost:3642';
 let connectionStatus = 'unknown';
 
 // Get browser API (cross-browser compatibility)

@@ -21,7 +21,7 @@ extern crate objc;
 // OAuth2 Configuration - Set these via environment variables
 const GOOGLE_AUTH_URL: &str = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL: &str = "https://oauth2.googleapis.com/token";
-const REDIRECT_URI: &str = "http://127.0.0.1:3000/oauth/callback";
+const REDIRECT_URI: &str = "http://127.0.0.1:3642/oauth/callback";
 const SCOPES: &str = "https://www.googleapis.com/auth/presentations.readonly https://www.googleapis.com/auth/userinfo.profile";
 
 // Global state
@@ -634,11 +634,11 @@ async fn start_server() {
         .route("/oauth/logout", post(logout_handler))
         .layer(cors);
 
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:3642")
         .await
-        .expect("Failed to bind to port 3000");
+        .expect("Failed to bind to port 3642");
 
-    println!("Server running on http://127.0.0.1:3000");
+    println!("Server running on http://127.0.0.1:3642");
 
     axum::serve(listener, app).await.expect("Server error");
 }

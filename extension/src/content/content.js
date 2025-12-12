@@ -5,7 +5,7 @@
   'use strict';
 
   const CONFIG = {
-    API_ENDPOINT: 'http://localhost:3000/slides',
+    API_ENDPOINT: 'http://localhost:3642/slides',
     DEBOUNCE_MS: 50,
     RETRY_ATTEMPTS: 3,
     RETRY_DELAY_MS: 1000,

@@ -7,9 +7,9 @@ async function updateStatus() {
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3000);
+    const timeoutId = setTimeout(() => controller.abort(), 3642);
 
-    const response = await fetch('http://localhost:3000/health', {
+    const response = await fetch('http://localhost:3642/health', {
       signal: controller.signal
     });
 

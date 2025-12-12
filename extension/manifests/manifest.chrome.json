@@ -11,7 +11,7 @@
 
   "host_permissions": [
     "https://docs.google.com/presentation/*",
-    "http://localhost:3000/*"
+    "http://localhost:3642/*"
   ],
 
   "content_scripts": [
