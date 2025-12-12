@@ -6,7 +6,7 @@
 
   const CONFIG = {
     API_ENDPOINT: 'http://localhost:3000/slides',
-    DEBOUNCE_MS: 300,
+    DEBOUNCE_MS: 50,
     RETRY_ATTEMPTS: 3,
     RETRY_DELAY_MS: 1000,
     POLL_INTERVAL_MS: 1000
@@ -200,13 +200,13 @@
     document.addEventListener('keydown', (e) => {
       if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
            'PageUp', 'PageDown', 'Space', 'Enter', 'Backspace'].includes(e.key)) {
-        setTimeout(handleSlideChange, 100); // Small delay for DOM update
+        setTimeout(handleSlideChange, 10); // Small delay for DOM update
       }
     });
 
     // Listen for click navigation
     document.addEventListener('click', () => {
-      setTimeout(handleSlideChange, 100);
+      setTimeout(handleSlideChange, 10);
     });
 
     // Listen for URL changes (some navigations change query params)

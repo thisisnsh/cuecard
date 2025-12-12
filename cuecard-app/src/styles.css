@@ -56,7 +56,7 @@ body {
   border-radius: 0 16px 16px 16px;
   -webkit-box-sizing: border-box;
   box-sizing: border-box;
-  border: 2px solid var(--text-primary);
+  border: 1px solid var(--text-primary);
   color: var(--text-primary);
   cursor: pointer;
   font-size: 14px;
