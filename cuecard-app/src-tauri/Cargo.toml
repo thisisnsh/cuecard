@@ -15,7 +15,6 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 tauri = { version = "2", features = ["macos-private-api"] }
 tauri-plugin-opener = "2"
-tauri-plugin-store = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
@@ -33,11 +32,6 @@ parking_lot = "0.12"
 
 # URL encoding
 urlencoding = "2.1"
-
-# For PKCE code challenge
-sha2 = "0.10"
-base64 = "0.22"
-rand = "0.8"
 
 # Date/time handling
 chrono = "0.4"

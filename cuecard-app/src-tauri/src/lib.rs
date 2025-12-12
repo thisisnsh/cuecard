@@ -5,49 +5,24 @@ use axum::{
     routing::{get, post},
     Router,
 };
-use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
 use once_cell::sync::Lazy;
 use parking_lot::RwLock;
-use rand::Rng;
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tauri::{AppHandle, Emitter, Manager};
 use tauri_plugin_opener::OpenerExt;
-use tauri_plugin_store::StoreExt;
 use tower_http::cors::{Any, CorsLayer};
 
 #[cfg(target_os = "macos")]
 #[macro_use]
 extern crate objc;
 
-// OAuth2 Configuration for Google Slides API access 
+// OAuth2 Configuration - Set these via environment variables
 const GOOGLE_AUTH_URL: &str = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL: &str = "https://oauth2.googleapis.com/token";
 const REDIRECT_URI: &str = "http://127.0.0.1:3642/oauth/callback";
-// Combined scopes for login + Slides API access
-const OAUTH_SCOPES: &str = "openid email profile https://www.googleapis.com/auth/presentations.readonly";
-
-// Google OAuth Client ID - embedded at compile time for distribution
-// Set via environment variable at build time, or use default for development
-// Create a "Desktop app" OAuth client in Google Cloud Console
-const GOOGLE_CLIENT_ID_EMBEDDED: Option<&str> = option_env!("GOOGLE_CLIENT_ID");
-
-// Store file name for persistent storage
-const STORE_FILE: &str = "cuecard_store.json";
-
-// Helper to get Google Client ID (compile-time embedded or runtime env var)
-fn get_google_client_id() -> Result<String, String> {
-    // First check compile-time embedded value
-    if let Some(id) = GOOGLE_CLIENT_ID_EMBEDDED {
-        if !id.is_empty() {
-            return Ok(id.to_string());
-        }
-    }
-    // Fall back to runtime environment variable (for development)
-    std::env::var("GOOGLE_CLIENT_ID").map_err(|_| "GOOGLE_CLIENT_ID not set".to_string())
-}
+const SCOPES: &str = "https://www.googleapis.com/auth/presentations.readonly https://www.googleapis.com/auth/userinfo.profile";
 
 // Global state
 static CURRENT_SLIDE: Lazy<Arc<RwLock<Option<SlideData>>>> =
@@ -58,52 +33,14 @@ static CURRENT_PRESENTATION_ID: Lazy<Arc<RwLock<Option<String>>>> =
     Lazy::new(|| Arc::new(RwLock::new(None)));
 static APP_HANDLE: Lazy<Arc<RwLock<Option<AppHandle>>>> =
     Lazy::new(|| Arc::new(RwLock::new(None)));
-// OAuth tokens (for both login and Slides API)
 static OAUTH_TOKENS: Lazy<Arc<RwLock<Option<OAuthTokens>>>> =
     Lazy::new(|| Arc::new(RwLock::new(None)));
-// User info (from Google)
-static USER_INFO: Lazy<Arc<RwLock<Option<UserInfo>>>> =
-    Lazy::new(|| Arc::new(RwLock::new(None)));
-// PKCE code verifier (stored between auth request and callback)
-static PKCE_VERIFIER: Lazy<Arc<RwLock<Option<String>>>> =
-    Lazy::new(|| Arc::new(RwLock::new(None)));
 
-// Generate PKCE code verifier (random 43-128 char string)
-fn generate_code_verifier() -> String {
-    let mut rng = rand::thread_rng();
-    let bytes: Vec<u8> = (0..32).map(|_| rng.gen::<u8>()).collect();
-    URL_SAFE_NO_PAD.encode(&bytes)
-}
-
-// Generate PKCE code challenge from verifier (SHA256 + base64url)
-fn generate_code_challenge(verifier: &str) -> String {
-    let mut hasher = Sha256::new();
-    hasher.update(verifier.as_bytes());
-    let hash = hasher.finalize();
-    URL_SAFE_NO_PAD.encode(&hash)
-}
-
-// OAuth tokens
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OAuthTokens {
     pub access_token: String,
     pub refresh_token: Option<String>,
     pub expires_at: Option<i64>,
-}
-
-// User info from Google
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct UserInfo {
-    pub email: Option<String>,
-    pub name: Option<String>,
-    pub picture: Option<String>,
-}
-
-// App settings for persistence
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
-pub struct AppSettings {
-    pub window_opacity: Option<f64>,
-    pub screenshot_protection_enabled: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -225,34 +162,33 @@ async fn slides_handler(Json(slide_data): Json<SlideData>) -> Result<Json<ApiRes
     }))
 }
 
-// OAuth2 login - redirects to Google for Slides API access only
+// OAuth2 login - redirects to Google
 async fn oauth_login_handler() -> Result<Redirect, StatusCode> {
-    let client_id = get_google_client_id().map_err(|e| {
-        eprintln!("{}", e);
+    let client_id = std::env::var("GOOGLE_CLIENT_ID").map_err(|_| {
+        eprintln!("GOOGLE_CLIENT_ID not set");
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
 
-    // Only request Slides API scope - profile info comes from Firebase
     let auth_url = format!(
         "{}?client_id={}&redirect_uri={}&response_type=code&scope={}&access_type=offline&prompt=consent",
         GOOGLE_AUTH_URL,
         urlencoding::encode(&client_id),
         urlencoding::encode(REDIRECT_URI),
-        urlencoding::encode(OAUTH_SCOPES)
+        urlencoding::encode(SCOPES)
     );
 
     Ok(Redirect::temporary(&auth_url))
 }
 
-// OAuth2 callback - exchanges code for tokens and fetches user info
+// OAuth2 callback - exchanges code for tokens
 async fn oauth_callback_handler(Query(params): Query<OAuthCallback>) -> Html<String> {
     if let Some(error) = params.error {
         return Html(format!(
             r#"<!DOCTYPE html>
-            <html><head><title>Sign In Failed</title>
+            <html><head><title>Authentication Failed</title>
             <style>body {{ font-family: system-ui; padding: 40px; text-align: center; }}</style>
             </head><body>
-            <h1>Sign In Failed</h1>
+            <h1>Authentication Failed</h1>
             <p>Error: {}</p>
             <p>You can close this window.</p>
             </body></html>"#,
@@ -265,10 +201,10 @@ async fn oauth_callback_handler(Query(params): Query<OAuthCallback>) -> Html<Str
         None => {
             return Html(
                 r#"<!DOCTYPE html>
-                <html><head><title>Sign In Failed</title>
+                <html><head><title>Authentication Failed</title>
                 <style>body { font-family: system-ui; padding: 40px; text-align: center; }</style>
                 </head><body>
-                <h1>Sign In Failed</h1>
+                <h1>Authentication Failed</h1>
                 <p>No authorization code received.</p>
                 <p>You can close this window.</p>
                 </body></html>"#
@@ -280,47 +216,50 @@ async fn oauth_callback_handler(Query(params): Query<OAuthCallback>) -> Html<Str
     // Exchange code for tokens
     match exchange_code_for_tokens(&code).await {
         Ok(tokens) => {
-            // Fetch user info
-            let user_info = fetch_user_info(&tokens.access_token).await.ok();
-
-            // Store tokens in memory
+            // Store tokens
             {
-                let mut oauth_tokens = OAUTH_TOKENS.write();
-                *oauth_tokens = Some(tokens.clone());
+                let mut oauth = OAUTH_TOKENS.write();
+                *oauth = Some(tokens);
             }
 
-            // Store user info in memory
-            {
-                let mut user = USER_INFO.write();
-                *user = user_info.clone();
-            }
-
-            // Save to persistent storage
-            if let Some(app) = APP_HANDLE.read().as_ref() {
-                if let Ok(store) = app.store(STORE_FILE) {
-                    let _ = store.set("oauth_tokens", serde_json::to_value(&tokens).unwrap_or_default());
-                    if let Some(ref info) = user_info {
-                        let _ = store.set("user_info", serde_json::to_value(info).unwrap_or_default());
+            // Fetch user info to get the name
+            let user_name = if let Some(access_token) = get_valid_access_token().await {
+                let client = reqwest::Client::new();
+                if let Ok(response) = client
+                    .get("https://www.googleapis.com/oauth2/v2/userinfo")
+                    .header("Authorization", format!("Bearer {}", access_token))
+                    .send()
+                    .await
+                {
+                    if let Ok(user_info) = response.json::<serde_json::Value>().await {
+                        user_info.get("name").and_then(|n| n.as_str()).map(|s| s.to_string())
+                    } else {
+                        None
                     }
-                    let _ = store.save();
+                } else {
+                    None
                 }
+            } else {
+                None
+            };
 
-                // Notify frontend
+            // Notify frontend
+            if let Some(app) = APP_HANDLE.read().as_ref() {
                 let _ = app.emit("auth-status", serde_json::json!({
                     "authenticated": true,
-                    "user": user_info
+                    "user_name": user_name
                 }));
             }
 
             Html(
                 r#"<!DOCTYPE html>
-                <html><head><title>Sign In Successful</title>
+                <html><head><title>Authentication Successful</title>
                 <style>
                     body { font-family: system-ui; padding: 40px; text-align: center; background: #fff; }
                     .success { color: #000; }
                 </style>
                 </head><body>
-                <h1 class="success">Sign In Successful!</h1>
+                <h1 class="success">Authentication Successful!</h1>
                 <p>You can now close this window and return to CueCard.</p>
                 <script>setTimeout(() => window.close(), 2000);</script>
                 </body></html>"#
@@ -329,10 +268,10 @@ async fn oauth_callback_handler(Query(params): Query<OAuthCallback>) -> Html<Str
         }
         Err(e) => Html(format!(
             r#"<!DOCTYPE html>
-            <html><head><title>Sign In Failed</title>
+            <html><head><title>Authentication Failed</title>
             <style>body {{ font-family: system-ui; padding: 40px; text-align: center; }}</style>
             </head><body>
-            <h1>Sign In Failed</h1>
+            <h1>Authentication Failed</h1>
             <p>Error: {}</p>
             <p>You can close this window.</p>
             </body></html>"#,
@@ -341,31 +280,21 @@ async fn oauth_callback_handler(Query(params): Query<OAuthCallback>) -> Html<Str
     }
 }
 
-// Exchange authorization code for OAuth tokens using PKCE
+// Exchange authorization code for tokens
 async fn exchange_code_for_tokens(code: &str) -> Result<OAuthTokens, String> {
-    let client_id = get_google_client_id()?;
-
-    // Get the stored PKCE code verifier
-    let code_verifier = {
-        let verifier = PKCE_VERIFIER.read();
-        verifier.clone().ok_or("No PKCE code verifier found")?
-    };
-
-    // Clear the verifier after use
-    {
-        let mut verifier = PKCE_VERIFIER.write();
-        *verifier = None;
-    }
+    let client_id = std::env::var("GOOGLE_CLIENT_ID").map_err(|_| "GOOGLE_CLIENT_ID not set")?;
+    let client_secret =
+        std::env::var("GOOGLE_CLIENT_SECRET").map_err(|_| "GOOGLE_CLIENT_SECRET not set")?;
 
     let client = reqwest::Client::new();
     let response = client
         .post(GOOGLE_TOKEN_URL)
         .form(&[
             ("code", code),
-            ("client_id", client_id.as_str()),
+            ("client_id", &client_id),
+            ("client_secret", &client_secret),
             ("redirect_uri", REDIRECT_URI),
             ("grant_type", "authorization_code"),
-            ("code_verifier", code_verifier.as_str()),
         ])
         .send()
         .await
@@ -392,32 +321,6 @@ async fn exchange_code_for_tokens(code: &str) -> Result<OAuthTokens, String> {
     })
 }
 
-// Fetch user info from Google
-async fn fetch_user_info(access_token: &str) -> Result<UserInfo, String> {
-    let client = reqwest::Client::new();
-    let response = client
-        .get("https://www.googleapis.com/oauth2/v2/userinfo")
-        .header("Authorization", format!("Bearer {}", access_token))
-        .send()
-        .await
-        .map_err(|e| format!("Failed to fetch user info: {}", e))?;
-
-    if !response.status().is_success() {
-        return Err(format!("Failed to fetch user info: {}", response.status()));
-    }
-
-    let user_data: serde_json::Value = response
-        .json()
-        .await
-        .map_err(|e| format!("Failed to parse user info: {}", e))?;
-
-    Ok(UserInfo {
-        email: user_data.get("email").and_then(|v| v.as_str()).map(|s| s.to_string()),
-        name: user_data.get("name").and_then(|v| v.as_str()).map(|s| s.to_string()),
-        picture: user_data.get("picture").and_then(|v| v.as_str()).map(|s| s.to_string()),
-    })
-}
-
 // Refresh access token
 async fn refresh_access_token() -> Result<(), String> {
     let refresh_token = {
@@ -428,14 +331,17 @@ async fn refresh_access_token() -> Result<(), String> {
             .ok_or("No refresh token available")?
     };
 
-    let client_id = get_google_client_id()?;
+    let client_id = std::env::var("GOOGLE_CLIENT_ID").map_err(|_| "GOOGLE_CLIENT_ID not set")?;
+    let client_secret =
+        std::env::var("GOOGLE_CLIENT_SECRET").map_err(|_| "GOOGLE_CLIENT_SECRET not set")?;
 
     let client = reqwest::Client::new();
     let response = client
         .post(GOOGLE_TOKEN_URL)
         .form(&[
             ("refresh_token", refresh_token.as_str()),
-            ("client_id", client_id.as_str()),
+            ("client_id", &client_id),
+            ("client_secret", &client_secret),
             ("grant_type", "refresh_token"),
         ])
         .send()
@@ -457,7 +363,7 @@ async fn refresh_access_token() -> Result<(), String> {
         .map(|secs| chrono::Utc::now().timestamp() + secs);
 
     // Update tokens (keep existing refresh token if new one not provided)
-    let updated_tokens = {
+    {
         let mut tokens = OAUTH_TOKENS.write();
         if let Some(ref mut t) = *tokens {
             t.access_token = token_response.access_token;
@@ -465,17 +371,6 @@ async fn refresh_access_token() -> Result<(), String> {
                 t.refresh_token = token_response.refresh_token;
             }
             t.expires_at = expires_at;
-        }
-        tokens.clone()
-    };
-
-    // Save updated tokens to persistent storage
-    if let Some(app) = APP_HANDLE.read().as_ref() {
-        if let Some(tokens) = updated_tokens {
-            if let Ok(store) = app.store(STORE_FILE) {
-                let _ = store.set("oauth_tokens", serde_json::to_value(&tokens).unwrap_or_default());
-                let _ = store.save();
-            }
         }
     }
 
@@ -699,39 +594,22 @@ fn extract_text_from_text_elements(text: &serde_json::Value) -> Option<String> {
 // Auth status endpoint
 async fn auth_status_handler() -> Json<serde_json::Value> {
     let is_authenticated = OAUTH_TOKENS.read().is_some();
-    let user_info = USER_INFO.read().clone();
     Json(serde_json::json!({
-        "authenticated": is_authenticated,
-        "user": user_info
+        "authenticated": is_authenticated
     }))
 }
 
-// Logout endpoint - clears all tokens
+// Logout endpoint
 async fn logout_handler() -> Json<serde_json::Value> {
-    // Clear OAuth tokens
     {
         let mut tokens = OAUTH_TOKENS.write();
         *tokens = None;
     }
 
-    // Clear user info
-    {
-        let mut user = USER_INFO.write();
-        *user = None;
-    }
-
-    // Clear from persistent storage
     if let Some(app) = APP_HANDLE.read().as_ref() {
-        if let Ok(store) = app.store(STORE_FILE) {
-            let _ = store.delete("oauth_tokens");
-            let _ = store.delete("user_info");
-            let _ = store.delete("settings");
-            let _ = store.save();
-        }
-
         let _ = app.emit("auth-status", serde_json::json!({
             "authenticated": false,
-            "user": null
+            "user_name": null
         }));
     }
 
@@ -784,43 +662,54 @@ fn get_current_notes() -> Option<String> {
     }
 }
 
-// Tauri command to check if user is logged in
+// Tauri command to check auth status
 #[tauri::command]
 fn get_auth_status() -> bool {
     OAUTH_TOKENS.read().is_some()
 }
 
-// Tauri command to get user info
+// Tauri command to get user info from Google
 #[tauri::command]
-fn get_user_info() -> Option<UserInfo> {
-    USER_INFO.read().clone()
-}
+async fn get_user_info() -> Result<serde_json::Value, String> {
+    let access_token = match get_valid_access_token().await {
+        Some(token) => token,
+        None => return Err("Not authenticated".to_string()),
+    };
 
-// Tauri command to initiate login (opens system browser) with PKCE
-#[tauri::command]
-async fn start_login(app: AppHandle) -> Result<(), String> {
-    println!("Starting Google OAuth with PKCE...");
+    let client = reqwest::Client::new();
+    let response = client
+        .get("https://www.googleapis.com/oauth2/v2/userinfo")
+        .header("Authorization", format!("Bearer {}", access_token))
+        .send()
+        .await
+        .map_err(|e| format!("Failed to fetch user info: {}", e))?;
 
-    let client_id = get_google_client_id()?;
-    println!("Using Client ID: {}", client_id);
-
-    // Generate PKCE code verifier and challenge
-    let code_verifier = generate_code_verifier();
-    let code_challenge = generate_code_challenge(&code_verifier);
-
-    // Store the verifier for later use in token exchange
-    {
-        let mut verifier = PKCE_VERIFIER.write();
-        *verifier = Some(code_verifier);
+    if !response.status().is_success() {
+        return Err(format!("Failed to fetch user info: {}", response.status()));
     }
 
+    let user_info: serde_json::Value = response
+        .json()
+        .await
+        .map_err(|e| format!("Failed to parse user info: {}", e))?;
+
+    Ok(user_info)
+}
+
+// Tauri command to initiate login - opens browser directly
+#[tauri::command]
+async fn start_login(app: AppHandle) -> Result<(), String> {
+    println!("Starting OAuth2 login flow...");
+
+    let client_id = std::env::var("GOOGLE_CLIENT_ID").map_err(|_| "GOOGLE_CLIENT_ID not set")?;
+    println!("Using Client ID: {}", client_id);
+
     let auth_url = format!(
-        "{}?client_id={}&redirect_uri={}&response_type=code&scope={}&code_challenge={}&code_challenge_method=S256",
+        "{}?client_id={}&redirect_uri={}&response_type=code&scope={}&access_type=offline&prompt=consent",
         GOOGLE_AUTH_URL,
         urlencoding::encode(&client_id),
         urlencoding::encode(REDIRECT_URI),
-        urlencoding::encode(OAUTH_SCOPES),
-        urlencoding::encode(&code_challenge)
+        urlencoding::encode(SCOPES)
     );
     println!("Opening browser to URL: {}", auth_url);
 
@@ -831,99 +720,11 @@ async fn start_login(app: AppHandle) -> Result<(), String> {
     Ok(())
 }
 
-// Tauri command to save settings to persistent storage
+// Tauri command to logout
 #[tauri::command]
-fn save_settings(app: AppHandle, settings: AppSettings) -> Result<(), String> {
-    let store = app.store(STORE_FILE).map_err(|e| format!("Failed to open store: {}", e))?;
-    store.set("settings", serde_json::to_value(&settings).unwrap_or_default());
-    store.save().map_err(|e| format!("Failed to save store: {}", e))?;
-    Ok(())
-}
-
-// Tauri command to load settings from persistent storage
-#[tauri::command]
-fn load_settings(app: AppHandle) -> Result<AppSettings, String> {
-    let store = app.store(STORE_FILE).map_err(|e| format!("Failed to open store: {}", e))?;
-    if let Some(value) = store.get("settings") {
-        serde_json::from_value(value.clone()).map_err(|e| format!("Failed to parse settings: {}", e))
-    } else {
-        Ok(AppSettings::default())
-    }
-}
-
-// Tauri command to load all stored data on app start
-#[tauri::command]
-fn load_stored_data(app: AppHandle) -> Result<serde_json::Value, String> {
-    let store = app.store(STORE_FILE).map_err(|e| format!("Failed to open store: {}", e))?;
-
-    // Load OAuth tokens
-    if let Some(tokens_value) = store.get("oauth_tokens") {
-        if let Ok(tokens) = serde_json::from_value::<OAuthTokens>(tokens_value.clone()) {
-            let mut oauth_tokens = OAUTH_TOKENS.write();
-            *oauth_tokens = Some(tokens);
-        }
-    }
-
-    // Load user info
-    if let Some(user_value) = store.get("user_info") {
-        if let Ok(user) = serde_json::from_value::<UserInfo>(user_value.clone()) {
-            let mut user_info = USER_INFO.write();
-            *user_info = Some(user);
-        }
-    }
-
-    // Load settings
-    let settings: AppSettings = store.get("settings")
-        .and_then(|v| serde_json::from_value(v.clone()).ok())
-        .unwrap_or_default();
-
-    let user_info = USER_INFO.read().clone();
-    let is_authenticated = OAUTH_TOKENS.read().is_some();
-
-    Ok(serde_json::json!({
-        "authenticated": is_authenticated,
-        "user": user_info,
-        "settings": settings
-    }))
-}
-
-// Tauri command to logout - clears all storage
-#[tauri::command]
-fn logout(app: AppHandle) -> Result<(), String> {
-    // Clear OAuth tokens from memory
-    {
-        let mut tokens = OAUTH_TOKENS.write();
-        *tokens = None;
-    }
-
-    // Clear user info from memory
-    {
-        let mut user = USER_INFO.write();
-        *user = None;
-    }
-
-    // Clear slide data
-    {
-        let mut slide = CURRENT_SLIDE.write();
-        *slide = None;
-    }
-    {
-        let mut notes = SLIDE_NOTES.write();
-        notes.clear();
-    }
-    {
-        let mut pres_id = CURRENT_PRESENTATION_ID.write();
-        *pres_id = None;
-    }
-
-    // Clear from persistent storage
-    let store = app.store(STORE_FILE).map_err(|e| format!("Failed to open store: {}", e))?;
-    let _ = store.delete("oauth_tokens");
-    let _ = store.delete("user_info");
-    let _ = store.delete("settings");
-    store.save().map_err(|e| format!("Failed to save store: {}", e))?;
-
-    Ok(())
+fn logout() {
+    let mut tokens = OAUTH_TOKENS.write();
+    *tokens = None;
 }
 
 // Tauri command to refresh notes for current slide/presentation
@@ -1120,7 +921,6 @@ fn set_screenshot_protection(app: AppHandle, enabled: bool) -> Result<(), String
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_store::Builder::default().build())
         .setup(|app| {
             // Store app handle for emitting events
             {
@@ -1213,9 +1013,6 @@ pub fn run() {
             get_auth_status,
             get_user_info,
             start_login,
-            save_settings,
-            load_settings,
-            load_stored_data,
             logout,
             refresh_notes,
             set_window_opacity,

@@ -102,8 +102,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Set up settings handlers
   setupSettings();
 
-  // Load stored data and apply settings
-  await loadStoredData();
+  // Check auth status on load
+  await checkAuthStatus();
 
   // Check for existing slide data
   await checkCurrentSlide();
@@ -116,14 +116,11 @@ window.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // Listen for auth status changes from backend
+  // Listen for auth status changes
   if (listen) {
     await listen("auth-status", (event) => {
       console.log("Auth status changed:", event.payload);
-      const { authenticated, user } = event.payload;
-      isAuthenticated = authenticated;
-      userName = user?.name || '';
-      updateAuthUI(authenticated, userName);
+      updateAuthUI(event.payload.authenticated, event.payload.user_name);
     });
   }
 
@@ -516,42 +513,30 @@ function highlightNotesForInput(text) {
   return safe;
 }
 
-// Load stored data from persistent storage on app start
-async function loadStoredData() {
+// Check authentication status
+async function checkAuthStatus() {
   if (!invoke) {
-    console.log("Tauri not available, skipping stored data load");
+    console.log("Tauri not available, skipping auth check");
     return;
   }
   try {
-    const data = await invoke("load_stored_data");
-    console.log("Loaded stored data:", data);
-
-    // Update state from stored data
-    isAuthenticated = data.authenticated || false;
-    if (data.user) {
-      userName = data.user.name || '';
-    }
-
-    // Apply stored settings
-    if (data.settings) {
-      if (data.settings.window_opacity !== null && data.settings.window_opacity !== undefined) {
-        currentOpacity = Math.round(data.settings.window_opacity * 100);
-        // Apply opacity to window
-        await invoke("set_window_opacity", { opacity: data.settings.window_opacity });
-      }
-      if (data.settings.screenshot_protection_enabled !== null && data.settings.screenshot_protection_enabled !== undefined) {
-        screenshotProtectionEnabled = data.settings.screenshot_protection_enabled;
-        await invoke("set_screenshot_protection", { enabled: screenshotProtectionEnabled });
+    const status = await invoke("get_auth_status");
+    // Try to get user info if authenticated
+    let name = '';
+    if (status) {
+      try {
+        const userInfo = await invoke("get_user_info");
+        name = userInfo?.name || '';
+      } catch (e) {
+        console.log("Could not get user info:", e);
       }
     }
-
-    // Update UI based on loaded state
-    updateAuthUI(isAuthenticated, userName);
+    updateAuthUI(status, name);
   } catch (error) {
-    console.error("Error loading stored data:", error);
+    console.error("Error checking auth status:", error);
+    updateAuthUI(false, '');
   }
 }
-
 
 // Get time-based greeting
 function getGreeting() {
@@ -618,7 +603,6 @@ function updateAuthUI(authenticated, name = '') {
       slidesLink.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-
         // Show notes view with slide data or default message
         if (currentSlideData) {
           showView('notes');
@@ -647,35 +631,29 @@ function updateAuthUI(authenticated, name = '') {
   }
 }
 
-// Handle login - opens system browser for Google OAuth
+// Handle login
 async function handleLogin() {
   try {
     if (!invoke) {
       console.error("Tauri invoke API not available");
+      alert("Please run the app in Tauri mode");
       return;
     }
-
-    console.log("Starting Google OAuth login...");
     await invoke("start_login");
   } catch (error) {
     console.error("Error starting login:", error);
   }
 }
 
-// Handle logout - clears all storage
+// Handle logout
 async function handleLogout() {
+  if (!invoke) {
+    console.error("Tauri invoke API not available");
+    return;
+  }
   try {
-    // Clear backend storage
-    if (invoke) {
-      await invoke("logout");
-    }
-
-    // Reset state
-    userName = '';
-    isAuthenticated = false;
-
+    await invoke("logout");
     updateAuthUI(false, '');
-
     // Reset to initial view if viewing slide notes
     if (currentView === 'notes' && !manualNotes) {
       showView('initial');
@@ -1009,8 +987,6 @@ function setupSettings() {
     if (invoke) {
       try {
         await invoke("set_window_opacity", { opacity: value / 100 });
-        // Save settings to persistent storage
-        await saveSettingsToStorage();
       } catch (error) {
         console.error("Error setting window opacity:", error);
       }
@@ -1027,8 +1003,6 @@ function setupSettings() {
     if (invoke) {
       try {
         await invoke("set_screenshot_protection", { enabled: !showInCapture });
-        // Save settings to persistent storage
-        await saveSettingsToStorage();
       } catch (error) {
         console.error("Error setting screenshot protection:", error);
       }
@@ -1036,74 +1010,23 @@ function setupSettings() {
   });
 }
 
-// Save current settings to persistent storage
-async function saveSettingsToStorage() {
-  if (!invoke) return;
-
-  try {
-    const settings = {
-      window_opacity: currentOpacity / 100,
-      screenshot_protection_enabled: screenshotProtectionEnabled
-    };
-    await invoke("save_settings", { settings });
-    console.log("Settings saved to storage:", settings);
-  } catch (error) {
-    console.error("Error saving settings to storage:", error);
-  }
-}
-
-// Load current settings values (called when settings view is shown)
+// Load current settings values
 async function loadCurrentSettings() {
   if (!invoke) return;
 
   try {
-    // Load settings from persistent storage
-    const settings = await invoke("load_settings");
-    console.log("Loaded settings for display:", settings);
-
-    // Apply opacity
-    if (settings.window_opacity !== null && settings.window_opacity !== undefined) {
-      const opacityPercent = Math.round(settings.window_opacity * 100);
-      currentOpacity = opacityPercent;
-      if (opacitySlider) {
-        opacitySlider.value = opacityPercent;
-      }
-      if (opacityValue) {
-        opacityValue.textContent = `${opacityPercent}%`;
-      }
-    } else {
-      // Fall back to getting current window opacity
-      const opacity = await invoke("get_window_opacity");
-      const opacityPercent = Math.round(opacity * 100);
-      currentOpacity = opacityPercent;
-      if (opacitySlider) {
-        opacitySlider.value = opacityPercent;
-      }
-      if (opacityValue) {
-        opacityValue.textContent = `${opacityPercent}%`;
-      }
+    // Load current opacity
+    const opacity = await invoke("get_window_opacity");
+    const opacityPercent = Math.round(opacity * 100);
+    currentOpacity = opacityPercent;
+    if (opacitySlider) {
+      opacitySlider.value = opacityPercent;
     }
-
-    // Apply screenshot protection setting
-    if (settings.screenshot_protection_enabled !== null && settings.screenshot_protection_enabled !== undefined) {
-      screenshotProtectionEnabled = settings.screenshot_protection_enabled;
+    if (opacityValue) {
+      opacityValue.textContent = `${opacityPercent}%`;
     }
   } catch (error) {
-    console.error("Error loading settings:", error);
-    // Fall back to defaults
-    try {
-      const opacity = await invoke("get_window_opacity");
-      const opacityPercent = Math.round(opacity * 100);
-      currentOpacity = opacityPercent;
-      if (opacitySlider) {
-        opacitySlider.value = opacityPercent;
-      }
-      if (opacityValue) {
-        opacityValue.textContent = `${opacityPercent}%`;
-      }
-    } catch (e) {
-      console.error("Error loading fallback opacity:", e);
-    }
+    console.error("Error loading window opacity:", error);
   }
 
   // Screen capture toggle: default is OFF (protected), so checkbox unchecked
