@@ -24,7 +24,7 @@ const GOOGLE_AUTH_URL: &str = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL: &str = "https://oauth2.googleapis.com/token";
 const REDIRECT_URI: &str = "http://127.0.0.1:3642/oauth/callback";
 // Split scopes for incremental authorization
-const SCOPE_PROFILE: &str = "https://www.googleapis.com/auth/userinfo.profile";
+const SCOPE_PROFILE: &str = "openid profile email";
 const SCOPE_SLIDES: &str = "https://www.googleapis.com/auth/presentations.readonly";
 
 // Global state
@@ -273,7 +273,7 @@ async fn oauth_callback_handler(Query(params): Query<OAuthCallback>) -> Html<Str
             let user_name = if let Some(access_token) = get_valid_access_token().await {
                 let client = reqwest::Client::new();
                 if let Ok(response) = client
-                    .get("https://www.googleapis.com/oauth2/v2/userinfo")
+                    .get("https://www.googleapis.com/oauth2/v3/userinfo")
                     .header("Authorization", format!("Bearer {}", access_token))
                     .send()
                     .await
@@ -804,7 +804,7 @@ async fn get_user_info() -> Result<serde_json::Value, String> {
 
     let client = reqwest::Client::new();
     let response = client
-        .get("https://www.googleapis.com/oauth2/v2/userinfo")
+        .get("https://www.googleapis.com/oauth2/v3/userinfo")
         .header("Authorization", format!("Bearer {}", access_token))
         .send()
         .await

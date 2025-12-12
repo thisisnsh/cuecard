@@ -74,6 +74,7 @@ async function saveUserProfile(email, name) {
 
 // Increment usage counter in Firestore
 async function incrementUsage(email, usageType) {
+  console.log("Incrementing usage for email:", email, "usageType:", usageType);
   if (!email) return;
 
   const documentPath = `Profiles/${encodeURIComponent(email)}`;
@@ -126,6 +127,7 @@ async function getUserEmail() {
   if (!invoke) return null;
   try {
     const userInfo = await invoke("get_user_info");
+    console.log("User info:", userInfo);
     return userInfo?.email || null;
   } catch (e) {
     console.log("Could not get user email:", e);
@@ -146,7 +148,7 @@ const STORAGE_KEYS = {
 
 // Scope constants (must match backend)
 const SCOPES = {
-  PROFILE: 'https://www.googleapis.com/auth/userinfo.profile',
+  PROFILE: 'openid profile email',
   SLIDES: 'https://www.googleapis.com/auth/presentations.readonly'
 };
 
