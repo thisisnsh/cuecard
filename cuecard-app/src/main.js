@@ -9,22 +9,26 @@ const { openUrl } = window.__TAURI__?.opener || {};
 
 // DOM Elements
 let authBtn;
-let viewInitial, viewAddNotes, viewNotes;
+let viewInitial, viewAddNotes, viewNotes, viewSettings;
 let linkGoBack, backSeparator;
 let notesInput, notesContent, slideInfo, slideInfoBtn, slideSeparator;
 let welcomeHeading, welcomeSubtext;
 let privacyLink, websiteLink, websiteSeparator;
+let settingsLink, settingsSeparator;
 let refreshBtn, refreshSeparator;
 let notesInputHighlight;
 let timerSeparator, timerStartSeparator, timerPauseSeparator;
 let btnStart, btnPause, btnReset;
+let opacitySlider, opacityValue, screenCaptureToggle;
 
 // State
 let isAuthenticated = false;
 let userName = '';
-let currentView = 'initial'; // 'initial', 'add-notes', 'notes'
+let currentView = 'initial'; // 'initial', 'add-notes', 'notes', 'settings'
 let manualNotes = ''; // Notes pasted by the user
 let currentSlideData = null; // Store current slide data
+let currentOpacity = 100; // Store current opacity value (10-100)
+let screenshotProtectionEnabled = true; // Default: protected (not shown in capture)
 
 // Timer State
 let timerState = 'stopped'; // 'stopped', 'running', 'paused'
@@ -34,12 +38,13 @@ let originalTimerValues = []; // Store original timer values for reset
 // Initialize the app
 window.addEventListener("DOMContentLoaded", async () => {
   console.log("App initializing...");
-  
+
   // Get DOM elements
   authBtn = document.getElementById("auth-btn");
   viewInitial = document.getElementById("view-initial");
   viewAddNotes = document.getElementById("view-add-notes");
   viewNotes = document.getElementById("view-notes");
+  viewSettings = document.getElementById("view-settings");
   linkGoBack = document.getElementById("link-go-back");
   backSeparator = document.getElementById("back-separator");
   notesInput = document.getElementById("notes-input");
@@ -52,6 +57,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   privacyLink = document.getElementById("privacy-link");
   websiteLink = document.getElementById("website-link");
   websiteSeparator = document.getElementById("website-separator");
+  settingsLink = document.getElementById("settings-link");
+  settingsSeparator = document.getElementById("settings-separator");
   refreshBtn = document.getElementById("refresh-btn");
   refreshSeparator = document.getElementById("refresh-separator");
   notesInputHighlight = document.getElementById("notes-input-highlight");
@@ -61,7 +68,10 @@ window.addEventListener("DOMContentLoaded", async () => {
   btnStart = document.getElementById("btn-start");
   btnPause = document.getElementById("btn-pause");
   btnReset = document.getElementById("btn-reset");
-  
+  opacitySlider = document.getElementById("opacity-slider");
+  opacityValue = document.getElementById("opacity-value");
+  screenCaptureToggle = document.getElementById("screen-capture-toggle");
+
   console.log("DOM elements loaded:", {
     authBtn: !!authBtn,
     privacyLink: !!privacyLink,
@@ -89,6 +99,9 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Set up syntax highlighting for notes input
   setupNotesInputHighlighting();
 
+  // Set up settings handlers
+  setupSettings();
+
   // Check auth status on load
   await checkAuthStatus();
 
@@ -110,7 +123,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       updateAuthUI(event.payload.authenticated, event.payload.user_name);
     });
   }
-  
+
   console.log("App initialization complete!");
 });
 
@@ -131,22 +144,22 @@ function resetAllStates() {
   if (notesInputHighlight) {
     notesInputHighlight.innerHTML = '';
   }
-  
+
   // Clear notes content
   notesContent.innerHTML = '';
-  
+
   // Clear slide info
   slideInfo.textContent = '';
-  
+
   // Reset slide data
   currentSlideData = null;
   manualNotes = '';
-  
+
   // Stop and reset all timers
   stopAllTimers();
   timerState = 'stopped';
   originalTimerValues = [];
-  
+
   // Update timer button visibility
   updateTimerButtonVisibility();
 }
@@ -167,21 +180,21 @@ function setupAuth() {
 // Refresh Button Handler
 function setupRefreshButton() {
   if (!refreshBtn) return;
-  
+
   refreshBtn.addEventListener("click", async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (!invoke) {
       console.error("Tauri invoke API not available");
       return;
     }
-    
+
     // Store original text
     const originalText = refreshBtn.textContent;
     refreshBtn.textContent = 'Refreshing...';
     refreshBtn.disabled = true;
-    
+
     try {
       console.log("Refreshing notes...");
       await invoke("refresh_notes");
@@ -199,18 +212,18 @@ function setupRefreshButton() {
 // Slide Info Button Handler
 function setupSlideInfoButton() {
   if (!slideInfoBtn) return;
-  
+
   slideInfoBtn.addEventListener("click", async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     console.log("Slide info button clicked. Current slide data:", currentSlideData);
-    
+
     if (!currentSlideData) {
       console.log("No slide data available");
       return;
     }
-    
+
     if (!openUrl) {
       console.error("Tauri opener API not available");
       // Fallback to window.open
@@ -220,13 +233,13 @@ function setupSlideInfoButton() {
       window.open(url, "_blank", "noopener,noreferrer");
       return;
     }
-    
+
     try {
       // Construct the Google Slides URL
       const presentationId = currentSlideData.presentationId;
       const slideId = currentSlideData.slideId;
       const url = `https://docs.google.com/presentation/d/${presentationId}/view#slide=id.${slideId}`;
-      
+
       console.log("Opening slide:", url);
       await openUrl(url);
     } catch (error) {
@@ -238,19 +251,19 @@ function setupSlideInfoButton() {
 // Timer Control Buttons Setup
 function setupTimerControls() {
   if (!btnStart || !btnPause || !btnReset) return;
-  
+
   btnStart.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
     startTimerCountdown();
   });
-  
+
   btnPause.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
     pauseTimerCountdown();
   });
-  
+
   btnReset.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -261,10 +274,10 @@ function setupTimerControls() {
 // Start/Resume timer countdown
 function startTimerCountdown() {
   if (timerState === 'running') return;
-  
+
   timerState = 'running';
   updateTimerButtonVisibility();
-  
+
   // Get timestamps based on current view
   let timestamps;
   if (currentView === 'add-notes') {
@@ -274,25 +287,25 @@ function startTimerCountdown() {
     // In notes view, get timestamps from the content display
     timestamps = document.querySelectorAll('.timestamp[data-time]');
   }
-  
+
   timestamps.forEach((timestamp, index) => {
     // Get current remaining time from data attribute
     let remainingSeconds = parseInt(timestamp.getAttribute('data-remaining') || timestamp.getAttribute('data-time'));
-    
+
     // Update the timer every second
     const interval = setInterval(() => {
       if (timerState !== 'running') {
         clearInterval(interval);
         return;
       }
-      
+
       remainingSeconds--;
       timestamp.setAttribute('data-remaining', remainingSeconds);
-      
+
       const minutes = Math.floor(Math.abs(remainingSeconds) / 60);
       const seconds = Math.abs(remainingSeconds) % 60;
       const displayTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-      
+
       // Update the display
       if (remainingSeconds < 0) {
         timestamp.textContent = `[-${displayTime}]`;
@@ -307,7 +320,7 @@ function startTimerCountdown() {
         timestamp.classList.remove('time-warning', 'time-overtime');
       }
     }, 1000);
-    
+
     timerIntervals.push(interval);
   });
 }
@@ -315,7 +328,7 @@ function startTimerCountdown() {
 // Pause timer countdown
 function pauseTimerCountdown() {
   if (timerState !== 'running') return;
-  
+
   timerState = 'paused';
   stopAllTimers();
   updateTimerButtonVisibility();
@@ -325,7 +338,7 @@ function pauseTimerCountdown() {
 function resetTimerCountdown() {
   stopAllTimers();
   timerState = 'stopped';
-  
+
   // Get timestamps based on current view
   let timestamps;
   if (currentView === 'add-notes') {
@@ -333,19 +346,19 @@ function resetTimerCountdown() {
   } else {
     timestamps = document.querySelectorAll('.timestamp[data-time]');
   }
-  
+
   timestamps.forEach((timestamp) => {
     const originalTime = parseInt(timestamp.getAttribute('data-time'));
     timestamp.setAttribute('data-remaining', originalTime);
-    
+
     const minutes = Math.floor(originalTime / 60);
     const seconds = originalTime % 60;
     const displayTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-    
+
     timestamp.textContent = `[${displayTime}]`;
     timestamp.classList.remove('time-warning', 'time-overtime');
   });
-  
+
   updateTimerButtonVisibility();
 }
 
@@ -364,11 +377,11 @@ function hasTimePattern(text) {
 // Update timer button visibility based on state
 function updateTimerButtonVisibility() {
   if (!btnStart || !btnPause || !btnReset) return;
-  
+
   // Determine if we should show timer controls
   // Show only if text contains [time mm:ss] pattern
   let shouldShowTimers = false;
-  
+
   if (currentView === 'add-notes') {
     // Check if input text has time pattern
     shouldShowTimers = notesInput.value.trim() && hasTimePattern(notesInput.value);
@@ -376,7 +389,7 @@ function updateTimerButtonVisibility() {
     // Check if notes content has time pattern
     shouldShowTimers = currentSlideData && notesContent.querySelector('.timestamp[data-time]') !== null;
   }
-  
+
   // Show timer controls only when there's content with time pattern
   if (shouldShowTimers) {
     // Show appropriate buttons and separators based on timer state
@@ -423,7 +436,7 @@ function updateTimerButtonVisibility() {
 // Setup syntax highlighting for notes input
 function setupNotesInputHighlighting() {
   if (!notesInput || !notesInputHighlight) return;
-  
+
   // Function to update the highlighted preview
   function updateHighlight() {
     const text = notesInput.value;
@@ -433,25 +446,25 @@ function setupNotesInputHighlighting() {
       updateTimerButtonVisibility();
       return;
     }
-    
+
     // Apply the same highlighting as in displayNotes
     const highlighted = highlightNotesForInput(text);
     notesInputHighlight.innerHTML = highlighted;
-    
+
     // Initialize timer data attributes for the preview
     initializeTimerDataAttributesForInput();
-    
+
     // Update timer button visibility when content changes
     updateTimerButtonVisibility();
   }
-  
+
   // Listen for input changes
   notesInput.addEventListener('input', updateHighlight);
   notesInput.addEventListener('scroll', () => {
     // Sync scroll position
     notesInputHighlight.scrollTop = notesInput.scrollTop;
   });
-  
+
   // Initial update if there's already content
   updateHighlight();
 }
@@ -465,7 +478,7 @@ function highlightNotesForInput(text) {
     .replace(/\u2028/g, '\n')
     .replace(/\u2029/g, '\n')
     .replace(/\v/g, '\n');
-  
+
   // Escape HTML
   safe = escapeHtml(safe);
 
@@ -473,7 +486,7 @@ function highlightNotesForInput(text) {
 
   // Pattern for [time mm:ss] syntax
   const timePattern = /\[time\s+(\d{1,2}):(\d{2})\]/gi;
-  
+
   // Pattern for [emotion ...] syntax
   const emotionPattern = /\[emotion\s+([^\]]+)\]/gi;
 
@@ -481,14 +494,14 @@ function highlightNotesForInput(text) {
   safe = safe.replace(timePattern, (match, minutes, seconds) => {
     const timeInSeconds = parseInt(minutes) * 60 + parseInt(seconds);
     cumulativeTime += timeInSeconds;
-    
+
     const displayMinutes = Math.floor(cumulativeTime / 60);
     const displaySeconds = cumulativeTime % 60;
     const displayTime = `${String(displayMinutes).padStart(2, '0')}:${String(displaySeconds).padStart(2, '0')}`;
-    
+
     return `<span class="timestamp" data-time="${cumulativeTime}">[${displayTime}]</span>`;
   });
-  
+
   // Replace [emotion ...]
   safe = safe.replace(emotionPattern, (match, emotion) => {
     return `<span class="action-tag">[${emotion}]</span>`;
@@ -528,7 +541,7 @@ async function checkAuthStatus() {
 // Get time-based greeting
 function getGreeting() {
   const hour = new Date().getHours();
-  
+
   if (hour >= 5 && hour < 12) {
     return 'Morning';
   } else if (hour >= 12 && hour < 17) {
@@ -550,25 +563,25 @@ function getFirstName(fullName) {
 function updateAuthUI(authenticated, name = '') {
   isAuthenticated = authenticated;
   userName = name;
-  
+
   const buttonText = authBtn.querySelector('.gsi-material-button-contents');
   const buttonIcon = authBtn.querySelector('.gsi-material-button-icon');
-  
+
   if (authenticated) {
     // Update button to show "Sign out"
     if (buttonText) buttonText.textContent = 'Sign out';
     if (buttonIcon) buttonIcon.style.display = 'none';
-    
+
     // Update welcome heading with greeting and first name
     const firstName = getFirstName(name);
     const greeting = getGreeting();
     const versionSpan = welcomeHeading.querySelector('.version-text');
     const versionHTML = versionSpan ? versionSpan.outerHTML : '';
     welcomeHeading.innerHTML = `${greeting}, ${firstName}!${versionHTML ? '\n' + versionHTML : ''}`;
-    
+
     // Update subtext to show paste notes link
     welcomeSubtext.innerHTML = 'Speak using <a href="#" class="paste-notes-link" id="paste-notes-link">Your Notes</a>, or sync them from <a href="#" class="slides-link" id="slides-link">Google Slides</a> seamlessly — visible only to you.';
-    
+
     // Add click handler for Paste your notes link
     const pasteNotesLink = document.getElementById('paste-notes-link');
     if (pasteNotesLink) {
@@ -579,7 +592,7 @@ function updateAuthUI(authenticated, name = '') {
         notesInput.focus();
       });
     }
-    
+
     // Add click handler for Google Slides link
     const slidesLink = document.getElementById('slides-link');
     if (slidesLink) {
@@ -593,7 +606,7 @@ function updateAuthUI(authenticated, name = '') {
           // Show notes view with default message when no slide is open
           displayNotes('Open a Google Slides presentation to see your speaker notes here...');
           slideInfo.textContent = 'No Slide Open';
-          showView('notes');          
+          showView('notes');
         }
       });
     }
@@ -601,10 +614,10 @@ function updateAuthUI(authenticated, name = '') {
     // Update button to show "Sign in"
     if (buttonText) buttonText.textContent = 'Sign in with Google';
     if (buttonIcon) buttonIcon.style.display = 'block';
-    
+
     // Reset welcome heading to default
     welcomeHeading.innerHTML = 'CueCard\n<span class="version-text">1.0.1</span>';
-    
+
     // Reset subtext
     welcomeSubtext.innerHTML = 'Speaker notes visible only to you — for <span class="highlight-presentations">presentations</span>, <span class="highlight-meetings">meetings</span>, <span class="highlight-dates">dates</span> and everything...';
   }
@@ -668,7 +681,7 @@ function handleSlideUpdate(data, autoShow = false) {
   }
 
   // Check if this is a different slide (slide changed)
-  const isNewSlide = !currentSlideData || 
+  const isNewSlide = !currentSlideData ||
     currentSlideData.slideId !== slide_data.slideId ||
     currentSlideData.presentationId !== slide_data.presentationId;
 
@@ -682,14 +695,14 @@ function handleSlideUpdate(data, autoShow = false) {
       stopAllTimers();
       timerState = 'stopped';
     }
-    
+
     displayNotes(notes, slide_data);
-    
+
     // If viewing notes and slide changed, start timer automatically
     if (currentView === 'notes' && isNewSlide) {
       startTimerCountdown();
     }
-    
+
     // Only auto-show if explicitly requested
     if (autoShow) {
       showView('notes');
@@ -705,22 +718,39 @@ function showView(viewName) {
   viewInitial.classList.add('hidden');
   viewAddNotes.classList.add('hidden');
   viewNotes.classList.add('hidden');
+  viewSettings.classList.add('hidden');
 
   // Show/hide the back button in footer based on view
-  if (viewName === 'add-notes' || viewName === 'notes') {
+  if (viewName === 'add-notes' || viewName === 'notes' || viewName === 'settings') {
     linkGoBack.classList.remove('hidden');
     backSeparator.classList.remove('hidden');
-    // Hide privacy and website links in view note screens
-    privacyLink.classList.add('hidden');
-    websiteLink.classList.add('hidden');
-    websiteSeparator.classList.add('hidden');
   } else {
     linkGoBack.classList.add('hidden');
     backSeparator.classList.add('hidden');
-    // Show privacy and website links in initial view
+  }
+
+  // Show/hide privacy, website, and settings links based on view
+  if (viewName === 'initial') {
+    // Initial view: show Visit Site, Privacy Policy, Settings
     privacyLink.classList.remove('hidden');
     websiteLink.classList.remove('hidden');
     websiteSeparator.classList.remove('hidden');
+    settingsLink.classList.remove('hidden');
+    settingsSeparator.classList.remove('hidden');
+  } else if (viewName === 'settings') {
+    // Settings view: show Visit Site, Privacy Policy (no Settings button)
+    privacyLink.classList.remove('hidden');
+    websiteLink.classList.remove('hidden');
+    websiteSeparator.classList.remove('hidden');
+    settingsLink.classList.add('hidden');
+    settingsSeparator.classList.add('hidden');
+  } else {
+    // Notes and Add-Notes views: hide all footer links except go back
+    privacyLink.classList.add('hidden');
+    websiteLink.classList.add('hidden');
+    websiteSeparator.classList.add('hidden');
+    settingsLink.classList.add('hidden');
+    settingsSeparator.classList.add('hidden');
   }
 
   // Show/hide slide info and refresh button based on view and slide data
@@ -756,6 +786,11 @@ function showView(viewName) {
         startTimerCountdown();
       }
       break;
+    case 'settings':
+      viewSettings.classList.remove('hidden');
+      // Load current settings when showing settings view
+      loadCurrentSettings();
+      break;
   }
 }
 
@@ -770,13 +805,13 @@ function truncateText(text, maxLength = 35) {
 function displayNotes(text, slideData = null) {
   const highlighted = highlightNotes(text);
   notesContent.innerHTML = highlighted;
-  
+
   // Update slide info if available
   if (slideData && slideInfo) {
     // Use camelCase property names (as sent by backend with serde rename_all = "camelCase")
     const presentationTitle = slideData.title || 'Untitled Presentation';
     slideInfo.textContent = truncateText(presentationTitle);
-    
+
     // Show slide info and refresh button in footer when there's slide data
     if (currentView === 'notes') {
       slideInfoBtn.classList.remove('hidden');
@@ -786,18 +821,18 @@ function displayNotes(text, slideData = null) {
     }
   } else if (slideInfo) {
     slideInfo.textContent = 'No Slide Open';
-    
+
     // Hide slide info and refresh button when no slide
     slideInfoBtn.classList.add('hidden');
     slideSeparator.classList.add('hidden');
     refreshBtn.classList.add('hidden');
     refreshSeparator.classList.add('hidden');
   }
-  
+
   // Initialize timer data attributes but don't start
   // Timer start is controlled by buttons or view logic
   initializeTimerDataAttributes();
-  
+
   // Update timer button visibility
   updateTimerButtonVisibility();
 }
@@ -806,7 +841,7 @@ function displayNotes(text, slideData = null) {
 function highlightNotes(text) {
   // Debug: log character codes to identify line break characters
   console.log('Input chars:', [...text].map(c => c.charCodeAt(0)));
-  
+
   // Normalize all line break types to \n first
   // Handles: \r\n (Windows), \r (old Mac), \n (Unix), 
   // \u2028 (Line Separator), \u2029 (Paragraph Separator), \v (Vertical Tab)
@@ -816,7 +851,7 @@ function highlightNotes(text) {
     .replace(/\u2028/g, '\n')
     .replace(/\u2029/g, '\n')
     .replace(/\v/g, '\n');
-  
+
   // Escape HTML
   safe = escapeHtml(safe);
 
@@ -824,7 +859,7 @@ function highlightNotes(text) {
 
   // Pattern for [time mm:ss] syntax - marks the START of the next block
   const timePattern = /\[time\s+(\d{1,2}):(\d{2})\]/gi;
-  
+
   // Pattern for [emotion ...] syntax - matches anything between [emotion and ]
   const emotionPattern = /\[emotion\s+([^\]]+)\]/gi;
 
@@ -832,14 +867,14 @@ function highlightNotes(text) {
   safe = safe.replace(timePattern, (match, minutes, seconds) => {
     const timeInSeconds = parseInt(minutes) * 60 + parseInt(seconds);
     cumulativeTime += timeInSeconds;
-    
+
     const displayMinutes = Math.floor(cumulativeTime / 60);
     const displaySeconds = cumulativeTime % 60;
     const displayTime = `${String(displayMinutes).padStart(2, '0')}:${String(displaySeconds).padStart(2, '0')}`;
-    
+
     return `<span class="timestamp" data-time="${cumulativeTime}">[${displayTime}]</span>`;
   });
-  
+
   // Replace [emotion ...] with [...] inline (pink)
   safe = safe.replace(emotionPattern, (match, emotion) => {
     return `<span class="action-tag">[${emotion}]</span>`;
@@ -854,7 +889,7 @@ function highlightNotes(text) {
 // Initialize timer data attributes for timestamps (without starting countdown)
 function initializeTimerDataAttributes() {
   const timestamps = document.querySelectorAll('.timestamp[data-time]');
-  
+
   timestamps.forEach(timestamp => {
     const totalSeconds = parseInt(timestamp.getAttribute('data-time'));
     // Set initial remaining time equal to total time
@@ -865,7 +900,7 @@ function initializeTimerDataAttributes() {
 // Initialize timer data attributes for timestamps in input preview
 function initializeTimerDataAttributesForInput() {
   const timestamps = notesInputHighlight.querySelectorAll('.timestamp[data-time]');
-  
+
   timestamps.forEach(timestamp => {
     const totalSeconds = parseInt(timestamp.getAttribute('data-time'));
     // Set initial remaining time equal to total time
@@ -911,4 +946,74 @@ function setupFooter() {
       console.error("Error opening website:", error);
     }
   });
+
+  // Settings link handler
+  settingsLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    console.log("Settings link clicked");
+    showView('settings');
+  });
+}
+
+// Settings Handlers
+function setupSettings() {
+  if (!opacitySlider || !screenCaptureToggle) return;
+
+  // Opacity slider handler
+  opacitySlider.addEventListener("input", async (e) => {
+    const value = parseInt(e.target.value);
+    currentOpacity = value;
+    opacityValue.textContent = `${value}%`;
+
+    // Update window opacity via Tauri
+    if (invoke) {
+      try {
+        await invoke("set_window_opacity", { opacity: value / 100 });
+      } catch (error) {
+        console.error("Error setting window opacity:", error);
+      }
+    }
+  });
+
+  // Screen capture toggle handler
+  screenCaptureToggle.addEventListener("change", async (e) => {
+    const showInCapture = e.target.checked;
+    screenshotProtectionEnabled = !showInCapture;
+
+    // Update screenshot protection via Tauri
+    // When "show in capture" is ON, protection should be OFF (enabled = false)
+    if (invoke) {
+      try {
+        await invoke("set_screenshot_protection", { enabled: !showInCapture });
+      } catch (error) {
+        console.error("Error setting screenshot protection:", error);
+      }
+    }
+  });
+}
+
+// Load current settings values
+async function loadCurrentSettings() {
+  if (!invoke) return;
+
+  try {
+    // Load current opacity
+    const opacity = await invoke("get_window_opacity");
+    const opacityPercent = Math.round(opacity * 100);
+    currentOpacity = opacityPercent;
+    if (opacitySlider) {
+      opacitySlider.value = opacityPercent;
+    }
+    if (opacityValue) {
+      opacityValue.textContent = `${opacityPercent}%`;
+    }
+  } catch (error) {
+    console.error("Error loading window opacity:", error);
+  }
+
+  // Screen capture toggle: default is OFF (protected), so checkbox unchecked
+  // The screenshotProtectionEnabled state tracks if protection is on
+  if (screenCaptureToggle) {
+    screenCaptureToggle.checked = !screenshotProtectionEnabled;
+  }
 }

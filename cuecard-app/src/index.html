@@ -62,6 +62,37 @@
       <section class="view hidden" id="view-notes">
         <div class="notes-content" id="notes-content"></div>
       </section>
+
+      <!-- Settings View -->
+      <section class="view hidden" id="view-settings">
+        <div class="settings-content">
+          <div class="settings-group">
+            <div class="setting-item">
+              <div class="setting-label">
+                <span class="setting-title">Window Transparency</span>
+                <span class="setting-description">Adjust window opacity to see content behind</span>
+              </div>
+              <div class="setting-control">
+                <input type="range" id="opacity-slider" class="opacity-slider" min="10" max="100" value="100">
+                <span class="opacity-value" id="opacity-value">100%</span>
+              </div>
+            </div>
+            
+            <div class="setting-item">
+              <div class="setting-label">
+                <span class="setting-title">Show in Screen Capture</span>
+                <span class="setting-description">Allow app to appear in screenshots and recordings</span>
+              </div>
+              <div class="setting-control">
+                <label class="toggle-switch">
+                  <input type="checkbox" id="screen-capture-toggle">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
 
     <!-- Footer -->
@@ -83,6 +114,8 @@
       <button class="footer-link" id="website-link">Visit Site</button>
       <span class="footer-separator" id="website-separator">•</span>
       <button class="footer-link" id="privacy-link">Privacy Policy</button>
+      <span class="footer-separator" id="settings-separator">•</span>
+      <button class="footer-link" id="settings-link">Settings</button>
     </footer>
   </div>
 </body>
