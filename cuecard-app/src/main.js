@@ -276,6 +276,9 @@ function showView(viewName) {
 function displayNotes(text) {
   const highlighted = highlightNotes(text);
   notesContent.innerHTML = highlighted;
+  
+  // Start countdown timers if there are any
+  startTimers();
 }
 
 // Highlight timestamps and action tags in notes
@@ -283,16 +286,42 @@ function highlightNotes(text) {
   // Escape HTML first
   let safe = escapeHtml(text);
 
-  // Pattern for timestamps like [00:23], [01:23], [1:30:45]
+  let cumulativeTime = 0; // Track cumulative time in seconds
+
+  // Pattern for [time mm:ss] syntax
+  const timePattern = /\[time\s+(\d{1,2}):(\d{2})\]/gi;
+  
+  // Pattern for [emotion emotion-name] syntax
+  const emotionPattern = /\[emotion\s+([a-zA-Z]+)\]/gi;
+  
+  // Pattern for old-style timestamps like [00:23], [01:23] (keep for backward compatibility)
   const timestampPattern = /\[(\d{1,2}:\d{2}(?::\d{2})?)\]/g;
   
-  // Pattern for action tags like [laugh], [pause], [sign], etc.
+  // Pattern for old-style action tags like [laugh], [pause], [sign] (keep for backward compatibility)
   const actionPattern = /\[(laugh|pause|sign|applause|music|silence|cough|sigh|gasp)\]/gi;
 
-  // Replace timestamps - they appear on their own line
+  // Replace [time mm:ss] with cumulative time display
+  safe = safe.replace(timePattern, (match, minutes, seconds) => {
+    const timeInSeconds = parseInt(minutes) * 60 + parseInt(seconds);
+    cumulativeTime += timeInSeconds;
+    
+    const displayMinutes = Math.floor(cumulativeTime / 60);
+    const displaySeconds = cumulativeTime % 60;
+    const displayTime = `${String(displayMinutes).padStart(2, '0')}:${String(displaySeconds).padStart(2, '0')}`;
+    
+    // Add a newline before the timestamp and after
+    return `\n<span class="timestamp" data-time="${cumulativeTime}">[${displayTime}]</span>\n`;
+  });
+  
+  // Replace [emotion name] with [name] inline
+  safe = safe.replace(emotionPattern, (match, emotion) => {
+    return `<span class="action-tag">[${emotion}]</span>`;
+  });
+
+  // Replace old-style timestamps - they appear on their own line
   safe = safe.replace(timestampPattern, '<span class="timestamp">[$1]</span>');
   
-  // Replace action tags - they appear inline
+  // Replace old-style action tags - they appear inline
   safe = safe.replace(actionPattern, '<span class="action-tag">[$1]</span>');
 
   // Convert line breaks
@@ -300,6 +329,42 @@ function highlightNotes(text) {
   safe = safe.replace(/\n/g, '<br>');
 
   return `<p class="paragraph">${safe}</p>`;
+}
+
+// Start countdown timers for all timestamps
+function startTimers() {
+  const timestamps = document.querySelectorAll('.timestamp[data-time]');
+  
+  timestamps.forEach(timestamp => {
+    const totalSeconds = parseInt(timestamp.getAttribute('data-time'));
+    let remainingSeconds = totalSeconds;
+    
+    // Update the timer every second
+    const interval = setInterval(() => {
+      remainingSeconds--;
+      
+      const minutes = Math.floor(Math.abs(remainingSeconds) / 60);
+      const seconds = Math.abs(remainingSeconds) % 60;
+      const displayTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+      
+      // Update the display
+      if (remainingSeconds < 0) {
+        timestamp.textContent = `[-${displayTime}]`;
+        timestamp.classList.add('time-overtime');
+        timestamp.classList.remove('time-warning');
+      } else if (remainingSeconds < 10) {
+        timestamp.textContent = `[${displayTime}]`;
+        timestamp.classList.add('time-warning');
+        timestamp.classList.remove('time-overtime');
+      } else {
+        timestamp.textContent = `[${displayTime}]`;
+        timestamp.classList.remove('time-warning', 'time-overtime');
+      }
+      
+      // Optional: stop at some point if needed
+      // if (remainingSeconds < -600) clearInterval(interval); // Stop after 10 minutes overtime
+    }, 1000);
+  });
 }
 
 // Escape HTML to prevent XSS

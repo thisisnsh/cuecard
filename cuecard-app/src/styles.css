@@ -312,6 +312,17 @@ body {
   font-stretch: expanded;
   color: var(--accent-timestamp);
   line-height: 2.4;
+  transition: color 0.3s ease;
+}
+
+/* Warning state: when time < 00:10 */
+.notes-content .timestamp.time-warning {
+  color: var(--accent-link); /* Yellow */
+}
+
+/* Overtime state: when time < 00:00 (counting up) */
+.notes-content .timestamp.time-overtime {
+  color: #ff736a; /* Red */
 }
 
 .notes-content .action-tag {
