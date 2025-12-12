@@ -311,8 +311,9 @@ body {
   font-weight: 600;
   font-stretch: expanded;
   color: var(--accent-timestamp);
-  line-height: 2.4;
+  line-height: 1;
   transition: color 0.3s ease;
+  margin-bottom: -24px;
 }
 
 /* Warning state: when time < 00:10 */
@@ -332,9 +333,6 @@ body {
   color: var(--accent-action);
 }
 
-.notes-content .paragraph {
-  margin-bottom: 16px;
-}
 
 /* Scrollbar Styling */
 .content::-webkit-scrollbar,

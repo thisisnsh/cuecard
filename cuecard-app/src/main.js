@@ -283,24 +283,31 @@ function displayNotes(text) {
 
 // Highlight timestamps and action tags in notes
 function highlightNotes(text) {
-  // Escape HTML first
-  let safe = escapeHtml(text);
+  // Debug: log character codes to identify line break characters
+  console.log('Input chars:', [...text].map(c => c.charCodeAt(0)));
+  
+  // Normalize all line break types to \n first
+  // Handles: \r\n (Windows), \r (old Mac), \n (Unix), 
+  // \u2028 (Line Separator), \u2029 (Paragraph Separator), \v (Vertical Tab)
+  let safe = text
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .replace(/\u2028/g, '\n')
+    .replace(/\u2029/g, '\n')
+    .replace(/\v/g, '\n');
+  
+  // Escape HTML
+  safe = escapeHtml(safe);
 
   let cumulativeTime = 0; // Track cumulative time in seconds
 
-  // Pattern for [time mm:ss] syntax
+  // Pattern for [time mm:ss] syntax - marks the START of the next block
   const timePattern = /\[time\s+(\d{1,2}):(\d{2})\]/gi;
   
-  // Pattern for [emotion emotion-name] syntax
-  const emotionPattern = /\[emotion\s+([a-zA-Z]+)\]/gi;
-  
-  // Pattern for old-style timestamps like [00:23], [01:23] (keep for backward compatibility)
-  const timestampPattern = /\[(\d{1,2}:\d{2}(?::\d{2})?)\]/g;
-  
-  // Pattern for old-style action tags like [laugh], [pause], [sign] (keep for backward compatibility)
-  const actionPattern = /\[(laugh|pause|sign|applause|music|silence|cough|sigh|gasp)\]/gi;
+  // Pattern for [emotion ...] syntax - matches anything between [emotion and ]
+  const emotionPattern = /\[emotion\s+([^\]]+)\]/gi;
 
-  // Replace [time mm:ss] with cumulative time display
+  // Replace [time mm:ss] - add line break BEFORE it, time starts a new line
   safe = safe.replace(timePattern, (match, minutes, seconds) => {
     const timeInSeconds = parseInt(minutes) * 60 + parseInt(seconds);
     cumulativeTime += timeInSeconds;
@@ -309,26 +316,18 @@ function highlightNotes(text) {
     const displaySeconds = cumulativeTime % 60;
     const displayTime = `${String(displayMinutes).padStart(2, '0')}:${String(displaySeconds).padStart(2, '0')}`;
     
-    // Add a newline before the timestamp and after
-    return `\n<span class="timestamp" data-time="${cumulativeTime}">[${displayTime}]</span>\n`;
+    return `<span class="timestamp" data-time="${cumulativeTime}">[${displayTime}]</span>`;
   });
   
-  // Replace [emotion name] with [name] inline
+  // Replace [emotion ...] with [...] inline (pink)
   safe = safe.replace(emotionPattern, (match, emotion) => {
     return `<span class="action-tag">[${emotion}]</span>`;
   });
 
-  // Replace old-style timestamps - they appear on their own line
-  safe = safe.replace(timestampPattern, '<span class="timestamp">[$1]</span>');
-  
-  // Replace old-style action tags - they appear inline
-  safe = safe.replace(actionPattern, '<span class="action-tag">[$1]</span>');
-
   // Convert line breaks
-  safe = safe.replace(/\n\n/g, '</p><p class="paragraph">');
   safe = safe.replace(/\n/g, '<br>');
 
-  return `<p class="paragraph">${safe}</p>`;
+  return safe;
 }
 
 // Start countdown timers for all timestamps
