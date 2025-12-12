@@ -10,7 +10,9 @@ use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::{AppHandle, Emitter, Manager};
+use tokio::sync::watch;
 use tauri_plugin_opener::OpenerExt;
 use tower_http::cors::{Any, CorsLayer};
 
@@ -34,6 +36,11 @@ static CURRENT_PRESENTATION_ID: Lazy<Arc<RwLock<Option<String>>>> =
 static APP_HANDLE: Lazy<Arc<RwLock<Option<AppHandle>>>> =
     Lazy::new(|| Arc::new(RwLock::new(None)));
 static OAUTH_TOKENS: Lazy<Arc<RwLock<Option<OAuthTokens>>>> =
+    Lazy::new(|| Arc::new(RwLock::new(None)));
+
+// Server control state
+static SERVER_RUNNING: AtomicBool = AtomicBool::new(false);
+static SERVER_SHUTDOWN_TX: Lazy<Arc<RwLock<Option<watch::Sender<bool>>>>> =
     Lazy::new(|| Arc::new(RwLock::new(None)));
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -618,8 +625,8 @@ async fn logout_handler() -> Json<serde_json::Value> {
     }))
 }
 
-// Start the web server
-async fn start_server() {
+// Start the web server with graceful shutdown support
+async fn start_server(mut shutdown_rx: watch::Receiver<bool>) {
     let cors = CorsLayer::new()
         .allow_origin(Any)
         .allow_methods(Any)
@@ -634,13 +641,34 @@ async fn start_server() {
         .route("/oauth/logout", post(logout_handler))
         .layer(cors);
 
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
-        .await
-        .expect("Failed to bind to port 3000");
+    let listener = match tokio::net::TcpListener::bind("127.0.0.1:3000").await {
+        Ok(l) => l,
+        Err(e) => {
+            eprintln!("Failed to bind to port 3000: {}", e);
+            SERVER_RUNNING.store(false, Ordering::SeqCst);
+            return;
+        }
+    };
 
     println!("Server running on http://127.0.0.1:3000");
+    SERVER_RUNNING.store(true, Ordering::SeqCst);
 
-    axum::serve(listener, app).await.expect("Server error");
+    let server = axum::serve(listener, app).with_graceful_shutdown(async move {
+        // Wait for shutdown signal
+        while !*shutdown_rx.borrow() {
+            if shutdown_rx.changed().await.is_err() {
+                break;
+            }
+        }
+        println!("Server shutdown signal received");
+    });
+
+    if let Err(e) = server.await {
+        eprintln!("Server error: {}", e);
+    }
+
+    SERVER_RUNNING.store(false, Ordering::SeqCst);
+    println!("Server stopped");
 }
 
 // Tauri command to get current slide data
@@ -696,10 +724,16 @@ async fn get_user_info() -> Result<serde_json::Value, String> {
     Ok(user_info)
 }
 
-// Tauri command to initiate login - opens browser directly
+// Tauri command to initiate login - starts server and opens browser
 #[tauri::command]
 async fn start_login(app: AppHandle) -> Result<(), String> {
     println!("Starting OAuth2 login flow...");
+
+    // Start the web server first (needed to receive OAuth callback)
+    start_web_server_internal();
+
+    // Wait a moment for the server to start
+    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
 
     let client_id = std::env::var("GOOGLE_CLIENT_ID").map_err(|_| "GOOGLE_CLIENT_ID not set")?;
     println!("Using Client ID: {}", client_id);
@@ -723,8 +757,67 @@ async fn start_login(app: AppHandle) -> Result<(), String> {
 // Tauri command to logout
 #[tauri::command]
 fn logout() {
+    // Stop the web server first
+    stop_web_server_internal();
+
     let mut tokens = OAUTH_TOKENS.write();
     *tokens = None;
+}
+
+// Internal function to start the web server
+fn start_web_server_internal() {
+    if SERVER_RUNNING.load(Ordering::SeqCst) {
+        println!("Server is already running");
+        return;
+    }
+
+    // Create shutdown channel
+    let (tx, rx) = watch::channel(false);
+    {
+        let mut shutdown_tx = SERVER_SHUTDOWN_TX.write();
+        *shutdown_tx = Some(tx);
+    }
+
+    // Start the server in a background thread
+    std::thread::spawn(move || {
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        rt.block_on(start_server(rx));
+    });
+}
+
+// Internal function to stop the web server
+fn stop_web_server_internal() {
+    if !SERVER_RUNNING.load(Ordering::SeqCst) {
+        println!("Server is not running");
+        return;
+    }
+
+    // Send shutdown signal
+    let shutdown_tx = SERVER_SHUTDOWN_TX.read();
+    if let Some(tx) = shutdown_tx.as_ref() {
+        let _ = tx.send(true);
+        println!("Shutdown signal sent");
+    }
+}
+
+// Tauri command to start the web server
+#[tauri::command]
+fn start_web_server() -> Result<(), String> {
+    start_web_server_internal();
+    Ok(())
+}
+
+// Tauri command to stop the web server
+#[tauri::command]
+fn stop_web_server() -> Result<(), String> {
+    stop_web_server_internal();
+    Ok(())
+}
+
+// Tauri command to check if server is running
+#[tauri::command]
+fn is_server_running() -> bool {
+    SERVER_RUNNING.load(Ordering::SeqCst)
 }
 
 // Tauri command to refresh notes for current slide/presentation
@@ -999,11 +1092,8 @@ pub fn run() {
                 }
             }
 
-            // Start the web server in a background thread
-            std::thread::spawn(|| {
-                let rt = tokio::runtime::Runtime::new().unwrap();
-                rt.block_on(start_server());
-            });
+            // Server will be started when user initiates login
+            // and stopped when user logs out
 
             Ok(())
         })
@@ -1017,7 +1107,10 @@ pub fn run() {
             refresh_notes,
             set_window_opacity,
             get_window_opacity,
-            set_screenshot_protection
+            set_screenshot_protection,
+            start_web_server,
+            stop_web_server,
+            is_server_running
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
