@@ -12,9 +12,12 @@ let authBtn;
 let viewInitial, viewAddNotes, viewNotes;
 let linkGoBack, backSeparator;
 let notesInput, notesContent, slideInfo;
-let welcomeSubtext;
+let welcomeHeading, welcomeSubtext;
 let privacyLink, websiteLink;
 let refreshBtn;
+let notesInputHighlight;
+let timerControls, timerSeparator;
+let btnStart, btnPause, btnReset;
 
 // State
 let isAuthenticated = false;
@@ -22,6 +25,11 @@ let userName = '';
 let currentView = 'initial'; // 'initial', 'add-notes', 'notes'
 let manualNotes = ''; // Notes pasted by the user
 let currentSlideData = null; // Store current slide data
+
+// Timer State
+let timerState = 'stopped'; // 'stopped', 'running', 'paused'
+let timerIntervals = []; // Store all timer interval IDs
+let originalTimerValues = []; // Store original timer values for reset
 
 // Initialize the app
 window.addEventListener("DOMContentLoaded", async () => {
@@ -37,10 +45,17 @@ window.addEventListener("DOMContentLoaded", async () => {
   notesInput = document.getElementById("notes-input");
   notesContent = document.getElementById("notes-content");
   slideInfo = document.getElementById("slide-info");
+  welcomeHeading = document.getElementById("welcome-heading");
   welcomeSubtext = document.getElementById("welcome-subtext");
   privacyLink = document.getElementById("privacy-link");
   websiteLink = document.getElementById("website-link");
   refreshBtn = document.getElementById("refresh-btn");
+  notesInputHighlight = document.getElementById("notes-input-highlight");
+  timerControls = document.getElementById("timer-controls");
+  timerSeparator = document.getElementById("timer-separator");
+  btnStart = document.getElementById("btn-start");
+  btnPause = document.getElementById("btn-pause");
+  btnReset = document.getElementById("btn-reset");
   
   console.log("DOM elements loaded:", {
     authBtn: !!authBtn,
@@ -59,6 +74,12 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   // Set up refresh button handler
   setupRefreshButton();
+
+  // Set up timer control buttons
+  setupTimerControls();
+
+  // Set up syntax highlighting for notes input
+  setupNotesInputHighlighting();
 
   // Check auth status on load
   await checkAuthStatus();
@@ -87,26 +108,39 @@ window.addEventListener("DOMContentLoaded", async () => {
 
 // Navigation Handlers
 function setupNavigation() {
-  // Click anywhere on initial view to paste notes (only when authenticated)
-  viewInitial.addEventListener("click", (e) => {
-    // Don't trigger if clicking the auth button or not authenticated
-    if (e.target.closest('#auth-btn') || !isAuthenticated) {
-      return;
-    }
-    e.preventDefault();
-    showView('add-notes');
-    notesInput.focus();
-  });
-
   linkGoBack.addEventListener("click", (e) => {
     e.preventDefault();
-    // Clear the input and go back to initial view
-    notesInput.value = '';
-    // Clear slide info when going back
-    slideInfo.textContent = '';
-    currentSlideData = null;
+    // Reset all states
+    resetAllStates();
     showView('initial');
   });
+}
+
+// Reset all states and internal storages
+function resetAllStates() {
+  // Clear the input and highlight
+  notesInput.value = '';
+  if (notesInputHighlight) {
+    notesInputHighlight.innerHTML = '';
+  }
+  
+  // Clear notes content
+  notesContent.innerHTML = '';
+  
+  // Clear slide info
+  slideInfo.textContent = '';
+  
+  // Reset slide data
+  currentSlideData = null;
+  manualNotes = '';
+  
+  // Stop and reset all timers
+  stopAllTimers();
+  timerState = 'stopped';
+  originalTimerValues = [];
+  
+  // Update timer button visibility
+  updateTimerButtonVisibility();
 }
 
 // Auth Handlers
@@ -153,6 +187,220 @@ function setupRefreshButton() {
   });
 }
 
+// Timer Control Buttons Setup
+function setupTimerControls() {
+  if (!btnStart || !btnPause || !btnReset) return;
+  
+  btnStart.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    startTimerCountdown();
+  });
+  
+  btnPause.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    pauseTimerCountdown();
+  });
+  
+  btnReset.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    resetTimerCountdown();
+  });
+}
+
+// Start/Resume timer countdown
+function startTimerCountdown() {
+  if (timerState === 'running') return;
+  
+  timerState = 'running';
+  updateTimerButtonVisibility();
+  
+  const timestamps = document.querySelectorAll('.timestamp[data-time]');
+  
+  timestamps.forEach((timestamp, index) => {
+    // Get current remaining time from data attribute
+    let remainingSeconds = parseInt(timestamp.getAttribute('data-remaining') || timestamp.getAttribute('data-time'));
+    
+    // Update the timer every second
+    const interval = setInterval(() => {
+      if (timerState !== 'running') {
+        clearInterval(interval);
+        return;
+      }
+      
+      remainingSeconds--;
+      timestamp.setAttribute('data-remaining', remainingSeconds);
+      
+      const minutes = Math.floor(Math.abs(remainingSeconds) / 60);
+      const seconds = Math.abs(remainingSeconds) % 60;
+      const displayTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+      
+      // Update the display
+      if (remainingSeconds < 0) {
+        timestamp.textContent = `[-${displayTime}]`;
+        timestamp.classList.add('time-overtime');
+        timestamp.classList.remove('time-warning');
+      } else if (remainingSeconds < 10) {
+        timestamp.textContent = `[${displayTime}]`;
+        timestamp.classList.add('time-warning');
+        timestamp.classList.remove('time-overtime');
+      } else {
+        timestamp.textContent = `[${displayTime}]`;
+        timestamp.classList.remove('time-warning', 'time-overtime');
+      }
+    }, 1000);
+    
+    timerIntervals.push(interval);
+  });
+}
+
+// Pause timer countdown
+function pauseTimerCountdown() {
+  if (timerState !== 'running') return;
+  
+  timerState = 'paused';
+  stopAllTimers();
+  updateTimerButtonVisibility();
+}
+
+// Reset timer countdown to original values
+function resetTimerCountdown() {
+  stopAllTimers();
+  timerState = 'stopped';
+  
+  const timestamps = document.querySelectorAll('.timestamp[data-time]');
+  
+  timestamps.forEach((timestamp) => {
+    const originalTime = parseInt(timestamp.getAttribute('data-time'));
+    timestamp.setAttribute('data-remaining', originalTime);
+    
+    const minutes = Math.floor(originalTime / 60);
+    const seconds = originalTime % 60;
+    const displayTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    
+    timestamp.textContent = `[${displayTime}]`;
+    timestamp.classList.remove('time-warning', 'time-overtime');
+  });
+  
+  updateTimerButtonVisibility();
+}
+
+// Stop all running timer intervals
+function stopAllTimers() {
+  timerIntervals.forEach(interval => clearInterval(interval));
+  timerIntervals = [];
+}
+
+// Update timer button visibility based on state
+function updateTimerButtonVisibility() {
+  if (!timerControls || !btnStart || !btnPause || !btnReset) return;
+  
+  // Show timer controls only in add-notes or notes view
+  if (currentView === 'add-notes' || currentView === 'notes') {
+    timerControls.classList.remove('hidden');
+    timerSeparator.classList.remove('hidden');
+  } else {
+    timerControls.classList.add('hidden');
+    timerSeparator.classList.add('hidden');
+    return;
+  }
+  
+  switch (timerState) {
+    case 'stopped':
+      // Initial state: show Start only
+      btnStart.classList.remove('hidden');
+      btnPause.classList.add('hidden');
+      btnReset.classList.add('hidden');
+      break;
+    case 'running':
+      // Running: show Pause and Reset
+      btnStart.classList.add('hidden');
+      btnPause.classList.remove('hidden');
+      btnReset.classList.remove('hidden');
+      break;
+    case 'paused':
+      // Paused: show Start and Reset
+      btnStart.classList.remove('hidden');
+      btnPause.classList.add('hidden');
+      btnReset.classList.remove('hidden');
+      break;
+  }
+}
+
+// Setup syntax highlighting for notes input
+function setupNotesInputHighlighting() {
+  if (!notesInput || !notesInputHighlight) return;
+  
+  // Function to update the highlighted preview
+  function updateHighlight() {
+    const text = notesInput.value;
+    if (!text) {
+      notesInputHighlight.innerHTML = '';
+      return;
+    }
+    
+    // Apply the same highlighting as in displayNotes, but without timers
+    const highlighted = highlightNotesForInput(text);
+    notesInputHighlight.innerHTML = highlighted;
+  }
+  
+  // Listen for input changes
+  notesInput.addEventListener('input', updateHighlight);
+  notesInput.addEventListener('scroll', () => {
+    // Sync scroll position
+    notesInputHighlight.scrollTop = notesInput.scrollTop;
+  });
+  
+  // Initial update if there's already content
+  updateHighlight();
+}
+
+// Highlight notes for input preview (without timers)
+function highlightNotesForInput(text) {
+  // Normalize all line break types to \n first
+  let safe = text
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .replace(/\u2028/g, '\n')
+    .replace(/\u2029/g, '\n')
+    .replace(/\v/g, '\n');
+  
+  // Escape HTML
+  safe = escapeHtml(safe);
+
+  let cumulativeTime = 0; // Track cumulative time in seconds
+
+  // Pattern for [time mm:ss] syntax
+  const timePattern = /\[time\s+(\d{1,2}):(\d{2})\]/gi;
+  
+  // Pattern for [emotion ...] syntax
+  const emotionPattern = /\[emotion\s+([^\]]+)\]/gi;
+
+  // Replace [time mm:ss]
+  safe = safe.replace(timePattern, (match, minutes, seconds) => {
+    const timeInSeconds = parseInt(minutes) * 60 + parseInt(seconds);
+    cumulativeTime += timeInSeconds;
+    
+    const displayMinutes = Math.floor(cumulativeTime / 60);
+    const displaySeconds = cumulativeTime % 60;
+    const displayTime = `${String(displayMinutes).padStart(2, '0')}:${String(displaySeconds).padStart(2, '0')}`;
+    
+    return `<span class="timestamp">[${displayTime}]</span>`;
+  });
+  
+  // Replace [emotion ...]
+  safe = safe.replace(emotionPattern, (match, emotion) => {
+    return `<span class="action-tag">[${emotion}]</span>`;
+  });
+
+  // Convert line breaks
+  safe = safe.replace(/\n/g, '<br>');
+
+  return safe;
+}
+
 // Check authentication status
 async function checkAuthStatus() {
   if (!invoke) {
@@ -178,6 +426,27 @@ async function checkAuthStatus() {
   }
 }
 
+// Get time-based greeting
+function getGreeting() {
+  const hour = new Date().getHours();
+  
+  if (hour >= 5 && hour < 12) {
+    return 'Morning';
+  } else if (hour >= 12 && hour < 17) {
+    return 'Afternoon';
+  } else if (hour >= 17 && hour < 21) {
+    return 'Evening';
+  } else {
+    return 'Hello';
+  }
+}
+
+// Extract first name from full name
+function getFirstName(fullName) {
+  if (!fullName) return '';
+  return fullName.trim().split(' ')[0];
+}
+
 // Update UI based on auth status
 function updateAuthUI(authenticated, name = '') {
   isAuthenticated = authenticated;
@@ -190,8 +459,27 @@ function updateAuthUI(authenticated, name = '') {
     // Update button to show "Sign out"
     if (buttonText) buttonText.textContent = 'Sign out';
     if (buttonIcon) buttonIcon.style.display = 'none';
-    // Update subtext to show click instruction
-    welcomeSubtext.innerHTML = 'Click anywhere to paste your notes or use with <a href="#" class="slides-link" id="slides-link">Google Slides</a> directly...';
+    
+    // Update welcome heading with greeting and first name
+    const firstName = getFirstName(name);
+    const greeting = getGreeting();
+    const versionSpan = welcomeHeading.querySelector('.version-text');
+    const versionHTML = versionSpan ? versionSpan.outerHTML : '';
+    welcomeHeading.innerHTML = `${greeting}, ${firstName}!${versionHTML ? '\n' + versionHTML : ''}`;
+    
+    // Update subtext to show paste notes link
+    welcomeSubtext.innerHTML = 'Speak using <a href="#" class="paste-notes-link" id="paste-notes-link">Your Notes</a>, or sync them from <a href="#" class="slides-link" id="slides-link">Google Slides</a> seamlessly...';
+    
+    // Add click handler for Paste your notes link
+    const pasteNotesLink = document.getElementById('paste-notes-link');
+    if (pasteNotesLink) {
+      pasteNotesLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        showView('add-notes');
+        notesInput.focus();
+      });
+    }
     
     // Add click handler for Google Slides link
     const slidesLink = document.getElementById('slides-link');
@@ -210,17 +498,16 @@ function updateAuthUI(authenticated, name = '') {
         }
       });
     }
-    
-    // Enable clickable view
-    viewInitial.classList.add('clickable-view');
   } else {
     // Update button to show "Sign in"
     if (buttonText) buttonText.textContent = 'Sign in with Google';
     if (buttonIcon) buttonIcon.style.display = 'block';
+    
+    // Reset welcome heading to default
+    welcomeHeading.innerHTML = 'CueCard\n<span class="version-text">1.0.1</span>';
+    
     // Reset subtext
     welcomeSubtext.innerHTML = 'Speaker notes for <span class="highlight-presentations">presentations</span>, <span class="highlight-meetings">meetings</span>, and even <span class="highlight-dates">dates</span> — visible only to you...';
-    // Disable clickable view
-    viewInitial.classList.remove('clickable-view');
   }
 }
 
@@ -281,12 +568,29 @@ function handleSlideUpdate(data, autoShow = false) {
     return;
   }
 
+  // Check if this is a different slide (slide changed)
+  const isNewSlide = !currentSlideData || 
+    currentSlideData.slideId !== slide_data.slideId ||
+    currentSlideData.presentationId !== slide_data.presentationId;
+
   // Store current slide data
   currentSlideData = slide_data;
 
   // Display the notes
   if (notes && notes.trim()) {
+    // If viewing notes and slide changed, reset timer and start fresh
+    if (currentView === 'notes' && isNewSlide) {
+      stopAllTimers();
+      timerState = 'stopped';
+    }
+    
     displayNotes(notes, slide_data);
+    
+    // If viewing notes and slide changed, start timer automatically
+    if (currentView === 'notes' && isNewSlide) {
+      startTimerCountdown();
+    }
+    
     // Only auto-show if explicitly requested
     if (autoShow) {
       showView('notes');
@@ -312,6 +616,9 @@ function showView(viewName) {
     backSeparator.classList.add('hidden');
   }
 
+  // Update timer button visibility
+  updateTimerButtonVisibility();
+
   // Show the requested view
   switch (viewName) {
     case 'initial':
@@ -319,9 +626,15 @@ function showView(viewName) {
       break;
     case 'add-notes':
       viewAddNotes.classList.remove('hidden');
+      // In add-notes view, timer waits for Start button
+      // Don't auto-start
       break;
     case 'notes':
       viewNotes.classList.remove('hidden');
+      // In notes view, timer starts automatically
+      if (timerState === 'stopped') {
+        startTimerCountdown();
+      }
       break;
   }
 }
@@ -335,14 +648,14 @@ function displayNotes(text, slideData = null) {
   if (slideData && slideInfo) {
     // Use camelCase property names (as sent by backend with serde rename_all = "camelCase")
     const presentationTitle = slideData.title || 'Untitled Presentation';
-    const slideNumber = slideData.slideNumber || '?';
-    slideInfo.textContent = `${presentationTitle} • Slide ${slideNumber}`;
+    slideInfo.textContent = `${presentationTitle}`;
   } else if (slideInfo) {
-    slideInfo.textContent = '';
+    slideInfo.textContent = 'No Slide Open';
   }
   
-  // Start countdown timers if there are any
-  startTimers();
+  // Initialize timer data attributes but don't start
+  // Timer start is controlled by buttons or view logic
+  initializeTimerDataAttributes();
 }
 
 // Highlight timestamps and action tags in notes
@@ -394,39 +707,14 @@ function highlightNotes(text) {
   return safe;
 }
 
-// Start countdown timers for all timestamps
-function startTimers() {
+// Initialize timer data attributes for timestamps (without starting countdown)
+function initializeTimerDataAttributes() {
   const timestamps = document.querySelectorAll('.timestamp[data-time]');
   
   timestamps.forEach(timestamp => {
     const totalSeconds = parseInt(timestamp.getAttribute('data-time'));
-    let remainingSeconds = totalSeconds;
-    
-    // Update the timer every second
-    const interval = setInterval(() => {
-      remainingSeconds--;
-      
-      const minutes = Math.floor(Math.abs(remainingSeconds) / 60);
-      const seconds = Math.abs(remainingSeconds) % 60;
-      const displayTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-      
-      // Update the display
-      if (remainingSeconds < 0) {
-        timestamp.textContent = `[-${displayTime}]`;
-        timestamp.classList.add('time-overtime');
-        timestamp.classList.remove('time-warning');
-      } else if (remainingSeconds < 10) {
-        timestamp.textContent = `[${displayTime}]`;
-        timestamp.classList.add('time-warning');
-        timestamp.classList.remove('time-overtime');
-      } else {
-        timestamp.textContent = `[${displayTime}]`;
-        timestamp.classList.remove('time-warning', 'time-overtime');
-      }
-      
-      // Optional: stop at some point if needed
-      // if (remainingSeconds < -600) clearInterval(interval); // Stop after 10 minutes overtime
-    }, 1000);
+    // Set initial remaining time equal to total time
+    timestamp.setAttribute('data-remaining', totalSeconds);
   });
 }
 

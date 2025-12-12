@@ -185,9 +185,6 @@ body {
   padding-top: 24px;
 }
 
-#view-initial.clickable-view {
-  cursor: pointer;
-}
 
 .welcome-content {
   display: flex;
@@ -235,14 +232,37 @@ body {
   opacity: 0.8;
 }
 
-.clickable-view {
-  cursor: pointer;
-}
 
 /* Add Notes View */
 #view-add-notes {
   height: 100%;
   position: relative;
+}
+
+.notes-input-wrapper {
+  flex: 1;
+  position: relative;
+  display: flex;
+}
+
+.notes-input-highlight {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  font-family: var(--font-family);
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  line-height: 1.2;
+  padding-top: 24px;
+  padding-bottom: 24px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-y: auto;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .notes-input {
@@ -254,14 +274,34 @@ body {
   font-family: var(--font-family);
   font-size: 20px;
   font-weight: 500;
-  color: var(--text-secondary);
+  color: transparent;
+  caret-color: var(--text-secondary);
   line-height: 1.2;
   padding-top: 24px;
   padding-bottom: 24px;
+  position: relative;
+  z-index: 1;
 }
 
 .notes-input::placeholder {
   color: var(--text-secondary);
+}
+
+/* Apply syntax highlighting styles to input preview */
+.notes-input-highlight .timestamp {
+  display: inline;
+  font-size: 10px;
+  font-weight: 600;
+  font-stretch: expanded;
+  color: var(--accent-timestamp);
+  line-height: 1;
+}
+
+.notes-input-highlight .action-tag {
+  font-size: 10px;
+  font-weight: 600;
+  font-stretch: expanded;
+  color: var(--accent-action);
 }
 
 /* Gradient overlays for notes input */
@@ -301,8 +341,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-top: 18px;
-  padding-bottom: 8px;
+  padding-top: 8px;
+  padding-bottom: 0px;
   flex-shrink: 0;
 }
 
@@ -355,7 +395,7 @@ body {
   line-height: 1.2;
   white-space: pre-wrap;
   word-wrap: break-word;
-  padding-top: 24px;
+  padding-top: 12px;
   padding-bottom: 24px;
   flex: 1;
   overflow-y: auto;
@@ -365,10 +405,10 @@ body {
 #view-notes::before {
   content: '';
   position: absolute;
-  top: 40px; /* After slide-header (padding-top 18px + content ~14px + padding-bottom 8px) */
+  top: 30px; /* After slide-header (padding-top 8px + content ~14px + padding-bottom 0px) */
   left: 0;
   right: 0;
-  height: 24px;
+  height: 12px;
   background: linear-gradient(to bottom, var(--bg-primary) 0%, transparent 100%);
   pointer-events: none;
   z-index: 1;
@@ -499,6 +539,38 @@ body {
   opacity: 0.8;
 }
 
+/* Paste Notes Link */
+.paste-notes-link {
+  position: relative;
+  display: inline-block;
+  color: var(--accent-timestamp);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.paste-notes-link:hover {
+  color: var(--accent-timestamp);
+}
+
+.paste-notes-link::after {
+  content: '';
+  position: absolute;
+  left: -2px;
+  right: -2px;
+  bottom: -1px;
+  height: 2px;
+  background: var(--accent-timestamp);
+  transform: scaleX(1);
+  transform-origin: left;
+  border-radius: 50% 50% 50% 50% / 60% 30% 60% 30%;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.paste-notes-link:hover::after {
+  opacity: 1;
+}
+
 /* Google Slides Link */
 .slides-link {
   position: relative;
@@ -583,4 +655,38 @@ body {
   color: var(--text-secondary);
   opacity: 0.5;
   user-select: none;
+}
+
+/* Timer Control Buttons */
+.timer-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.timer-btn {
+  font-size: 12px;
+  font-weight: 500;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: opacity 0.15s ease;
+  letter-spacing: 0.25px;
+}
+
+.timer-btn:hover {
+  opacity: 0.8;
+}
+
+.timer-btn-start {
+  color: var(--accent-timestamp);
+}
+
+.timer-btn-reset {
+  color: var(--accent-action);
+}
+
+.timer-btn-pause {
+  color: var(--accent-link);
 }

@@ -68,81 +68,13 @@
     return docTitle || 'Untitled Presentation';
   }
 
-  // Calculate slide number from slide ID (best effort)
-  function getSlideNumber() {
-    const mode = detectMode();
-
-    if (mode === 'edit' || mode === 'published') {
-      // Method 1: Try to find slide number from aria-label (most reliable)
-      const selectedThumb = document.querySelector('.punch-filmstrip-thumbnail[aria-selected="true"]');
-      if (selectedThumb) {
-        const label = selectedThumb.getAttribute('aria-label');
-        if (label) {
-          // Match patterns like "Slide 3" or just "3" in various languages
-          const match = label.match(/(\d+)/);
-          if (match) return parseInt(match[1], 10);
-        }
-      }
-
-      // Method 2: Find by index in filmstrip
-      const filmstrip = document.querySelector('.punch-filmstrip-scroll');
-      if (filmstrip) {
-        const slides = filmstrip.querySelectorAll('.punch-filmstrip-thumbnail');
-        const activeSlide = filmstrip.querySelector('.punch-filmstrip-thumbnail[aria-selected="true"]') ||
-                          filmstrip.querySelector('.punch-filmstrip-thumbnail-selected');
-        if (activeSlide && slides.length > 0) {
-          const index = Array.from(slides).indexOf(activeSlide);
-          if (index >= 0) return index + 1;
-        }
-      }
-
-      // Method 3: Check aria-posinset attribute (slide position in set)
-      const slideWithPos = document.querySelector('.punch-filmstrip-thumbnail[aria-posinset]');
-      if (slideWithPos) {
-        const posInSet = slideWithPos.getAttribute('aria-posinset');
-        if (posInSet) return parseInt(posInSet, 10);
-      }
-    } else if (mode === 'slideshow') {
-      // Method 1: Check for slide indicator text (e.g., "3 / 10")
-      const indicator = document.querySelector('.punch-viewer-nav-label') ||
-                       document.querySelector('[class*="nav-label"]') ||
-                       document.querySelector('.punch-viewer-speakernotes-page-num');
-      if (indicator) {
-        const text = indicator.textContent || indicator.innerText;
-        // Match "3 / 10" or "3/10" or just "3"
-        const match = text.match(/^(\d+)/);
-        if (match) return parseInt(match[1], 10);
-      }
-
-      // Method 2: Check aria-label on slide container
-      const slideContainer = document.querySelector('[aria-label*="slide"]') ||
-                            document.querySelector('[aria-label*="Slide"]');
-      if (slideContainer) {
-        const label = slideContainer.getAttribute('aria-label');
-        const match = label.match(/(\d+)/);
-        if (match) return parseInt(match[1], 10);
-      }
-
-      // Method 3: Check URL for slide parameter and extract number
-      const params = new URLSearchParams(window.location.search);
-      const slideParam = params.get('slide');
-      if (slideParam) {
-        // Format could be "id.p3" or "id.g123abc" - extract numeric suffix from "p" prefix
-        const pMatch = slideParam.match(/p(\d+)/);
-        if (pMatch) return parseInt(pMatch[1], 10);
-      }
-    }
-
-    return 1; // Default to slide 1
-  }
-
   // Build slide info object
   function buildSlideInfo() {
     const slideId = getSlideFromHash() || getSlideFromQuery();
     return {
       presentationId: getPresentationId(),
       slideId: slideId,
-      slideNumber: getSlideNumber(),
+      slideNumber: 0,
       title: getPresentationTitle(),
       mode: detectMode(),
       timestamp: Date.now(),
