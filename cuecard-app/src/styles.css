@@ -337,57 +337,6 @@ body {
   flex-direction: column;
 }
 
-.slide-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 8px;
-  padding-bottom: 0px;
-  flex-shrink: 0;
-}
-
-.slide-info {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  letter-spacing: 0.25px;
-}
-
-.refresh-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-  color: var(--text-secondary);
-  opacity: 0.6;
-  transition: opacity 0.15s ease, transform 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-}
-
-.refresh-btn:hover {
-  opacity: 1;
-}
-
-.refresh-btn:active {
-  transform: rotate(180deg);
-}
-
-.refresh-btn.loading {
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 .notes-content {
   font-size: 20px;
   font-weight: 500;
@@ -395,7 +344,7 @@ body {
   line-height: 1.2;
   white-space: pre-wrap;
   word-wrap: break-word;
-  padding-top: 12px;
+  padding-top: 24px;
   padding-bottom: 24px;
   flex: 1;
   overflow-y: auto;
@@ -405,10 +354,10 @@ body {
 #view-notes::before {
   content: '';
   position: absolute;
-  top: 30px; /* After slide-header (padding-top 8px + content ~14px + padding-bottom 0px) */
+  top: 0;
   left: 0;
   right: 0;
-  height: 12px;
+  height: 24px;
   background: linear-gradient(to bottom, var(--bg-primary) 0%, transparent 100%);
   pointer-events: none;
   z-index: 1;
@@ -689,4 +638,39 @@ body {
 
 .timer-btn-pause {
   color: var(--accent-link);
+}
+
+/* Footer Refresh Button and Slide Info */
+.refresh-btn {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+  letter-spacing: 0.25px;
+}
+
+.refresh-btn:hover {
+  opacity: 0.8;
+}
+
+#slide-info-btn {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+  letter-spacing: 0.25px;
+}
+
+#slide-info-btn:hover {
+  opacity: 0.8;
 }

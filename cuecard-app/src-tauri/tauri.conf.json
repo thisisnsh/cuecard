@@ -11,10 +11,10 @@
     "windows": [
       {
         "title": "CueCard",
-        "width": 450,
+        "width": 600,
         "height": 300,
         "resizable": true,
-        "minWidth": 450,
+        "minWidth": 600,
         "minHeight": 300,
         "center": true,
         "alwaysOnTop": true,
@@ -42,8 +42,8 @@
       "icons/icon.ico"
     ],
     "category": "Productivity",
-    "shortDescription": "Speaker notes for presentations, meetings, and even dates — visible only to you.",
-    "longDescription": "Speaker notes for presentations, meetings, and even dates — visible only to you.",
+    "shortDescription": "Speaker notes visible only to you — for presentations, meetings, dates and everything.",
+    "longDescription": "Speaker notes visible only to you — for presentations, meetings, dates and everything.",
     "macOS": {
       "minimumSystemVersion": "10.13"
     },
