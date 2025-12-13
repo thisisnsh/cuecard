@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CueCard - Speaker Notes Visible Only to You</title>
+    <meta name="description" content="Speaker notes visible only to you - for presentations, meetings, dates, and everything. Sync notes from Google Slides and view them discreetly.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23000'/%3E%3Cpath d='M50 10 A40 40 0 0 1 50 90 A20 20 0 0 1 50 50 A20 20 0 0 0 50 10' fill='%231AB2C4'/%3E%3Cpath d='M50 10 A40 40 0 0 0 50 90 A20 20 0 0 0 50 50 A20 20 0 0 1 50 10' fill='%23FEBC2E'/%3E%3C/svg%3E">
+</head>
+<body>
+    <div class="noise-overlay"></div>
+
+    <nav class="nav">
+        <a href="/" class="nav-logo">
+            <svg class="logo-icon" viewBox="0 0 100 100" width="32" height="32">
+                <circle cx="50" cy="50" r="45" fill="#000"/>
+                <path d="M50 10 A40 40 0 0 1 50 90 A20 20 0 0 1 50 50 A20 20 0 0 0 50 10" fill="#1AB2C4"/>
+                <path d="M50 10 A40 40 0 0 0 50 90 A20 20 0 0 0 50 50 A20 20 0 0 1 50 10" fill="#FEBC2E"/>
+            </svg>
+            <span>CueCard</span>
+        </a>
+        <div class="nav-links">
+            <a href="https://github.com/thisisnsh/cuecard" target="_blank" rel="noopener" class="nav-link github-link">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+                Star on GitHub
+            </a>
+        </div>
+    </nav>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-badge">
+                <span class="badge-dot"></span>
+                Completely free & open source
+            </div>
+            <h1 class="hero-title">CueCard</h1>
+            <p class="hero-subtitle">
+                Speaker notes visible only to you — for
+                <span class="highlight highlight-yellow">presentations</span>,
+                <span class="highlight highlight-green">meetings</span>,
+                <span class="highlight highlight-pink">dates</span>,
+                and everything.
+            </p>
+            <div class="hero-cta">
+                <a href="https://github.com/thisisnsh/cuecard/releases" class="btn btn-primary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Download for macOS
+                </a>
+                <a href="https://github.com/thisisnsh/cuecard" target="_blank" class="btn btn-secondary">
+                    View Source
+                </a>
+            </div>
+        </section>
+
+        <!-- Use Cases Section -->
+        <section class="use-cases">
+            <div class="use-case-grid">
+                <div class="use-case-card">
+                    <div class="use-case-icon use-case-icon-yellow">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <rect x="2" y="3" width="20" height="14" rx="2"/>
+                            <path d="M8 21h8"/>
+                            <path d="M12 17v4"/>
+                        </svg>
+                    </div>
+                    <h3 class="use-case-title">Sync from <span class="highlight-inline highlight-yellow">Google Slides</span></h3>
+                    <p class="use-case-desc">Sync notes from Google Slides and view them discreetly while presenting</p>
+                    <div class="gif-placeholder" data-label="GIF: Slides in background with overlaying notes that change as slides change">
+                        <div class="placeholder-content">
+                            <div class="placeholder-icon">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <rect x="2" y="2" width="20" height="20" rx="2"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                    <path d="M2 12h3M19 12h3M12 2v3M12 19v3"/>
+                                </svg>
+                            </div>
+                            <span>Demo coming soon</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="use-case-card">
+                    <div class="use-case-icon use-case-icon-green">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                    </div>
+                    <h3 class="use-case-title">Paste notes for any <span class="highlight-inline highlight-green">meeting</span></h3>
+                    <p class="use-case-desc">Paste your own notes for any meeting — interviews, standups, client calls</p>
+                    <div class="gif-placeholder" data-label="GIF: Screen share in Zoom showing sheets with notes overlay">
+                        <div class="placeholder-content">
+                            <div class="placeholder-icon">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <rect x="2" y="2" width="20" height="20" rx="2"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                    <path d="M2 12h3M19 12h3M12 2v3M12 19v3"/>
+                                </svg>
+                            </div>
+                            <span>Demo coming soon</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="features">
+            <div class="section-header">
+                <span class="section-tag">Features</span>
+                <h2 class="section-title">Everything you need,<br/>nothing you don't</h2>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card feature-large">
+                    <div class="feature-header">
+                        <span class="feature-number">01</span>
+                        <h3 class="feature-title">Now you see me.<br/>Now you don't.</h3>
+                    </div>
+                    <p class="feature-desc">Hide from screen recordings or screen shares and keep speaker notes in front of your eyes. Toggle visibility instantly.</p>
+                    <div class="gif-placeholder feature-demo" data-label="GIF: Toggle visibility setting">
+                        <div class="placeholder-content">
+                            <div class="placeholder-icon">
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                                    <line x1="1" y1="1" x2="23" y2="23"/>
+                                </svg>
+                            </div>
+                            <span>Visibility toggle demo</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-header">
+                        <span class="feature-number">02</span>
+                        <h3 class="feature-title">Transparency much?</h3>
+                    </div>
+                    <p class="feature-desc">Set the transparency exactly how you want it. Slide to perfection.</p>
+                    <div class="gif-placeholder feature-demo" data-label="GIF: Transparency slider">
+                        <div class="placeholder-content">
+                            <div class="placeholder-icon">
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <circle cx="12" cy="12" r="10" opacity="0.3"/>
+                                    <circle cx="12" cy="12" r="6" opacity="0.6"/>
+                                    <circle cx="12" cy="12" r="2"/>
+                                </svg>
+                            </div>
+                            <span>Transparency slider demo</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-header">
+                        <span class="feature-number">03</span>
+                        <h3 class="feature-title">Time flies when<br/>you're unprepared</h3>
+                    </div>
+                    <p class="feature-desc">Set and see the time to be spent on each part of your content. Never run overtime again.</p>
+                    <div class="gif-placeholder feature-demo" data-label="GIF: Timer feature">
+                        <div class="placeholder-content">
+                            <div class="placeholder-icon">
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <polyline points="12 6 12 12 16 14"/>
+                                </svg>
+                            </div>
+                            <span>Timer demo</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-header">
+                        <span class="feature-number">04</span>
+                        <h3 class="feature-title">Are you human?</h3>
+                    </div>
+                    <p class="feature-desc">Inject emotions in the text to sound more human. Because robots don't give good presentations.</p>
+                    <div class="gif-placeholder feature-demo" data-label="GIF: Emotion tags feature">
+                        <div class="placeholder-content">
+                            <div class="placeholder-icon">
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+                                    <line x1="9" y1="9" x2="9.01" y2="9"/>
+                                    <line x1="15" y1="9" x2="15.01" y2="9"/>
+                                </svg>
+                            </div>
+                            <span>Emotion tags demo</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ Section -->
+        <section class="faq">
+            <div class="section-header">
+                <span class="section-tag">FAQ</span>
+                <h2 class="section-title">Questions?<br/>We've got answers.</h2>
+            </div>
+
+            <div class="faq-list">
+                <details class="faq-item" open>
+                    <summary class="faq-question">
+                        <span>Is it free?</span>
+                        <svg class="faq-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M6 9l6 6 6-6"/>
+                        </svg>
+                    </summary>
+                    <div class="faq-answer">
+                        <p>Yes, CueCard is completely free and open source. Check out the code at <a href="https://github.com/thisisnsh/cuecard" target="_blank">github.com/thisisnsh/cuecard</a> and give us a star!</p>
+                    </div>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">
+                        <span>What platforms are supported?</span>
+                        <svg class="faq-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M6 9l6 6 6-6"/>
+                        </svg>
+                    </summary>
+                    <div class="faq-answer">
+                        <p>Currently CueCard is available for macOS. Windows and Linux support coming soon.</p>
+                    </div>
+                </details>
+
+                <details class="faq-item">
+                    <summary class="faq-question">
+                        <span>Is my data safe?</span>
+                        <svg class="faq-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M6 9l6 6 6-6"/>
+                        </svg>
+                    </summary>
+                    <div class="faq-answer">
+                        <p>Absolutely. All your notes and Google tokens are stored locally on your device. We only collect your name and email to know our users. Nothing else leaves your system. Check our <a href="/privacy">Privacy Policy</a> for details.</p>
+                    </div>
+                </details>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section class="cta-section">
+            <div class="cta-content">
+                <h2 class="cta-title">Ready to present<br/>like a pro?</h2>
+                <p class="cta-desc">Download CueCard and never fumble through a presentation again.</p>
+                <a href="https://github.com/thisisnsh/cuecard/releases" class="btn btn-primary btn-large">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    Download CueCard
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <svg class="logo-icon" viewBox="0 0 100 100" width="24" height="24">
+                    <circle cx="50" cy="50" r="45" fill="#000"/>
+                    <path d="M50 10 A40 40 0 0 1 50 90 A20 20 0 0 1 50 50 A20 20 0 0 0 50 10" fill="#1AB2C4"/>
+                    <path d="M50 10 A40 40 0 0 0 50 90 A20 20 0 0 0 50 50 A20 20 0 0 1 50 10" fill="#FEBC2E"/>
+                </svg>
+                <span>CueCard</span>
+            </div>
+            <div class="footer-links">
+                <a href="mailto:help@cuecard.dev">Support</a>
+                <span class="footer-divider">·</span>
+                <a href="/privacy">Privacy Policy</a>
+                <span class="footer-divider">·</span>
+                <a href="/terms">Terms of Service</a>
+                <span class="footer-divider">·</span>
+                <a href="https://github.com/thisisnsh/cuecard" target="_blank">GitHub</a>
+            </div>
+            <p class="footer-copy">© 2024 CueCard. Open source under MIT License.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
