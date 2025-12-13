@@ -1,4 +1,3 @@
 # Environment variables
 .env
 .env.local
-firebase.config

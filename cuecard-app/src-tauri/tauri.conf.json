@@ -12,7 +12,6 @@
     "windows": [
       {
         "title": "CueCard",
-        "url": "http://127.0.0.1:3642",
         "width": 600,
         "height": 300,
         "resizable": true,

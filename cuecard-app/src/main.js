@@ -7,94 +7,147 @@ const { invoke } = window.__TAURI__?.core || {};
 const { listen } = window.__TAURI__?.event || {};
 const { openUrl } = window.__TAURI__?.opener || {};
 
-let currentUser = null;
-let isSlidesAuthenticated = false;
+// Firestore REST API Configuration
+let FIRESTORE_PROJECT_ID = null;
+let FIRESTORE_BASE_URL = null;
 
-async function loadUserSession() {
-  if (!invoke) return;
-  try {
-    const session = await invoke("get_firebase_user");
-    applyUserSession(session);
-  } catch (error) {
-    console.error("Failed to load user session:", error);
-  }
-}
-
-function applyUserSession(session) {
-  if (session && session.authenticated) {
-    currentUser = session;
-    isAuthenticated = true;
-    userName = session.displayName || session.email || '';
-    updateAuthUI(true, userName);
-  } else {
-    currentUser = null;
-    isAuthenticated = false;
-    userName = '';
-    updateAuthUI(false, '');
-  }
-}
-
-async function handleAppLogin() {
-  if (!invoke) return;
-  try {
-    await invoke("start_login", { scope: 'firebase' });
-  } catch (error) {
-    console.error("Failed to start login:", error);
-    alert("Could not start Google login. Please try again.");
-  }
-}
-
-async function handleLogout() {
-  if (!invoke) return;
-  try {
-    await invoke("logout_firebase");
-  } catch (error) {
-    console.error("Error clearing user session:", error);
-  }
-
-  try {
-    await invoke("logout");
-  } catch (error) {
-    console.error("Error logging out of Slides:", error);
-  }
-
-  await clearGrantedScopes();
-  applyUserSession(null);
-  isSlidesAuthenticated = false;
-  if (currentView === 'notes' && !manualNotes) {
-    showView('initial');
-  }
-}
-
-async function requestSlidesAccess() {
-  if (!invoke) return;
-  if (!currentUser) {
-    alert("Please sign in first.");
+// Initialize Firestore configuration
+async function initFirestoreConfig() {
+  if (!invoke) {
+    console.error("Tauri invoke API not available");
     return;
   }
   try {
-    const hasSlidesScope = await hasScope('slides');
-    if (!hasSlidesScope) {
-      await invoke("start_login", { scope: 'slides' });
-    } else {
-      isSlidesAuthenticated = true;
+    FIRESTORE_PROJECT_ID = await invoke("get_firestore_project_id");
+    FIRESTORE_BASE_URL = `https://firestore.googleapis.com/v1/projects/${FIRESTORE_PROJECT_ID}/databases/(default)/documents`;
+    console.log("Firestore configuration initialized");
+  } catch (error) {
+    console.error("Error getting Firestore project ID:", error);
+  }
+}
+
+// Get or create user profile in Firestore
+async function saveUserProfile(email, name) {
+  if (!email || !FIRESTORE_BASE_URL) return;
+
+  const documentPath = `Profiles/${encodeURIComponent(email)}`;
+  const url = `${FIRESTORE_BASE_URL}/${documentPath}`;
+
+  try {
+    // First, try to get the existing document
+    const getResponse = await fetch(url);
+
+    if (getResponse.ok) {
+      // Document exists, just update name and email (don't touch creationDate)
+      const existingDoc = await getResponse.json();
+      const updateUrl = `${url}?updateMask.fieldPaths=name&updateMask.fieldPaths=email`;
+
+      await fetch(updateUrl, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fields: {
+            name: { stringValue: name },
+            email: { stringValue: email }
+          }
+        })
+      });
+      console.log("User profile updated in Firestore");
+    } else if (getResponse.status === 404) {
+      // Document doesn't exist, create new one with all fields
+      const now = new Date().toISOString();
+
+      await fetch(url, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fields: {
+            name: { stringValue: name },
+            email: { stringValue: email },
+            creationDate: { timestampValue: now },
+            usage: {
+              mapValue: {
+                fields: {
+                  paste: { integerValue: '0' },
+                  slide: { integerValue: '0' }
+                }
+              }
+            }
+          }
+        })
+      });
+      console.log("New user profile created in Firestore");
     }
   } catch (error) {
-    console.error("Error requesting Slides access:", error);
+    console.error("Error saving user profile to Firestore:", error);
   }
 }
 
-async function trackUsage(usageType) {
-  if (!invoke || !currentUser) return;
+// Increment usage counter in Firestore
+async function incrementUsage(email, usageType) {
+  console.log("Incrementing usage for email:", email, "usageType:", usageType);
+  if (!email || !FIRESTORE_BASE_URL) return;
+
+  const documentPath = `Profiles/${encodeURIComponent(email)}`;
+  const url = `${FIRESTORE_BASE_URL}/${documentPath}`;
+
   try {
-    await invoke("track_usage_event", { usageType });
+    // Get current document to read current usage values
+    const getResponse = await fetch(url);
+
+    if (getResponse.ok) {
+      const doc = await getResponse.json();
+      const currentUsage = doc.fields?.usage?.mapValue?.fields || {};
+      const currentPaste = parseInt(currentUsage.paste?.integerValue || '0');
+      const currentSlide = parseInt(currentUsage.slide?.integerValue || '0');
+
+      // Calculate new values
+      const newPaste = usageType === 'paste' ? currentPaste + 1 : currentPaste;
+      const newSlide = usageType === 'slide' ? currentSlide + 1 : currentSlide;
+
+      // Update only the usage field
+      const updateUrl = `${url}?updateMask.fieldPaths=usage`;
+
+      await fetch(updateUrl, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          fields: {
+            usage: {
+              mapValue: {
+                fields: {
+                  paste: { integerValue: String(newPaste) },
+                  slide: { integerValue: String(newSlide) }
+                }
+              }
+            }
+          }
+        })
+      });
+      console.log(`Usage ${usageType} incremented in Firestore`);
+    }
   } catch (error) {
-    console.error("Failed to track usage:", error);
+    console.error("Error incrementing usage in Firestore:", error);
   }
 }
 
-function getUserEmail() {
-  return currentUser?.email || null;
+// Get user email from stored user info
+async function getUserEmail() {
+  if (!invoke) return null;
+  try {
+    const userInfo = await invoke("get_user_info");
+    console.log("User info:", userInfo);
+    return userInfo?.email || null;
+  } catch (e) {
+    console.log("Could not get user email:", e);
+    return null;
+  }
 }
 
 // Store for persistent storage
@@ -110,6 +163,7 @@ const STORAGE_KEYS = {
 
 // Scope constants (must match backend)
 const SCOPES = {
+  PROFILE: 'openid profile email',
   SLIDES: 'https://www.googleapis.com/auth/presentations.readonly'
 };
 
@@ -189,7 +243,7 @@ async function saveGrantedScopes(scopes) {
 // Check if a specific scope is granted
 async function hasScope(scopeType) {
   const scopes = await getGrantedScopes();
-  const scopeUrl = SCOPES.SLIDES;
+  const scopeUrl = scopeType === 'profile' ? SCOPES.PROFILE : SCOPES.SLIDES;
   return scopes.includes(scopeUrl);
 }
 
@@ -241,9 +295,11 @@ let originalTimerValues = []; // Store original timer values for reset
 window.addEventListener("DOMContentLoaded", async () => {
   console.log("App initializing...");
 
+  // Initialize Firestore configuration from environment variables
+  await initFirestoreConfig();
+
   // Initialize the store for persistent storage
   await initStore();
-  await loadUserSession();
 
   // Get DOM elements
   authBtn = document.getElementById("auth-btn");
@@ -329,7 +385,15 @@ window.addEventListener("DOMContentLoaded", async () => {
         await saveGrantedScopes(event.payload.granted_scopes);
       }
 
-      isSlidesAuthenticated = !!event.payload.authenticated;
+      // Save user profile to Firestore when authenticated
+      if (event.payload.authenticated) {
+        const email = await getUserEmail();
+        if (email && event.payload.user_name) {
+          saveUserProfile(email, event.payload.user_name);
+        }
+      }
+
+      updateAuthUI(event.payload.authenticated, event.payload.user_name);
 
       // If slides scope was just granted and we requested it, show the notes view
       if (event.payload.requested_scope === 'slides' && event.payload.authenticated) {
@@ -345,13 +409,6 @@ window.addEventListener("DOMContentLoaded", async () => {
           }
         }
       }
-    });
-  }
-
-  if (listen) {
-    await listen("user-session", (event) => {
-      console.log("User session changed:", event.payload);
-      applyUserSession(event.payload);
     });
   }
 
@@ -410,7 +467,7 @@ function setupAuth() {
     if (isAuthenticated) {
       await handleLogout();
     } else {
-      await handleAppLogin();
+      await handleLogin();
     }
   });
 }
@@ -720,8 +777,19 @@ async function checkAuthStatus() {
   }
   try {
     const status = await invoke("get_auth_status");
-    isSlidesAuthenticated = status;
+    // Try to get user info and granted scopes if authenticated
+    let name = '';
+    let email = '';
     if (status) {
+      try {
+        const userInfo = await invoke("get_user_info");
+        name = userInfo?.name || '';
+        email = userInfo?.email || '';
+      } catch (e) {
+        console.log("Could not get user info:", e);
+      }
+
+      // Sync granted scopes from backend
       try {
         const scopes = await invoke("get_granted_scopes");
         if (scopes && Array.isArray(scopes)) {
@@ -731,12 +799,16 @@ async function checkAuthStatus() {
       } catch (e) {
         console.log("Could not get granted scopes:", e);
       }
-    } else {
-      await clearGrantedScopes();
+
+      // Save user profile to Firestore
+      if (email && name) {
+        saveUserProfile(email, name);
+      }
     }
+    updateAuthUI(status, name);
   } catch (error) {
     console.error("Error checking auth status:", error);
-    isSlidesAuthenticated = false;
+    updateAuthUI(false, '');
   }
 }
 
@@ -791,7 +863,10 @@ function updateAuthUI(authenticated, name = '') {
         e.preventDefault();
         e.stopPropagation();
         // Track paste usage in Firestore
-        await trackUsage('paste');
+        const email = await getUserEmail();
+        if (email) {
+          incrementUsage(email, 'paste');
+        }
         showView('add-notes');
         notesInput.focus();
       });
@@ -805,14 +880,17 @@ function updateAuthUI(authenticated, name = '') {
         e.stopPropagation();
 
         // Track slide usage in Firestore
-        await trackUsage('slide');
+        const email = await getUserEmail();
+        if (email) {
+          incrementUsage(email, 'slide');
+        }
 
         // Check if we have slides scope
         const hasSlidesScope = await hasScope('slides');
         if (!hasSlidesScope) {
           // Request slides scope
           console.log("Slides scope not granted, requesting...");
-          await requestSlidesAccess();
+          await handleLogin('slides');
           return;
         }
 
@@ -837,6 +915,42 @@ function updateAuthUI(authenticated, name = '') {
 
     // Reset subtext
     welcomeSubtext.innerHTML = 'Speaker notes visible only to you — for <span class="highlight-presentations">presentations</span>, <span class="highlight-meetings">meetings</span>, <span class="highlight-dates">dates</span> and everything...';
+  }
+}
+
+// Handle login with specific scope
+// scope: 'profile' for basic auth, 'slides' for Google Slides access
+async function handleLogin(scope = 'profile') {
+  try {
+    if (!invoke) {
+      console.error("Tauri invoke API not available");
+      alert("Please run the app in Tauri mode");
+      return;
+    }
+    console.log(`Starting login with scope: ${scope}`);
+    await invoke("start_login", { scope });
+  } catch (error) {
+    console.error("Error starting login:", error);
+  }
+}
+
+// Handle logout
+async function handleLogout() {
+  if (!invoke) {
+    console.error("Tauri invoke API not available");
+    return;
+  }
+  try {
+    await invoke("logout");
+    // Clear granted scopes from local storage
+    await clearGrantedScopes();
+    updateAuthUI(false, '');
+    // Reset to initial view if viewing slide notes
+    if (currentView === 'notes' && !manualNotes) {
+      showView('initial');
+    }
+  } catch (error) {
+    console.error("Error logging out:", error);
   }
 }
 
