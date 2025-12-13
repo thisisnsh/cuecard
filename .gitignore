@@ -1,3 +1,63 @@
 # Environment variables
 .env
 .env.local
+.env.*.local
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+target/
+releases/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# IDE and editor directories
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*.sw?
+*.sublime-workspace
+*.sublime-project
+
+# macOS
+.DS_Store
+*.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.local
+
+# Rust
+Cargo.lock
+**/*.rs.bk
+
+# Tauri
+src-tauri/target/
+src-tauri/Cargo.lock
+
+# Safari Xcode project (generated)
+extension/dist/safari-xcode/
+
+# Misc
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
