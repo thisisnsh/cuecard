@@ -199,6 +199,44 @@ async fn slides_handler(Json(slide_data): Json<SlideData>) -> Result<Json<ApiRes
 // OAUTH2 AUTHENTICATION
 // =============================================================================
 
+/// Firebase Identity Toolkit URL for OAuth token exchange
+const FIREBASE_IDENTITY_TOOLKIT_URL: &str = "https://identitytoolkit.googleapis.com/v1/accounts:signInWithIdp";
+
+/// Signs in to Firebase using a Google OAuth access token
+/// This provides an alternative auth flow when direct OAuth has issues
+async fn firebase_sign_in_with_google(
+    access_token: &str,
+) -> Result<serde_json::Value, String> {
+    let api_key = env!("FIREBASE_API_KEY");
+
+    let url = format!("{}?key={}", FIREBASE_IDENTITY_TOOLKIT_URL, api_key);
+
+    let body = serde_json::json!({
+        "postBody": format!("access_token={}&providerId=google.com", access_token),
+        "requestUri": "http://localhost",
+        "returnSecureToken": true,
+        "returnIdpCredential": true
+    });
+
+    let client = reqwest::Client::new();
+    let response = client
+        .post(&url)
+        .json(&body)
+        .send()
+        .await
+        .map_err(|e| format!("Firebase auth request failed: {}", e))?;
+
+    if !response.status().is_success() {
+        let error_body = response.text().await.unwrap_or_default();
+        return Err(format!("Firebase auth failed: {}", error_body));
+    }
+
+    response
+        .json()
+        .await
+        .map_err(|e| format!("Failed to parse Firebase response: {}", e))
+}
+
 // OAuth2 login - redirects to Google
 async fn oauth_login_handler() -> Result<Redirect, StatusCode> {
     let client_id = env!("GOOGLE_CLIENT_ID");
@@ -801,6 +839,12 @@ fn get_firestore_project_id() -> String {
     env!("FIRESTORE_PROJECT_ID").to_string()
 }
 
+// Tauri command to get Firebase API key (compile-time environment variable)
+#[tauri::command]
+fn get_firebase_api_key() -> String {
+    env!("FIREBASE_API_KEY").to_string()
+}
+
 // Tauri command to get granted scopes
 #[tauri::command]
 fn get_granted_scopes() -> Vec<String> {
@@ -888,6 +932,13 @@ async fn start_login(app: AppHandle, scope: String) -> Result<(), String> {
         .map_err(|e| format!("Failed to open browser: {}", e))?;
 
     Ok(())
+}
+
+// Tauri command to sign in with Firebase using Google access token
+// This is an alternative auth method when direct OAuth has issues
+#[tauri::command]
+async fn firebase_sign_in(access_token: String) -> Result<serde_json::Value, String> {
+    firebase_sign_in_with_google(&access_token).await
 }
 
 // Tauri command to logout
@@ -1083,10 +1134,12 @@ pub fn run() {
             get_current_notes,
             get_auth_status,
             get_firestore_project_id,
+            get_firebase_api_key,
             get_granted_scopes,
             has_scope,
             get_user_info,
             start_login,
+            firebase_sign_in,
             logout,
             refresh_notes,
             set_window_opacity,
