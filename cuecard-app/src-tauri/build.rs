@@ -24,9 +24,6 @@ fn main() {
                 if let Ok(project_id) = std::env::var("FIRESTORE_PROJECT_ID") {
                     println!("cargo:rustc-env=FIRESTORE_PROJECT_ID={}", project_id);
                 }
-                if let Ok(api_key) = std::env::var("FIREBASE_API_KEY") {
-                    println!("cargo:rustc-env=FIREBASE_API_KEY={}", api_key);
-                }
             }
             Err(e) => {
                 println!("cargo:warning=Failed to load .env file: {}", e);
