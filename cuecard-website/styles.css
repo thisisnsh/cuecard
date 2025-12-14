@@ -14,6 +14,7 @@
     --accent-yellow: #febc2e;
     --accent-green: #19c332;
     --accent-pink: #ff6adf;
+    --accent-red: #ff4d4d;
 
     /* Typography */
     --font-display: 'Syne', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -650,6 +651,15 @@ main {
     letter-spacing: 0.08em;
     color: var(--accent-green);
     margin-bottom: var(--space-xs);
+    transition: color var(--transition-fast);
+}
+
+.syntax-notes .notes-content .timestamp-warning {
+    color: var(--accent-yellow);
+}
+
+.syntax-notes .notes-content .timestamp-danger {
+    color: var(--accent-red);
 }
 
 .syntax-notes .notes-content .action-tag {
