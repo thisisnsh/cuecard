@@ -199,7 +199,7 @@ main {
     display: inline-flex;
     align-items: center;
     gap: var(--space-sm);
-    padding: var(--space-sm) var(--space-md);
+    padding: var(--space-sm) var(--space-lg);
     border-radius: var(--radius-xl);
     font-size: 0.875rem;
     margin-bottom: var(--space-xl);

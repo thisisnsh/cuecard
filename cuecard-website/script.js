@@ -207,8 +207,8 @@ function initHeroBadgeTypewriter() {
     if (!heroBadge) return;
 
     const messages = [
-        { text: 'Paste notes for any meeting', theme: 'green' },
         { text: 'Sync notes from Google Slides', theme: 'yellow' },
+        { text: 'Paste notes for any meeting', theme: 'green' },
         { text: 'Free and Open Source', theme: 'white' }
     ];
 
