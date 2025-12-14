@@ -543,12 +543,26 @@ main {
 
 /* Responsive */
 @media (max-width: 768px) {
+    .pills-container {
+        position: static;
+        transform: none;
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+        padding: 0 var(--space-md);
+        gap: var(--space-sm);
+    }
+
     .use-cases-container {
         flex-direction: column;
         padding: 80px 0;
     }
 
     .use-case-pill {
+        width: 100%;
+        justify-content: center;
+        text-align: center;
+        white-space: normal;
         position: relative;
         top: auto !important;
         left: auto !important;
@@ -558,12 +572,11 @@ main {
 
     .pill-yellow {
         order: -1;
-        margin-bottom: var(--space-lg);
     }
 
     .pill-green {
         order: 1;
-        margin-top: var(--space-lg);
+        margin-bottom: var(--space-lg);
     }
 
     .video-hero {
