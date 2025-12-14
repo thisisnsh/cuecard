@@ -182,30 +182,41 @@
 
         <!-- Use Cases Section -->
         <section class="use-cases">
-            <div class="use-case-grid">
-                <div class="use-case-card">
-                    <div class="use-case-icon use-case-icon-yellow">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <div class="use-cases-container">
+                <!-- Floating pills container -->
+                <div class="pills-container">
+                    <div class="use-case-pill pill-yellow">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="2" y="3" width="20" height="14" rx="2"/>
                             <path d="M8 21h8"/>
                             <path d="M12 17v4"/>
                         </svg>
+                        <span>Sync from <strong>Google Slides</strong></span>
                     </div>
-                    <h3 class="use-case-title">Sync from <span class="highlight-inline highlight-yellow">Google Slides</span></h3>
-                    <p class="use-case-desc">Sync notes from Google Slides and view them discreetly while presenting</p>
-                </div>
 
-                <div class="use-case-card">
-                    <div class="use-case-icon use-case-icon-green">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <div class="use-case-pill pill-green">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                             <circle cx="9" cy="7" r="4"/>
                             <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
                             <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                         </svg>
+                        <span>Paste notes for any <strong>meeting</strong></span>
                     </div>
-                    <h3 class="use-case-title">Paste notes for any <span class="highlight-inline highlight-green">meeting</span></h3>
-                    <p class="use-case-desc">Paste your own notes for any meeting — interviews, standups, client calls</p>
+                </div>
+
+                <!-- Video Hero -->
+                <div class="video-hero">
+                    <div class="video-wrapper">
+                        <iframe
+                            src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+                            title="CueCard Demo"
+                            frameborder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowfullscreen>
+                        </iframe>
+                    </div>
+                    <div class="video-glow"></div>
                 </div>
             </div>
         </section>        
@@ -344,7 +355,7 @@ It has a [emotion emphasize] timer and that emotion-injection thingy, [emotion e
                         <h3 class="feature-title">What You See</h3>
                     </div>
                     <p class="feature-desc">CueCard highlights timestamps, and action cues while the on-screen timer gently counts down.</p>
-                    <div class="notes-preview notes-preview-highlighted" aria-live="off">
+                    <div class="notes-preview notes-preview-raw" aria-live="off">
                         <div class="notes-content">
 <span class="timestamp" data-time="15">[00:15]</span>
 Imagine your notes floating above the deck. <span class="action-tag">[smile]</span> I've been using CueCard to do that.
@@ -400,7 +411,7 @@ It has a <span class="action-tag">[emphasize]</span> timer and that emotion-inje
                         </svg>
                     </summary>
                     <div class="faq-answer">
-                        <p>Absolutely. All your notes and Google tokens are stored locally on your device. We only collect your name and email to know our users. Nothing else leaves your system. Check our <a href="./privacy/">Privacy Policy</a> for details.</p>
+                        <p>Absolutely. All your notes and Google tokens are stored locally on your device. Check our <a href="./privacy/">Privacy Policy</a> for details.</p>
                     </div>
                 </details>
             </div>

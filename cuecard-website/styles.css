@@ -416,64 +416,159 @@ main {
     font-size: 1.125rem;
 }
 
-/* Use Cases Section */
+/* Use Cases Section - Video Hero with Floating Pills */
 .use-cases {
     padding: var(--space-2xl) var(--space-xl);
-    max-width: 1400px;
+    max-width: 1000px;
     margin: 0 auto;
 }
 
-.use-case-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-    gap: var(--space-xl);
-}
-
-.use-case-card {
-    background: var(--bg-card);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: var(--radius-lg);
-    padding: var(--space-xl);
-    transition: all var(--transition-medium);
-}
-
-.use-case-card:hover {
-    border-color: rgba(255, 255, 255, 0.1);
-    transform: translateY(-4px);
-}
-
-.use-case-icon {
-    width: 64px;
-    height: 64px;
+.use-cases-container {
+    position: relative;
     display: flex;
-    align-items: center;
     justify-content: center;
-    border-radius: var(--radius-md);
-    margin-bottom: var(--space-lg);
+    align-items: center;
+    padding: 60px 0;
 }
 
-.use-case-icon-yellow {
-    background: rgba(254, 188, 46, 0.1);
+/* Video Hero */
+.video-hero {
+    position: relative;
+    width: 100%;
+    max-width: 800px;
+    z-index: 1;
+}
+
+.video-wrapper {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.video-wrapper iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.video-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 120%;
+    height: 120%;
+    background: radial-gradient(ellipse at center, rgba(254, 188, 46, 0.15) 0%, rgba(25, 195, 50, 0.1) 30%, transparent 70%);
+    pointer-events: none;
+    z-index: -1;
+    filter: blur(40px);
+}
+
+/* Pills container */
+.pills-container {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: var(--space-md);
+    z-index: 10;
+}
+
+/* Floating Pills */
+.use-case-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-xl);
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    transition: all var(--transition-medium);
+    white-space: nowrap;
+}
+
+.use-case-pill:hover {
+    transform: translateY(-2px) scale(1.02);
+}
+
+.use-case-pill svg {
+    flex-shrink: 0;
+}
+
+.use-case-pill strong {
+    font-weight: 700;
+}
+
+/* Yellow pill */
+.pill-yellow {
+    background: rgba(254, 188, 46, 0.15);
+    border: 1px solid rgba(254, 188, 46, 0.3);
     color: var(--accent-yellow);
 }
 
-.use-case-icon-green {
-    background: rgba(25, 195, 50, 0.1);
+.pill-yellow strong {
+    color: var(--accent-yellow);
+}
+
+/* Green pill */
+.pill-green {
+    background: rgba(25, 195, 50, 0.15);
+    border: 1px solid rgba(25, 195, 50, 0.3);
     color: var(--accent-green);
 }
 
-.use-case-title {
-    font-family: var(--font-display);
-    font-size: 1.5rem;
-    font-weight: 700;
-    margin-bottom: var(--space-md);
-    line-height: 1.3;
+.pill-green strong {
+    color: var(--accent-green);
 }
 
-.use-case-desc {
-    color: var(--text-secondary);
-    font-size: 1rem;
-    margin-bottom: var(--space-lg);
+@keyframes floatPill {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-8px);
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .use-cases-container {
+        flex-direction: column;
+        padding: 80px 0;
+    }
+
+    .use-case-pill {
+        position: relative;
+        top: auto !important;
+        left: auto !important;
+        right: auto !important;
+        bottom: auto !important;
+    }
+
+    .pill-yellow {
+        order: -1;
+        margin-bottom: var(--space-lg);
+    }
+
+    .pill-green {
+        order: 1;
+        margin-top: var(--space-lg);
+    }
+
+    .video-hero {
+        order: 0;
+    }
 }
 
 
