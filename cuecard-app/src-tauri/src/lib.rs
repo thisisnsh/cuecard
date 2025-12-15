@@ -5,7 +5,7 @@
 //! - Google Slides API integration
 //! - Local web server for browser extension communication
 //! - Tauri commands for frontend interaction
-//! - macOS window management (opacity, screenshot protection)
+//! - macOS window management (opacity, screenshot protection, floating above fullscreen)
 
 use axum::{
     extract::Query,
@@ -23,9 +23,6 @@ use tauri::{AppHandle, Emitter, Manager};
 use tauri_plugin_opener::OpenerExt;
 use tauri_plugin_store::StoreExt;
 use tower_http::cors::{Any, CorsLayer};
-
-#[macro_use]
-extern crate objc;
 
 // =============================================================================
 // CONSTANTS
@@ -222,7 +219,7 @@ fn load_firebase_config(app: &AppHandle) -> Result<FirebaseConfig, String> {
         config_path,
         Some(std::path::PathBuf::from("firebase-config.json")),
         Some(std::path::PathBuf::from("../firebase-config.json")),
-        Some(std::path::PathBuf::from("../../firebase-config.json")),
+        Some(std::path::PathBuf::from("../../firebase-config.json")), 
     ];
 
     for path_opt in possible_paths {
@@ -1390,26 +1387,99 @@ fn get_window_opacity(app: AppHandle) -> Result<f64, String> {
     Ok(opacity)
 }
 
+/// Set screenshot/screen capture protection
+/// On macOS: Uses NSWindow.setSharingType (works on macOS ≤14, limited on 15+)
+/// On Windows: Uses set_content_protected
 #[tauri::command]
 fn set_screenshot_protection(app: AppHandle, enabled: bool) -> Result<(), String> {
-    use cocoa::base::id;
+    #[cfg(target_os = "macos")]
+    {
+        use cocoa::base::id;
+        use objc::{msg_send, sel, sel_impl};
 
-    let window = app
-        .get_webview_window("main")
-        .ok_or("Failed to get main window")?;
-    let ns_window = window
-        .ns_window()
-        .map_err(|e| format!("Failed to get NSWindow: {}", e))? as id;
+        let window = app
+            .get_webview_window("main")
+            .ok_or("Failed to get main window")?;
 
-    unsafe {
-        if enabled {
-            let _: () = msg_send![ns_window, setSharingType: 0u64];
-        } else {
-            let _: () = msg_send![ns_window, setSharingType: 1u64];
+        let ns_window = window
+            .ns_window()
+            .map_err(|e| format!("Failed to get NSWindow: {}", e))? as id;
+
+        // NSWindowSharingType values:
+        // 0 = NSWindowSharingNone (prevents capture)
+        // 1 = NSWindowSharingReadOnly (allows capture, default)
+        // 2 = NSWindowSharingReadWrite (allows capture and modification)
+        let sharing_type: i64 = if enabled { 0 } else { 1 };
+
+        unsafe {
+            let _: () = msg_send![ns_window, setSharingType: sharing_type];
         }
+
+        Ok(())
     }
 
-    Ok(())
+    #[cfg(target_os = "windows")]
+    {
+        let window = app
+            .get_webview_window("main")
+            .ok_or("Failed to get main window")?;
+        window
+            .set_content_protected(enabled)
+            .map_err(|e| format!("Failed to update content protection: {}", e))?;
+        Ok(())
+    }
+
+    #[cfg(not(any(target_os = "macos", target_os = "windows")))]
+    {
+        Err("Screenshot protection is not supported on this platform".to_string())
+    }
+}
+
+/// Set window to float above all apps including fullscreen apps (macOS only)
+/// Uses NSWindow.setLevel with appropriate window level
+#[tauri::command]
+fn set_float_on_top(app: AppHandle, enabled: bool) -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    {
+        use cocoa::appkit::NSWindow;
+        use cocoa::base::id;
+
+        let window = app
+            .get_webview_window("main")
+            .ok_or("Failed to get main window")?;
+
+        let ns_window = window
+            .ns_window()
+            .map_err(|e| format!("Failed to get NSWindow: {}", e))? as id;
+
+        // Window levels:
+        // NSNormalWindowLevel = 0
+        // NSFloatingWindowLevel = 3
+        // NSStatusWindowLevel = 25
+        // NSScreenSaverWindowLevel = 1000
+        // For floating above fullscreen, we need a high level
+        // kCGMaximumWindowLevelKey is very high, but NSStatusWindowLevel (25)
+        // or a custom high value like 24 (above modal panels) works well
+        let level: i64 = if enabled { 25 } else { 3 }; // NSStatusWindowLevel vs NSFloatingWindowLevel
+
+        unsafe {
+            ns_window.setLevel_(level);
+        }
+
+        Ok(())
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        // On Windows, alwaysOnTop should work as expected
+        let window = app
+            .get_webview_window("main")
+            .ok_or("Failed to get main window")?;
+        window
+            .set_always_on_top(enabled)
+            .map_err(|e| format!("Failed to set always on top: {}", e))?;
+        Ok(())
+    }
 }
 
 // =============================================================================
@@ -1443,36 +1513,6 @@ pub fn run() {
             // Load stored tokens from persistent storage
             load_tokens_from_store(app.handle());
 
-            // Enable screenshot protection and full-screen overlay by default
-            {
-                use cocoa::appkit::NSApplication;
-                use cocoa::base::{nil, NO};
-
-                unsafe {
-                    let ns_app = NSApplication::sharedApplication(nil);
-                    let _: () = msg_send![ns_app, setActivationPolicy: 1i64];
-                }
-
-                if let Some(window) = app.get_webview_window("main") {
-                    use cocoa::base::id;
-
-                    if let Ok(ns_window) = window.ns_window() {
-                        let ns_window = ns_window as id;
-                        unsafe {
-                            let _: () = msg_send![ns_window, setSharingType: 0u64];
-                            let collection_behavior: u64 = (1 << 0) | (1 << 8) | (1 << 6);
-                            let _: () =
-                                msg_send![ns_window, setCollectionBehavior: collection_behavior];
-                            let _: () = msg_send![ns_window, setLevel: 3i32];
-                            let _: () = msg_send![ns_window, setHidesOnDeactivate: NO];
-                            let current_style: u64 = msg_send![ns_window, styleMask];
-                            let new_style = current_style | (1 << 7);
-                            let _: () = msg_send![ns_window, setStyleMask: new_style];
-                        }
-                    }
-                }
-            }
-
             // Start the web server in a background thread
             std::thread::spawn(|| {
                 let rt = tokio::runtime::Runtime::new().unwrap();
@@ -1494,7 +1534,8 @@ pub fn run() {
             refresh_notes,
             set_window_opacity,
             get_window_opacity,
-            set_screenshot_protection
+            set_screenshot_protection,
+            set_float_on_top
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

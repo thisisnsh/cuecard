@@ -21,6 +21,7 @@
         "alwaysOnTop": true,
         "transparent": true,
         "decorations": true,
+        "contentProtected": true,
         "visibleOnAllWorkspaces": true,
         "skipTaskbar": true,
         "focus": false,
