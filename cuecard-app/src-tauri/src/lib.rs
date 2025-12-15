@@ -24,9 +24,6 @@ use tauri_plugin_opener::OpenerExt;
 use tauri_plugin_store::StoreExt;
 use tower_http::cors::{Any, CorsLayer};
 
-#[macro_use]
-extern crate objc;
-
 // =============================================================================
 // CONSTANTS
 // =============================================================================
@@ -1351,64 +1348,31 @@ async fn refresh_notes(app: AppHandle) -> Result<Option<String>, String> {
 }
 
 // =============================================================================
-// WINDOW MANAGEMENT (macOS)
+// WINDOW MANAGEMENT 
 // =============================================================================
 
 #[tauri::command]
 fn set_window_opacity(app: AppHandle, opacity: f64) -> Result<(), String> {
-    use cocoa::appkit::NSWindow;
-    use cocoa::base::id;
-
-    let window = app
-        .get_webview_window("main")
-        .ok_or("Failed to get main window")?;
-
-    let clamped_opacity = opacity.max(0.1).min(1.0);
-
-    let ns_window = window
-        .ns_window()
-        .map_err(|e| format!("Failed to get NSWindow: {}", e))? as id;
-    unsafe {
-        ns_window.setAlphaValue_(clamped_opacity);
-    }
-
+    // TODO: Set window opacity (0.0 to 1.0)
+    // Just make app background transparent not the content itself
     Ok(())
 }
 
 #[tauri::command]
 fn get_window_opacity(app: AppHandle) -> Result<f64, String> {
-    use cocoa::appkit::NSWindow;
-    use cocoa::base::id;
-
-    let window = app
-        .get_webview_window("main")
-        .ok_or("Failed to get main window")?;
-    let ns_window = window
-        .ns_window()
-        .map_err(|e| format!("Failed to get NSWindow: {}", e))? as id;
-    let opacity = unsafe { ns_window.alphaValue() };
-    Ok(opacity)
+    // TODO: Get window opacity (0.0 to 1.0)
+    Ok(1.0)
 }
 
 #[tauri::command]
 fn set_screenshot_protection(app: AppHandle, enabled: bool) -> Result<(), String> {
-    use cocoa::base::id;
-
     let window = app
         .get_webview_window("main")
         .ok_or("Failed to get main window")?;
-    let ns_window = window
-        .ns_window()
-        .map_err(|e| format!("Failed to get NSWindow: {}", e))? as id;
-
-    unsafe {
-        if enabled {
-            let _: () = msg_send![ns_window, setSharingType: 0u64];
-        } else {
-            let _: () = msg_send![ns_window, setSharingType: 1u64];
-        }
-    }
-
+    window
+        .set_content_protected(enabled)
+        .map_err(|e| format!("Failed to update content protection: {}", e))?;
+    // TODO: Enable screenshot protection for mac
     Ok(())
 }
 
@@ -1443,35 +1407,7 @@ pub fn run() {
             // Load stored tokens from persistent storage
             load_tokens_from_store(app.handle());
 
-            // Enable screenshot protection and full-screen overlay by default
-            {
-                use cocoa::appkit::NSApplication;
-                use cocoa::base::{nil, NO};
-
-                unsafe {
-                    let ns_app = NSApplication::sharedApplication(nil);
-                    let _: () = msg_send![ns_app, setActivationPolicy: 1i64];
-                }
-
-                if let Some(window) = app.get_webview_window("main") {
-                    use cocoa::base::id;
-
-                    if let Ok(ns_window) = window.ns_window() {
-                        let ns_window = ns_window as id;
-                        unsafe {
-                            let _: () = msg_send![ns_window, setSharingType: 0u64];
-                            let collection_behavior: u64 = (1 << 0) | (1 << 8) | (1 << 6);
-                            let _: () =
-                                msg_send![ns_window, setCollectionBehavior: collection_behavior];
-                            let _: () = msg_send![ns_window, setLevel: 3i32];
-                            let _: () = msg_send![ns_window, setHidesOnDeactivate: NO];
-                            let current_style: u64 = msg_send![ns_window, styleMask];
-                            let new_style = current_style | (1 << 7);
-                            let _: () = msg_send![ns_window, setStyleMask: new_style];
-                        }
-                    }
-                }
-            }
+            // TODO: Enable screenshot protection and full-screen overlay by default
 
             // Start the web server in a background thread
             std::thread::spawn(|| {
