@@ -1,6 +1,13 @@
 // CueCard Website - Interactions & Animations
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize hero badge rotation (run first)
+    try {
+        initHeroBadgeTypewriter();
+    } catch (e) {
+        console.error('Hero badge error:', e);
+    }
+
     // Initialize scroll reveal animations
     initScrollReveal();
 
@@ -18,9 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize Ghost Mode GIF animation
     initGhostModeAnimation();
-
-    // Initialize hero badge typewriter
-    initHeroBadgeTypewriter();
 });
 
 // Scroll Reveal Animation
@@ -201,10 +205,13 @@ function startTimestampCountdown(element, initialSeconds) {
     }, 1000);
 }
 
-// Hero badge typewriter animation
+// Hero badge text rotation
 function initHeroBadgeTypewriter() {
     const heroBadge = document.querySelector('.hero-badge');
-    if (!heroBadge) return;
+    if (!heroBadge) {
+        console.log('Hero badge not found');
+        return;
+    }
 
     const messages = [
         { text: 'Sync notes from Google Slides', theme: 'yellow' },
@@ -212,48 +219,40 @@ function initHeroBadgeTypewriter() {
         { text: 'Free and Open Source', theme: 'white' }
     ];
 
-    const textSpan = document.createElement('span');
-    textSpan.className = 'hero-badge-text';
-
-    heroBadge.textContent = '';
-    heroBadge.append(textSpan);
-
     const themes = ['hero-badge--yellow', 'hero-badge--green', 'hero-badge--white'];
-    const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-    const setTheme = (theme) => {
-        heroBadge.classList.remove(...themes);
-        heroBadge.classList.add(`hero-badge--${theme}`);
+    let currentIndex = 0;
+
+    const updateText = () => {
+        const { text, theme } = messages[currentIndex];
+
+        // Fade out
+        heroBadge.style.opacity = '0';
+
+        setTimeout(() => {
+            // Remove all theme classes
+            themes.forEach(t => heroBadge.classList.remove(t));
+            // Add current theme
+            heroBadge.classList.add('hero-badge--' + theme);
+            // Update text
+            heroBadge.textContent = text;
+
+            // Fade in
+            heroBadge.style.opacity = '1';
+
+            // Move to next message
+            currentIndex = (currentIndex + 1) % messages.length;
+        }, 300);
     };
 
-    const typeText = async (text) => {
-        for (const char of text) {
-            textSpan.textContent += char;
-            await wait(60);
-        }
-    };
+    // Add transition
+    heroBadge.style.transition = 'opacity 0.3s ease';
 
-    const deleteText = async () => {
-        while (textSpan.textContent.length > 0) {
-            textSpan.textContent = textSpan.textContent.slice(0, -1);
-            await wait(35);
-        }
-    };
+    // Set initial message
+    updateText();
 
-    const startTypewriter = async () => {
-        let index = 0;
-        while (true) {
-            const { text, theme } = messages[index];
-            setTheme(theme);
-            await typeText(text);
-            await wait(1500);
-            await deleteText();
-            await wait(400);
-            index = (index + 1) % messages.length;
-        }
-    };
-
-    startTypewriter();
+    // Change every 3 seconds
+    setInterval(updateText, 3000);
 }
 
 function formatTimestamp(totalSeconds) {
