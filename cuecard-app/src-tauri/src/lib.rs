@@ -864,17 +864,8 @@ async fn oauth_callback_handler(Query(params): Query<OAuthCallback>) -> Html<Str
                             }
 
                             Html(
-                                r#"<!DOCTYPE html>
-                                <html><head><title>Authentication Successful</title>
-                                <style>
-                                    body { font-family: system-ui; padding: 40px; text-align: center; background: #fff; }
-                                    .success { color: #000; }
-                                </style>
-                                </head><body>
-                                <h1 class="success">Authentication Successful!</h1>
-                                <p>You can now close this window and return to CueCard.</p>
-                                <script>setTimeout(() => window.close(), 2000);</script>
-                                </body></html>"#
+                                r#"<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CueCard Authentication</title><style>:root{--bg0:#0b0b0c;--bg1:#121214;--text-strong:rgba(255,255,255,.7);--text-soft:rgba(255,255,255,.55)}html,body{height:100%;margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji"}body{background:radial-gradient(1200px 600px at 50% 45%,#1a1a1f 0%,#0f0f12 55%,#0a0a0b 100%),linear-gradient(180deg,var(--bg1),var(--bg0));display:grid;place-items:center;color:#fff}.wrap{text-align:center;padding:48px 24px;max-width:900px}h1{margin:0 0 26px;font-weight:600;letter-spacing:-.02em;color:var(--text-strong);font-size:clamp(44px,6vw,78px);line-height:1.08}p{margin:0;font-size:clamp(16px,2vw,26px);line-height:1.5;color:var(--text-soft)}</style></head><body><main class="wrap" role="main">
+                                <h1>Speak Confidently</h1><p>You're all set up for CueCard. You can now close this window.</p></main></body></html>"#
                                     .to_string(),
                             )
                         }
@@ -936,17 +927,8 @@ async fn oauth_callback_handler(Query(params): Query<OAuthCallback>) -> Html<Str
                 }
 
                 Html(
-                    r#"<!DOCTYPE html>
-                    <html><head><title>Slides Access Granted</title>
-                    <style>
-                        body { font-family: system-ui; padding: 40px; text-align: center; background: #fff; }
-                        .success { color: #000; }
-                    </style>
-                    </head><body>
-                    <h1 class="success">Google Slides Access Granted!</h1>
-                    <p>You can now close this window and return to CueCard.</p>
-                    <script>setTimeout(() => window.close(), 2000);</script>
-                    </body></html>"#
+                    r#"<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CueCard Authentication</title><style>:root{--bg0:#0b0b0c;--bg1:#121214;--text-strong:rgba(255,255,255,.7);--text-soft:rgba(255,255,255,.55)}html,body{height:100%;margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji"}body{background:radial-gradient(1200px 600px at 50% 45%,#1a1a1f 0%,#0f0f12 55%,#0a0a0b 100%),linear-gradient(180deg,var(--bg1),var(--bg0));display:grid;place-items:center;color:#fff}.wrap{text-align:center;padding:48px 24px;max-width:900px}h1{margin:0 0 26px;font-weight:600;letter-spacing:-.02em;color:var(--text-strong);font-size:clamp(44px,6vw,78px);line-height:1.08}p{margin:0;font-size:clamp(16px,2vw,26px);line-height:1.5;color:var(--text-soft)}</style></head><body><main class="wrap" role="main">
+                    <h1>Speak Confidently</h1><p>You're all set up for Slides Access. You can now close this window.</p></main></body></html>"#
                         .to_string(),
                 )
             }
