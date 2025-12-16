@@ -13,7 +13,6 @@
       {
         "title": "CueCard",
         "theme": "Dark",
-
         "acceptFirstMouse": true,
         "alwaysOnTop": true,
         "center": true,
@@ -25,7 +24,6 @@
         "skipTaskbar": true,
         "transparent": true,
         "visibleOnAllWorkspaces": true,
-
         "height": 300,
         "width": 600,
         "minHeight": 300,
@@ -67,7 +65,10 @@
       "endpoints": [
         "https://github.com/thisisnsh/cuecard/releases/latest/download/latest.json"
       ],
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEU2NjY0RDBEN0M3MjExRTcKUldUbkVYSjhEVTFtNWt1U3N4Y3VuN0Q2MUdqT0RhOUpsOXhGMm4vSUVuUHFVaC85cy82bFlIbnAK"
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEU2NjY0RDBEN0M3MjExRTcKUldUbkVYSjhEVTFtNWt1U3N4Y3VuN0Q2MUdqT0RhOUpsOXhGMm4vSUVuUHFVaC85cy82bFlIbnAK",
+      "windows": {
+        "installMode": "passive"
+      }
     }
   }
 }

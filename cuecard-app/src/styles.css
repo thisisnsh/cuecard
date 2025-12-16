@@ -628,7 +628,7 @@ body {
 .close-btn {
   font-size: 12px;
   font-weight: 500;
-  color: var(--color-red);
+  color: var(--text-secondary);
   background: none;
   border: none;
   cursor: pointer;
@@ -639,6 +639,34 @@ body {
 }
 
 .close-btn:hover {
+  color: var(--color-red);
+}
+
+.download-updates-btn {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: none;
+  letter-spacing: 0.25px;
+
+  animation: blink 5s infinite;
+}
+
+@keyframes blink {
+  0%, 100% {
+    color: var(--text-secondary);  
+  }
+  50% {
+    color: var(--color-yellow);
+  }
+}
+
+.download-updates-btn:hover {
+  animation-play-state: paused; 
   opacity: 0.8;
 }
 

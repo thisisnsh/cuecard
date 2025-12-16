@@ -23,6 +23,8 @@ const { invoke } = window.__TAURI__?.core || {};
 const { listen } = window.__TAURI__?.event || {};
 const { openUrl } = window.__TAURI__?.opener || {};
 const { getCurrentWindow } = window.__TAURI__?.window || {};
+const { check } = window.__TAURI__?.updater || {};
+const { relaunch } = window.__TAURI__?.process || {};
 
 // =============================================================================
 // FIRESTORE INTEGRATION
@@ -301,7 +303,7 @@ async function hasScope(scopeType) {
 // =============================================================================
 
 // DOM Elements
-let btnClose;
+let btnClose, btnDownloadUpdates, downloadUpdatesSeparator;
 let authBtn;
 let viewInitial, viewAddNotes, viewNotes, viewSettings;
 let linkGoBack, backSeparator;
@@ -346,6 +348,8 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   // Get DOM elements
   btnClose = document.getElementById("btn-close");
+  btnDownloadUpdates = document.getElementById("btn-download-updates");
+  downloadUpdatesSeparator = document.getElementById("download-updates-separator");
   authBtn = document.getElementById("auth-btn");
   viewInitial = document.getElementById("view-initial");
   viewAddNotes = document.getElementById("view-add-notes");
@@ -385,9 +389,12 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   // Set up header handlers
   setupHeader();
-  
+
   // Set up footer handlers
   setupFooter();
+
+  // Set up update checker
+  setupUpdateChecker();
 
   // Set up refresh button handler
   setupRefreshButton();
@@ -1280,6 +1287,101 @@ function setupHeader() {
       console.error("Tauri window API not available");
     }
   });
+
+  // Download updates button handler
+  btnDownloadUpdates.addEventListener("click", async (e) => {
+    e.preventDefault();
+    console.log("Download updates button clicked");
+
+    // Disable the button during download
+    btnDownloadUpdates.disabled = true;
+
+    try {
+      const update = await check();
+
+      if (update?.available) {
+        console.log(`Update available: ${update.version}`);
+
+        // Show download progress in button text
+        btnDownloadUpdates.textContent = 'Downloading...';
+
+        // Download and install with progress tracking
+        await update.downloadAndInstall((event) => {
+          switch (event.event) {
+            case 'Started':
+              btnDownloadUpdates.textContent = 'Downloading...';
+              console.log(`Started downloading ${event.data.contentLength} bytes`);
+              break;
+            case 'Progress':
+              const percent = Math.round((event.data.chunkLength / event.data.contentLength) * 100);
+              btnDownloadUpdates.textContent = `Downloading ${percent}%`;
+              console.log(`Downloaded ${event.data.chunkLength} of ${event.data.contentLength}`);
+              break;
+            case 'Finished':
+              btnDownloadUpdates.textContent = 'Installing...';
+              console.log('Download finished');
+              break;
+          }
+        });
+
+        console.log('Update installed, preparing to relaunch');
+
+        // Hide the button before relaunch
+        btnDownloadUpdates.classList.add('hidden');
+        downloadUpdatesSeparator.classList.add('hidden');
+
+        // Relaunch the app
+        await relaunch();
+      }
+    } catch (error) {
+      console.error('Update failed:', error);
+      btnDownloadUpdates.textContent = 'Update Failed';
+      btnDownloadUpdates.disabled = false;
+
+      // Reset button text after 3 seconds
+      setTimeout(() => {
+        btnDownloadUpdates.textContent = 'Download Updates';
+      }, 3000);
+    }
+  });
+}
+
+// =============================================================================
+// UPDATE CHECKER
+// =============================================================================
+
+// Set up automatic update checking
+function setupUpdateChecker() {
+  // Check for updates immediately on startup
+  checkForUpdates();
+
+  // Check for updates every minute (60000 ms)
+  setInterval(checkForUpdates, 60000);
+}
+
+// Check for updates and show button if available
+async function checkForUpdates() {
+  try {
+    console.log('Checking for updates...');
+    const update = await check();
+
+    if (update?.available) {
+      console.log(`Update available: ${update.version}`);
+      // Show the download updates button
+      btnDownloadUpdates.classList.remove('hidden');
+      downloadUpdatesSeparator.classList.remove('hidden');
+    } else {
+      console.log('No updates available');
+      // Hide the button if no updates
+      btnDownloadUpdates.classList.add('hidden');
+      downloadUpdatesSeparator.classList.add('hidden');
+    }
+  } catch (error) {
+    console.error('Error checking for updates:', error);
+    // Hide button on error
+    btnDownloadUpdates.classList.add('hidden');
+    downloadUpdatesSeparator.classList.add('hidden');
+  }
 }
 
 // Footer Handlers
