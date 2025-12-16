@@ -22,6 +22,7 @@ if (!window.__TAURI__) {
 const { invoke } = window.__TAURI__?.core || {};
 const { listen } = window.__TAURI__?.event || {};
 const { openUrl } = window.__TAURI__?.opener || {};
+const { getCurrentWindow } = window.__TAURI__?.window || {};
 
 // =============================================================================
 // FIRESTORE INTEGRATION
@@ -300,6 +301,7 @@ async function hasScope(scopeType) {
 // =============================================================================
 
 // DOM Elements
+let btnClose;
 let authBtn;
 let viewInitial, viewAddNotes, viewNotes, viewSettings;
 let linkGoBack, backSeparator;
@@ -343,6 +345,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   await initStore();
 
   // Get DOM elements
+  btnClose = document.getElementById("btn-close");
   authBtn = document.getElementById("auth-btn");
   viewInitial = document.getElementById("view-initial");
   viewAddNotes = document.getElementById("view-add-notes");
@@ -380,6 +383,9 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Set up auth handlers
   setupAuth();
 
+  // Set up header handlers
+  setupHeader();
+  
   // Set up footer handlers
   setupFooter();
 
@@ -1262,8 +1268,22 @@ function escapeHtml(text) {
 }
 
 // =============================================================================
-// FOOTER AND EXTERNAL LINKS
+// HEADER, FOOTER AND EXTERNAL LINKS
 // =============================================================================
+
+// Header Handlers
+function setupHeader() {
+  // Close button handler
+  btnClose.addEventListener("click", async (e) => {
+    e.preventDefault();
+    console.log("Close button clicked");
+    if (getCurrentWindow) {
+      await getCurrentWindow().close();
+    } else {
+      console.error("Tauri window API not available");
+    }
+  });
+}
 
 // Footer Handlers
 function setupFooter() {

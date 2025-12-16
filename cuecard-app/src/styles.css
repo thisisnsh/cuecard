@@ -3,9 +3,9 @@
   --bg-opacity: 1;
   --text-primary: #ffffff;
   --text-secondary: #a8a6a6;
-  --accent-link: #febc2e;
-  --accent-timestamp: #19c332;
-  --accent-action: #ff6adf;
+  --color-yellow: #febc2e;
+  --color-green: #19c332;
+  --color-pink: #ff6adf;
 
   /* Typography */
   --font-family: -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
@@ -42,6 +42,7 @@ body {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  border-radius: 32px;
 }
 
 /* Google Sign-in Button */
@@ -293,12 +294,12 @@ body {
   font-size: 10px;
   font-weight: 600;
   font-stretch: expanded;
-  color: var(--accent-timestamp);
+  color: var(--color-green);
   line-height: 1;
 }
 
 .notes-input-highlight .timestamp.time-warning {
-  color: var(--accent-link);
+  color: var(--color-yellow);
 }
 
 .notes-input-highlight .timestamp.time-overtime {
@@ -309,7 +310,7 @@ body {
   font-size: 10px;
   font-weight: 600;
   font-stretch: expanded;
-  color: var(--accent-action);
+  color: var(--color-pink);
 }
 
 /* Gradient overlays for notes input */
@@ -389,7 +390,7 @@ body {
   font-size: 10px;
   font-weight: 600;
   font-stretch: expanded;
-  color: var(--accent-timestamp);
+  color: var(--color-green);
   line-height: 1;
   transition: color 0.3s ease;
   margin-bottom: -20px;
@@ -397,7 +398,7 @@ body {
 
 /* Warning state: when time < 00:10 */
 .notes-content .timestamp.time-warning {
-  color: var(--accent-link); /* Yellow */
+  color: var(--color-yellow); /* Yellow */
 }
 
 /* Overtime state: when time < 00:00 (counting up) */
@@ -409,7 +410,7 @@ body {
   font-size: 10px;
   font-weight: 600;
   font-stretch: expanded;
-  color: var(--accent-action);
+  color: var(--color-pink);
 }
 
 
@@ -448,7 +449,7 @@ body {
   right: -2px;
   bottom: -1px;
   height: 2px;
-  background: var(--accent-link);
+  background: var(--color-yellow);
   transform: scaleX(0);
   transform-origin: left;
   animation: brush-stroke 0.6s ease-out forwards;
@@ -468,7 +469,7 @@ body {
   right: -2px;
   bottom: -1px;
   height: 2px;
-  background: var(--accent-timestamp);
+  background: var(--color-green);
   transform: scaleX(0);
   transform-origin: left;
   animation: brush-stroke 0.6s ease-out 0.3s forwards;
@@ -488,7 +489,7 @@ body {
   right: -2px;
   bottom: -1px;
   height: 2px;
-  background: var(--accent-action);
+  background: var(--color-pink);
   transform: scaleX(0);
   transform-origin: left;
   animation: brush-stroke 0.6s ease-out 0.6s forwards;
@@ -500,13 +501,13 @@ body {
 .paste-notes-link {
   position: relative;
   display: inline-block;
-  color: var(--accent-timestamp);
+  color: var(--color-green);
   text-decoration: none;
   transition: color 0.2s ease;
 }
 
 .paste-notes-link:hover {
-  color: var(--accent-timestamp);
+  color: var(--color-green);
 }
 
 .paste-notes-link::after {
@@ -516,7 +517,7 @@ body {
   right: -2px;
   bottom: -1px;
   height: 2px;
-  background: var(--accent-timestamp);
+  background: var(--color-green);
   transform: scaleX(1);
   transform-origin: left;
   border-radius: 50% 50% 50% 50% / 60% 30% 60% 30%;
@@ -532,13 +533,13 @@ body {
 .slides-link {
   position: relative;
   display: inline-block;
-  color: var(--accent-link);
+  color: var(--color-yellow);
   text-decoration: none;
   transition: color 0.2s ease;
 }
 
 .slides-link:hover {
-  color: var(--accent-link);
+  color: var(--color-yellow);
 }
 
 .slides-link::after {
@@ -548,7 +549,7 @@ body {
   right: -2px;
   bottom: -1px;
   height: 2px;
-  background: var(--accent-link);
+  background: var(--color-yellow);
   transform: scaleX(1);
   transform-origin: left;
   border-radius: 50% 50% 50% 50% / 60% 30% 60% 30%;
@@ -578,6 +579,33 @@ body {
 ::selection {
   background: rgba(254, 188, 46, 0.3);
   color: var(--text-primary);
+}
+
+/* Header */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 18px 18px 0px 18px;
+  background: rgba(0, 0, 0, var(--bg-opacity));
+}
+
+.header-link {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-pink);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+  letter-spacing: 0.25px;
+}
+
+.header-link:hover {
+  opacity: 0.8;
 }
 
 /* Footer */
@@ -637,15 +665,15 @@ body {
 }
 
 .timer-btn-start {
-  color: var(--accent-timestamp);
+  color: var(--color-green);
 }
 
 .timer-btn-reset {
-  color: var(--accent-action);
+  color: var(--color-pink);
 }
 
 .timer-btn-pause {
-  color: var(--accent-link);
+  color: var(--color-yellow);
 }
 
 /* Footer Refresh Button and Slide Info */
@@ -830,7 +858,7 @@ body {
 }
 
 .toggle-switch input:checked + .toggle-slider {
-  background-color: var(--accent-timestamp);
+  background-color: var(--color-green);
   opacity: 1;
 }
 
