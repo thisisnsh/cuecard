@@ -1353,42 +1353,6 @@ async fn refresh_notes(app: AppHandle) -> Result<Option<String>, String> {
 // =============================================================================
 
 #[tauri::command]
-fn set_window_opacity(app: AppHandle, opacity: f64) -> Result<(), String> {
-    use cocoa::appkit::NSWindow;
-    use cocoa::base::id;
-
-    let window = app
-        .get_webview_window("main")
-        .ok_or("Failed to get main window")?;
-
-    let clamped_opacity = opacity.max(0.1).min(1.0);
-
-    let ns_window = window
-        .ns_window()
-        .map_err(|e| format!("Failed to get NSWindow: {}", e))? as id;
-    unsafe {
-        ns_window.setAlphaValue_(clamped_opacity);
-    }
-
-    Ok(())
-}
-
-#[tauri::command]
-fn get_window_opacity(app: AppHandle) -> Result<f64, String> {
-    use cocoa::appkit::NSWindow;
-    use cocoa::base::id;
-
-    let window = app
-        .get_webview_window("main")
-        .ok_or("Failed to get main window")?;
-    let ns_window = window
-        .ns_window()
-        .map_err(|e| format!("Failed to get NSWindow: {}", e))? as id;
-    let opacity = unsafe { ns_window.alphaValue() };
-    Ok(opacity)
-}
-
-#[tauri::command]
 fn set_screenshot_protection(app: AppHandle, enabled: bool) -> Result<(), String> {    
     let window = app
         .get_webview_window("main")
@@ -1506,8 +1470,6 @@ pub fn run() {
             start_login,
             logout,
             refresh_notes,
-            set_window_opacity,
-            get_window_opacity,
             set_screenshot_protection
         ])
         .run(tauri::generate_context!())

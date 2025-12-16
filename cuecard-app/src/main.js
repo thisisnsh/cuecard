@@ -1315,14 +1315,8 @@ async function loadStoredSettings() {
   const storedOpacity = await getStoredValue(STORAGE_KEYS.SETTINGS_OPACITY);
   if (storedOpacity !== null && storedOpacity !== undefined) {
     currentOpacity = storedOpacity;
-    // Apply the stored opacity
-    if (invoke) {
-      try {
-        await invoke("set_window_opacity", { opacity: storedOpacity / 100 });
-      } catch (error) {
-        console.error("Error applying stored opacity:", error);
-      }
-    }
+    // Apply the stored opacity via CSS variable
+    document.documentElement.style.setProperty('--bg-opacity', storedOpacity / 100);
   }
 
   // Load stored screenshot protection setting
@@ -1352,14 +1346,8 @@ function setupSettings() {
     currentOpacity = value;
     opacityValue.textContent = `${value}%`;
 
-    // Update window opacity via Tauri
-    if (invoke) {
-      try {
-        await invoke("set_window_opacity", { opacity: value / 100 });
-      } catch (error) {
-        console.error("Error setting window opacity:", error);
-      }
-    }
+    // Update window opacity via CSS variable
+    document.documentElement.style.setProperty('--bg-opacity', value / 100);
 
     // Save to persistent storage
     await setStoredValue(STORAGE_KEYS.SETTINGS_OPACITY, value);
@@ -1387,21 +1375,15 @@ function setupSettings() {
 
 // Load current settings values
 async function loadCurrentSettings() {
-  if (!invoke) return;
-
-  try {
-    // Load current opacity
-    const opacity = await invoke("get_window_opacity");
-    const opacityPercent = Math.round(opacity * 100);
-    currentOpacity = opacityPercent;
-    if (opacitySlider) {
-      opacitySlider.value = opacityPercent;
-    }
-    if (opacityValue) {
-      opacityValue.textContent = `${opacityPercent}%`;
-    }
-  } catch (error) {
-    console.error("Error loading window opacity:", error);
+  // Load current opacity from CSS variable
+  const opacity = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--bg-opacity')) || 1;
+  const opacityPercent = Math.round(opacity * 100);
+  currentOpacity = opacityPercent;
+  if (opacitySlider) {
+    opacitySlider.value = opacityPercent;
+  }
+  if (opacityValue) {
+    opacityValue.textContent = `${opacityPercent}%`;
   }
 
   // Screen capture toggle: default is OFF (protected), so checkbox unchecked
