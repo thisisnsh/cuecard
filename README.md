@@ -2,7 +2,7 @@
 
 Speaker notes visible only to you — for presentations, meetings, dates and everything.
 
-CueCard is a lightweight desktop teleprompter that keeps your speaker notes in view without letting anyone else see them. Whether you’re giving a presentation, or leading a meeting, you can keep your talking points floating above everything else – invisible to screen shares and recordings.
+CueCard is a lightweight cross-platform desktop teleprompter (macOS & Windows) that keeps your speaker notes in view without letting anyone else see them. Whether you're giving a presentation, or leading a meeting, you can keep your talking points floating above everything else – invisible to screen shares and recordings.
 
 <a href="https://www.youtube.com/watch?v=D2xCqQFtK-k"><strong>▶ Watch the Demo</strong></a>
 
@@ -50,9 +50,14 @@ CueCard focuses on the essentials so you can focus on your delivery:
 - **Mac Desktop App**:
   - Download the latest DMG from the [GitHub Releases](https://github.com/thisisnsh/cuecard/releases) page
   - Drag `CueCard` into your `Applications` folder
+  - Supports Intel and Apple Silicon (Universal binary)
 
 - **Windows Desktop App**:
-  - Coming Soon
+  - Download the latest installer from the [GitHub Releases](https://github.com/thisisnsh/cuecard/releases) page
+  - Choose the installer for your system:
+    - `CueCard_x64-setup.exe` for 64-bit Intel/AMD processors
+    - `CueCard_x86-setup.exe` for 32-bit systems
+    - `CueCard_arm64-setup.exe` for ARM64 devices (Surface, Snapdragon)
 
 > The browser extension is **only required** for syncing Google Slides speaker notes.
 

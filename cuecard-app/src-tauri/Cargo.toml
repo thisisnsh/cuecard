@@ -39,5 +39,10 @@ urlencoding = "2.1"
 # Date/time handling
 chrono = "0.4"
 
-# macOS
+# macOS-specific dependencies
+[target.'cfg(target_os = "macos")'.dependencies]
 tauri-nspanel = { git = "https://github.com/ahkohd/tauri-nspanel", branch = "v2.1" }
+
+# Windows-specific dependencies
+[target.'cfg(target_os = "windows")'.dependencies]
+windows = { version = "0.58", features = ["Win32_UI_WindowsAndMessaging", "Win32_Foundation"] }

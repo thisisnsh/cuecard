@@ -20,6 +20,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
+#[cfg(target_os = "macos")]
 use tauri_nspanel::{tauri_panel, WebviewWindowExt, PanelLevel, StyleMask, CollectionBehavior};
 use tauri_plugin_opener::OpenerExt;
 use tauri_plugin_store::StoreExt;
@@ -1389,6 +1390,47 @@ fn init_nspanel(app_handle: &AppHandle) {
 }
 
 // =============================================================================
+// WINDOWS WINDOW MANAGEMENT
+// =============================================================================
+
+#[cfg(target_os = "windows")]
+fn init_windows_window(app_handle: &AppHandle) {
+    use windows::Win32::Foundation::HWND;
+    use windows::Win32::UI::WindowsAndMessaging::{
+        GetWindowLongW, SetWindowLongW, SetWindowPos,
+        GWL_EXSTYLE, HWND_TOPMOST, SWP_NOMOVE, SWP_NOSIZE, SWP_NOACTIVATE,
+        WS_EX_TOOLWINDOW, WS_EX_APPWINDOW, WS_EX_NOACTIVATE,
+    };
+
+    let window = app_handle.get_webview_window("main").unwrap();
+
+    // Get the native window handle
+    if let Ok(hwnd) = window.hwnd() {
+        let hwnd = HWND(hwnd.0 as *mut std::ffi::c_void);
+
+        unsafe {
+            // Get current extended style
+            let ex_style = GetWindowLongW(hwnd, GWL_EXSTYLE);
+
+            // Set WS_EX_TOOLWINDOW to hide from taskbar and alt-tab
+            // Remove WS_EX_APPWINDOW to ensure it doesn't show in taskbar
+            // Add WS_EX_NOACTIVATE to prevent stealing focus
+            let new_ex_style = (ex_style | WS_EX_TOOLWINDOW.0 as i32 | WS_EX_NOACTIVATE.0 as i32)
+                & !(WS_EX_APPWINDOW.0 as i32);
+            SetWindowLongW(hwnd, GWL_EXSTYLE, new_ex_style);
+
+            // Ensure window stays on top (HWND_TOPMOST)
+            let _ = SetWindowPos(
+                hwnd,
+                HWND_TOPMOST,
+                0, 0, 0, 0,
+                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE,
+            );
+        }
+    }
+}
+
+// =============================================================================
 // APPLICATION ENTRY POINT
 // =============================================================================
 
@@ -1406,8 +1448,9 @@ pub fn run() {
     }
 
     builder
-        .setup(|app| {            
-            // Set activation policy to Accessory to prevent the app icon from showing on the dock
+        .setup(|app| {
+            // Set activation policy to Accessory to prevent the app icon from showing on the dock (macOS only)
+            #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
 
             // Store app handle for emitting events
@@ -1430,9 +1473,12 @@ pub fn run() {
             // Load stored tokens from persistent storage
             load_tokens_from_store(app.handle());
 
-            // Enable screenshot protection on macOS
+            // Platform-specific window initialization
             #[cfg(target_os = "macos")]
             init_nspanel(app.app_handle());
+
+            #[cfg(target_os = "windows")]
+            init_windows_window(app.app_handle());
 
             // Start the web server in a background thread
             std::thread::spawn(|| {
