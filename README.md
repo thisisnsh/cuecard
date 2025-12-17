@@ -61,8 +61,11 @@ CueCard focuses on the essentials so you can focus on your delivery:
 
 > The browser extension is **only required** for syncing Google Slides speaker notes.
 
-- **Chrome Extension**: 
+- **Chrome Extension**:
   - Install CueCard directly from the Chrome Web Store
+
+- **Firefox Extension**:
+  - Install CueCard directly from [Firefox Add-ons](https://addons.mozilla.org/)
 
 - **Safari Extension**:
   - Download the latest DMG from the [GitHub Releases](https://github.com/thisisnsh/cuecard/releases) page

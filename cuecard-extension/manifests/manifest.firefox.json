@@ -1,0 +1,55 @@
+{
+  "manifest_version": 2,
+  "name": "CueCard Extension",
+  "version": "1.0.1",
+  "description": "Browser extension for CueCard - syncs speaker notes from Google Slides",
+
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "extension@cuecard.dev",
+      "strict_min_version": "91.0"
+    }
+  },
+
+  "permissions": [
+    "activeTab",
+    "storage",
+    "https://docs.google.com/presentation/*",
+    "http://localhost:3642/*"
+  ],
+
+  "content_scripts": [
+    {
+      "matches": [
+        "https://docs.google.com/presentation/d/*/edit*",
+        "https://docs.google.com/presentation/d/*/present*",
+        "https://docs.google.com/presentation/d/*/view*",
+        "https://docs.google.com/presentation/d/*/pub*"
+      ],
+      "js": ["src/content/content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+
+  "background": {
+    "scripts": ["src/background/background.js"],
+    "persistent": false
+  },
+
+  "browser_action": {
+    "default_popup": "src/popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  }
+}

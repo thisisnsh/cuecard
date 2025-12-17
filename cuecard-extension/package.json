@@ -6,6 +6,7 @@
     "build": "node scripts/build.js",
     "build:chrome": "node scripts/build.js chrome",
     "build:safari": "node scripts/build.js safari && ./scripts/safari-convert.sh",
+    "build:firefox": "node scripts/build.js firefox",
     "release": "node scripts/release.js"
   },
   "author": "",

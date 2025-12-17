@@ -48,8 +48,14 @@ function main() {
   createZip(path.join(DIST, 'chrome'), chromeZip);
   console.log(`   Created: ${chromeZip}`);
 
+  // Package Firefox extension
+  console.log('\n3. Packaging Firefox extension...');
+  const firefoxZip = path.join(RELEASES, `cuecard-extension-firefox-v${VERSION}.zip`);
+  createZip(path.join(DIST, 'firefox'), firefoxZip);
+  console.log(`   Created: ${firefoxZip}`);
+
   // Safari note
-  console.log('\n3. Safari packaging...');
+  console.log('\n4. Safari packaging...');
   console.log('   Safari requires Xcode to build the app.');
   console.log('   Run: npm run build:safari');
   console.log('   Then build in Xcode and export the app.');
@@ -83,6 +89,13 @@ function main() {
   console.log('  3. Upload the Chrome ZIP (Edge uses same format)');
   console.log('  4. Submit for review');
 
+  console.log('\nFIREFOX ADD-ONS:');
+  console.log('  1. Go to: https://addons.mozilla.org/developers/');
+  console.log('  2. Create Mozilla Developer account (free)');
+  console.log('  3. Click "Submit a New Add-on" and upload the Firefox ZIP');
+  console.log('  4. Fill in add-on details');
+  console.log('  5. Submit for review (takes 1-5 days)');
+
   console.log('\nSAFARI APP STORE:');
   console.log('  1. Requires Apple Developer account ($99/year)');
   console.log('  2. Build the app in Xcode');
@@ -92,6 +105,7 @@ function main() {
   console.log('\nDIRECT DISTRIBUTION (no store):');
   console.log('  Users can install directly:');
   console.log('  - Chrome: Unzip and load unpacked in developer mode');
+  console.log('  - Firefox: Load temporary add-on via about:debugging');
   console.log('');
 }
 

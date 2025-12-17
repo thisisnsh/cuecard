@@ -10,7 +10,8 @@ const DIST = path.join(ROOT, 'dist');
 
 const BROWSERS = {
   chrome: 'manifest.chrome.json',
-  safari: 'manifest.chrome.json' // Safari uses Chrome manifest as base
+  safari: 'manifest.chrome.json', // Safari uses Chrome manifest as base
+  firefox: 'manifest.firefox.json'
 };
 
 function ensureDir(dir) {
@@ -105,6 +106,11 @@ function main() {
   console.log('  2. Open the Xcode project in dist/safari-xcode');
   console.log('  3. Build and run in Xcode');
   console.log('  4. Enable extension in Safari Preferences > Extensions');
+
+  console.log('\nFirefox:');
+  console.log('  1. Open about:debugging#/runtime/this-firefox');
+  console.log('  2. Click "Load Temporary Add-on..."');
+  console.log(`  3. Select manifest.json from: ${path.join(DIST, 'firefox')}`);
 }
 
 main();
