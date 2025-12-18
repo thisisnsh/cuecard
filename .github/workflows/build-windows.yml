@@ -33,6 +33,7 @@ jobs:
 
       - name: Create firebase config
         working-directory: cuecard-app
+        shell: bash
         run: |
           echo '${{ secrets.FIREBASE_CONFIG }}' > firebase-config.json
 
