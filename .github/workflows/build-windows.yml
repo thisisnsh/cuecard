@@ -1,0 +1,73 @@
+name: Build Windows
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Rust
+        uses: dtolnay/rust-action@stable
+
+      - name: Install Rust targets
+        run: |
+          rustup target add x86_64-pc-windows-msvc
+          rustup target add aarch64-pc-windows-msvc
+
+      - name: Install dependencies
+        working-directory: cuecard-app
+        run: npm install
+
+      - name: Create firebase config
+        working-directory: cuecard-app
+        run: |
+          echo '${{ secrets.FIREBASE_CONFIG }}' > firebase-config.json
+
+      - name: Build x64
+        working-directory: cuecard-app
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: npm run tauri build -- --target x86_64-pc-windows-msvc
+
+      - name: Build ARM64
+        working-directory: cuecard-app
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: npm run tauri build -- --target aarch64-pc-windows-msvc
+
+      - name: Upload x64 artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-x64
+          path: |
+            cuecard-app/src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/*.exe
+            cuecard-app/src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/*.exe.sig
+            cuecard-app/src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/*.msi
+            cuecard-app/src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/*.msi.sig
+            cuecard-app/src-tauri/target/x86_64-pc-windows-msvc/release/bundle/latest.json
+
+      - name: Upload ARM64 artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-arm64
+          path: |
+            cuecard-app/src-tauri/target/aarch64-pc-windows-msvc/release/bundle/nsis/*.exe
+            cuecard-app/src-tauri/target/aarch64-pc-windows-msvc/release/bundle/nsis/*.exe.sig
+            cuecard-app/src-tauri/target/aarch64-pc-windows-msvc/release/bundle/msi/*.msi
+            cuecard-app/src-tauri/target/aarch64-pc-windows-msvc/release/bundle/msi/*.msi.sig
+            cuecard-app/src-tauri/target/aarch64-pc-windows-msvc/release/bundle/latest.json
