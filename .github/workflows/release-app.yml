@@ -1,0 +1,116 @@
+name: Release CueCard App
+
+on:
+  push:
+    tags:
+      - 'app-v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.0.2)'
+        required: true
+        type: string
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-tauri:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # macOS Universal
+          - platform: macos-latest
+            args: --target universal-apple-darwin
+            target: universal-apple-darwin
+          # Windows x64
+          - platform: windows-latest
+            args: --target x86_64-pc-windows-msvc
+            target: x86_64-pc-windows-msvc
+          # Windows x86
+          - platform: windows-latest
+            args: --target i686-pc-windows-msvc
+            target: i686-pc-windows-msvc
+          # Windows ARM64
+          - platform: windows-latest
+            args: --target aarch64-pc-windows-msvc
+            target: aarch64-pc-windows-msvc
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-action@stable
+
+      - name: Add Rust target (Windows)
+        if: matrix.platform == 'windows-latest'
+        run: rustup target add ${{ matrix.target }}
+
+      - name: Add Rust targets (macOS Universal)
+        if: matrix.target == 'universal-apple-darwin'
+        run: |
+          rustup target add aarch64-apple-darwin
+          rustup target add x86_64-apple-darwin
+
+      - name: Install dependencies
+        working-directory: cuecard-app
+        run: npm install
+
+      - name: Create firebase-config.json
+        working-directory: cuecard-app
+        shell: bash
+        run: echo '${{ secrets.FIREBASE_CONFIG }}' > firebase-config.json
+
+      - name: Get version
+        id: get_version
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/app-v}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build Tauri App
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        with:
+          projectPath: cuecard-app
+          tagName: app-v${{ steps.get_version.outputs.version }}
+          releaseName: 'CueCard App v${{ steps.get_version.outputs.version }}'
+          releaseBody: |
+            ## CueCard App v${{ steps.get_version.outputs.version }}
+
+            ### Downloads
+
+            **macOS:**
+            - Universal (Intel + Apple Silicon): `CueCard_${{ steps.get_version.outputs.version }}_universal.dmg`
+
+            **Windows:**
+            - 64-bit: `CueCard_${{ steps.get_version.outputs.version }}_x64-setup.exe`
+            - 32-bit: `CueCard_${{ steps.get_version.outputs.version }}_x86-setup.exe`
+            - ARM64: `CueCard_${{ steps.get_version.outputs.version }}_arm64-setup.exe`
+
+            ### What's Changed
+            <!-- Add changelog here before publishing -->
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}
+          includeUpdaterJson: true

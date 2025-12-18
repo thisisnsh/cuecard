@@ -1,0 +1,165 @@
+name: Release CueCard Extension
+
+on:
+  push:
+    tags:
+      - 'ext-v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 1.0.2)'
+        required: true
+        type: string
+
+jobs:
+  build-extension:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Get version
+        id: get_version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/ext-v}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build Chrome extension
+        working-directory: cuecard-extension
+        run: npm run build:chrome
+
+      - name: Build Firefox extension
+        working-directory: cuecard-extension
+        run: npm run build:firefox
+
+      - name: Create release packages
+        working-directory: cuecard-extension
+        run: |
+          mkdir -p releases
+          cd dist/chrome && zip -r ../../releases/cuecard-extension-chrome-v${{ steps.get_version.outputs.version }}.zip . -x "*.DS_Store"
+          cd ../firefox && zip -r ../../releases/cuecard-extension-firefox-v${{ steps.get_version.outputs.version }}.zip . -x "*.DS_Store"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ext-v${{ steps.get_version.outputs.version }}
+          name: CueCard Extension v${{ steps.get_version.outputs.version }}
+          draft: true
+          prerelease: false
+          body: |
+            ## CueCard Extension v${{ steps.get_version.outputs.version }}
+
+            ### Downloads
+
+            | Browser | Download |
+            |---------|----------|
+            | Chrome/Edge | `cuecard-extension-chrome-v${{ steps.get_version.outputs.version }}.zip` |
+            | Firefox | `cuecard-extension-firefox-v${{ steps.get_version.outputs.version }}.zip` |
+
+            ### Installation
+
+            **Chrome/Edge (Developer Mode):**
+            1. Download and extract the Chrome zip
+            2. Go to `chrome://extensions` (or `edge://extensions`)
+            3. Enable "Developer mode"
+            4. Click "Load unpacked" and select the extracted folder
+
+            **Firefox (Temporary):**
+            1. Download and extract the Firefox zip
+            2. Go to `about:debugging#/runtime/this-firefox`
+            3. Click "Load Temporary Add-on"
+            4. Select any file in the extracted folder
+
+            ### Store Submissions
+
+            After testing the extensions:
+            - **Chrome Web Store:** https://chrome.google.com/webstore/devconsole
+            - **Edge Add-ons:** https://partner.microsoft.com/dashboard/microsoftedge/
+            - **Firefox Add-ons:** https://addons.mozilla.org/developers/
+
+            ### What's Changed
+            <!-- Add changelog here before publishing -->
+          files: |
+            cuecard-extension/releases/cuecard-extension-chrome-v${{ steps.get_version.outputs.version }}.zip
+            cuecard-extension/releases/cuecard-extension-firefox-v${{ steps.get_version.outputs.version }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Safari requires macOS and Xcode - optional job
+  build-safari:
+    runs-on: macos-latest
+    permissions:
+      contents: write
+    # Only run Safari build if APPLE_DEVELOPER_TEAM_ID is configured
+    if: ${{ vars.BUILD_SAFARI == 'true' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Get version
+        id: get_version
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=${GITHUB_REF#refs/tags/ext-v}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build Safari extension
+        working-directory: cuecard-extension
+        run: |
+          npm run build:chrome  # Safari uses the same base as Chrome MV3
+          mkdir -p dist/safari
+          cp -r dist/chrome/* dist/safari/
+
+      - name: Convert to Safari Web Extension
+        working-directory: cuecard-extension
+        run: |
+          xcrun safari-web-extension-converter dist/safari \
+            --project-location dist/safari-xcode \
+            --app-name "CueCard" \
+            --bundle-identifier "com.cuecard.extension" \
+            --no-prompt \
+            --no-open
+
+      - name: Build Safari App
+        working-directory: cuecard-extension/dist/safari-xcode/CueCard
+        run: |
+          xcodebuild -project CueCard.xcodeproj \
+            -scheme "CueCard (macOS)" \
+            -configuration Release \
+            -archivePath ../CueCard.xcarchive \
+            archive \
+            CODE_SIGN_IDENTITY="${{ secrets.APPLE_SIGNING_IDENTITY }}" \
+            DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}"
+
+      - name: Export Safari App
+        working-directory: cuecard-extension/dist/safari-xcode
+        run: |
+          xcodebuild -exportArchive \
+            -archivePath CueCard.xcarchive \
+            -exportPath CueCard-export \
+            -exportOptionsPlist ../../../scripts/ExportOptions.plist
+
+      - name: Upload Safari build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: safari-extension-v${{ steps.get_version.outputs.version }}
+          path: cuecard-extension/dist/safari-xcode/CueCard-export/
