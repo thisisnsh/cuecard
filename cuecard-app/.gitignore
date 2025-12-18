@@ -1,0 +1,4 @@
+# Updater manifests (generated manually per release)
+# Example files are tracked; actual manifests are not
+latest/*.json
+!latest/*.example.json

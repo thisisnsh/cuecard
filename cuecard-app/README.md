@@ -84,6 +84,52 @@ Note: 32-bit (x86) Windows builds are intentionally not supported.
 
 ## Release Process
 
+### Generating Updater Manifests (latest.json)
+
+Tauri 2.x no longer auto-generates `latest.json` files. You must create them manually for each platform/architecture before uploading to GitHub Releases.
+
+**Template files in `latest/` folder:**
+- `latest/darwin-x86_64-latest.example.json` — macOS (universal binary serves both x86_64 and aarch64)
+- `latest/windows-x86_64-latest.example.json` — Windows x64
+- `latest/windows-aarch64-latest.example.json` — Windows ARM64
+
+**To create a manifest:**
+
+1. Copy the appropriate example file:
+   ```bash
+   cp latest/darwin-x86_64-latest.example.json latest/darwin-x86_64-latest.json
+   ```
+
+2. Update the fields:
+   - `version`: Must match the version in `src-tauri/tauri.conf.json`
+   - `notes`: Release notes (can be brief or detailed)
+   - `pub_date`: ISO 8601 timestamp (e.g., `2024-01-15T12:00:00Z`)
+   - `url`: Direct download URL from GitHub Releases (use the latest release URL format)
+   - `signature`: Paste the **contents** of the `.sig` file (not the file path)
+
+3. Get the signature content:
+   ```bash
+   # macOS
+   cat src-tauri/target/universal-apple-darwin/release/bundle/macos/CueCard.app.tar.gz.sig
+
+   # Windows x64
+   cat src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/CueCard_<version>_x64-setup.exe.sig
+
+   # Windows ARM64
+   cat src-tauri/target/aarch64-pc-windows-msvc/release/bundle/nsis/CueCard_<version>_arm64-setup.exe.sig
+   ```
+
+**Example manifest (darwin-x86_64-latest.json):**
+```json
+{
+  "version": "1.0.1",
+  "notes": "Bug fixes and performance improvements",
+  "pub_date": "2024-01-15T12:00:00Z",
+  "url": "https://github.com/thisisnsh/cuecard/releases/latest/download/CueCard.app.tar.gz",
+  "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUbkVYSjhEVTFtNW..."
+}
+```
+
 ### macOS
 
 1. Generate signing keys (first time only):
@@ -101,12 +147,19 @@ Note: 32-bit (x86) Windows builds are intentionally not supported.
    TAURI_SIGNING_PRIVATE_KEY_PASSWORD="" \
    npm run tauri build -- --target universal-apple-darwin
    ```
-   This generates `latest.json` for the updater
 
 3. Locate build artifacts in `src-tauri/target/universal-apple-darwin/release/bundle/`:
    - `dmg/CueCard_<version>_universal.dmg` - Disk image for distribution
+   - `macos/CueCard.app.tar.gz` - Updater payload
+   - `macos/CueCard.app.tar.gz.sig` - Updater signature
 
-4. Create GitHub Release:
+4. Generate the updater manifest:
+   ```bash
+   cp latest/darwin-x86_64-latest.example.json latest/darwin-x86_64-latest.json
+   # Edit latest/darwin-x86_64-latest.json with correct version, notes, pub_date, and signature
+   ```
+
+5. Create GitHub Release:
    - Tag the release: `git tag v<version>`
    - Push tag: `git push origin v<version>`
    - Create release on GitHub
@@ -116,7 +169,7 @@ Note: 32-bit (x86) Windows builds are intentionally not supported.
       | `src-tauri/target/universal-apple-darwin/release/bundle/dmg/CueCard_<version>_universal.dmg` | `CueCard_<version>_universal.dmg` | Manual installer for users |
       | `src-tauri/target/universal-apple-darwin/release/bundle/macos/CueCard.app.tar.gz`            | `CueCard.app.tar.gz`              | **Updater payload**        |
       | `src-tauri/target/universal-apple-darwin/release/bundle/macos/CueCard.app.tar.gz.sig`        | `CueCard.app.tar.gz.sig`          | Updater signature          |
-      | `src-tauri/target/universal-apple-darwin/release/bundle/latest.json`                         | `darwin-x86_64-latest.json`       | macOS updater feed         |
+      | `latest/darwin-x86_64-latest.json`                                                           | `darwin-x86_64-latest.json`       | macOS updater feed         |
 
 
 ### Windows
@@ -142,6 +195,7 @@ Note: 32-bit (x86) Windows builds are intentionally not supported.
 3. Locate build artifacts in `src-tauri/target/<arch>/release/bundle/`:
    - `msi/CueCard_<version>_<arch>.msi` - Windows Installer
    - `nsis/CueCard_<version>_<arch>-setup.exe` - NSIS Installer
+   - `nsis/CueCard_<version>_<arch>-setup.exe.sig` - Updater signature
 
 4. Sign Artifacts
    ```bash
@@ -175,7 +229,18 @@ Note: 32-bit (x86) Windows builds are intentionally not supported.
    "src-tauri\target\x86_64-pc-windows-msvc\release\bundle\msi\CueCard_1.0.1_x64.msi"
    ```
 
-5. Create GitHub Release:
+5. Generate the updater manifests:
+   ```bash
+   # Windows x64
+   cp latest/windows-x86_64-latest.example.json latest/windows-x86_64-latest.json
+   # Edit latest/windows-x86_64-latest.json with correct version, notes, pub_date, and signature
+
+   # Windows ARM64
+   cp latest/windows-aarch64-latest.example.json latest/windows-aarch64-latest.json
+   # Edit latest/windows-aarch64-latest.json with correct version, notes, pub_date, and signature
+   ```
+
+6. Create GitHub Release:
    - Tag the release: `git tag v<version>`
    - Push tag: `git push origin v<version>`
    - Create release on GitHub
@@ -184,17 +249,17 @@ Note: 32-bit (x86) Windows builds are intentionally not supported.
       | ------------------------------------------------------------------------------------------------- | ------------------------------------- | --------------------------------- |
       | `src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/CueCard_<version>_x64-setup.exe`     | `CueCard_<version>_x64-setup.exe`     | NSIS installer (manual + updater) |
       | `src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/CueCard_<version>_x64-setup.exe.sig` | `CueCard_<version>_x64-setup.exe.sig` | Updater signature                 |
-      | `src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/CueCard_<version>_x64.msi`            | `CueCard_<version>_x64.msi`           | MSI installer (manual + updater)  |
-      | `src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/CueCard_<version>_x64.msi.sig`        | `CueCard_<version>_x64.msi.sig`       | Updater signature                 |
-      | `src-tauri/target/x86_64-pc-windows-msvc/release/bundle/latest.json`                              | `windows-x86_64-latest.json`          | Windows x64 updater feed          |
+      | `src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/CueCard_<version>_x64.msi`            | `CueCard_<version>_x64.msi`           | MSI installer (manual only)       |
+      | `src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/CueCard_<version>_x64.msi.sig`        | `CueCard_<version>_x64.msi.sig`       | MSI signature                     |
+      | `latest/windows-x86_64-latest.json`                                                               | `windows-x86_64-latest.json`          | Windows x64 updater feed          |
    - Upload: (ARM64)
       | Local build artifact path                                                                            | Upload as                               | Notes                             |
       | ---------------------------------------------------------------------------------------------------- | --------------------------------------- | --------------------------------- |
       | `src-tauri/target/aarch64-pc-windows-msvc/release/bundle/nsis/CueCard_<version>_arm64-setup.exe`     | `CueCard_<version>_arm64-setup.exe`     | NSIS installer (manual + updater) |
       | `src-tauri/target/aarch64-pc-windows-msvc/release/bundle/nsis/CueCard_<version>_arm64-setup.exe.sig` | `CueCard_<version>_arm64-setup.exe.sig` | Updater signature                 |
-      | `src-tauri/target/aarch64-pc-windows-msvc/release/bundle/msi/CueCard_<version>_arm64.msi`            | `CueCard_<version>_arm64.msi`           | MSI installer (manual + updater)  |
-      | `src-tauri/target/aarch64-pc-windows-msvc/release/bundle/msi/CueCard_<version>_arm64.msi.sig`        | `CueCard_<version>_arm64.msi.sig`       | Updater signature                 |
-      | `src-tauri/target/aarch64-pc-windows-msvc/release/bundle/latest.json`                                | `windows-aarch64-latest.json`           | Windows ARM64 updater feed        |
+      | `src-tauri/target/aarch64-pc-windows-msvc/release/bundle/msi/CueCard_<version>_arm64.msi`            | `CueCard_<version>_arm64.msi`           | MSI installer (manual only)       |
+      | `src-tauri/target/aarch64-pc-windows-msvc/release/bundle/msi/CueCard_<version>_arm64.msi.sig`        | `CueCard_<version>_arm64.msi.sig`       | MSI signature                     |
+      | `latest/windows-aarch64-latest.json`                                                                 | `windows-aarch64-latest.json`           | Windows ARM64 updater feed        |
 
 
 ### Notes
