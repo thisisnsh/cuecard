@@ -45,21 +45,31 @@ CueCard focuses on the essentials so you can focus on your delivery:
 ![CueCard Notes](./cuecard-assets/cuecard-notes.png)
 ## Get Started
 
-### Install CueCard
+### Install CueCard Desktop App
 
-- **Mac Desktop App**:
-  - Download the latest DMG from the [GitHub Releases](https://github.com/thisisnsh/cuecard/releases) page
-  - Drag `CueCard` into your `Applications` folder
-  - Supports Intel and Apple Silicon (Universal binary)
+- **macOS**:
+  - [Download](https://cuecard.dev/#download) the latest **DMG**
+  - Open the DMG and drag **CueCard** into your **Applications** folder
+  - Requires **macOS 11 or later**
+  - Supports **Intel and Apple Silicon** (Universal binary)
 
-- **Windows Desktop App**:
-  - Download the latest installer from the [GitHub Releases](https://github.com/thisisnsh/cuecard/releases) page
-  - Choose the installer for your system:
-    - `CueCard_x64-setup.exe` for 64-bit Intel/AMD processors
-    - `CueCard_x86-setup.exe` for 32-bit systems
-    - `CueCard_arm64-setup.exe` for ARM64 devices (Surface, Snapdragon)
+- **Windows**:
+  - [Download](https://cuecard.dev/#download) the latest installer
+  - Choose the installer that matches your system:
+    - **`CueCard_<version>_x64-setup.exe`** — 64-bit Intel / AMD (most PCs)
+    - **`CueCard_<version>_arm64-setup.exe`** — ARM64 devices (Surface, Snapdragon)
+  - For enterprise or managed environments, an MSI installer is also available:
+    - **`CueCard_<version>_x64.msi`**
+    - **`CueCard_<version>_arm64.msi`**
+  - Run the installer and follow the setup wizard
+  - Requires **Windows 10 or later**
 
-> The browser extension is **only required** for syncing Google Slides speaker notes.
+  > The Windows installer may show a SmartScreen warning if not yet code-signed.  
+  > Click **More info → Run anyway** if prompted.
+
+### Install CueCard Extension
+
+The browser extension is **only required** for syncing Google Slides speaker notes.
 
 - **Chrome Extension**:
   - Install CueCard directly from the Chrome Web Store
