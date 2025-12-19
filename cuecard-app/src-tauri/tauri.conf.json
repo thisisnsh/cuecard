@@ -69,6 +69,9 @@
         "type": "downloadBootstrapper"
       }
     },
+    "nsis": {
+      "installerIcon": "icons/icon.ico"
+    },
     "createUpdaterArtifacts": true
   },
   "plugins": {
