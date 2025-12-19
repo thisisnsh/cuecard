@@ -49,9 +49,9 @@ body {
   border-radius: 32px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow:
-  0 0 0 1px rgba(0,0,0,0.28),
-  0 0 4px 1px rgba(0,0,0,0.18),
-  0 0 10px 2px rgba(0,0,0,0.12);
+    0 0 0 1px rgba(0, 0, 0, 0.28),
+    0 0 4px 1px rgba(0, 0, 0, 0.18),
+    0 0 10px 2px rgba(0, 0, 0, 0.12);
 }
 
 /* Google Sign-in Button */
@@ -60,7 +60,7 @@ body {
   -webkit-user-select: none;
   -ms-user-select: none;
   -webkit-appearance: none;
-  background-color: #000000;
+  background-color: rgba(0, 0, 0, var(--bg-opacity));
   background-image: none;
   -webkit-border-radius: 0 16px 16px 16px;
   border-radius: 0 16px 16px 16px;
