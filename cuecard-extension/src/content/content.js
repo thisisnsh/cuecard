@@ -16,6 +16,7 @@
   let currentSlideInfo = null;
   let isInitialized = false;
   let observers = [];
+  let blockNavigation = false;
 
   // Detect current mode (edit vs slideshow)
   function detectMode() {
@@ -84,6 +85,55 @@
 
   // Get browser API (cross-browser compatibility)
   const browserAPI = typeof browser !== 'undefined' ? browser : chrome;
+
+  // Load block navigation setting from storage
+  async function loadBlockNavigationSetting() {
+    try {
+      const result = await browserAPI.storage.local.get('blockNavigation');
+      blockNavigation = result.blockNavigation || false;
+      console.log('[CueCard] Block click navigation:', blockNavigation);
+    } catch (error) {
+      console.error('[CueCard] Error loading block navigation setting:', error);
+    }
+  }
+
+  // Listen for setting changes from popup
+  browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.type === 'BLOCK_NAVIGATION_CHANGED') {
+      blockNavigation = message.enabled;
+      console.log('[CueCard] Block click navigation changed:', blockNavigation);
+      sendResponse({ success: true });
+    }
+    return true;
+  });
+
+  // Block click navigation when setting is enabled (slideshow mode)
+  function blockClickHandler(e) {
+    if (!blockNavigation) return;
+
+    const mode = detectMode();
+    if (mode !== 'slideshow') return;
+
+    // Block clicks on the presentation area (not on controls)
+    const target = e.target;
+    const isControl = target.closest('button') ||
+                      target.closest('[role="button"]') ||
+                      target.closest('.punch-viewer-nav-button');
+
+    if (!isControl) {
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      console.log('[CueCard] Blocked navigation click');
+      return false;
+    }
+  }
+
+  // Set up click blocking listener (capturing phase to intercept early)
+  document.addEventListener('click', blockClickHandler, true);
+
+  // Load initial setting
+  loadBlockNavigationSetting();
 
   // Send slide info via background script (avoids mixed content issues)
   async function sendSlideInfo(slideInfo) {

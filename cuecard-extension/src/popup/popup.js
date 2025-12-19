@@ -66,12 +66,44 @@ async function getCurrentTabInfo() {
   }
 }
 
+// Load and handle block navigation setting
+async function loadBlockNavigationSetting() {
+  const blockNavCheckbox = document.getElementById('block-navigation');
+  try {
+    const result = await browserAPI.storage.local.get('blockNavigation');
+    blockNavCheckbox.checked = result.blockNavigation || false;
+  } catch (error) {
+    console.error('Error loading setting:', error);
+  }
+}
+
+async function saveBlockNavigationSetting(enabled) {
+  try {
+    await browserAPI.storage.local.set({ blockNavigation: enabled });
+    // Notify content script of the change
+    const [tab] = await browserAPI.tabs.query({ active: true, currentWindow: true });
+    if (tab && tab.url && tab.url.includes('docs.google.com/presentation')) {
+      browserAPI.tabs.sendMessage(tab.id, {
+        type: 'BLOCK_NAVIGATION_CHANGED',
+        enabled: enabled
+      });
+    }
+  } catch (error) {
+    console.error('Error saving setting:', error);
+  }
+}
+
 // Event listeners
 document.getElementById('refresh-btn').addEventListener('click', () => {
   updateStatus();
   getCurrentTabInfo();
 });
 
+document.getElementById('block-navigation').addEventListener('change', (e) => {
+  saveBlockNavigationSetting(e.target.checked);
+});
+
 // Initialize on popup open
 updateStatus();
 getCurrentTabInfo();
+loadBlockNavigationSetting();
