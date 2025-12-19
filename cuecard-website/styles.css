@@ -1855,6 +1855,10 @@ main {
         --space-3xl: 80px;
     }
 
+    .desktop-br {
+        display: none;
+    }
+
     .nav {
         padding: var(--space-md);
     }
