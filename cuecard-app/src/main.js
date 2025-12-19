@@ -309,7 +309,7 @@ let viewInitial, viewAddNotes, viewNotes, viewSettings;
 let linkGoBack, backSeparator;
 let notesInput, notesContent;
 let welcomeHeading, welcomeSubtext;
-let bugLink, websiteLink, websiteSeparator;
+let bugLink, websiteLink, websiteSeparator, supportLink, supportSeparator;
 let settingsLink, settingsSeparator;
 let refreshBtn, refreshSeparator;
 let notesInputHighlight;
@@ -364,6 +364,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   bugLink = document.getElementById("bug-link");
   websiteLink = document.getElementById("website-link");
   websiteSeparator = document.getElementById("website-separator");
+  supportLink = document.getElementById("support-link");
+  supportSeparator = document.getElementById("support-separator");
   settingsLink = document.getElementById("settings-link");
   settingsSeparator = document.getElementById("settings-separator");
   refreshBtn = document.getElementById("refresh-btn");
@@ -1090,19 +1092,28 @@ async function showView(viewName) {
 
   // Show/hide privacy, website, and settings links based on view
   if (viewName === 'initial') {
-    // Initial view: show Visit Site, Privacy Policy, Settings
+    // Initial view: show Visit Site, Settings
     websiteLink.classList.remove('hidden');
-    websiteSeparator.classList.remove('hidden');
+    websiteSeparator.classList.add('hidden');
+    supportLink.classList.add('hidden');
+    supportSeparator.classList.add('hidden');
+    bugLink.classList.add('hidden');
   } else if (viewName === 'settings') {
-    // Settings view: show Visit Site, Privacy Policy (no Settings button)
-    websiteLink.classList.remove('hidden');
-    websiteSeparator.classList.remove('hidden');
+    // Settings view: show Support, Report Bug (no Settings button or Visit Site)
+    websiteLink.classList.add('hidden');
+    websiteSeparator.classList.add('hidden');
+    supportLink.classList.remove('hidden');
+    supportSeparator.classList.remove('hidden');
+    bugLink.classList.remove('hidden');
     settingsLink.classList.add('hidden');
     settingsSeparator.classList.add('hidden');
   } else {
     // Notes and Add-Notes views: hide all footer links except go back
     websiteLink.classList.add('hidden');
     websiteSeparator.classList.add('hidden');
+    supportLink.classList.add('hidden');
+    supportSeparator.classList.add('hidden');
+    bugLink.classList.add('hidden');
   }
 
   // Show/hide slide info and refresh button based on view and slide data
@@ -1398,6 +1409,21 @@ function setupFooter() {
       await openUrl("https://github.com/ThisIsNSH/CueCard/issues/new/choose");
     } catch (error) {
       console.error("Error opening bug report:", error);
+    }
+  });
+
+  supportLink.addEventListener("click", async (e) => {
+    e.preventDefault();
+    console.log("Support link clicked");
+    try {
+      if (!openUrl) {
+        console.error("Tauri opener API not available");
+        window.open("mailto:support@cuecard.dev", "_blank", "noopener,noreferrer");
+        return;
+      }
+      await openUrl("mailto:support@cuecard.dev");
+    } catch (error) {
+      console.error("Error opening support email:", error);
     }
   });
 
