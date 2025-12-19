@@ -493,7 +493,7 @@ function getSampleReleaseData() {
             name: `CueCard ${sampleVersion}`,
             prerelease: false,
             published_at: sampleDate,
-            body: `## What's New\n\n- Initial release of CueCard\n- Ghost mode for hiding from screen recordings\n- Google Slides sync support\n- Timer and emotion tags\n\n## Installation\n\nDownload the appropriate installer for your platform below.`,
+            body: `## What's New\n\n- Initial release of CueCard\n- Ghost mode for hiding from screen recordings\n- Google Slides sync support\n- Timer and note tags\n\n## Installation\n\nDownload the appropriate installer for your platform below.`,
             assets: [
                 // macOS
                 {

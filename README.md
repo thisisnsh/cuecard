@@ -68,9 +68,9 @@ CueCard focuses on the essentials so you can focus on your delivery.
 
 Write notes naturally or add simple `[time]` tags to control pacing. Use tags like `[time 00:15]` or `[time 03:00]` to schedule sections of your speech. CueCard shows a subtle on-screen countdown for each time cue.
 
-### Full of Emotions
+### Note It
 
-CueCard helps you adjust tone and energy naturally—without memorizing every change. Add `[emotion]` tags directly inside your notes to guide your delivery. Use tags like `[emotion smile]`, `[emotion emphasize]`, `[emotion excited]`, or `[emotion hype]`. Emotion cues appear as colored markers next to your text.
+CueCard helps you adjust tone and energy naturally—without memorizing every change. Add `[note]` tags directly in your notes to guide your delivery. You can write anything inside a note (e.g., `[note smile]`, `[note slow down]`, `[note emphasize]`). Notes appear as colored markers next to your text.
 
 ### Ghost Mode
 

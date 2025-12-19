@@ -819,7 +819,7 @@ main {
     border-color: rgba(25, 195, 50, 0.4);
 }
 
-.code-emotion {
+.code-note {
     color: var(--accent-pink);
     border-color: rgba(255, 106, 223, 0.4);
 }

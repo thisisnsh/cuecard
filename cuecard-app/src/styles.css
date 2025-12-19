@@ -60,7 +60,7 @@ body {
   -webkit-user-select: none;
   -ms-user-select: none;
   -webkit-appearance: none;
-  background-color: rgba(0, 0, 0, var(--bg-opacity));
+  background-color: transparent;
   background-image: none;
   -webkit-border-radius: 0 16px 16px 16px;
   border-radius: 0 16px 16px 16px;

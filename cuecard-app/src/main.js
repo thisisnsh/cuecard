@@ -802,8 +802,8 @@ function highlightNotesForInput(text) {
   // Pattern for [time mm:ss] syntax
   const timePattern = /\[time\s+(\d{1,2}):(\d{2})\]/gi;
 
-  // Pattern for [emotion ...] syntax
-  const emotionPattern = /\[emotion\s+([^\]]+)\]/gi;
+  // Pattern for [note ...] syntax
+  const notePattern = /\[note\s+([^\]]+)\]/gi;
 
   // Replace [time mm:ss]
   safe = safe.replace(timePattern, (match, minutes, seconds) => {
@@ -817,9 +817,9 @@ function highlightNotesForInput(text) {
     return `<span class="timestamp" data-time="${cumulativeTime}">[${displayTime}]</span>`;
   });
 
-  // Replace [emotion ...]
-  safe = safe.replace(emotionPattern, (match, emotion) => {
-    return `<span class="action-tag">[${emotion}]</span>`;
+  // Replace [note ...]
+  safe = safe.replace(notePattern, (match, note) => {
+    return `<span class="action-tag">[${note}]</span>`;
   });
 
   // Convert line breaks
@@ -1208,8 +1208,8 @@ function highlightNotes(text) {
   // Pattern for [time mm:ss] syntax - marks the START of the next block
   const timePattern = /\[time\s+(\d{1,2}):(\d{2})\]/gi;
 
-  // Pattern for [emotion ...] syntax - matches anything between [emotion and ]
-  const emotionPattern = /\[emotion\s+([^\]]+)\]/gi;
+  // Pattern for [note ...] syntax - matches anything between [note and ]
+  const notePattern = /\[note\s+([^\]]+)\]/gi;
 
   // Pattern for "Google Slides" - replace with link
   const slidesPattern = /Google Slides/gi;
@@ -1226,9 +1226,9 @@ function highlightNotes(text) {
     return `<span class="timestamp" data-time="${cumulativeTime}">[${displayTime}]</span>`;
   });
 
-  // Replace [emotion ...] with [...] inline (pink)
-  safe = safe.replace(emotionPattern, (match, emotion) => {
-    return `<span class="action-tag">[${emotion}]</span>`;
+  // Replace [note ...] with [...] inline (pink)
+  safe = safe.replace(notePattern, (match, note) => {
+    return `<span class="action-tag">[${note}]</span>`;
   });
 
   // Replace "Google Slides" with link
@@ -1392,10 +1392,10 @@ function setupFooter() {
     try {
       if (!openUrl) {
         console.error("Tauri opener API not available");
-        window.open("https://github.com/ThisIsNSH/CueCard/issues/new", "_blank", "noopener,noreferrer");
+        window.open("https://github.com/ThisIsNSH/CueCard/issues/new/choose", "_blank", "noopener,noreferrer");
         return;
       }
-      await openUrl("https://github.com/ThisIsNSH/CueCard/issues/new");
+      await openUrl("https://github.com/ThisIsNSH/CueCard/issues/new/choose");
     } catch (error) {
       console.error("Error opening bug report:", error);
     }
