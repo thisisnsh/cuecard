@@ -12,7 +12,7 @@
 [![Website](https://img.shields.io/badge/Website-cuecard.dev-blue)](https://cuecard.dev)
 [![Demo Video](https://img.shields.io/badge/▶_Watch-Demo-red?logo=youtube)](https://www.youtube.com/watch?v=jCApPR67MDE)
 
-<img src="https://cuecard.dev/assets/cuecard.gif" alt="CueCard Hero" style="border-radius: 16px; border: 1px solid black;">
+<img src="./cuecard-website/assets/cuecard.gif" alt="CueCard Hero" style="border-radius: 16px; border: 1px solid black;">
 
 </div>
 
