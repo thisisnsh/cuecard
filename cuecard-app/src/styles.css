@@ -292,6 +292,37 @@ body {
   color: var(--text-secondary);
 }
 
+/* Edit mode: textarea is editable, text is visible, highlight is hidden */
+.notes-input-wrapper.edit-mode .notes-input {
+  color: var(--text-secondary);
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+}
+
+.notes-input-wrapper.edit-mode .notes-input-highlight {
+  display: none;
+}
+
+/* Done mode (default): textarea is readonly, text is transparent, highlight is visible, selection disabled */
+.notes-input-wrapper:not(.edit-mode) .notes-input {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  pointer-events: none;
+}
+
+/* Allow selection on the highlight layer in done mode */
+.notes-input-wrapper:not(.edit-mode) .notes-input-highlight {
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  pointer-events: auto;
+}
+
 /* Apply syntax highlighting styles to input preview */
 .notes-input-highlight .timestamp {
   display: inline;

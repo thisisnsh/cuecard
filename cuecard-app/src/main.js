@@ -316,6 +316,8 @@ let notesInputHighlight;
 let timerSeparator, timerStartSeparator, timerPauseSeparator;
 let btnStart, btnPause, btnReset;
 let opacitySlider, opacityValue, screenCaptureToggle;
+let editNoteBtn, editNoteSeparator;
+let notesInputWrapper;
 
 // State
 let isAuthenticated = false;
@@ -331,6 +333,9 @@ let showInScreenshot = false; // Default: false = hidden from screenshots
 let timerState = 'stopped'; // 'stopped', 'running', 'paused'
 let timerIntervals = []; // Store all timer interval IDs
 let originalTimerValues = []; // Store original timer values for reset
+
+// Edit Mode State
+let isEditMode = false; // false = done mode (readonly, highlighted), true = edit mode (editable, not highlighted)
 
 // =============================================================================
 // APPLICATION INITIALIZATION
@@ -380,6 +385,9 @@ window.addEventListener("DOMContentLoaded", async () => {
   opacitySlider = document.getElementById("opacity-slider");
   opacityValue = document.getElementById("opacity-value");
   screenCaptureToggle = document.getElementById("screen-capture-toggle");
+  editNoteBtn = document.getElementById("edit-note-btn");
+  editNoteSeparator = document.getElementById("edit-note-separator");
+  notesInputWrapper = document.querySelector(".notes-input-wrapper");
 
   // DOM elements loaded
 
@@ -406,6 +414,9 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   // Set up syntax highlighting for notes input
   setupNotesInputHighlighting();
+
+  // Set up edit note button
+  setupEditNoteButton();
 
   // Set up settings handlers
   setupSettings();
@@ -547,6 +558,9 @@ function setupRefreshButton() {
       console.log("Refreshing notes...");
       await invoke("refresh_notes");
       console.log("Notes refreshed successfully");
+
+      // Reset timer and show start button
+      resetTimerCountdown();
     } catch (error) {
       console.error("Error refreshing notes:", error);
     } finally {
@@ -696,8 +710,8 @@ function updateTimerButtonVisibility() {
   let shouldShowTimers = false;
 
   if (currentView === 'add-notes') {
-    // Check if input text has time pattern
-    shouldShowTimers = notesInput.value.trim() && hasTimePattern(notesInput.value);
+    // Check if input text has time pattern AND we're not in edit mode
+    shouldShowTimers = notesInput.value.trim() && hasTimePattern(notesInput.value) && !isEditMode;
   } else if (currentView === 'notes') {
     // Check if notes content has time pattern
     shouldShowTimers = currentSlideData && notesContent.querySelector('.timestamp[data-time]') !== null;
@@ -761,6 +775,8 @@ function setupNotesInputHighlighting() {
       notesInputHighlight.innerHTML = '';
       // Update timer button visibility when content changes
       updateTimerButtonVisibility();
+      // Update edit note button visibility when content changes
+      updateEditNoteButtonVisibility();
       return;
     }
 
@@ -773,6 +789,8 @@ function setupNotesInputHighlighting() {
 
     // Update timer button visibility when content changes
     updateTimerButtonVisibility();
+    // Update edit note button visibility when content changes
+    updateEditNoteButtonVisibility();
   }
 
   // Listen for input changes
@@ -784,6 +802,75 @@ function setupNotesInputHighlighting() {
 
   // Initial update if there's already content
   updateHighlight();
+}
+
+// =============================================================================
+// EDIT NOTE BUTTON
+// =============================================================================
+
+// Setup edit note button
+function setupEditNoteButton() {
+  if (!editNoteBtn || !notesInputWrapper) return;
+
+  // Add click handler
+  editNoteBtn.addEventListener("click", toggleEditMode);
+}
+
+// Toggle between edit and done modes
+function toggleEditMode() {
+  isEditMode = !isEditMode;
+
+  if (isEditMode) {
+    // Edit mode: input is editable, not highlighted
+    notesInputWrapper.classList.add('edit-mode');
+    notesInput.readOnly = false;
+    editNoteBtn.textContent = 'Save Note';
+    notesInput.focus();
+  } else {
+    // Done mode: input is readonly, highlighted
+    notesInputWrapper.classList.remove('edit-mode');
+    notesInput.readOnly = true;
+    editNoteBtn.textContent = 'Edit Note';
+  }
+
+  // Reset timer when toggling edit/done
+  resetTimerCountdown();
+}
+
+// Update edit note button visibility
+function updateEditNoteButtonVisibility() {
+  if (!editNoteBtn || !editNoteSeparator) return;
+
+  const hasContent = notesInput.value.trim();
+
+  // Only show button in add-notes view when there's content
+  if (currentView === 'add-notes' && hasContent) {
+    editNoteBtn.classList.remove('hidden');
+    editNoteSeparator.classList.remove('hidden');
+
+    // If content was just added (transitioning from empty to non-empty),
+    // start in edit mode (editable, not highlighted)
+    if (!notesInputWrapper.classList.contains('edit-mode') && !notesInput.readOnly) {
+      // User is actively typing/pasting - keep in edit mode
+      isEditMode = true;
+      notesInputWrapper.classList.add('edit-mode');
+      notesInput.readOnly = false;
+      editNoteBtn.textContent = 'Save Note';
+    } else {
+      // Update button text based on current mode
+      editNoteBtn.textContent = isEditMode ? 'Save Note' : 'Edit Note';
+    }
+  } else {
+    editNoteBtn.classList.add('hidden');
+    editNoteSeparator.classList.add('hidden');
+
+    // Reset to edit mode when content is cleared
+    if (!hasContent) {
+      isEditMode = false;
+      notesInputWrapper.classList.remove('edit-mode');
+      notesInput.readOnly = false;
+    }
+  }
 }
 
 // Highlight notes for input preview (without timers)
@@ -1128,6 +1215,9 @@ async function showView(viewName) {
   // Update timer button visibility
   updateTimerButtonVisibility();
 
+  // Update edit note button visibility
+  updateEditNoteButtonVisibility();
+
   // Show the requested view
   switch (viewName) {
     case 'initial':
@@ -1138,8 +1228,17 @@ async function showView(viewName) {
       // Load stored notes when entering add-notes view
       // But skip loading if coming back from settings (content is already there)
       if (previousView !== 'settings') {
-        loadStoredNotes();
+        await loadStoredNotes();
+        // If notes were loaded from storage, start in done mode (readonly, highlighted)
+        if (notesInput.value.trim()) {
+          isEditMode = false;
+          notesInputWrapper.classList.remove('edit-mode');
+          notesInput.readOnly = true;
+          editNoteBtn.textContent = 'Edit Note';
+        }
       }
+      // Update edit note button visibility
+      updateEditNoteButtonVisibility();
       // In add-notes view, timer waits for Start button
       // Don't auto-start
       break;
