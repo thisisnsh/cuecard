@@ -47,11 +47,7 @@ body {
   display: flex;
   flex-direction: column;
   border-radius: 32px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.28),
-    0 0 4px 1px rgba(0, 0, 0, 0.18),
-    0 0 10px 2px rgba(0, 0, 0, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 /* Google Sign-in Button */
