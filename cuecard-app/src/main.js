@@ -1136,14 +1136,18 @@ async function showView(viewName) {
     case 'add-notes':
       viewAddNotes.classList.remove('hidden');
       // Load stored notes when entering add-notes view
-      loadStoredNotes();
+      // But skip loading if coming back from settings (content is already there)
+      if (previousView !== 'settings') {
+        loadStoredNotes();
+      }
       // In add-notes view, timer waits for Start button
       // Don't auto-start
       break;
     case 'notes':
       viewNotes.classList.remove('hidden');
       // In notes view, timer starts automatically if slide is present
-      if (timerState === 'stopped' && currentSlideData) {
+      // But don't auto-start if we're coming back from settings (preserve timer state)
+      if (timerState === 'stopped' && currentSlideData && previousView !== 'settings') {
         startTimerCountdown();
       }
       break;
