@@ -10,15 +10,15 @@
 [![Windows](https://img.shields.io/badge/Windows-10%2B-0078D6?logo=windows&logoColor=white)](https://cuecard.dev/#download)
 
 [![Website](https://img.shields.io/badge/Website-cuecard.dev-blue)](https://cuecard.dev)
-[![Demo Video](https://img.shields.io/badge/▶_Watch-Demo-red?logo=youtube)](https://www.youtube.com/watch?v=D2xCqQFtK-k)
+[![Demo Video](https://img.shields.io/badge/▶_Watch-Demo-red?logo=youtube)](https://www.youtube.com/watch?v=jCApPR67MDE)
 
-![CueCard Hero](cuecard-assets/cuecard.gif)
+<img src="https://cuecard.dev/assets/cuecard.gif" alt="CueCard Hero" style="border-radius: 16px; border: 1px solid black;">
 
 </div>
 
 <br>
 
-## About CueCard
+## 📖 About CueCard
 
 CueCard is a **lightweight cross-platform desktop teleprompter** (macOS & Windows) that keeps your speaker notes in view without letting anyone else see them. Whether you're giving a presentation, leading a meeting, or recording content, you can keep your talking points floating above everything else — **invisible to screen shares and recordings**.
 
@@ -31,16 +31,16 @@ CueCard is a **lightweight cross-platform desktop teleprompter** (macOS & Window
 
 <br>
 
-## Download CueCard
+## 📥 Download CueCard
 
 <div align="center">
 
-### Desktop App
+### 💻 Desktop App
 
 [![Download for macOS](https://img.shields.io/badge/Download-macOS-000000?style=for-the-badge&logo=apple&logoColor=white)](https://cuecard.dev/#download)
 [![Download for Windows](https://img.shields.io/badge/Download-Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)](https://cuecard.dev/#download)
 
-### Browser Extension
+### 🔌 Browser Extension
 
 [![Chrome Web Store](https://img.shields.io/badge/Chrome-Extension-4285F4?style=for-the-badge&logo=googlechrome&logoColor=white)](https://chrome.google.com/webstore)
 [![Firefox Add-ons](https://img.shields.io/badge/Firefox-Add--on-FF7139?style=for-the-badge&logo=firefox&logoColor=white)](https://addons.mozilla.org/)
@@ -52,7 +52,7 @@ CueCard is a **lightweight cross-platform desktop teleprompter** (macOS & Window
 
 <br>
 
-## Why CueCard?
+## ✨ Why CueCard?
 
 - **Always on top, always private.** CueCard opens a floating window that stays above all other applications yet is hidden from screen sharing tools. Your audience sees only your slides; you see your notes.
 - **Works with Google Slides or your own text.** Use the companion browser extension to sync your existing Google Slides speaker notes, or just paste any text into the CueCard app.
@@ -60,31 +60,31 @@ CueCard is a **lightweight cross-platform desktop teleprompter** (macOS & Window
 
 <br>
 
-## Features
+## ⚡ Features
 
 CueCard focuses on the essentials so you can focus on your delivery.
 
-### On Time, Every Time
+### ⏰ On Time, Every Time
 
 Write notes naturally or add simple `[time]` tags to control pacing. Use tags like `[time 00:15]` or `[time 03:00]` to schedule sections of your speech. CueCard shows a subtle on-screen countdown for each time cue.
 
-### Note It
+### 📝 Note It
 
 CueCard helps you adjust tone and energy naturally—without memorizing every change. Add `[note]` tags directly in your notes to guide your delivery. You can write anything inside a note (e.g., `[note smile]`, `[note slow down]`, `[note emphasize]`). Notes appear as colored markers next to your text.
 
-### Ghost Mode
+### 👻 Ghost Mode
 
 Keep your notes completely hidden from viewers during screen sharing or recording. Ghost Mode ensures only you can see the floating note card. Toggle visibility instantly with a single click.
 
-### Just Enough to See
+### 👁️ Just Enough to See
 
 Adjust the transparency of the note card using a simple slider. Increase opacity for clear reading or fade it for subtle visibility. Find the perfect balance between readability and discretion.
 
 <br>
 
-## How to Use CueCard
+## 🚀 How to Use CueCard
 
-### Using Google Slides Speaker Notes
+### 📊 Using Google Slides Speaker Notes
 
 1. Open the **CueCard** app
 2. Ensure the **CueCard browser extension** is installed and running
@@ -94,7 +94,7 @@ Adjust the transparency of the note card using a simple slider. Increase opacity
 
 > **Tip:** If notes don't appear immediately, move to the next slide and then return to the previous one.
 
-### Using Custom Text Notes
+### ✍️ Using Custom Text Notes
 
 1. Open the **CueCard** app
 2. Click **Paste Your Notes**
@@ -105,7 +105,7 @@ Adjust the transparency of the note card using a simple slider. Increase opacity
 
 <br>
 
-## For Developers
+## 👨‍💻 For Developers
 
 If you're interested in contributing to CueCard or building it from source, check out these guides:
 
@@ -117,7 +117,7 @@ If you're interested in contributing to CueCard or building it from source, chec
 
 <br>
 
-## Contributing
+## 🤝 Contributing
 
 We welcome contributions! CueCard is open source and built by the community.
 
@@ -127,7 +127,7 @@ We welcome contributions! CueCard is open source and built by the community.
 
 <br>
 
-## Support & Contact
+## 💬 Support & Contact
 
 **Need help?**
 - Email: [support@cuecard.dev](mailto:support@cuecard.dev)
@@ -139,9 +139,3 @@ We welcome contributions! CueCard is open source and built by the community.
 - [MIT License](LICENSE)
 
 <div align="center">
-
-**Built with [Tauri](https://tauri.app/) • Licensed under [MIT](LICENSE) • Made with ❤️ for speakers everywhere**
-
-[![Star on GitHub](https://img.shields.io/github/stars/thisisnsh/cuecard?style=social)](https://github.com/thisisnsh/cuecard)
-
-</div>
