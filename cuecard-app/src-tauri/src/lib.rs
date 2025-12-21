@@ -1,11 +1,14 @@
 //! CueCard - Speaker notes visible only to you
 //!
 //! This module contains the main backend logic for the CueCard application:
-//! - Firebase Authentication with Google provider
-//! - Google Slides API integration
+//! - Firebase Authentication with Google provider (profile scope only)
 //! - Local web server for browser extension communication
 //! - Tauri commands for frontend interaction
 //! - macOS window management (opacity, screenshot protection)
+//!
+//! Note: Speaker notes are extracted directly from the Google Slides page DOM
+//! by the browser extension. This approach eliminates the need for the restricted
+//! `presentations.readonly` Google API scope.
 
 use axum::{
     extract::Query,
@@ -43,9 +46,8 @@ const FIREBASE_SIGNIN_IDP_URL: &str =
     "https://identitytoolkit.googleapis.com/v1/accounts:signInWithIdp";
 const FIREBASE_TOKEN_URL: &str = "https://securetoken.googleapis.com/v1/token";
 
-// Scopes
+// Scopes - only profile scope needed, notes are extracted from DOM by extension
 const SCOPE_PROFILE: &str = "openid profile email";
-const SCOPE_SLIDES: &str = "https://www.googleapis.com/auth/presentations.readonly";
 
 // =============================================================================
 // DATA TYPES
@@ -97,14 +99,6 @@ pub struct OAuthCredentials {
     pub client_secret: String,
 }
 
-/// Slides API tokens (separate from Firebase auth)
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SlidesTokens {
-    pub access_token: String,
-    pub refresh_token: Option<String>,
-    pub expires_at: Option<i64>,
-}
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SlideData {
@@ -115,6 +109,8 @@ pub struct SlideData {
     pub mode: String,
     pub timestamp: i64,
     pub url: String,
+    #[serde(default)]
+    pub notes: Option<String>, // Notes extracted from DOM by the extension
 }
 
 #[derive(Debug, Serialize)]
@@ -199,8 +195,6 @@ static FIREBASE_CONFIG: Lazy<Arc<RwLock<Option<FirebaseConfig>>>> =
 static FIREBASE_TOKENS: Lazy<Arc<RwLock<Option<FirebaseTokens>>>> =
     Lazy::new(|| Arc::new(RwLock::new(None)));
 static OAUTH_CREDENTIALS: Lazy<Arc<RwLock<Option<OAuthCredentials>>>> =
-    Lazy::new(|| Arc::new(RwLock::new(None)));
-static SLIDES_TOKENS: Lazy<Arc<RwLock<Option<SlidesTokens>>>> =
     Lazy::new(|| Arc::new(RwLock::new(None)));
 static PENDING_OAUTH_SCOPE: Lazy<Arc<RwLock<Option<String>>>> =
     Lazy::new(|| Arc::new(RwLock::new(None)));
@@ -511,98 +505,6 @@ async fn exchange_code_for_google_tokens(code: &str) -> Result<GoogleTokenRespon
     Ok(token_response)
 }
 
-/// Refresh Slides API access token
-async fn refresh_slides_token() -> Result<(), String> {
-    let credentials = OAUTH_CREDENTIALS
-        .read()
-        .clone()
-        .ok_or("OAuth credentials not available")?;
-
-    let refresh_token = {
-        let tokens = SLIDES_TOKENS.read();
-        tokens
-            .as_ref()
-            .and_then(|t| t.refresh_token.clone())
-            .ok_or("No Slides refresh token available")?
-    };
-
-    let client = reqwest::Client::new();
-    let response = client
-        .post(GOOGLE_TOKEN_URL)
-        .form(&[
-            ("refresh_token", refresh_token.as_str()),
-            ("client_id", &credentials.client_id),
-            ("client_secret", &credentials.client_secret),
-            ("grant_type", "refresh_token"),
-        ])
-        .send()
-        .await
-        .map_err(|e| format!("Token refresh failed: {}", e))?;
-
-    if !response.status().is_success() {
-        let error_text = response.text().await.unwrap_or_default();
-        return Err(format!("Token refresh failed: {}", error_text));
-    }
-
-    let token_response: GoogleTokenResponse = response
-        .json()
-        .await
-        .map_err(|e| format!("Failed to parse token response: {}", e))?;
-
-    let expires_at = token_response
-        .expires_in
-        .map(|secs| chrono::Utc::now().timestamp() + secs);
-
-    // Update tokens
-    {
-        let mut tokens = SLIDES_TOKENS.write();
-        if let Some(ref mut t) = *tokens {
-            t.access_token = token_response.access_token;
-            if token_response.refresh_token.is_some() {
-                t.refresh_token = token_response.refresh_token;
-            }
-            t.expires_at = expires_at;
-        }
-    }
-
-    // Save to persistent storage
-    if let Some(app) = APP_HANDLE.read().as_ref() {
-        save_slides_tokens_to_store(app);
-    }
-
-    Ok(())
-}
-
-/// Get valid Slides API access token (refreshes if needed)
-async fn get_valid_slides_token() -> Option<String> {
-    let (access_token, expires_at, has_refresh) = {
-        let tokens = SLIDES_TOKENS.read();
-        match tokens.as_ref() {
-            Some(t) => (
-                t.access_token.clone(),
-                t.expires_at,
-                t.refresh_token.is_some(),
-            ),
-            None => return None,
-        }
-    };
-
-    // Check if token is expired or about to expire (within 5 minutes)
-    let now = chrono::Utc::now().timestamp();
-    let is_expired = expires_at.map(|exp| now >= exp - 300).unwrap_or(false);
-
-    if is_expired && has_refresh {
-        if let Err(e) = refresh_slides_token().await {
-            eprintln!("Failed to refresh Slides token: {}", e);
-            return None;
-        }
-        // Return the new token
-        let tokens = SLIDES_TOKENS.read();
-        return tokens.as_ref().map(|t| t.access_token.clone());
-    }
-
-    Some(access_token)
-}
 
 // =============================================================================
 // TOKEN STORAGE
@@ -614,18 +516,6 @@ fn save_firebase_tokens_to_store(app: &AppHandle) {
         if let Some(ref t) = *tokens {
             if let Ok(json) = serde_json::to_value(t) {
                 store.set("firebase_tokens", json);
-                let _ = store.save();
-            }
-        }
-    }
-}
-
-fn save_slides_tokens_to_store(app: &AppHandle) {
-    if let Ok(store) = app.store("cuecard-store.json") {
-        let tokens = SLIDES_TOKENS.read();
-        if let Some(ref t) = *tokens {
-            if let Ok(json) = serde_json::to_value(t) {
-                store.set("slides_tokens", json);
                 let _ = store.save();
             }
         }
@@ -660,14 +550,6 @@ fn load_tokens_from_store(app: &AppHandle) {
             if let Ok(tokens) = serde_json::from_value::<FirebaseTokens>(tokens_json.clone()) {
                 let mut firebase = FIREBASE_TOKENS.write();
                 *firebase = Some(tokens);
-            }
-        }
-
-        // Load Slides tokens
-        if let Some(tokens_json) = store.get("slides_tokens") {
-            if let Ok(tokens) = serde_json::from_value::<SlidesTokens>(tokens_json.clone()) {
-                let mut slides = SLIDES_TOKENS.write();
-                *slides = Some(tokens);
             }
         }
 
@@ -712,36 +594,24 @@ async fn slides_handler(
             let mut notes_cache = SLIDE_NOTES.write();
             notes_cache.clear();
         }
-        let presentation_id = slide_data.presentation_id.clone();
-        tokio::spawn(async move {
-            let _ = prefetch_all_notes(&presentation_id).await;
-        });
+    }
+
+    // Notes are now extracted from the DOM by the extension and sent with slide_data
+    let notes = slide_data.notes.clone();
+
+    // Cache the notes for potential later use
+    if let Some(ref note_text) = notes {
+        if !note_text.is_empty() {
+            let mut notes_cache = SLIDE_NOTES.write();
+            let key = format!("{}:{}", slide_data.presentation_id, slide_data.slide_id);
+            notes_cache.insert(key, note_text.clone());
+        }
     }
 
     {
         let mut current = CURRENT_SLIDE.write();
         *current = Some(slide_data.clone());
     }
-
-    let notes = {
-        let notes_cache = SLIDE_NOTES.read();
-        let key = format!("{}:{}", slide_data.presentation_id, slide_data.slide_id);
-        notes_cache.get(&key).cloned()
-    };
-
-    let notes = match notes {
-        Some(n) => Some(n),
-        None => {
-            let fetched =
-                fetch_slide_notes(&slide_data.presentation_id, &slide_data.slide_id).await;
-            if let Some(ref note_text) = fetched {
-                let mut notes_cache = SLIDE_NOTES.write();
-                let key = format!("{}:{}", slide_data.presentation_id, slide_data.slide_id);
-                notes_cache.insert(key, note_text.clone());
-            }
-            fetched
-        }
-    };
 
     if let Some(app) = APP_HANDLE.read().as_ref() {
         let event = SlideUpdateEvent {
@@ -757,34 +627,26 @@ async fn slides_handler(
     }))
 }
 
-// OAuth login handler - redirects to Google
+// OAuth login handler - redirects to Google (profile scope only)
 async fn oauth_login_handler() -> Result<Redirect, StatusCode> {
     let credentials = match OAUTH_CREDENTIALS.read().clone() {
         Some(c) => c,
         None => return Err(StatusCode::INTERNAL_SERVER_ERROR),
     };
 
-    let scope_url = {
-        let pending = PENDING_OAUTH_SCOPE.read();
-        match pending.as_deref() {
-            Some("profile") => SCOPE_PROFILE.to_string(),
-            Some("slides") => SCOPE_SLIDES.to_string(),
-            _ => format!("{} {}", SCOPE_PROFILE, SCOPE_SLIDES),
-        }
-    };
-
+    // Only request profile scope - notes are extracted from DOM by extension
     let auth_url = format!(
-        "{}?client_id={}&redirect_uri={}&response_type=code&scope={}&access_type=offline&prompt=consent&include_granted_scopes=true",
+        "{}?client_id={}&redirect_uri={}&response_type=code&scope={}&access_type=offline&prompt=consent",
         GOOGLE_AUTH_URL,
         urlencoding::encode(&credentials.client_id),
         urlencoding::encode(REDIRECT_URI),
-        urlencoding::encode(&scope_url)
+        urlencoding::encode(SCOPE_PROFILE)
     );
 
     Ok(Redirect::temporary(&auth_url))
 }
 
-// OAuth callback handler
+// OAuth callback handler (profile scope only)
 async fn oauth_callback_handler(Query(params): Query<OAuthCallback>) -> Html<String> {
     if let Some(error) = params.error {
         return Html(format!(
@@ -817,116 +679,74 @@ async fn oauth_callback_handler(Query(params): Query<OAuthCallback>) -> Html<Str
         }
     };
 
-    // Get pending scope
-    let pending_scope = {
+    // Clear pending scope
+    {
         let mut pending = PENDING_OAUTH_SCOPE.write();
-        pending.take()
-    };
+        pending.take();
+    }
 
     // Exchange code for Google tokens
     match exchange_code_for_google_tokens(&code).await {
         Ok(google_tokens) => {
-            let is_profile_scope = pending_scope.as_deref() == Some("profile");
+            // Exchange Google ID token for Firebase token
+            if let Some(google_id_token) = &google_tokens.id_token {
+                match exchange_google_token_for_firebase(google_id_token).await {
+                    Ok(firebase_tokens) => {
+                        let user_name = firebase_tokens.display_name.clone();
+                        let user_email = firebase_tokens.email.clone();
 
-            if is_profile_scope {
-                // For profile scope, exchange Google ID token for Firebase token
-                if let Some(google_id_token) = &google_tokens.id_token {
-                    match exchange_google_token_for_firebase(google_id_token).await {
-                        Ok(firebase_tokens) => {
-                            let user_name = firebase_tokens.display_name.clone();
-                            let user_email = firebase_tokens.email.clone();
-
-                            // Store Firebase tokens
-                            {
-                                let mut tokens = FIREBASE_TOKENS.write();
-                                *tokens = Some(firebase_tokens);
-                            }
-
-                            // Save to persistent storage
-                            if let Some(app) = APP_HANDLE.read().as_ref() {
-                                save_firebase_tokens_to_store(app);
-                                save_oauth_credentials_to_store(app);
-                            }
-
-                            // Notify frontend
-                            if let Some(app) = APP_HANDLE.read().as_ref() {
-                                let _ = app.emit(
-                                    "auth-status",
-                                    serde_json::json!({
-                                        "authenticated": true,
-                                        "user_name": user_name,
-                                        "user_email": user_email,
-                                        "requested_scope": pending_scope
-                                    }),
-                                );
-                            }
-
-                            Html(
-                                r#"<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CueCard Authentication</title><style>:root{--bg0:#0b0b0c;--bg1:#121214;--text-strong:rgba(255,255,255,.7);--text-soft:rgba(255,255,255,.55)}html,body{height:100%;margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji"}body{background:radial-gradient(1200px 600px at 50% 45%,#1a1a1f 0%,#0f0f12 55%,#0a0a0b 100%),linear-gradient(180deg,var(--bg1),var(--bg0));display:grid;place-items:center;color:#fff}.wrap{text-align:center;padding:48px 24px;max-width:900px}h1{margin:0 0 26px;font-weight:600;letter-spacing:-.02em;color:var(--text-strong);font-size:clamp(44px,6vw,78px);line-height:1.08}p{margin:0;font-size:clamp(16px,2vw,26px);line-height:1.5;color:var(--text-soft)}</style></head><body><main class="wrap" role="main">
-                                <h1>Speak Confidently</h1><p>You're all set up for CueCard. You can now close this window.</p></main></body></html>"#
-                                    .to_string(),
-                            )
+                        // Store Firebase tokens
+                        {
+                            let mut tokens = FIREBASE_TOKENS.write();
+                            *tokens = Some(firebase_tokens);
                         }
-                        Err(e) => Html(format!(
-                            r#"<!DOCTYPE html>
-                            <html><head><title>Authentication Failed</title>
-                            <style>body {{ font-family: system-ui; padding: 40px; text-align: center; }}</style>
-                            </head><body>
-                            <h1>Firebase Authentication Failed</h1>
-                            <p>Error: {}</p>
-                            <p>You can close this window.</p>
-                            </body></html>"#,
-                            e
-                        )),
+
+                        // Save to persistent storage
+                        if let Some(app) = APP_HANDLE.read().as_ref() {
+                            save_firebase_tokens_to_store(app);
+                            save_oauth_credentials_to_store(app);
+                        }
+
+                        // Notify frontend
+                        if let Some(app) = APP_HANDLE.read().as_ref() {
+                            let _ = app.emit(
+                                "auth-status",
+                                serde_json::json!({
+                                    "authenticated": true,
+                                    "user_name": user_name,
+                                    "user_email": user_email
+                                }),
+                            );
+                        }
+
+                        Html(
+                            r#"<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CueCard Authentication</title><style>:root{--bg0:#0b0b0c;--bg1:#121214;--text-strong:rgba(255,255,255,.7);--text-soft:rgba(255,255,255,.55)}html,body{height:100%;margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji"}body{background:radial-gradient(1200px 600px at 50% 45%,#1a1a1f 0%,#0f0f12 55%,#0a0a0b 100%),linear-gradient(180deg,var(--bg1),var(--bg0));display:grid;place-items:center;color:#fff}.wrap{text-align:center;padding:48px 24px;max-width:900px}h1{margin:0 0 26px;font-weight:600;letter-spacing:-.02em;color:var(--text-strong);font-size:clamp(44px,6vw,78px);line-height:1.08}p{margin:0;font-size:clamp(16px,2vw,26px);line-height:1.5;color:var(--text-soft)}</style></head><body><main class="wrap" role="main">
+                            <h1>Speak Confidently</h1><p>You're all set up for CueCard. You can now close this window.</p></main></body></html>"#
+                                .to_string(),
+                        )
                     }
-                } else {
-                    Html(
+                    Err(e) => Html(format!(
                         r#"<!DOCTYPE html>
                         <html><head><title>Authentication Failed</title>
-                        <style>body { font-family: system-ui; padding: 40px; text-align: center; }</style>
+                        <style>body {{ font-family: system-ui; padding: 40px; text-align: center; }}</style>
                         </head><body>
-                        <h1>Authentication Failed</h1>
-                        <p>No ID token received from Google.</p>
+                        <h1>Firebase Authentication Failed</h1>
+                        <p>Error: {}</p>
                         <p>You can close this window.</p>
-                        </body></html>"#
-                            .to_string(),
-                    )
+                        </body></html>"#,
+                        e
+                    )),
                 }
             } else {
-                // For slides scope, store the access token for Slides API
-                let expires_at = google_tokens
-                    .expires_in
-                    .map(|secs| chrono::Utc::now().timestamp() + secs);
-
-                {
-                    let mut tokens = SLIDES_TOKENS.write();
-                    *tokens = Some(SlidesTokens {
-                        access_token: google_tokens.access_token,
-                        refresh_token: google_tokens.refresh_token,
-                        expires_at,
-                    });
-                }
-
-                // Save to persistent storage
-                if let Some(app) = APP_HANDLE.read().as_ref() {
-                    save_slides_tokens_to_store(app);
-                }
-
-                // Notify frontend
-                if let Some(app) = APP_HANDLE.read().as_ref() {
-                    let _ = app.emit(
-                        "auth-status",
-                        serde_json::json!({
-                            "authenticated": true,
-                            "slides_authorized": true,
-                            "requested_scope": pending_scope
-                        }),
-                    );
-                }
-
                 Html(
-                    r#"<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CueCard Authentication</title><style>:root{--bg0:#0b0b0c;--bg1:#121214;--text-strong:rgba(255,255,255,.7);--text-soft:rgba(255,255,255,.55)}html,body{height:100%;margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji"}body{background:radial-gradient(1200px 600px at 50% 45%,#1a1a1f 0%,#0f0f12 55%,#0a0a0b 100%),linear-gradient(180deg,var(--bg1),var(--bg0));display:grid;place-items:center;color:#fff}.wrap{text-align:center;padding:48px 24px;max-width:900px}h1{margin:0 0 26px;font-weight:600;letter-spacing:-.02em;color:var(--text-strong);font-size:clamp(44px,6vw,78px);line-height:1.08}p{margin:0;font-size:clamp(16px,2vw,26px);line-height:1.5;color:var(--text-soft)}</style></head><body><main class="wrap" role="main">
-                    <h1>Speak Confidently</h1><p>You're all set up for Slides Access. You can now close this window.</p></main></body></html>"#
+                    r#"<!DOCTYPE html>
+                    <html><head><title>Authentication Failed</title>
+                    <style>body { font-family: system-ui; padding: 40px; text-align: center; }</style>
+                    </head><body>
+                    <h1>Authentication Failed</h1>
+                    <p>No ID token received from Google.</p>
+                    <p>You can close this window.</p>
+                    </body></html>"#
                         .to_string(),
                 )
             }
@@ -955,10 +775,6 @@ async fn auth_status_handler() -> Json<serde_json::Value> {
 async fn logout_handler() -> Json<serde_json::Value> {
     {
         let mut tokens = FIREBASE_TOKENS.write();
-        *tokens = None;
-    }
-    {
-        let mut tokens = SLIDES_TOKENS.write();
         *tokens = None;
     }
 
@@ -1001,177 +817,6 @@ async fn start_server() {
     axum::serve(listener, app).await.expect("Server error");
 }
 
-// =============================================================================
-// GOOGLE SLIDES API
-// =============================================================================
-
-async fn prefetch_all_notes(presentation_id: &str) -> Result<(), String> {
-    let access_token = match get_valid_slides_token().await {
-        Some(token) => token,
-        None => return Err("Not authenticated for Slides".to_string()),
-    };
-
-    let url = format!(
-        "https://slides.googleapis.com/v1/presentations/{}",
-        presentation_id
-    );
-
-    let client = reqwest::Client::new();
-    let response = match client
-        .get(&url)
-        .header("Authorization", format!("Bearer {}", access_token))
-        .send()
-        .await
-    {
-        Ok(r) => r,
-        Err(e) => {
-            eprintln!("Error fetching slides API for prefetch: {}", e);
-            return Err(e.to_string());
-        }
-    };
-
-    if !response.status().is_success() {
-        let status = response.status();
-        let error_body = response.text().await.unwrap_or_default();
-        eprintln!(
-            "Slides API error during prefetch: {} - {}",
-            status, error_body
-        );
-        return Err(format!("API error: {}", status));
-    }
-
-    let json: serde_json::Value = match response.json().await {
-        Ok(j) => j,
-        Err(e) => {
-            eprintln!("Failed to parse slides response during prefetch: {}", e);
-            return Err(e.to_string());
-        }
-    };
-
-    let slides = match json.get("slides").and_then(|s| s.as_array()) {
-        Some(s) => s,
-        None => return Ok(()),
-    };
-
-    let mut notes_cache = SLIDE_NOTES.write();
-
-    for slide in slides {
-        if let Some(obj_id) = slide.get("objectId").and_then(|o| o.as_str()) {
-            if let Some(notes_text) = extract_notes_from_slide(slide) {
-                let key = format!("{}:{}", presentation_id, obj_id);
-                notes_cache.insert(key, notes_text);
-            }
-        }
-    }
-
-    Ok(())
-}
-
-fn extract_notes_from_slide(slide: &serde_json::Value) -> Option<String> {
-    let notes = slide
-        .get("slideProperties")?
-        .get("notesPage")?
-        .get("pageElements")?
-        .as_array()?;
-
-    for element in notes {
-        if let Some(shape) = element.get("shape") {
-            if let Some(placeholder) = shape.get("placeholder") {
-                if placeholder.get("type")?.as_str()? == "BODY" {
-                    if let Some(text) = shape.get("text") {
-                        return extract_text_from_text_elements(text);
-                    }
-                }
-            }
-        }
-    }
-
-    None
-}
-
-async fn fetch_slide_notes(presentation_id: &str, slide_id: &str) -> Option<String> {
-    let access_token = match get_valid_slides_token().await {
-        Some(token) => token,
-        None => return None,
-    };
-
-    let url = format!(
-        "https://slides.googleapis.com/v1/presentations/{}",
-        presentation_id
-    );
-
-    let client = reqwest::Client::new();
-    let response = match client
-        .get(&url)
-        .header("Authorization", format!("Bearer {}", access_token))
-        .send()
-        .await
-    {
-        Ok(r) => r,
-        Err(e) => {
-            eprintln!("Error fetching slides API: {}", e);
-            return None;
-        }
-    };
-
-    if !response.status().is_success() {
-        eprintln!("Slides API error: {}", response.status());
-        return None;
-    }
-
-    let json: serde_json::Value = match response.json().await {
-        Ok(j) => j,
-        Err(e) => {
-            eprintln!("Failed to parse slides response: {}", e);
-            return None;
-        }
-    };
-
-    let slides = json.get("slides")?.as_array()?;
-    for slide in slides {
-        let obj_id = slide.get("objectId")?.as_str()?;
-        if obj_id == slide_id {
-            let notes = slide
-                .get("slideProperties")?
-                .get("notesPage")?
-                .get("pageElements")?
-                .as_array()?;
-
-            for element in notes {
-                if let Some(shape) = element.get("shape") {
-                    if let Some(placeholder) = shape.get("placeholder") {
-                        if placeholder.get("type")?.as_str()? == "BODY" {
-                            if let Some(text) = shape.get("text") {
-                                return extract_text_from_text_elements(text);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    None
-}
-
-fn extract_text_from_text_elements(text: &serde_json::Value) -> Option<String> {
-    let elements = text.get("textElements")?.as_array()?;
-    let mut result = String::new();
-
-    for element in elements {
-        if let Some(text_run) = element.get("textRun") {
-            if let Some(content) = text_run.get("content").and_then(|c| c.as_str()) {
-                result.push_str(content);
-            }
-        }
-    }
-
-    if result.is_empty() {
-        None
-    } else {
-        Some(result.trim().to_string())
-    }
-}
 
 // =============================================================================
 // TAURI COMMANDS
@@ -1217,7 +862,8 @@ async fn get_firebase_id_token() -> Result<String, String> {
 
 #[tauri::command]
 fn has_slides_scope() -> bool {
-    SLIDES_TOKENS.read().is_some()
+    // Notes are now extracted from DOM by extension - no Slides API scope needed
+    true
 }
 
 #[tauri::command]
@@ -1234,13 +880,7 @@ async fn get_user_info() -> Result<serde_json::Value, String> {
 }
 
 #[tauri::command]
-async fn start_login(app: AppHandle, scope: String) -> Result<(), String> {
-    // Set pending scope
-    {
-        let mut pending = PENDING_OAUTH_SCOPE.write();
-        *pending = Some(scope.clone());
-    }
-
+async fn start_login(app: AppHandle, _scope: String) -> Result<(), String> {
     // Check if we have OAuth credentials
     let has_credentials = OAUTH_CREDENTIALS.read().is_some();
 
@@ -1256,24 +896,18 @@ async fn start_login(app: AppHandle, scope: String) -> Result<(), String> {
         }
     }
 
-    // Now build the OAuth URL
+    // Now build the OAuth URL (profile scope only - notes are extracted from DOM by extension)
     let credentials = OAUTH_CREDENTIALS
         .read()
         .clone()
         .ok_or("OAuth credentials not available")?;
 
-    let scope_url = match scope.as_str() {
-        "profile" => SCOPE_PROFILE.to_string(),
-        "slides" => SCOPE_SLIDES.to_string(),
-        _ => format!("{} {}", SCOPE_PROFILE, SCOPE_SLIDES),
-    };
-
     let auth_url = format!(
-        "{}?client_id={}&redirect_uri={}&response_type=code&scope={}&access_type=offline&prompt=consent&include_granted_scopes=true",
+        "{}?client_id={}&redirect_uri={}&response_type=code&scope={}&access_type=offline&prompt=consent",
         GOOGLE_AUTH_URL,
         urlencoding::encode(&credentials.client_id),
         urlencoding::encode(REDIRECT_URI),
-        urlencoding::encode(&scope_url)
+        urlencoding::encode(SCOPE_PROFILE)
     );
 
     app.opener()
@@ -1289,16 +923,14 @@ fn logout(app: AppHandle) {
         let mut tokens = FIREBASE_TOKENS.write();
         *tokens = None;
     }
-    {
-        let mut tokens = SLIDES_TOKENS.write();
-        *tokens = None;
-    }
 
     clear_all_tokens_from_store(&app);
 }
 
 #[tauri::command]
 async fn refresh_notes(app: AppHandle) -> Result<Option<String>, String> {
+    // Notes are now extracted from DOM by the extension
+    // This command returns the cached notes and emits a refresh event
     let current_slide = { CURRENT_SLIDE.read().clone() };
 
     let slide_data = match current_slide {
@@ -1306,19 +938,14 @@ async fn refresh_notes(app: AppHandle) -> Result<Option<String>, String> {
         None => return Err("No current slide".to_string()),
     };
 
-    {
-        let mut notes_cache = SLIDE_NOTES.write();
-        notes_cache.retain(|k, _| !k.starts_with(&format!("{}:", slide_data.presentation_id)));
-    }
-
-    let _ = prefetch_all_notes(&slide_data.presentation_id).await;
-
+    // Get cached notes (provided by extension)
     let notes = {
         let notes_cache = SLIDE_NOTES.read();
         let key = format!("{}:{}", slide_data.presentation_id, slide_data.slide_id);
         notes_cache.get(&key).cloned()
     };
 
+    // Emit slide update event with current notes
     let event = SlideUpdateEvent {
         slide_data: slide_data.clone(),
         notes: notes.clone(),
