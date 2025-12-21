@@ -408,6 +408,7 @@ main {
     max-width: 800px;
     line-height: 1.5;
     margin-bottom: var(--space-xl);
+    padding-top: var(--space-xl);
     animation: fadeInUp 0.6s ease-out 0.2s both;
 }
 
@@ -437,6 +438,75 @@ main {
 }
 
 .hero-note-link:hover {
+    color: var(--text-primary);
+}
+
+/* Hero Platforms Section */
+.hero-platforms {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-top: var(--space-xl);
+    animation: fadeInUp 0.6s ease-out 0.25s both;
+}
+
+.platforms-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin: 0;
+}
+
+.platforms-logos {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.platform-logo {
+    font-size: 1.125rem;
+    font-weight: 600;
+    font-family: var(--font-display);
+    transition: all var(--transition-fast);
+    cursor: default;
+}
+
+.platform-logo:hover {
+    transform: translateY(-2px);
+}
+
+.platform-zoom {
+    color: #2D8CFF;
+}
+
+.platform-teams {
+    color: #6264A7;
+}
+
+.platform-meet {
+    color: #00897B;
+}
+
+.platforms-more {
+    font-size: 0.875rem;
+    font-weight: 600;
+    font-family: var(--font-display);
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.platforms-more a {
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+}
+
+.platforms-more a:hover {
     color: var(--text-primary);
 }
 
@@ -1960,13 +2030,6 @@ main {
 
     .feature-title {
         font-size: 1.5rem;
-    }
-
-    /* Download section text styling */
-    .download-section .section-title {
-        max-width: 60%;
-        margin-left: auto;
-        margin-right: auto;
     }
 
     .download-section .section-desc {
