@@ -35,8 +35,13 @@ jobs:
           cd dist/chrome
           zip -r ../../releases/CueCard_${VERSION}_chrome.zip . -x "*.DS_Store"
 
+      - name: Prepare artifacts
+        run: |
+          mkdir -p artifacts
+          cp cuecard-extension/releases/*.zip artifacts/
+
       - name: Upload Chrome extension
         uses: actions/upload-artifact@v4
         with:
           name: chrome-extension
-          path: cuecard-extension/releases/*.zip
+          path: artifacts/

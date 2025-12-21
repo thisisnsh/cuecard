@@ -35,8 +35,13 @@ jobs:
           cd dist/firefox
           zip -r ../../releases/CueCard_${VERSION}_firefox.zip . -x "*.DS_Store"
 
+      - name: Prepare artifacts
+        run: |
+          mkdir -p artifacts
+          cp cuecard-extension/releases/*.zip artifacts/
+
       - name: Upload Firefox extension
         uses: actions/upload-artifact@v4
         with:
           name: firefox-extension
-          path: cuecard-extension/releases/*.zip
+          path: artifacts/

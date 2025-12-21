@@ -134,12 +134,12 @@ jobs:
           # Staple the notarization
           xcrun stapler staple "$RUNNER_TEMP/CueCard_${VERSION}_safari.dmg"
 
-          # Copy to releases directory
-          mkdir -p cuecard-extension/releases
-          cp "$RUNNER_TEMP/CueCard_${VERSION}_safari.dmg" cuecard-extension/releases/
+          # Copy to artifacts directory
+          mkdir -p artifacts
+          cp "$RUNNER_TEMP/CueCard_${VERSION}_safari.dmg" artifacts/
 
       - name: Upload Safari DMG
         uses: actions/upload-artifact@v4
         with:
           name: safari-extension-dmg
-          path: cuecard-extension/releases/*.dmg
+          path: artifacts/
