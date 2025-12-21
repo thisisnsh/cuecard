@@ -19,8 +19,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize Ghost Mode GIF animation
     initGhostModeAnimation();
 
-    // Initialize hero badge typewriter
-    initHeroBadgeTypewriter();
+    // Initialize interactive hero demo
+    initInteractiveDemo();
 
     // Initialize GitHub stats and releases
     initGitHubData();
@@ -210,66 +210,6 @@ function startTimestampCountdown(element, initialSeconds) {
     }, 1000);
 }
 
-// Hero badge typewriter animation
-function initHeroBadgeTypewriter() {
-    const heroBadge = document.querySelector('.hero-badge');
-    if (!heroBadge) return;
-
-    const messages = [
-        { text: 'Paste notes for any meeting', theme: 'green' },
-        { text: 'Sync notes from Google Slides', theme: 'yellow' },
-        { text: 'Free and Open Source', theme: 'white' }
-    ];
-
-    // Create span for animated text
-    const textSpan = document.createElement('span');
-    textSpan.className = 'hero-badge-text';
-    textSpan.textContent = messages[0].text;
-
-    // Clear badge and append span
-    heroBadge.textContent = '';
-    heroBadge.appendChild(textSpan);
-
-    const themes = ['hero-badge--yellow', 'hero-badge--green', 'hero-badge--white'];
-    const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-    const setTheme = (theme) => {
-        heroBadge.classList.remove(...themes);
-        heroBadge.classList.add(`hero-badge--${theme}`);
-    };
-
-    const typeText = async (text) => {
-        for (const char of text) {
-            textSpan.textContent += char;
-            await wait(60);
-        }
-    };
-
-    const deleteText = async () => {
-        while (textSpan.textContent.length > 0) {
-            textSpan.textContent = textSpan.textContent.slice(0, -1);
-            await wait(35);
-        }
-    };
-
-    const startTypewriter = async () => {
-        let index = 1;
-        await wait(1000);
-        await deleteText();
-        await wait(400);
-        while (true) {
-            const { text, theme } = messages[index];
-            setTheme(theme);
-            await typeText(text);
-            await wait(1500);
-            await deleteText();
-            await wait(400);
-            index = (index + 1) % messages.length;
-        }
-    };
-
-    startTypewriter();
-}
 
 function formatTimestamp(totalSeconds) {
     const sign = totalSeconds < 0 ? '-' : '';
@@ -691,10 +631,10 @@ function groupAssetsByPlatform(assets) {
             assets: [],
             totalSize: 0,
             instructions: [
-                'Download the ZIP file',
+                'Download and extract the ZIP file',
                 'Open Firefox and go to about:debugging#/runtime/this-firefox',
                 'Click "Load Temporary Add-on"',
-                'Select the ZIP file (no need to extract)',
+                'Select manifest.json in the extracted folder',
             ],
             badge: 'Coming to Add-ons'
         }
@@ -1082,4 +1022,190 @@ function initGhostModeAnimation() {
 
     // Start animation
     runAnimation();
+}
+
+// Interactive Hero Demo
+function initInteractiveDemo() {
+    const container = document.getElementById('demo-container');
+    if (!container) return;
+
+    // Elements
+    const slideThumbs = container.querySelectorAll('.slide-thumb');
+    const slideViews = container.querySelectorAll('.slide-view');
+    const speakerNotesContent = document.getElementById('speaker-notes-content');
+    const cuecardNotes = document.getElementById('cuecard-notes');
+    const cuecardTimer = document.getElementById('cuecard-timer');
+    const cuecardOverlay = document.getElementById('cuecard-overlay');
+    const settingsBtn = document.getElementById('cuecard-settings-btn');
+    const settingsPanel = document.getElementById('cuecard-settings-panel');
+    const opacitySlider = document.getElementById('opacity-slider');
+    const opacityValue = document.getElementById('opacity-value');
+    const screenshotToggle = document.getElementById('screenshot-toggle');
+    const screenShareBtn = document.getElementById('screen-share-btn');
+    const screenShareBorder = document.getElementById('screen-share-border');
+    const presenterViewBtn = document.getElementById('presenter-view-btn');
+    const slideshowBtn = document.getElementById('slideshow-btn');
+    const fullscreenView = document.getElementById('fullscreen-view');
+    const fullscreenExitBtn = document.getElementById('fullscreen-exit-btn');
+    const fullscreenContent = document.getElementById('fullscreen-content');
+
+    // Slide notes data with [time] and [note] tags
+    const slideNotes = [
+        {
+            raw: '[time 00:15] Welcome everyone to this demo. [note smile] I\'m excited to show you CueCard today.',
+            time: '00:15'
+        },
+        {
+            raw: '[time 00:20] Let me walk through the key features. [note pause] First, always-on-top notes. [note gesture] Second, invisible to screen share.',
+            time: '00:20'
+        },
+        {
+            raw: '[time 00:30] Watch closely as I demonstrate. [note emphasize] This is the magic of CueCard - your notes stay hidden.',
+            time: '00:30'
+        },
+        {
+            raw: '[time 00:10] Any questions? [note open hands] Feel free to ask anything about the app.',
+            time: '00:10'
+        }
+    ];
+
+    let currentSlide = 0;
+    let isSharing = true;
+
+    // Parse and render notes with highlighted tags
+    function parseNotes(raw) {
+        return raw
+            .replace(/\[time (\d{2}:\d{2})\]/g, '<span class="time-tag">[$1]</span>')
+            .replace(/\[note ([^\]]+)\]/g, '<span class="note-tag">[$1]</span>');
+    }
+
+    // Update slide display
+    function updateSlide(index) {
+        currentSlide = index;
+
+        // Update thumbnails
+        slideThumbs.forEach((thumb, i) => {
+            thumb.classList.toggle('active', i === index);
+        });
+
+        // Update slide views
+        slideViews.forEach((view, i) => {
+            view.classList.toggle('active', i === index);
+        });
+
+        // Update speaker notes
+        const note = slideNotes[index];
+        if (speakerNotesContent) {
+            speakerNotesContent.textContent = note.raw;
+        }
+
+        // Update CueCard overlay
+        if (cuecardNotes) {
+            cuecardNotes.innerHTML = parseNotes(note.raw);
+        }
+        if (cuecardTimer) {
+            cuecardTimer.textContent = `[${note.time}]`;
+            cuecardTimer.className = 'cuecard-timer';
+        }
+    }
+
+    // Slide thumbnail clicks
+    slideThumbs.forEach((thumb, index) => {
+        thumb.addEventListener('click', () => updateSlide(index));
+    });
+
+    // Settings button toggle
+    if (settingsBtn && settingsPanel) {
+        settingsBtn.addEventListener('click', () => {
+            settingsBtn.classList.toggle('active');
+            settingsPanel.classList.toggle('active');
+        });
+    }
+
+    // Opacity slider
+    if (opacitySlider && opacityValue && cuecardOverlay) {
+        opacitySlider.addEventListener('input', () => {
+            const value = opacitySlider.value;
+            opacityValue.textContent = `${value}%`;
+            cuecardOverlay.style.opacity = value / 100;
+        });
+    }
+
+    // Screenshot toggle (visual demo only)
+    if (screenshotToggle) {
+        screenshotToggle.addEventListener('change', () => {
+            // This is just for visual demonstration
+            // In the real app, this would control screen capture protection
+        });
+    }
+
+    // Screen share button
+    if (screenShareBtn && screenShareBorder) {
+        screenShareBtn.addEventListener('click', () => {
+            isSharing = !isSharing;
+            screenShareBtn.classList.toggle('active', isSharing);
+            screenShareBorder.classList.toggle('active', isSharing);
+
+            const shareText = screenShareBtn.querySelector('.share-text');
+            if (shareText) {
+                shareText.textContent = isSharing ? 'Stop sharing' : 'Start sharing';
+            }
+        });
+    }
+
+    // Presenter View button
+    if (presenterViewBtn && fullscreenView && fullscreenContent) {
+        presenterViewBtn.addEventListener('click', () => {
+            fullscreenView.className = 'fullscreen-view active presenter';
+
+            const slideContent = slideViews[currentSlide].innerHTML;
+            const noteContent = parseNotes(slideNotes[currentSlide].raw);
+
+            fullscreenContent.innerHTML = `
+                <div class="presenter-slide">
+                    <div class="slide-view active" style="position: static; display: flex;">
+                        ${slideContent}
+                    </div>
+                </div>
+                <div class="presenter-notes">
+                    <div class="presenter-notes-header">Speaker Notes</div>
+                    <div class="presenter-notes-content">${noteContent}</div>
+                </div>
+            `;
+        });
+    }
+
+    // Slideshow button
+    if (slideshowBtn && fullscreenView && fullscreenContent) {
+        slideshowBtn.addEventListener('click', () => {
+            fullscreenView.className = 'fullscreen-view active slideshow';
+
+            const slideContent = slideViews[currentSlide].innerHTML;
+
+            fullscreenContent.innerHTML = `
+                <div class="slideshow-slide">
+                    <div class="slide-view active" style="position: static; display: flex;">
+                        ${slideContent}
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    // Exit fullscreen
+    if (fullscreenExitBtn && fullscreenView) {
+        fullscreenExitBtn.addEventListener('click', () => {
+            fullscreenView.className = 'fullscreen-view';
+        });
+
+        // ESC key to exit
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && fullscreenView.classList.contains('active')) {
+                fullscreenView.className = 'fullscreen-view';
+            }
+        });
+    }
+
+    // Initialize with first slide
+    updateSlide(0);
 }

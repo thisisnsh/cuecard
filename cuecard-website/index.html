@@ -68,11 +68,7 @@
 
     <main>
         <!-- Hero Section -->
-        <section class="hero">
-            <div class="hero-badge hero-badge--yellow">
-                Sync notes from Google Slides
-            </div>
-            <h1 class="hero-title"><span class="title-cue">Cue</span><span class="title-card">Card</span></h1>
+        <section class="hero hero-interactive">
             <p class="hero-subtitle">
                 Speaker notes visible only to you — for
                 <span class="highlight highlight-yellow">presentations</span>,
@@ -80,6 +76,163 @@
                 <span class="highlight highlight-pink">dates</span>,
                 and everything.
             </p>
+
+            <!-- Interactive Demo Container -->
+            <div class="interactive-demo-wrapper">
+                <div class="interactive-demo-border">
+                    <div class="interactive-demo-container" id="demo-container">
+                        <!-- Screen sharing indicator -->
+                        <div class="screen-share-border active" id="screen-share-border"></div>
+
+                        <!-- Google Slides Mock -->
+                        <div class="slides-mock" id="slides-mock">
+                            <!-- Top toolbar -->
+                            <div class="slides-toolbar">
+                                <div class="slides-toolbar-left">
+                                    <div class="slides-logo">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="#FBBC04">
+                                            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z"/>
+                                            <rect x="7" y="12" width="10" height="2" fill="#FBBC04"/>
+                                            <rect x="7" y="8" width="10" height="2" fill="#FBBC04"/>
+                                        </svg>
+                                    </div>
+                                    <span class="slides-title">Product Launch Deck</span>
+                                </div>
+                                <div class="slides-toolbar-right">
+                                    <button class="slides-btn" id="presenter-view-btn">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <rect x="2" y="3" width="20" height="14" rx="2"/>
+                                            <path d="M8 21h8"/>
+                                            <path d="M12 17v4"/>
+                                        </svg>
+                                        Presenter view
+                                    </button>
+                                    <button class="slides-btn slides-btn-primary" id="slideshow-btn">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                            <polygon points="5,3 19,12 5,21"/>
+                                        </svg>
+                                        Slideshow
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Main slides area -->
+                            <div class="slides-main">
+                                <!-- Sidebar with thumbnails -->
+                                <div class="slides-sidebar">
+                                    <div class="slide-thumb active" data-slide="0">
+                                        <span class="slide-num">1</span>
+                                        <div class="slide-thumb-content">
+                                            <div class="thumb-title">Welcome</div>
+                                        </div>
+                                    </div>
+                                    <div class="slide-thumb" data-slide="1">
+                                        <span class="slide-num">2</span>
+                                        <div class="slide-thumb-content">
+                                            <div class="thumb-title">Features</div>
+                                        </div>
+                                    </div>
+                                    <div class="slide-thumb" data-slide="2">
+                                        <span class="slide-num">3</span>
+                                        <div class="slide-thumb-content">
+                                            <div class="thumb-title">Demo</div>
+                                        </div>
+                                    </div>
+                                    <div class="slide-thumb" data-slide="3">
+                                        <span class="slide-num">4</span>
+                                        <div class="slide-thumb-content">
+                                            <div class="thumb-title">Q&A</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Main slide view -->
+                                <div class="slides-content">
+                                    <div class="slide-canvas" id="slide-canvas">
+                                        <!-- Slide 1 -->
+                                        <div class="slide-view active" data-slide="0">
+                                            <h2 class="slide-heading">Welcome to CueCard</h2>
+                                            <p class="slide-text">Your invisible presentation companion</p>
+                                        </div>
+                                        <!-- Slide 2 -->
+                                        <div class="slide-view" data-slide="1">
+                                            <h2 class="slide-heading">Key Features</h2>
+                                            <ul class="slide-list">
+                                                <li>Always-on-top notes</li>
+                                                <li>Invisible to screen share</li>
+                                                <li>Timer & cue support</li>
+                                            </ul>
+                                        </div>
+                                        <!-- Slide 3 -->
+                                        <div class="slide-view" data-slide="2">
+                                            <h2 class="slide-heading">Live Demo</h2>
+                                            <p class="slide-text">See CueCard in action</p>
+                                            <div class="slide-demo-graphic"></div>
+                                        </div>
+                                        <!-- Slide 4 -->
+                                        <div class="slide-view" data-slide="3">
+                                            <h2 class="slide-heading">Questions?</h2>
+                                            <p class="slide-text">Let's discuss!</p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Speaker notes area -->
+                                    <div class="speaker-notes-area">
+                                        <div class="speaker-notes-header">
+                                            <span>Speaker notes</span>
+                                        </div>
+                                        <div class="speaker-notes-content" id="speaker-notes-content">
+                                            <!-- Notes will be populated by JS -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- CueCard Overlay -->
+                        <div class="cuecard-overlay" id="cuecard-overlay">
+                            <div class="cuecard-header">
+                                <span class="cuecard-timer" id="cuecard-timer">[00:15]</span>
+                                <button class="cuecard-settings-btn" id="cuecard-settings-btn">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="3"/>
+                                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="cuecard-notes" id="cuecard-notes">
+                                <!-- Notes will be populated by JS -->
+                            </div>
+
+                            <!-- Settings Panel -->
+                            <div class="cuecard-settings-panel" id="cuecard-settings-panel">
+                                <div class="settings-row">
+                                    <span class="settings-label">Opacity</span>
+                                    <input type="range" class="settings-slider" id="opacity-slider" min="20" max="100" value="85">
+                                    <span class="settings-value" id="opacity-value">85%</span>
+                                </div>
+                                <div class="settings-row">
+                                    <span class="settings-label">Show in Screenshot</span>
+                                    <label class="settings-toggle">
+                                        <input type="checkbox" id="screenshot-toggle">
+                                        <span class="toggle-slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Screen share control -->
+                        <button class="screen-share-btn active" id="screen-share-btn">
+                            <span class="share-status-dot"></span>
+                            <span class="share-text">Stop sharing</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tip below container -->
+                <p class="demo-tip"><em>tip: open settings to change opacity and hide on screen share</em></p>
+            </div>
+
             <div class="hero-cta">
                 <a href="#download" class="btn btn-primary" id="hero-download-btn">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -98,27 +251,23 @@
                     <span id="hero-stars-text">View Source</span>
                 </a>
             </div>
-            <br>
             <p class="hero-note">
-                <a href="#faq-undetectable">Undetectable on Zoom, Microsoft Teams,<br>Google Meet and more.</a>
+                <a href="#faq-undetectable">Undetectable on Zoom, Microsoft Teams, Google Meet and more.</a>
             </p>
         </section>
 
-        <!-- Use Cases Section -->
-        <section class="use-cases">
-            <div class="use-cases-container">
-                <!-- Video Hero -->
-                <div class="video-hero">
-                    <div class="video-wrapper">
-                        <iframe src="https://www.youtube.com/embed/jCApPR67MDE" title="CueCard - Invisible Speaker Notes" frameborder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowfullscreen>
-                        </iframe>
-                    </div>
-                    <div class="video-glow"></div>
-                </div>
+        <!-- Fullscreen Presenter/Slideshow View -->
+        <div class="fullscreen-view" id="fullscreen-view">
+            <button class="fullscreen-exit-btn" id="fullscreen-exit-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+                ESC
+            </button>
+            <div class="fullscreen-content" id="fullscreen-content">
+                <!-- Content populated by JS -->
             </div>
-        </section>
+        </div>
 
         <!-- Syntax Section -->
         <section class="features syntax-notes">
