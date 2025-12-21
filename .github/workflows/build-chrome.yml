@@ -1,0 +1,42 @@
+name: Build Chrome Extension
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  build-chrome:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        working-directory: cuecard-extension
+        run: npm install
+
+      - name: Build Chrome extension
+        working-directory: cuecard-extension
+        run: npm run build:chrome
+
+      - name: Create release ZIP
+        working-directory: cuecard-extension
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          mkdir -p releases
+          cd dist/chrome
+          zip -r ../../releases/CueCard_${VERSION}_chrome.zip . -x "*.DS_Store"
+
+      - name: Upload Chrome extension
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrome-extension
+          path: cuecard-extension/releases/*.zip

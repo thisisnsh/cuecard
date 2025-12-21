@@ -1,0 +1,80 @@
+name: Build macOS
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Rust targets
+        run: rustup target add universal-apple-darwin
+
+      - name: Install dependencies
+        working-directory: cuecard-app
+        run: npm install
+
+      - name: Create firebase config
+        working-directory: cuecard-app/src-tauri
+        shell: bash
+        run: |
+          echo '${{ secrets.FIREBASE_CONFIG }}' > firebase-config.json
+
+      - name: Build Universal macOS
+        working-directory: cuecard-app
+        env:
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: npm run tauri build -- --target universal-apple-darwin
+
+      - name: Generate latest.json
+        working-directory: cuecard-app/src-tauri
+        shell: bash
+        run: |
+          # Read version from tauri.conf.json
+          VERSION=$(node -p "require('./tauri.conf.json').version")
+
+          # Read signature from .sig file
+          SIGNATURE=$(cat target/universal-apple-darwin/release/bundle/macos/*.tar.gz.sig)
+
+          # Copy template and generate latest.json
+          cp latest/darwin-x86_64-latest.example.json latest/darwin-x86_64-latest.json
+
+          # Update fields using node
+          node -e "
+            const fs = require('fs');
+            const latest = JSON.parse(fs.readFileSync('latest/darwin-x86_64-latest.json', 'utf8'));
+            latest.version = '$VERSION';
+            latest.pub_date = new Date().toISOString();
+            latest.signature = \`$SIGNATURE\`;
+            fs.writeFileSync('latest/darwin-x86_64-latest.json', JSON.stringify(latest, null, 2));
+          "
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-universal
+          path: |
+            cuecard-app/src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
+            cuecard-app/src-tauri/target/universal-apple-darwin/release/bundle/macos/*.tar.gz
+            cuecard-app/src-tauri/target/universal-apple-darwin/release/bundle/macos/*.tar.gz.sig
+            cuecard-app/src-tauri/latest/darwin-x86_64-latest.json

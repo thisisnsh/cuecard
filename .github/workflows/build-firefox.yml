@@ -1,0 +1,42 @@
+name: Build Firefox Extension
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  build-firefox:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        working-directory: cuecard-extension
+        run: npm install
+
+      - name: Build Firefox extension
+        working-directory: cuecard-extension
+        run: npm run build:firefox
+
+      - name: Create release ZIP
+        working-directory: cuecard-extension
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          mkdir -p releases
+          cd dist/firefox
+          zip -r ../../releases/CueCard_${VERSION}_firefox.zip . -x "*.DS_Store"
+
+      - name: Upload Firefox extension
+        uses: actions/upload-artifact@v4
+        with:
+          name: firefox-extension
+          path: cuecard-extension/releases/*.zip

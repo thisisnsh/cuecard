@@ -1,0 +1,134 @@
+name: Build Safari Extension
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  build-safari:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        working-directory: cuecard-extension
+        run: npm install
+
+      - name: Build Safari extension and convert to Xcode project
+        working-directory: cuecard-extension
+        run: npm run build:safari
+
+      - name: Import signing certificate
+        env:
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        run: |
+          # Create temporary keychain
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+          # Import certificate
+          echo "$APPLE_CERTIFICATE" | base64 --decode > certificate.p12
+          security import certificate.p12 -P "$APPLE_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security list-keychain -d user -s $KEYCHAIN_PATH
+
+          # Clean up
+          rm certificate.p12
+
+      - name: Build macOS app
+        working-directory: cuecard-extension/dist/safari-xcode/CueCard Extension
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          # Build for macOS only (not iOS)
+          xcodebuild archive \
+            -project "CueCard Extension.xcodeproj" \
+            -scheme "CueCard Extension (macOS)" \
+            -archivePath "$RUNNER_TEMP/CueCard.xcarchive" \
+            -destination "generic/platform=macOS" \
+            DEVELOPMENT_TEAM="${APPLE_TEAM_ID}"
+
+          # Export the app
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/CueCard.xcarchive" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -exportOptionsPlist ../../../scripts/ExportOptions.plist
+
+      - name: Notarize app
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          # Create a zip for notarization
+          ditto -c -k --keepParent "$RUNNER_TEMP/export/CueCard Extension.app" "$RUNNER_TEMP/CueCard.zip"
+
+          # Submit for notarization
+          xcrun notarytool submit "$RUNNER_TEMP/CueCard.zip" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID" \
+            --wait
+
+          # Staple the notarization
+          xcrun stapler staple "$RUNNER_TEMP/export/CueCard Extension.app"
+
+      - name: Create DMG
+        run: |
+          # Install create-dmg
+          brew install create-dmg
+
+          VERSION=$(node -p "require('./cuecard-extension/package.json').version")
+
+          # Create DMG with custom background and settings
+          create-dmg \
+            --volname "CueCard Extension" \
+            --background "cuecard-app/src-tauri/icons/dmg-background.png" \
+            --window-pos 200 120 \
+            --window-size 660 400 \
+            --icon-size 100 \
+            --icon "CueCard Extension.app" 180 170 \
+            --app-drop-link 480 170 \
+            "$RUNNER_TEMP/CueCard_${VERSION}_safari.dmg" \
+            "$RUNNER_TEMP/export/CueCard Extension.app"
+
+      - name: Notarize DMG
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          VERSION=$(node -p "require('./cuecard-extension/package.json').version")
+
+          # Submit DMG for notarization
+          xcrun notarytool submit "$RUNNER_TEMP/CueCard_${VERSION}_safari.dmg" \
+            --apple-id "$APPLE_ID" \
+            --password "$APPLE_PASSWORD" \
+            --team-id "$APPLE_TEAM_ID" \
+            --wait
+
+          # Staple the notarization
+          xcrun stapler staple "$RUNNER_TEMP/CueCard_${VERSION}_safari.dmg"
+
+          # Copy to releases directory
+          mkdir -p cuecard-extension/releases
+          cp "$RUNNER_TEMP/CueCard_${VERSION}_safari.dmg" cuecard-extension/releases/
+
+      - name: Upload Safari DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: safari-extension-dmg
+          path: cuecard-extension/releases/*.dmg

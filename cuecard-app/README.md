@@ -85,52 +85,6 @@ Note: 32-bit (x86) Windows builds are intentionally not supported.
 
 ## Release Process
 
-### Generating Updater Manifests (latest.json)
-
-Tauri 2.x no longer auto-generates `latest.json` files. You must create them manually for each platform/architecture before uploading to GitHub Releases.
-
-**Template files in `src-tauri/latest/` folder:**
-- `src-tauri/latest/darwin-x86_64-latest.example.json` — macOS (universal binary serves both x86_64 and aarch64)
-- `src-tauri/latest/windows-x86_64-latest.example.json` — Windows x64
-- `src-tauri/latest/windows-aarch64-latest.example.json` — Windows ARM64
-
-**To create a manifest:**
-
-1. Copy the appropriate example file:
-   ```bash
-   cp src-tauri/latest/darwin-x86_64-latest.example.json src-tauri/latest/darwin-x86_64-latest.json
-   ```
-
-2. Update the fields:
-   - `version`: Must match the version in `src-tauri/tauri.conf.json`
-   - `notes`: Release notes (can be brief or detailed)
-   - `pub_date`: ISO 8601 timestamp (e.g., `2024-01-15T12:00:00Z`)
-   - `url`: Direct download URL from GitHub Releases (use the latest release URL format)
-   - `signature`: Paste the **contents** of the `.sig` file (not the file path)
-
-3. Get the signature content:
-   ```bash
-   # macOS
-   cat src-tauri/target/universal-apple-darwin/release/bundle/macos/CueCard.app.tar.gz.sig
-
-   # Windows x64
-   cat src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/CueCard_<version>_x64-setup.exe.sig
-
-   # Windows ARM64
-   cat src-tauri/target/aarch64-pc-windows-msvc/release/bundle/nsis/CueCard_<version>_arm64-setup.exe.sig
-   ```
-
-**Example manifest (darwin-x86_64-latest.json):**
-```json
-{
-  "version": "1.0.1",
-  "notes": "Bug fixes and performance improvements",
-  "pub_date": "2024-01-15T12:00:00Z",
-  "url": "https://github.com/thisisnsh/cuecard/releases/latest/download/CueCard.app.tar.gz",
-  "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUbkVYSjhEVTFtNW..."
-}
-```
-
 ### macOS
 
 1. Generate signing keys (first time only):
@@ -262,6 +216,51 @@ Tauri 2.x no longer auto-generates `latest.json` files. You must create them man
       | `src-tauri/target/aarch64-pc-windows-msvc/release/bundle/msi/CueCard_<version>_arm64.msi.sig`        | `CueCard_<version>_arm64.msi.sig`       | MSI signature                     |
       | `src-tauri/latest/windows-aarch64-latest.json`                                                                 | `windows-aarch64-latest.json`           | Windows ARM64 updater feed        |
 
+### Generating Updater Manifests (latest.json)
+
+Tauri 2.x no longer auto-generates `latest.json` files. You must create them manually for each platform/architecture before uploading to GitHub Releases.
+
+**Template files in `src-tauri/latest/` folder:**
+- `src-tauri/latest/darwin-x86_64-latest.example.json` — macOS (universal binary serves both x86_64 and aarch64)
+- `src-tauri/latest/windows-x86_64-latest.example.json` — Windows x64
+- `src-tauri/latest/windows-aarch64-latest.example.json` — Windows ARM64
+
+**To create a manifest:**
+
+1. Copy the appropriate example file:
+   ```bash
+   cp src-tauri/latest/darwin-x86_64-latest.example.json src-tauri/latest/darwin-x86_64-latest.json
+   ```
+
+2. Update the fields:
+   - `version`: Must match the version in `src-tauri/tauri.conf.json`
+   - `notes`: Release notes (can be brief or detailed)
+   - `pub_date`: ISO 8601 timestamp (e.g., `2024-01-15T12:00:00Z`)
+   - `url`: Direct download URL from GitHub Releases (use the latest release URL format)
+   - `signature`: Paste the **contents** of the `.sig` file (not the file path)
+
+3. Get the signature content:
+   ```bash
+   # macOS
+   cat src-tauri/target/universal-apple-darwin/release/bundle/macos/CueCard.app.tar.gz.sig
+
+   # Windows x64
+   cat src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/CueCard_<version>_x64-setup.exe.sig
+
+   # Windows ARM64
+   cat src-tauri/target/aarch64-pc-windows-msvc/release/bundle/nsis/CueCard_<version>_arm64-setup.exe.sig
+   ```
+
+**Example manifest (darwin-x86_64-latest.json):**
+```json
+{
+  "version": "1.0.1",
+  "notes": "Bug fixes and performance improvements",
+  "pub_date": "2024-01-15T12:00:00Z",
+  "url": "https://github.com/thisisnsh/cuecard/releases/latest/download/CueCard.app.tar.gz",
+  "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUbkVYSjhEVTFtNW..."
+}
+```
 
 ### Notes
 
