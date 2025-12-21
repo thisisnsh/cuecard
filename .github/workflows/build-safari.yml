@@ -66,6 +66,7 @@ jobs:
             -scheme "CueCard Extension (macOS)" \
             -archivePath "$RUNNER_TEMP/CueCard.xcarchive" \
             -destination "generic/platform=macOS" \
+            MACOSX_DEPLOYMENT_TARGET=11.0 \
             CODE_SIGN_STYLE=Manual \
             CODE_SIGN_IDENTITY="Developer ID Application" \
             DEVELOPMENT_TEAM="${APPLE_TEAM_ID}" \
