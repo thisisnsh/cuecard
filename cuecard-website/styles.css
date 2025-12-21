@@ -1985,13 +1985,13 @@ main {
     }
 
     .hero-tagline {
-        max-width: 60%;
+        max-width: 90%;
         margin-left: auto;
         margin-right: auto;
     }
 
     .hero-note {
-        max-width: 60%;
+        max-width: 90%;
         margin-left: auto;
         margin-right: auto;
     }
@@ -2033,7 +2033,7 @@ main {
     }
 
     .download-section .section-desc {
-        max-width: 60%;
+        max-width: 90%;
         margin-left: auto;
         margin-right: auto;
         font-size: 1rem;

@@ -1,6 +1,9 @@
 // CueCard Website - Interactions & Animations
 
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize hero gif loading
+    initHeroGifLoading();
+
     // Initialize scroll reveal animations
     initScrollReveal();
 
@@ -25,6 +28,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize GitHub stats and releases
     initGitHubData();
 });
+
+// Hero GIF Loading - Show poster first, then load actual gif
+function initHeroGifLoading() {
+    const heroGif = document.getElementById('hero-gif');
+    if (!heroGif) return;
+
+    const gifSrc = heroGif.dataset.gifSrc;
+    if (!gifSrc) return;
+
+    // Preload the actual gif
+    const gifImage = new Image();
+    gifImage.onload = () => {
+        // Once loaded, swap to the actual gif
+        heroGif.src = gifSrc;
+    };
+    gifImage.src = gifSrc;
+}
 
 // Scroll Reveal Animation
 function initScrollReveal() {
