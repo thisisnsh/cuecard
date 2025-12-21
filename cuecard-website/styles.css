@@ -1788,12 +1788,22 @@ main {
     }
 
     .release-selector {
-        flex-direction: column;
-        gap: var(--space-sm);
+        flex-direction: row;
+        flex-wrap: nowrap;
+        gap: var(--space-xs);
     }
 
     .release-dropdown {
-        width: 100%;
+        width: auto;
+        min-width: 0;
+    }
+
+    .release-selector label {
+        white-space: nowrap;
+    }
+
+    .nav .github-link {
+        display: none;
     }
 }
 
