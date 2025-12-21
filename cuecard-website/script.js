@@ -405,43 +405,6 @@ function showToast(message) {
     }, 2000);
 }
 
-// Intersection Observer for performance (alternative to scroll event)
-function initIntersectionObserver() {
-    const options = {
-        root: null,
-        rootMargin: '0px',
-        threshold: 0.1
-    };
-
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('in-view');
-            }
-        });
-    }, options);
-
-    document.querySelectorAll('.use-case-card, .feature-card').forEach(el => {
-        observer.observe(el);
-    });
-}
-
-// Preload fonts for better performance
-function preloadFonts() {
-    const fonts = [
-        'https://fonts.googleapis.com/css2?family=Syne:wght@700;800&display=swap',
-        'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap'
-    ];
-
-    fonts.forEach(font => {
-        const link = document.createElement('link');
-        link.rel = 'preload';
-        link.as = 'style';
-        link.href = font;
-        document.head.appendChild(link);
-    });
-}
-
 // GitHub API Integration
 const GITHUB_REPO = 'thisisnsh/cuecard';
 let allReleases = [];
@@ -483,112 +446,6 @@ async function initGitHubData() {
 
 function getSampleReleaseData() {
     return [];
-
-    const sampleVersion = '1.0.0';
-    const sampleDate = new Date().toISOString();
-
-    return [
-        {
-            tag_name: `v${sampleVersion}`,
-            name: `CueCard ${sampleVersion}`,
-            prerelease: false,
-            published_at: sampleDate,
-            body: `## What's New\n\n- Initial release of CueCard\n- Ghost mode for hiding from screen recordings\n- Google Slides sync support\n- Timer and note tags\n\n## Installation\n\nDownload the appropriate installer for your platform below.`,
-            assets: [
-                // macOS
-                {
-                    name: `CueCard_${sampleVersion}_universal.dmg`,
-                    size: 45 * 1024 * 1024,
-                    download_count: 1250,
-                    browser_download_url: '#'
-                },
-                // Windows x64
-                {
-                    name: `CueCard_${sampleVersion}_x64-setup.exe`,
-                    size: 38 * 1024 * 1024,
-                    download_count: 2340,
-                    browser_download_url: '#'
-                },
-                {
-                    name: `CueCard_${sampleVersion}_x64.msi`,
-                    size: 40 * 1024 * 1024,
-                    download_count: 890,
-                    browser_download_url: '#'
-                },
-                // Windows ARM64
-                {
-                    name: `CueCard_${sampleVersion}_arm64-setup.exe`,
-                    size: 36 * 1024 * 1024,
-                    download_count: 450,
-                    browser_download_url: '#'
-                },
-                {
-                    name: `CueCard_${sampleVersion}_arm64.msi`,
-                    size: 38 * 1024 * 1024,
-                    download_count: 220,
-                    browser_download_url: '#'
-                },
-                // Safari Extension
-                {
-                    name: `CueCard_${sampleVersion}_safari.dmg`,
-                    size: 12 * 1024 * 1024,
-                    download_count: 890,
-                    browser_download_url: '#'
-                },
-                // Chrome Extension
-                {
-                    name: `CueCard_${sampleVersion}_chrome.zip`,
-                    size: 2 * 1024 * 1024,
-                    download_count: 560,
-                    browser_download_url: '#'
-                },
-                // Firefox Extension
-                {
-                    name: `CueCard_${sampleVersion}_firefox.zip`,
-                    size: 2 * 1024 * 1024,
-                    download_count: 340,
-                    browser_download_url: '#'
-                },
-                // Files that should be filtered out
-                {
-                    name: `CueCard.app.tar.gz`,
-                    size: 42 * 1024 * 1024,
-                    download_count: 100,
-                    browser_download_url: '#'
-                },
-                {
-                    name: `CueCard.app.tar.gz.sig`,
-                    size: 1024,
-                    download_count: 50,
-                    browser_download_url: '#'
-                },
-                {
-                    name: `darwin-x86_64-latest.json`,
-                    size: 512,
-                    download_count: 200,
-                    browser_download_url: '#'
-                },
-                {
-                    name: `windows-x86_64-latest.json`,
-                    size: 512,
-                    download_count: 150,
-                    browser_download_url: '#'
-                },
-                {
-                    name: `CueCard_${sampleVersion}_x64-setup.exe.sig`,
-                    size: 1024,
-                    download_count: 30,
-                    browser_download_url: '#'
-                },
-                {
-                    name: `CueCard_${sampleVersion}_x64.msi.sig`,
-                    size: 1024,
-                    download_count: 25,
-                    browser_download_url: '#'
-                }
-            ]
-        }
-    ];
 }
 
 async function fetchGitHubStars() {
@@ -621,12 +478,6 @@ function updateStarsCount(count) {
         starsElement.textContent = formatNumber(count) + " GitHub Stars";
     }
 
-    // Update hero source button with stars
-    const heroStarsText = document.getElementById('hero-stars-text');
-    // Show github stars in hero if needed
-    // if (heroStarsText) {
-    // heroStarsText.textContent = formatNumber(count) + " GitHub Stars";
-    // }
 }
 
 function formatNumber(num) {
@@ -958,7 +809,6 @@ function getDownloadButtonLabel(filename, size, platformKey) {
     }
 
     // Format: size EXT (version)
-    // e.g., "45MB DMG (v1.0.0)" with version styled differently
     const versionPart = version ? ` <span class="btn-version">(${version})</span>` : '';
 
     if (platformKey === 'macos' || platformKey === 'safari') {
@@ -983,78 +833,6 @@ function getDownloadButtonLabel(filename, size, platformKey) {
     }
 
     return { label: `${sizeStr} ${ext}${versionPart}`, subtitle: null };
-}
-
-function getAssetDisplayInfo(filename) {
-    // Get extension
-    const ext = filename.split('.').pop().toLowerCase();
-    const nameLower = filename.toLowerCase();
-
-    // Check if it's an extension/Safari file
-    const isExtension = nameLower.includes('extension');
-
-    // Remove extension from filename for display
-    const nameWithoutExt = filename.replace(/\.[^/.]+$/, '');
-
-    // Parse the filename: CueCard_Extension_1.0.0_universal or CueCard_1.0.0_universal
-    // Remove "CueCard" prefix and clean up
-    let displayName = nameWithoutExt
-        .replace(/^CueCard[_\s]*/i, '') // Remove CueCard prefix
-        .replace(/_/g, ' ')
-        .replace(/-setup/gi, '')
-        .replace(/\s+/g, ' ')
-        .trim();
-
-    // If it starts with "Extension", extract just "Extension" as the main name
-    // and append architecture info
-    if (displayName.toLowerCase().startsWith('extension')) {
-        // CueCard_Extension_1.0.0_universal -> "Extension 1.0.0 universal"
-        displayName = displayName
-            .replace(/^extension\s*/i, 'Extension ')
-            .trim();
-    }
-
-    // Replace "universal" with "Intel + Apple Silicon"
-    displayName = displayName
-        .replace(/\buniversal\b/gi, 'Intel + Apple Silicon')
-        .replace(/\bx64\b/gi, 'x64')
-        .replace(/\bx86\b/gi, 'x86')
-        .replace(/\barm64\b/gi, 'ARM64');
-
-    // Clean up any double spaces
-    displayName = displayName.replace(/\s+/g, ' ').trim();
-
-    // Friendly type names
-    const friendlyTypes = {
-        'dmg': 'DMG Disk Image',
-        'exe': 'EXE Personal',
-        'msi': 'MSI Enterprise'
-    };
-
-    const friendlyType = friendlyTypes[ext] || ext.toUpperCase();
-
-    // Determine platform icon
-    let platformIcon;
-    if (isExtension && ext === 'dmg') {
-        // Safari icon for Extension .dmg
-        platformIcon = getSafariIcon();
-    } else if (ext === 'dmg') {
-        // macOS icon for regular .dmg
-        platformIcon = getMacIcon();
-    } else if (ext === 'exe' || ext === 'msi') {
-        // Windows icon
-        platformIcon = getWindowsIcon();
-    } else {
-        // Default file icon
-        platformIcon = getDefaultFileIcon();
-    }
-
-    return {
-        displayName,
-        extension: ext.toUpperCase(),
-        friendlyType,
-        platformIcon
-    };
 }
 
 function getMacIcon() {
@@ -1088,52 +866,6 @@ function getChromeIcon() {
 function getFirefoxIcon() {
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32" fill="currentColor" aria-hidden="true">
         <path d="M12 2c-2.64 0-5.1 1.03-6.97 2.9C3.16 6.78 2 9.3 2 12c0 2.7 1.16 5.22 3.03 7.1C6.9 20.97 9.36 22 12 22c3.07 0 5.9-1.4 7.77-3.84.9-1.18 1.41-2.62 1.41-4.16 0-3.37-2.38-6.3-5.64-6.97-.45-.1-.9-.14-1.35-.14-.38 0-.76.04-1.13.1.64.35 1.2.84 1.63 1.42.53.7.82 1.55.82 2.42 0 2.25-1.82 4.07-4.07 4.07-2.25 0-4.07-1.82-4.07-4.07 0-1.4.7-2.64 1.77-3.38-.3.05-.6.12-.9.2-.7.2-1.34.53-1.9.97C7.02 7.08 6.2 8.5 6.2 10.1c0 3.2 2.6 5.8 5.8 5.8 3.2 0 5.8-2.6 5.8-5.8 0-1.93-.95-3.64-2.42-4.7C14.45 4.8 13.25 4.5 12 4.5c-.6 0-1.2.07-1.77.2C10.8 3.1 11.4 2 12 2z"/>
-    </svg>`;
-}
-
-function getDefaultFileIcon() {
-    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="32" height="32">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-        <polyline points="14 2 14 8 20 8"/>
-    </svg>`;
-}
-
-function getAssetIcon(filename) {
-    const ext = filename.split('.').pop().toLowerCase();
-    const name = filename.toLowerCase();
-
-    // macOS
-    if (name.includes('darwin') || name.includes('macos') || name.includes('mac') || ext === 'dmg') {
-        return `<svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-        </svg>`;
-    }
-
-    // Windows
-    if (name.includes('windows') || name.includes('win') || ext === 'exe' || ext === 'msi') {
-        return `<svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M3 12V6.75l6-1.32v6.48L3 12zm17-9v8.75l-10 .15V5.21L20 3zM3 13l6 .09v6.81l-6-1.15V13zm17 .25V22l-10-1.91V13.1l10 .15z"/>
-        </svg>`;
-    }
-
-    // Linux
-    if (name.includes('linux') || ext === 'deb' || ext === 'rpm' || ext === 'appimage') {
-        return `<svg viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12.504 0c-.155 0-.315.008-.48.021-4.226.333-3.105 4.807-3.17 6.298-.076 1.092-.3 1.953-1.05 3.02-.885 1.051-2.127 2.75-2.716 4.521-.278.832-.41 1.684-.287 2.489a.424.424 0 00-.11.135c-.26.268-.45.6-.663.839-.199.199-.485.267-.797.4-.313.136-.658.269-.864.68-.09.189-.136.394-.132.602 0 .199.027.4.055.536.058.399.116.728.04.97-.249.68-.28 1.145-.106 1.484.174.334.535.47.94.601.81.2 1.91.135 2.774.6.926.466 1.866.67 2.616.47.526-.116.97-.464 1.208-.946.587-.003 1.23-.269 2.26-.334.699-.058 1.574.267 2.577.2.025.134.063.198.114.333l.003.003c.391.778 1.113 1.132 1.884 1.071.771-.06 1.592-.536 2.257-1.306.631-.765 1.683-1.084 2.378-1.503.348-.199.629-.469.649-.853.023-.4-.2-.811-.714-1.376v-.097l-.003-.003c-.17-.2-.25-.535-.338-.926-.085-.401-.182-.786-.492-1.046h-.003c-.059-.054-.123-.067-.188-.135a.357.357 0 00-.19-.064c.431-1.278.264-2.55-.173-3.694-.533-1.41-1.465-2.638-2.175-3.483-.796-1.005-1.576-1.957-1.56-3.368.026-2.152.236-6.133-3.544-6.139zm.529 3.405h.013c.213 0 .396.062.584.198.19.135.33.332.438.533.105.259.158.459.166.724 0-.02.006-.04.006-.06v.105a.086.086 0 01-.004-.021l-.004-.024a1.807 1.807 0 01-.15.706.953.953 0 01-.213.335.71.71 0 00-.088-.042c-.104-.045-.198-.064-.284-.133a1.312 1.312 0 00-.22-.066c.05-.06.146-.133.183-.198.053-.128.082-.262.083-.402 0-.037-.007-.066-.007-.106a.18.18 0 01-.007-.035.14.14 0 01-.01-.039c-.01-.04-.04-.134-.04-.2a.29.29 0 01-.01-.06c0-.04.006-.063.006-.1 0-.03-.012-.06-.012-.09a.559.559 0 00-.01-.053.232.232 0 01-.004-.037c-.01-.06-.023-.11-.023-.17l-.01-.03c-.004-.008-.008-.02-.014-.027-.008-.014-.025-.024-.05-.042-.06-.036-.15-.053-.27-.053-.038 0-.096.003-.142.01-.106.01-.197.037-.27.066a.727.727 0 00-.262.177c-.053.058-.098.118-.16.197-.078.098-.177.266-.228.399l-.004.007-.004.007c-.017.055-.033.098-.05.137-.024.062-.04.11-.05.16-.01.03-.02.057-.027.086l-.01.03c-.023.078-.044.175-.078.276-.04.105-.09.242-.128.392l-.004.013a1.3 1.3 0 00-.05.246c.023-.5.033-.86.073-1.133.04-.27.09-.47.16-.615.07-.145.14-.24.25-.31a.56.56 0 01.168-.09.86.86 0 01.175-.04zm-4.23.638l.004.034.002.027v.002l.003.02.006.012.003.01.003.01.002.006.002.008v.004c.005.016.013.032.02.049l.002.003c.004.01.013.013.013.02l.014.018c.01.014.017.028.03.04.01.013.02.02.03.024a.062.062 0 00.018.01c.004.002.006.002.01.004.01.01.015.01.024.013.01.004.02.002.027.003.01 0 .016.002.025.002.007 0 .016-.002.024-.002.01 0 .02-.01.03-.01.007-.01.013-.01.02-.02l.01-.01c.003-.003.007-.003.01-.007a.14.14 0 00.01-.02c.015-.02.027-.04.04-.06l.002-.01c.016-.03.03-.052.05-.092.02-.04.03-.073.04-.11l.01-.034c.01-.028.017-.06.02-.096l.004-.04c.014-.16.014-.34-.044-.53-.023-.077-.034-.16-.066-.253a2.13 2.13 0 00-.176-.399c-.11-.175-.243-.326-.428-.437a.848.848 0 00-.252-.108.824.824 0 00-.299-.03c-.062.01-.145.017-.21.05a.725.725 0 00-.192.1.675.675 0 00-.15.147.66.66 0 00-.09.169.62.62 0 00-.04.2c-.003.066.006.14.02.2.016.077.03.15.063.23a.76.76 0 00.096.17c.04.063.09.11.14.15.03.02.05.04.08.05l.04.02c.016.01.03.013.043.02.01.002.016.004.024.006a.17.17 0 00.034.004c.01 0 .02 0 .027-.003a.093.093 0 00.03-.01c.018-.006.03-.016.04-.024l.03-.023a.18.18 0 00.02-.026c.003-.003.003-.006.006-.01l.007-.014a.13.13 0 00.007-.02.16.16 0 00.007-.02l.003-.014.003-.01v-.008l.002-.02v-.01a.14.14 0 000-.014l-.004-.016a.05.05 0 00-.003-.013z"/>
-        </svg>`;
-    }
-
-    // ZIP file
-    if (ext === 'zip') {
-        return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
-        </svg>`;
-    }
-
-    // Default file icon
-    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-        <polyline points="14 2 14 8 20 8"/>
     </svg>`;
 }
 

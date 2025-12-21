@@ -135,7 +135,6 @@ async function saveUserProfile(email, name) {
 
 // Increment usage counter in Firestore
 async function incrementUsage(email, usageType) {
-  // Incrementing usage counter
   if (!email || !FIRESTORE_BASE_URL) return;
 
   // Get Firebase ID token for authenticated request
@@ -200,7 +199,6 @@ async function getUserEmail() {
   if (!invoke) return null;
   try {
     const userInfo = await invoke("get_user_info");
-    // User info retrieved
     return userInfo?.email || null;
   } catch (e) {
     console.log("Could not get user email:", e);
@@ -332,7 +330,6 @@ let showInScreenshot = false; // Default: false = hidden from screenshots
 // Timer State
 let timerState = 'stopped'; // 'stopped', 'running', 'paused'
 let timerIntervals = []; // Store all timer interval IDs
-let originalTimerValues = []; // Store original timer values for reset
 
 // Edit Mode State
 let isEditMode = false; // false = done mode (readonly, highlighted), true = edit mode (editable, not highlighted)
@@ -389,8 +386,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   editNoteSeparator = document.getElementById("edit-note-separator");
   notesInputWrapper = document.querySelector(".notes-input-wrapper");
 
-  // DOM elements loaded
-
   // Set up navigation handlers
   setupNavigation();
 
@@ -433,7 +428,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Listen for slide updates from the backend
   if (listen) {
     await listen("slide-update", (event) => {
-      // Received slide update
       handleSlideUpdate(event.payload);
     });
   }
@@ -526,7 +520,6 @@ function resetAllStates() {
 // Auth Handlers
 function setupAuth() {
   authBtn.addEventListener("click", async (e) => {
-    // Auth button clicked
     e.stopPropagation(); // Prevent event from bubbling to viewInitial
     if (isAuthenticated) {
       await handleLogout();
@@ -1064,7 +1057,6 @@ async function handleLogin(scope = 'profile') {
       alert("Please run the app in Tauri mode");
       return;
     }
-    // Starting login
     await invoke("start_login", { scope });
   } catch (error) {
     console.error("Error starting login:", error);
