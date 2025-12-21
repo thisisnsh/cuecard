@@ -626,7 +626,8 @@ function groupAssetsByPlatform(assets) {
                 'Run the installer and follow prompts',
                 'If SmartScreen appears, click "More info" then "Run anyway"',
                 'Launch CueCard from Start Menu'
-            ]
+            ],
+            badge: 'Beta'
         },
         windows_arm: {
             name: 'Windows ARM',
@@ -639,7 +640,8 @@ function groupAssetsByPlatform(assets) {
                 'Run the installer and follow prompts',
                 'If SmartScreen appears, click "More info" then "Run anyway"',
                 'Launch CueCard from Start Menu'
-            ]
+            ],
+            badge: 'Beta'
         },
         macos: {
             name: 'macOS',
