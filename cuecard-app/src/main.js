@@ -1043,7 +1043,7 @@ function updateAuthUI(authenticated, name = '') {
     welcomeHeading.innerHTML = 'CueCard\n<span class="version-text">1.0.1</span>';
 
     // Reset subtext
-    welcomeSubtext.innerHTML = 'Speaker notes visible only to you — for <span class="highlight-presentations">presentations</span>, <span class="highlight-meetings">meetings</span>, <span class="highlight-dates">dates</span> and everything...';
+    welcomeSubtext.innerHTML = 'Speaker notes visible only to you during screen sharing — for <span class="highlight-presentations">presentations</span>, <span class="highlight-meetings">meetings</span>, and more...';
   }
 }
 
@@ -1319,8 +1319,8 @@ function highlightNotes(text) {
   // Pattern for "Google Slides" - replace with link
   const slidesPattern = /Google Slides/gi;
 
-  // Pattern for "CueCard" - replace with link
-  const cuecardPattern = /CueCard/gi;
+  // Pattern for "CueCard Extension" - replace with link
+  const cuecardPattern = /CueCard Extension/gi;
 
   // Replace [time mm:ss] - add line break BEFORE it, time starts a new line
   safe = safe.replace(timePattern, (match, minutes, seconds) => {
@@ -1344,7 +1344,7 @@ function highlightNotes(text) {
   //   return `<a href="https://slides.google.com" class="slides-link" id="slides-link" target="_blank" rel="noopener noreferrer">${match}</a>`;
   // });
 
-  // Replace "CueCard" with link
+  // Replace "CueCard Extension" with link
   safe = safe.replace(cuecardPattern, (match) => {
     return `<a href="https://cuecard.dev/#download" class="slides-link" id="slides-link" target="_blank" rel="noopener noreferrer">${match}</a>`;
   });

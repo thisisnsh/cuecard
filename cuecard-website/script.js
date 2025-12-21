@@ -445,8 +445,6 @@ async function initGitHubData() {
 }
 
 function getSampleReleaseData() {
-    return [];
-
     const sampleVersion = '1.0.0';
     const sampleDate = new Date().toISOString();
 
@@ -733,7 +731,6 @@ function groupAssetsByPlatform(assets) {
                 'If SmartScreen appears, click "More info" then "Run anyway"',
                 'Launch CueCard from Start Menu'
             ],
-            badge: 'Beta'
         },
         windows_arm: {
             name: 'Windows ARM',
@@ -747,7 +744,6 @@ function groupAssetsByPlatform(assets) {
                 'If SmartScreen appears, click "More info" then "Run anyway"',
                 'Launch CueCard from Start Menu'
             ],
-            badge: 'Beta'
         },
         macos: {
             name: 'macOS',
@@ -784,6 +780,7 @@ function groupAssetsByPlatform(assets) {
             totalSize: 0,
             instructions: [
                 'Download and extract the ZIP file',
+                'Move the extracted folder to Documents',
                 'Open Chrome and go to chrome://extensions',
                 'Enable "Developer mode" in the top right',
                 'Click "Load unpacked" and select the extracted folder',
@@ -798,6 +795,7 @@ function groupAssetsByPlatform(assets) {
             totalSize: 0,
             instructions: [
                 'Download and extract the ZIP file',
+                'Move the extracted folder to Documents',
                 'Open Firefox and go to about:debugging#/runtime/this-firefox',
                 'Click "Load Temporary Add-on"',
                 'Select manifest.json in the extracted folder',

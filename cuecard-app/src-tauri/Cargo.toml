@@ -1,7 +1,7 @@
 [package]
 name = "cuecard-app"
 version = "1.0.1"
-description = "Speaker notes visible only to you — for presentations, meetings, dates and everything."
+description = "Speaker notes visible only to you during screen sharing — for presentations, meetings, and more."
 authors = ["CueCard"]
 edition = "2021"
 

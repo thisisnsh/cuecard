@@ -1,8 +1,8 @@
 <div align="center">
 
-# CueCard ![Work In Progress](https://img.shields.io/badge/Work%20in%20Progress-yellow)
+# CueCard
 
-**Speaker notes visible only to you — for presentations, meetings, and everything in between.**
+**Speaker notes visible only to you during screen sharing — for presentations, meetings, and more.**
 
 [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
 [![Made with Tauri](https://img.shields.io/badge/Made%20with-Tauri-FFC131?logo=tauri&logoColor=white)](https://tauri.app/)

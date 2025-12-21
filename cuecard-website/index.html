@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CueCard - Speaker Notes Visible Only to You</title>
     <meta name="description"
-        content="Speaker notes visible only to you - for presentations, meetings, dates, and everything. Sync notes from Google Slides and view them discreetly.">
+        content="Speaker notes visible only to you during screen sharing — for presentations, meetings, and more. Sync notes from Google Slides and view them discreetly.">
     <meta name="author" content="CueCard">
     <meta name="robots" content="index, follow">
     <meta name="theme-color" content="#000000">
@@ -15,7 +15,7 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://cuecard.dev/">
     <meta property="og:title" content="CueCard - Speaker Notes Visible Only to You">
-    <meta property="og:description" content="Speaker notes visible only to you - for presentations, meetings, dates, and everything. Sync notes from Google Slides and view them discreetly.">
+    <meta property="og:description" content="Speaker notes visible only to you during screen sharing — for presentations, meetings, and more. Sync notes from Google Slides and view them discreetly.">
     <meta property="og:image" content="https://cuecard.dev/assets/og-image.png">
     <meta property="og:site_name" content="CueCard">
 
@@ -23,7 +23,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:url" content="https://cuecard.dev/">
     <meta name="twitter:title" content="CueCard - Speaker Notes Visible Only to You">
-    <meta name="twitter:description" content="Speaker notes visible only to you - for presentations, meetings, dates, and everything. Sync notes from Google Slides and view them discreetly.">
+    <meta name="twitter:description" content="Speaker notes visible only to you during screen sharing — for presentations, meetings, and more. Sync notes from Google Slides and view them discreetly.">
     <meta name="twitter:image" content="https://cuecard.dev/assets/og-image.png">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -40,8 +40,6 @@
 </head>
 
 <body>
-    <div class="noise-overlay"></div>
-
     <nav class="nav">
         <a href="/" class="nav-logo">
             <img class="logo-icon" src="assets/logo-circle.png" width="32" height="32" alt="" aria-hidden="true">
@@ -69,16 +67,23 @@
     <main>
         <!-- Hero Section -->
         <section class="hero">
-            <div class="hero-badge hero-badge--yellow">
-                Sync notes from Google Slides
-            </div>
-            <h1 class="hero-title"><span class="title-cue">Cue</span><span class="title-card">Card</span></h1>
             <p class="hero-subtitle">
-                Speaker notes visible only to you — for
+                Speaker notes visible only to you during screen sharing — for
                 <span class="highlight highlight-yellow">presentations</span>,
                 <span class="highlight highlight-green">meetings</span>,
-                <span class="highlight highlight-pink">dates</span>,
-                and everything.
+                and more.
+            </p>
+            <div class="hero-gif-card" id="hero-gif-card" style="display: none;">
+                <img src="assets/cuecard.gif" alt="CueCard in action" class="hero-gif" id="hero-gif" onload="document.getElementById('hero-gif-card').style.display='block';">
+                <a href="https://www.youtube.com/watch?v=jCApPR67MDE" target="_blank" class="gif-demo-link">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                    Watch on YouTube
+                </a>
+            </div>
+            <p class="hero-tagline shimmer">
+                Sync notes from Google Slides, or paste notes for any other meeting.
             </p>
             <div class="hero-cta">
                 <a href="#download" class="btn btn-primary" id="hero-download-btn">
@@ -98,32 +103,16 @@
                     <span id="hero-stars-text">View Source</span>
                 </a>
             </div>
-            <br>
             <p class="hero-note">
-                <a href="#faq-undetectable">Undetectable on Zoom, Microsoft Teams,<br>Google Meet and more.</a>
+                <a href="#faq-undetectable">Undetectable on Zoom, Microsoft Teams,<br class="mobile-br"> Google Meet and more.</a>
             </p>
         </section>
 
-        <!-- Use Cases Section -->
-        <section class="use-cases">
-            <div class="use-cases-container">
-                <!-- Video Hero -->
-                <div class="video-hero">
-                    <div class="video-wrapper">
-                        <iframe src="https://www.youtube.com/embed/jCApPR67MDE" title="CueCard - Invisible Speaker Notes" frameborder="0"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowfullscreen>
-                        </iframe>
-                    </div>
-                    <div class="video-glow"></div>
-                </div>
-            </div>
-        </section>
 
         <!-- Syntax Section -->
         <section class="features syntax-notes">
             <div class="section-header">
-                <span class="section-tag">Syntax</span>
+                <span class="section-tag">Feature</span>
                 <h2 class="section-title">On Time, Every Time.<br class="desktop-br"> Note It.</h2>
             </div>
 
@@ -165,8 +154,8 @@
                             been using CueCard to do that.
 
                             <span class="timestamp" data-time="75">[00:25]</span>
-                            It has a <span class="action-tag">[emphasize]</span> timer and that sub-note
-                            thingy, <span class="action-tag">[shrug a little]</span> which makes me sound way more human.
+                            It has a <span class="action-tag">[emphasize]</span> timer and that sub-note thingy,
+                            <span class="action-tag">[shrug a little]</span> which makes me sound way more human.
 
                             <span class="timestamp" data-time="105">[00:30]</span>
                             <span class="action-tag">[widen the eyes]</span> Dude, you gotta try this out.
@@ -176,103 +165,6 @@
             </div>
         </section>
 
-        <!-- Features Section -->
-        <section class="features">
-            <div class="section-header">
-                <span class="section-tag">Features</span>
-                <h2 class="section-title">Everything you need, nothing you don't</h2>
-            </div>
-
-            <div class="features-grid">
-                <div class="feature-card">
-                    <div class="feature-header">
-                        <span class="feature-number">01</span>
-                        <h3 class="feature-title">Ghost Mode for Your Notes</h3>
-                    </div>
-                    <p class="feature-desc">Hide from screen recordings or screen shares and keep speaker notes in front
-                        of your eyes. Toggle visibility instantly with a single click.</p>
-                    <div class="feature-demo gif-demo gif-demo-visibility">
-                        <!-- Screen share area with dashed border -->
-                        <div class="demo-screen-area">
-                            <!-- Slides window -->
-                            <div class="demo-slides-window">
-                                <div class="demo-slides-sidebar">
-                                    <div class="demo-slide-thumb active"></div>
-                                    <div class="demo-slide-thumb"></div>
-                                    <div class="demo-slide-thumb"></div>
-                                </div>
-                                <div class="demo-main-slide"></div>
-                            </div>
-                        </div>
-                        <!-- Floating CueCard app (outside screen area for ghost mode) -->
-                        <div class="demo-floating-app demo-app-visibility">
-                            <div class="demo-app-header">
-                                <div class="demo-traffic-lights">
-                                    <span class="demo-light red"></span>
-                                </div>
-                                <span class="demo-app-title">CueCard</span>
-                            </div>
-                            <div class="demo-app-content">
-                                <div class="demo-toggle">
-                                    <div class="demo-toggle-track">
-                                        <div class="demo-toggle-thumb"></div>
-                                    </div>
-                                </div>
-                                <span class="demo-toggle-label">Show In Screen Share</span>
-                            </div>
-                        </div>
-                        <!-- Screen sharing banners (toggle between them) -->
-                        <div class="demo-share-banner demo-banner-on">You are screen sharing</div>
-                        <div class="demo-share-banner demo-banner-off">Not screen sharing</div>
-                        <!-- Animated cursor -->
-                        <div class="demo-cursor"></div>
-                    </div>
-                </div>
-
-                <div class="feature-card">
-                    <div class="feature-header">
-                        <span class="feature-number">02</span>
-                        <h3 class="feature-title">Just Enough to See</h3>
-                    </div>
-                    <p class="feature-desc">Set the transparency exactly how you want it with a simple slider. Find the
-                        perfect balance between visibility and discretion.</p>
-                    <div class="feature-demo gif-demo gif-demo-transparency">
-                        <!-- Screen share area with dashed border -->
-                        <div class="demo-screen-area">
-                            <!-- Slides window -->
-                            <div class="demo-slides-window">
-                                <div class="demo-slides-sidebar">
-                                    <div class="demo-slide-thumb active"></div>
-                                    <div class="demo-slide-thumb"></div>
-                                    <div class="demo-slide-thumb"></div>
-                                </div>
-                                <div class="demo-main-slide"></div>
-                            </div>
-                            <!-- Floating CueCard app with transparency animation -->
-                            <div class="demo-floating-app demo-app-transparency">
-                                <div class="demo-app-header">
-                                    <div class="demo-traffic-lights">
-                                        <span class="demo-light red"></span>
-                                    </div>
-                                    <span class="demo-app-title">CueCard</span>
-                                </div>
-                                <div class="demo-app-content">
-                                    <div class="demo-slider">
-                                        <div class="demo-slider-track">
-                                            <div class="demo-slider-fill"></div>
-                                            <div class="demo-slider-thumb"></div>
-                                        </div>
-                                    </div>
-                                    <span class="demo-slider-label">Transparency</span>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Screen sharing banner -->
-                        <div class="demo-share-banner">You are screen sharing</div>
-                    </div>
-                </div>
-            </div>
-        </section>
 
         <!-- Download Section -->
         <section class="download-section" id="download">

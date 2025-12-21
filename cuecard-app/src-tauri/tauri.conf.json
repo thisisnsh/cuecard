@@ -54,8 +54,8 @@
       "icons/icon.ico"
     ],
     "category": "Productivity",
-    "shortDescription": "Speaker notes visible only to you — for presentations, meetings, dates and everything.",
-    "longDescription": "Speaker notes visible only to you — for presentations, meetings, dates and everything.",
+    "shortDescription": "Speaker notes visible only to you during screen sharing — for presentations, meetings, and more.",
+    "longDescription": "Speaker notes visible only to you during screen sharing — for presentations, meetings, and more.",
     "macOS": {
       "minimumSystemVersion": "11.0",
       "dmg": {
