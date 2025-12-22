@@ -858,8 +858,8 @@ function updateEditNoteButtonVisibility() {
 
     // Reset to edit mode when content is cleared
     if (!hasContent) {
-      isEditMode = false;
-      notesInputWrapper.classList.remove('edit-mode');
+      isEditMode = true;
+      notesInputWrapper.classList.add('edit-mode');
       notesInput.readOnly = false;
     }
   }
