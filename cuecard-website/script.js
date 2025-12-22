@@ -1006,30 +1006,15 @@ function formatFileSize(bytes) {
 }
 
 function displayReleaseNotes(release) {
-    const notesContainer = document.getElementById('release-notes');
-    if (!notesContainer) return;
+    const releaseNotesBtn = document.getElementById('release-notes-btn');
+    if (!releaseNotesBtn) return;
 
-    if (!release.body) {
-        notesContainer.classList.remove('has-content');
-        return;
+    // Update button to link to the specific release page
+    if (release.html_url) {
+        releaseNotesBtn.href = release.html_url;
+    } else {
+        releaseNotesBtn.href = `https://github.com/thisisnsh/cuecard/releases/tag/${release.tag_name}`;
     }
-
-    const date = new Date(release.published_at).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    });
-
-    notesContainer.innerHTML = `
-        <div class="release-notes-header">
-            <h3 class="release-notes-title">Release Notes - ${release.tag_name}</h3>
-            <span class="release-notes-date">${date}</span>
-        </div>
-        <div class="release-notes-content">
-            ${parseMarkdown(release.body)}
-        </div>
-    `;
-    notesContainer.classList.add('has-content');
 }
 
 function parseMarkdown(text) {
