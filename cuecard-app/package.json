@@ -1,7 +1,7 @@
 {
   "name": "cuecard-app",
   "private": true,
-  "version": "1.0.1",
+  "version": "1.1.1",
   "type": "module",
   "scripts": {
     "tauri": "tauri"
