@@ -1,0 +1,86 @@
+name: Clean
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+
+    permissions:
+      actions: write
+      contents: read
+
+    steps:
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Fetch workflow runs
+        id: runs
+        run: |
+          curl -s \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/runs?branch=main&per_page=100" \
+            > runs.json
+
+      - name: Determine runs to keep
+        id: keep
+        run: |
+          CURRENT_RUN_ID=${{ github.run_id }}
+
+          LAST_SUCCESS_RUN_ID=$(jq -r '
+            .workflow_runs
+            | map(select(.conclusion == "success"))
+            | sort_by(.run_started_at)
+            | reverse
+            | .[0].id // empty
+          ' runs.json)
+
+          echo "current=$CURRENT_RUN_ID" >> $GITHUB_OUTPUT
+          echo "last_success=$LAST_SUCCESS_RUN_ID" >> $GITHUB_OUTPUT
+
+      - name: Delete old workflow runs
+        run: |
+          KEEP_RUNS="${{ steps.keep.outputs.current }} ${{ steps.keep.outputs.last_success }}"
+
+          for run_id in $(jq -r '.workflow_runs[].id' runs.json); do
+            if [[ ! " $KEEP_RUNS " =~ " $run_id " ]]; then
+              echo "Deleting workflow run $run_id"
+              curl -s -X DELETE \
+                -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+                -H "Accept: application/vnd.github+json" \
+                "https://api.github.com/repos/${{ github.repository }}/actions/runs/$run_id"
+            else
+              echo "Keeping workflow run $run_id"
+            fi
+          done
+
+      - name: Fetch artifacts
+        run: |
+          curl -s \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/artifacts?per_page=100" \
+            > artifacts.json
+
+      - name: Delete old artifacts
+        run: |
+          KEEP_RUNS="${{ steps.keep.outputs.current }} ${{ steps.keep.outputs.last_success }}"
+
+          for artifact in $(jq -c '.artifacts[]' artifacts.json); do
+            ARTIFACT_ID=$(echo "$artifact" | jq -r '.id')
+            RUN_ID=$(echo "$artifact" | jq -r '.workflow_run.id')
+
+            if [[ ! " $KEEP_RUNS " =~ " $RUN_ID " ]]; then
+              echo "Deleting artifact $ARTIFACT_ID (run $RUN_ID)"
+              curl -s -X DELETE \
+                -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+                -H "Accept: application/vnd.github+json" \
+                "https://api.github.com/repos/${{ github.repository }}/actions/artifacts/$ARTIFACT_ID"
+            else
+              echo "Keeping artifact $ARTIFACT_ID"
+            fi
+          done
