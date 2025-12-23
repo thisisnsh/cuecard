@@ -303,7 +303,7 @@ async function hasScope(scopeType) {
 // DOM Elements
 let btnClose, btnDownloadUpdates, downloadUpdatesSeparator;
 let authBtn;
-let viewInitial, viewAddNotes, viewNotes, viewSettings;
+let appContainer, viewInitial, viewAddNotes, viewNotes, viewSettings;
 let linkGoBack, backSeparator;
 let notesInput, notesContent;
 let welcomeHeading, welcomeSubtext;
@@ -353,6 +353,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   btnDownloadUpdates = document.getElementById("btn-download-updates");
   downloadUpdatesSeparator = document.getElementById("download-updates-separator");
   authBtn = document.getElementById("auth-btn");
+  appContainer = document.querySelector(".app-container");
   viewInitial = document.getElementById("view-initial");
   viewAddNotes = document.getElementById("view-add-notes");
   viewNotes = document.getElementById("view-notes");
@@ -1148,6 +1149,15 @@ async function showView(viewName) {
 
   previousView = currentView;
   currentView = viewName;
+
+  if (appContainer) {
+    appContainer.classList.remove('stroke-add-notes', 'stroke-slides');
+    if (viewName === 'add-notes') {
+      appContainer.classList.add('stroke-add-notes');
+    } else if (viewName === 'notes') {
+      appContainer.classList.add('stroke-slides');
+    }
+  }
 
   // Hide all views
   viewInitial.classList.add('hidden');

@@ -14,6 +14,10 @@
   /* Layout */
   --border-radius: 32px;
   --title-bar-height: 50px;
+  --stroke-width: 2px;
+  --stroke-main: var(--text-secondary);
+  --stroke-add-notes: var(--color-green);
+  --stroke-slides: var(--color-yellow);
 }
 
 * {
@@ -46,8 +50,16 @@ body {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  border-radius: 32px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--border-radius);
+  border: var(--stroke-width) solid var(--stroke-main);
+}
+
+.app-container.stroke-add-notes {
+  border-color: var(--stroke-add-notes);
+}
+
+.app-container.stroke-slides {
+  border-color: var(--stroke-slides);
 }
 
 /* Google Sign-in Button */

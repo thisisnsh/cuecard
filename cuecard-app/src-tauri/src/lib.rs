@@ -1374,9 +1374,6 @@ fn init_nspanel(app_handle: &AppHandle) {
 
     let window: WebviewWindow = app_handle.get_webview_window("main").unwrap();
 
-    // Enable shadow on macOS
-    let _ = window.set_shadow(true);
-
     let panel = window.to_panel::<CueCardPanel>().unwrap();
 
     // Set floating window level
