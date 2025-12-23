@@ -115,6 +115,7 @@ pub struct SlideData {
     pub mode: String,
     pub timestamp: i64,
     pub url: String,
+    pub force_refresh: Option<bool>,
 }
 
 #[derive(Debug, Serialize)]
@@ -697,6 +698,8 @@ async fn health_handler() -> Json<serde_json::Value> {
 async fn slides_handler(
     Json(slide_data): Json<SlideData>,
 ) -> Result<Json<ApiResponse>, StatusCode> {
+    let force_refresh = slide_data.force_refresh.unwrap_or(false);
+
     // Check if presentation changed
     let presentation_changed = {
         let current_pres = CURRENT_PRESENTATION_ID.read();
@@ -723,23 +726,33 @@ async fn slides_handler(
         *current = Some(slide_data.clone());
     }
 
-    let notes = {
-        let notes_cache = SLIDE_NOTES.read();
-        let key = format!("{}:{}", slide_data.presentation_id, slide_data.slide_id);
-        notes_cache.get(&key).cloned()
-    };
+    let notes = if force_refresh {
+        let fetched = fetch_slide_notes(&slide_data.presentation_id, &slide_data.slide_id).await;
+        if let Some(ref note_text) = fetched {
+            let mut notes_cache = SLIDE_NOTES.write();
+            let key = format!("{}:{}", slide_data.presentation_id, slide_data.slide_id);
+            notes_cache.insert(key, note_text.clone());
+        }
+        fetched
+    } else {
+        let notes = {
+            let notes_cache = SLIDE_NOTES.read();
+            let key = format!("{}:{}", slide_data.presentation_id, slide_data.slide_id);
+            notes_cache.get(&key).cloned()
+        };
 
-    let notes = match notes {
-        Some(n) => Some(n),
-        None => {
-            let fetched =
-                fetch_slide_notes(&slide_data.presentation_id, &slide_data.slide_id).await;
-            if let Some(ref note_text) = fetched {
-                let mut notes_cache = SLIDE_NOTES.write();
-                let key = format!("{}:{}", slide_data.presentation_id, slide_data.slide_id);
-                notes_cache.insert(key, note_text.clone());
+        match notes {
+            Some(n) => Some(n),
+            None => {
+                let fetched =
+                    fetch_slide_notes(&slide_data.presentation_id, &slide_data.slide_id).await;
+                if let Some(ref note_text) = fetched {
+                    let mut notes_cache = SLIDE_NOTES.write();
+                    let key = format!("{}:{}", slide_data.presentation_id, slide_data.slide_id);
+                    notes_cache.insert(key, note_text.clone());
+                }
+                fetched
             }
-            fetched
         }
     };
 

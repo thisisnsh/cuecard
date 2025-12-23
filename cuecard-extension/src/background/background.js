@@ -87,6 +87,14 @@ browserAPI.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true; // Keep message channel open for async response
   }
 
+  if (message.type === 'FORCE_REFRESH') {
+    console.log('[CueCard] Received force refresh');
+    sendSlideInfoToAPI(message.data).then(result => {
+      sendResponse(result);
+    });
+    return true;
+  }
+
   if (message.type === 'GET_CONNECTION_STATUS') {
     sendResponse({ status: connectionStatus });
   }

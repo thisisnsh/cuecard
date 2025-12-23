@@ -66,10 +66,85 @@ async function getCurrentTabInfo() {
   }
 }
 
+function getPresentationIdFromUrl(url) {
+  const match = url.match(/\/presentation\/d\/([a-zA-Z0-9_-]+)/);
+  return match ? match[1] : null;
+}
+
+function getSlideIdFromUrl(url) {
+  const hashMatch = url.match(/#slide=id\.([a-zA-Z0-9_-]+)/);
+  if (hashMatch) {
+    return hashMatch[1];
+  }
+
+  const queryMatch = url.match(/[?&]slide=id\.([a-zA-Z0-9_-]+)/);
+  if (queryMatch) {
+    return queryMatch[1];
+  }
+
+  return null;
+}
+
+function detectModeFromUrl(url) {
+  if (url.includes('/present')) {
+    return 'slideshow';
+  }
+  if (url.includes('/edit') || url.includes('/view')) {
+    return 'edit';
+  }
+  if (url.includes('/pub')) {
+    return 'published';
+  }
+  return 'unknown';
+}
+
+function buildSlideInfoFromTab(tab) {
+  if (!tab?.url) return null;
+
+  const presentationId = getPresentationIdFromUrl(tab.url);
+  const slideId = getSlideIdFromUrl(tab.url);
+
+  if (!presentationId || !slideId) {
+    return null;
+  }
+
+  let title = tab.title || 'Unknown';
+  title = title.replace(' - Google Slides', '').replace(' - Google Präsentationen', '');
+
+  return {
+    presentationId,
+    slideId,
+    slideNumber: 0,
+    title,
+    mode: detectModeFromUrl(tab.url),
+    timestamp: Date.now(),
+    url: tab.url,
+    forceRefresh: true
+  };
+}
+
+async function sendForceRefreshForActiveTab() {
+  try {
+    const [tab] = await browserAPI.tabs.query({ active: true, currentWindow: true });
+    const slideInfo = buildSlideInfoFromTab(tab);
+    if (!slideInfo) {
+      return;
+    }
+
+    await browserAPI.runtime.sendMessage({
+      type: 'FORCE_REFRESH',
+      data: slideInfo
+    });
+  } catch (error) {
+    console.error('Error sending force refresh:', error);
+  }
+}
+
 // Event listeners
-document.getElementById('refresh-btn').addEventListener('click', () => {
+document.getElementById('refresh-btn').addEventListener('click', async () => {
   updateStatus();
   getCurrentTabInfo();
+  await sendForceRefreshForActiveTab();
 });
 
 // Initialize on popup open
