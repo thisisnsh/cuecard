@@ -85,7 +85,8 @@
         "installerIcon": "icons/icon.ico"
       }
     },
-    "createUpdaterArtifacts": true
+    "createUpdaterArtifacts": true,
+    "publisher": "Nishant Hada"
   },
   "plugins": {
     "updater": {
