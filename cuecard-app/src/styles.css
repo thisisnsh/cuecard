@@ -1,6 +1,7 @@
 :root {
   /* Colors from Figma */
   --bg-opacity: 1;
+  --color-bg: #000000;
   --text-primary: #ffffff;
   --text-secondary: #a8a6a6;
   --color-yellow: #febc2e;
@@ -12,7 +13,7 @@
   --font-family: -apple-system, BlinkMacSystemFont, "SF Pro", "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 
   /* Layout */
-  --border-radius: 32px;
+  --border-radius: 0px;
   --title-bar-height: 50px;
   --stroke-width: 2px;
   --stroke-main: var(--text-secondary);
@@ -51,15 +52,6 @@ body {
   display: flex;
   flex-direction: column;
   border-radius: var(--border-radius);
-  border: var(--stroke-width) solid var(--stroke-main);
-}
-
-.app-container.stroke-add-notes {
-  border-color: var(--stroke-add-notes);
-}
-
-.app-container.stroke-slides {
-  border-color: var(--stroke-slides);
 }
 
 /* Google Sign-in Button */
@@ -140,12 +132,12 @@ body {
 
 .gsi-material-button:disabled {
   cursor: default;
-  background-color: #13131461;
-  border-color: #8e918f1f;
+  background-color: var(--text-secondary);
+  border-color: var(--text-secondary);
 }
 
 .gsi-material-button:disabled .gsi-material-button-state {
-  background-color: #e3e3e31f;
+  background-color: var(--text-secondary);
 }
 
 .gsi-material-button:disabled .gsi-material-button-contents {
@@ -158,7 +150,7 @@ body {
 
 .gsi-material-button:not(:disabled):active .gsi-material-button-state,
 .gsi-material-button:not(:disabled):focus .gsi-material-button-state {
-  background-color: white;
+  background-color: var(--text-primary);
   opacity: 12%;
 }
 
@@ -168,7 +160,7 @@ body {
 }
 
 .gsi-material-button:not(:disabled):hover .gsi-material-button-state {
-  background-color: white;
+  background-color: var(--text-primary);
   opacity: 8%;
 }
 
@@ -350,7 +342,7 @@ body {
 }
 
 .notes-input-highlight .timestamp.time-overtime {
-  color: #ff736a;
+  color: var(--color-red);
 }
 
 .notes-input-highlight .action-tag {
@@ -367,14 +359,14 @@ body {
   /* Mask for fade in/out */
   -webkit-mask-image: linear-gradient(to bottom,
       transparent 0px,
-      black 24px,
-      black calc(100% - 24px),
+      var(--color-bg) 24px,
+      var(--color-bg) calc(100% - 24px),
       transparent 100%);
 
   mask-image: linear-gradient(to bottom,
       transparent 0px,
-      black 24px,
-      black calc(100% - 24px),
+      var(--color-bg) 24px,
+      var(--color-bg) calc(100% - 24px),
       transparent 100%);
 
   -webkit-mask-repeat: no-repeat;
@@ -409,14 +401,14 @@ body {
   /* Mask for fade in/out */
   -webkit-mask-image: linear-gradient(to bottom,
       transparent 0px,
-      black 24px,
-      black calc(100% - 24px),
+      var(--color-bg) 24px,
+      var(--color-bg) calc(100% - 24px),
       transparent 100%);
 
   mask-image: linear-gradient(to bottom,
       transparent 0px,
-      black 24px,
-      black calc(100% - 24px),
+      var(--color-bg) 24px,
+      var(--color-bg) calc(100% - 24px),
       transparent 100%);
 
   -webkit-mask-repeat: no-repeat;
@@ -443,8 +435,7 @@ body {
 
 /* Overtime state: when time < 00:00 (counting up) */
 .notes-content .timestamp.time-overtime {
-  color: #ff736a;
-  /* Red */
+  color: var(--color-red);
 }
 
 .notes-content .action-tag {
@@ -642,7 +633,7 @@ body {
 }
 
 .app-header:hover {
-  background: linear-gradient(to bottom, rgba(36, 36, 36, var(--bg-opacity)) 0%, transparent 100%);
+  background: linear-gradient(to bottom, rgba(80, 80, 80, var(--bg-opacity)) 0%, transparent 100%);
 }
 
 .app-container:hover .app-header {
