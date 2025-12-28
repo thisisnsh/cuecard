@@ -1739,6 +1739,60 @@ main {
     margin-bottom: 0;
 }
 
+/* Manual Install Section (for store-available extensions) */
+.manual-install-section {
+    width: 100%;
+    margin-top: var(--space-md);
+    text-align: center;
+}
+
+.manual-install-summary {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    gap: var(--space-xs);
+    cursor: pointer;
+    padding: var(--space-xs) 0;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    list-style: none;
+    transition: color var(--transition-fast);
+    opacity: 0.7;
+}
+
+.manual-install-summary::-webkit-details-marker {
+    display: none;
+}
+
+.manual-install-summary:hover {
+    color: var(--text-primary);
+    opacity: 1;
+}
+
+.manual-install-icon {
+    transition: transform var(--transition-fast);
+    color: var(--text-secondary);
+}
+
+.manual-install-section[open] .manual-install-icon {
+    transform: rotate(180deg);
+}
+
+.manual-install-content {
+    padding-top: var(--space-md);
+    text-align: center;
+}
+
+.manual-install-content .platform-downloads {
+    margin-bottom: var(--space-sm);
+}
+
+.manual-install-content .install-instructions {
+    margin-top: var(--space-sm);
+    padding-top: 0;
+}
+
 @media (max-width: 768px) {
     .download-grid {
         grid-template-columns: 1fr;

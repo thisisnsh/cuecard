@@ -821,14 +821,14 @@ function groupAssetsByPlatform(assets) {
             icon: getFirefoxIcon(),
             assets: [],
             totalSize: 0,
+            storeUrl: 'https://addons.mozilla.org/en-US/firefox/addon/cuecard-extension/',
             instructions: [
                 'Download and extract the ZIP file',
                 'Move the extracted folder to Documents',
                 'Open Firefox and go to about:debugging#/runtime/this-firefox',
                 'Click "Load Temporary Add-on"',
                 'Select manifest.json in the extracted folder',
-            ],
-            badge: 'Coming to Add-ons'
+            ]
         }
     };
 
@@ -906,21 +906,61 @@ function createPlatformCard(platformKey, platform) {
         </details>
     ` : '';
 
-    // Add badge if present (for Chrome/Firefox "Coming to Store" labels)
+    // Add badge if present (for Chrome "Coming to Store" label)
     const badgeHtml = platform.badge ? `<span class="platform-badge">${platform.badge}</span>` : '';
 
-    card.innerHTML = `
-        <div class="platform-card-header">
-            <div class="platform-icon">${platform.icon}</div>
-            <h3 class="platform-name">${platform.name}</h3>
-            <p class="platform-subtitle">${platform.subtitle}</p>
-        </div>
-        <div class="platform-downloads">
-            ${downloadButtons}
-        </div>
-        ${instructionsHtml}
-        ${badgeHtml}
-    `;
+    // Check if platform has a store URL (like Firefox Add-ons)
+    if (platform.storeUrl) {
+        // Build manual install section with download buttons
+        const manualInstallHtml = platform.assets.length > 0 ? `
+            <details class="manual-install-section">
+                <summary class="manual-install-summary">
+                    <span>Download and Install Manually</span>
+                    <svg class="manual-install-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M6 9l6 6 6-6"/>
+                    </svg>
+                </summary>
+                <div class="manual-install-content">
+                    <div class="platform-downloads">
+                        ${downloadButtons}
+                    </div>
+                    ${instructionsHtml}
+                </div>
+            </details>
+        ` : '';
+
+        card.innerHTML = `
+            <div class="platform-card-header">
+                <div class="platform-icon">${platform.icon}</div>
+                <h3 class="platform-name">${platform.name}</h3>
+                <p class="platform-subtitle">${platform.subtitle}</p>
+            </div>
+            <div class="platform-downloads">
+                <a href="${platform.storeUrl}" class="platform-download-btn" target="_blank" rel="noopener noreferrer">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                        <polyline points="15 3 21 3 21 9"/>
+                        <line x1="10" y1="14" x2="21" y2="3"/>
+                    </svg>
+                    <span class="btn-label">Add to Firefox</span>
+                </a>
+            </div>
+            ${manualInstallHtml}
+        `;
+    } else {
+        card.innerHTML = `
+            <div class="platform-card-header">
+                <div class="platform-icon">${platform.icon}</div>
+                <h3 class="platform-name">${platform.name}</h3>
+                <p class="platform-subtitle">${platform.subtitle}</p>
+            </div>
+            <div class="platform-downloads">
+                ${downloadButtons}
+            </div>
+            ${instructionsHtml}
+            ${badgeHtml}
+        `;
+    }
 
     return card;
 }
