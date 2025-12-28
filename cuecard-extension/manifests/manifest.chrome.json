@@ -5,8 +5,7 @@
   "description": "Browser extension for CueCard - syncs speaker notes from Google Slides",
 
   "permissions": [
-    "activeTab",
-    "storage"
+    "activeTab"
   ],
 
   "host_permissions": [
