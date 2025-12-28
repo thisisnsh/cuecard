@@ -10,7 +10,7 @@
 [![Windows](https://img.shields.io/badge/Windows-10%2B-0078D6?logo=windows&logoColor=white)](https://cuecard.dev/#download)
 
 [![Website](https://img.shields.io/badge/Website-cuecard.dev-blue)](https://cuecard.dev)
-[![Demo Video](https://img.shields.io/badge/▶_Watch-Demo-red?logo=youtube)](https://www.youtube.com/watch?v=ZNnWhhueQE8)
+[![Demo Video](https://img.shields.io/badge/▶_Watch-Demo-red?logo=youtube)](https://www.youtube.com/watch?v=VQ85qXoMfis)
 
 <img src="./cuecard-website/assets/cuecard.gif" alt="CueCard Hero" style="border-radius: 16px; border: 1px solid black;">
 
