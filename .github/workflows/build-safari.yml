@@ -5,6 +5,9 @@ on:
     branches:
       - main
       - develop
+    paths:
+      - 'cuecard-extension/**'
+      - '.github/workflows/build-safari.yml'
 
 jobs:
   build-safari:

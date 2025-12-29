@@ -5,6 +5,9 @@ on:
     branches:
       - main
       - develop
+    paths:
+      - 'cuecard-app/**'
+      - '.github/workflows/build-mac.yml'
 
 jobs:
   build-macos:

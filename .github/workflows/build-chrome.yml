@@ -5,6 +5,9 @@ on:
     branches:
       - main
       - develop
+    paths:
+      - 'cuecard-extension/**'
+      - '.github/workflows/build-chrome.yml'
 
 jobs:
   build-chrome:

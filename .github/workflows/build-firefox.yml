@@ -5,6 +5,9 @@ on:
     branches:
       - main
       - develop
+    paths:
+      - 'cuecard-extension/**'
+      - '.github/workflows/build-firefox.yml'
 
 jobs:
   build-firefox:
