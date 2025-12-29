@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="/src/styles.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>CueCard</title>
+    <script type="module" src="/src/main.ts" defer></script>
+  </head>
+
+  <body>
+    <div id="app">
+      <!-- Sign In View -->
+      <div id="view-signin" class="view active">
+        <div class="signin-container">
+          <div class="logo">
+            <svg width="64" height="64" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="100" height="100" rx="20" fill="#1a1a1a"/>
+              <rect x="15" y="25" width="70" height="50" rx="8" stroke="#ffffff" stroke-width="4" fill="none"/>
+              <line x1="25" y1="40" x2="75" y2="40" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+              <line x1="25" y1="50" x2="65" y2="50" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+              <line x1="25" y1="60" x2="55" y2="60" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h1>CueCard</h1>
+          <p class="subtitle">Your floating teleprompter</p>
+          <button id="btn-signin" class="btn-primary">
+            <svg class="google-icon" viewBox="0 0 24 24" width="20" height="20">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            Sign in with Google
+          </button>
+        </div>
+      </div>
+
+      <!-- Notes Editor View -->
+      <div id="view-notes" class="view">
+        <header class="header">
+          <div class="header-left">
+            <span id="user-greeting">Hello</span>
+          </div>
+          <div class="header-right">
+            <button id="btn-settings" class="btn-icon" title="Settings">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+              </svg>
+            </button>
+          </div>
+        </header>
+
+        <div class="notes-container">
+          <div class="notes-input-wrapper" id="notes-input-wrapper">
+            <div class="notes-input-highlight" id="notes-input-highlight"></div>
+            <textarea
+              id="notes-input"
+              class="notes-input"
+              placeholder="Paste your notes here...
+
+Use [time mm:ss] for timer checkpoints
+Use [note text] for delivery cues"
+            ></textarea>
+          </div>
+        </div>
+
+        <footer class="footer">
+          <div class="footer-actions">
+            <button id="btn-edit" class="btn-secondary hidden">Edit Note</button>
+            <button id="btn-start-floating" class="btn-primary hidden">Start Floating</button>
+          </div>
+          <!-- Timer controls (Android only) -->
+          <div id="timer-controls" class="timer-controls hidden">
+            <button id="btn-timer-start" class="btn-timer">Start</button>
+            <button id="btn-timer-pause" class="btn-timer hidden">Pause</button>
+            <button id="btn-timer-reset" class="btn-timer hidden">Reset</button>
+          </div>
+        </footer>
+      </div>
+
+      <!-- Settings View -->
+      <div id="view-settings" class="view">
+        <header class="header">
+          <button id="btn-back" class="btn-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+          </button>
+          <h2>Settings</h2>
+          <div style="width: 36px;"></div>
+        </header>
+
+        <div class="settings-container">
+          <div class="setting-group">
+            <label class="setting-label">Font Size</label>
+            <div class="setting-control">
+              <span class="setting-value" id="font-size-value">16px</span>
+              <input type="range" id="font-size-slider" min="12" max="32" value="16" class="slider" />
+            </div>
+          </div>
+
+          <div class="setting-group" id="scroll-speed-group">
+            <label class="setting-label">Scroll Speed (iOS)</label>
+            <div class="setting-control">
+              <span class="setting-value" id="scroll-speed-value">1.0x</span>
+              <input type="range" id="scroll-speed-slider" min="5" max="30" value="10" step="1" class="slider" />
+            </div>
+          </div>
+
+          <div class="setting-group">
+            <label class="setting-label">Opacity</label>
+            <div class="setting-control">
+              <span class="setting-value" id="opacity-value">100%</span>
+              <input type="range" id="opacity-slider" min="30" max="100" value="100" class="slider" />
+            </div>
+          </div>
+
+          <div class="setting-divider"></div>
+
+          <button id="btn-signout" class="btn-danger">Sign Out</button>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
