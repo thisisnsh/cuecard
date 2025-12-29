@@ -1068,7 +1068,7 @@ function updateAuthUI(authenticated, name = '') {
     if (buttonIcon) buttonIcon.style.display = 'block';
 
     // Reset welcome heading to default
-    welcomeHeading.innerHTML = 'CueCard\n<span class="version-text">1.1.2</span>';
+    welcomeHeading.innerHTML = 'CueCard\n<span class="version-text">1.1.3</span>';
 
     // Reset subtext
     welcomeSubtext.innerHTML = 'Speaker notes visible only to you during screen sharing — for <span class="highlight-presentations">presentations</span>, <span class="highlight-meetings">meetings</span>, and more...';
@@ -1464,16 +1464,24 @@ function setupHeader() {
         btnDownloadUpdates.textContent = 'Downloading...';
 
         // Download and install with progress tracking
+        let contentLength = 0;
+        let downloaded = 0;
+
         await update.downloadAndInstall((event) => {
           switch (event.event) {
             case 'Started':
+              contentLength = event.data.contentLength || 0;
+              downloaded = 0;
               btnDownloadUpdates.textContent = 'Downloading...';
-              console.log(`Started downloading ${event.data.contentLength} bytes`);
+              console.log(`Started downloading ${contentLength} bytes`);
               break;
             case 'Progress':
-              const percent = Math.round((event.data.chunkLength / event.data.contentLength) * 100);
-              btnDownloadUpdates.textContent = `Downloading ${percent}%`;
-              console.log(`Downloaded ${event.data.chunkLength} of ${event.data.contentLength}`);
+              downloaded += event.data.chunkLength;
+              if (contentLength > 0) {
+                const percent = Math.round((downloaded / contentLength) * 100);
+                btnDownloadUpdates.textContent = `Downloading ${percent}%`;
+              }
+              console.log(`Downloaded ${downloaded} of ${contentLength}`);
               break;
             case 'Finished':
               btnDownloadUpdates.textContent = 'Installing...';

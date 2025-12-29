@@ -12,6 +12,7 @@
     "core:window:deny-internal-toggle-maximize",
     "opener:default",
     "store:default",
-    "updater:default"
+    "updater:default",
+    "process:default"
   ]
 }
