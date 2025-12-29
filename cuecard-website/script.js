@@ -743,6 +743,18 @@ function displayDownloadAssets(assets) {
             grid.appendChild(card);
         }
     });
+
+    // Add iOS and Android "Coming Soon" cards
+    grid.appendChild(createComingSoonCard('ios', {
+        name: 'iOS',
+        subtitle: 'iPhone & iPad',
+        icon: getAppleIcon()
+    }));
+    grid.appendChild(createComingSoonCard('android', {
+        name: 'Android',
+        subtitle: 'Phones & Tablets',
+        icon: getAndroidIcon()
+    }));
 }
 
 function groupAssetsByPlatform(assets) {
@@ -1041,6 +1053,36 @@ function getFirefoxIcon() {
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32" fill="currentColor" aria-hidden="true">
         <path d="M12 2c-2.64 0-5.1 1.03-6.97 2.9C3.16 6.78 2 9.3 2 12c0 2.7 1.16 5.22 3.03 7.1C6.9 20.97 9.36 22 12 22c3.07 0 5.9-1.4 7.77-3.84.9-1.18 1.41-2.62 1.41-4.16 0-3.37-2.38-6.3-5.64-6.97-.45-.1-.9-.14-1.35-.14-.38 0-.76.04-1.13.1.64.35 1.2.84 1.63 1.42.53.7.82 1.55.82 2.42 0 2.25-1.82 4.07-4.07 4.07-2.25 0-4.07-1.82-4.07-4.07 0-1.4.7-2.64 1.77-3.38-.3.05-.6.12-.9.2-.7.2-1.34.53-1.9.97C7.02 7.08 6.2 8.5 6.2 10.1c0 3.2 2.6 5.8 5.8 5.8 3.2 0 5.8-2.6 5.8-5.8 0-1.93-.95-3.64-2.42-4.7C14.45 4.8 13.25 4.5 12 4.5c-.6 0-1.2.07-1.77.2C10.8 3.1 11.4 2 12 2z"/>
     </svg>`;
+}
+
+function getAppleIcon() {
+    return `<svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32">
+        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+    </svg>`;
+}
+
+function getAndroidIcon() {
+    return `<svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32">
+        <path d="M17.6 9.48l1.84-3.18c.16-.31.04-.69-.26-.85-.29-.15-.65-.06-.83.22l-1.88 3.24c-1.4-.59-2.94-.92-4.47-.92s-3.07.33-4.47.92L5.65 5.67c-.19-.29-.54-.38-.83-.22-.31.16-.43.54-.26.85L6.4 9.48C3.3 11.25 1.28 14.44 1 18h22c-.28-3.56-2.3-6.75-5.4-8.52zM7 15.25c-.69 0-1.25-.56-1.25-1.25S6.31 12.75 7 12.75s1.25.56 1.25 1.25-.56 1.25-1.25 1.25zm10 0c-.69 0-1.25-.56-1.25-1.25s.56-1.25 1.25-1.25 1.25.56 1.25 1.25-.56 1.25-1.25 1.25z"/>
+    </svg>`;
+}
+
+function createComingSoonCard(platformKey, platform) {
+    const card = document.createElement('div');
+    card.className = 'platform-card platform-card-coming-soon';
+
+    card.innerHTML = `
+        <div class="platform-card-header">
+            <div class="platform-icon">${platform.icon}</div>
+            <h3 class="platform-name">${platform.name}</h3>
+            <p class="platform-subtitle">${platform.subtitle}</p>
+        </div>
+        <div class="platform-downloads">
+            <span class="coming-soon-badge">Coming Soon</span>
+        </div>
+    `;
+
+    return card;
 }
 
 function formatFileSize(bytes) {

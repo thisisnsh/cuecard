@@ -1684,6 +1684,30 @@ main {
     z-index: 1;
 }
 
+/* Coming Soon Card Styles */
+.platform-card-coming-soon {
+    opacity: 0.7;
+}
+
+.platform-card-coming-soon:hover {
+    transform: none;
+}
+
+.coming-soon-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 20px;
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: var(--text-secondary);
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
 /* Installation Instructions Accordion */
 .install-instructions {
     width: 100%;
