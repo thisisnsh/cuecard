@@ -2,13 +2,34 @@
  * CueCard - Main Frontend Application
  *
  * This file contains the main frontend logic for the CueCard application:
- * - Firestore integration for usage analytics
+ * - Firebase Analytics for usage tracking
+ * - Firestore integration for user profiles
  * - Persistent storage management
  * - Google OAuth authentication UI
  * - Notes display and syntax highlighting
  * - Timer functionality for presentations
  * - Settings management (opacity, screenshot protection)
  */
+
+// =============================================================================
+// ANALYTICS IMPORTS
+// =============================================================================
+
+import {
+  initAnalytics,
+  setAnalyticsUserId,
+  trackAppOpen,
+  trackSessionStart,
+  trackLogin,
+  trackLogout,
+  trackScreenView,
+  trackNotesPaste,
+  trackSlidesSync,
+  trackTimerAction,
+  trackSettingChange,
+  trackSlideUpdate,
+  trackEditAction
+} from './analytics.js';
 
 // =============================================================================
 // TAURI API INITIALIZATION
@@ -357,6 +378,9 @@ let timerIntervals = []; // Store all timer interval IDs
 // Edit Mode State
 let isEditMode = false; // false = done mode (readonly, highlighted), true = edit mode (editable, not highlighted)
 
+// Analytics State
+let sessionTracked = false; // Prevent duplicate session tracking
+
 // =============================================================================
 // APPLICATION INITIALIZATION
 // =============================================================================
@@ -364,6 +388,9 @@ let isEditMode = false; // false = done mode (readonly, highlighted), true = edi
 // Initialize the app
 window.addEventListener("DOMContentLoaded", async () => {
   console.log("App initializing...");
+
+  // Initialize Firebase Analytics
+  await initAnalytics();
 
   // Initialize Firestore configuration from environment variables
   await initFirestoreConfig();
@@ -450,6 +477,9 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Check auth status on load
   await checkAuthStatus();
 
+  // Track app open event (after auth check so we have user info if available)
+  trackAppOpen();
+
   // Check for existing slide data
   await checkCurrentSlide();
 
@@ -469,6 +499,14 @@ window.addEventListener("DOMContentLoaded", async () => {
       // Save user profile to Firestore when authenticated
       if (event.payload.authenticated && event.payload.user_email) {
         saveUserProfile(event.payload.user_email, event.payload.user_name || '');
+        // Set analytics user ID and track login (new login from OAuth)
+        setAnalyticsUserId(event.payload.user_email);
+        trackLogin('google');
+        // Only track session if not already tracked (prevents duplicate counting)
+        if (!sessionTracked) {
+          trackSessionStart();
+          sessionTracked = true;
+        }
       }
 
       // Update auth UI (only for profile auth, not slides)
@@ -549,6 +587,7 @@ function setupAuth() {
   authBtn.addEventListener("click", async (e) => {
     e.stopPropagation(); // Prevent event from bubbling to viewInitial
     if (isAuthenticated) {
+      trackLogout();
       await handleLogout();
     } else {
       await handleLogin();
@@ -622,6 +661,7 @@ function setupTimerControls() {
 function startTimerCountdown() {
   if (timerState === 'running') return;
 
+  trackTimerAction('start');
   timerState = 'running';
   updateTimerButtonVisibility();
 
@@ -676,6 +716,7 @@ function startTimerCountdown() {
 function pauseTimerCountdown() {
   if (timerState !== 'running') return;
 
+  trackTimerAction('pause');
   timerState = 'paused';
   stopAllTimers();
   updateTimerButtonVisibility();
@@ -683,6 +724,7 @@ function pauseTimerCountdown() {
 
 // Reset timer countdown to original values
 function resetTimerCountdown() {
+  trackTimerAction('reset');
   stopAllTimers();
   timerState = 'stopped';
 
@@ -842,12 +884,14 @@ function toggleEditMode() {
 
   if (isEditMode) {
     // Edit mode: input is editable, not highlighted
+    trackEditAction('edit');
     notesInputWrapper.classList.add('edit-mode');
     notesInput.readOnly = false;
     editNoteBtn.textContent = 'Save Note';
     notesInput.focus();
   } else {
     // Done mode: input is readonly, highlighted
+    trackEditAction('save');
     notesInputWrapper.classList.remove('edit-mode');
     notesInput.readOnly = true;
     editNoteBtn.textContent = 'Edit Note';
@@ -961,6 +1005,15 @@ async function checkAuthStatus() {
       if (email && name) {
         saveUserProfile(email, name);
       }
+      // Set analytics user ID for returning users
+      if (email) {
+        setAnalyticsUserId(email);
+        // Only track session if not already tracked (prevents duplicate counting)
+        if (!sessionTracked) {
+          trackSessionStart();
+          sessionTracked = true;
+        }
+      }
     }
     updateAuthUI(status, name);
   } catch (error) {
@@ -1019,6 +1072,7 @@ function updateAuthUI(authenticated, name = '') {
       pasteNotesLink.addEventListener('click', async (e) => {
         e.preventDefault();
         e.stopPropagation();
+        trackNotesPaste();
         // Track paste usage in Firestore
         const email = await getUserEmail();
         if (email) {
@@ -1035,6 +1089,7 @@ function updateAuthUI(authenticated, name = '') {
       slidesLink.addEventListener('click', async (e) => {
         e.preventDefault();
         e.stopPropagation();
+        trackSlidesSync();
 
         // Track slide usage in Firestore
         const email = await getUserEmail();
@@ -1137,6 +1192,11 @@ function handleSlideUpdate(data, autoShow = false) {
   const isNewSlide = !currentSlideData ||
     currentSlideData.slideId !== slide_data.slideId ||
     currentSlideData.presentationId !== slide_data.presentationId;
+
+  // Track slide update from extension
+  if (isNewSlide) {
+    trackSlideUpdate();
+  }
 
   // Store current slide data
   currentSlideData = slide_data;
@@ -1601,6 +1661,7 @@ function setupFooter() {
   settingsLink.addEventListener("click", (e) => {
     e.preventDefault();
     console.log("Settings link clicked");
+    trackScreenView('settings');
     showView('settings');
   });
 }
@@ -1663,6 +1724,7 @@ async function loadStoredSettings() {
 // Settings Handlers
 function setupSettings() {
   // Opacity slider handler
+  let opacityTrackingTimeout = null;
   if (opacitySlider) {
     opacitySlider.addEventListener("input", async (e) => {
       const value = parseInt(e.target.value);
@@ -1674,6 +1736,12 @@ function setupSettings() {
 
       // Save to persistent storage
       await setStoredValue(STORAGE_KEYS.SETTINGS_OPACITY, value);
+
+      // Debounce analytics tracking (only track final value after user stops dragging)
+      clearTimeout(opacityTrackingTimeout);
+      opacityTrackingTimeout = setTimeout(() => {
+        trackSettingChange('opacity', value);
+      }, 500);
     });
   }
 
@@ -1682,6 +1750,9 @@ function setupSettings() {
     screenCaptureToggle.addEventListener("change", async (e) => {
       showInScreenshot = e.target.checked;
       updateGhostModeIndicator();
+
+      // Track setting change
+      trackSettingChange('ghost_mode', !showInScreenshot);
 
       // Update screenshot protection via Tauri (protection = !showInScreenshot)
       if (invoke) {
@@ -1701,6 +1772,9 @@ function setupSettings() {
     lightModeToggle.addEventListener("change", async (e) => {
       isLightMode = e.target.checked;
       applyTheme(isLightMode);
+
+      // Track setting change
+      trackSettingChange('light_mode', isLightMode);
 
       // Save to persistent storage
       await setStoredValue(STORAGE_KEYS.SETTINGS_LIGHT_MODE, isLightMode);

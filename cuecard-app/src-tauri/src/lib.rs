@@ -62,21 +62,42 @@ pub struct FirebaseConfig {
     pub app_id: Option<String>,
 }
 
+/// Analytics configuration (separate Firebase project for security)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AnalyticsConfig {
+    pub api_key: String,
+    pub auth_domain: String,
+    pub project_id: String,
+    pub app_id: String,
+    pub measurement_id: String,
+}
+
 /// Wrapper for firebase-config.json structure
 #[derive(Debug, Clone, Serialize, Deserialize)]
 struct FirebaseConfigFile {
-    firebase: FirebaseConfigFileInner,
+    firebase: FirebaseConfigInner,
+    analytics: AnalyticsConfigInner,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct FirebaseConfigFileInner {
+struct FirebaseConfigInner {
     api_key: String,
     auth_domain: String,
     project_id: String,
     storage_bucket: Option<String>,
     messaging_sender_id: Option<String>,
     app_id: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct AnalyticsConfigInner {
+    api_key: String,
+    auth_domain: String,
+    project_id: String,
+    app_id: String,
+    measurement_id: String,
 }
 
 /// Firebase authentication tokens
@@ -197,6 +218,8 @@ static APP_HANDLE: Lazy<Arc<RwLock<Option<AppHandle>>>> = Lazy::new(|| Arc::new(
 // Firebase and OAuth state
 static FIREBASE_CONFIG: Lazy<Arc<RwLock<Option<FirebaseConfig>>>> =
     Lazy::new(|| Arc::new(RwLock::new(None)));
+static ANALYTICS_CONFIG: Lazy<Arc<RwLock<Option<AnalyticsConfig>>>> =
+    Lazy::new(|| Arc::new(RwLock::new(None)));
 static FIREBASE_TOKENS: Lazy<Arc<RwLock<Option<FirebaseTokens>>>> =
     Lazy::new(|| Arc::new(RwLock::new(None)));
 static OAUTH_CREDENTIALS: Lazy<Arc<RwLock<Option<OAuthCredentials>>>> =
@@ -210,7 +233,7 @@ static PENDING_OAUTH_SCOPE: Lazy<Arc<RwLock<Option<String>>>> =
 // FIREBASE CONFIGURATION
 // =============================================================================
 
-/// Load Firebase configuration from firebase-config.json
+/// Load Firebase and Analytics configuration from firebase-config.json
 fn load_firebase_config(app: &AppHandle) -> Result<FirebaseConfig, String> {
     // Try to find firebase-config.json in the resource directory (bundled app)
     // or relative paths (development mode)
@@ -237,6 +260,20 @@ fn load_firebase_config(app: &AppHandle) -> Result<FirebaseConfig, String> {
                 messaging_sender_id: config_file.firebase.messaging_sender_id,
                 app_id: config_file.firebase.app_id,
             };
+
+            // Load analytics config (only store if properly configured)
+            let analytics = config_file.analytics;
+            if !analytics.measurement_id.starts_with("G-XXXX") {
+                let analytics_config = AnalyticsConfig {
+                    api_key: analytics.api_key,
+                    auth_domain: analytics.auth_domain,
+                    project_id: analytics.project_id,
+                    app_id: analytics.app_id,
+                    measurement_id: analytics.measurement_id,
+                };
+                let mut ac = ANALYTICS_CONFIG.write();
+                *ac = Some(analytics_config);
+            }
 
             return Ok(config);
         }
@@ -1222,6 +1259,11 @@ fn get_firestore_project_id() -> String {
 }
 
 #[tauri::command]
+fn get_analytics_config() -> Option<AnalyticsConfig> {
+    ANALYTICS_CONFIG.read().clone()
+}
+
+#[tauri::command]
 async fn get_firebase_id_token() -> Result<String, String> {
     get_valid_firebase_token()
         .await
@@ -1455,6 +1497,7 @@ pub fn run() {
             get_current_notes,
             get_auth_status,
             get_firestore_project_id,
+            get_analytics_config,
             get_firebase_id_token,
             has_slides_scope,
             get_user_info,
