@@ -1040,7 +1040,7 @@ function updateAuthUI(authenticated, name = '') {
     if (buttonIcon) buttonIcon.style.display = 'block';
 
     // Reset welcome heading to default
-    welcomeHeading.innerHTML = 'CueCard\n<span class="version-text">1.1.3</span>';
+    welcomeHeading.innerHTML = 'CueCard\n<span class="version-text">1.2.1</span>';
 
     // Reset subtext
     welcomeSubtext.innerHTML = 'Speaker notes visible only to you during screen sharing — for <span class="highlight-presentations">presentations</span>, <span class="highlight-meetings">meetings</span>, and more...';
