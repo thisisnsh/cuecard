@@ -48,7 +48,7 @@ const FIREBASE_TOKEN_URL: &str = "https://securetoken.googleapis.com/v1/token";
 // Analytics
 const GA_COLLECT_URL: &str = "https://www.google-analytics.com/mp/collect";
 const ANALYTICS_CLIENT_ID_KEY: &str = "analytics_client_id";
-const ANALYTICS_SESSION_COUNT_KEY: &str = "analytics_session_count";
+const ANALYTICS_FIRST_OPEN_KEY: &str = "analytics_first_open_sent";
 
 // Scopes
 const SCOPE_PROFILE: &str = "openid profile email";
@@ -81,13 +81,12 @@ struct AnalyticsState {
     measurement_id: String,
     api_secret: String,
     client_id: String,
-    session_id: i64,
-    session_count: i64,
     user_id: Option<String>,
     platform: Option<String>,
     operating_system: Option<String>,
     ip_override: Option<String>,
-    last_event_at_ms: Option<i64>,
+    app_version: Option<String>,
+    session_id: String,
 }
 
 /// Wrapper for firebase-config.json structure
@@ -753,20 +752,23 @@ fn get_or_init_analytics_state(app: &AppHandle) -> Option<AnalyticsState> {
 
     let config = ANALYTICS_CONFIG.read().clone()?;
     let client_id = load_or_create_client_id(app);
-    let session_count = increment_session_count(app);
-    let session_id = chrono::Utc::now().timestamp();
+
+    // Generate session_id from current timestamp (GA4 uses timestamp as session identifier)
+    let session_id = chrono::Utc::now().timestamp_millis().to_string();
+
+    // Get app version from Tauri context
+    let app_version = app.config().version.clone();
 
     let state = AnalyticsState {
         measurement_id: config.measurement_id,
         api_secret: config.api_secret,
         client_id,
-        session_id,
-        session_count,
         user_id: None,
         platform: None,
         operating_system: None,
         ip_override: None,
-        last_event_at_ms: None,
+        app_version,
+        session_id,
     };
 
     *analytics_state = Some(state.clone());
@@ -790,25 +792,6 @@ fn load_or_create_client_id(app: &AppHandle) -> String {
     }
 
     generate_client_id()
-}
-
-fn increment_session_count(app: &AppHandle) -> i64 {
-    if let Ok(store) = app.store("cuecard-store.json") {
-        let current = store
-            .get(ANALYTICS_SESSION_COUNT_KEY)
-            .and_then(|value| {
-                value
-                    .as_i64()
-                    .or_else(|| value.as_str().and_then(|text| text.parse::<i64>().ok()))
-            })
-            .unwrap_or(0);
-        let next = current + 1;
-        store.set(ANALYTICS_SESSION_COUNT_KEY, serde_json::json!(next));
-        let _ = store.save();
-        return next;
-    }
-
-    1
 }
 
 fn generate_client_id() -> String {
@@ -1406,83 +1389,75 @@ async fn send_event(
         None => return Ok(()),
     };
 
-    let now_ms = chrono::Utc::now().timestamp_millis();
-    let engagement_time_msec = {
-        let mut analytics_state = ANALYTICS_STATE.write();
-        if let Some(ref mut state) = *analytics_state {
-            let last = state.last_event_at_ms.unwrap_or(now_ms);
-            state.last_event_at_ms = Some(now_ms);
-            let delta = now_ms.saturating_sub(last);
-            if delta <= 0 {
-                1
-            } else {
-                delta
-            }
-        } else {
-            1
-        }
-    };
-
     let AnalyticsState {
         measurement_id,
         api_secret,
         client_id,
-        session_id,
-        session_count,
         user_id,
         platform,
         operating_system,
         ip_override,
-        last_event_at_ms: _,
+        app_version,
+        session_id,
     } = state;
 
     let mut event_params = params.unwrap_or_default();
-    if (event_name == "app_open" || event_name == "start_session")
-        && !event_params.contains_key("platform")
-    {
-        let platform_value = platform.unwrap_or_else(|| "unknown".to_string());
-        event_params.insert(
-            "platform".to_string(),
-            serde_json::Value::String(platform_value),
-        );
-    }
+
+    // Add required GA4 parameters for proper tracking
+    // engagement_time_msec is required for user activity to display in reports
     if !event_params.contains_key("engagement_time_msec") {
         event_params.insert(
             "engagement_time_msec".to_string(),
-            serde_json::Value::Number(engagement_time_msec.into()),
+            serde_json::Value::Number(serde_json::Number::from(100)),
         );
     }
-    if !event_params.contains_key("session_id") {
-        event_params.insert(
-            "session_id".to_string(),
-            serde_json::Value::Number(session_id.into()),
-        );
-    }
-    if !event_params.contains_key("session_number") {
-        event_params.insert(
-            "session_number".to_string(),
-            serde_json::Value::Number(session_count.into()),
-        );
-    }
+
+    // session_id connects events to the same session
+    event_params.insert(
+        "session_id".to_string(),
+        serde_json::Value::String(session_id),
+    );
 
     let mut payload = serde_json::json!({
         "client_id": client_id,
         "events": [{
             "name": event_name,
             "params": event_params
-        }],
-        "device": {
-            "category": "desktop",
-            "operating_system": operating_system.unwrap_or_else(|| "unknown".to_string())
-        }
+        }]
     });
 
+    // Add user_id if available
     if let Some(user_id) = user_id {
         payload["user_id"] = serde_json::Value::String(user_id);
     }
-    if let Some(ip_override) = ip_override {
-        payload["ip_override"] = serde_json::Value::String(ip_override.to_string());
+
+    // Add ip_override for geo location
+    if let Some(ip) = ip_override {
+        payload["ip_override"] = serde_json::Value::String(ip);
     }
+
+    // Add user_properties for app_version and platform info
+    let mut user_properties = serde_json::json!({});
+
+    if let Some(ref version) = app_version {
+        user_properties["app_version"] = serde_json::json!({
+            "value": version
+        });
+    }
+
+    if let Some(ref os) = operating_system {
+        user_properties["operating_system"] = serde_json::json!({
+            "value": os
+        });
+    }
+
+    if let Some(ref plat) = platform {
+        user_properties["platform"] = serde_json::json!({
+            "value": plat
+        });
+    }
+
+    payload["user_properties"] = user_properties;
 
     let url = format!(
         "{}?measurement_id={}&api_secret={}",
@@ -1491,9 +1466,6 @@ async fn send_event(
 
     let client = reqwest::Client::new();
     let response = client.post(&url).json(&payload).send().await;
-
-    println!("Analytics payload: {}", payload);
-    println!("Analytics response: {:?}", response);
 
     match response {
         Ok(result) => {
@@ -1530,6 +1502,24 @@ fn clear_analytics_user_id() -> Result<(), String> {
         state.user_id = None;
     }
     Ok(())
+}
+
+#[tauri::command]
+fn check_and_mark_first_open(app: AppHandle) -> bool {
+    if let Ok(store) = app.store("cuecard-store.json") {
+        // Check if first_open was already sent
+        if let Some(value) = store.get(ANALYTICS_FIRST_OPEN_KEY) {
+            if value.as_bool().unwrap_or(false) {
+                return false; // Not first open
+            }
+        }
+
+        // Mark as sent
+        store.set(ANALYTICS_FIRST_OPEN_KEY, serde_json::json!(true));
+        let _ = store.save();
+        return true; // This is the first open
+    }
+    false
 }
 
 #[tauri::command]
@@ -1770,6 +1760,7 @@ pub fn run() {
             send_event,
             set_analytics_user_id,
             clear_analytics_user_id,
+            check_and_mark_first_open,
             get_firebase_id_token,
             has_slides_scope,
             get_user_info,

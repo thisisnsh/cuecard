@@ -93,10 +93,26 @@ function trackLogout() {
   void clearAnalyticsUserId();
 }
 
-function trackScreenView(screenName) {
+function trackScreenView(screenName, pageTitle = null) {
   void sendAnalyticsEvent('screen_view', {
-    screen_name: screenName
+    screen_name: screenName,
+    page_title: pageTitle || screenName,
+    screen_class: 'CueCard'
   });
+}
+
+async function trackFirstOpen() {
+  if (!invoke) return;
+  try {
+    const isFirstOpen = await invoke('check_and_mark_first_open');
+    if (isFirstOpen) {
+      // Using 'app_first_launch' instead of 'first_open' as first_open is a restricted GA4 event
+      await sendAnalyticsEvent('app_first_launch');
+      console.log('Analytics: First launch tracked');
+    }
+  } catch (error) {
+    console.debug('Analytics first_launch error:', error);
+  }
 }
 
 function trackNotesPaste() {
@@ -499,8 +515,14 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Check auth status on load
   await checkAuthStatus();
 
+  // Track first_open for new users (must be before app_open)
+  await trackFirstOpen();
+
   // Track app open event (after auth check so we have user info if available)
   trackAppOpen();
+
+  // Track initial screen view
+  trackScreenView('initial', 'CueCard Home');
 
   // Check for existing slide data
   await checkCurrentSlide();
@@ -1248,6 +1270,16 @@ async function showView(viewName) {
   previousView = currentView;
   currentView = viewName;
 
+  // Track screen view when navigating (settings is tracked separately in footer handler)
+  if (viewName !== 'settings') {
+    const pageTitles = {
+      'initial': 'CueCard Home',
+      'add-notes': 'CueCard Add Notes',
+      'notes': 'CueCard Notes'
+    };
+    trackScreenView(viewName, pageTitles[viewName] || 'CueCard');
+  }
+
   if (appContainer) {
     appContainer.classList.remove('stroke-add-notes', 'stroke-slides');
     if (viewName === 'add-notes') {
@@ -1672,7 +1704,7 @@ function setupFooter() {
   settingsLink.addEventListener("click", (e) => {
     e.preventDefault();
     console.log("Settings link clicked");
-    trackScreenView('settings');
+    trackScreenView('settings', 'CueCard Settings');
     showView('settings');
   });
 }
