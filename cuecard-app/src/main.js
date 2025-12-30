@@ -174,78 +174,6 @@ async function saveUserProfile(email, name) {
   }
 }
 
-// Increment usage counter in Firestore
-async function incrementUsage(email, usageType) {
-  if (!email || !FIRESTORE_BASE_URL) return;
-
-  // Get Firebase ID token for authenticated request
-  const token = await getFirebaseIdToken();
-  if (!token) {
-    console.log("No Firebase token available, skipping usage increment");
-    return;
-  }
-
-  const documentPath = `Profiles/${encodeURIComponent(email)}`;
-  const url = `${FIRESTORE_BASE_URL}/${documentPath}`;
-
-  try {
-    // Get current document to read current usage values
-    const getResponse = await fetch(url, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-
-    if (getResponse.ok) {
-      const doc = await getResponse.json();
-      const currentUsage = doc.fields?.usage?.mapValue?.fields || {};
-      const currentPaste = parseInt(currentUsage.paste?.integerValue || '0');
-      const currentSlide = parseInt(currentUsage.slide?.integerValue || '0');
-
-      // Calculate new values
-      const newPaste = usageType === 'paste' ? currentPaste + 1 : currentPaste;
-      const newSlide = usageType === 'slide' ? currentSlide + 1 : currentSlide;
-
-      // Update only the usage field
-      const updateUrl = `${url}?updateMask.fieldPaths=usage`;
-
-      await fetch(updateUrl, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          fields: {
-            usage: {
-              mapValue: {
-                fields: {
-                  paste: { integerValue: String(newPaste) },
-                  slide: { integerValue: String(newSlide) }
-                }
-              }
-            }
-          }
-        })
-      });
-      console.log(`Usage ${usageType} incremented in Firestore`);
-    }
-  } catch (error) {
-    console.error("Error incrementing usage in Firestore:", error);
-  }
-}
-
-// Get user email from stored user info
-async function getUserEmail() {
-  if (!invoke) return null;
-  try {
-    const userInfo = await invoke("get_user_info");
-    return userInfo?.email || null;
-  } catch (e) {
-    console.log("Could not get user email:", e);
-    return null;
-  }
-}
 
 // =============================================================================
 // PERSISTENT STORAGE
@@ -1069,15 +997,10 @@ function updateAuthUI(authenticated, name = '') {
     // Add click handler for Paste your notes link
     const pasteNotesLink = document.getElementById('paste-notes-link');
     if (pasteNotesLink) {
-      pasteNotesLink.addEventListener('click', async (e) => {
+      pasteNotesLink.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
         trackNotesPaste();
-        // Track paste usage in Firestore
-        const email = await getUserEmail();
-        if (email) {
-          incrementUsage(email, 'paste');
-        }
         showView('add-notes');
         notesInput.focus();
       });
@@ -1090,12 +1013,6 @@ function updateAuthUI(authenticated, name = '') {
         e.preventDefault();
         e.stopPropagation();
         trackSlidesSync();
-
-        // Track slide usage in Firestore
-        const email = await getUserEmail();
-        if (email) {
-          incrementUsage(email, 'slide');
-        }
 
         // Check if we have slides scope
         const hasSlidesScope = await hasScope('slides');
