@@ -10,12 +10,12 @@
  * - Custom events for user behavior
  */
 
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js';
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js';
 import {
   getAnalytics,
   logEvent,
   setUserId
-} from 'https://www.gstatic.com/firebasejs/11.1.0/firebase-analytics.js';
+} from 'https://www.gstatic.com/firebasejs/12.7.0/firebase-analytics.js';
 
 const { invoke } = window.__TAURI__.core;
 
@@ -30,19 +30,25 @@ export async function initAnalytics() {
   if (isInitialized) return;
 
   try {
+    console.log('[Analytics] Starting initialization...');
+    console.log('[Analytics] Window location:', window.location.href);
+
     // Fetch config from backend via Tauri command
     const config = await invoke('get_analytics_config');
+    console.log('[Analytics] Config received:', config ? 'yes' : 'no');
 
     if (!config) {
-      console.warn('Analytics config not found. Analytics disabled.');
+      console.warn('[Analytics] Config not found. Analytics disabled.');
       return;
     }
 
     // Check if config is properly set up (config uses snake_case from Rust)
     if (!config.measurement_id || config.measurement_id.startsWith('G-XXXX')) {
-      console.warn('Analytics: measurement_id not configured. Update firebase-config.json');
+      console.warn('[Analytics] measurement_id not configured. Update firebase-config.json');
       return;
     }
+
+    console.log('[Analytics] Measurement ID:', config.measurement_id);
 
     // Initialize Firebase (map snake_case from Rust to camelCase for Firebase SDK)
     const firebaseConfig = {
@@ -53,13 +59,17 @@ export async function initAnalytics() {
       measurementId: config.measurement_id
     };
 
+    console.log('[Analytics] Initializing Firebase app...');
     const app = initializeApp(firebaseConfig, 'analytics');
+
+    console.log('[Analytics] Getting analytics instance...');
     analytics = getAnalytics(app);
     isInitialized = true;
 
-    console.log('Firebase Analytics initialized');
+    console.log('[Analytics] Firebase Analytics initialized successfully');
   } catch (error) {
-    console.warn('Analytics initialization failed:', error.message);
+    console.error('[Analytics] Initialization failed:', error);
+    console.error('[Analytics] Error stack:', error.stack);
   }
 }
 
