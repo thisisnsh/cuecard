@@ -122,6 +122,7 @@ If you're interested in contributing to CueCard or building it from source, chec
 | Component | Description | Documentation |
 |-----------|-------------|---------------|
 | **Desktop App** | Tauri-based desktop application for macOS & Windows | [`cuecard-app/README.md`](cuecard-app/README.md) |
+| **Mobile App** | Tauri-based mobile app for iOS & Android with PiP teleprompter | [`cuecard-mobile/README.md`](cuecard-mobile/README.md) |
 | **Browser Extension** | Chrome, Firefox, and Safari extensions for Google Slides | [`cuecard-extension/README.md`](cuecard-extension/README.md) |
 | **Website** | Static marketing site at cuecard.dev | [`cuecard-website/README.md`](cuecard-website/README.md) |
 
