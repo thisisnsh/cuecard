@@ -446,11 +446,10 @@ let extensionDownloads = {
 
 async function initGitHubData() {
     try {
-        // Fetch stars, releases, and extension downloads in parallel
+        // Fetch stars and releases in parallel (don't wait for extension downloads)
         const [starsResult, releasesResult] = await Promise.all([
             fetchGitHubStars(),
-            fetchGitHubReleases(),
-            fetchExtensionDownloads()
+            fetchGitHubReleases()
         ]);
 
         // Update stars count
@@ -469,6 +468,11 @@ async function initGitHubData() {
         calculateTotalDownloads();
         populateReleaseDropdown();
         displayRelease(allReleases[0]); // Show latest release by default
+
+        // Fetch extension downloads in background, then update total
+        fetchExtensionDownloads().then(() => {
+            calculateTotalDownloads();
+        });
     } catch (error) {
         console.error('Error fetching GitHub data:', error);
         // Fall back to sample data on error
