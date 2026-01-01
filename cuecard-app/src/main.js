@@ -428,6 +428,7 @@ const AUTO_SCROLL_SPEEDS = {
 let timerState = 'stopped'; // 'stopped', 'running', 'paused'
 let timerIntervals = []; // Store all timer interval IDs
 let autoScrollAnimationId = null; // Store auto-scroll animation frame ID
+let autoScrollAccumulator = 0; // Accumulator for sub-pixel scrolling
 let totalTimeSeconds = 0; // Total time from all [time] tags
 let remainingTimeSeconds = 0; // Current remaining time for countdown
 
@@ -858,6 +859,9 @@ function startAutoScroll() {
   const speed = AUTO_SCROLL_SPEEDS[autoScrollSpeed];
   if (speed <= 0) return;
 
+  // Reset accumulator when starting
+  autoScrollAccumulator = 0;
+
   function scrollStep() {
     if (timerState !== 'running' || autoScrollSpeed === 'off') {
       stopAutoScroll();
@@ -868,7 +872,14 @@ function startAutoScroll() {
     if (container) {
       const maxScroll = container.scrollHeight - container.clientHeight;
       if (container.scrollTop < maxScroll) {
-        container.scrollTop += speed;
+        // Accumulate fractional scroll values
+        autoScrollAccumulator += speed;
+        // Only update scrollTop when we have at least 1 pixel to scroll
+        if (autoScrollAccumulator >= 1) {
+          const pixelsToScroll = Math.floor(autoScrollAccumulator);
+          container.scrollTop += pixelsToScroll;
+          autoScrollAccumulator -= pixelsToScroll;
+        }
       }
     }
 
@@ -884,6 +895,7 @@ function stopAutoScroll() {
     cancelAnimationFrame(autoScrollAnimationId);
     autoScrollAnimationId = null;
   }
+  autoScrollAccumulator = 0;
 }
 
 // Check if text contains [time mm:ss] pattern
