@@ -107,11 +107,9 @@
                 <span class="setting-title">Auto-Scroll Speed</span>
                 <span class="setting-description">Automatically scroll notes while presenting</span>
               </div>
-              <div class="setting-control speed-buttons">
-                <button class="speed-btn" id="speed-off" data-speed="off">Off</button>
-                <button class="speed-btn" id="speed-low" data-speed="low">Low</button>
-                <button class="speed-btn" id="speed-medium" data-speed="medium">Medium</button>
-                <button class="speed-btn" id="speed-high" data-speed="high">High</button>
+              <div class="setting-control">
+                <input type="range" id="speed-slider" class="opacity-slider" min="0" max="2" step="0.25" value="0">
+                <span class="opacity-value" id="speed-value">Off</span>
               </div>
             </div>
 

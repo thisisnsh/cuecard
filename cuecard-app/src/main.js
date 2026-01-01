@@ -397,7 +397,7 @@ let notesInputHighlight;
 let btnStart, btnPause, btnReset;
 let opacitySlider, opacityValue, ghostModeToggle, shortcutsToggle;
 let themeSystemBtn, themeLightBtn, themeDarkBtn;
-let speedOffBtn, speedLowBtn, speedMediumBtn, speedHighBtn;
+let speedSlider, speedValue;
 let editNoteBtn;
 let notesInputWrapper;
 let ghostModeIndicator;
@@ -414,15 +414,7 @@ let currentOpacity = 100; // Store current opacity value (10-100)
 let ghostMode = true; // Default: true = hidden from screenshots (ghost mode ON)
 let currentTheme = 'system'; // 'system', 'light', 'dark'
 let shortcutsEnabled = true; // Default: true = global shortcuts are enabled
-let autoScrollSpeed = 'off'; // 'off', 'low', 'medium', 'high'
-
-// Auto-scroll speed values (pixels per frame at 60fps)
-const AUTO_SCROLL_SPEEDS = {
-  off: 0,
-  low: 0.5,
-  medium: 1,
-  high: 2
-};
+let autoScrollSpeed = 0; // 0 to 2 (pixels per frame at 60fps), 0 = off
 
 // Timer State
 let timerState = 'stopped'; // 'stopped', 'running', 'paused'
@@ -493,10 +485,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   themeSystemBtn = document.getElementById("theme-system");
   themeLightBtn = document.getElementById("theme-light");
   themeDarkBtn = document.getElementById("theme-dark");
-  speedOffBtn = document.getElementById("speed-off");
-  speedLowBtn = document.getElementById("speed-low");
-  speedMediumBtn = document.getElementById("speed-medium");
-  speedHighBtn = document.getElementById("speed-high");
+  speedSlider = document.getElementById("speed-slider");
+  speedValue = document.getElementById("speed-value");
   editNoteBtn = document.getElementById("edit-note-btn");
   notesInputWrapper = document.querySelector(".notes-input-wrapper");
   ghostModeIndicator = document.getElementById("ghost-mode-indicator");
@@ -854,16 +844,15 @@ function getScrollContainer() {
 
 // Start auto-scroll animation
 function startAutoScroll() {
-  if (autoScrollSpeed === 'off' || autoScrollAnimationId !== null) return;
+  if (autoScrollSpeed <= 0 || autoScrollAnimationId !== null) return;
 
-  const speed = AUTO_SCROLL_SPEEDS[autoScrollSpeed];
-  if (speed <= 0) return;
+  const speed = autoScrollSpeed;
 
   // Reset accumulator when starting
   autoScrollAccumulator = 0;
 
   function scrollStep() {
-    if (timerState !== 'running' || autoScrollSpeed === 'off') {
+    if (timerState !== 'running' || autoScrollSpeed <= 0) {
       stopAutoScroll();
       return;
     }
@@ -2006,13 +1995,20 @@ async function loadStoredSettings() {
     }
   }
 
-  // Load stored auto-scroll speed setting or use default (off)
+  // Load stored auto-scroll speed setting or use default (0 = off)
   const storedAutoScrollSpeed = await getStoredValue(STORAGE_KEYS.SETTINGS_AUTO_SCROLL_SPEED);
   if (storedAutoScrollSpeed !== null && storedAutoScrollSpeed !== undefined) {
-    autoScrollSpeed = storedAutoScrollSpeed;
+    // Handle migration from old string values to new numeric values
+    if (typeof storedAutoScrollSpeed === 'string') {
+      const migrationMap = { 'off': 0, 'low': 0.5, 'medium': 1, 'high': 2 };
+      autoScrollSpeed = migrationMap[storedAutoScrollSpeed] ?? 0;
+      await setStoredValue(STORAGE_KEYS.SETTINGS_AUTO_SCROLL_SPEED, autoScrollSpeed);
+    } else {
+      autoScrollSpeed = storedAutoScrollSpeed;
+    }
   } else {
-    autoScrollSpeed = 'off';
-    await setStoredValue(STORAGE_KEYS.SETTINGS_AUTO_SCROLL_SPEED, 'off');
+    autoScrollSpeed = 0;
+    await setStoredValue(STORAGE_KEYS.SETTINGS_AUTO_SCROLL_SPEED, 0);
   }
 }
 
@@ -2105,39 +2101,42 @@ function setupSettings() {
     });
   }
 
-  // Auto-scroll speed button handlers
-  const speedButtons = [speedOffBtn, speedLowBtn, speedMediumBtn, speedHighBtn];
-  speedButtons.forEach(btn => {
-    if (btn) {
-      btn.addEventListener("click", async (e) => {
-        const speed = btn.dataset.speed;
-        autoScrollSpeed = speed;
-        updateSpeedButtons(speed);
+  // Auto-scroll speed slider handler
+  let speedTrackingTimeout = null;
+  if (speedSlider) {
+    speedSlider.addEventListener("input", async (e) => {
+      const value = parseFloat(e.target.value);
+      autoScrollSpeed = value;
+      updateSpeedDisplay(value);
 
-        // Track setting change
-        trackSettingChange('auto_scroll_speed', speed);
+      // Save to persistent storage
+      await setStoredValue(STORAGE_KEYS.SETTINGS_AUTO_SCROLL_SPEED, value);
 
-        // Save to persistent storage
-        await setStoredValue(STORAGE_KEYS.SETTINGS_AUTO_SCROLL_SPEED, speed);
+      // Debounce analytics tracking
+      clearTimeout(speedTrackingTimeout);
+      speedTrackingTimeout = setTimeout(() => {
+        trackSettingChange('auto_scroll_speed', value);
+      }, 500);
 
-        // If timer is running and speed changed, restart or stop auto-scroll
-        if (timerState === 'running') {
-          stopAutoScroll();
-          if (speed !== 'off') {
-            startAutoScroll();
-          }
+      // If timer is running and speed changed, restart or stop auto-scroll
+      if (timerState === 'running') {
+        stopAutoScroll();
+        if (value > 0) {
+          startAutoScroll();
         }
-      });
-    }
-  });
+      }
+    });
+  }
 }
 
-// Update speed buttons active state
-function updateSpeedButtons(speed) {
-  if (speedOffBtn) speedOffBtn.classList.toggle('active', speed === 'off');
-  if (speedLowBtn) speedLowBtn.classList.toggle('active', speed === 'low');
-  if (speedMediumBtn) speedMediumBtn.classList.toggle('active', speed === 'medium');
-  if (speedHighBtn) speedHighBtn.classList.toggle('active', speed === 'high');
+// Update speed display value
+function updateSpeedDisplay(speed) {
+  if (!speedValue) return;
+  if (speed === 0) {
+    speedValue.textContent = 'Off';
+  } else {
+    speedValue.textContent = `${speed}x`;
+  }
 }
 
 function updateGhostModeIndicator() {
@@ -2183,8 +2182,11 @@ async function loadCurrentSettings() {
     shortcutsToggle.checked = shortcutsEnabled;
   }
 
-  // Update speed buttons
-  updateSpeedButtons(autoScrollSpeed);
+  // Update speed slider and display
+  if (speedSlider) {
+    speedSlider.value = autoScrollSpeed;
+  }
+  updateSpeedDisplay(autoScrollSpeed);
 }
 
 // =============================================================================
