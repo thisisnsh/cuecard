@@ -25,6 +25,7 @@ use tauri::WebviewWindow;
 use tauri::{AppHandle, Emitter, Manager};
 #[cfg(target_os = "macos")]
 use tauri_nspanel::{tauri_panel, CollectionBehavior, PanelLevel, StyleMask, WebviewWindowExt};
+use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut};
 use tauri_plugin_opener::OpenerExt;
 use tauri_plugin_store::StoreExt;
 use tower_http::cors::{Any, CorsLayer};
@@ -1706,7 +1707,30 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_updater::Builder::default().build())
-        .plugin(tauri_plugin_process::init());
+        .plugin(tauri_plugin_process::init())
+        .plugin(
+            tauri_plugin_global_shortcut::Builder::new()
+                .with_handler(|app, shortcut, event| {
+                    if event.state() == tauri_plugin_global_shortcut::ShortcutState::Pressed {
+                        let action = match shortcut.id() {
+                            id if id == Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::KeyC).id() => "toggle-visibility",
+                            id if id == Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::Minus).id() => "opacity-down",
+                            id if id == Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::Equal).id() => "opacity-up",
+                            id if id == Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::ArrowDown).id() => "height-up",
+                            id if id == Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::ArrowUp).id() => "height-down",
+                            id if id == Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::ArrowLeft).id() => "move-left",
+                            id if id == Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::ArrowRight).id() => "move-right",
+                            id if id == Shortcut::new(Some(Modifiers::ALT | Modifiers::CONTROL), Code::ArrowUp).id() => "move-up",
+                            id if id == Shortcut::new(Some(Modifiers::ALT | Modifiers::CONTROL), Code::ArrowDown).id() => "move-down",
+                            id if id == Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::Space).id() => "timer-toggle",
+                            id if id == Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::Digit0).id() => "timer-reset",
+                            _ => return,
+                        };
+                        let _ = app.emit("shortcut-triggered", action);
+                    }
+                })
+                .build(),
+        );
 
     #[cfg(target_os = "macos")]
     {
@@ -1742,6 +1766,25 @@ pub fn run() {
             // Platform-specific window initialization
             #[cfg(target_os = "macos")]
             init_nspanel(app.app_handle());
+
+            // Register global shortcuts
+            let shortcuts = [
+                Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::KeyC),      // Toggle visibility
+                Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::Minus),     // Opacity down
+                Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::Equal),     // Opacity up
+                Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::ArrowDown), // Height down
+                Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::ArrowUp),   // Height up
+                Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::ArrowLeft), // Move left
+                Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::ArrowRight),// Move right
+                Shortcut::new(Some(Modifiers::ALT | Modifiers::CONTROL), Code::ArrowUp), // Move up
+                Shortcut::new(Some(Modifiers::ALT | Modifiers::CONTROL), Code::ArrowDown),// Move down
+                Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::Space),     // Timer toggle
+                Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::Digit0),    // Timer reset
+            ];
+
+            if let Err(e) = app.global_shortcut().register_multiple(shortcuts) {
+                eprintln!("Failed to register global shortcuts: {}", e);
+            }
 
             // Start the web server in a background thread
             std::thread::spawn(|| {

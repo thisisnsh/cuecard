@@ -393,12 +393,13 @@ async function hasScope(scopeType) {
 // DOM Elements
 let btnClose, btnDownloadUpdates, downloadUpdatesSeparator;
 let authBtn;
-let appContainer, appHeader, appHeaderTitle, viewInitial, viewAddNotes, viewNotes, viewSettings;
+let appContainer, appHeader, appHeaderTitle, viewInitial, viewAddNotes, viewNotes, viewSettings, viewShortcuts;
 let linkGoBack, backSeparator;
 let notesInput, notesContent;
 let welcomeHeading, welcomeSubtext;
 let bugLink, websiteLink, websiteSeparator, supportLink, supportSeparator;
 let settingsLink, settingsSeparator;
+let shortcutsLink, shortcutsSeparator;
 let refreshBtn, refreshSeparator;
 let notesInputHighlight;
 let timerSeparator, timerStartSeparator, timerPauseSeparator;
@@ -481,6 +482,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   viewAddNotes = document.getElementById("view-add-notes");
   viewNotes = document.getElementById("view-notes");
   viewSettings = document.getElementById("view-settings");
+  viewShortcuts = document.getElementById("view-shortcuts");
   linkGoBack = document.getElementById("link-go-back");
   backSeparator = document.getElementById("back-separator");
   notesInput = document.getElementById("notes-input");
@@ -494,6 +496,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   supportSeparator = document.getElementById("support-separator");
   settingsLink = document.getElementById("settings-link");
   settingsSeparator = document.getElementById("settings-separator");
+  shortcutsLink = document.getElementById("shortcuts-link");
+  shortcutsSeparator = document.getElementById("shortcuts-separator");
   refreshBtn = document.getElementById("refresh-btn");
   refreshSeparator = document.getElementById("refresh-separator");
   notesInputHighlight = document.getElementById("notes-input-highlight");
@@ -552,6 +556,9 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   // Set up settings handlers
   setupSettings();
+
+  // Set up global shortcut listener
+  await setupShortcutListener();
 
   // Load stored settings
   await loadStoredSettings();
@@ -752,6 +759,7 @@ function setupTimerControls() {
 
 // Start/Resume timer countdown
 function startTimerCountdown() {
+  console.log('[Timer] startTimerCountdown called, timerState:', timerState);
   if (timerState === 'running') return;
 
   trackTimerAction('start');
@@ -759,6 +767,7 @@ function startTimerCountdown() {
   updateTimerButtonVisibility();
 
   // Start auto-scroll
+  console.log('[Timer] Starting auto-scroll...');
   autoScrollPausedByHover = false;
   userScrolledDuringHover = false;
   savedScrollPosition = null;
@@ -908,22 +917,39 @@ function isAutoScrollEnabled() {
 function startAutoScroll() {
   stopAutoScroll();
 
-  if (!isAutoScrollEnabled()) return;
+  console.log('[AutoScroll] startAutoScroll called');
+  console.log('[AutoScroll] isAutoScrollEnabled:', isAutoScrollEnabled(), 'scrollSpeedIndex:', scrollSpeedIndex);
+
+  if (!isAutoScrollEnabled()) {
+    console.log('[AutoScroll] RETURN: auto-scroll not enabled');
+    return;
+  }
 
   const wordsPerMinute = getCurrentWPM();
-  if (wordsPerMinute === 0) return;
+  console.log('[AutoScroll] WPM:', wordsPerMinute);
+  if (wordsPerMinute === 0) {
+    console.log('[AutoScroll] RETURN: WPM is 0');
+    return;
+  }
 
   // Get the scrollable container for the current view
   const container = getAutoScrollContainer();
-  if (!container) return;
+  console.log('[AutoScroll] container:', container, 'currentView:', currentView, 'isEditMode:', isEditMode);
+  if (!container) {
+    console.log('[AutoScroll] RETURN: no container');
+    return;
+  }
 
   // Wait for next frame to ensure layout is ready
   requestAnimationFrame(() => {
+    console.log('[AutoScroll] RAF - scrollHeight:', container.scrollHeight, 'clientHeight:', container.clientHeight);
     // Check if container is scrollable
     if (container.scrollHeight <= container.clientHeight) {
+      console.log('[AutoScroll] RETURN: container not scrollable');
       return;
     }
 
+    console.log('[AutoScroll] Starting animation loop');
     autoScrollLastTimestamp = null;
 
     // Simple smooth scroll speed based on reading speed (WPM)
@@ -1042,25 +1068,45 @@ function resumeOnLeave() {
 
 // Pause auto-scroll when opening settings
 function pauseAnimationsForSettings() {
-  if (autoScrollRafId) {
-    stopAutoScroll();
+  console.log('[Settings] pauseAnimationsForSettings called, timerState:', timerState, 'isAutoScrollEnabled:', isAutoScrollEnabled());
+  // Mark that settings was opened while auto-scroll should be running
+  // Check if auto-scroll SHOULD be running, not just if it IS running
+  // (it might be paused by hover)
+  if (timerState === 'running' && isAutoScrollEnabled()) {
     autoScrollPausedBySettings = true;
+    console.log('[Settings] autoScrollPausedBySettings set to true');
   }
+  // Always stop auto-scroll when entering settings (safe to call even if not running)
+  stopAutoScroll();
 }
 
 // Resume auto-scroll when closing settings
 function resumeAnimationsAfterSettings() {
+  console.log('[Settings] resumeAnimationsAfterSettings called, timerState:', timerState, 'isAutoScrollEnabled:', isAutoScrollEnabled());
+  autoScrollPausedBySettings = false;
+
+  // Don't resume if timer is not running
   if (timerState !== 'running') {
-    autoScrollPausedBySettings = false;
+    console.log('[Settings] RETURN: timer not running');
     return;
   }
 
-  if (autoScrollPausedBySettings) {
-    if (isAutoScrollEnabled()) {
-      startAutoScroll();
-    }
-    autoScrollPausedBySettings = false;
+  // Don't resume if auto-scroll is disabled (Off)
+  if (!isAutoScrollEnabled()) {
+    console.log('[Settings] RETURN: auto-scroll not enabled');
+    return;
   }
+
+  // Reset hover state - user needs to move mouse out and back in to re-enable hover pause
+  // This prevents the hover state from blocking auto-scroll when returning from settings
+  console.log('[Settings] Resetting hover state and starting auto-scroll');
+  isHoveringApp = false;
+  autoScrollPausedByHover = false;
+  userScrolledDuringHover = false;
+  savedScrollPosition = null;
+
+  // Start auto-scroll
+  startAutoScroll();
 }
 
 // Track manual scroll during hover
@@ -1648,9 +1694,10 @@ async function showView(viewName) {
   viewAddNotes.classList.add('hidden');
   viewNotes.classList.add('hidden');
   viewSettings.classList.add('hidden');
+  viewShortcuts.classList.add('hidden');
 
   // Show/hide the back button in footer based on view
-  if (viewName === 'add-notes' || viewName === 'notes' || viewName === 'settings') {
+  if (viewName === 'add-notes' || viewName === 'notes' || viewName === 'settings' || viewName === 'shortcuts') {
     linkGoBack.classList.remove('hidden');
     backSeparator.classList.remove('hidden');
   } else {
@@ -1664,11 +1711,19 @@ async function showView(viewName) {
 
   if (btnClose && appHeaderTitle && headerTimer) {
     const isSettingsView = viewName === 'settings';
+    const isShortcutsView = viewName === 'shortcuts';
     const isNotesView = viewName === 'add-notes' || viewName === 'notes';
 
-    // Hide close button for settings and notes views, show only for initial view
-    btnClose.classList.toggle('hidden', isSettingsView || isNotesView);
-    appHeaderTitle.classList.toggle('hidden', !isSettingsView);
+    // Hide close button for settings, shortcuts and notes views, show only for initial view
+    btnClose.classList.toggle('hidden', isSettingsView || isShortcutsView || isNotesView);
+    appHeaderTitle.classList.toggle('hidden', !isSettingsView && !isShortcutsView);
+
+    // Update header title text
+    if (isSettingsView) {
+      appHeaderTitle.textContent = 'Settings';
+    } else if (isShortcutsView) {
+      appHeaderTitle.textContent = 'Shortcuts';
+    }
 
     updateHeaderTimerVisibility();
   }
@@ -1690,6 +1745,19 @@ async function showView(viewName) {
     bugLink.classList.remove('hidden');
     settingsLink.classList.add('hidden');
     settingsSeparator.classList.add('hidden');
+    shortcutsLink.classList.add('hidden');
+    shortcutsSeparator.classList.add('hidden');
+  } else if (viewName === 'shortcuts') {
+    // Shortcuts view: hide all footer links except go back
+    websiteLink.classList.add('hidden');
+    websiteSeparator.classList.add('hidden');
+    supportLink.classList.add('hidden');
+    supportSeparator.classList.add('hidden');
+    bugLink.classList.add('hidden');
+    settingsLink.classList.add('hidden');
+    settingsSeparator.classList.add('hidden');
+    shortcutsLink.classList.add('hidden');
+    shortcutsSeparator.classList.add('hidden');
   } else {
     // Notes and Add-Notes views: hide all footer links except go back
     websiteLink.classList.add('hidden');
@@ -1770,6 +1838,11 @@ async function showView(viewName) {
       viewSettings.classList.remove('hidden');
       // Load current settings when showing settings view
       loadCurrentSettings();
+      break;
+    case 'shortcuts':
+      viewShortcuts.classList.remove('hidden');
+      // Populate shortcut key displays
+      populateShortcutKeys();
       break;
   }
 
@@ -2100,6 +2173,14 @@ function setupFooter() {
     trackScreenView('settings', 'CueCard Settings');
     showView('settings');
   });
+
+  // Shortcuts link handler
+  shortcutsLink.addEventListener("click", (e) => {
+    e.preventDefault();
+    console.log("Shortcuts link clicked");
+    trackScreenView('shortcuts', 'CueCard Shortcuts');
+    showView('shortcuts');
+  });
 }
 
 // =============================================================================
@@ -2314,4 +2395,140 @@ async function loadCurrentSettings() {
     const preset = SCROLL_SPEED_PRESETS[scrollSpeedIndex];
     scrollSpeedValue.textContent = preset.label;
   }
+}
+
+// =============================================================================
+// GLOBAL SHORTCUTS
+// =============================================================================
+
+// Shortcut definitions with platform-specific display
+const SHORTCUTS = {
+  'toggle-visibility': { mac: ['Option', 'Shift', 'C'], win: ['Alt', 'Shift', 'C'] },
+  'opacity-down': { mac: ['Option', 'Shift', '-'], win: ['Alt', 'Shift', '-'] },
+  'opacity-up': { mac: ['Option', 'Shift', '='], win: ['Alt', 'Shift', '='] },
+  'height-down': { mac: ['Option', 'Shift', '↑'], win: ['Alt', 'Shift', '↑'] },
+  'height-up': { mac: ['Option', 'Shift', '↓'], win: ['Alt', 'Shift', '↓'] },
+  'move-left': { mac: ['Option', 'Shift', '←'], win: ['Alt', 'Shift', '←'] },
+  'move-right': { mac: ['Option', 'Shift', '→'], win: ['Alt', 'Shift', '→'] },
+  'move-up': { mac: ['Option', 'Ctrl', '↑'], win: ['Alt', 'Ctrl', '↑'] },
+  'move-down': { mac: ['Option', 'Ctrl', '↓'], win: ['Alt', 'Ctrl', '↓'] },
+  'timer-toggle': { mac: ['Option', 'Shift', 'Space'], win: ['Alt', 'Shift', 'Space'] },
+  'timer-reset': { mac: ['Option', 'Shift', '0'], win: ['Alt', 'Shift', '0'] },
+};
+
+// Check if running on macOS
+function isMac() {
+  return navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+}
+
+// Populate shortcut key displays in the shortcuts view
+function populateShortcutKeys() {
+  const platform = isMac() ? 'mac' : 'win';
+
+  Object.entries(SHORTCUTS).forEach(([action, keys]) => {
+    const element = document.getElementById(`shortcut-${action}`);
+    if (element) {
+      const keyList = keys[platform];
+      element.innerHTML = keyList.map(key => `<kbd>${key}</kbd>`).join(' ');
+    }
+  });
+}
+
+// Handle shortcut actions
+async function handleShortcutAction(action) {
+  const window = getCurrentWindow ? getCurrentWindow() : null;
+  if (!window) return;
+
+  switch (action) {
+    case 'toggle-visibility':
+      const isVisible = await window.isVisible();
+      if (isVisible) {
+        await window.hide();
+      } else {
+        await window.show();
+      }
+      break;
+
+    case 'opacity-down':
+      currentOpacity = Math.max(10, currentOpacity - 10);
+      await applyOpacity(currentOpacity);
+      break;
+
+    case 'opacity-up':
+      currentOpacity = Math.min(100, currentOpacity + 10);
+      await applyOpacity(currentOpacity);
+      break;
+
+    case 'height-down':
+      const sizeDown = await window.innerSize();
+      const scaleDown = await window.scaleFactor();
+      const logicalWidthDown = Math.round(sizeDown.width / scaleDown);
+      const logicalHeightDown = Math.round(sizeDown.height / scaleDown);
+      const minHeight = 300; // Match minHeight from tauri.conf.json
+      if (logicalHeightDown > minHeight) {
+        const newHeightDown = Math.max(minHeight, logicalHeightDown - 50);
+        await window.setSize({ width: logicalWidthDown, height: newHeightDown, type: 'Logical' });
+      }
+      break;
+
+    case 'height-up':
+      const sizeUp = await window.innerSize();
+      const scaleUp = await window.scaleFactor();
+      const logicalWidthUp = Math.round(sizeUp.width / scaleUp);
+      const logicalHeightUp = Math.round(sizeUp.height / scaleUp);
+      const newHeightUp = logicalHeightUp + 50;
+      await window.setSize({ width: logicalWidthUp, height: newHeightUp, type: 'Logical' });
+      break;
+
+    case 'move-left':
+      const posLeft = await window.outerPosition();
+      await window.setPosition({ x: posLeft.x - 50, y: posLeft.y, type: 'Physical' });
+      break;
+
+    case 'move-right':
+      const posRight = await window.outerPosition();
+      await window.setPosition({ x: posRight.x + 50, y: posRight.y, type: 'Physical' });
+      break;
+
+    case 'move-up':
+      const posUp = await window.outerPosition();
+      await window.setPosition({ x: posUp.x, y: posUp.y - 50, type: 'Physical' });
+      break;
+
+    case 'move-down':
+      const posDown = await window.outerPosition();
+      await window.setPosition({ x: posDown.x, y: posDown.y + 50, type: 'Physical' });
+      break;
+
+    case 'timer-toggle':
+      if (timerState === 'running') {
+        pauseTimerCountdown();
+      } else {
+        startTimerCountdown();
+      }
+      break;
+
+    case 'timer-reset':
+      resetTimerCountdown();
+      break;
+  }
+}
+
+// Apply opacity change from shortcut
+async function applyOpacity(value) {
+  document.documentElement.style.setProperty('--bg-opacity', value / 100);
+  if (opacitySlider) opacitySlider.value = value;
+  if (opacityValue) opacityValue.textContent = `${value}%`;
+  await storeValue(STORAGE_KEYS.SETTINGS_OPACITY, value);
+}
+
+// Setup shortcut event listener
+async function setupShortcutListener() {
+  if (!listen) return;
+
+  await listen("shortcut-triggered", (event) => {
+    const action = event.payload;
+    console.log("Shortcut triggered:", action);
+    handleShortcutAction(action);
+  });
 }

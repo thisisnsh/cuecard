@@ -9,10 +9,18 @@
     "core:default",
     "core:window:allow-close",
     "core:window:allow-start-dragging",
+    "core:window:allow-set-size",
+    "core:window:allow-outer-position",
+    "core:window:allow-set-position",
+    "core:window:allow-outer-size",
+    "core:window:allow-show",
+    "core:window:allow-hide",
+    "core:window:allow-is-visible",
     "core:window:deny-internal-toggle-maximize",
     "opener:default",
     "store:default",
     "updater:default",
-    "process:default"
+    "process:default",
+    "global-shortcut:default"
   ]
 }
