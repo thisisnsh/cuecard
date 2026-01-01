@@ -286,7 +286,7 @@ body {
   color: var(--text-secondary);
   line-height: 1.2;
   padding-top: 24px;
-  padding-bottom: calc(100vh - 100px);
+  padding-bottom: 24px;
   white-space: pre-wrap;
   word-wrap: break-word;
   overflow-y: auto;
@@ -310,7 +310,7 @@ body {
   caret-color: var(--text-secondary);
   line-height: 1.2;
   padding-top: 24px;
-  padding-bottom: calc(100vh - 100px);
+  padding-bottom: 24px;
   position: relative;
   z-index: 1;
   -webkit-overflow-scrolling: touch;
@@ -414,7 +414,7 @@ body {
   white-space: pre-wrap;
   word-wrap: break-word;
   padding-top: 24px;
-  padding-bottom: calc(100vh - 100px);
+  padding-bottom: 24px;
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;

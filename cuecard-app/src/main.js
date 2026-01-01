@@ -850,6 +850,14 @@ function getScrollContainer() {
 function startAutoScroll() {
   if (autoScrollSpeed <= 0 || autoScrollAnimationId !== null) return;
 
+  const container = getScrollContainer();
+  if (!container) return;
+  const maxScroll = container.scrollHeight - container.clientHeight;
+  if (maxScroll <= 0) {
+    autoScrollAccumulator = 0;
+    return;
+  }
+
   const speed = autoScrollSpeed;
 
   // Reset accumulator when starting
@@ -866,6 +874,10 @@ function startAutoScroll() {
       const container = getScrollContainer();
       if (container) {
         const maxScroll = container.scrollHeight - container.clientHeight;
+        if (maxScroll <= 0) {
+          stopAutoScroll();
+          return;
+        }
         if (container.scrollTop < maxScroll) {
           // Accumulate fractional scroll values
           autoScrollAccumulator += speed;
@@ -1417,6 +1429,7 @@ function handleSlideUpdate(data, autoShow = false) {
     // If viewing notes and slide changed, reset timer and start fresh
     if (currentView === 'notes' && isNewSlide) {
       stopAllTimers();
+      stopAutoScroll();
       timerState = 'stopped';
     }
 
@@ -1614,6 +1627,13 @@ function truncateText(text, maxLength = 35) {
 function displayNotes(text, slideData = null) {
   const highlighted = highlightNotes(text);
   notesContent.innerHTML = highlighted;
+  if (notesContent) {
+    notesContent.scrollTop = 0;
+  }
+  if (currentView === 'notes' && timerState === 'running') {
+    stopAutoScroll();
+    startAutoScroll();
+  }
 
   // Update slide info if available
   if (slideData) {
