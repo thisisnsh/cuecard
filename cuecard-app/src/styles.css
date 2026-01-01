@@ -748,7 +748,7 @@ weight and line-height across buttons/links/separators
 }
 
 .header-timer.time-countup {
-  color: var(--text-secondary);
+  color: var(--text-primary);
 }
 
 .header-timer.time-warning {
