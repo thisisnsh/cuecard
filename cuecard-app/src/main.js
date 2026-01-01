@@ -394,20 +394,19 @@ async function hasScope(scopeType) {
 let btnClose, btnDownloadUpdates, downloadUpdatesSeparator;
 let authBtn;
 let appContainer, appHeader, appHeaderTitle, viewInitial, viewAddNotes, viewNotes, viewSettings, viewShortcuts;
-let linkGoBack, backSeparator;
+let linkGoBack;
 let notesInput, notesContent;
 let welcomeHeading, welcomeSubtext;
-let bugLink, websiteLink, websiteSeparator, supportLink, supportSeparator;
-let settingsLink, settingsSeparator;
-let shortcutsLink, shortcutsSeparator;
-let refreshBtn, refreshSeparator;
+let bugLink, websiteLink, supportLink;
+let settingsLink;
+let shortcutsLink;
+let refreshBtn;
 let notesInputHighlight;
-let timerSeparator, timerStartSeparator, timerPauseSeparator;
 let btnStart, btnPause, btnReset;
 let opacitySlider, opacityValue, ghostModeToggle;
 let scrollSpeedSlider, scrollSpeedValue;
 let themeSystemBtn, themeLightBtn, themeDarkBtn;
-let editNoteBtn, editNoteSeparator;
+let editNoteBtn;
 let notesInputWrapper;
 let ghostModeIndicator;
 let headerTimer;
@@ -484,26 +483,17 @@ window.addEventListener("DOMContentLoaded", async () => {
   viewSettings = document.getElementById("view-settings");
   viewShortcuts = document.getElementById("view-shortcuts");
   linkGoBack = document.getElementById("link-go-back");
-  backSeparator = document.getElementById("back-separator");
   notesInput = document.getElementById("notes-input");
   notesContent = document.getElementById("notes-content");
   welcomeHeading = document.getElementById("welcome-heading");
   welcomeSubtext = document.getElementById("welcome-subtext");
   bugLink = document.getElementById("bug-link");
   websiteLink = document.getElementById("website-link");
-  websiteSeparator = document.getElementById("website-separator");
   supportLink = document.getElementById("support-link");
-  supportSeparator = document.getElementById("support-separator");
   settingsLink = document.getElementById("settings-link");
-  settingsSeparator = document.getElementById("settings-separator");
   shortcutsLink = document.getElementById("shortcuts-link");
-  shortcutsSeparator = document.getElementById("shortcuts-separator");
   refreshBtn = document.getElementById("refresh-btn");
-  refreshSeparator = document.getElementById("refresh-separator");
   notesInputHighlight = document.getElementById("notes-input-highlight");
-  timerSeparator = document.getElementById("timer-separator");
-  timerStartSeparator = document.getElementById("timer-start-separator");
-  timerPauseSeparator = document.getElementById("timer-pause-separator");
   btnStart = document.getElementById("btn-start");
   btnPause = document.getElementById("btn-pause");
   btnReset = document.getElementById("btn-reset");
@@ -516,7 +506,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   themeLightBtn = document.getElementById("theme-light");
   themeDarkBtn = document.getElementById("theme-dark");
   editNoteBtn = document.getElementById("edit-note-btn");
-  editNoteSeparator = document.getElementById("edit-note-separator");
   notesInputWrapper = document.querySelector(".notes-input-wrapper");
   ghostModeIndicator = document.getElementById("ghost-mode-indicator");
   headerTimer = document.getElementById("header-timer");
@@ -1149,6 +1138,30 @@ function updateHeaderTimerVisibility() {
   headerTimer.classList.toggle('hidden', !shouldShowHeaderTimer);
 }
 
+// Update footer separators - add .has-separator class to visible items that follow other visible items
+function updateFooterSeparators() {
+  const footerLeft = document.querySelector('.footer-left');
+  const footerRight = document.querySelector('.footer-right');
+
+  [footerLeft, footerRight].forEach(container => {
+    if (!container) return;
+
+    const children = Array.from(container.children);
+    let foundFirstVisible = false;
+
+    children.forEach(child => {
+      child.classList.remove('has-separator');
+
+      if (!child.classList.contains('hidden')) {
+        if (foundFirstVisible) {
+          child.classList.add('has-separator');
+        }
+        foundFirstVisible = true;
+      }
+    });
+  });
+}
+
 // Update timer button visibility based on state
 function updateTimerButtonVisibility() {
   if (!btnStart || !btnPause || !btnReset) return;
@@ -1167,45 +1180,35 @@ function updateTimerButtonVisibility() {
 
   // Show timer controls only when there's content with time pattern
   if (shouldShowTimers) {
-    // Show appropriate buttons and separators based on timer state
+    // Show appropriate buttons based on timer state
     switch (timerState) {
       case 'stopped':
         // Initial state: show Start only
         btnStart.classList.remove('hidden');
-        timerStartSeparator.classList.remove('hidden');
         btnPause.classList.add('hidden');
-        timerPauseSeparator.classList.add('hidden');
         btnReset.classList.add('hidden');
-        timerSeparator.classList.add('hidden');
         break;
       case 'running':
         // Running: show Pause and Reset
         btnStart.classList.add('hidden');
-        timerStartSeparator.classList.add('hidden');
         btnPause.classList.remove('hidden');
-        timerPauseSeparator.classList.remove('hidden');
         btnReset.classList.remove('hidden');
-        timerSeparator.classList.remove('hidden');
         break;
       case 'paused':
         // Paused: show Start and Reset
         btnStart.classList.remove('hidden');
-        timerStartSeparator.classList.remove('hidden');
         btnPause.classList.add('hidden');
-        timerPauseSeparator.classList.add('hidden');
         btnReset.classList.remove('hidden');
-        timerSeparator.classList.remove('hidden');
         break;
     }
   } else {
     // Hide all timer controls
     btnStart.classList.add('hidden');
-    timerStartSeparator.classList.add('hidden');
     btnPause.classList.add('hidden');
-    timerPauseSeparator.classList.add('hidden');
     btnReset.classList.add('hidden');
-    timerSeparator.classList.add('hidden');
   }
+
+  updateFooterSeparators();
 }
 
 // =============================================================================
@@ -1298,14 +1301,13 @@ function toggleEditMode() {
 
 // Update edit note button visibility
 function updateEditNoteButtonVisibility() {
-  if (!editNoteBtn || !editNoteSeparator) return;
+  if (!editNoteBtn) return;
 
   const hasContent = notesInput.value.trim();
 
   // Only show button in add-notes view when there's content
   if (currentView === 'add-notes' && hasContent) {
     editNoteBtn.classList.remove('hidden');
-    editNoteSeparator.classList.remove('hidden');
 
     // If content was just added (transitioning from empty to non-empty),
     // start in edit mode (editable, not highlighted)
@@ -1321,7 +1323,6 @@ function updateEditNoteButtonVisibility() {
     }
   } else {
     editNoteBtn.classList.add('hidden');
-    editNoteSeparator.classList.add('hidden');
 
     // Reset to edit mode when content is cleared
     if (!hasContent) {
@@ -1330,6 +1331,8 @@ function updateEditNoteButtonVisibility() {
       notesInput.readOnly = false;
     }
   }
+
+  updateFooterSeparators();
 }
 
 function trimSpacesPreserveNewlines(text) {
@@ -1699,15 +1702,13 @@ async function showView(viewName) {
   // Show/hide the back button in footer based on view
   if (viewName === 'add-notes' || viewName === 'notes' || viewName === 'settings' || viewName === 'shortcuts') {
     linkGoBack.classList.remove('hidden');
-    backSeparator.classList.remove('hidden');
   } else {
     linkGoBack.classList.add('hidden');
-    backSeparator.classList.add('hidden');
   }
 
-  // Show settings link and separator
+  // Show settings and shortcuts links
   settingsLink.classList.remove('hidden');
-  settingsSeparator.classList.remove('hidden');
+  shortcutsLink.classList.remove('hidden');
 
   if (btnClose && appHeaderTitle && headerTimer) {
     const isSettingsView = viewName === 'settings';
@@ -1732,48 +1733,34 @@ async function showView(viewName) {
   if (viewName === 'initial') {
     // Initial view: show Visit Site, Settings
     websiteLink.classList.remove('hidden');
-    websiteSeparator.classList.add('hidden');
     supportLink.classList.add('hidden');
-    supportSeparator.classList.add('hidden');
     bugLink.classList.add('hidden');
   } else if (viewName === 'settings') {
     // Settings view: show Support, Report Bug (no Settings button or Visit Site)
     websiteLink.classList.add('hidden');
-    websiteSeparator.classList.add('hidden');
     supportLink.classList.remove('hidden');
-    supportSeparator.classList.remove('hidden');
     bugLink.classList.remove('hidden');
     settingsLink.classList.add('hidden');
-    settingsSeparator.classList.add('hidden');
     shortcutsLink.classList.add('hidden');
-    shortcutsSeparator.classList.add('hidden');
   } else if (viewName === 'shortcuts') {
     // Shortcuts view: hide all footer links except go back
     websiteLink.classList.add('hidden');
-    websiteSeparator.classList.add('hidden');
     supportLink.classList.add('hidden');
-    supportSeparator.classList.add('hidden');
     bugLink.classList.add('hidden');
     settingsLink.classList.add('hidden');
-    settingsSeparator.classList.add('hidden');
     shortcutsLink.classList.add('hidden');
-    shortcutsSeparator.classList.add('hidden');
   } else {
     // Notes and Add-Notes views: hide all footer links except go back
     websiteLink.classList.add('hidden');
-    websiteSeparator.classList.add('hidden');
     supportLink.classList.add('hidden');
-    supportSeparator.classList.add('hidden');
     bugLink.classList.add('hidden');
   }
 
   // Show/hide slide info and refresh button based on view and slide data
   if (viewName === 'notes' && currentSlideData) {
     refreshBtn.classList.remove('hidden');
-    refreshSeparator.classList.remove('hidden');
   } else {
     refreshBtn.classList.add('hidden');
-    refreshSeparator.classList.add('hidden');
   }
 
   // Update timer button visibility
@@ -1849,6 +1836,8 @@ async function showView(viewName) {
   if (previousView === 'settings' && (viewName === 'add-notes' || viewName === 'notes')) {
     resumeAnimationsAfterSettings();
   }
+
+  updateFooterSeparators();
 }
 
 // Truncate text to max length with ellipsis
@@ -1876,14 +1865,12 @@ function displayNotes(text, slideData = null) {
     // Show slide info and refresh button in footer when there's slide data
     if (currentView === 'notes') {
       refreshBtn.classList.remove('hidden');
-      refreshSeparator.classList.remove('hidden');
     }
   } else {
     window.title = 'No Slide Open';
 
     // Hide slide info and refresh button when no slide
     refreshBtn.classList.add('hidden');
-    refreshSeparator.classList.add('hidden');
   }
 
   // Update timer button visibility
@@ -2362,7 +2349,7 @@ function setupSettings() {
 
 function updateGhostModeIndicator() {
   if (!ghostModeIndicator) return;
-  ghostModeIndicator.textContent = `Ghost Mode: ${ghostMode ? 'On' : 'Off'}`;
+  ghostModeIndicator.textContent = `Ghost Mode ${ghostMode ? 'Enabled' : 'Disabled'}`;
 }
 
 // Load current settings values
