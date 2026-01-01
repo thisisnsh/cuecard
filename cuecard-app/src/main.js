@@ -421,6 +421,7 @@ let timerState = 'stopped'; // 'stopped', 'running', 'paused'
 let timerIntervals = []; // Store all timer interval IDs
 let autoScrollAnimationId = null; // Store auto-scroll animation frame ID
 let autoScrollAccumulator = 0; // Accumulator for sub-pixel scrolling
+let autoScrollPausedByHover = false; // Tracks if auto-scroll is paused due to hover
 let totalTimeSeconds = 0; // Total time from all [time] tags
 let remainingTimeSeconds = 0; // Current remaining time for countdown
 
@@ -518,6 +519,9 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   // Set up edit note button
   setupEditNoteButton();
+
+  // Set up auto-scroll hover listeners
+  setupAutoScrollHoverListeners();
 
   // Set up settings handlers
   setupSettings();
@@ -857,17 +861,20 @@ function startAutoScroll() {
       return;
     }
 
-    const container = getScrollContainer();
-    if (container) {
-      const maxScroll = container.scrollHeight - container.clientHeight;
-      if (container.scrollTop < maxScroll) {
-        // Accumulate fractional scroll values
-        autoScrollAccumulator += speed;
-        // Only update scrollTop when we have at least 1 pixel to scroll
-        if (autoScrollAccumulator >= 1) {
-          const pixelsToScroll = Math.floor(autoScrollAccumulator);
-          container.scrollTop += pixelsToScroll;
-          autoScrollAccumulator -= pixelsToScroll;
+    // Skip scrolling if paused by hover, but keep the animation loop running
+    if (!autoScrollPausedByHover) {
+      const container = getScrollContainer();
+      if (container) {
+        const maxScroll = container.scrollHeight - container.clientHeight;
+        if (container.scrollTop < maxScroll) {
+          // Accumulate fractional scroll values
+          autoScrollAccumulator += speed;
+          // Only update scrollTop when we have at least 1 pixel to scroll
+          if (autoScrollAccumulator >= 1) {
+            const pixelsToScroll = Math.floor(autoScrollAccumulator);
+            container.scrollTop += pixelsToScroll;
+            autoScrollAccumulator -= pixelsToScroll;
+          }
         }
       }
     }
@@ -885,6 +892,24 @@ function stopAutoScroll() {
     autoScrollAnimationId = null;
   }
   autoScrollAccumulator = 0;
+  autoScrollPausedByHover = false;
+}
+
+// Setup hover listeners to pause auto-scroll
+function setupAutoScrollHoverListeners() {
+  const containers = [notesInputHighlight, notesContent];
+
+  containers.forEach(container => {
+    if (!container) return;
+
+    container.addEventListener('mouseenter', () => {
+      autoScrollPausedByHover = true;
+    });
+
+    container.addEventListener('mouseleave', () => {
+      autoScrollPausedByHover = false;
+    });
+  });
 }
 
 // Check if text contains [time mm:ss] pattern
