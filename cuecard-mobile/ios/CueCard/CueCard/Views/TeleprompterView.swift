@@ -35,9 +35,9 @@ struct TeleprompterView: View {
     }
 
     private var timerColor: Color {
-        // Show neutral color during countdown
+        // Show pink color during countdown
         if isCountingDown {
-            return AppColors.textPrimary(for: colorScheme)
+            return AppColors.pink(for: colorScheme)
         }
         guard timerDuration > 0 else {
             return AppColors.textPrimary(for: colorScheme)
@@ -50,15 +50,15 @@ struct TeleprompterView: View {
     }
 
     private var timeDisplay: String {
-        // Show countdown if counting down
+        // Show countdown if counting down (in mm:ss format)
         if isCountingDown {
-            return "\(countdownValue)"
+            return " \(TeleprompterParser.formatTime(countdownValue)) "
         }
         if timerDuration > 0 {
             let remaining = timerDuration - Int(elapsedTime)
-            return TeleprompterParser.formatTime(remaining)
+            return " \(TeleprompterParser.formatTime(remaining)) "
         }
-        return TeleprompterParser.formatTime(Int(elapsedTime))
+        return " \(TeleprompterParser.formatTime(Int(elapsedTime))) "
     }
 
     var body: some View {
@@ -91,19 +91,6 @@ struct TeleprompterView: View {
                             resetControlsTimer()
                         }
                     )
-
-                    // Timer overlay (center top below nav bar)
-                    VStack {
-                        Text(timeDisplay)
-                            .font(.system(size: 20, weight: .bold, design: .monospaced))
-                            .foregroundStyle(timerColor)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 10)
-                            .glassedEffect(in: Capsule())
-                            .padding(.top, 8)
-
-                        Spacer()
-                    }
 
                     // Controls overlay
                     if showControls {
@@ -189,6 +176,11 @@ struct TeleprompterView: View {
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                     }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Text(timeDisplay)
+                        .font(.system(size: 16, weight: .bold, design: .monospaced))
+                        .foregroundStyle(timerColor)
                 }
             }
         }

@@ -308,8 +308,8 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
         let fontSize = CGFloat(settings.pipFontSize)
         let remainingTime = timerDuration > 0 ? timerDuration - Int(elapsedTime) : Int(elapsedTime)
 
-        // Show countdown value if counting down, otherwise show timer
-        let timerText = isCountingDown ? "\(countdownValue)" : TeleprompterParser.formatTime(remainingTime)
+        // Show countdown value if counting down (in mm:ss format), otherwise show timer
+        let timerText = isCountingDown ? TeleprompterParser.formatTime(countdownValue) : TeleprompterParser.formatTime(remainingTime)
 
         let wordsPerSecond = Double(settings.wordsPerMinute) / 60.0
         let highlightProgress = settings.autoScroll
@@ -325,7 +325,8 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
             remainingTime: remainingTime,
             currentWordIndex: currentWordIndex,
             highlightProgress: highlightProgress,
-            autoScroll: settings.autoScroll
+            autoScroll: settings.autoScroll,
+            isCountingDown: isCountingDown
         )
 
         pipContentView?.update(
@@ -337,7 +338,8 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
             remainingTime: remainingTime,
             currentWordIndex: currentWordIndex,
             highlightProgress: highlightProgress,
-            autoScroll: settings.autoScroll
+            autoScroll: settings.autoScroll,
+            isCountingDown: isCountingDown
         )
     }
 
@@ -400,6 +402,10 @@ extension TeleprompterPiPManager: AVPictureInPictureControllerDelegate {
 private class TeleprompterPiPContentView: UIView {
     private let textView = UITextView()
     private let timerLabel = UILabel()
+    private let topGradientView = UIView()
+    private let bottomGradientView = UIView()
+    private var topGradientLayer: CAGradientLayer?
+    private var bottomGradientLayer: CAGradientLayer?
     private var lastContentId: String = ""
     private var lastWordIndex: Int = -1
     private var lastProgressBucket: Double = -1
@@ -426,7 +432,7 @@ private class TeleprompterPiPContentView: UIView {
         textView.isScrollEnabled = true
         textView.showsVerticalScrollIndicator = false
         textView.backgroundColor = .clear
-        textView.textContainerInset = UIEdgeInsets(top: 8, left: 12, bottom: 12, right: 12)
+        textView.textContainerInset = UIEdgeInsets(top: 40, left: 12, bottom: 40, right: 12)
         textView.textContainer.lineFragmentPadding = 0
         textView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(textView)
@@ -438,6 +444,15 @@ private class TeleprompterPiPContentView: UIView {
         timerLabel.translatesAutoresizingMaskIntoConstraints = false
         addSubview(timerLabel)
 
+        // Setup gradient views for fade effect
+        topGradientView.translatesAutoresizingMaskIntoConstraints = false
+        topGradientView.isUserInteractionEnabled = false
+        addSubview(topGradientView)
+
+        bottomGradientView.translatesAutoresizingMaskIntoConstraints = false
+        bottomGradientView.isUserInteractionEnabled = false
+        addSubview(bottomGradientView)
+
         NSLayoutConstraint.activate([
             timerLabel.topAnchor.constraint(equalTo: topAnchor, constant: 6),
             timerLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
@@ -447,15 +462,56 @@ private class TeleprompterPiPContentView: UIView {
             textView.topAnchor.constraint(equalTo: timerLabel.bottomAnchor, constant: 4),
             textView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 8),
             textView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -8),
-            textView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -8)
+            textView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -8),
+
+            // Top gradient - starts at top of textView
+            topGradientView.topAnchor.constraint(equalTo: textView.topAnchor),
+            topGradientView.leadingAnchor.constraint(equalTo: textView.leadingAnchor),
+            topGradientView.trailingAnchor.constraint(equalTo: textView.trailingAnchor),
+            topGradientView.heightAnchor.constraint(equalToConstant: 40),
+
+            // Bottom gradient
+            bottomGradientView.bottomAnchor.constraint(equalTo: textView.bottomAnchor),
+            bottomGradientView.leadingAnchor.constraint(equalTo: textView.leadingAnchor),
+            bottomGradientView.trailingAnchor.constraint(equalTo: textView.trailingAnchor),
+            bottomGradientView.heightAnchor.constraint(equalToConstant: 40)
         ])
 
         updateColors()
     }
 
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        topGradientLayer?.frame = topGradientView.bounds
+        bottomGradientLayer?.frame = bottomGradientView.bounds
+    }
+
     private func updateColors() {
-        backgroundColor = isDarkMode ? AppColors.UIColors.Dark.background : AppColors.UIColors.Light.background
+        let bgColor = isDarkMode ? AppColors.UIColors.Dark.background : AppColors.UIColors.Light.background
+        backgroundColor = bgColor
         textView.textColor = isDarkMode ? AppColors.UIColors.Dark.textPrimary : AppColors.UIColors.Light.textPrimary
+
+        // Update top gradient (fades from background to transparent)
+        topGradientLayer?.removeFromSuperlayer()
+        let topGradient = CAGradientLayer()
+        topGradient.colors = [bgColor.cgColor, bgColor.withAlphaComponent(0).cgColor]
+        topGradient.locations = [0.0, 1.0]
+        topGradient.startPoint = CGPoint(x: 0.5, y: 0.0)
+        topGradient.endPoint = CGPoint(x: 0.5, y: 1.0)
+        topGradient.frame = topGradientView.bounds
+        topGradientView.layer.addSublayer(topGradient)
+        topGradientLayer = topGradient
+
+        // Update bottom gradient (fades from transparent to background)
+        bottomGradientLayer?.removeFromSuperlayer()
+        let bottomGradient = CAGradientLayer()
+        bottomGradient.colors = [bgColor.withAlphaComponent(0).cgColor, bgColor.cgColor]
+        bottomGradient.locations = [0.0, 1.0]
+        bottomGradient.startPoint = CGPoint(x: 0.5, y: 0.0)
+        bottomGradient.endPoint = CGPoint(x: 0.5, y: 1.0)
+        bottomGradient.frame = bottomGradientView.bounds
+        bottomGradientView.layer.addSublayer(bottomGradient)
+        bottomGradientLayer = bottomGradient
     }
 
     func update(
@@ -467,7 +523,8 @@ private class TeleprompterPiPContentView: UIView {
         remainingTime: Int,
         currentWordIndex: Int,
         highlightProgress: Double,
-        autoScroll: Bool
+        autoScroll: Bool,
+        isCountingDown: Bool = false
     ) {
         let contentId = text
         let progressBucket = (highlightProgress * 10).rounded(.down) / 10
@@ -513,11 +570,15 @@ private class TeleprompterPiPContentView: UIView {
         }
 
         timerLabel.text = " \(timerText) "
-        timerLabel.textColor = AppColors.timerUIColor(
-            remainingSeconds: remainingTime,
-            totalSeconds: timerDuration,
-            isDarkMode: isDarkMode
-        )
+        if isCountingDown {
+            timerLabel.textColor = isDarkMode ? AppColors.UIColors.Dark.pink : AppColors.UIColors.Light.pink
+        } else {
+            timerLabel.textColor = AppColors.timerUIColor(
+                remainingSeconds: remainingTime,
+                totalSeconds: timerDuration,
+                isDarkMode: isDarkMode
+            )
+        }
         timerLabel.backgroundColor = (isDarkMode ? AppColors.UIColors.Dark.background : AppColors.UIColors.Light.background).withAlphaComponent(0.8)
     }
 
