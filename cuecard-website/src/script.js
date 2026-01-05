@@ -816,17 +816,7 @@ function displayDownloadAssets(assets) {
         }
     });
 
-    // Add iOS and Android "Coming Soon" cards
-    grid.appendChild(createComingSoonCard('ios', {
-        name: 'iOS',
-        subtitle: 'iPhone & iPad',
-        icon: getAppleIcon()
-    }));
-    grid.appendChild(createComingSoonCard('android', {
-        name: 'Android',
-        subtitle: 'Phones & Tablets',
-        icon: getAndroidIcon()
-    }));
+    // Mobile cards removed from main download grid
 }
 
 function groupAssetsByPlatform(assets) {
@@ -1135,7 +1125,7 @@ function getAppleIcon() {
 
 function getAndroidIcon() {
     return `<svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32">
-        <path d="M17.6 9.48l1.84-3.18c.16-.31.04-.69-.26-.85-.29-.15-.65-.06-.83.22l-1.88 3.24c-1.4-.59-2.94-.92-4.47-.92s-3.07.33-4.47.92L5.65 5.67c-.19-.29-.54-.38-.83-.22-.31.16-.43.54-.26.85L6.4 9.48C3.3 11.25 1.28 14.44 1 18h22c-.28-3.56-2.3-6.75-5.4-8.52zM7 15.25c-.69 0-1.25-.56-1.25-1.25S6.31 12.75 7 12.75s1.25.56 1.25 1.25-.56 1.25-1.25 1.25zm10 0c-.69 0-1.25-.56-1.25-1.25s.56-1.25 1.25-1.25 1.25.56 1.25 1.25-.56 1.25-1.25 1.25z"/>
+        <path d="M17.6 9.48l1.43-2.49a.25.25 0 0 0-.09-.34.25.25 0 0 0-.34.09l-1.45 2.5A7.007 7.007 0 0 0 12 8c-1.84 0-3.55.7-4.8 1.84L5.75 7.09a.25.25 0 0 0-.34-.09.25.25 0 0 0-.09.34l1.43 2.49A5.987 5.987 0 0 0 4 14.5V19c0 .55.45 1 1 1h1v2c0 .55.45 1 1 1s1-.45 1-1v-2h8v2c0 .55.45 1 1 1s1-.45 1-1v-2h1c.55 0 1-.45 1-1v-4.5c0-1.56-.6-3-1.6-4.02zM8 14a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm8 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
     </svg>`;
 }
 

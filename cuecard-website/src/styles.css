@@ -52,6 +52,9 @@
     /* Glass blur */
     --blur-glass: 20px;
     --blur-glass-strong: 30px;
+
+    --nav-height: 64px;
+    --banner-height: 36px;
 }
 
 /* Reset & Base */
@@ -158,7 +161,7 @@ a:hover {
 /* Navigation - Rounded Rectangle with Margins */
 .nav {
     position: fixed;
-    top: var(--space-md);
+    top: calc(var(--space-md) + var(--banner-height));
     left: var(--space-lg);
     right: var(--space-lg);
     z-index: 100;
@@ -166,6 +169,7 @@ a:hover {
     justify-content: space-between;
     align-items: center;
     padding: var(--space-md) var(--space-lg);
+    min-height: var(--nav-height);
     background: var(--glass-bg);
     backdrop-filter: blur(var(--blur-glass-strong));
     -webkit-backdrop-filter: blur(var(--blur-glass-strong));
@@ -216,6 +220,49 @@ a:hover {
 
 .nav-link:hover {
     color: var(--text-secondary);
+}
+
+.nav-secondary {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 120;
+    height: var(--banner-height);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 var(--space-lg);
+}
+
+.nav-secondary-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    height: 100%;
+    padding: 0 var(--space-lg);
+    border-radius: 0;
+    border: 1px solid var(--glass-border);
+    border-top: none;
+    border-bottom-left-radius: var(--radius-md);
+    border-bottom-right-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(var(--blur-glass-strong));
+    -webkit-backdrop-filter: blur(var(--blur-glass-strong));
+    color: var(--text-primary);
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: all var(--transition-fast);
+    letter-spacing: 0.01em;
+}
+
+.nav-secondary-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.nav-secondary-text-mobile {
+    display: none;
 }
 
 .download-link {
@@ -1382,6 +1429,11 @@ main {
     margin: 0 auto;
 }
 
+.faq.faq-followup {
+    padding-top: 0;
+    margin-top: calc(var(--space-3xl) * -1);
+}
+
 .faq-list {
     display: flex;
     flex-direction: column;
@@ -1991,6 +2043,11 @@ main {
 }
 
 @media (max-width: 768px) {
+    :root {
+        --nav-height: 56px;
+        --banner-height: 32px;
+    }
+
     .mobile-br {
         display: inline;
     }
@@ -2011,6 +2068,28 @@ main {
         right: var(--space-md);
     }
 
+    .nav-secondary {
+        left: 0;
+        right: 0;
+        padding: 0;
+    }
+
+    .nav-secondary-btn {
+        width: 100%;
+        padding: 0 var(--space-md);
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+    }
+
+    .nav-secondary-text {
+        display: none;
+    }
+
+    .nav-secondary-text-mobile {
+        display: inline;
+    }
+
     .nav-links {
         gap: var(--space-md);
     }
@@ -2024,11 +2103,13 @@ main {
     }
 
     .hero {
-        padding: calc(var(--space-3xl) + 40px) var(--space-xl) var(--space-2xl);
+        padding: calc(var(--space-3xl) + var(--banner-height) + 24px) var(--space-xl) var(--space-2xl);
+        gap: var(--space-lg);
     }
 
     .hero-gif-card {
         padding: var(--space-md);
+        margin-bottom: 0;
     }
 
     .feature-card {
@@ -2040,19 +2121,24 @@ main {
         max-width: 90%;
         margin-left: auto;
         margin-right: auto;
-        padding-top: var(--space-xl);
+        padding-top: 0;
+        margin-bottom: 0;
     }
 
     .hero-tagline {
         max-width: 90%;
         margin-left: auto;
         margin-right: auto;
+        margin-top: 0;
+        margin-bottom: 0;
     }
 
     .hero-note {
         max-width: 90%;
         margin-left: auto;
         margin-right: auto;
+        margin-top: 0;
+        margin-bottom: 0;
     }
 
     /* Hide mobile-br in hero-note only */
@@ -2065,6 +2151,7 @@ main {
         width: 100%;
         max-width: 300px;
         gap: var(--space-sm);
+        margin-top: 0;
     }
 
     .btn {
@@ -2080,6 +2167,22 @@ main {
 
     #hero-source-btn {
         flex: 0 0 auto;
+        padding: var(--space-md);
+    }
+
+    .hero .app-store-buttons {
+        margin-top: 0;
+    }
+
+    .hero .app-screenshots {
+        margin: 0 auto;
+    }
+
+    .view-source-btn span {
+        display: none;
+    }
+
+    .view-source-btn {
         padding: var(--space-md);
     }
 
@@ -2176,30 +2279,47 @@ main {
     display: flex;
     justify-content: center;
     gap: var(--space-lg);
-    margin: var(--space-xl) 0;
+    margin: var(--space-xl) auto;
     flex-wrap: wrap;
+    width: 100%;
+    max-width: 1100px;
+    align-self: stretch;
 }
 
-.app-screenshot {
+.app-screenshot-card {
     width: 280px;
     max-width: 100%;
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--blur-glass-strong));
+    -webkit-backdrop-filter: blur(var(--blur-glass-strong));
+    border: 1px solid var(--glass-border);
     border-radius: var(--radius-lg);
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-    transition: transform var(--transition-medium);
+    padding: var(--space-sm);
+    box-shadow: 0 8px 32px var(--glass-shadow);
+    transition: all var(--transition-medium);
+    overflow: hidden;
+    cursor: pointer;
+    will-change: transform;
     opacity: 0;
     transform: translateY(40px);
     animation: slideUp 0.6s ease-out forwards;
 }
 
-.app-screenshot:nth-child(1) {
+.app-screenshot {
+    width: 100%;
+    display: block;
+    border-radius: var(--radius-md);
+}
+
+.app-screenshot-card:nth-child(1) {
     animation-delay: 0.1s;
 }
 
-.app-screenshot:nth-child(2) {
+.app-screenshot-card:nth-child(2) {
     animation-delay: 0.2s;
 }
 
-.app-screenshot:nth-child(3) {
+.app-screenshot-card:nth-child(3) {
     animation-delay: 0.3s;
 }
 
@@ -2210,18 +2330,37 @@ main {
     }
 }
 
-.app-screenshot:hover {
-    transform: translateY(-8px) scale(1.02);
+.app-screenshot-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 16px 48px var(--glass-shadow);
 }
+
 
 @media (max-width: 768px) {
     .app-screenshots {
-        flex-direction: column;
-        align-items: center;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        width: 100vw;
+        margin-left: calc(50% - 50vw);
+        margin-right: calc(50% - 50vw);
+        padding: 0 calc(50vw - 120px) var(--space-sm);
+        scroll-padding-inline: calc(50vw - 120px);
+        min-width: 100%;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
     }
 
-    .app-screenshot {
+    .app-screenshots::-webkit-scrollbar {
+        display: none;
+    }
+
+    .app-screenshot-card {
         width: 240px;
+        flex: 0 0 auto;
+        scroll-snap-align: center;
     }
 }
 
@@ -2249,6 +2388,7 @@ main {
     font-size: 1rem;
     transition: all var(--transition-fast);
     text-decoration: none;
+    min-height: 48px;
 }
 
 .app-store-btn:hover {
@@ -2260,6 +2400,22 @@ main {
 .app-store-btn svg {
     width: 20px;
     height: 20px;
+}
+
+.app-store-buttons .btn {
+    min-height: 48px;
+    justify-content: center;
+}
+
+.app-store-label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    white-space: nowrap;
+}
+
+.app-store-name {
+    font-weight: 600;
 }
 
 .app-store-btn.coming-soon {
@@ -2285,7 +2441,7 @@ main {
 /* App Features Grid */
 .app-features-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: var(--space-lg);
     margin-top: var(--space-xl);
 }
@@ -2317,10 +2473,10 @@ main {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: rgba(25, 195, 50, 0.1);
+    background: rgba(254, 188, 46, 0.12);
     border-radius: 50%;
     margin-bottom: var(--space-md);
-    color: var(--accent-green);
+    color: var(--accent-yellow);
 }
 
 .app-feature-title {
@@ -2342,6 +2498,14 @@ main {
     }
 
     .app-store-buttons {
-        flex-direction: column;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .app-store-btn,
+    .app-store-buttons .btn {
+        width: auto;
+        max-width: none;
     }
 }

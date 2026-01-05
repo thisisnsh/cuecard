@@ -22,3 +22,13 @@
         {% endif %}
     </div>
 </nav>
+{% if navCtaText %}
+<div class="nav-secondary">
+    <a href="{{ navCtaHref or '#' }}" class="nav-secondary-btn">
+        <span class="nav-secondary-text">{{ navCtaText }}</span>
+        {% if navCtaTextMobile %}
+        <span class="nav-secondary-text-mobile">{{ navCtaTextMobile }}</span>
+        {% endif %}
+    </a>
+</div>
+{% endif %}

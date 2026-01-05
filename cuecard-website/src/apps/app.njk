@@ -87,21 +87,19 @@ layout: layouts/mobile-app.njk
         {% elif app.platform == "android" %}
         <a href="#download" class="nav-link download-link">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M17.523 15h-11.046c-.258 0-.477-.19-.477-.447v-7.106c0-.258.219-.447.477-.447h11.046c.258 0 .477.189.477.447v7.106c0 .257-.219.447-.477.447zm-5.523-11.5l1.5 2.5h-3l1.5-2.5zm-4 2.5h-.5c-.276 0-.5.224-.5.5v.5h1v-1zm9 0h-.5v1h1v-.5c0-.276-.224-.5-.5-.5zm-10 10v2c0 .553.447 1 1 1h1v1.5c0 .553.447 1 1 1s1-.447 1-1v-1.5h2v1.5c0 .553.447 1 1 1s1-.447 1-1v-1.5h1c.553 0 1-.447 1-1v-2h-10zm-2-7v5c0 .553.447 1 1 1s1-.447 1-1v-5c0-.553-.447-1-1-1s-1 .447-1 1zm13 0v5c0 .553.447 1 1 1s1-.447 1-1v-5c0-.553-.447-1-1-1s-1 .447-1 1z"/>
+                <path d="M17.6 9.48l1.43-2.49a.25.25 0 0 0-.09-.34.25.25 0 0 0-.34.09l-1.45 2.5A7.007 7.007 0 0 0 12 8c-1.84 0-3.55.7-4.8 1.84L5.75 7.09a.25.25 0 0 0-.34-.09.25.25 0 0 0-.09.34l1.43 2.49A5.987 5.987 0 0 0 4 14.5V19c0 .55.45 1 1 1h1v2c0 .55.45 1 1 1s1-.45 1-1v-2h8v2c0 .55.45 1 1 1s1-.45 1-1v-2h1c.55 0 1-.45 1-1v-4.5c0-1.56-.6-3-1.6-4.02zM8 14a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm8 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
             </svg>
             <span>Download for Android</span>
         </a>
         {% endif %}
-        <a href="/" class="nav-link">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                <line x1="8" y1="21" x2="16" y2="21"></line>
-                <line x1="12" y1="17" x2="12" y2="21"></line>
-            </svg>
-            <span>Try on Desktop</span>
-        </a>
     </div>
 </nav>
+<div class="nav-secondary">
+    <a href="/#download" class="nav-secondary-btn">
+        <span class="nav-secondary-text">Download for Mac or Windows</span>
+        <span class="nav-secondary-text-mobile">Download for Desktop</span>
+    </a>
+</div>
 
 <main>
     <!-- Hero Section -->
@@ -114,12 +112,6 @@ layout: layouts/mobile-app.njk
             {{ app.promotionalText }}
         </p>
 
-        <div class="app-screenshots">
-            <img src="/assets/app-ios1.jpg" alt="CueCard Teleprompter floating over camera" class="app-screenshot">
-            <img src="/assets/app-ios2.jpg" alt="CueCard with timer and notes" class="app-screenshot">
-            <img src="/assets/app-ios3.jpg" alt="CueCard features - resizable, floats over apps" class="app-screenshot">
-        </div>
-
         <!-- App Store Buttons -->
         <div class="app-store-buttons" id="download">
             {% if app.showIos %}
@@ -127,29 +119,39 @@ layout: layouts/mobile-app.njk
                 <svg viewBox="0 0 24 24" fill="currentColor">
                     <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
                 </svg>
-                <span>
-                    <span class="coming-soon-text">Coming Soon</span><br>
-                    App Store
+                <span class="app-store-label">
+                    <span class="app-store-name">App Store: Coming Soon</span>
                 </span>
             </a>
             {% endif %}
             {% if app.showAndroid %}
             <a href="#" class="app-store-btn coming-soon">
                 <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M17.523 15h-11.046c-.258 0-.477-.19-.477-.447v-7.106c0-.258.219-.447.477-.447h11.046c.258 0 .477.189.477.447v7.106c0 .257-.219.447-.477.447zm-5.523-11.5l1.5 2.5h-3l1.5-2.5zm-4 2.5h-.5c-.276 0-.5.224-.5.5v.5h1v-1zm9 0h-.5v1h1v-.5c0-.276-.224-.5-.5-.5zm-10 10v2c0 .553.447 1 1 1h1v1.5c0 .553.447 1 1 1s1-.447 1-1v-1.5h2v1.5c0 .553.447 1 1 1s1-.447 1-1v-1.5h1c.553 0 1-.447 1-1v-2h-10zm-2-7v5c0 .553.447 1 1 1s1-.447 1-1v-5c0-.553-.447-1-1-1s-1 .447-1 1zm13 0v5c0 .553.447 1 1 1s1-.447 1-1v-5c0-.553-.447-1-1-1s-1 .447-1 1z"/>
+                    <path d="M17.6 9.48l1.43-2.49a.25.25 0 0 0-.09-.34.25.25 0 0 0-.34.09l-1.45 2.5A7.007 7.007 0 0 0 12 8c-1.84 0-3.55.7-4.8 1.84L5.75 7.09a.25.25 0 0 0-.34-.09.25.25 0 0 0-.09.34l1.43 2.49A5.987 5.987 0 0 0 4 14.5V19c0 .55.45 1 1 1h1v2c0 .55.45 1 1 1s1-.45 1-1v-2h8v2c0 .55.45 1 1 1s1-.45 1-1v-2h1c.55 0 1-.45 1-1v-4.5c0-1.56-.6-3-1.6-4.02zM8 14a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm8 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
                 </svg>
-                <span>
-                    <span class="coming-soon-text">Coming Soon</span><br>
-                    Google Play
+                <span class="app-store-label">
+                    <span class="app-store-name">Google Play: Coming Soon</span>
                 </span>
             </a>
             {% endif %}
-            <a href="https://github.com/thisisnsh/cuecard" target="_blank" class="btn btn-secondary">
+            <a href="https://github.com/thisisnsh/cuecard" target="_blank" class="btn btn-secondary view-source-btn">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
                 </svg>
                 <span>View Source</span>
             </a>
+        </div>
+
+        <div class="app-screenshots">
+            <div class="app-screenshot-card">
+                <img src="/assets/app-ios1.jpg" alt="CueCard Teleprompter floating over camera" class="app-screenshot">
+            </div>
+            <div class="app-screenshot-card">
+                <img src="/assets/app-ios2.jpg" alt="CueCard with timer and notes" class="app-screenshot">
+            </div>
+            <div class="app-screenshot-card">
+                <img src="/assets/app-ios3.jpg" alt="CueCard features - resizable, floats over apps" class="app-screenshot">
+            </div>
         </div>
     </section>
 
@@ -164,7 +166,13 @@ layout: layouts/mobile-app.njk
             {% for feature in app.features %}
             <div class="app-feature-item">
                 <div class="app-feature-icon">
-                    {% if feature.icon == "layers" %}
+                    {% if feature.icon == "scroll" %}
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="7" y="2" width="10" height="20" rx="5"></rect>
+                        <path d="M12 7v4"></path>
+                        <path d="M10.5 16l1.5 1.5 1.5-1.5"></path>
+                    </svg>
+                    {% elif feature.icon == "layers" %}
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
                         <polyline points="2 17 12 22 22 17"></polyline>
@@ -192,6 +200,8 @@ layout: layouts/mobile-app.njk
         </div>
     </section>
 
+    {% include "partials/features.njk" %}
+
     <!-- FAQ Section -->
     <section class="faq">
         <div class="section-header">
@@ -215,24 +225,5 @@ layout: layouts/mobile-app.njk
     </section>
 </main>
 
-<footer class="footer">
-    <div class="footer-content">
-        <a href="/{{ app.slug }}/" class="footer-brand">
-            <img class="logo-icon" src="/assets/logo-circle.png" width="24" height="24" alt="" aria-hidden="true">
-            <span>CueCard</span>
-        </a>
-        <div class="footer-links">
-            <a href="/">Desktop App</a>
-            <span class="footer-divider">·</span>
-            <a href="/app/">Mobile App</a>
-            <span class="footer-divider">·</span>
-            <a href="mailto:support@cuecard.dev">Support</a>
-            <span class="footer-divider">·</span>
-            <a href="/privacy/">Privacy Policy</a>
-            <span class="footer-divider">·</span>
-            <a href="/terms/">Terms of Service</a>
-        </div>
-        <p class="footer-copy">&copy; 2025 CueCard. Open Source under MIT License.</p>
-    </div>
-</footer>
+{% include "partials/footer.njk" %}
 {% endblock %}

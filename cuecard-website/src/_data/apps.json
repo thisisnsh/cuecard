@@ -16,6 +16,11 @@
     "showAndroid": true,
     "features": [
       {
+        "title": "Auto-Scroll Teleprompter",
+        "description": "Auto-scroll your script at a comfortable pace so you can stay focused.",
+        "icon": "scroll"
+      },
+      {
         "title": "Floats Over All Apps",
         "description": "Your notes stay visible while using Camera, Instagram, TikTok, or any other app.",
         "icon": "layers"
@@ -66,6 +71,11 @@
     "showIos": true,
     "showAndroid": true,
     "features": [
+      {
+        "title": "Auto-Scroll Teleprompter",
+        "description": "Auto-scroll your script at a comfortable pace so you can stay focused.",
+        "icon": "scroll"
+      },
       {
         "title": "Floats Over All Apps",
         "description": "Your notes stay visible while using Camera, Instagram, TikTok, or any other app.",
@@ -118,6 +128,11 @@
     "showAndroid": false,
     "features": [
       {
+        "title": "Auto-Scroll Teleprompter",
+        "description": "Auto-scroll your script at a comfortable pace so you can stay focused.",
+        "icon": "scroll"
+      },
+      {
         "title": "Floats Over All Apps",
         "description": "Your notes stay visible while using Camera, Instagram, TikTok, or any other app.",
         "icon": "layers"
@@ -168,6 +183,11 @@
     "showIos": false,
     "showAndroid": true,
     "features": [
+      {
+        "title": "Auto-Scroll Teleprompter",
+        "description": "Auto-scroll your script at a comfortable pace so you can stay focused.",
+        "icon": "scroll"
+      },
       {
         "title": "Floats Over All Apps",
         "description": "Your notes stay visible while using Camera, Instagram, TikTok, or any other app.",

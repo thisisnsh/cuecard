@@ -90,6 +90,9 @@ ogLocale: "en_US"
 {% endblock %}
 
 {% block body %}
+{% set navCtaText = "Download on iOS or Android" %}
+{% set navCtaTextMobile = "Download for Mobile" %}
+{% set navCtaHref = "/app/#download" %}
 {% include "partials/nav.njk" %}
 
 <main>
@@ -108,7 +111,7 @@ ogLocale: "en_US"
     {% include "partials/faq.njk" %}
 
     <!-- Mobile App FAQ -->
-    <section class="faq" style="padding-top: 0;">
+    <section class="faq faq-followup">
         <details class="faq-item">
             <summary class="faq-question">
                 <span>Is there a mobile app for CueCard?</span>
