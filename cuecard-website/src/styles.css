@@ -2346,8 +2346,8 @@ main {
 
 
 @media (max-width: 768px) {
-    /* Allow app-screenshots to break out of hero padding */
-    .hero:has(.app-screenshots) {
+    /* Allow app screenshots to go full-bleed on app pages */
+    .hero.hero-app {
         overflow: visible;
     }
 
@@ -2357,11 +2357,14 @@ main {
         overflow-x: auto;
         scroll-snap-type: x mandatory;
         -webkit-overflow-scrolling: touch;
-        width: calc(100% + 2 * var(--space-xl));
-        margin-left: calc(-1 * var(--space-xl));
-        margin-right: calc(-1 * var(--space-xl));
-        padding: 0 var(--space-xl);
+        width: 100vw;
+        max-width: 100vw;
+        margin-left: calc(50% - 50vw);
+        margin-right: calc(50% - 50vw);
+        padding: 0 var(--space-lg);
+        scroll-padding-inline: var(--space-lg);
         gap: var(--space-md);
+        overscroll-behavior-x: contain;
         scrollbar-width: none;
         -ms-overflow-style: none;
     }
@@ -2371,8 +2374,8 @@ main {
     }
 
     .app-screenshot-card {
-        width: 200px;
-        flex: 0 0 auto;
+        width: 70vw;
+        flex: 0 0 70vw;
         scroll-snap-align: start;
     }
 }
@@ -2418,6 +2421,13 @@ main {
 .app-store-buttons .btn {
     min-height: 48px;
     justify-content: center;
+}
+
+.app-store-btn,
+.app-store-buttons .btn {
+    flex: 1 1 240px;
+    max-width: 320px;
+    width: 100%;
 }
 
 .app-store-label {
@@ -2528,7 +2538,6 @@ main {
 
     .app-store-btn,
     .app-store-buttons .btn {
-        width: auto;
-        max-width: none;
+        max-width: 100%;
     }
 }
