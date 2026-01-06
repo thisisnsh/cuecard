@@ -27,7 +27,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize GitHub stats and releases
     initGitHubData();
+
+    // Initialize app screenshots scroll to second item on mobile
+    initAppScreenshotsScroll();
 });
+
+// Scroll app screenshots to center on second item on mobile
+function initAppScreenshotsScroll() {
+    const screenshots = document.querySelector('.app-screenshots');
+    if (!screenshots) return;
+
+    // Only on mobile
+    if (window.innerWidth > 768) return;
+
+    const secondCard = screenshots.querySelector('.app-screenshot-card:nth-child(2)');
+    if (!secondCard) return;
+
+    // Scroll to center the second card
+    setTimeout(() => {
+        const containerWidth = screenshots.offsetWidth;
+        const cardWidth = secondCard.offsetWidth;
+        const cardOffset = secondCard.offsetLeft;
+        const scrollPos = cardOffset - (containerWidth / 2) + (cardWidth / 2);
+        screenshots.scrollLeft = scrollPos;
+    }, 100);
+}
 
 // Hero GIF Loading - Show poster first, then load actual gif
 function initHeroGifLoading() {

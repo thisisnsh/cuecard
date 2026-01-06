@@ -1,0 +1,30 @@
+---
+layout: layouts/base.njk
+title: "Page Not Found - CueCard"
+description: "The page you're looking for doesn't exist."
+permalink: "404.html"
+---
+
+{% block body %}
+{% include "partials/nav.njk" %}
+
+<main>
+    <section class="hero" style="min-height: 80vh;">
+        <h1 style="font-family: var(--font-display); font-size: clamp(4rem, 15vw, 8rem); font-weight: 800; color: var(--text-primary); margin-bottom: var(--space-md); line-height: 1;">404</h1>
+        <p class="hero-subtitle" style="margin-bottom: var(--space-xl); padding-top: 0;">
+            Oops! The page you're looking for doesn't exist.
+        </p>
+        <div class="hero-cta" style="justify-content: center;">
+            <a href="/" class="btn btn-primary">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+                <span>Back to Home</span>
+            </a>
+        </div>
+    </section>
+</main>
+
+{% include "partials/footer.njk" %}
+{% endblock %}

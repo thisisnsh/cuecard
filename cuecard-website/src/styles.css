@@ -325,6 +325,7 @@ main {
     padding: var(--space-3xl) var(--space-xl);
     position: relative;
     overflow: hidden;
+    gap: var(--space-md);
 }
 
 .hero::before {
@@ -361,7 +362,6 @@ main {
     border: 1px solid var(--glass-border);
     border-radius: var(--radius-lg);
     padding: var(--space-lg);
-    margin-bottom: var(--space-xl);
     box-shadow: 0 8px 32px var(--glass-shadow);
     transition: all var(--transition-medium);
     animation: fadeInUp 0.6s ease-out;
@@ -1902,6 +1902,15 @@ main {
     .nav .github-link {
         display: none;
     }
+
+    /* Minimize nav download button to icon only on small screens */
+    .nav .download-link span {
+        display: none;
+    }
+
+    .nav .download-link {
+        padding: var(--space-sm);
+    }
 }
 
 /* Footer */
@@ -2104,7 +2113,7 @@ main {
 
     .hero {
         padding: calc(var(--space-3xl) + var(--banner-height) + 24px) var(--space-xl) var(--space-2xl);
-        gap: var(--space-lg);
+        gap: var(--space-md);
     }
 
     .hero-gif-card {
@@ -2337,18 +2346,22 @@ main {
 
 
 @media (max-width: 768px) {
+    /* Allow app-screenshots to break out of hero padding */
+    .hero:has(.app-screenshots) {
+        overflow: visible;
+    }
+
     .app-screenshots {
         flex-wrap: nowrap;
         justify-content: flex-start;
         overflow-x: auto;
         scroll-snap-type: x mandatory;
         -webkit-overflow-scrolling: touch;
-        width: 100vw;
-        margin-left: calc(50% - 50vw);
-        margin-right: calc(50% - 50vw);
-        padding: 0 calc(50vw - 120px) var(--space-sm);
-        scroll-padding-inline: calc(50vw - 120px);
-        min-width: 100%;
+        width: calc(100% + 2 * var(--space-xl));
+        margin-left: calc(-1 * var(--space-xl));
+        margin-right: calc(-1 * var(--space-xl));
+        padding: 0 var(--space-xl);
+        gap: var(--space-md);
         scrollbar-width: none;
         -ms-overflow-style: none;
     }
@@ -2358,9 +2371,9 @@ main {
     }
 
     .app-screenshot-card {
-        width: 240px;
+        width: 200px;
         flex: 0 0 auto;
-        scroll-snap-align: center;
+        scroll-snap-align: start;
     }
 }
 
@@ -2371,7 +2384,6 @@ main {
     gap: var(--space-md);
     align-items: center;
     justify-content: center;
-    margin-top: var(--space-xl);
     flex-wrap: wrap;
 }
 
@@ -2400,6 +2412,7 @@ main {
 .app-store-btn svg {
     width: 20px;
     height: 20px;
+    flex-shrink: 0;
 }
 
 .app-store-buttons .btn {
@@ -2429,6 +2442,16 @@ main {
 .app-store-btn.coming-soon:hover {
     transform: none;
     box-shadow: none;
+}
+
+/* Disabled app store button - not dimmed, just not clickable */
+.app-store-btn-disabled {
+    cursor: default;
+}
+
+.app-store-btn-disabled svg {
+    display: flex;
+    align-self: center;
 }
 
 .coming-soon-text {
