@@ -1,0 +1,10 @@
+RewriteEngine On
+
+# Force HTTPS and non-www host
+RewriteCond %{HTTPS} !=on [OR]
+RewriteCond %{HTTP_HOST} ^www\.cuecard\.dev$ [NC]
+RewriteRule ^ https://cuecard.dev%{REQUEST_URI} [R=301,L]
+
+# Strip ref query parameter to avoid duplicate URLs
+RewriteCond %{QUERY_STRING} (^|&)ref= [NC]
+RewriteRule ^ https://cuecard.dev%{REQUEST_URI} [R=301,L,QSD]
