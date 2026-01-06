@@ -2348,10 +2348,11 @@ main {
 @media (max-width: 768px) {
     /* Allow app screenshots to go full-bleed on app pages */
     .hero.hero-app {
+        margin-top: var(--space-xl);
         overflow: visible;
     }
 
-    .app-screenshots {
+    .hero.hero-app .app-screenshots {
         flex-wrap: nowrap;
         justify-content: flex-start;
         overflow-x: auto;
@@ -2361,8 +2362,8 @@ main {
         max-width: 100vw;
         margin-left: calc(50% - 50vw);
         margin-right: calc(50% - 50vw);
-        padding: 0 var(--space-lg);
-        scroll-padding-inline: var(--space-lg);
+        padding: 0 calc(50vw - 35vw);
+        scroll-padding-inline: calc(50vw - 35vw);
         gap: var(--space-md);
         overscroll-behavior-x: contain;
         scrollbar-width: none;
@@ -2373,10 +2374,10 @@ main {
         display: none;
     }
 
-    .app-screenshot-card {
+    .hero.hero-app .app-screenshot-card {
         width: 70vw;
         flex: 0 0 70vw;
-        scroll-snap-align: start;
+        scroll-snap-align: center;
     }
 }
 
@@ -2387,7 +2388,7 @@ main {
     gap: var(--space-md);
     align-items: center;
     justify-content: center;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
 }
 
 .app-store-btn {
@@ -2427,7 +2428,23 @@ main {
 .app-store-buttons .btn {
     flex: 1 1 240px;
     max-width: 320px;
-    width: 100%;
+    width: auto;
+}
+
+.app-store-buttons--paired {
+    flex-wrap: nowrap;
+}
+
+.app-store-buttons--paired .app-store-btn {
+    flex: 1 1 auto;
+    width: auto;
+    max-width: none;
+}
+
+.app-store-buttons--paired .btn {
+    flex: 0 0 auto;
+    width: auto;
+    max-width: none;
 }
 
 .app-store-label {
@@ -2439,6 +2456,10 @@ main {
 
 .app-store-name {
     font-weight: 600;
+}
+
+.app-store-name-short {
+    display: none;
 }
 
 .app-store-btn.coming-soon {
@@ -2539,5 +2560,55 @@ main {
     .app-store-btn,
     .app-store-buttons .btn {
         max-width: 100%;
+        width: 100%;
+    }
+
+    .app-store-buttons--paired {
+        flex-wrap: nowrap;
+        gap: var(--space-sm);
+    }
+
+    .app-store-buttons--paired .app-store-btn,
+    .app-store-buttons--paired .btn {
+        flex: 1 1 0;
+        min-width: 0;
+        width: auto;
+        max-width: none;
+    }
+
+    .app-store-buttons--paired .app-store-label {
+        display: block;
+        white-space: normal;
+        text-align: center;
+    }
+
+    .app-store-buttons--paired .app-store-name-full {
+        display: none;
+    }
+
+    .app-store-buttons--paired .app-store-name-short {
+        display: inline;
+    }
+
+    .app-store-buttons--paired .app-store-btn {
+        flex: 1 1 auto;
+    }
+
+    .app-store-buttons--paired .view-source-btn {
+        flex: 0 0 auto;
+    }
+
+    .hero.hero-app .app-store-buttons {
+        width: 100%;
+        max-width: 300px;
+        margin-left: auto;
+        margin-right: auto;
+        padding-left: var(--space-sm);
+        padding-right: var(--space-sm);
+    }
+
+    .nav.nav-app-both .github-link {
+        display: flex;
+        padding: var(--space-sm);
     }
 }
