@@ -66,6 +66,8 @@
     {% set heroSubtitle = profession.heroSubtitle %}
     {% include "partials/hero.njk" %}
     {% include "partials/features.njk" %}
+    {% set downloadTitle = "Ready to present<br class=\"desktop-br\"> like a pro?" %}
+    {% set downloadDesc = "Download CueCard and never fumble through a presentation again." %}
     {% include "partials/download.njk" %}
 
     <!-- Profession FAQ Section -->
@@ -88,6 +90,8 @@
             </div>
         </details>
         {% endfor %}
+
+        {% include "partials/faq-default-desktop.njk" %}
     </section>
 </main>
 
