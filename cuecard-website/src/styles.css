@@ -2815,6 +2815,99 @@ main {
     opacity: 0.7;
 }
 
+/* Waitlist Form */
+.waitlist-form {
+    margin-top: var(--space-lg);
+    padding: var(--space-md) var(--space-lg);
+    width: 100%;
+    max-width: 560px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    background: var(--glass-bg);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 12px 40px var(--glass-shadow);
+    backdrop-filter: blur(var(--blur-glass-strong));
+    -webkit-backdrop-filter: blur(var(--blur-glass-strong));
+}
+
+.waitlist-header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.waitlist-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: var(--text-primary);
+}
+
+.waitlist-subtitle {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+}
+
+.waitlist-fields {
+    display: flex;
+    gap: var(--space-sm);
+    align-items: stretch;
+}
+
+.waitlist-input {
+    flex: 1 1 auto;
+    min-width: 200px;
+    padding: var(--space-md) var(--space-lg);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--glass-border);
+    background: rgba(0, 0, 0, 0.35);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 1rem;
+}
+
+.waitlist-input::placeholder {
+    color: var(--text-secondary);
+}
+
+.waitlist-input:focus {
+    outline: none;
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.12);
+}
+
+.waitlist-status {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.waitlist-status:empty {
+    display: none;
+}
+
+.waitlist-status.is-success {
+    color: var(--accent-green);
+}
+
+.waitlist-status.is-error {
+    color: var(--accent-red);
+}
+
+.waitlist-form--success {
+    border-color: rgba(25, 195, 50, 0.4);
+}
+
+.waitlist-form--loading {
+    opacity: 0.9;
+}
+
+.waitlist-honeypot {
+    position: absolute;
+    left: -9999px;
+}
+
 /* App Features Grid */
 .app-features-grid {
     display: grid;
@@ -2928,6 +3021,15 @@ main {
         margin-right: auto;
         padding-left: var(--space-sm);
         padding-right: var(--space-sm);
+    }
+
+    .waitlist-form {
+        padding: var(--space-md);
+        max-width: 100%;
+    }
+
+    .waitlist-fields {
+        flex-direction: column;
     }
 
     .nav.nav-app-both .github-link {

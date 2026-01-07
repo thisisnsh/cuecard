@@ -124,6 +124,20 @@ layout: layouts/mobile-profession.njk
             </span>
         </div>
 
+        <form class="waitlist-form" action="/waitlist.php" method="post">
+            <div class="waitlist-header">
+                <span class="waitlist-title">Join the waitlist</span>
+                <span class="waitlist-subtitle">Be first to know when CueCard Mobile launches.</span>
+            </div>
+            <div class="waitlist-fields">
+                <input class="waitlist-input" type="email" name="email" id="waitlist-email-{{ mobileProfession.slug | replace('/', '-') }}" placeholder="Email address" aria-label="Email address" autocomplete="email" required>
+                <button class="btn btn-primary" type="submit">Join the waitlist</button>
+            </div>
+            <div class="waitlist-status" role="status" aria-live="polite"></div>
+            <input type="text" name="company" class="waitlist-honeypot" tabindex="-1" autocomplete="off" aria-hidden="true">
+            <input type="hidden" name="return_to" value="{{ page.url }}">
+        </form>
+
         <div class="app-screenshots">
             <div class="app-screenshot-card">
                 <img src="/assets/app-ios1.jpg" alt="CueCard Teleprompter floating over camera" class="app-screenshot">

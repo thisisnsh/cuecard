@@ -34,6 +34,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize mobile app screenshot scroll behavior
     initAppScreenshotGallery();
 
+    // Initialize waitlist form handling
+    initWaitlistForms();
+
 });
 
 // Hero GIF Loading - Show poster first, then load actual gif
@@ -284,6 +287,86 @@ function initAppScreenshotGallery() {
     } else if (typeof mediaQuery.addListener === 'function') {
         mediaQuery.addListener(applyMobileLayout);
     }
+}
+
+function initWaitlistForms() {
+    const forms = document.querySelectorAll('.waitlist-form');
+    if (!forms.length) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const waitlistState = params.get('waitlist');
+    const statusMessages = {
+        success: 'Thanks! You are on the waitlist.',
+        invalid: 'Please enter a valid email address.',
+        error: 'Something went wrong. Please try again.'
+    };
+
+    const setStatus = (statusEl, state) => {
+        if (!statusEl || !state) return;
+        statusEl.textContent = statusMessages[state] || statusMessages.error;
+        statusEl.classList.remove('is-success', 'is-error');
+        statusEl.classList.add(state === 'success' ? 'is-success' : 'is-error');
+    };
+
+    forms.forEach((form) => {
+        const status = form.querySelector('.waitlist-status');
+        const submitButton = form.querySelector('button[type="submit"]');
+        const emailInput = form.querySelector('input[name="email"]');
+
+        if (waitlistState) {
+            setStatus(status, waitlistState);
+            if (waitlistState === 'success') {
+                form.classList.add('waitlist-form--success');
+            }
+        }
+
+        if (!window.fetch) return;
+
+        form.addEventListener('submit', async (event) => {
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            event.preventDefault();
+
+            form.classList.add('waitlist-form--loading');
+            if (submitButton) {
+                submitButton.disabled = true;
+            }
+            if (status) {
+                status.textContent = 'Adding you to the waitlist...';
+                status.classList.remove('is-success', 'is-error');
+            }
+
+            try {
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: new FormData(form),
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                const data = await response.json().catch(() => null);
+                if (response.ok && data && data.success) {
+                    setStatus(status, 'success');
+                    form.classList.add('waitlist-form--success');
+                    if (emailInput) {
+                        emailInput.value = '';
+                    }
+                } else {
+                    setStatus(status, data && data.error === 'invalid_email' ? 'invalid' : 'error');
+                }
+            } catch (error) {
+                setStatus(status, 'error');
+            } finally {
+                form.classList.remove('waitlist-form--loading');
+                if (submitButton) {
+                    submitButton.disabled = false;
+                }
+            }
+        });
+    });
 }
 
 // Timestamp countdown animation for syntax preview
