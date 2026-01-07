@@ -1961,6 +1961,11 @@ main {
     letter-spacing: 0.05em;
 }
 
+.footer-section-title a {
+    color: inherit;
+    text-decoration: none;
+}
+
 .footer-section-links {
     list-style: none;
     padding: 0;
