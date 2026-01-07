@@ -1,0 +1,58 @@
+---
+layout: layouts/base.njk
+title: "CueCard Blog - Speaker notes, teleprompter tips, and presentation workflows"
+description: "Read the CueCard blog for speaker notes tips, teleprompter workflows, and presentation best practices across Zoom, Google Meet, and Teams."
+keywords: "cuecard blog, speaker notes tips, teleprompter tips, presentation workflows, zoom speaker notes, google meet notes, teams presenter notes"
+canonical: "https://cuecard.dev/blog/"
+ogTitle: "CueCard Blog"
+ogDescription: "Speaker notes tips, teleprompter workflows, and presentation best practices."
+ogImageWidth: "1280"
+ogImageHeight: "640"
+ogLocale: "en_US"
+---
+{% block body %}
+{% set downloadHref = "/#download" %}
+{% include "partials/nav.njk" %}
+
+<main class="blog-page">
+    <header class="blog-hero">
+        <p class="blog-eyebrow">CueCard Blog</p>
+        <h1 class="blog-page-title">Speaker notes that stay invisible.</h1>
+        <p class="blog-page-subtitle">
+            Practical guides for presenters, educators, and teams who want clean screen shares and confident delivery.
+        </p>
+    </header>
+
+    <section class="blog-list">
+        {% for blog in blogs %}
+        <article class="blog-entry">
+            <header class="blog-entry-header">
+                <p class="blog-meta">
+                    <time datetime="{{ blog.datetime }}">{{ blog.datetime }}</time>
+                    <span class="blog-meta-separator">&middot;</span>
+                    <span class="blog-author">{{ blog.author }}</span>
+                </p>
+                <h2 class="blog-entry-title">
+                    <a href="/blog/{{ blog.slug }}/" target="_blank" rel="noopener">{{ blog.title }}</a>
+                </h2>
+            </header>
+            <div class="blog-entry-content">
+                {{ blog.content | markdownExcerpt | safe }}
+            </div>
+            <a class="blog-entry-link" href="/blog/{{ blog.slug }}/" target="_blank" rel="noopener">Read full post</a>
+        </article>
+        {% endfor %}
+    </section>
+
+    <section class="blog-cta">
+        <h2 class="blog-cta-title">Download CueCard</h2>
+        <p class="blog-cta-subtitle">Choose the desktop app or the mobile teleprompter.</p>
+        <div class="blog-cta-actions">
+            <a class="btn btn-primary" href="/#download">Download for Desktop</a>
+            <a class="btn btn-secondary" href="/mobile/">Download for Mobile</a>
+        </div>
+    </section>
+</main>
+
+{% include "partials/footer.njk" %}
+{% endblock %}

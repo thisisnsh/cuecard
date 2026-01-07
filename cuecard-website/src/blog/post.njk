@@ -1,0 +1,52 @@
+---
+pagination:
+  data: blogs
+  size: 1
+  alias: blog
+permalink: "blog/{{ blog.slug }}/index.html"
+layout: layouts/base.njk
+eleventyComputed:
+  title: "{{ blog.title }} | CueCard Blog"
+  description: "{{ blog.content | markdownExcerpt | striptags }}"
+  keywords: "cuecard blog, speaker notes, teleprompter, presentation tips"
+  canonical: "https://cuecard.dev/blog/{{ blog.slug }}/"
+  ogTitle: "{{ blog.title }}"
+  ogDescription: "{{ blog.content | markdownExcerpt | striptags }}"
+  ogImageWidth: "1280"
+  ogImageHeight: "640"
+  ogLocale: "en_US"
+---
+{% block body %}
+{% set downloadHref = "/#download" %}
+{% include "partials/nav.njk" %}
+
+<main class="blog-page blog-post-page">
+    <header class="blog-post-header">
+        <p class="blog-meta">
+            <time datetime="{{ blog.datetime }}">{{ blog.datetime }}</time>
+            <span class="blog-meta-separator">&middot;</span>
+            <span class="blog-author">{{ blog.author }}</span>
+        </p>
+        <h1 class="blog-post-title">{{ blog.title }}</h1>
+    </header>
+
+    <article class="blog-entry-content">
+        {{ blog.content | markdownify | safe }}
+    </article>
+
+    <div class="blog-post-actions">
+        <a class="blog-entry-link" href="/blog/">Back to Blog</a>
+    </div>
+
+    <section class="blog-cta">
+        <h2 class="blog-cta-title">Download CueCard</h2>
+        <p class="blog-cta-subtitle">Choose the desktop app or the mobile teleprompter.</p>
+        <div class="blog-cta-actions">
+            <a class="btn btn-primary" href="/#download">Download for Desktop</a>
+            <a class="btn btn-secondary" href="/mobile/">Download for Mobile</a>
+        </div>
+    </section>
+</main>
+
+{% include "partials/footer.njk" %}
+{% endblock %}
