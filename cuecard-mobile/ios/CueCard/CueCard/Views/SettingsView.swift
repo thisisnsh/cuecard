@@ -1,5 +1,6 @@
 import SwiftUI
 import FirebaseAnalytics
+import FirebaseCrashlytics
 
 struct SettingsView: View {
     @EnvironmentObject var authService: AuthenticationService
@@ -144,6 +145,7 @@ struct SettingsView: View {
                 // Reset settings
                 Section {
                     Button("Reset to Defaults") {
+                        AnalyticsEvents.logButtonClick("reset_to_defaults", screen: "settings")
                         settingsService.resetSettings()
                     }
                 }
@@ -151,6 +153,7 @@ struct SettingsView: View {
                 // Sign out section
                 Section {
                     Button(role: .destructive) {
+                        AnalyticsEvents.logButtonClick("sign_out", screen: "settings")
                         authService.signOut()
                         dismiss()
                     } label: {
@@ -165,6 +168,7 @@ struct SettingsView: View {
                 // Delete account section
                 Section {
                     Button(role: .destructive) {
+                        AnalyticsEvents.logButtonClick("delete_account", screen: "settings")
                         showingDeleteConfirmation = true
                     } label: {
                         HStack {
@@ -190,6 +194,7 @@ struct SettingsView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") {
+                        AnalyticsEvents.logButtonClick("done", screen: "settings")
                         dismiss()
                     }
                 }

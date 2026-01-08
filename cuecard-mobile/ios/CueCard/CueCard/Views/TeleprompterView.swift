@@ -1,6 +1,7 @@
 import SwiftUI
 import UIKit
 import FirebaseAnalytics
+import FirebaseCrashlytics
 
 struct TeleprompterView: View {
     let content: TeleprompterContent
@@ -99,7 +100,10 @@ struct TeleprompterView: View {
 
                             HStack(spacing: 24) {
                                 // Backward 10 seconds
-                                Button(action: { seekBackward() }) {
+                                Button(action: {
+                                    AnalyticsEvents.logButtonClick("seek_backward", screen: "teleprompter")
+                                    seekBackward()
+                                }) {
                                     Image(systemName: "gobackward.10")
                                         .font(.system(size: 24))
                                         .foregroundStyle(AppColors.textPrimary(for: colorScheme))
@@ -109,7 +113,10 @@ struct TeleprompterView: View {
 
                                 // PiP toggle button
                                 if pipManager.isPiPPossible {
-                                    Button(action: { togglePiP() }) {
+                                    Button(action: {
+                                        AnalyticsEvents.logButtonClick(pipManager.isPiPActive ? "pip_exit" : "pip_enter", screen: "teleprompter")
+                                        togglePiP()
+                                    }) {
                                         Image(systemName: pipManager.isPiPActive ? "pip.exit" : "pip.enter")
                                             .font(.system(size: 20, weight: .semibold))
                                             .foregroundStyle(AppColors.textPrimary(for: colorScheme))
@@ -120,7 +127,10 @@ struct TeleprompterView: View {
                                 }
 
                                 // Play/Pause button
-                                Button(action: { togglePlayPause() }) {
+                                Button(action: {
+                                    AnalyticsEvents.logButtonClick((isPlaying || isCountingDown) ? "pause" : "play", screen: "teleprompter")
+                                    togglePlayPause()
+                                }) {
                                     Image(systemName: (isPlaying || isCountingDown) ? "pause.fill" : "play.fill")
                                         .font(.system(size: 28, weight: .semibold))
                                         .foregroundStyle(colorScheme == .dark ? .black : .white)
@@ -133,7 +143,10 @@ struct TeleprompterView: View {
                                 }
 
                                 // Restart button
-                                Button(action: { restart() }) {
+                                Button(action: {
+                                    AnalyticsEvents.logButtonClick("restart", screen: "teleprompter")
+                                    restart()
+                                }) {
                                     Image(systemName: "arrow.counterclockwise")
                                         .font(.system(size: 20, weight: .semibold))
                                         .foregroundStyle(AppColors.textPrimary(for: colorScheme))
@@ -142,7 +155,10 @@ struct TeleprompterView: View {
                                 }
 
                                 // Forward 10 seconds
-                                Button(action: { seekForward() }) {
+                                Button(action: {
+                                    AnalyticsEvents.logButtonClick("seek_forward", screen: "teleprompter")
+                                    seekForward()
+                                }) {
                                     Image(systemName: "goforward.10")
                                         .font(.system(size: 24))
                                         .foregroundStyle(AppColors.textPrimary(for: colorScheme))
@@ -171,7 +187,10 @@ struct TeleprompterView: View {
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button(action: { stopAndDismiss() }) {
+                    Button(action: {
+                        AnalyticsEvents.logButtonClick("close", screen: "teleprompter")
+                        stopAndDismiss()
+                    }) {
                         Image(systemName: "xmark")
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundStyle(AppColors.textPrimary(for: colorScheme))

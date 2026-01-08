@@ -1,4 +1,6 @@
 import SwiftUI
+import FirebaseAnalytics
+import FirebaseCrashlytics
 
 struct ProfileView: View {
     @EnvironmentObject var authService: AuthenticationService
@@ -40,6 +42,7 @@ struct ProfileView: View {
                 // Sign out section
                 Section {
                     Button(role: .destructive) {
+                        AnalyticsEvents.logButtonClick("sign_out", screen: "profile")
                         authService.signOut()
                         dismiss()
                     } label: {
@@ -56,9 +59,15 @@ struct ProfileView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") {
+                        AnalyticsEvents.logButtonClick("done", screen: "profile")
                         dismiss()
                     }
                 }
+            }
+            .onAppear {
+                Analytics.logEvent(AnalyticsEventScreenView, parameters: [
+                    AnalyticsParameterScreenName: "profile"
+                ])
             }
         }
     }

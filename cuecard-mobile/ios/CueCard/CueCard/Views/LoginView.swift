@@ -1,5 +1,7 @@
 import SwiftUI
 import AuthenticationServices
+import FirebaseAnalytics
+import FirebaseCrashlytics
 
 struct LoginView: View {
     @EnvironmentObject var authService: AuthenticationService
@@ -63,12 +65,14 @@ struct LoginView: View {
                     .disabled(authService.isLoading)
                     .opacity(authService.isLoading ? 0.6 : 1)
                     .onTapGesture {
+                        AnalyticsEvents.logButtonClick("sign_in_with_apple", screen: "login")
                         authService.signInWithApple()
                     }
                     .allowsHitTesting(!authService.isLoading)
 
                     // Google Sign in button
                     Button(action: {
+                        AnalyticsEvents.logButtonClick("sign_in_with_google", screen: "login")
                         Task {
                             await authService.signInWithGoogle()
                         }

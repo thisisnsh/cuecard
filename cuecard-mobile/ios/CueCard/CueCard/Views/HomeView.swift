@@ -1,5 +1,6 @@
 import SwiftUI
 import FirebaseAnalytics
+import FirebaseCrashlytics
 
 private struct MenuDismissBehaviorIfAvailable: ViewModifier {
     func body(content: Content) -> some View {
@@ -63,6 +64,7 @@ struct HomeView: View {
                                     Spacer()
 
                                     Button(action: {
+                                        AnalyticsEvents.logButtonClick("close_timer_picker", screen: "home")
                                         withAnimation(.easeInOut(duration: 0.2)) {
                                             showingTimerPicker = false
                                         }
@@ -121,6 +123,7 @@ struct HomeView: View {
 
                         if hasNotes || showingTimerPicker {
                             Button(action: {
+                                AnalyticsEvents.logButtonClick(showingTimerPicker ? "timer_done" : "set_timer", screen: "home")
                                 withAnimation(.easeInOut(duration: 0.2)) {
                                     showingTimerPicker.toggle()
                                 }
@@ -134,6 +137,7 @@ struct HomeView: View {
                             }
                         } else {
                             Button(action: {
+                                AnalyticsEvents.logButtonClick("add_sample_text", screen: "home")
                                 settingsService.addSampleText()
                             }) {
                                 Text("Add Sample Text")
@@ -149,6 +153,7 @@ struct HomeView: View {
                     Spacer(minLength: 12)
 
                     Button(action: {
+                        AnalyticsEvents.logButtonClick("start_teleprompter", screen: "home")
                         isTextEditorFocused = false
                         showingTeleprompter = true
                     }) {
@@ -174,7 +179,10 @@ struct HomeView: View {
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button(action: { showingSavedNotes = true }) {
+                    Button(action: {
+                        AnalyticsEvents.logButtonClick("saved_notes", screen: "home")
+                        showingSavedNotes = true
+                    }) {
                         Image(systemName: "folder")
                             .font(.title3)
                             .foregroundStyle(AppColors.textPrimary(for: colorScheme))
@@ -186,6 +194,7 @@ struct HomeView: View {
                         Menu {
                             if settingsService.currentNoteId != nil && settingsService.hasUnsavedChanges {
                                 Button(action: {
+                                    AnalyticsEvents.logButtonClick("save_note", screen: "home")
                                     settingsService.saveChangesToCurrentNote()
                                 }) {
                                     Label("Save", systemImage: "square.and.arrow.down")
@@ -193,6 +202,7 @@ struct HomeView: View {
                             }
 
                             Button(action: {
+                                AnalyticsEvents.logButtonClick("save_as_new", screen: "home")
                                 saveNoteTitle = ""
                                 showingSaveDialog = true
                             }) {
@@ -203,6 +213,7 @@ struct HomeView: View {
                             Divider()
 
                             Button(action: {
+                                AnalyticsEvents.logButtonClick("new_note", screen: "home")
                                 settingsService.createNewNote()
                             }) {
                                 Label("New Note", systemImage: "square.and.pencil")
@@ -214,7 +225,10 @@ struct HomeView: View {
                         }
                         .applyMenuDismissBehaviorIfAvailable()
 
-                        Button(action: { showingSettings = true }) {
+                        Button(action: {
+                            AnalyticsEvents.logButtonClick("settings", screen: "home")
+                            showingSettings = true
+                        }) {
                             Image(systemName: "gearshape")
                                 .font(.title3)
                                 .foregroundStyle(AppColors.textPrimary(for: colorScheme))
@@ -323,6 +337,7 @@ struct SavedNotesView: View {
                     List {
                         ForEach(settingsService.savedNotes.sorted { $0.updatedAt > $1.updatedAt }) { note in
                             Button(action: {
+                                AnalyticsEvents.logButtonClick("load_note", screen: "saved_notes", parameters: ["note_id": note.id.uuidString])
                                 settingsService.loadNote(note)
                                 dismiss()
                             }) {
@@ -344,6 +359,7 @@ struct SavedNotesView: View {
                             }
                             .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                                 Button(role: .destructive) {
+                                    AnalyticsEvents.logButtonClick("delete_note", screen: "saved_notes", parameters: ["note_id": note.id.uuidString])
                                     settingsService.deleteNote(id: note.id)
                                 } label: {
                                     Label("Delete", systemImage: "trash")
@@ -351,6 +367,7 @@ struct SavedNotesView: View {
                             }
                             .swipeActions(edge: .leading, allowsFullSwipe: false) {
                                 Button {
+                                    AnalyticsEvents.logButtonClick("rename_note", screen: "saved_notes", parameters: ["note_id": note.id.uuidString])
                                     renameTitle = note.title
                                     noteToRename = note
                                 } label: {
@@ -367,6 +384,7 @@ struct SavedNotesView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") {
+                        AnalyticsEvents.logButtonClick("done", screen: "saved_notes")
                         dismiss()
                     }
                 }

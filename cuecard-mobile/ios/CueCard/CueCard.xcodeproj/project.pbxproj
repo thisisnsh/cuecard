@@ -19,6 +19,7 @@
 		010 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 302 /* FirebaseAuth */; };
 		011 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 303 /* GoogleSignIn */; };
 		012 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 304 /* GoogleSignInSwift */; };
+		018 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 305 /* FirebaseCrashlytics */; };
 		013 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 109 /* SettingsView.swift */; };
 		014 /* TeleprompterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110 /* TeleprompterView.swift */; };
 		015 /* TeleprompterParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 111 /* TeleprompterParser.swift */; };
@@ -56,6 +57,7 @@
 			files = (
 				009 /* FirebaseAnalytics in Frameworks */,
 				010 /* FirebaseAuth in Frameworks */,
+				018 /* FirebaseCrashlytics in Frameworks */,
 				011 /* GoogleSignIn in Frameworks */,
 				012 /* GoogleSignInSwift in Frameworks */,
 			);
@@ -155,6 +157,7 @@
 			packageProductDependencies = (
 				301 /* FirebaseAnalytics */,
 				302 /* FirebaseAuth */,
+				305 /* FirebaseCrashlytics */,
 				303 /* GoogleSignIn */,
 				304 /* GoogleSignInSwift */,
 			);
@@ -482,6 +485,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1101 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
 			productName = GoogleSignInSwift;
+		};
+		305 /* FirebaseCrashlytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1100 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCrashlytics;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
