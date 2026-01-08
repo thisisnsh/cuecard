@@ -1,5 +1,6 @@
 import SwiftUI
 import FirebaseAnalytics
+import FirebaseAuth
 import FirebaseCrashlytics
 
 struct SettingsView: View {
@@ -73,20 +74,28 @@ struct SettingsView: View {
         if let user = authService.user {
             Section {
                 VStack(alignment: .leading, spacing: 4) {
-                    if let displayName = user.displayName, !displayName.isEmpty {
-                        Text(displayName)
-                            .font(.headline)
-                    }
+                    Text(displayNameForUser(user))
+                        .font(.headline)
 
                     if let email = user.email {
                         Text(email)
                             .font(.subheadline)
-                            .foregroundStyle(user.displayName != nil && !user.displayName!.isEmpty ? .secondary : .primary)
+                            .foregroundStyle(.secondary)
                     }
                 }
                 .padding(.vertical, 8)
             }
         }
+    }
+
+    private func displayNameForUser(_ user: FirebaseAuth.User) -> String {
+        if let displayName = user.displayName, !displayName.isEmpty {
+            return displayName
+        }
+        if let email = user.email, email.contains("privaterelay.appleid.com") {
+            return "Private User"
+        }
+        return "User"
     }
 
     private var countdownSection: some View {
