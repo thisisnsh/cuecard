@@ -1,6 +1,11 @@
 const markdownIt = require("markdown-it");
 
 module.exports = function(eleventyConfig) {
+  // Configure dev server to serve 404.html for missing routes
+  eleventyConfig.setServerOptions({
+    showAllHosts: true,
+  });
+
   const markdown = markdownIt({
     html: false,
     breaks: true,

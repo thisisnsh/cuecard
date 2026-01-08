@@ -2,3 +2,6 @@
 http://cuecard.dev/* https://cuecard.dev/:splat 301!
 http://www.cuecard.dev/* https://cuecard.dev/:splat 301!
 https://www.cuecard.dev/* https://cuecard.dev/:splat 301!
+
+# Serve custom 404 page for all unmatched routes
+/* /404.html 404
