@@ -74,7 +74,7 @@ class AuthenticationService: ObservableObject {
 
             currentSignInProvider = "google"
             Analytics.logEvent("sign_in_success", parameters: ["method": "google"])
-            await sendWelcomeIfNeeded(
+            await sendWelcome(
                 authResult: authResult,
                 provider: "google"
             )
@@ -140,7 +140,7 @@ class AuthenticationService: ObservableObject {
                 let authResult = try await Auth.auth().signIn(with: credential)
                 currentSignInProvider = "apple"
                 Analytics.logEvent("sign_in_success", parameters: ["method": "apple"])
-                await sendWelcomeIfNeeded(
+                await sendWelcome(
                     authResult: authResult,
                     provider: "apple",
                     fullName: appleIDCredential.fullName,
@@ -203,16 +203,12 @@ class AuthenticationService: ObservableObject {
         let createdAt: String?
     }
 
-    private func sendWelcomeIfNeeded(
+    private func sendWelcome(
         authResult: AuthDataResult,
         provider: String,
         fullName: PersonNameComponents? = nil,
         emailOverride: String? = nil
     ) async {
-        guard authResult.additionalUserInfo?.isNewUser == true else {
-            return
-        }
-
         guard let url = welcomeEndpoint else {
             Analytics.logEvent("welcome_request_error", parameters: [
                 "error": "invalid_url",
