@@ -19,12 +19,12 @@
 		010 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 302 /* FirebaseAuth */; };
 		011 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 303 /* GoogleSignIn */; };
 		012 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 304 /* GoogleSignInSwift */; };
-		018 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 305 /* FirebaseCrashlytics */; };
 		013 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 109 /* SettingsView.swift */; };
 		014 /* TeleprompterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110 /* TeleprompterView.swift */; };
 		015 /* TeleprompterParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 111 /* TeleprompterParser.swift */; };
 		016 /* TeleprompterPiPManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 112 /* TeleprompterPiPManager.swift */; };
 		017 /* AppColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 113 /* AppColors.swift */; };
+		018 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 305 /* FirebaseCrashlytics */; };
 		AA7130F62F04E5BC00F5C366 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = AA7130F52F04E5BC00F5C366 /* GoogleService-Info.plist */; };
 		AA856D562F060DFC00B0CBC6 /* GlassEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA856D542F060DFC00B0CBC6 /* GlassEffect.swift */; };
 /* End PBXBuildFile section */
@@ -148,6 +148,7 @@
 				801 /* Sources */,
 				601 /* Frameworks */,
 				802 /* Resources */,
+				803 /* Crashlytics Run */,
 			);
 			buildRules = (
 			);
@@ -213,6 +214,29 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		803 /* Crashlytics Run */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}",
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${PRODUCT_NAME}",
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Info.plist",
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/GoogleService-Info.plist",
+				"$(TARGET_BUILD_DIR)/$(EXECUTABLE_PATH)",
+				"${DWARF_DSYM_FOLDER_PATH}/${DWARF_DSYM_FILE_NAME}/Contents/Resources/DWARF/${PRODUCT_NAME}.debug.dylib",
+			);
+			name = "Crashlytics Run";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${BUILD_DIR%/Build/*}/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		801 /* Sources */ = {
@@ -365,6 +389,7 @@
 				CODE_SIGN_ENTITLEMENTS = CueCard/CueCard.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 3;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 983LBM5U6B;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -398,6 +423,7 @@
 				CODE_SIGN_ENTITLEMENTS = CueCard/CueCard.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 3;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = 983LBM5U6B;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
