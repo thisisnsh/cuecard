@@ -35,7 +35,7 @@ const items = [
   {
     question: "Is there a mobile app?",
     answer:
-      'CueCard Mobile is coming soon on iOS and Android. It includes a floating teleprompter that works over any app. <a href="/mobile/">Learn more about CueCard Mobile</a>.'
+      'CueCard Mobile is available on <a href="https://apps.apple.com/app/cuecard-teleprompter/id6757321325">iOS</a> with Android coming soon. It includes a floating teleprompter that works over any app. <a href="/mobile/">Learn more about CueCard Mobile</a>.'
   },
   {
     question: "Does the mobile teleprompter float above all apps?",
