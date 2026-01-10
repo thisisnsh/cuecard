@@ -299,7 +299,8 @@ const STORAGE_KEYS = {
   SETTINGS_THEME: 'settings_theme',
   SETTINGS_SHORTCUTS_ENABLED: 'settings_shortcuts_enabled',
   SETTINGS_AUTO_SCROLL_SPEED: 'settings_auto_scroll_speed',
-  ADD_NOTES_CONTENT: 'add_notes_content'
+  ADD_NOTES_CONTENT: 'add_notes_content',
+  SAVED_NOTES: 'saved_notes'
 };
 
 // Initialize the store
@@ -363,6 +364,204 @@ async function saveNotesToStorage() {
   }
 }
 
+// =============================================================================
+// SAVED NOTES LIST MANAGEMENT
+// =============================================================================
+
+// Get all saved notes from storage
+async function getSavedNotes() {
+  const savedNotes = await getStoredValue(STORAGE_KEYS.SAVED_NOTES);
+  return savedNotes || [];
+}
+
+// Save current note to the saved notes list
+async function saveNoteToList() {
+  if (!notesInput || !notesInput.value.trim()) return;
+
+  const content = notesInput.value;
+  const now = new Date().toISOString();
+
+  const savedNotes = await getSavedNotes();
+
+  // Create new note object with unique id
+  const newNote = {
+    id: Date.now().toString(),
+    content: content,
+    updatedAt: now
+  };
+
+  // Add to beginning of list (most recent first)
+  savedNotes.unshift(newNote);
+
+  await setStoredValue(STORAGE_KEYS.SAVED_NOTES, savedNotes);
+  console.log("Note saved to list");
+}
+
+// Load a note from the saved notes list (updates the time)
+async function loadNoteFromList(noteId) {
+  const savedNotes = await getSavedNotes();
+  const noteIndex = savedNotes.findIndex(n => n.id === noteId);
+
+  if (noteIndex === -1) return;
+
+  const note = savedNotes[noteIndex];
+
+  // Update the updatedAt time
+  note.updatedAt = new Date().toISOString();
+
+  // Move to beginning of list (most recently used)
+  savedNotes.splice(noteIndex, 1);
+  savedNotes.unshift(note);
+
+  await setStoredValue(STORAGE_KEYS.SAVED_NOTES, savedNotes);
+
+  // Load the note into the input
+  notesInput.value = note.content;
+
+  // Also update the current notes storage
+  await setStoredValue(STORAGE_KEYS.ADD_NOTES_CONTENT, note.content);
+
+  // Trigger the highlight update
+  if (notesInputHighlight) {
+    const event = new Event('input', { bubbles: true });
+    notesInput.dispatchEvent(event);
+  }
+
+  console.log("Note loaded from list");
+
+  // Navigate to add-notes view
+  showView('add-notes');
+
+  // Set to done mode (readonly, highlighted)
+  isEditMode = false;
+  notesInputWrapper.classList.remove('edit-mode');
+  notesInput.readOnly = true;
+  editNoteBtn.textContent = 'Edit Note';
+
+  // Update button visibility
+  updateEditNoteButtonVisibility();
+  updateTimerButtonVisibility();
+}
+
+// Delete a note from the saved notes list
+async function deleteNoteFromList(noteId) {
+  const savedNotes = await getSavedNotes();
+  const filteredNotes = savedNotes.filter(n => n.id !== noteId);
+
+  await setStoredValue(STORAGE_KEYS.SAVED_NOTES, filteredNotes);
+  console.log("Note deleted from list");
+
+  // Re-render the list
+  renderSavedNotesList();
+}
+
+// Get first line of note content for preview
+function getFirstLinePreview(content) {
+  if (!content) return '';
+
+  // Split by newlines and get first non-empty line
+  const lines = content.split(/\r?\n/);
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (trimmed) {
+      // Remove any [time] or [note] tags for cleaner preview
+      return trimmed
+        .replace(/\[time\s+\d{1,2}:\d{2}\]/gi, '')
+        .replace(/\[note\s+[^\]]+\]/gi, '')
+        .trim() || trimmed;
+    }
+  }
+  return content.substring(0, 50);
+}
+
+// Format date for display
+function formatNoteDate(isoString) {
+  const date = new Date(isoString);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+
+  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+// Render the saved notes list in the view
+async function renderSavedNotesList() {
+  if (!savedNotesList || !savedNotesEmpty) return;
+
+  const savedNotes = await getSavedNotes();
+
+  if (savedNotes.length === 0) {
+    savedNotesList.classList.add('hidden');
+    savedNotesEmpty.classList.remove('hidden');
+    return;
+  }
+
+  savedNotesList.classList.remove('hidden');
+  savedNotesEmpty.classList.add('hidden');
+
+  savedNotesList.innerHTML = savedNotes.map(note => `
+    <div class="saved-note-item" data-note-id="${note.id}">
+      <div class="saved-note-info">
+        <span class="saved-note-preview">${escapeHtml(getFirstLinePreview(note.content))}</span>
+        <span class="saved-note-time">${formatNoteDate(note.updatedAt)}</span>
+      </div>
+      <button class="saved-note-delete" data-note-id="${note.id}">Delete</button>
+    </div>
+  `).join('');
+
+  // Add click handlers
+  savedNotesList.querySelectorAll('.saved-note-item').forEach(item => {
+    item.addEventListener('click', (e) => {
+      // Don't load if clicking delete button
+      if (e.target.classList.contains('saved-note-delete')) return;
+
+      const noteId = item.dataset.noteId;
+      loadNoteFromList(noteId);
+    });
+  });
+
+  // Add delete handlers
+  savedNotesList.querySelectorAll('.saved-note-delete').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const noteId = btn.dataset.noteId;
+      deleteNoteFromList(noteId);
+    });
+  });
+}
+
+// Setup saved notes button handlers
+function setupSavedNotesButtons() {
+  if (saveNoteBtn) {
+    saveNoteBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      await saveNoteToList();
+      // Show brief feedback
+      const originalText = saveNoteBtn.textContent;
+      saveNoteBtn.textContent = 'Saved!';
+      setTimeout(() => {
+        saveNoteBtn.textContent = originalText;
+      }, 1000);
+    });
+  }
+
+  if (savedNotesBtn) {
+    savedNotesBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      showView('saved-notes');
+    });
+  }
+}
+
 // Check if a specific scope is granted (backend handles scope tracking)
 async function hasScope(scopeType) {
   if (!invoke) return false;
@@ -385,7 +584,7 @@ async function hasScope(scopeType) {
 // DOM Elements
 let btnClose, btnDownloadUpdates, downloadUpdatesSeparator, btnSignOut;
 let authBtn;
-let appContainer, appHeader, appHeaderTitle, viewInitial, viewAddNotes, viewNotes, viewSettings, viewShortcuts;
+let appContainer, appHeader, appHeaderTitle, viewInitial, viewAddNotes, viewNotes, viewSettings, viewShortcuts, viewSavedNotes;
 let linkGoBack;
 let notesInput, notesContent;
 let welcomeHeading, welcomeSubtext, welcomeActions;
@@ -402,6 +601,7 @@ let editNoteBtn;
 let notesInputWrapper;
 let ghostModeIndicator;
 let headerTimer;
+let savedNotesList, savedNotesEmpty, saveNoteBtn, savedNotesBtn;
 
 // State
 let isAuthenticated = false;
@@ -465,6 +665,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   viewNotes = document.getElementById("view-notes");
   viewSettings = document.getElementById("view-settings");
   viewShortcuts = document.getElementById("view-shortcuts");
+  viewSavedNotes = document.getElementById("view-saved-notes");
   linkGoBack = document.getElementById("link-go-back");
   notesInput = document.getElementById("notes-input");
   notesContent = document.getElementById("notes-content");
@@ -494,6 +695,10 @@ window.addEventListener("DOMContentLoaded", async () => {
   notesInputWrapper = document.querySelector(".notes-input-wrapper");
   ghostModeIndicator = document.getElementById("ghost-mode-indicator");
   headerTimer = document.getElementById("header-timer");
+  savedNotesList = document.getElementById("saved-notes-list");
+  savedNotesEmpty = document.getElementById("saved-notes-empty");
+  saveNoteBtn = document.getElementById("save-note-btn");
+  savedNotesBtn = document.getElementById("saved-notes-btn");
 
   // Set up navigation handlers
   setupNavigation();
@@ -524,6 +729,9 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   // Set up edit note button
   setupEditNoteButton();
+
+  // Set up saved notes buttons
+  setupSavedNotesButtons();
 
   // Set up auto-scroll hover listeners
   setupAutoScrollHoverListeners();
@@ -611,6 +819,11 @@ function setupNavigation() {
 
     if (currentView === 'settings') {
       showView(previousView);
+      return;
+    }
+
+    if (currentView === 'saved-notes') {
+      showView('add-notes');
       return;
     }
 
@@ -1126,7 +1339,7 @@ function toggleEditMode() {
     trackEditAction('edit');
     notesInputWrapper.classList.add('edit-mode');
     notesInput.readOnly = false;
-    editNoteBtn.textContent = 'Save Note';
+    editNoteBtn.textContent = 'Done';
     notesInput.focus();
   } else {
     // Done mode: input is readonly, highlighted
@@ -1135,6 +1348,9 @@ function toggleEditMode() {
     notesInput.readOnly = true;
     editNoteBtn.textContent = 'Edit Note';
   }
+
+  // Update saved notes button visibility
+  updateSavedNotesButtonVisibility();
 
   // Reset timer when toggling edit/done
   resetTimerCountdown();
@@ -1157,10 +1373,10 @@ function updateEditNoteButtonVisibility() {
       isEditMode = true;
       notesInputWrapper.classList.add('edit-mode');
       notesInput.readOnly = false;
-      editNoteBtn.textContent = 'Save Note';
+      editNoteBtn.textContent = 'Done';
     } else {
       // Update button text based on current mode
-      editNoteBtn.textContent = isEditMode ? 'Save Note' : 'Edit Note';
+      editNoteBtn.textContent = isEditMode ? 'Done' : 'Edit Note';
     }
   } else {
     editNoteBtn.classList.add('hidden');
@@ -1173,7 +1389,33 @@ function updateEditNoteButtonVisibility() {
     }
   }
 
+  // Show/hide save and saved notes buttons
+  updateSavedNotesButtonVisibility();
+
   updateFooterSeparators();
+}
+
+// Update save and saved notes button visibility
+function updateSavedNotesButtonVisibility() {
+  const hasContent = notesInput && notesInput.value.trim();
+
+  // Show save button in add-notes view when there's content and not in edit mode
+  if (saveNoteBtn) {
+    if (currentView === 'add-notes' && hasContent && !isEditMode) {
+      saveNoteBtn.classList.remove('hidden');
+    } else {
+      saveNoteBtn.classList.add('hidden');
+    }
+  }
+
+  // Show saved notes button in add-notes view (always visible in this view)
+  if (savedNotesBtn) {
+    if (currentView === 'add-notes') {
+      savedNotesBtn.classList.remove('hidden');
+    } else {
+      savedNotesBtn.classList.add('hidden');
+    }
+  }
 }
 
 function trimSpacesPreserveNewlines(text) {
@@ -1518,9 +1760,10 @@ async function showView(viewName) {
   viewNotes.classList.add('hidden');
   viewSettings.classList.add('hidden');
   viewShortcuts.classList.add('hidden');
+  viewSavedNotes.classList.add('hidden');
 
   // Show/hide the back button in footer based on view
-  if (viewName === 'add-notes' || viewName === 'notes' || viewName === 'settings' || viewName === 'shortcuts') {
+  if (viewName === 'add-notes' || viewName === 'notes' || viewName === 'settings' || viewName === 'shortcuts' || viewName === 'saved-notes') {
     linkGoBack.classList.remove('hidden');
   } else {
     linkGoBack.classList.add('hidden');
@@ -1532,17 +1775,20 @@ async function showView(viewName) {
   if (btnClose && appHeaderTitle && headerTimer) {
     const isSettingsView = viewName === 'settings';
     const isShortcutsView = viewName === 'shortcuts';
+    const isSavedNotesView = viewName === 'saved-notes';
     const isNotesView = viewName === 'add-notes' || viewName === 'notes';
 
-    // Hide close button for settings, shortcuts and notes views, show only for initial view
-    btnClose.classList.toggle('hidden', isSettingsView || isShortcutsView || isNotesView);
-    appHeaderTitle.classList.toggle('hidden', !isSettingsView && !isShortcutsView);
+    // Hide close button for settings, shortcuts, saved-notes and notes views, show only for initial view
+    btnClose.classList.toggle('hidden', isSettingsView || isShortcutsView || isSavedNotesView || isNotesView);
+    appHeaderTitle.classList.toggle('hidden', !isSettingsView && !isShortcutsView && !isSavedNotesView);
 
     // Update header title text
     if (isSettingsView) {
       appHeaderTitle.textContent = 'Settings';
     } else if (isShortcutsView) {
       appHeaderTitle.textContent = 'Shortcuts';
+    } else if (isSavedNotesView) {
+      appHeaderTitle.textContent = 'Saved Notes';
     }
 
     updateHeaderTimerVisibility();
@@ -1571,6 +1817,12 @@ async function showView(viewName) {
     settingsLink.classList.add('hidden');
   } else if (viewName === 'shortcuts') {
     // Shortcuts view: hide all footer links except go back
+    websiteLink.classList.add('hidden');
+    supportLink.classList.add('hidden');
+    bugLink.classList.add('hidden');
+    settingsLink.classList.add('hidden');
+  } else if (viewName === 'saved-notes') {
+    // Saved notes view: hide all footer links except go back
     websiteLink.classList.add('hidden');
     supportLink.classList.add('hidden');
     bugLink.classList.add('hidden');
@@ -1606,8 +1858,8 @@ async function showView(viewName) {
     case 'add-notes':
       viewAddNotes.classList.remove('hidden');
       // Load stored notes when entering add-notes view
-      // But skip loading if coming back from settings (content is already there)
-      if (previousView !== 'settings') {
+      // But skip loading if coming back from settings or saved-notes (content is already there)
+      if (previousView !== 'settings' && previousView !== 'saved-notes') {
         await loadStoredNotes();
         // If notes were loaded from storage, start in done mode (readonly, highlighted)
         if (notesInput.value.trim()) {
@@ -1647,6 +1899,11 @@ async function showView(viewName) {
       viewShortcuts.classList.remove('hidden');
       // Populate shortcut key displays
       populateShortcutKeys();
+      break;
+    case 'saved-notes':
+      viewSavedNotes.classList.remove('hidden');
+      // Render the saved notes list
+      renderSavedNotesList();
       break;
   }
 
@@ -2235,8 +2492,8 @@ function updateShortcutsVisibility() {
   if (shortcutsLink) {
     // Hide shortcuts button if:
     // 1. Shortcuts are disabled, OR
-    // 2. Current view is settings or shortcuts
-    const shouldHide = !shortcutsEnabled || currentView === 'settings' || currentView === 'shortcuts';
+    // 2. Current view is settings, shortcuts, or saved-notes
+    const shouldHide = !shortcutsEnabled || currentView === 'settings' || currentView === 'shortcuts' || currentView === 'saved-notes';
     shortcutsLink.classList.toggle('hidden', shouldHide);
   }
 }
@@ -2399,7 +2656,7 @@ async function applyOpacity(value) {
   document.documentElement.style.setProperty('--bg-opacity', value / 100);
   if (opacitySlider) opacitySlider.value = value;
   if (opacityValue) opacityValue.textContent = `${value}%`;
-  await storeValue(STORAGE_KEYS.SETTINGS_OPACITY, value);
+  await setStoredValue(STORAGE_KEYS.SETTINGS_OPACITY, value);
 }
 
 // Setup shortcut event listener

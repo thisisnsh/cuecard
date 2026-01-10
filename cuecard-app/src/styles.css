@@ -1373,3 +1373,124 @@ weight and line-height across buttons/links/separators
   border-radius: 4px;
   opacity: 0.8;
 }
+
+/* Saved Notes View */
+#view-saved-notes {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+
+  /* Mask for fade in/out */
+  -webkit-mask-image: linear-gradient(to bottom,
+      transparent 0px,
+      var(--color-bg) 24px,
+      var(--color-bg) calc(100% - 24px),
+      transparent 100%);
+
+  mask-image: linear-gradient(to bottom,
+      transparent 0px,
+      var(--color-bg) 24px,
+      var(--color-bg) calc(100% - 24px),
+      transparent 100%);
+
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+.saved-notes-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow-y: auto;
+  padding-top: 24px;
+  padding-bottom: 24px;
+  scrollbar-width: none;
+}
+
+.saved-notes-content::-webkit-scrollbar {
+  display: none;
+}
+
+.saved-notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.saved-note-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: var(--welcome-surface);
+  border: 1px solid var(--welcome-border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.saved-note-item:hover {
+  background: var(--welcome-surface-strong);
+  border-color: var(--color-green);
+}
+
+.saved-note-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.saved-note-preview {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.saved-note-time {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+.saved-note-delete {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+.saved-note-item:hover .saved-note-delete {
+  opacity: 1;
+}
+
+.saved-note-delete:hover {
+  color: var(--color-red);
+}
+
+.saved-notes-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 40px 20px;
+}
+
+.saved-notes-empty p {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
