@@ -159,9 +159,6 @@ fun MainScreen() {
             TeleprompterScreen(
                 content = content,
                 settings = settings,
-                onNavigateToSettings = {
-                    navController.navigate(Screen.Settings.route)
-                },
                 onDismiss = {
                     navController.popBackStack()
                 }

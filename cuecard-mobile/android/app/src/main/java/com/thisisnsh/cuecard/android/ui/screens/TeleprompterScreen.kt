@@ -32,7 +32,6 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PictureInPicture
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -84,7 +83,6 @@ import kotlin.math.roundToInt
 fun TeleprompterScreen(
     content: TeleprompterContent,
     settings: TeleprompterSettings,
-    onNavigateToSettings: () -> Unit,
     onDismiss: () -> Unit
 ) {
     val isDark = isSystemInDarkTheme()
@@ -132,7 +130,7 @@ fun TeleprompterScreen(
     val isOvertime = timerDuration > 0 && elapsedTime.toInt() > timerDuration
 
     val timerColor = when {
-        isCountingDown -> AppColors.textPrimary(isDark)
+        isCountingDown -> AppColors.pink(isDark) // Pink during countdown like iOS
         timerDuration <= 0 -> AppColors.textPrimary(isDark)
         else -> AppColors.timerColor(
             remainingSeconds = timerDuration - elapsedTime.toInt(),
@@ -142,9 +140,10 @@ fun TeleprompterScreen(
     }
 
     val timeDisplay = when {
-        isCountingDown -> countdownValue.toString()
-        timerDuration > 0 -> TeleprompterParser.formatTime(timerDuration - elapsedTime.toInt())
-        else -> TeleprompterParser.formatTime(elapsedTime.toInt())
+        // Show countdown in mm:ss format like iOS
+        isCountingDown -> " ${TeleprompterParser.formatTime(countdownValue)} "
+        timerDuration > 0 -> " ${TeleprompterParser.formatTime(timerDuration - elapsedTime.toInt())} "
+        else -> " ${TeleprompterParser.formatTime(elapsedTime.toInt())} "
     }
 
     // Log screen view on appear
@@ -298,7 +297,7 @@ fun TeleprompterScreen(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            // Top App Bar
+            // Top App Bar - matching iOS layout
             TopAppBar(
                 title = {
                     Text(
@@ -318,13 +317,15 @@ fun TeleprompterScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onNavigateToSettings) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Settings",
-                            tint = AppColors.textPrimary(isDark)
-                        )
-                    }
+                    // Timer in top bar like iOS
+                    Text(
+                        text = timeDisplay,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Monospace,
+                        color = timerColor,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = AppColors.background(isDark)
@@ -355,29 +356,6 @@ fun TeleprompterScreen(
                         isPlaying = isPlaying,
                         isDark = isDark
                     )
-                }
-
-                // Timer overlay at top center
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    contentAlignment = Alignment.TopCenter
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(50))
-                            .glassEffect(isDark = isDark)
-                            .padding(horizontal = 16.dp, vertical = 10.dp)
-                    ) {
-                        Text(
-                            text = timeDisplay,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = FontFamily.Monospace,
-                            color = timerColor
-                        )
-                    }
                 }
             }
         }

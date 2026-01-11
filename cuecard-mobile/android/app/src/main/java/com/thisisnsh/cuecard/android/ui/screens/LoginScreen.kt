@@ -14,16 +14,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.FormatAlignLeft
-import androidx.compose.material.icons.outlined.PictureInPicture
-import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -34,7 +28,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -69,21 +62,14 @@ fun LoginScreen(
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Logo - using app icon placeholder
-                Box(
+                // Logo - using app icon
+                Image(
+                    painter = painterResource(id = R.mipmap.ic_launcher),
+                    contentDescription = "CueCard Logo",
                     modifier = Modifier
                         .size(80.dp)
                         .clip(RoundedCornerShape(16.dp))
-                        .background(AppColors.green(isDark)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "C",
-                        fontSize = 40.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = if (isDark) Color.Black else Color.White
-                    )
-                }
+                )
 
                 Spacer(modifier = Modifier.height(24.dp))
 
@@ -97,41 +83,13 @@ fun LoginScreen(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Subtitle
+                // Subtitle - matching iOS
                 Text(
-                    text = "Professional Teleprompter",
+                    text = "Floating Teleprompter",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Medium,
                     color = AppColors.textSecondary(isDark)
                 )
-
-                Spacer(modifier = Modifier.height(32.dp))
-
-                // Feature highlights
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    FeatureRow(
-                        icon = Icons.Outlined.FormatAlignLeft,
-                        title = "Smooth Scrolling",
-                        description = "Word-by-word highlighting",
-                        isDark = isDark
-                    )
-
-                    FeatureRow(
-                        icon = Icons.Outlined.Timer,
-                        title = "Smart Timer",
-                        description = "Color-coded countdown",
-                        isDark = isDark
-                    )
-
-                    FeatureRow(
-                        icon = Icons.Outlined.PictureInPicture,
-                        title = "Overlay",
-                        description = "Read while recording",
-                        isDark = isDark
-                    )
-                }
             }
 
             Spacer(modifier = Modifier.weight(1f))
@@ -220,48 +178,3 @@ fun LoginScreen(
     }
 }
 
-@Composable
-private fun FeatureRow(
-    icon: ImageVector,
-    title: String,
-    description: String,
-    isDark: Boolean
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Start,
-        modifier = Modifier.padding(horizontal = 32.dp)
-    ) {
-        // Icon with green background circle
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .background(AppColors.green(isDark).copy(alpha = 0.15f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp),
-                tint = AppColors.green(isDark)
-            )
-        }
-
-        Spacer(modifier = Modifier.width(16.dp))
-
-        Column {
-            Text(
-                text = title,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = AppColors.textPrimary(isDark)
-            )
-            Text(
-                text = description,
-                fontSize = 12.sp,
-                color = AppColors.textSecondary(isDark)
-            )
-        }
-    }
-}

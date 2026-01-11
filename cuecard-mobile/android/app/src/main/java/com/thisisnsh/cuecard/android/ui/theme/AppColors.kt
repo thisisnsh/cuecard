@@ -88,14 +88,15 @@ object AppColors {
 
     /**
      * Get timer color based on remaining time and total duration
-     * - Green: > 20% time remaining
+     * - Green: > 20% time remaining (or when totalSeconds <= 0)
      * - Yellow: <= 20% time remaining
      * - Red: overtime (negative remaining time)
      */
     @Composable
     fun timerColor(remainingSeconds: Int, totalSeconds: Int, isDark: Boolean = isSystemInDarkTheme()): Color {
+        // Match iOS: return green when no timer duration set
         if (totalSeconds <= 0) {
-            return textPrimary(isDark)
+            return green(isDark)
         }
 
         val percentage = remainingSeconds.toDouble() / totalSeconds.toDouble()
@@ -111,8 +112,9 @@ object AppColors {
      * Non-composable version for timer color
      */
     fun timerColorValue(remainingSeconds: Int, totalSeconds: Int, isDark: Boolean): Color {
+        // Match iOS: return green when no timer duration set
         if (totalSeconds <= 0) {
-            return if (isDark) Dark.textPrimary else Light.textPrimary
+            return if (isDark) Dark.green else Light.green
         }
 
         val percentage = remainingSeconds.toDouble() / totalSeconds.toDouble()

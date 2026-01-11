@@ -257,6 +257,7 @@ fun SavedNotesScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SavedNoteItem(
     note: SavedNote,
@@ -269,66 +270,106 @@ private fun SavedNoteItem(
         SimpleDateFormat("MMM d, yyyy 'at' h:mm a", Locale.getDefault())
     }
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(
-            modifier = Modifier.weight(1f)
-        ) {
-            Text(
-                text = note.title,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = AppColors.textPrimary(isDark),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = note.content
-                    .take(100)
-                    .replace("\n", " "),
-                fontSize = 14.sp,
-                color = AppColors.textSecondary(isDark),
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = dateFormatter.format(Date(note.updatedAt)),
-                fontSize = 12.sp,
-                color = AppColors.textSecondary(isDark).copy(alpha = 0.7f)
-            )
-        }
-
-        Spacer(modifier = Modifier.width(8.dp))
-
-        // Action buttons
-        Row {
-            IconButton(
-                onClick = onRename,
-                modifier = Modifier.size(40.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Edit,
-                    contentDescription = "Rename",
-                    tint = AppColors.textSecondary(isDark),
-                    modifier = Modifier.size(20.dp)
-                )
+    // Swipe to dismiss state - matching iOS swipe actions
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { value ->
+            when (value) {
+                SwipeToDismissBoxValue.EndToStart -> {
+                    // Swipe right to delete (trailing edge)
+                    onDelete()
+                    true
+                }
+                SwipeToDismissBoxValue.StartToEnd -> {
+                    // Swipe left to rename (leading edge)
+                    onRename()
+                    false // Don't dismiss, just trigger rename dialog
+                }
+                SwipeToDismissBoxValue.Settled -> false
             }
-            IconButton(
-                onClick = onDelete,
-                modifier = Modifier.size(40.dp)
+        }
+    )
+
+    // Reset state after rename action
+    LaunchedEffect(dismissState.currentValue) {
+        if (dismissState.currentValue == SwipeToDismissBoxValue.StartToEnd) {
+            dismissState.reset()
+        }
+    }
+
+    SwipeToDismissBox(
+        state = dismissState,
+        backgroundContent = {
+            val direction = dismissState.dismissDirection
+            val color = when (direction) {
+                SwipeToDismissBoxValue.EndToStart -> AppColors.red(isDark) // Delete - red
+                SwipeToDismissBoxValue.StartToEnd -> Color(0xFFFF9500) // Rename - orange like iOS
+                else -> Color.Transparent
+            }
+            val icon = when (direction) {
+                SwipeToDismissBoxValue.EndToStart -> Icons.Default.Delete
+                SwipeToDismissBoxValue.StartToEnd -> Icons.Default.Edit
+                else -> null
+            }
+            val alignment = when (direction) {
+                SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
+                SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
+                else -> Alignment.Center
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(color)
+                    .padding(horizontal = 20.dp),
+                contentAlignment = alignment
             ) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Delete",
-                    tint = AppColors.red(isDark),
-                    modifier = Modifier.size(20.dp)
+                icon?.let {
+                    Icon(
+                        imageVector = it,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
+        },
+        enableDismissFromStartToEnd = true,
+        enableDismissFromEndToStart = true
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(AppColors.background(isDark))
+                .clickable(onClick = onClick)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = note.title,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = AppColors.textPrimary(isDark),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = note.content
+                        .take(100)
+                        .replace("\n", " "),
+                    fontSize = 14.sp,
+                    color = AppColors.textSecondary(isDark),
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = dateFormatter.format(Date(note.updatedAt)),
+                    fontSize = 12.sp,
+                    color = AppColors.textSecondary(isDark).copy(alpha = 0.7f)
                 )
             }
         }
