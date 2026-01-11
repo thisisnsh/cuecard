@@ -162,7 +162,7 @@ fun LoginScreen(
                     onClick = {
                         scope.launch {
                             // Replace with your actual Web Client ID from Firebase Console
-                            authService.signInWithGoogle("829544425796-078qfb55oulclu6j796c1ba81u96hr61.apps.googleusercontent.com")
+                            authService.signInWithGoogle("829544425796-a38eavf0pphc2l2p1rc60dg8d5tpddg3.apps.googleusercontent.com")
                         }
                     },
                     modifier = Modifier
