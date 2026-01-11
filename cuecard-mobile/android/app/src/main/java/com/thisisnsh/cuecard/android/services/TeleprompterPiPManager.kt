@@ -5,6 +5,9 @@ import android.app.PictureInPictureParams
 import android.content.Context
 import android.os.Build
 import android.util.Rational
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import com.thisisnsh.cuecard.android.models.OverlayAspectRatio
 import com.thisisnsh.cuecard.android.models.TeleprompterSettings
 
@@ -22,10 +25,10 @@ class TeleprompterPiPManager private constructor() {
     }
 
     // State
-    var isPiPActive = false
+    var isPiPActive by mutableStateOf(false)
         private set
 
-    var isPiPPossible = false
+    var isPiPPossible by mutableStateOf(false)
         private set
 
     var isPlaying = false

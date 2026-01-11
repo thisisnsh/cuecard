@@ -26,7 +26,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
@@ -61,6 +60,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.analytics.logEvent
 import com.google.firebase.ktx.Firebase
@@ -68,6 +68,7 @@ import com.thisisnsh.cuecard.android.services.SettingsService
 import com.thisisnsh.cuecard.android.ui.components.glassEffect
 import com.thisisnsh.cuecard.android.ui.theme.AppColors
 import kotlinx.coroutines.launch
+import android.widget.NumberPicker as AndroidNumberPicker
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -123,21 +124,6 @@ fun HomeScreen(
                         color = AppColors.textPrimary(isDark)
                     )
                 },
-                navigationIcon = {
-                    IconButton(onClick = {
-                        Firebase.analytics.logEvent("button_click") {
-                            param("button_name", "saved_notes")
-                            param("screen", "home")
-                        }
-                        onNavigateToSavedNotes()
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.Folder,
-                            contentDescription = "Saved Notes",
-                            tint = AppColors.textPrimary(isDark)
-                        )
-                    }
-                },
                 actions = {
                     // More menu with save options
                     Box {
@@ -153,6 +139,27 @@ fun HomeScreen(
                             onDismissRequest = { showMenuDropdown = false },
                             modifier = Modifier.background(AppColors.background(isDark))
                         ) {
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = "Saved Notes",
+                                        color = AppColors.textPrimary(isDark)
+                                    )
+                                },
+                                onClick = {
+                                    Firebase.analytics.logEvent("button_click") {
+                                        param("button_name", "saved_notes")
+                                        param("screen", "home")
+                                    }
+                                    onNavigateToSavedNotes()
+                                    showMenuDropdown = false
+                                }
+                            )
+
+                            HorizontalDivider(
+                                color = AppColors.textSecondary(isDark).copy(alpha = 0.2f)
+                            )
+
                             // Save option (only show if editing existing note with changes)
                             if (currentNoteId != null && hasUnsavedChanges) {
                                 DropdownMenuItem(
@@ -355,8 +362,7 @@ fun HomeScreen(
                                         scope.launch {
                                             settingsService.updateTimerMinutes(newValue)
                                         }
-                                    },
-                                    isDark = isDark
+                                    }
                                 )
 
                                 Text(
@@ -376,7 +382,6 @@ fun HomeScreen(
                                             settingsService.updateTimerSeconds(newValue)
                                         }
                                     },
-                                    isDark = isDark,
                                     formatValue = { String.format("%02d", it) }
                                 )
                             }
@@ -516,61 +521,35 @@ private fun NumberPicker(
     value: Int,
     range: IntRange,
     onValueChange: (Int) -> Unit,
-    isDark: Boolean,
     formatValue: (Int) -> String = { it.toString() }
 ) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Decrease button
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(CircleShape)
-                .background(AppColors.textSecondary(isDark).copy(alpha = 0.1f))
-                .clickable {
-                    if (value > range.first) {
-                        onValueChange(value - 1)
-                    }
-                },
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "-",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = AppColors.textPrimary(isDark)
-            )
-        }
-
-        // Value display
-        Text(
-            text = formatValue(value),
-            fontSize = 20.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = AppColors.textPrimary(isDark),
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-
-        // Increase button
-        Box(
-            modifier = Modifier
-                .size(36.dp)
-                .clip(CircleShape)
-                .background(AppColors.textSecondary(isDark).copy(alpha = 0.1f))
-                .clickable {
-                    if (value < range.last) {
-                        onValueChange(value + 1)
-                    }
-                },
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "+",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = AppColors.textPrimary(isDark)
-            )
-        }
-    }
+    AndroidView(
+        factory = { context ->
+            AndroidNumberPicker(context).apply {
+                minValue = range.first
+                maxValue = range.last
+                wrapSelectorWheel = true
+                descendantFocusability = AndroidNumberPicker.FOCUS_BLOCK_DESCENDANTS
+                setFormatter { formatValue(it) }
+                setOnValueChangedListener { _, _, newValue ->
+                    onValueChange(newValue)
+                }
+            }
+        },
+        update = { picker ->
+            if (picker.minValue != range.first) {
+                picker.minValue = range.first
+            }
+            if (picker.maxValue != range.last) {
+                picker.maxValue = range.last
+            }
+            picker.setFormatter { formatValue(it) }
+            if (picker.value != value) {
+                picker.value = value
+            }
+        },
+        modifier = Modifier
+            .width(64.dp)
+            .height(88.dp)
+    )
 }

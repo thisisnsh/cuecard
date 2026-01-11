@@ -16,10 +16,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -32,11 +34,11 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PictureInPicture
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -51,16 +53,22 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -86,11 +94,10 @@ fun TeleprompterScreen(
     onDismiss: () -> Unit
 ) {
     val isDark = isSystemInDarkTheme()
-    val density = LocalDensity.current
-    val configuration = LocalConfiguration.current
     val context = LocalContext.current
     val activity = context as? Activity
     val pipManager = remember { TeleprompterPiPManager.shared }
+    val isInPiP = pipManager.isPiPActive
 
     var isPlaying by remember { mutableStateOf(false) }
     var elapsedTime by remember { mutableDoubleStateOf(0.0) }
@@ -99,6 +106,8 @@ fun TeleprompterScreen(
     var dragOffset by remember { mutableFloatStateOf(0f) }
     var countdownValue by remember { mutableIntStateOf(0) }
     var isCountingDown by remember { mutableStateOf(false) }
+    var pipViewportHeightPx by remember { mutableFloatStateOf(0f) }
+    var fullViewportHeightPx by remember { mutableFloatStateOf(0f) }
 
     val scrollState = rememberScrollState()
 
@@ -146,6 +155,12 @@ fun TeleprompterScreen(
         else -> " ${TeleprompterParser.formatTime(elapsedTime.toInt())} "
     }
 
+    LaunchedEffect(isInPiP) {
+        if (isInPiP) {
+            showControls = false
+        }
+    }
+
     // Log screen view on appear
     LaunchedEffect(Unit) {
         Firebase.analytics.logEvent("teleprompter_started") {
@@ -189,14 +204,6 @@ fun TeleprompterScreen(
         if (isPlaying && showControls) {
             delay(3000)
             showControls = false
-        }
-    }
-
-    // Auto-scroll to current word
-    LaunchedEffect(currentWordIndex) {
-        if (settings.autoScroll && currentWordIndex > 0) {
-            val targetScroll = (currentWordIndex * 50).coerceAtMost(scrollState.maxValue)
-            scrollState.animateScrollTo(targetScroll)
         }
     }
 
@@ -257,6 +264,22 @@ fun TeleprompterScreen(
         elapsedTime = currentWordIndex / wordsPerSecond
     }
 
+    val density = LocalDensity.current
+    val textFontSize = if (isInPiP) settings.pipFontSize else settings.fontSize
+    val textHorizontalPadding = if (isInPiP) 12.dp else 24.dp
+    val baseTopPadding = if (isInPiP) 40.dp else 60.dp
+    val baseBottomPadding = if (isInPiP) 40.dp else 200.dp
+    val fullTopPadding = if (fullViewportHeightPx > 0f) {
+        with(density) { (fullViewportHeightPx * 0.4f).toDp() }
+    } else {
+        baseTopPadding
+    }
+    val fullBottomPadding = if (fullViewportHeightPx > 0f) {
+        with(density) { (fullViewportHeightPx * 0.6f).toDp() }
+    } else {
+        baseBottomPadding
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -288,6 +311,7 @@ fun TeleprompterScreen(
                 )
             }
             .clickable(
+                enabled = !isInPiP,
                 indication = null,
                 interactionSource = remember { MutableInteractionSource() }
             ) {
@@ -297,40 +321,61 @@ fun TeleprompterScreen(
         Column(
             modifier = Modifier.fillMaxSize()
         ) {
-            // Top App Bar - matching iOS layout
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Teleprompter",
-                        fontWeight = FontWeight.SemiBold,
-                        color = AppColors.textPrimary(isDark)
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onDismiss) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Close",
-                            tint = AppColors.textPrimary(isDark),
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                },
-                actions = {
-                    // Timer in top bar like iOS
+            if (isInPiP) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 6.dp),
+                    contentAlignment = Alignment.TopCenter
+                ) {
                     Text(
                         text = timeDisplay,
-                        fontSize = 16.sp,
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = FontFamily.Monospace,
                         color = timerColor,
-                        modifier = Modifier.padding(end = 8.dp)
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(AppColors.background(isDark).copy(alpha = 0.8f))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
                     )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = AppColors.background(isDark)
+                }
+            } else {
+                // Top App Bar - matching iOS layout
+                CenterAlignedTopAppBar(
+                    title = {
+                        Text(
+                            text = "Teleprompter",
+                            fontWeight = FontWeight.SemiBold,
+                            color = AppColors.textPrimary(isDark)
+                        )
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = onDismiss) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Close",
+                                tint = AppColors.textPrimary(isDark),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    },
+                    actions = {
+                        // Timer in top bar like iOS
+                        Text(
+                            text = timeDisplay,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace,
+                            color = timerColor,
+                            modifier = Modifier.padding(end = 8.dp)
+                        )
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = AppColors.background(isDark)
+                    )
                 )
-            )
+            }
 
             // Content area
             Box(
@@ -338,31 +383,121 @@ fun TeleprompterScreen(
                     .weight(1f)
                     .fillMaxWidth()
             ) {
-                // Teleprompter text
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(scrollState)
-                        .padding(horizontal = 24.dp)
-                        .padding(top = 60.dp, bottom = 200.dp)
-                ) {
-                    TeleprompterText(
-                        content = content,
-                        fontSize = settings.fontSize,
-                        currentWordIndex = currentWordIndex,
-                        elapsedTime = elapsedTime,
-                        wordsPerMinute = settings.wordsPerMinute,
-                        autoScroll = settings.autoScroll,
-                        isPlaying = isPlaying,
-                        isDark = isDark
-                    )
+                if (isInPiP) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .onSizeChanged { pipViewportHeightPx = it.height.toFloat() }
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .verticalScroll(scrollState)
+                        ) {
+                            TeleprompterPiPText(
+                                content = content,
+                                fontSize = textFontSize,
+                                currentWordIndex = currentWordIndex,
+                                elapsedTime = elapsedTime,
+                                wordsPerMinute = settings.wordsPerMinute,
+                                autoScroll = settings.autoScroll,
+                                isPlaying = isPlaying,
+                                isDark = isDark,
+                                scrollState = scrollState,
+                                viewportHeightPx = pipViewportHeightPx,
+                                horizontalPadding = textHorizontalPadding,
+                                topPadding = baseTopPadding,
+                                bottomPadding = baseBottomPadding
+                            )
+                        }
+
+                        val bgColor = AppColors.background(isDark)
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(40.dp)
+                                .align(Alignment.TopCenter)
+                                .padding(horizontal = textHorizontalPadding)
+                                .background(
+                                    Brush.verticalGradient(
+                                        listOf(bgColor, bgColor.copy(alpha = 0f))
+                                    )
+                                )
+                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(40.dp)
+                                .align(Alignment.BottomCenter)
+                                .padding(horizontal = textHorizontalPadding)
+                                .background(
+                                    Brush.verticalGradient(
+                                        listOf(bgColor.copy(alpha = 0f), bgColor)
+                                    )
+                                )
+                        )
+                    }
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .onSizeChanged { fullViewportHeightPx = it.height.toFloat() }
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .verticalScroll(scrollState)
+                        ) {
+                            TeleprompterFullText(
+                                content = content,
+                                fontSize = textFontSize,
+                                currentWordIndex = currentWordIndex,
+                                elapsedTime = elapsedTime,
+                                wordsPerMinute = settings.wordsPerMinute,
+                                autoScroll = settings.autoScroll,
+                                isPlaying = isPlaying,
+                                isDark = isDark,
+                                scrollState = scrollState,
+                                viewportHeightPx = fullViewportHeightPx,
+                                horizontalPadding = textHorizontalPadding,
+                                topPadding = fullTopPadding,
+                                bottomPadding = fullBottomPadding
+                            )
+                        }
+
+                        val bgColor = AppColors.background(isDark)
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(80.dp)
+                                .align(Alignment.TopCenter)
+                                .padding(horizontal = textHorizontalPadding)
+                                .background(
+                                    Brush.verticalGradient(
+                                        listOf(bgColor, bgColor.copy(alpha = 0f))
+                                    )
+                                )
+                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(80.dp)
+                                .align(Alignment.BottomCenter)
+                                .padding(horizontal = textHorizontalPadding)
+                                .background(
+                                    Brush.verticalGradient(
+                                        listOf(bgColor.copy(alpha = 0f), bgColor)
+                                    )
+                                )
+                        )
+                    }
                 }
             }
         }
 
         // Controls overlay at bottom
         AnimatedVisibility(
-            visible = showControls,
+            visible = showControls && !isInPiP,
             enter = fadeIn(),
             exit = fadeOut(),
             modifier = Modifier.align(Alignment.BottomCenter)
@@ -481,6 +616,253 @@ fun TeleprompterScreen(
 }
 
 @Composable
+private fun TeleprompterFullText(
+    content: TeleprompterContent,
+    fontSize: Int,
+    currentWordIndex: Int,
+    elapsedTime: Double,
+    wordsPerMinute: Int,
+    autoScroll: Boolean,
+    isPlaying: Boolean,
+    isDark: Boolean,
+    scrollState: ScrollState,
+    viewportHeightPx: Float,
+    horizontalPadding: Dp,
+    topPadding: Dp,
+    bottomPadding: Dp
+) {
+    val textColor = AppColors.textPrimary(isDark)
+    val pinkColor = AppColors.pink(isDark)
+    val displayResult = remember(content.fullText) {
+        TeleprompterParser.buildDisplayText(content.fullText)
+    }
+    val displayText = displayResult.text
+    val noteRanges = displayResult.noteRanges
+    val wordsPerSecond = wordsPerMinute / 60.0
+    val highlightProgress = if (autoScroll) {
+        if (elapsedTime == 0.0 && !isPlaying) -1_000_000.0 else elapsedTime * wordsPerSecond
+    } else {
+        Double.MAX_VALUE
+    }
+    val progressBucket = if (autoScroll) (highlightProgress * 10).roundToInt() else 0
+    val lineHeight = (fontSize * 1.18f).sp
+    var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
+    val density = LocalDensity.current
+    val topPaddingPx = with(density) { topPadding.toPx() }
+    val noteStyle = remember(fontSize, pinkColor) {
+        SpanStyle(
+            color = pinkColor,
+            fontSize = (fontSize * 0.72f).sp,
+            fontWeight = FontWeight.SemiBold,
+            letterSpacing = (fontSize * 0.05f).sp,
+            fontFamily = FontFamily.SansSerif
+        )
+    }
+
+    fun smoothstep(edge0: Double, edge1: Double, x: Double): Double {
+        val t = ((x - edge0) / (edge1 - edge0)).coerceIn(0.0, 1.0)
+        return t * t * (3.0 - 2.0 * t)
+    }
+
+    fun highlightAlpha(index: Int): Float {
+        val distance = highlightProgress - index.toDouble()
+        val blend = smoothstep(-2.0, 0.0, distance)
+        return (0.3f + blend.toFloat() * 0.7f)
+    }
+
+    val annotatedText = remember(displayText, fontSize, textColor, noteStyle, progressBucket, autoScroll, noteRanges) {
+        buildAnnotatedString {
+            append(displayText)
+            noteRanges.forEach { range ->
+                if (range.first < range.last + 1) {
+                    addStyle(noteStyle, range.first, range.last + 1)
+                }
+            }
+            content.words.forEachIndexed { index, word ->
+                if (word.startIndex >= displayText.length) return@forEachIndexed
+                val start = word.startIndex.coerceAtLeast(0)
+                val end = word.endIndex.coerceAtMost(displayText.length)
+                if (start >= end) return@forEachIndexed
+
+                val isNote = noteRanges.any { range ->
+                    range.contains(start) && range.contains(end - 1)
+                }
+                if (!isNote) {
+                    addStyle(
+                        SpanStyle(
+                            color = textColor.copy(alpha = highlightAlpha(index)),
+                            fontSize = fontSize.sp,
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = FontFamily.SansSerif
+                        ),
+                        start,
+                        end
+                    )
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(currentWordIndex, textLayoutResult, autoScroll, viewportHeightPx, scrollState.maxValue) {
+        val layout = textLayoutResult ?: return@LaunchedEffect
+        if (!autoScroll) return@LaunchedEffect
+        if (viewportHeightPx <= 0f) return@LaunchedEffect
+        val word = content.words.getOrNull(currentWordIndex) ?: return@LaunchedEffect
+        if (displayText.isEmpty() || word.startIndex >= displayText.length) return@LaunchedEffect
+
+        val rect = layout.getBoundingBox(word.startIndex)
+        val target = rect.top + topPaddingPx - (viewportHeightPx / 3f)
+        val maxScroll = scrollState.maxValue.toFloat()
+        val clamped = target.coerceIn(0f, maxScroll)
+        scrollState.animateScrollTo(clamped.roundToInt())
+    }
+
+    Text(
+        text = annotatedText,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(
+                start = horizontalPadding,
+                end = horizontalPadding,
+                top = topPadding,
+                bottom = bottomPadding
+            ),
+        color = textColor,
+        style = TextStyle(
+            lineHeight = lineHeight,
+            fontFamily = FontFamily.SansSerif
+        ),
+        onTextLayout = { textLayoutResult = it }
+    )
+}
+
+@Composable
+private fun TeleprompterPiPText(
+    content: TeleprompterContent,
+    fontSize: Int,
+    currentWordIndex: Int,
+    elapsedTime: Double,
+    wordsPerMinute: Int,
+    autoScroll: Boolean,
+    isPlaying: Boolean,
+    isDark: Boolean,
+    scrollState: ScrollState,
+    viewportHeightPx: Float,
+    horizontalPadding: Dp,
+    topPadding: Dp,
+    bottomPadding: Dp
+) {
+    val textColor = AppColors.textPrimary(isDark)
+    val pinkColor = AppColors.pink(isDark)
+    val displayResult = remember(content.fullText) {
+        TeleprompterParser.buildDisplayText(content.fullText)
+    }
+    val displayText = displayResult.text
+    val noteRanges = displayResult.noteRanges
+    val wordsPerSecond = wordsPerMinute / 60.0
+    val highlightProgress = if (autoScroll) {
+        if (elapsedTime == 0.0 && !isPlaying) -1_000_000.0 else elapsedTime * wordsPerSecond
+    } else {
+        Double.MAX_VALUE
+    }
+    val progressBucket = if (autoScroll) (highlightProgress * 10).roundToInt() else 0
+    val lineHeight = (fontSize * 1.0f).sp
+    var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
+    val density = LocalDensity.current
+    val topPaddingPx = with(density) { topPadding.toPx() }
+    val noteStyle = remember(fontSize, pinkColor) {
+        SpanStyle(
+            color = pinkColor,
+            fontSize = (fontSize * 0.72f).sp,
+            fontWeight = FontWeight.SemiBold,
+            letterSpacing = (-fontSize * 0.01f).sp,
+            fontFamily = FontFamily.SansSerif
+        )
+    }
+
+    fun smoothstep(edge0: Double, edge1: Double, x: Double): Double {
+        val t = ((x - edge0) / (edge1 - edge0)).coerceIn(0.0, 1.0)
+        return t * t * (3.0 - 2.0 * t)
+    }
+
+    fun highlightAlpha(index: Int): Float {
+        val distance = highlightProgress - index.toDouble()
+        val blend = smoothstep(-2.0, 0.0, distance)
+        return (0.3f + blend.toFloat() * 0.7f)
+    }
+
+    val annotatedText = remember(displayText, fontSize, textColor, noteStyle, progressBucket, autoScroll, noteRanges) {
+        buildAnnotatedString {
+            append(displayText)
+            noteRanges.forEach { range ->
+                if (range.first < range.last + 1) {
+                    addStyle(noteStyle, range.first, range.last + 1)
+                }
+            }
+            content.words.forEachIndexed { index, word ->
+                if (word.startIndex >= displayText.length) return@forEachIndexed
+                val start = word.startIndex.coerceAtLeast(0)
+                val end = word.endIndex.coerceAtMost(displayText.length)
+                if (start >= end) return@forEachIndexed
+
+                val isNote = noteRanges.any { range ->
+                    range.contains(start) && range.contains(end - 1)
+                }
+                if (!isNote) {
+                    addStyle(
+                        SpanStyle(
+                            color = textColor.copy(alpha = highlightAlpha(index)),
+                            fontSize = fontSize.sp,
+                            fontWeight = FontWeight.Medium,
+                            fontFamily = FontFamily.SansSerif
+                        ),
+                        start,
+                        end
+                    )
+                }
+            }
+        }
+    }
+
+    LaunchedEffect(currentWordIndex, textLayoutResult, autoScroll, viewportHeightPx, scrollState.maxValue) {
+        val layout = textLayoutResult ?: return@LaunchedEffect
+        if (!autoScroll) return@LaunchedEffect
+        if (viewportHeightPx <= 0f) return@LaunchedEffect
+        val word = content.words.getOrNull(currentWordIndex) ?: return@LaunchedEffect
+        if (displayText.isEmpty() || word.startIndex >= displayText.length) return@LaunchedEffect
+
+        val rect = layout.getBoundingBox(word.startIndex)
+        val target = rect.top + topPaddingPx - (viewportHeightPx / 3f)
+        val maxScroll = scrollState.maxValue.toFloat()
+        val clamped = target.coerceIn(0f, maxScroll)
+        scrollState.animateScrollTo(clamped.roundToInt())
+    }
+
+    Text(
+        text = annotatedText,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(
+                start = horizontalPadding,
+                end = horizontalPadding,
+                top = topPadding,
+                bottom = bottomPadding
+            ),
+        color = textColor,
+        style = TextStyle(
+            lineHeight = lineHeight,
+            lineHeightStyle = LineHeightStyle(
+                alignment = LineHeightStyle.Alignment.Center,
+                trim = LineHeightStyle.Trim.Both
+            ),
+            platformStyle = PlatformTextStyle(includeFontPadding = false),
+            fontFamily = FontFamily.SansSerif
+        ),
+        onTextLayout = { textLayoutResult = it }
+    )
+}
+
+@Composable
 private fun TeleprompterText(
     content: TeleprompterContent,
     fontSize: Int,
@@ -542,7 +924,8 @@ private fun TeleprompterText(
                                         color = pinkColor,
                                         fontSize = (fontSize * 0.72f).sp,
                                         fontWeight = FontWeight.SemiBold,
-                                        letterSpacing = (fontSize * 0.05f).sp
+                                        letterSpacing = (fontSize * 0.05f).sp,
+                                        fontFamily = FontFamily.SansSerif
                                     )
                                 ) {
                                     append(word)
@@ -566,7 +949,8 @@ private fun TeleprompterText(
                                     SpanStyle(
                                         color = textColor.copy(alpha = alpha),
                                         fontSize = fontSize.sp,
-                                        fontWeight = FontWeight.Medium
+                                        fontWeight = FontWeight.Medium,
+                                        fontFamily = FontFamily.SansSerif
                                     )
                                 ) {
                                     append(word)

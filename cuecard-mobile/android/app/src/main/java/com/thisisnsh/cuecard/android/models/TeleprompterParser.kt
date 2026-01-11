@@ -11,6 +11,37 @@ object TeleprompterParser {
 
     private val NOTE_PATTERN: Pattern = Pattern.compile("\\[note\\s+([^\\]]+)\\]")
 
+    data class DisplayTextResult(
+        val text: String,
+        val noteRanges: List<IntRange>
+    )
+
+    /**
+     * Build display text with [note] tags replaced by their content.
+     * Returns the display text and note ranges in display text indices.
+     */
+    fun buildDisplayText(text: String): DisplayTextResult {
+        val matcher = NOTE_PATTERN.matcher(text)
+        val builder = StringBuilder()
+        val ranges = mutableListOf<IntRange>()
+        var lastIndex = 0
+
+        while (matcher.find()) {
+            builder.append(text.substring(lastIndex, matcher.start()))
+            val content = matcher.group(1) ?: ""
+            val start = builder.length
+            builder.append(content)
+            val end = builder.length
+            if (start < end) {
+                ranges.add(start until end)
+            }
+            lastIndex = matcher.end()
+        }
+
+        builder.append(text.substring(lastIndex))
+        return DisplayTextResult(builder.toString(), ranges)
+    }
+
     /**
      * Parse notes content for teleprompter display
      * Only supports [note content] tags for delivery cues
@@ -18,7 +49,8 @@ object TeleprompterParser {
     fun parseNotes(notes: String): TeleprompterContent {
         val cleanedNotes = cleanText(notes)
         val noteRanges = findNoteRanges(cleanedNotes)
-        val words = extractWords(cleanedNotes, noteRanges)
+        val displayResult = buildDisplayText(cleanedNotes)
+        val words = extractWords(displayResult.text, displayResult.noteRanges)
 
         return TeleprompterContent(
             fullText = cleanedNotes,
@@ -62,25 +94,8 @@ object TeleprompterParser {
     /**
      * Extract words from text, marking which ones are inside [note] tags
      */
-    private fun extractWords(text: String, noteRanges: List<NoteRange>): List<WordInfo> {
+    private fun extractWords(displayText: String, noteRanges: List<IntRange>): List<WordInfo> {
         val words = mutableListOf<WordInfo>()
-
-        // Build display text by replacing [note ...] with just the content
-        var displayText = text
-        var offset = 0
-
-        for (noteRange in noteRanges) {
-            val fullLength = noteRange.fullEndIndex - noteRange.fullStartIndex
-            val contentLength = noteRange.content.length
-            val startIdx = noteRange.fullStartIndex - offset
-            val endIdx = noteRange.fullEndIndex - offset
-
-            displayText = displayText.substring(0, startIdx) +
-                    noteRange.content +
-                    displayText.substring(endIdx)
-
-            offset += fullLength - contentLength
-        }
 
         // Extract words from display text
         val wordPattern = Pattern.compile("\\S+")
@@ -88,15 +103,17 @@ object TeleprompterParser {
 
         while (matcher.find()) {
             val word = matcher.group()
-            val isNote = noteRanges.any { noteRange ->
-                noteRange.content.contains(word)
+            val wordStart = matcher.start()
+            val wordEnd = matcher.end()
+            val isNote = noteRanges.any { range ->
+                range.contains(wordStart) && range.contains(wordEnd - 1)
             }
 
             words.add(
                 WordInfo(
                     text = word,
-                    startIndex = matcher.start(),
-                    endIndex = matcher.end(),
+                    startIndex = wordStart,
+                    endIndex = wordEnd,
                     isNote = isNote
                 )
             )
@@ -109,7 +126,7 @@ object TeleprompterParser {
      * Get display text with [note] tags replaced by just their content
      */
     fun getDisplayText(text: String): String {
-        return NOTE_PATTERN.matcher(text).replaceAll("$1")
+        return buildDisplayText(text).text
     }
 
     /**
