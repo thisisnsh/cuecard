@@ -23,13 +23,14 @@ export default {
 
     console.log("welcome_payload", JSON.stringify(payload));
 
-    const { email, name } = payload;
+    const { email, name, displayName } = payload;
 
     if (!email) {
       return new Response("Bad Request: email is required", { status: 400 });
     }
 
-    const firstName = name ? name.split(" ")[0] : "there";
+    const fullName = name || displayName;
+    const firstName = fullName ? fullName.split(" ")[0] : "there";
 
     try {
       const emailResponse = await fetch("https://api.resend.com/emails", {
