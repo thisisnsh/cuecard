@@ -412,6 +412,7 @@ struct TeleprompterView: View {
 
     private func seekForward() {
         // Seek forward 10 seconds worth of words
+        guard !content.words.isEmpty else { return }
         let wordsPerSecond = Double(settings.wordsPerMinute) / 60.0
         let wordsToSkip = Int(10 * wordsPerSecond)
         currentWordIndex = min(currentWordIndex + wordsToSkip, content.words.count - 1)
@@ -426,6 +427,7 @@ struct TeleprompterView: View {
 
     private func seekBackward() {
         // Seek backward 10 seconds worth of words
+        guard !content.words.isEmpty else { return }
         let wordsPerSecond = Double(settings.wordsPerMinute) / 60.0
         let wordsToSkip = Int(10 * wordsPerSecond)
         currentWordIndex = max(currentWordIndex - wordsToSkip, 0)
@@ -476,10 +478,12 @@ struct TeleprompterView: View {
     }
 
     private func updateCurrentWord() {
-        let wordsPerSecond = Double(settings.wordsPerMinute) / 60.0
-        let newWordIndex = min(Int(elapsedTime * wordsPerSecond), content.words.count - 1)
-        if newWordIndex != currentWordIndex && newWordIndex >= 0 {
-            currentWordIndex = newWordIndex
+        if !content.words.isEmpty {
+            let wordsPerSecond = Double(settings.wordsPerMinute) / 60.0
+            let newWordIndex = min(Int(elapsedTime * wordsPerSecond), content.words.count - 1)
+            if newWordIndex != currentWordIndex && newWordIndex >= 0 {
+                currentWordIndex = newWordIndex
+            }
         }
 
         pipManager.updateState(elapsedTime: elapsedTime, isPlaying: isPlaying, currentWordIndex: currentWordIndex)
