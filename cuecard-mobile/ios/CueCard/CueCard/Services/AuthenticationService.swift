@@ -10,7 +10,7 @@ import CryptoKit
 class AuthenticationService: ObservableObject {
     static let shared = AuthenticationService()
 
-    private let welcomeEndpoint = URL(string: "https://cuecard-mobile.thisisnsh.workers.dev/welcome")
+    private let welcomeEndpoint = URL(string: "https://cuecard-mobile.thisisnsh.workers.dev/v2/welcome")
 
     @Published var user: User?
     @Published var isAuthenticated = false
@@ -239,9 +239,12 @@ class AuthenticationService: ObservableObject {
         )
 
         do {
+            let idToken = try await user.getIDToken()
+
             var request = URLRequest(url: url)
             request.httpMethod = "POST"
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.setValue("Bearer \(idToken)", forHTTPHeaderField: "Authorization")
             request.httpBody = try JSONEncoder().encode(payload)
 
             let (_, response) = try await URLSession.shared.data(for: request)
