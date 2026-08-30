@@ -1,8 +1,123 @@
+const FIREBASE_PROJECT_ID = "cuecard-mobile";
+const JWKS_URL =
+  "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com";
+
+let cachedJwks = null;
+let cachedJwksExpiry = 0;
+
+async function fetchJwks() {
+  if (cachedJwks && Date.now() < cachedJwksExpiry) {
+    return cachedJwks;
+  }
+
+  const response = await fetch(JWKS_URL);
+  if (!response.ok) {
+    throw new Error("jwks_fetch_failed");
+  }
+
+  const jwks = await response.json();
+  const maxAge = Number(
+    (/max-age=(\d+)/.exec(response.headers.get("cache-control") || "") || [])[1] || 3600
+  );
+
+  cachedJwks = jwks;
+  cachedJwksExpiry = Date.now() + maxAge * 1000;
+  return jwks;
+}
+
+function base64UrlToBytes(value) {
+  const base64 = value.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = base64 + "=".repeat((4 - (base64.length % 4)) % 4);
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
+function decodeJsonSegment(segment) {
+  return JSON.parse(new TextDecoder().decode(base64UrlToBytes(segment)));
+}
+
+async function verifyIdToken(token) {
+  const parts = token.split(".");
+  if (parts.length !== 3) {
+    return null;
+  }
+
+  let header;
+  try {
+    header = decodeJsonSegment(parts[0]);
+  } catch {
+    return null;
+  }
+
+  if (header.alg !== "RS256" || !header.kid) {
+    return null;
+  }
+
+  const jwks = await fetchJwks();
+  const jwk = (jwks.keys || []).find((candidate) => candidate.kid === header.kid);
+  if (!jwk) {
+    return null;
+  }
+
+  const key = await crypto.subtle.importKey(
+    "jwk",
+    jwk,
+    { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+    false,
+    ["verify"]
+  );
+
+  const signatureIsValid = await crypto.subtle.verify(
+    "RSASSA-PKCS1-v1_5",
+    key,
+    base64UrlToBytes(parts[2]),
+    new TextEncoder().encode(`${parts[0]}.${parts[1]}`)
+  );
+  if (!signatureIsValid) {
+    return null;
+  }
+
+  let claims;
+  try {
+    claims = decodeJsonSegment(parts[1]);
+  } catch {
+    return null;
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+  if (claims.aud !== FIREBASE_PROJECT_ID) return null;
+  if (claims.iss !== `https://securetoken.google.com/${FIREBASE_PROJECT_ID}`) return null;
+  if (typeof claims.exp !== "number" || claims.exp <= now) return null;
+  if (typeof claims.iat !== "number" || claims.iat > now + 300) return null;
+  if (!claims.sub) return null;
+
+  return claims;
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    if (url.pathname !== "/welcome") {
+    // /welcome is the original unauthenticated endpoint that app builds already
+    // in the store still call. /v2/welcome takes the recipient from a verified
+    // Firebase ID token rather than from the request body.
+    const isLegacy = url.pathname === "/welcome";
+    const isVerified = url.pathname === "/v2/welcome";
+
+    if (!isLegacy && !isVerified) {
       return new Response("Not Found", { status: 404 });
     }
 
@@ -13,6 +128,29 @@ export default {
       });
     }
 
+    let claims = null;
+    if (isVerified) {
+      const authorization = request.headers.get("Authorization") || "";
+      const idToken = authorization.startsWith("Bearer ")
+        ? authorization.slice("Bearer ".length).trim()
+        : "";
+
+      if (!idToken) {
+        return new Response("Unauthorized", { status: 401 });
+      }
+
+      try {
+        claims = await verifyIdToken(idToken);
+      } catch (error) {
+        console.log("welcome_token_error", error?.message || "verification_failed");
+        return new Response("Service Unavailable", { status: 503 });
+      }
+
+      if (!claims) {
+        return new Response("Unauthorized", { status: 401 });
+      }
+    }
+
     let payload;
     try {
       payload = await request.json();
@@ -21,16 +159,15 @@ export default {
       return new Response("Bad Request", { status: 400 });
     }
 
-    console.log("welcome_payload", JSON.stringify(payload));
-
-    const { email, name, displayName } = payload;
+    // On the verified route the recipient comes from the token, never the body.
+    const email = claims ? claims.email : payload.email;
 
     if (!email) {
       return new Response("Bad Request: email is required", { status: 400 });
     }
 
-    const fullName = name || displayName;
-    const firstName = fullName ? fullName.split(" ")[0] : "there";
+    const fullName = (claims && claims.name) || payload.name || payload.displayName;
+    const firstName = fullName ? String(fullName).split(" ")[0] : "there";
 
     try {
       const emailResponse = await fetch("https://api.resend.com/emails", {
@@ -53,7 +190,7 @@ export default {
         return new Response("Failed to send email", { status: 500 });
       }
 
-      console.log("welcome_email_sent", email);
+      console.log("welcome_email_sent", claims ? claims.sub : "legacy");
       return new Response("OK", { status: 200 });
     } catch (error) {
       console.log("welcome_email_exception", error?.message || "unknown_error");
@@ -92,7 +229,7 @@ function getWelcomeEmailHtml(firstName) {
               </h1>
 
               <p style="margin: 0 0 24px; font-size: 16px; line-height: 1.6; color: #555555;">
-                Hey ${firstName}, thanks for signing up.
+                Hey ${escapeHtml(firstName)}, thanks for signing up.
               </p>
 
               <p style="margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: #555555;">
