@@ -104,9 +104,23 @@ struct LoginView: View {
                     }
 
                     // Privacy note
-                    Text("Your data stays on your device")
-                        .font(.caption)
-                        .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                    VStack(spacing: 6) {
+                        Text("Your data stays on your device")
+
+                        Link(destination: AppLinks.sourceCode) {
+                            HStack(spacing: 4) {
+                                Text("View the code. It's open source.")
+                                    .underline()
+                                Image(systemName: "arrow.up.right")
+                                    .font(.system(size: 9, weight: .semibold))
+                            }
+                        }
+                        .simultaneousGesture(TapGesture().onEnded {
+                            AnalyticsEvents.logButtonClick("source_code", screen: "login")
+                        })
+                    }
+                    .font(.caption)
+                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
                 }
                 .padding(.horizontal, 32)
                 .padding(.bottom, 48)

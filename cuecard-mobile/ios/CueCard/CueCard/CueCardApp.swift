@@ -46,3 +46,8 @@ struct AnalyticsEvents {
         Crashlytics.crashlytics().log("Button clicked: \(buttonName) on \(screen)")
     }
 }
+
+// MARK: - External Links
+enum AppLinks {
+    static let sourceCode = URL(string: "https://github.com/thisisnsh/cuecard")!
+}
