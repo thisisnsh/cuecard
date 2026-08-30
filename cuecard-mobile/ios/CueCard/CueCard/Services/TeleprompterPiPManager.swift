@@ -39,6 +39,9 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
     private var playbackTimerStartDate: Date?
     private var elapsedTimeAtPlaybackStart: Double = 0
     private var needsContentViewUpdate = false
+    private var lastRenderTimestamp: CFTimeInterval = 0
+    private var lastSourceRenderTimestamp: CFTimeInterval = 0
+    private var isRenderingToPiP = false
 
     // MARK: - Callbacks
 
@@ -92,6 +95,8 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
             return
         }
 
+        lastSourceRenderTimestamp = 0
+        updateContentView()
         pipController.startPictureInPicture()
 
         if minimizeApp {
@@ -148,10 +153,9 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
     }
 
     @objc private func handlePlaybackTimerTick() {
-        guard isPlaying, let startDate = playbackTimerStartDate else { return }
-        elapsedTime = elapsedTimeAtPlaybackStart + Date().timeIntervalSince(startDate)
-        // Keep PiP motion smooth by rendering every playback tick.
-        needsContentViewUpdate = true
+        // Fallback renderer for when the display link is not firing (app in background).
+        guard CACurrentMediaTime() - lastRenderTimestamp > 0.05 else { return }
+        render()
     }
 
     private func stopPlaybackTimer() {
@@ -207,6 +211,9 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
         pipWindow?.isHidden = true
         pipWindow = nil
         isPiPActive = false
+        isRenderingToPiP = false
+        lastRenderTimestamp = 0
+        lastSourceRenderTimestamp = 0
     }
 
     // MARK: - PiP Setup
@@ -218,7 +225,8 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
             return
         }
 
-        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene else {
+        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        guard let windowScene = scenes.first(where: { $0.activationState == .foregroundActive }) ?? scenes.first else {
             print("No window scene available")
             return
         }
@@ -304,7 +312,7 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
 
     private func startDisplayLink() {
         displayLink = CADisplayLink(target: self, selector: #selector(updateDisplay))
-        displayLink?.preferredFrameRateRange = CAFrameRateRange(minimum: 30, maximum: 30)
+        displayLink?.preferredFrameRateRange = CAFrameRateRange(minimum: 30, maximum: 60, preferred: 60)
         displayLink?.add(to: .main, forMode: .common)
     }
 
@@ -314,30 +322,47 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
     }
 
     @objc private func updateDisplay() {
-        guard needsContentViewUpdate else { return }
+        guard isRenderingToPiP || needsContentViewUpdate else { return }
+        render()
+    }
+
+    private func render() {
+        if isPlaying, let startDate = playbackTimerStartDate {
+            elapsedTime = elapsedTimeAtPlaybackStart + Date().timeIntervalSince(startDate)
+        }
         needsContentViewUpdate = false
+        lastRenderTimestamp = CACurrentMediaTime()
         updateContentView()
     }
 
     private func updateContentView() {
+        // Off PiP nothing is on screen, so the mirrored views only need to stay
+        // roughly current for the transition instead of tracking every frame.
+        if !isRenderingToPiP {
+            guard CACurrentMediaTime() - lastSourceRenderTimestamp > 0.1 else { return }
+            lastSourceRenderTimestamp = CACurrentMediaTime()
+        }
+
         let fontSize = CGFloat(settings.pipFontSize)
         let remainingTime = timerDuration > 0 ? timerDuration - Int(elapsedTime) : Int(elapsedTime)
 
         // Show countdown value if counting down (in mm:ss format), otherwise show timer
         let timerText = isCountingDown ? TeleprompterParser.formatTime(countdownValue) : TeleprompterParser.formatTime(remainingTime)
 
-        teleprompterContentView?.update(
-            text: text,
-            fontSize: fontSize,
-            isPlaying: isPlaying,
-            timerText: timerText,
-            timerDuration: timerDuration,
-            remainingTime: remainingTime,
-            elapsedTime: elapsedTime,
-            totalWords: totalWords,
-            wordsPerMinute: settings.wordsPerMinute,
-            isCountingDown: isCountingDown
-        )
+        if !isRenderingToPiP {
+            teleprompterContentView?.update(
+                text: text,
+                fontSize: fontSize,
+                isPlaying: isPlaying,
+                timerText: timerText,
+                timerDuration: timerDuration,
+                remainingTime: remainingTime,
+                elapsedTime: elapsedTime,
+                totalWords: totalWords,
+                wordsPerMinute: settings.wordsPerMinute,
+                isCountingDown: isCountingDown
+            )
+        }
 
         pipContentView?.update(
             text: text,
@@ -363,6 +388,7 @@ extension TeleprompterPiPManager: AVPictureInPictureControllerDelegate {
     nonisolated func pictureInPictureControllerWillStartPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
         Task { @MainActor in
             isPiPActive = true
+            isRenderingToPiP = true
             // Start playback timer if already playing when PiP starts
             if isPlaying {
                 startPlaybackTimer()
@@ -379,6 +405,9 @@ extension TeleprompterPiPManager: AVPictureInPictureControllerDelegate {
     nonisolated func pictureInPictureControllerWillStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
         Task { @MainActor in
             stopPlaybackTimer()
+            isRenderingToPiP = false
+            lastSourceRenderTimestamp = 0
+            updateContentView()
         }
     }
 
@@ -407,9 +436,12 @@ private class TeleprompterPiPContentView: UIView {
     private var topGradientLayer: CAGradientLayer?
     private var bottomGradientLayer: CAGradientLayer?
     private var lastContentId: String = ""
+    private var lastTimerText: String?
+    private var lastTimerColor: UIColor?
 
     var isDarkMode: Bool = true {
         didSet {
+            lastTimerColor = nil
             updateColors()
         }
     }
@@ -531,25 +563,36 @@ private class TeleprompterPiPContentView: UIView {
             textView.layoutIfNeeded()
             textView.contentOffset = .zero
             lastContentId = text
+            lastTimerText = nil
+            lastTimerColor = nil
         }
 
         // Continuous time-based scroll
-        updateContinuousScroll(elapsedTime: elapsedTime, totalWords: totalWords, wordsPerMinute: wordsPerMinute, snap: needsFullRebuild)
+        updateContinuousScroll(elapsedTime: elapsedTime, totalWords: totalWords, wordsPerMinute: wordsPerMinute)
 
-        timerLabel.text = " \(timerText) "
+        if lastTimerText != timerText {
+            lastTimerText = timerText
+            timerLabel.text = " \(timerText) "
+        }
+
+        let timerColor: UIColor
         if isCountingDown {
-            timerLabel.textColor = isDarkMode ? AppColors.UIColors.Dark.pink : AppColors.UIColors.Light.pink
+            timerColor = isDarkMode ? AppColors.UIColors.Dark.pink : AppColors.UIColors.Light.pink
         } else {
-            timerLabel.textColor = AppColors.timerUIColor(
+            timerColor = AppColors.timerUIColor(
                 remainingSeconds: remainingTime,
                 totalSeconds: timerDuration,
                 isDarkMode: isDarkMode
             )
         }
-        timerLabel.backgroundColor = (isDarkMode ? AppColors.UIColors.Dark.background : AppColors.UIColors.Light.background).withAlphaComponent(0.8)
+        if lastTimerColor != timerColor {
+            lastTimerColor = timerColor
+            timerLabel.textColor = timerColor
+            timerLabel.backgroundColor = (isDarkMode ? AppColors.UIColors.Dark.background : AppColors.UIColors.Light.background).withAlphaComponent(0.8)
+        }
     }
 
-    private func updateContinuousScroll(elapsedTime: Double, totalWords: Int, wordsPerMinute: Int, snap: Bool) {
+    private func updateContinuousScroll(elapsedTime: Double, totalWords: Int, wordsPerMinute: Int) {
         guard totalWords > 0, wordsPerMinute > 0 else { return }
 
         let wordsPerSecond = Double(wordsPerMinute) / 60.0
@@ -558,21 +601,10 @@ private class TeleprompterPiPContentView: UIView {
         let maxY = max(0, textView.contentSize.height - textView.bounds.height)
         let targetY = scrollFraction * maxY
 
-        if snap {
+        // The target is an exact function of elapsed time, so track it directly.
+        if abs(textView.contentOffset.y - targetY) > 0.01 {
             textView.setContentOffset(CGPoint(x: 0, y: targetY), animated: false)
-            return
         }
-
-        let currentY = textView.contentOffset.y
-        let delta = targetY - currentY
-        if abs(delta) < 0.5 {
-            textView.setContentOffset(CGPoint(x: 0, y: targetY), animated: false)
-            return
-        }
-
-        // Smooth interpolation toward target
-        let step = delta * 0.2
-        textView.setContentOffset(CGPoint(x: 0, y: currentY + step), animated: false)
     }
 
     private func buildAttributedString(
