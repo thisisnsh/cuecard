@@ -111,13 +111,11 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    // /welcome is the original unauthenticated endpoint that app builds already
-    // in the store still call. /v2/welcome takes the recipient from a verified
-    // Firebase ID token rather than from the request body.
-    const isLegacy = url.pathname === "/welcome";
-    const isVerified = url.pathname === "/v2/welcome";
+    if (url.pathname === "/welcome") {
+      return new Response("Gone", { status: 410 });
+    }
 
-    if (!isLegacy && !isVerified) {
+    if (url.pathname !== "/v2/welcome") {
       return new Response("Not Found", { status: 404 });
     }
 
@@ -128,27 +126,25 @@ export default {
       });
     }
 
-    let claims = null;
-    if (isVerified) {
-      const authorization = request.headers.get("Authorization") || "";
-      const idToken = authorization.startsWith("Bearer ")
-        ? authorization.slice("Bearer ".length).trim()
-        : "";
+    const authorization = request.headers.get("Authorization") || "";
+    const idToken = authorization.startsWith("Bearer ")
+      ? authorization.slice("Bearer ".length).trim()
+      : "";
 
-      if (!idToken) {
-        return new Response("Unauthorized", { status: 401 });
-      }
+    if (!idToken) {
+      return new Response("Unauthorized", { status: 401 });
+    }
 
-      try {
-        claims = await verifyIdToken(idToken);
-      } catch (error) {
-        console.log("welcome_token_error", error?.message || "verification_failed");
-        return new Response("Service Unavailable", { status: 503 });
-      }
+    let claims;
+    try {
+      claims = await verifyIdToken(idToken);
+    } catch (error) {
+      console.log("welcome_token_error", error?.message || "verification_failed");
+      return new Response("Service Unavailable", { status: 503 });
+    }
 
-      if (!claims) {
-        return new Response("Unauthorized", { status: 401 });
-      }
+    if (!claims) {
+      return new Response("Unauthorized", { status: 401 });
     }
 
     let payload;
@@ -159,14 +155,14 @@ export default {
       return new Response("Bad Request", { status: 400 });
     }
 
-    // On the verified route the recipient comes from the token, never the body.
-    const email = claims ? claims.email : payload.email;
+    // The recipient always comes from the verified token, never from the body.
+    const email = claims.email;
 
     if (!email) {
-      return new Response("Bad Request: email is required", { status: 400 });
+      return new Response("Bad Request: account has no email", { status: 400 });
     }
 
-    const fullName = (claims && claims.name) || payload.name || payload.displayName;
+    const fullName = claims.name || payload.name || payload.displayName;
     const firstName = fullName ? String(fullName).split(" ")[0] : "there";
 
     try {
@@ -190,7 +186,7 @@ export default {
         return new Response("Failed to send email", { status: 500 });
       }
 
-      console.log("welcome_email_sent", claims ? claims.sub : "legacy");
+      console.log("welcome_email_sent", claims.sub);
       return new Response("OK", { status: 200 });
     } catch (error) {
       console.log("welcome_email_exception", error?.message || "unknown_error");
