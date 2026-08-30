@@ -526,9 +526,16 @@ struct AttributedTextView: UIViewRepresentable {
     }
 
     class Coordinator: NSObject {
-        var lastWordIndex: Int = -1
-        var lastContentId: String = ""
+        var lastContentId: String?
+        var lastFontSize: CGFloat = 0
+        var lastColorScheme: ColorScheme = .dark
         var lastProgressBucket: Double = -1
+        var appliedProgress: Double = 0
+        var wordRanges: [NSRange] = []
+        var wordIsNote: [Bool] = []
+        var lastScrolledWordIndex: Int = -1
+        var lastScrollTarget: CGFloat = -1
+        var lastBoundsHeight: CGFloat = 0
         var onTap: (() -> Void)?
 
         init(onTap: (() -> Void)?) {
@@ -557,75 +564,123 @@ struct AttributedTextView: UIViewRepresentable {
     }
 
     func updateUIView(_ textView: UITextView, context: Context) {
-        context.coordinator.onTap = onTap
+        let coordinator = context.coordinator
+        coordinator.onTap = onTap
         textView.textContainerInset = UIEdgeInsets(top: topPadding, left: 24, bottom: bottomPadding, right: 24)
+
         let contentId = content.fullText
-        let progressBucket = (highlightProgress * 10).rounded(.down) / 10
-        let needsFullRebuild = context.coordinator.lastContentId != contentId
-        let needsHighlightUpdate = context.coordinator.lastProgressBucket != progressBucket
+        let needsFullRebuild = coordinator.lastContentId != contentId
+            || coordinator.lastFontSize != fontSize
+            || coordinator.lastColorScheme != colorScheme
 
-        // Only rebuild attributed string if content changed or word index changed
-        if needsFullRebuild || context.coordinator.lastWordIndex != currentWordIndex || needsHighlightUpdate {
-            let attributedString = buildAttributedString()
-
-            // Save current offset before updating
-            let savedOffset = textView.contentOffset
-
-            textView.attributedText = attributedString
+        if needsFullRebuild {
+            let built = buildAttributedString()
+            textView.attributedText = built.text
             textView.layoutIfNeeded()
+            textView.contentOffset = .zero
 
-            // Restore offset when highlighting updates (avoid jumping to top)
-            if needsFullRebuild {
-                textView.contentOffset = .zero
-            } else {
-                textView.setContentOffset(savedOffset, animated: false)
+            coordinator.lastContentId = contentId
+            coordinator.lastFontSize = fontSize
+            coordinator.lastColorScheme = colorScheme
+            coordinator.wordRanges = built.wordRanges
+            coordinator.wordIsNote = built.wordIsNote
+            coordinator.appliedProgress = highlightProgress
+            coordinator.lastProgressBucket = (highlightProgress * 10).rounded(.down) / 10
+            coordinator.lastScrolledWordIndex = -1
+            coordinator.lastScrollTarget = -1
+            coordinator.lastBoundsHeight = 0
+        } else {
+            // Only the few words inside the fade window change color, so recolor
+            // those in place instead of rebuilding and re-laying out the document.
+            let progressBucket = (highlightProgress * 10).rounded(.down) / 10
+            if coordinator.lastProgressBucket != progressBucket {
+                coordinator.lastProgressBucket = progressBucket
+                applyHighlight(to: textView, coordinator: coordinator)
             }
-
-            context.coordinator.lastWordIndex = currentWordIndex
-            context.coordinator.lastContentId = contentId
-            context.coordinator.lastProgressBucket = progressBucket
         }
 
         // Auto-scroll to current word
+        guard currentWordIndex < coordinator.wordRanges.count else { return }
+
+        let boundsHeight = textView.bounds.height
+        guard currentWordIndex != coordinator.lastScrolledWordIndex
+            || boundsHeight != coordinator.lastBoundsHeight else { return }
+
+        coordinator.lastScrolledWordIndex = currentWordIndex
+        coordinator.lastBoundsHeight = boundsHeight
+
+        var scrollY: CGFloat = 0
         if currentWordIndex > 0 {
-            let wordRanges = getWordRanges()
-            if currentWordIndex < wordRanges.count {
-                let range = wordRanges[currentWordIndex]
-                let glyphRange = textView.layoutManager.glyphRange(forCharacterRange: range, actualCharacterRange: nil)
-                let rect = textView.layoutManager.boundingRect(forGlyphRange: glyphRange, in: textView.textContainer)
+            let range = coordinator.wordRanges[currentWordIndex]
+            let glyphRange = textView.layoutManager.glyphRange(forCharacterRange: range, actualCharacterRange: nil)
+            let rect = textView.layoutManager.boundingRect(forGlyphRange: glyphRange, in: textView.textContainer)
 
-                let targetY = rect.origin.y + topPadding - (textView.bounds.height / 3)
-                let maxY = textView.contentSize.height - textView.bounds.height
-                let scrollY = max(0, min(targetY, maxY))
+            let targetY = rect.origin.y + topPadding - (boundsHeight / 3)
+            let maxY = textView.contentSize.height - boundsHeight
+            scrollY = max(0, min(targetY, maxY))
+        }
 
-                UIView.animate(withDuration: 0.3, delay: 0, options: [.curveEaseInOut, .allowUserInteraction]) {
-                    textView.contentOffset = CGPoint(x: 0, y: scrollY)
-                }
-            }
+        // Re-target only on a real move, so the eased scroll can finish instead of
+        // being restarted and snapped on every frame.
+        guard abs(scrollY - coordinator.lastScrollTarget) > 0.5 else { return }
+        coordinator.lastScrollTarget = scrollY
+
+        UIView.animate(withDuration: 0.3, delay: 0, options: [.curveEaseInOut, .allowUserInteraction, .beginFromCurrentState]) {
+            textView.contentOffset = CGPoint(x: 0, y: scrollY)
         }
     }
 
-    private func buildAttributedString() -> NSAttributedString {
+    private func applyHighlight(to textView: UITextView, coordinator: Coordinator) {
+        let wordCount = coordinator.wordRanges.count
+        guard wordCount > 0 else { return }
+
+        let previous = coordinator.appliedProgress
+        let current = highlightProgress
+        coordinator.appliedProgress = current
+
+        // Words below the window are fully faded and words above it are fully lit,
+        // so only the span the window swept over since the last pass can have changed.
+        let limit = Double(wordCount)
+        let lower = min(max(min(previous, current) - 1, -1), limit)
+        let upper = min(max(max(previous, current) + Self.fadeRange + 1, -1), limit)
+        let first = max(0, Int(lower.rounded(.down)))
+        let last = min(wordCount - 1, Int(upper.rounded(.up)))
+        guard first <= last else { return }
+
+        let textColor = colorScheme == .dark ? AppColors.UIColors.Dark.textPrimary : AppColors.UIColors.Light.textPrimary
+        let storage = textView.textStorage
+
+        storage.beginEditing()
+        for index in first...last where !coordinator.wordIsNote[index] {
+            storage.addAttribute(
+                .foregroundColor,
+                value: textColor.withAlphaComponent(highlightAlpha(for: index)),
+                range: coordinator.wordRanges[index]
+            )
+        }
+        storage.endEditing()
+    }
+
+    private static let fadeRange = 2.0
+
+    private func highlightAlpha(for index: Int) -> CGFloat {
+        let distance = highlightProgress - Double(index)
+        let t = min(max((distance + Self.fadeRange) / Self.fadeRange, 0.0), 1.0)
+        let blend = t * t * (3.0 - 2.0 * t)
+        return 0.3 + CGFloat(blend) * 0.7
+    }
+
+    private func buildAttributedString() -> (text: NSAttributedString, wordRanges: [NSRange], wordIsNote: [Bool]) {
         let result = NSMutableAttributedString()
+        var wordRanges: [NSRange] = []
+        var wordIsNote: [Bool] = []
         let paragraphs = content.fullText.components(separatedBy: "\n\n")
 
         let textColor = colorScheme == .dark ? AppColors.UIColors.Dark.textPrimary : AppColors.UIColors.Light.textPrimary
         let pinkColor = colorScheme == .dark ? AppColors.UIColors.Dark.pink : AppColors.UIColors.Light.pink
         let noteKern = fontSize * 0.05
-        let fadeRange = 2.0
 
         var globalWordIndex = 0
-
-        func smoothstep(_ edge0: Double, _ edge1: Double, _ x: Double) -> Double {
-            let t = min(max((x - edge0) / (edge1 - edge0), 0.0), 1.0)
-            return t * t * (3.0 - 2.0 * t)
-        }
-
-        func highlightAlpha(for index: Int) -> CGFloat {
-            let distance = highlightProgress - Double(index)
-            let blend = smoothstep(-fadeRange, 0.0, distance)
-            return 0.3 + CGFloat(blend) * 0.7
-        }
 
         for (paragraphIndex, paragraph) in paragraphs.enumerated() {
             if paragraphIndex > 0 {
@@ -657,7 +712,10 @@ struct AttributedTextView: UIViewRepresentable {
                             if lineWordIndex > 0 {
                                 result.append(NSAttributedString(string: " ", attributes: noteAttrs))
                             }
+                            let location = result.length
                             result.append(NSAttributedString(string: String(word), attributes: noteAttrs))
+                            wordRanges.append(NSRange(location: location, length: result.length - location))
+                            wordIsNote.append(true)
                             globalWordIndex += 1
                             lineWordIndex += 1
                         }
@@ -678,7 +736,10 @@ struct AttributedTextView: UIViewRepresentable {
                                 .font: UIFont.systemFont(ofSize: fontSize, weight: .medium),
                                 .foregroundColor: color
                             ]
+                            let location = result.length
                             result.append(NSAttributedString(string: word, attributes: attrs))
+                            wordRanges.append(NSRange(location: location, length: result.length - location))
+                            wordIsNote.append(false)
 
                             globalWordIndex += 1
                             lineWordIndex += 1
@@ -694,53 +755,7 @@ struct AttributedTextView: UIViewRepresentable {
         paragraphStyle.paragraphSpacing = fontSize * 0.45
         result.addAttribute(.paragraphStyle, value: paragraphStyle, range: NSRange(location: 0, length: result.length))
 
-        return result
-    }
-
-    private func getWordRanges() -> [NSRange] {
-        var ranges: [NSRange] = []
-        let fullText = NSMutableString()
-        let paragraphs = content.fullText.components(separatedBy: "\n\n")
-
-        for (paragraphIndex, paragraph) in paragraphs.enumerated() {
-            if paragraphIndex > 0 {
-                fullText.append("\n")
-            }
-
-            let lines = paragraph.components(separatedBy: "\n")
-
-            for (lineIndex, line) in lines.enumerated() {
-                if lineIndex > 0 {
-                    fullText.append("\n")
-                }
-
-                if line.isEmpty { continue }
-
-                let segments = splitLineIntoSegments(line)
-                var lineWordIndex = 0
-
-                for segment in segments {
-                    let segmentText: String
-                    switch segment {
-                    case .note(let content): segmentText = content
-                    case .text(let content): segmentText = content
-                    }
-
-                    let words = segmentText.split(separator: " ", omittingEmptySubsequences: true).map(String.init)
-                    for word in words {
-                        if lineWordIndex > 0 {
-                            fullText.append(" ")
-                        }
-                        let location = fullText.length
-                        fullText.append(word)
-                        ranges.append(NSRange(location: location, length: word.count))
-                        lineWordIndex += 1
-                    }
-                }
-            }
-        }
-
-        return ranges
+        return (result, wordRanges, wordIsNote)
     }
 
     private enum LineSegment {
