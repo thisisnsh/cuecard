@@ -84,15 +84,16 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
     }
 
     /// Start PiP mode
-    func startPiP(minimizeApp: Bool = false) {
+    @discardableResult
+    func startPiP(minimizeApp: Bool = false) -> Bool {
         guard let pipController = pipController else {
             print("PiP controller not available")
-            return
+            return false
         }
 
         guard pipController.isPictureInPicturePossible else {
             print("PiP is not possible")
-            return
+            return false
         }
 
         lastSourceRenderTimestamp = 0
@@ -105,6 +106,8 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
                 self.minimizeApp()
             }
         }
+
+        return true
     }
 
     /// Minimize the app to background
@@ -414,6 +417,15 @@ extension TeleprompterPiPManager: AVPictureInPictureControllerDelegate {
     nonisolated func pictureInPictureControllerDidStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
         Task { @MainActor in
             isPiPActive = false
+            onPiPClosed?()
+        }
+    }
+
+    nonisolated func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, failedToStartPictureInPictureWithError error: Error) {
+        Task { @MainActor in
+            isPiPActive = false
+            isRenderingToPiP = false
+            stopPlaybackTimer()
             onPiPClosed?()
         }
     }
