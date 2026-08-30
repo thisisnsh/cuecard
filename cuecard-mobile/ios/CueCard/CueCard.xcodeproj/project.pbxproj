@@ -25,6 +25,7 @@
 		017 /* AppColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 113 /* AppColors.swift */; };
 		018 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 305 /* FirebaseCrashlytics */; };
 		019 /* ReviewPromptService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 114 /* ReviewPromptService.swift */; };
+		020 /* ScriptDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 115 /* ScriptDocument.swift */; };
 		022 /* Cue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 116 /* Cue.swift */; };
 		023 /* CueEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 117 /* CueEditor.swift */; };
 		AA7130F62F04E5BC00F5C366 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = AA7130F52F04E5BC00F5C366 /* GoogleService-Info.plist */; };
@@ -45,6 +46,7 @@
 		112 /* TeleprompterPiPManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeleprompterPiPManager.swift; sourceTree = "<group>"; };
 		113 /* AppColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppColors.swift; sourceTree = "<group>"; };
 		114 /* ReviewPromptService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewPromptService.swift; sourceTree = "<group>"; };
+		115 /* ScriptDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptDocument.swift; sourceTree = "<group>"; };
 		116 /* Cue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cue.swift; sourceTree = "<group>"; };
 		117 /* CueEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueEditor.swift; sourceTree = "<group>"; };
 		201 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -123,6 +125,7 @@
 			children = (
 				111 /* TeleprompterParser.swift */,
 				113 /* AppColors.swift */,
+				115 /* ScriptDocument.swift */,
 				116 /* Cue.swift */,
 			);
 			path = Models;
@@ -262,6 +265,7 @@
 				014 /* TeleprompterView.swift in Sources */,
 				015 /* TeleprompterParser.swift in Sources */,
 				016 /* TeleprompterPiPManager.swift in Sources */,
+				020 /* ScriptDocument.swift in Sources */,
 				022 /* Cue.swift in Sources */,
 				023 /* CueEditor.swift in Sources */,
 			);

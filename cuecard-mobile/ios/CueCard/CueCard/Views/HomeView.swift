@@ -1,5 +1,6 @@
 import SwiftUI
 import StoreKit
+import UniformTypeIdentifiers
 import FirebaseAnalytics
 import FirebaseCrashlytics
 
@@ -14,6 +15,11 @@ struct HomeView: View {
     @State private var showingSavedNotes = false
     @State private var showingSaveDialog = false
     @State private var saveNoteTitle = ""
+    @State private var showingImporter = false
+    @State private var showingExporter = false
+    @State private var exportDocument: ScriptDocument?
+    @State private var exportFileName = "Speech"
+    @State private var fileErrorMessage: String?
     @State private var timerPickerTransitionTask: Task<Void, Never>?
     @State private var isEditorFocused = false
     @State private var editorSelection = NSRange(location: 0, length: 0)
@@ -165,6 +171,40 @@ struct HomeView: View {
         }
     }
 
+    private func startExport() {
+        exportDocument = ScriptDocument(text: settingsService.notes)
+        exportFileName = ScriptFile.suggestedFileName(
+            title: settingsService.currentNote?.title,
+            content: settingsService.notes
+        )
+        showingExporter = true
+    }
+
+    private func handleImport(_ result: Result<URL, Error>) {
+        switch result {
+        case .success(let url):
+            do {
+                let text = try ScriptFile.readText(from: url)
+                guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                    fileErrorMessage = "That file is empty."
+                    return
+                }
+                settingsService.importNote(title: ScriptFile.title(for: url), content: text)
+            } catch {
+                fileErrorMessage = "This file couldn't be read as text."
+            }
+        case .failure(let error):
+            fileErrorMessage = error.localizedDescription
+        }
+    }
+
+    private func handleExport(_ result: Result<URL, Error>) {
+        exportDocument = nil
+        if case .failure(let error) = result {
+            fileErrorMessage = error.localizedDescription
+        }
+    }
+
     /// Drop a cue tag in at the caret and leave the caret just after it, so the user
     /// can keep typing without hunting for their place.
     private func insertCue(_ cue: Cue) {
@@ -287,6 +327,23 @@ struct HomeView: View {
                             }) {
                                 Label("New Note", systemImage: "square.and.pencil")
                             }
+
+                            Divider()
+
+                            Button(action: {
+                                AnalyticsEvents.logButtonClick("import_file", screen: "home")
+                                showingImporter = true
+                            }) {
+                                Label("Import from File", systemImage: "arrow.down.doc")
+                            }
+
+                            Button(action: {
+                                AnalyticsEvents.logButtonClick("export_file", screen: "home")
+                                startExport()
+                            }) {
+                                Label("Export to File", systemImage: "arrow.up.doc")
+                            }
+                            .disabled(!hasNotes)
                         } label: {
                             Image(systemName: "ellipsis.circle")
                                 .font(.title3)
@@ -335,6 +392,28 @@ struct HomeView: View {
                 }
             } message: {
                 Text("Enter a title for your note")
+            }
+            .fileImporter(
+                isPresented: $showingImporter,
+                allowedContentTypes: ScriptFile.importableContentTypes
+            ) { result in
+                handleImport(result)
+            }
+            .fileExporter(
+                isPresented: $showingExporter,
+                document: exportDocument,
+                contentType: .plainText,
+                defaultFilename: exportFileName
+            ) { result in
+                handleExport(result)
+            }
+            .alert("Something Went Wrong", isPresented: Binding(
+                get: { fileErrorMessage != nil },
+                set: { if !$0 { fileErrorMessage = nil } }
+            )) {
+                Button("OK", role: .cancel) { fileErrorMessage = nil }
+            } message: {
+                Text(fileErrorMessage ?? "")
             }
             .fullScreenCover(isPresented: $showingTeleprompter, onDismiss: requestReviewIfEarned) {
                 TeleprompterView(

@@ -414,6 +414,16 @@ Try it out. I think you'll love it.
         isLoadingNote = false
     }
 
+    /// Load imported file content into the editor and keep it as a saved note.
+    /// The file already carries a name, so there's nothing to prompt the user for.
+    func importNote(title: String, content: String) {
+        isLoadingNote = true
+        notes = content
+        currentNoteId = nil
+        isLoadingNote = false
+        saveCurrentNote(title: title)
+    }
+
     /// Add sample text to current note
     func addSampleText() {
         notes = Self.defaultNoteText
