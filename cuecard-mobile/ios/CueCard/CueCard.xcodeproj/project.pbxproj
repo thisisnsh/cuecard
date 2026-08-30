@@ -25,6 +25,8 @@
 		017 /* AppColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 113 /* AppColors.swift */; };
 		018 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 305 /* FirebaseCrashlytics */; };
 		019 /* ReviewPromptService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 114 /* ReviewPromptService.swift */; };
+		022 /* Cue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 116 /* Cue.swift */; };
+		023 /* CueEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 117 /* CueEditor.swift */; };
 		AA7130F62F04E5BC00F5C366 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = AA7130F52F04E5BC00F5C366 /* GoogleService-Info.plist */; };
 		AA856D562F060DFC00B0CBC6 /* GlassEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA856D542F060DFC00B0CBC6 /* GlassEffect.swift */; };
 /* End PBXBuildFile section */
@@ -43,6 +45,8 @@
 		112 /* TeleprompterPiPManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeleprompterPiPManager.swift; sourceTree = "<group>"; };
 		113 /* AppColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppColors.swift; sourceTree = "<group>"; };
 		114 /* ReviewPromptService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewPromptService.swift; sourceTree = "<group>"; };
+		116 /* Cue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cue.swift; sourceTree = "<group>"; };
+		117 /* CueEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueEditor.swift; sourceTree = "<group>"; };
 		201 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		501 /* CueCard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CueCard.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA2E5C0E2F0F38B500E1D079 /* CueCard.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CueCard.entitlements; sourceTree = "<group>"; };
@@ -96,6 +100,7 @@
 				102 /* ContentView.swift */,
 				103 /* LoginView.swift */,
 				104 /* HomeView.swift */,
+				117 /* CueEditor.swift */,
 				109 /* SettingsView.swift */,
 				110 /* TeleprompterView.swift */,
 			);
@@ -118,6 +123,7 @@
 			children = (
 				111 /* TeleprompterParser.swift */,
 				113 /* AppColors.swift */,
+				116 /* Cue.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -256,6 +262,8 @@
 				014 /* TeleprompterView.swift in Sources */,
 				015 /* TeleprompterParser.swift in Sources */,
 				016 /* TeleprompterPiPManager.swift in Sources */,
+				022 /* Cue.swift in Sources */,
+				023 /* CueEditor.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

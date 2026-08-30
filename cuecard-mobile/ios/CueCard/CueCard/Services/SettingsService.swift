@@ -200,6 +200,7 @@ class SettingsService: ObservableObject {
     private let notesKey = "cuecard_notes"
     private let savedNotesKey = "cuecard_saved_notes"
     private let currentNoteIdKey = "cuecard_current_note_id"
+    private let cuesKey = "cuecard_cues"
     private var isLoadingNote = false
 
     @Published var settings: TeleprompterSettings {
@@ -232,29 +233,36 @@ class SettingsService: ObservableObject {
         }
     }
 
+    /// The user's reusable delivery cues, in the order they appear in the cue bar
+    @Published var cues: [Cue] = [] {
+        didSet {
+            saveCues()
+        }
+    }
+
     /// Default text for new notes
     static let defaultNoteText = """
 Welcome everyone.
 
 I'm excited to be here today to talk about CueCard.
 
-[note smile and pause]
+[note:pink smile and pause]
 
 It keeps your speaker notes visible above all apps, so you can use your existing camera apps and still read your notes.
 
-[note pause]
+[note:yellow pause]
 
 It has a timer so you know if you're being brief… or too passionate.
 
-[note light chuckle]
+[note:green light chuckle]
 
-And the pink highlights?
+And the colored highlights?
 
-[note emphasize]
+[note:purple emphasize]
 
 Those are your secret cues — reminders to smile, pause, or not panic.
 
-[note pause]
+[note:yellow pause]
 
 Try it out. I think you'll love it.
 """
@@ -286,10 +294,43 @@ Try it out. I think you'll love it.
             self.currentNoteId = id
         }
 
+        // Load cues, seeding the starter set the first time around
+        if let data = userDefaults.data(forKey: cuesKey),
+           let decoded = try? JSONDecoder().decode([Cue].self, from: data) {
+            self.cues = decoded
+        } else {
+            self.cues = Cue.defaults
+            userDefaults.set(try? JSONEncoder().encode(Cue.defaults), forKey: cuesKey)
+        }
+
         // Notes start empty - users can add sample text via the button
         if needsSave {
             saveSettings()
         }
+    }
+
+    private func saveCues() {
+        if let encoded = try? JSONEncoder().encode(cues) {
+            userDefaults.set(encoded, forKey: cuesKey)
+        }
+    }
+
+    // MARK: - Cues
+
+    /// Add a cue to the front of the library, where it's easiest to reach next time
+    func addCue(_ cue: Cue) {
+        cues.insert(cue, at: 0)
+    }
+
+    /// Update a saved cue. Scripts already written keep the text they were given —
+    /// a cue is a shortcut for typing a tag, not a live reference to one.
+    func updateCue(_ cue: Cue) {
+        guard let index = cues.firstIndex(where: { $0.id == cue.id }) else { return }
+        cues[index] = cue
+    }
+
+    func deleteCue(id: UUID) {
+        cues.removeAll { $0.id == id }
     }
 
     private func saveSettings() {
@@ -398,6 +439,7 @@ Try it out. I think you'll love it.
         notes = ""
         savedNotes = []
         currentNoteId = nil
+        cues = Cue.defaults
         userDefaults.removeObject(forKey: settingsKey)
         userDefaults.removeObject(forKey: notesKey)
         userDefaults.removeObject(forKey: savedNotesKey)

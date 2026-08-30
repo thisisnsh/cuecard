@@ -15,7 +15,9 @@ struct HomeView: View {
     @State private var showingSaveDialog = false
     @State private var saveNoteTitle = ""
     @State private var timerPickerTransitionTask: Task<Void, Never>?
-    @FocusState private var isTextEditorFocused: Bool
+    @State private var isEditorFocused = false
+    @State private var editorSelection = NSRange(location: 0, length: 0)
+    @State private var composerMode: CueComposerMode?
     @Environment(\.requestReview) private var requestReview
 
     private var hasNotes: Bool {
@@ -163,6 +165,16 @@ struct HomeView: View {
         }
     }
 
+    /// Drop a cue tag in at the caret and leave the caret just after it, so the user
+    /// can keep typing without hunting for their place.
+    private func insertCue(_ cue: Cue) {
+        AnalyticsEvents.logButtonClick("insert_cue", screen: "home")
+
+        let result = settingsService.notes.insertingCue(cue.tag, at: editorSelection)
+        settingsService.notes = result.text
+        editorSelection = NSRange(location: result.caret, length: 0)
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -174,13 +186,32 @@ struct HomeView: View {
                     // Notes editor
                     NotesEditorView(
                         text: $settingsService.notes,
-                        isFocused: $isTextEditorFocused,
+                        selectedRange: $editorSelection,
+                        isFocused: $isEditorFocused,
                         colorScheme: colorScheme
                     )
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
             .overlay(alignment: .bottom) {
+                if isEditorFocused {
+                    CueBar(
+                        cues: settingsService.cues,
+                        colorScheme: colorScheme,
+                        onInsert: insertCue,
+                        onCreate: {
+                            AnalyticsEvents.logButtonClick("new_cue", screen: "home")
+                            composerMode = .create
+                        },
+                        onEdit: { composerMode = .edit($0) },
+                        onRecolor: { cue, color in
+                            settingsService.updateCue(Cue(id: cue.id, text: cue.text, color: color))
+                        },
+                        onDelete: { settingsService.deleteCue(id: $0.id) },
+                        onDismissKeyboard: { isEditorFocused = false }
+                    )
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                } else {
                 HStack(alignment: .bottom, spacing: 12) {
                     VStack(alignment: .leading, spacing: 12) {
                         timerControl
@@ -190,7 +221,7 @@ struct HomeView: View {
 
                     Button(action: {
                         AnalyticsEvents.logButtonClick("start_teleprompter", screen: "home")
-                        isTextEditorFocused = false
+                        isEditorFocused = false
                         showingTeleprompter = true
                     }) {
                         Image(systemName: "play.fill")
@@ -208,7 +239,9 @@ struct HomeView: View {
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 24)
+                }
             }
+            .animation(.easeInOut(duration: 0.2), value: isEditorFocused)
             .navigationTitle("CueCard")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(AppColors.background(for: colorScheme), for: .navigationBar)
@@ -278,6 +311,19 @@ struct HomeView: View {
             .sheet(isPresented: $showingSavedNotes) {
                 SavedNotesView()
             }
+            .sheet(item: $composerMode) { mode in
+                CueComposerSheet(mode: mode) { cue, keepInLibrary in
+                    switch mode {
+                    case .create:
+                        if keepInLibrary {
+                            settingsService.addCue(cue)
+                        }
+                        insertCue(cue)
+                    case .edit:
+                        settingsService.updateCue(cue)
+                    }
+                }
+            }
             .alert("Save Note", isPresented: $showingSaveDialog) {
                 TextField("Note title", text: $saveNoteTitle)
                 Button("Cancel", role: .cancel) { }
@@ -305,31 +351,32 @@ struct HomeView: View {
     }
 }
 
-/// Notes editor with syntax highlighting for [note] tags
+/// Notes editor with live syntax highlighting for [note] cues
 struct NotesEditorView: View {
     @Binding var text: String
-    var isFocused: FocusState<Bool>.Binding
+    @Binding var selectedRange: NSRange
+    @Binding var isFocused: Bool
     let colorScheme: ColorScheme
 
     var body: some View {
         ZStack(alignment: .topLeading) {
             // Placeholder
             if text.isEmpty {
-                Text("Add your script here...\n\nUse [note text] for delivery cues like \"Welcome Everyone [note smile and pause]\"")                    
+                Text("Add your script here...\n\nTap a cue below the script to drop in a delivery reminder like \"Welcome everyone [note smile and pause]\"")
                     .foregroundStyle(AppColors.textSecondary(for: colorScheme).opacity(0.6))
                     .padding(.horizontal, 20)
                     .padding(.vertical, 16)
                     .allowsHitTesting(false)
             }
 
-            // Text editor
-            TextEditor(text: $text)
-                .focused(isFocused)
-                .scrollContentBackground(.hidden)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .font(.system(size: 16, weight: .medium))
-                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+            CueTextEditor(
+                text: $text,
+                selectedRange: $selectedRange,
+                isFocused: $isFocused,
+                colorScheme: colorScheme
+            )
+            .padding(.horizontal, 4)
+            .padding(.vertical, 8)
         }
     }
 }

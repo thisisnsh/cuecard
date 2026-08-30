@@ -11,6 +11,8 @@ struct AppColors {
         static let green = Color(hex: "#19c332")
         static let pink = Color(hex: "#ff6adf")
         static let red = Color(hex: "#ff605c")
+        static let blue = Color(hex: "#4da6ff")
+        static let purple = Color(hex: "#b07cff")
     }
 
     // MARK: - Light Mode Colors
@@ -22,6 +24,8 @@ struct AppColors {
         static let green = Color(hex: "#0c7a29")
         static let pink = Color(hex: "#b82a82")
         static let red = Color(hex: "#c23a36")
+        static let blue = Color(hex: "#1462c4")
+        static let purple = Color(hex: "#6b3fbe")
     }
 
     // MARK: - UIColor versions for UIKit
@@ -34,6 +38,8 @@ struct AppColors {
             static let green = UIColor(hex: "#19c332")
             static let pink = UIColor(hex: "#ff6adf")
             static let red = UIColor(hex: "#ff605c")
+            static let blue = UIColor(hex: "#4da6ff")
+            static let purple = UIColor(hex: "#b07cff")
         }
 
         struct Light {
@@ -44,6 +50,8 @@ struct AppColors {
             static let green = UIColor(hex: "#0c7a29")
             static let pink = UIColor(hex: "#b82a82")
             static let red = UIColor(hex: "#c23a36")
+            static let blue = UIColor(hex: "#1462c4")
+            static let purple = UIColor(hex: "#6b3fbe")
         }
     }
 }
@@ -83,6 +91,16 @@ extension AppColors {
     /// Get red accent color based on color scheme
     static func red(for colorScheme: ColorScheme) -> Color {
         colorScheme == .dark ? Dark.red : Light.red
+    }
+
+    /// Get blue accent color based on color scheme
+    static func blue(for colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark ? Dark.blue : Light.blue
+    }
+
+    /// Get purple accent color based on color scheme
+    static func purple(for colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark ? Dark.purple : Light.purple
     }
 }
 

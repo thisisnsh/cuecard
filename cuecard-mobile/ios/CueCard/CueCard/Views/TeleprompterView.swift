@@ -678,7 +678,6 @@ struct AttributedTextView: UIViewRepresentable {
         let paragraphs = content.fullText.components(separatedBy: "\n\n")
 
         let textColor = colorScheme == .dark ? AppColors.UIColors.Dark.textPrimary : AppColors.UIColors.Light.textPrimary
-        let pinkColor = colorScheme == .dark ? AppColors.UIColors.Dark.pink : AppColors.UIColors.Light.pink
         let noteKern = fontSize * 0.05
 
         var globalWordIndex = 0
@@ -697,15 +696,15 @@ struct AttributedTextView: UIViewRepresentable {
 
                 if line.isEmpty { continue }
 
-                let segments = splitLineIntoSegments(line)
+                let segments = TeleprompterParser.segments(in: line)
                 var lineWordIndex = 0
 
                 for segment in segments {
                     switch segment {
-                    case .note(let noteContent):
+                    case .cue(let noteContent, let cueColor):
                         let noteAttrs: [NSAttributedString.Key: Any] = [
                             .font: UIFont.systemFont(ofSize: fontSize * 0.72, weight: .semibold),
-                            .foregroundColor: pinkColor,
+                            .foregroundColor: cueColor.uiColor(isDarkMode: colorScheme == .dark),
                             .kern: noteKern
                         ]
                         let noteWords = noteContent.split(separator: " ", omittingEmptySubsequences: true)
@@ -757,54 +756,6 @@ struct AttributedTextView: UIViewRepresentable {
         result.addAttribute(.paragraphStyle, value: paragraphStyle, range: NSRange(location: 0, length: result.length))
 
         return (result, wordRanges, wordIsNote)
-    }
-
-    private enum LineSegment {
-        case text(String)
-        case note(String)
-    }
-
-    private func splitLineIntoSegments(_ line: String) -> [LineSegment] {
-        let pattern = #"\[note\s+([^\]]+)\]"#
-        guard let regex = try? NSRegularExpression(pattern: pattern) else {
-            return [.text(line)]
-        }
-
-        let nsLine = line as NSString
-        let matches = regex.matches(in: line, range: NSRange(location: 0, length: nsLine.length))
-
-        if matches.isEmpty {
-            return [.text(line)]
-        }
-
-        var segments: [LineSegment] = []
-        var lastEnd = line.startIndex
-
-        for match in matches {
-            guard let fullRange = Range(match.range, in: line),
-                  let contentRange = Range(match.range(at: 1), in: line) else { continue }
-
-            // Text before the note
-            if lastEnd < fullRange.lowerBound {
-                let before = String(line[lastEnd..<fullRange.lowerBound]).trimmingCharacters(in: .whitespaces)
-                if !before.isEmpty {
-                    segments.append(.text(before))
-                }
-            }
-
-            segments.append(.note(String(line[contentRange])))
-            lastEnd = fullRange.upperBound
-        }
-
-        // Text after the last note
-        if lastEnd < line.endIndex {
-            let after = String(line[lastEnd...]).trimmingCharacters(in: .whitespaces)
-            if !after.isEmpty {
-                segments.append(.text(after))
-            }
-        }
-
-        return segments
     }
 }
 
