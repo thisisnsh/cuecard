@@ -195,6 +195,7 @@ class AuthenticationService: ObservableObject {
             try Auth.auth().signOut()
             GIDSignIn.sharedInstance.signOut()
             currentSignInProvider = nil
+            ReviewPromptService.shared.reset()
             Analytics.logEvent("sign_out", parameters: nil)
         } catch {
             errorMessage = error.localizedDescription

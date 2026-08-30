@@ -447,6 +447,7 @@ struct TeleprompterView: View {
         Analytics.logEvent("teleprompter_closed", parameters: [
             "elapsed_time": Int(elapsedTime)
         ])
+        ReviewPromptService.shared.recordCompletedSession()
         dismiss()
     }
 

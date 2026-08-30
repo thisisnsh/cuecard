@@ -402,5 +402,6 @@ Try it out. I think you'll love it.
         userDefaults.removeObject(forKey: notesKey)
         userDefaults.removeObject(forKey: savedNotesKey)
         userDefaults.removeObject(forKey: currentNoteIdKey)
+        ReviewPromptService.shared.reset()
     }
 }

@@ -24,6 +24,7 @@
 		016 /* TeleprompterPiPManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 112 /* TeleprompterPiPManager.swift */; };
 		017 /* AppColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 113 /* AppColors.swift */; };
 		018 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 305 /* FirebaseCrashlytics */; };
+		019 /* ReviewPromptService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 114 /* ReviewPromptService.swift */; };
 		AA7130F62F04E5BC00F5C366 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = AA7130F52F04E5BC00F5C366 /* GoogleService-Info.plist */; };
 		AA856D562F060DFC00B0CBC6 /* GlassEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA856D542F060DFC00B0CBC6 /* GlassEffect.swift */; };
 /* End PBXBuildFile section */
@@ -41,6 +42,7 @@
 		111 /* TeleprompterParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeleprompterParser.swift; sourceTree = "<group>"; };
 		112 /* TeleprompterPiPManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeleprompterPiPManager.swift; sourceTree = "<group>"; };
 		113 /* AppColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppColors.swift; sourceTree = "<group>"; };
+		114 /* ReviewPromptService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewPromptService.swift; sourceTree = "<group>"; };
 		201 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		501 /* CueCard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CueCard.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA2E5C0E2F0F38B500E1D079 /* CueCard.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CueCard.entitlements; sourceTree = "<group>"; };
@@ -105,6 +107,7 @@
 			children = (
 				106 /* AuthenticationService.swift */,
 				108 /* SettingsService.swift */,
+				114 /* ReviewPromptService.swift */,
 				112 /* TeleprompterPiPManager.swift */,
 			);
 			path = Services;
@@ -247,6 +250,7 @@
 				004 /* HomeView.swift in Sources */,
 				006 /* AuthenticationService.swift in Sources */,
 				008 /* SettingsService.swift in Sources */,
+				019 /* ReviewPromptService.swift in Sources */,
 				013 /* SettingsView.swift in Sources */,
 				AA856D562F060DFC00B0CBC6 /* GlassEffect.swift in Sources */,
 				014 /* TeleprompterView.swift in Sources */,

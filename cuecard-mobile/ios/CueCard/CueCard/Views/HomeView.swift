@@ -1,4 +1,5 @@
 import SwiftUI
+import StoreKit
 import FirebaseAnalytics
 import FirebaseCrashlytics
 
@@ -15,6 +16,7 @@ struct HomeView: View {
     @State private var saveNoteTitle = ""
     @State private var timerPickerTransitionTask: Task<Void, Never>?
     @FocusState private var isTextEditorFocused: Bool
+    @Environment(\.requestReview) private var requestReview
 
     private var hasNotes: Bool {
         !settingsService.notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -36,6 +38,19 @@ struct HomeView: View {
             withAnimation(.easeInOut(duration: 0.18)) {
                 timerPickerContentVisible = true
             }
+        }
+    }
+
+    /// Ask for a review once the teleprompter has closed and the user is back on a
+    /// calm screen. The delay lets the full-screen dismissal finish first, so the
+    /// system alert doesn't land on top of an animating view.
+    private func requestReviewIfEarned() {
+        guard ReviewPromptService.shared.shouldRequestReview else { return }
+
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 800_000_000)
+            ReviewPromptService.shared.logReviewRequested()
+            requestReview()
         }
     }
 
@@ -275,7 +290,7 @@ struct HomeView: View {
             } message: {
                 Text("Enter a title for your note")
             }
-            .fullScreenCover(isPresented: $showingTeleprompter) {
+            .fullScreenCover(isPresented: $showingTeleprompter, onDismiss: requestReviewIfEarned) {
                 TeleprompterView(
                     content: TeleprompterParser.parseNotes(settingsService.notes),
                     settings: settingsService.settings

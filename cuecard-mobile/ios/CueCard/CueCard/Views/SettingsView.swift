@@ -62,6 +62,7 @@ struct SettingsView: View {
             textSizeSection
             overlaySection
             appearanceSection
+            rateSection
             resetSection
             diagnosticsSection
             signOutSection
@@ -194,6 +195,28 @@ struct SettingsView: View {
                     Text(theme.rawValue).tag(theme)
                 }
             }
+        }
+    }
+
+    private var rateSection: some View {
+        Section {
+            Link(destination: ReviewPromptService.writeReviewURL) {
+                HStack {
+                    Image(systemName: "star")
+                    Text("Rate CueCard")
+                    Spacer()
+                    Image(systemName: "arrow.up.right")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                }
+            }
+            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+            .simultaneousGesture(TapGesture().onEnded {
+                AnalyticsEvents.logButtonClick("rate_app", screen: "settings")
+            })
+        } footer: {
+            Text("Opens the App Store so you can leave a review.")
+                .font(.caption)
         }
     }
 
