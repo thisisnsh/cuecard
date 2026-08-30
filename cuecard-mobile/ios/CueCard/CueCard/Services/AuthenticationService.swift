@@ -135,6 +135,7 @@ class AuthenticationService: ObservableObject {
                 errorMessage = "Unable to fetch identity token"
                 return
             }
+            currentNonce = nil
 
             let credential = OAuthProvider.appleCredential(
                 withIDToken: idTokenString,
