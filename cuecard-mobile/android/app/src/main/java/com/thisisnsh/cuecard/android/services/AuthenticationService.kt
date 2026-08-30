@@ -11,31 +11,20 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.analytics.logEvent
-import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.ktx.Firebase
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.withContext
-import org.json.JSONObject
-import java.io.OutputStreamWriter
-import java.net.HttpURLConnection
-import java.net.URL
-import java.text.SimpleDateFormat
-import java.util.Locale
-import java.util.TimeZone
 
 class AuthenticationService(private val context: Context) {
 
     private val auth = FirebaseAuth.getInstance()
     private val analytics = Firebase.analytics
     private val credentialManager = CredentialManager.create(context)
-    private val welcomeEndpoint = "https://cuecard-mobile.thisisnsh.workers.dev/welcome"
 
     private val _currentUser = MutableStateFlow<FirebaseUser?>(auth.currentUser)
     val currentUser: StateFlow<FirebaseUser?> = _currentUser.asStateFlow()
@@ -94,8 +83,7 @@ class AuthenticationService(private val context: Context) {
                             googleIdTokenCredential.idToken,
                             null
                         )
-                        val authResult = auth.signInWithCredential(firebaseCredential).await()
-                        sendWelcome(authResult, "google")
+                        auth.signInWithCredential(firebaseCredential).await()
                     } catch (e: GoogleIdTokenParsingException) {
                         Log.e(TAG, "Invalid Google ID token", e)
                         _error.value = "Invalid credentials"
@@ -108,56 +96,6 @@ class AuthenticationService(private val context: Context) {
             else -> {
                 Log.e(TAG, "Unexpected credential type")
                 _error.value = "Unexpected credential type"
-            }
-        }
-    }
-
-    private suspend fun sendWelcome(authResult: AuthResult, provider: String) {
-        withContext(Dispatchers.IO) {
-            try {
-                val user = authResult.user ?: return@withContext
-                val createdAt = user.metadata?.creationTimestamp?.let { timestamp ->
-                    val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US)
-                    dateFormat.timeZone = TimeZone.getTimeZone("UTC")
-                    dateFormat.format(timestamp)
-                }
-
-                val payload = JSONObject().apply {
-                    put("uid", user.uid)
-                    put("email", user.email)
-                    put("displayName", user.displayName)
-                    put("provider", provider)
-                    put("createdAt", createdAt)
-                }
-
-                val url = URL(welcomeEndpoint)
-                val connection = url.openConnection() as HttpURLConnection
-                connection.requestMethod = "POST"
-                connection.setRequestProperty("Content-Type", "application/json")
-                connection.doOutput = true
-
-                OutputStreamWriter(connection.outputStream).use { writer ->
-                    writer.write(payload.toString())
-                }
-
-                val responseCode = connection.responseCode
-                if (responseCode in 200..299) {
-                    analytics.logEvent("welcome_request_success") {
-                        param("provider", provider)
-                    }
-                } else {
-                    analytics.logEvent("welcome_request_error") {
-                        param("error", "bad_status")
-                        param("provider", provider)
-                    }
-                }
-                connection.disconnect()
-            } catch (e: Exception) {
-                Log.e(TAG, "Welcome request failed", e)
-                analytics.logEvent("welcome_request_error") {
-                    param("error", e.message ?: "unknown")
-                    param("provider", provider)
-                }
             }
         }
     }

@@ -10,8 +10,6 @@ import CryptoKit
 class AuthenticationService: ObservableObject {
     static let shared = AuthenticationService()
 
-    private let welcomeEndpoint = URL(string: "https://cuecard-mobile.thisisnsh.workers.dev/v2/welcome")
-
     @Published var user: User?
     @Published var isAuthenticated = false
     @Published var isLoading = false
@@ -76,14 +74,10 @@ class AuthenticationService: ObservableObject {
                 accessToken: result.user.accessToken.tokenString
             )
 
-            let authResult = try await Auth.auth().signIn(with: credential)
+            try await Auth.auth().signIn(with: credential)
 
             currentSignInProvider = "google"
             Analytics.logEvent("sign_in_success", parameters: ["method": "google"])
-            await sendWelcome(
-                authResult: authResult,
-                provider: "google"
-            )
         } catch {
             errorMessage = error.localizedDescription
             Analytics.logEvent("sign_in_error", parameters: [
@@ -144,15 +138,9 @@ class AuthenticationService: ObservableObject {
             )
 
             do {
-                let authResult = try await Auth.auth().signIn(with: credential)
+                try await Auth.auth().signIn(with: credential)
                 currentSignInProvider = "apple"
                 Analytics.logEvent("sign_in_success", parameters: ["method": "apple"])
-                await sendWelcome(
-                    authResult: authResult,
-                    provider: "apple",
-                    fullName: appleIDCredential.fullName,
-                    emailOverride: appleIDCredential.email
-                )
             } catch {
                 errorMessage = error.localizedDescription
                 Analytics.logEvent("sign_in_error", parameters: [
@@ -198,74 +186,6 @@ class AuthenticationService: ObservableObject {
             String(format: "%02x", $0)
         }.joined()
         return hashString
-    }
-
-    // MARK: - Welcome Email Request
-
-    private struct WelcomePayload: Encodable {
-        let uid: String
-        let email: String?
-        let displayName: String?
-        let provider: String?
-        let createdAt: String?
-    }
-
-    private func sendWelcome(
-        authResult: AuthDataResult,
-        provider: String,
-        fullName: PersonNameComponents? = nil,
-        emailOverride: String? = nil
-    ) async {
-        guard let url = welcomeEndpoint else {
-            Analytics.logEvent("welcome_request_error", parameters: [
-                "error": "invalid_url",
-                "provider": provider
-            ])
-            return
-        }
-
-        let nameFormatter = PersonNameComponentsFormatter()
-        let formattedName = fullName.map { nameFormatter.string(from: $0) }
-        let user = authResult.user
-        let createdAt = user.metadata.creationDate.map {
-            ISO8601DateFormatter().string(from: $0)
-        }
-
-        let payload = WelcomePayload(
-            uid: user.uid,
-            email: emailOverride ?? user.email,
-            displayName: formattedName ?? user.displayName,
-            provider: provider,
-            createdAt: createdAt
-        )
-
-        do {
-            let idToken = try await user.getIDToken()
-
-            var request = URLRequest(url: url)
-            request.httpMethod = "POST"
-            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            request.setValue("Bearer \(idToken)", forHTTPHeaderField: "Authorization")
-            request.httpBody = try JSONEncoder().encode(payload)
-
-            let (_, response) = try await URLSession.shared.data(for: request)
-            if let httpResponse = response as? HTTPURLResponse,
-               (200..<300).contains(httpResponse.statusCode) {
-                Analytics.logEvent("welcome_request_success", parameters: [
-                    "provider": provider
-                ])
-            } else {
-                Analytics.logEvent("welcome_request_error", parameters: [
-                    "error": "bad_status",
-                    "provider": provider
-                ])
-            }
-        } catch {
-            Analytics.logEvent("welcome_request_error", parameters: [
-                "error": error.localizedDescription,
-                "provider": provider
-            ])
-        }
     }
 
     // MARK: - Sign Out
