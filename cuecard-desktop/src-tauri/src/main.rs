@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    cuecard_app_lib::run()
+    cuecard_desktop_lib::run()
 }

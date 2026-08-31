@@ -1,4 +1,4 @@
-name: Build App - MacOS
+name: Build Desktop - macOS
 
 on:
   push:
@@ -6,8 +6,8 @@ on:
       - main
       - develop
     paths:
-      - 'cuecard-app/**'
-      - '.github/workflows/build-mac.yml'
+      - 'cuecard-desktop/**'
+      - '.github/workflows/build-desktop-mac.yml'
 
 jobs:
   build-macos:
@@ -31,11 +31,11 @@ jobs:
           rustup target add aarch64-apple-darwin
 
       - name: Install dependencies
-        working-directory: cuecard-app
+        working-directory: cuecard-desktop
         run: npm install
 
       - name: Create firebase config
-        working-directory: cuecard-app/src-tauri
+        working-directory: cuecard-desktop/src-tauri
         shell: bash
         run: |
           echo '${{ secrets.FIREBASE_CONFIG }}' > firebase-config.json
@@ -66,7 +66,7 @@ jobs:
           rm certificate.p12
 
       - name: Build Universal macOS
-        working-directory: cuecard-app
+        working-directory: cuecard-desktop
         env:
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
           APPLE_ID: ${{ secrets.APPLE_ID }}
@@ -77,7 +77,7 @@ jobs:
         run: npm run tauri build -- --target universal-apple-darwin
 
       - name: Create DMG
-        working-directory: cuecard-app/src-tauri
+        working-directory: cuecard-desktop/src-tauri
         run: |
           # Install create-dmg
           brew install create-dmg
@@ -102,7 +102,7 @@ jobs:
             "$APP_PATH"
 
       - name: Notarize DMG
-        working-directory: cuecard-app/src-tauri
+        working-directory: cuecard-desktop/src-tauri
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
@@ -121,7 +121,7 @@ jobs:
           xcrun stapler staple "$RUNNER_TEMP/CueCard_${VERSION}_universal.dmg"
 
       - name: Generate latest.json
-        working-directory: cuecard-app/src-tauri
+        working-directory: cuecard-desktop/src-tauri
         shell: bash
         run: |
           # Read version from tauri.conf.json
@@ -148,15 +148,15 @@ jobs:
 
       - name: Prepare artifacts
         run: |
-          VERSION=$(node -p "require('./cuecard-app/src-tauri/tauri.conf.json').version")
+          VERSION=$(node -p "require('./cuecard-desktop/src-tauri/tauri.conf.json').version")
           mkdir -p artifacts
           # Use own DMG instead of the one created by Tauri.
           # One created by Tauri is notarized but does not contain the correct background image.
           cp "$RUNNER_TEMP/CueCard_${VERSION}_universal.dmg" artifacts/
-          cp cuecard-app/src-tauri/target/universal-apple-darwin/release/bundle/macos/*.tar.gz artifacts/
-          cp cuecard-app/src-tauri/target/universal-apple-darwin/release/bundle/macos/*.tar.gz.sig artifacts/
-          cp cuecard-app/src-tauri/latest/darwin-x86_64-latest.json artifacts/
-          cp cuecard-app/src-tauri/latest/darwin-aarch64-latest.json artifacts/
+          cp cuecard-desktop/src-tauri/target/universal-apple-darwin/release/bundle/macos/*.tar.gz artifacts/
+          cp cuecard-desktop/src-tauri/target/universal-apple-darwin/release/bundle/macos/*.tar.gz.sig artifacts/
+          cp cuecard-desktop/src-tauri/latest/darwin-x86_64-latest.json artifacts/
+          cp cuecard-desktop/src-tauri/latest/darwin-aarch64-latest.json artifacts/
 
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4

@@ -1,4 +1,4 @@
-name: Build App - Windows
+name: Build Desktop - Windows
 
 on:
   push:
@@ -6,8 +6,8 @@ on:
       - main
       - develop
     paths:
-      - 'cuecard-app/**'
-      - '.github/workflows/build-windows.yml'
+      - 'cuecard-desktop/**'
+      - '.github/workflows/build-desktop-windows.yml'
 
 jobs:
   build-windows:
@@ -31,31 +31,31 @@ jobs:
           rustup target add aarch64-pc-windows-msvc
 
       - name: Install dependencies
-        working-directory: cuecard-app
+        working-directory: cuecard-desktop
         run: npm install
 
       - name: Create firebase config
-        working-directory: cuecard-app/src-tauri
+        working-directory: cuecard-desktop/src-tauri
         shell: bash
         run: |
           echo '${{ secrets.FIREBASE_CONFIG }}' > firebase-config.json
 
       - name: Build x64
-        working-directory: cuecard-app
+        working-directory: cuecard-desktop
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: npm run tauri build -- --target x86_64-pc-windows-msvc
 
       - name: Build ARM64
-        working-directory: cuecard-app
+        working-directory: cuecard-desktop
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: npm run tauri build -- --target aarch64-pc-windows-msvc
 
       - name: Generate latest.json for x64
-        working-directory: cuecard-app/src-tauri
+        working-directory: cuecard-desktop/src-tauri
         shell: bash
         run: |
           # Read version from tauri.conf.json
@@ -79,7 +79,7 @@ jobs:
           "
 
       - name: Generate latest.json for ARM64
-        working-directory: cuecard-app/src-tauri
+        working-directory: cuecard-desktop/src-tauri
         shell: bash
         run: |
           # Read version from tauri.conf.json
@@ -106,21 +106,21 @@ jobs:
         shell: bash
         run: |
           mkdir -p artifacts-x64
-          cp cuecard-app/src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/*.exe artifacts-x64/
-          cp cuecard-app/src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/*.exe.sig artifacts-x64/
-          cp cuecard-app/src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/*.msi artifacts-x64/
-          cp cuecard-app/src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/*.msi.sig artifacts-x64/
-          cp cuecard-app/src-tauri/latest/windows-x86_64-latest.json artifacts-x64/
+          cp cuecard-desktop/src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/*.exe artifacts-x64/
+          cp cuecard-desktop/src-tauri/target/x86_64-pc-windows-msvc/release/bundle/nsis/*.exe.sig artifacts-x64/
+          cp cuecard-desktop/src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/*.msi artifacts-x64/
+          cp cuecard-desktop/src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/*.msi.sig artifacts-x64/
+          cp cuecard-desktop/src-tauri/latest/windows-x86_64-latest.json artifacts-x64/
 
       - name: Prepare ARM64 artifacts
         shell: bash
         run: |
           mkdir -p artifacts-arm64
-          cp cuecard-app/src-tauri/target/aarch64-pc-windows-msvc/release/bundle/nsis/*.exe artifacts-arm64/
-          cp cuecard-app/src-tauri/target/aarch64-pc-windows-msvc/release/bundle/nsis/*.exe.sig artifacts-arm64/
-          cp cuecard-app/src-tauri/target/aarch64-pc-windows-msvc/release/bundle/msi/*.msi artifacts-arm64/
-          cp cuecard-app/src-tauri/target/aarch64-pc-windows-msvc/release/bundle/msi/*.msi.sig artifacts-arm64/
-          cp cuecard-app/src-tauri/latest/windows-aarch64-latest.json artifacts-arm64/
+          cp cuecard-desktop/src-tauri/target/aarch64-pc-windows-msvc/release/bundle/nsis/*.exe artifacts-arm64/
+          cp cuecard-desktop/src-tauri/target/aarch64-pc-windows-msvc/release/bundle/nsis/*.exe.sig artifacts-arm64/
+          cp cuecard-desktop/src-tauri/target/aarch64-pc-windows-msvc/release/bundle/msi/*.msi artifacts-arm64/
+          cp cuecard-desktop/src-tauri/target/aarch64-pc-windows-msvc/release/bundle/msi/*.msi.sig artifacts-arm64/
+          cp cuecard-desktop/src-tauri/latest/windows-aarch64-latest.json artifacts-arm64/
 
       - name: Upload x64 artifacts
         uses: actions/upload-artifact@v4

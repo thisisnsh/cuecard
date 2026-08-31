@@ -818,7 +818,7 @@ async fn health_handler() -> Json<serde_json::Value> {
     let is_authenticated = FIREBASE_TOKENS.read().is_some();
     Json(serde_json::json!({
         "status": "ok",
-        "server": "cuecard-app",
+        "server": "cuecard-desktop",
         "authenticated": is_authenticated
     }))
 }

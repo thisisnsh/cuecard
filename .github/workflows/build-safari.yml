@@ -110,7 +110,7 @@ jobs:
           # Create DMG with custom background and settings
           create-dmg \
             --volname "CueCard Extension" \
-            --background "cuecard-app/src-tauri/icons/dmg-background.png" \
+            --background "cuecard-desktop/src-tauri/icons/dmg-background.png" \
             --window-pos 200 120 \
             --window-size 660 400 \
             --icon-size 100 \

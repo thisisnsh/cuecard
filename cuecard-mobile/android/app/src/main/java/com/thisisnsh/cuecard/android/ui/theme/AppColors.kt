@@ -5,7 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 /**
- * App colors matching iOS cuecard-app design system
+ * App colors matching iOS cuecard-desktop design system
  */
 object AppColors {
     // Dark Mode Colors

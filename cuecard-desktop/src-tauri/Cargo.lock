@@ -688,7 +688,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "cuecard-app"
+name = "cuecard-desktop"
 version = "1.4.1"
 dependencies = [
  "axum",

@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// App colors matching cuecard-app design system
+/// App colors matching cuecard-desktop design system
 struct AppColors {
     // MARK: - Dark Mode Colors
     struct Dark {

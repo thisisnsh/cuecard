@@ -33,7 +33,7 @@ Please be respectful and constructive in all interactions. We want to maintain a
 4. Install dependencies and run:
    ```bash
    # Desktop app
-   cd cuecard-app
+   cd cuecard-desktop
    npm install
    npm run tauri dev
 
@@ -116,20 +116,25 @@ Please be respectful and constructive in all interactions. We want to maintain a
 
 ```
 cuecard/
-├── cuecard-app/          # Tauri desktop application
-│   ├── src/              # Frontend (HTML, CSS, JavaScript)
-│   │   ├── index.html    # Main HTML file
-│   │   ├── main.js       # Main JavaScript file
-│   │   └── styles.css    # Stylesheet
-│   └── src-tauri/        # Rust backend
+├── cuecard-desktop/       # Tauri desktop application (macOS, Windows)
+│   ├── src/               # Frontend (HTML, CSS, JavaScript)
+│   │   ├── index.html     # Main HTML file
+│   │   ├── main.js        # Main JavaScript file
+│   │   └── styles.css     # Stylesheet
+│   └── src-tauri/         # Rust backend
 │       └── src/
-│           └── lib.rs    # Main Rust code
-└── extension/            # Browser extension
-    ├── src/              # Extension source
-    │   ├── content/      # Content script
-    │   ├── background/   # Service worker
-    │   └── popup/        # Extension popup
-    └── manifests/        # Browser manifests
+│           └── lib.rs     # Main Rust code
+├── cuecard-mobile/        # Native mobile apps
+│   ├── ios/               # SwiftUI app (Xcode project)
+│   └── android/           # Kotlin app (Gradle project)
+├── cuecard-extension/     # Browser extension
+│   ├── src/               # Extension source
+│   │   ├── content/       # Content script
+│   │   ├── background/    # Service worker
+│   │   └── popup/         # Extension popup
+│   └── manifests/         # Browser manifests
+└── cuecard-website/       # 11ty static site for cuecard.dev
+    └── src/               # Templates, data, and assets
 ```
 
 ## Testing

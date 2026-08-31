@@ -1,12 +1,12 @@
 [package]
-name = "cuecard-app"
+name = "cuecard-desktop"
 version = "1.4.1"
 description = "Speaker notes visible only to you during screen sharing — for presentations, meetings, and more."
 authors = ["CueCard"]
 edition = "2021"
 
 [lib]
-name = "cuecard_app_lib"
+name = "cuecard_desktop_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
