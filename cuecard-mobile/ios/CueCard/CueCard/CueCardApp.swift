@@ -8,13 +8,25 @@ struct CueCardApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @StateObject private var authService = AuthenticationService.shared
     @StateObject private var settingsService = SettingsService.shared
+    @StateObject private var remoteConfig = RemoteConfigService.shared
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environmentObject(authService)
                 .environmentObject(settingsService)
+                .environmentObject(remoteConfig)
                 .preferredColorScheme(settingsService.settings.themePreference.colorScheme)
+                .task {
+                    await remoteConfig.refresh()
+                }
+                .onChange(of: scenePhase) { phase in
+                    // Coming back to the app is the natural moment to pick up a
+                    // new notice. The service throttles itself, so this is cheap.
+                    guard phase == .active else { return }
+                    Task { await remoteConfig.refresh() }
+                }
         }
     }
 }
@@ -50,4 +62,5 @@ struct AnalyticsEvents {
 // MARK: - External Links
 enum AppLinks {
     static let sourceCode = URL(string: "https://github.com/thisisnsh/cuecard")!
+    static let appStore = URL(string: "https://apps.apple.com/app/id6757321325")!
 }

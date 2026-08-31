@@ -7,6 +7,7 @@ import FirebaseCrashlytics
 struct HomeView: View {
     @EnvironmentObject var authService: AuthenticationService
     @EnvironmentObject var settingsService: SettingsService
+    @EnvironmentObject var remoteConfig: RemoteConfigService
     @Environment(\.colorScheme) var colorScheme
     @State private var showingSettings = false
     @State private var showingTeleprompter = false
@@ -223,6 +224,16 @@ struct HomeView: View {
                     .ignoresSafeArea()
 
                 VStack(spacing: 0) {
+                    // Anything the worker wants people to see, above the script.
+                    // Nothing to show is the normal case, and then this is a
+                    // zero-height view the layout never notices.
+                    if let message = remoteConfig.message(for: .homeBanner) {
+                        RemoteMessageBanner(message: message)
+                            .padding(.horizontal, 16)
+                            .padding(.top, 12)
+                            .transition(.move(edge: .top).combined(with: .opacity))
+                    }
+
                     // Notes editor
                     NotesEditorView(
                         text: $settingsService.notes,
@@ -232,6 +243,7 @@ struct HomeView: View {
                     )
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
+                .animation(.easeInOut(duration: 0.25), value: remoteConfig.dismissedIDs)
             }
             .overlay(alignment: .bottom) {
                 if isEditorFocused {
@@ -579,6 +591,7 @@ struct SavedNotesView: View {
     HomeView()
         .environmentObject(AuthenticationService.shared)
         .environmentObject(SettingsService.shared)
+        .environmentObject(RemoteConfigService.shared)
 }
 
 #Preview("Saved Notes") {

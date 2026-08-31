@@ -219,6 +219,13 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
         lastSourceRenderTimestamp = 0
     }
 
+    /// Shut the overlay down and keep it down for this session. Used by the
+    /// remote kill switch, where the point is that nothing offers PiP at all.
+    func disable() {
+        cleanup()
+        isPiPPossible = false
+    }
+
     // MARK: - PiP Setup
 
     private func setupPiP() {

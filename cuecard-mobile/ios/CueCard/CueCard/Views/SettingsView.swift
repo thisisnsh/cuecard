@@ -6,6 +6,7 @@ import FirebaseCrashlytics
 struct SettingsView: View {
     @EnvironmentObject var authService: AuthenticationService
     @EnvironmentObject var settingsService: SettingsService
+    @EnvironmentObject var remoteConfig: RemoteConfigService
     @Environment(\.dismiss) var dismiss
     @Environment(\.colorScheme) var colorScheme
 
@@ -56,6 +57,7 @@ struct SettingsView: View {
 
     private var settingsList: some View {
         List {
+            remoteMessageSection
             userInfoSection
             countdownSection
             teleprompterSection
@@ -67,6 +69,17 @@ struct SettingsView: View {
             diagnosticsSection
             signOutSection
             deleteAccountSection
+        }
+    }
+
+    /// A notice from the worker, if there's one meant for Settings. Quieter than
+    /// the home banner — cross-promotion, deprecation notices, that sort of thing.
+    @ViewBuilder
+    private var remoteMessageSection: some View {
+        if let message = remoteConfig.message(for: .settingsRow) {
+            Section {
+                RemoteMessageRow(message: message)
+            }
         }
     }
 
@@ -311,4 +324,5 @@ struct SettingsView: View {
     SettingsView()
         .environmentObject(AuthenticationService.shared)
         .environmentObject(SettingsService.shared)
+        .environmentObject(RemoteConfigService.shared)
 }

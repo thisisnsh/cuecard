@@ -247,6 +247,14 @@ struct TeleprompterView: View {
     // MARK: - PiP Setup
 
     private func setupPiP() {
+        // Remote kill switch. If the overlay starts misbehaving on some iOS build
+        // this turns it off for everyone without waiting on a release — nothing
+        // offers PiP, and the background auto-start stays quiet too.
+        guard RemoteConfigService.shared.isPiPEnabled else {
+            pipManager.disable()
+            return
+        }
+
         pipManager.configure(
             text: content.fullText,
             settings: settings,
