@@ -1,0 +1,254 @@
+name: Release App - iOS
+
+# Tag ios-v1.2.0.7 → code-signed, App Store-ready IPA uploaded as a workflow
+# artifact, alongside the dSYMs for that build.
+#
+# iOS apps are not notarized; distribution goes through App Store Connect.
+# This workflow stops at the signed IPA — mirroring how the desktop DMG is
+# published — so upload it with Transporter or `xcrun altool` yourself.
+#
+# Tag format is ios-v<major>.<minor>.<patch>.<build>: the first three
+# components become MARKETING_VERSION, the fourth CURRENT_PROJECT_VERSION.
+# The build number must increase on every App Store submission.
+
+on:
+  push:
+    tags:
+      - 'ios-v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  BUNDLE_ID: com.thisisnsh.cuecard.ios
+
+jobs:
+  release:
+    # The app adopts iOS 26 APIs (glassEffect), so it must link against the
+    # iOS 26 SDK. macos-26 ships Xcode 26; the deployment target stays 17.0.
+    runs-on: macos-26
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Parse version from tag
+        id: version
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME#ios-v}"
+          if [[ ! "$TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Tag '$GITHUB_REF_NAME' must be ios-v<major>.<minor>.<patch>.<build>, e.g. ios-v1.2.0.7"
+            exit 1
+          fi
+          echo "marketing=${TAG%.*}" >> "$GITHUB_OUTPUT"
+          echo "build=${TAG##*.}" >> "$GITHUB_OUTPUT"
+
+      - name: Create Firebase config
+        env:
+          FIREBASE_PLIST_B64: ${{ secrets.IOS_GOOGLE_SERVICE_INFO_PLIST_B64 }}
+        working-directory: cuecard-mobile/ios/CueCard/CueCard
+        run: |
+          set -euo pipefail
+          test -n "$FIREBASE_PLIST_B64" || {
+            echo "::error::IOS_GOOGLE_SERVICE_INFO_PLIST_B64 is not set"; exit 1; }
+          # GoogleService-Info.plist is gitignored but sits in the target's
+          # Resources build phase, so the build fails outright without it.
+          printf '%s' "$FIREBASE_PLIST_B64" | base64 --decode > GoogleService-Info.plist
+          plutil -lint GoogleService-Info.plist
+          # A plist for the wrong bundle id builds fine and then misconfigures
+          # Firebase at runtime, so catch it here.
+          PLIST_BUNDLE_ID=$(plutil -extract BUNDLE_ID raw GoogleService-Info.plist)
+          test "$PLIST_BUNDLE_ID" = "$BUNDLE_ID" || {
+            echo "::error::GoogleService-Info.plist is for $PLIST_BUNDLE_ID, expected $BUNDLE_ID"
+            exit 1; }
+
+      - name: Import distribution certificate
+        env:
+          CERT_P12_B64: ${{ secrets.IOS_DIST_CERT_P12_B64 }}
+          CERT_PASSWORD: ${{ secrets.IOS_DIST_CERT_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$CERT_P12_B64" || {
+            echo "::error::IOS_DIST_CERT_P12_B64 is not set"; exit 1; }
+
+          KEYCHAIN_PATH="$RUNNER_TEMP/app-signing.keychain-db"
+          KEYCHAIN_PASSWORD=$(uuidgen)
+          printf '%s' "$CERT_P12_B64" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$RUNNER_TEMP/cert.p12" -k "$KEYCHAIN_PATH" \
+            -P "$CERT_PASSWORD" -A -t cert -f pkcs12 -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: \
+            -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychain -d user -s "$KEYCHAIN_PATH"
+
+          rm "$RUNNER_TEMP/cert.p12"
+          security find-identity -v -p codesigning
+
+      - name: Install and validate provisioning profile
+        id: profile
+        env:
+          PROFILE_B64: ${{ secrets.IOS_PROVISIONING_PROFILE_B64 }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          test -n "$PROFILE_B64" || {
+            echo "::error::IOS_PROVISIONING_PROFILE_B64 is not set"; exit 1; }
+          test -n "$APPLE_TEAM_ID" || {
+            echo "::error::APPLE_TEAM_ID is not set"; exit 1; }
+
+          PROFILE_PLIST=$(mktemp)
+          PROFILE_CERT=$(mktemp)
+          printf '%s' "$PROFILE_B64" | base64 --decode > "$RUNNER_TEMP/profile.mobileprovision"
+          security cms -D -i "$RUNNER_TEMP/profile.mobileprovision" > "$PROFILE_PLIST"
+
+          PROFILE_NAME=$(plutil -extract Name raw "$PROFILE_PLIST")
+          PROFILE_UUID=$(plutil -extract UUID raw "$PROFILE_PLIST")
+          PROFILE_TEAM=$(/usr/libexec/PlistBuddy -c 'Print :TeamIdentifier:0' "$PROFILE_PLIST")
+          PROFILE_APP_ID=$(/usr/libexec/PlistBuddy -c \
+            'Print :Entitlements:application-identifier' "$PROFILE_PLIST")
+
+          test "$PROFILE_TEAM" = "$APPLE_TEAM_ID" || {
+            echo "::error::Profile team $PROFILE_TEAM does not match APPLE_TEAM_ID"; exit 1; }
+          test "$PROFILE_APP_ID" = "${APPLE_TEAM_ID}.${BUNDLE_ID}" || {
+            echo "::error::Profile is for $PROFILE_APP_ID, expected ${APPLE_TEAM_ID}.${BUNDLE_ID}"
+            exit 1; }
+          # The app declares Sign in with Apple in CueCard.entitlements; a
+          # profile lacking it signs fine and then fails at runtime.
+          /usr/libexec/PlistBuddy -c \
+            'Print :Entitlements:com.apple.developer.applesignin' "$PROFILE_PLIST" >/dev/null || {
+            echo "::error::Profile is missing the Sign in with Apple entitlement"; exit 1; }
+
+          EXPIRY=$(plutil -extract ExpirationDate raw "$PROFILE_PLIST")
+          EXPIRY_EPOCH=$(date -j -u -f '%Y-%m-%dT%H:%M:%SZ' "$EXPIRY" '+%s')
+          MIN_EXPIRY_EPOCH=$(date -j -u -v+30d '+%s')
+          if (( EXPIRY_EPOCH <= MIN_EXPIRY_EPOCH )); then
+            echo "::error::Provisioning profile expires within 30 days ($EXPIRY)"
+            exit 1
+          fi
+
+          # Catch a profile/certificate mismatch here rather than as an opaque
+          # codesign failure twenty minutes into the archive.
+          /usr/libexec/PlistBuddy -c 'Print :DeveloperCertificates:0' \
+            "$PROFILE_PLIST" > "$PROFILE_CERT"
+          PROFILE_SHA=$(openssl x509 -inform DER -in "$PROFILE_CERT" \
+            -noout -fingerprint -sha1 | cut -d= -f2 | tr -d ':')
+          if ! security find-identity -v -p codesigning | tr -d ' ' | grep -qi "$PROFILE_SHA"; then
+            echo "::error::Profile certificate $PROFILE_SHA does not match the imported P12"
+            exit 1
+          fi
+
+          # Xcode 16+ reads UserData; MobileDevice is the legacy location.
+          # Install to both so either lookup succeeds.
+          for DIR in "$HOME/Library/MobileDevice/Provisioning Profiles" \
+                     "$HOME/Library/Developer/Xcode/UserData/Provisioning Profiles"; do
+            mkdir -p "$DIR"
+            cp "$RUNNER_TEMP/profile.mobileprovision" "$DIR/${PROFILE_UUID}.mobileprovision"
+          done
+
+          echo "name=$PROFILE_NAME" >> "$GITHUB_OUTPUT"
+          rm "$PROFILE_PLIST" "$PROFILE_CERT"
+
+      - name: Cache SwiftPM dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Caches/org.swift.swiftpm
+          key: spm-${{ runner.os }}-${{ hashFiles('cuecard-mobile/ios/CueCard/CueCard.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          restore-keys: spm-${{ runner.os }}-
+
+      - name: Build and archive
+        working-directory: cuecard-mobile/ios/CueCard
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          PROFILE_NAME: ${{ steps.profile.outputs.name }}
+          MARKETING: ${{ steps.version.outputs.marketing }}
+          BUILD: ${{ steps.version.outputs.build }}
+        run: |
+          set -euo pipefail
+          xcodebuild archive \
+            -project CueCard.xcodeproj \
+            -scheme CueCard \
+            -configuration Release \
+            -destination "generic/platform=iOS" \
+            -archivePath "$RUNNER_TEMP/CueCard.xcarchive" \
+            MARKETING_VERSION="$MARKETING" \
+            CURRENT_PROJECT_VERSION="$BUILD" \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
+            PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME"
+
+      - name: Export IPA
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          PROFILE_NAME: ${{ steps.profile.outputs.name }}
+        run: |
+          set -euo pipefail
+          # Generated rather than committed, because the profile name is
+          # whatever IOS_PROVISIONING_PROFILE_B64 happens to hold.
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store-connect</string>
+            <key>destination</key>
+            <string>export</string>
+            <key>teamID</key>
+            <string>${APPLE_TEAM_ID}</string>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>signingCertificate</key>
+            <string>Apple Distribution</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>${BUNDLE_ID}</key>
+              <string>${PROFILE_NAME}</string>
+            </dict>
+            <key>uploadSymbols</key>
+            <true/>
+          </dict>
+          </plist>
+          PLIST
+          plutil -lint "$RUNNER_TEMP/ExportOptions.plist"
+
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/CueCard.xcarchive" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist"
+
+      - name: Verify signing and stage artifacts
+        env:
+          MARKETING: ${{ steps.version.outputs.marketing }}
+          BUILD: ${{ steps.version.outputs.build }}
+        run: |
+          set -euo pipefail
+          IPA=$(find "$RUNNER_TEMP/export" -maxdepth 1 -name '*.ipa' | head -n 1)
+          test -n "$IPA" || { echo "::error::no IPA was exported"; exit 1; }
+
+          APP="$RUNNER_TEMP/CueCard.xcarchive/Products/Applications/CueCard.app"
+          codesign --verify --strict --verbose=2 "$APP"
+          test -f "$APP/embedded.mobileprovision" || {
+            echo "::error::the archived app has no embedded provisioning profile"; exit 1; }
+          test "$(plutil -extract CFBundleShortVersionString raw "$APP/Info.plist")" = "$MARKETING"
+          test "$(plutil -extract CFBundleVersion raw "$APP/Info.plist")" = "$BUILD"
+
+          mkdir -p artifacts
+          cp "$IPA" "artifacts/CueCard_${MARKETING}_${BUILD}.ipa"
+          # dSYMs symbolicate crash reports for this exact build and are not
+          # recoverable once the runner is gone.
+          ditto -c -k --keepParent \
+            "$RUNNER_TEMP/CueCard.xcarchive/dSYMs" \
+            "artifacts/CueCard_${MARKETING}_${BUILD}_dSYMs.zip"
+
+      - name: Upload iOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa
+          path: artifacts/
+          if-no-files-found: error

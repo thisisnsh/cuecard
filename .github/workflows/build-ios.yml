@@ -1,0 +1,57 @@
+name: Build App - iOS
+
+# Compile check only. The signed, App Store-ready IPA is built by
+# release-ios.yml on an ios-v* tag.
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'cuecard-mobile/ios/**'
+      - '.github/workflows/build-ios.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-ios:
+    # The app adopts iOS 26 APIs (glassEffect), so it must link against the
+    # iOS 26 SDK. macos-26 ships Xcode 26; the deployment target stays 17.0.
+    runs-on: macos-26
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create Firebase config
+        env:
+          FIREBASE_PLIST_B64: ${{ secrets.IOS_GOOGLE_SERVICE_INFO_PLIST_B64 }}
+        working-directory: cuecard-mobile/ios/CueCard/CueCard
+        run: |
+          set -euo pipefail
+          test -n "$FIREBASE_PLIST_B64" || {
+            echo "::error::IOS_GOOGLE_SERVICE_INFO_PLIST_B64 is not set"; exit 1; }
+          # GoogleService-Info.plist is gitignored but sits in the target's
+          # Resources build phase, so the build fails outright without it.
+          printf '%s' "$FIREBASE_PLIST_B64" | base64 --decode > GoogleService-Info.plist
+          plutil -lint GoogleService-Info.plist
+
+      - name: Cache SwiftPM dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Caches/org.swift.swiftpm
+          key: spm-${{ runner.os }}-${{ hashFiles('cuecard-mobile/ios/CueCard/CueCard.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          restore-keys: spm-${{ runner.os }}-
+
+      - name: Build for simulator
+        working-directory: cuecard-mobile/ios/CueCard
+        run: |
+          xcodebuild build \
+            -project CueCard.xcodeproj \
+            -scheme CueCard \
+            -configuration Debug \
+            -destination "generic/platform=iOS Simulator" \
+            CODE_SIGNING_ALLOWED=NO
