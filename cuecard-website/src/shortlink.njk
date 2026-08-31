@@ -1,0 +1,22 @@
+---
+pagination:
+  data: shortlinks
+  size: 1
+  alias: shortlink
+permalink: "{{ shortlink.slug }}/index.html"
+eleventyExcludeFromCollections: true
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Redirecting to {{ shortlink.title }}</title>
+<meta name="robots" content="noindex">
+<link rel="canonical" href="{{ shortlink.url }}">
+<meta http-equiv="refresh" content="0; url={{ shortlink.url }}">
+</head>
+<body>
+<p>Redirecting to <a href="{{ shortlink.url }}">{{ shortlink.title }}</a>&hellip;</p>
+<script>window.location.replace({{ shortlink.url | dump | safe }});</script>
+</body>
+</html>

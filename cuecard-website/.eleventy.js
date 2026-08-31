@@ -40,10 +40,8 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("src/styles.css");
   eleventyConfig.addPassthroughCopy("src/script.js");
   eleventyConfig.addPassthroughCopy("src/robots.txt");
-  eleventyConfig.addPassthroughCopy("src/_redirects");
-  eleventyConfig.addPassthroughCopy("src/.htaccess");
-  eleventyConfig.addPassthroughCopy("src/waitlist.php");
-  eleventyConfig.addPassthroughCopy("src/lookup.php");
+  // GitHub Pages reads CNAME from the published root to serve the custom domain
+  eleventyConfig.addPassthroughCopy("src/CNAME");
 
   // Watch for changes
   eleventyConfig.addWatchTarget("src/styles.css");

@@ -1,0 +1,89 @@
+name: Deploy Website
+
+# Builds the 11ty site and publishes cuecard-website/_site to GitHub Pages.
+# The site is fully static: there is no PHP and no .htaccess, so Pages serves
+# 404.html natively and the /ios and /android shortlinks are generated as
+# meta-refresh pages from src/_data/shortlinks.json. src/CNAME pins the
+# custom domain — deleting it reverts cuecard.dev to the github.io host.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'cuecard-website/**'
+      - '.github/workflows/deploy-website.yml'
+  pull_request:
+    paths:
+      - 'cuecard-website/**'
+      - '.github/workflows/deploy-website.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Let a newer commit supersede an in-flight deploy, but never cancel one
+# midway — a half-applied Pages deploy would leave the site inconsistent.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: cuecard-website/package-lock.json
+
+      - name: Install dependencies
+        working-directory: cuecard-website
+        run: npm ci
+
+      - name: Build site
+        working-directory: cuecard-website
+        run: npm run build
+
+      - name: Verify build output
+        working-directory: cuecard-website
+        run: |
+          set -euo pipefail
+          # A silently-empty build would publish a blank site over a working one.
+          for f in _site/index.html _site/404.html _site/CNAME \
+                   _site/ios/index.html _site/android/index.html; do
+            test -s "$f" || { echo "::error::missing or empty $f"; exit 1; }
+          done
+          # The site is served by GitHub Pages, which runs no PHP.
+          if find _site -name '*.php' | grep -q .; then
+            echo "::error::PHP files cannot be served by GitHub Pages"
+            exit 1
+          fi
+
+      - name: Configure Pages
+        if: github.event_name != 'pull_request'
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: cuecard-website/_site
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

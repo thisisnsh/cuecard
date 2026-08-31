@@ -13,36 +13,52 @@ Static site that powers [cuecard.dev](https://cuecard.dev) and mirrors the infor
 
 ```
 cuecard-website/
-├── index.html         # Landing page content
-├── styles.css         # Syne/Inter themed layout
-├── script.js          # Lightweight interactions (FAQ toggles, animations)
-├── assets/            # Favicons, manifest, images
-├── privacy/           # Privacy policy HTML
-└── terms/             # Terms of service HTML
+├── .eleventy.js       # 11ty config (input src/, output _site/)
+├── src/
+│   ├── index.njk      # Landing page content
+│   ├── styles.css     # Syne/Inter themed layout
+│   ├── script.js      # Lightweight interactions (FAQ toggles, animations)
+│   ├── shortlink.njk  # Generates /ios and /android redirect pages
+│   ├── CNAME          # Custom domain for GitHub Pages
+│   ├── _data/         # Page content: professions, apps, blogs, shortlinks
+│   ├── _includes/     # Layouts and partials
+│   ├── assets/        # Favicons, manifest, images
+│   ├── privacy.njk    # Privacy policy
+│   └── terms.njk      # Terms of service
+└── _site/             # Build output (gitignored)
 ```
 
-`index.html` is intentionally framework-free to keep the page lightweight and easily deployable to any static host.
+The site is fully static — no PHP, no server-side anything — so it can be served by any static host.
 
 ## Local Preview
 
-Any static file server works:
-
 ```bash
-npx serve .
-# or
-python3 -m http.server 4173
+npm ci
+npm start
 ```
 
-Then open `http://localhost:<port>/`.
+Then open the URL 11ty prints (`http://localhost:8080/` by default). The dev
+server rebuilds on save.
 
 ## Build & Deploy
 
+Deployment is automatic: `.github/workflows/deploy-website.yml` builds the site
+and publishes `_site/` to GitHub Pages on every push to `main` that touches
+`cuecard-website/`. Pull requests build the site but do not deploy.
+
+To build locally:
+
 ```bash
-npm run build
-rsync -avz --delete _site/ do:/var/www/cuecard/
+npm ci
+npm run build   # writes _site/
 ```
 
 ## Notes
 
 - Update `site.webmanifest` and favicons in `assets/` when branding changes
 - Remember to keep privacy/terms copies in sync with legal docs used inside the desktop app
+- `src/CNAME` pins the custom domain. Removing it reverts the site to the
+  `github.io` host on the next deploy
+- GitHub Pages serves `404.html` natively and handles apex/www plus HTTPS, so
+  the site carries no `.htaccess` or `_redirects` file. Add new shortlinks
+  (like `/ios` and `/android`) to `src/_data/shortlinks.json` instead
