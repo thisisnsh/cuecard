@@ -121,11 +121,11 @@ struct LoginView: View {
 
                     // Privacy note
                     VStack(spacing: 6) {
-                        Text("Your data stays on your device")
+                        Text("Your notes stay on your device")
 
                         Link(destination: AppLinks.sourceCode) {
                             HStack(spacing: 4) {
-                                Text("View the code. It's open source.")
+                                Text("View the code")
                                     .underline()
                                 Image(systemName: "arrow.up.right")
                                     .font(.system(size: 9, weight: .semibold))
