@@ -246,6 +246,10 @@ struct HomeView: View {
                         bottomOverlayHeight: isEditorFocused ? CueBar.height : 0
                     )
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    // The editor makes its own room for the keyboard, as scroll
+                    // inset. SwiftUI's avoidance would resize it instead, and the
+                    // gap it leaves behind on dismissal cuts the script off.
+                    .ignoresSafeArea(.keyboard, edges: .bottom)
                 }
                 .animation(.easeInOut(duration: 0.25), value: remoteConfig.dismissedIDs)
             }

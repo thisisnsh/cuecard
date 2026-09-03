@@ -1,15 +1,35 @@
 import SwiftUI
 import UIKit
 
-/// The editor's scroll view. It keeps the caret clear of whatever covers the
-/// bottom of the screen — the keyboard, and the cue bar riding above it — so the
-/// line being typed stays visible.
+/// The duration and curve the keyboard is moving with, so the text can travel with
+/// it rather than jumping ahead.
+private struct KeyboardAnimation {
+    let duration: TimeInterval
+    let options: UIView.AnimationOptions
+
+    init(_ notification: Notification) {
+        let info = notification.userInfo
+        duration = info?[UIResponder.keyboardAnimationDurationUserInfoKey] as? TimeInterval ?? 0.25
+        let curve = info?[UIResponder.keyboardAnimationCurveUserInfoKey] as? Int ?? 7
+        options = UIView.AnimationOptions(rawValue: UInt(curve) << 16)
+    }
+}
+
+/// The editor's scroll view. It keeps the line being typed clear of the keyboard
+/// and of the cue bar riding on top of it.
+///
+/// The editor ignores the keyboard's safe area, so SwiftUI never resizes it: the
+/// gap SwiftUI leaves behind when a UIKit responder resigns would cut the bottom of
+/// the script off, and its resize lands a frame after the keyboard notification, so
+/// measuring here as well made the text jump too far and settle back. All the room
+/// for the keyboard is scroll inset, and this view owns it.
 final class CueTextView: UITextView {
-    /// Height of the cue bar overlaying the bottom of the editor, in points.
+    /// Height of the cue bar covering the bottom of the editor while the keyboard
+    /// is up. It rides with the keyboard, so it only counts when the keyboard does.
     var bottomOverlayHeight: CGFloat = 0 {
         didSet {
             guard bottomOverlayHeight != oldValue else { return }
-            setNeedsLayout()
+            updateBottomInset()
         }
     }
 
@@ -18,7 +38,6 @@ final class CueTextView: UITextView {
 
     private var keyboardScreenFrame: CGRect = .null
     private var appliedBottomInset: CGFloat?
-    private var lastBoundsHeight: CGFloat?
 
     override init(frame: CGRect, textContainer: NSTextContainer?) {
         super.init(frame: frame, textContainer: textContainer)
@@ -34,7 +53,7 @@ final class CueTextView: UITextView {
         let center = NotificationCenter.default
         center.addObserver(
             self,
-            selector: #selector(keyboardFrameChanged),
+            selector: #selector(keyboardWillChangeFrame),
             name: UIResponder.keyboardWillChangeFrameNotification,
             object: nil
         )
@@ -46,47 +65,55 @@ final class CueTextView: UITextView {
         )
     }
 
-    @objc private func keyboardFrameChanged(_ notification: Notification) {
+    @objc private func keyboardWillChangeFrame(_ notification: Notification) {
         let frame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue
         keyboardScreenFrame = frame?.cgRectValue ?? .null
-        setNeedsLayout()
+        updateBottomInset(travellingWith: KeyboardAnimation(notification))
     }
 
     @objc private func keyboardWillHide(_ notification: Notification) {
         keyboardScreenFrame = .null
-        setNeedsLayout()
+        updateBottomInset(travellingWith: KeyboardAnimation(notification))
     }
 
     override func layoutSubviews() {
         super.layoutSubviews()
+        updateBottomInset()
+    }
 
-        let heightChanged = bounds.height != lastBoundsHeight
-        lastBoundsHeight = bounds.height
+    /// Keep clear whatever covers the bottom of the editor: the keyboard, and the
+    /// cue bar on top of it. Nothing when the keyboard is away — the bar goes too.
+    private func updateBottomInset(travellingWith animation: KeyboardAnimation? = nil) {
+        let overlap = keyboardOverlap()
+        let inset = overlap > 0 ? overlap + bottomOverlayHeight : 0
+        guard inset != appliedBottomInset else { return }
+        appliedBottomInset = inset
 
-        let inset = bottomOverlayHeight + keyboardOverlap()
-        let insetChanged = inset != appliedBottomInset
-        if insetChanged {
-            appliedBottomInset = inset
+        let apply = { [self] in
             contentInset.bottom = inset
             verticalScrollIndicatorInsets.bottom = inset
+
+            // Bring the line being written out from behind the keyboard, and — as the
+            // keyboard leaves — pull the text back down over the room it gave up,
+            // which UIScrollView would otherwise leave blank until the next touch.
+            scrollCaretIntoView()
+            pullContentBackFromEnd()
         }
 
-        // Opening the keyboard shrinks the editor, which can leave the caret
-        // below the fold; follow it back into view.
-        if heightChanged || insetChanged {
-            scrollCaretIntoView()
+        if let animation {
+            UIView.animate(withDuration: animation.duration, delay: 0, options: animation.options, animations: apply)
+        } else {
+            apply()
         }
     }
 
-    /// How much of the editor the keyboard covers. Usually nothing — SwiftUI
-    /// already lifts the editor clear of it — but measuring means the caret stays
-    /// visible even when it doesn't.
+    /// How much of the editor the keyboard covers.
     private func keyboardOverlap() -> CGFloat {
         guard !keyboardScreenFrame.isNull, let window else { return 0 }
 
-        let keyboard = convert(window.convert(keyboardScreenFrame, from: nil), from: window)
-        guard keyboard.intersects(bounds) else { return 0 }
-        return max(0, bounds.maxY - keyboard.minY)
+        let keyboard = window.convert(keyboardScreenFrame, from: nil)
+        let editor = convert(bounds, to: window)
+        return max(0, editor.maxY - keyboard.minY)
     }
 
     /// Scroll so the caret sits inside the part of the editor nothing is covering.
@@ -108,9 +135,23 @@ final class CueTextView: UITextView {
             return
         }
 
+        setContentOffsetY(target)
+    }
+
+    /// Scroll back down to the end of the text if the content has been left past it.
+    private func pullContentBackFromEnd() {
+        // Leave a scroll the user is driving alone; the rubber band is theirs.
+        guard !isTracking, !isDecelerating else { return }
+        setContentOffsetY(contentOffset.y)
+    }
+
+    /// Scroll to `y`, clamped to the ends of the text.
+    private func setContentOffsetY(_ y: CGFloat) {
         let lowest = -adjustedContentInset.top
         let highest = max(lowest, contentSize.height + adjustedContentInset.bottom - bounds.height)
-        contentOffset.y = min(max(target, lowest), highest)
+        let offset = min(max(y, lowest), highest)
+        guard offset != contentOffset.y else { return }
+        contentOffset.y = offset
     }
 }
 
@@ -164,11 +205,21 @@ struct CueTextEditor: UIViewRepresentable {
         }
 
         // SwiftUI's .focused() doesn't reach into a UIViewRepresentable, so drive
-        // first responder status from the binding instead.
-        if isFocused, !textView.isFirstResponder {
-            textView.becomeFirstResponder()
-        } else if !isFocused, textView.isFirstResponder {
-            textView.resignFirstResponder()
+        // first responder status from the binding instead — but after this update
+        // has finished. Becoming first responder calls the delegate straight back,
+        // and writing the binding from inside SwiftUI's own update is what the
+        // AttributeGraph cycles are made of.
+        guard isFocused != textView.isFirstResponder else { return }
+        let coordinator = context.coordinator
+        DispatchQueue.main.async { [weak textView] in
+            guard let textView else { return }
+
+            // Read the binding again — the intent may have changed while we waited.
+            if coordinator.parent.isFocused {
+                textView.becomeFirstResponder()
+            } else {
+                textView.resignFirstResponder()
+            }
         }
     }
 
