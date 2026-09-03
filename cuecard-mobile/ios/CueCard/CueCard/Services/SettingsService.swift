@@ -200,6 +200,7 @@ class SettingsService: ObservableObject {
     private let notesKey = "cuecard_notes"
     private let savedNotesKey = "cuecard_saved_notes"
     private let currentNoteIdKey = "cuecard_current_note_id"
+    private let cuesKey = "cuecard_cues"
     private var isLoadingNote = false
 
     @Published var settings: TeleprompterSettings {
@@ -232,29 +233,36 @@ class SettingsService: ObservableObject {
         }
     }
 
+    /// The user's reusable delivery cues, in the order they appear in the cue bar
+    @Published var cues: [Cue] = [] {
+        didSet {
+            saveCues()
+        }
+    }
+
     /// Default text for new notes
     static let defaultNoteText = """
 Welcome everyone.
 
 I'm excited to be here today to talk about CueCard.
 
-[cue:pink smile and pause]
+[note:pink smile and pause]
 
 It keeps your speaker notes visible above all apps, so you can use your existing camera apps and still read your notes.
 
-[cue:yellow pause]
+[note:yellow pause]
 
 It has a timer so you know if you're being brief… or too passionate.
 
-[cue:green light chuckle]
+[note:green light chuckle]
 
 And the colored highlights?
 
-[cue:purple emphasize]
+[note:purple emphasize]
 
 Those are your secret cues — reminders to smile, pause, or not panic.
 
-[cue:yellow pause]
+[note:yellow pause]
 
 Try it out. I think you'll love it.
 """
@@ -286,30 +294,43 @@ Try it out. I think you'll love it.
             self.currentNoteId = id
         }
 
-        // Scripts written before the rename still say [note …]; rewrite them once so
-        // what users see in the editor matches what the cue bar now writes.
-        let migratedNotes = TeleprompterParser.migratedToCueTags(self.notes)
-        if migratedNotes != self.notes {
-            self.notes = migratedNotes
-            userDefaults.set(migratedNotes, forKey: notesKey)
-        }
-
-        let migratedSavedNotes = self.savedNotes.map { note -> SavedNote in
-            var migrated = note
-            migrated.content = TeleprompterParser.migratedToCueTags(note.content)
-            return migrated
-        }
-        if migratedSavedNotes != self.savedNotes {
-            self.savedNotes = migratedSavedNotes
-            if let encoded = try? JSONEncoder().encode(migratedSavedNotes) {
-                userDefaults.set(encoded, forKey: savedNotesKey)
-            }
+        // Load cues, seeding the starter set the first time around
+        if let data = userDefaults.data(forKey: cuesKey),
+           let decoded = try? JSONDecoder().decode([Cue].self, from: data) {
+            self.cues = decoded
+        } else {
+            self.cues = Cue.defaults
+            userDefaults.set(try? JSONEncoder().encode(Cue.defaults), forKey: cuesKey)
         }
 
         // Notes start empty - users can add sample text via the button
         if needsSave {
             saveSettings()
         }
+    }
+
+    private func saveCues() {
+        if let encoded = try? JSONEncoder().encode(cues) {
+            userDefaults.set(encoded, forKey: cuesKey)
+        }
+    }
+
+    // MARK: - Cues
+
+    /// Add a cue to the front of the library, where it's easiest to reach next time
+    func addCue(_ cue: Cue) {
+        cues.insert(cue, at: 0)
+    }
+
+    /// Update a saved cue. Scripts already written keep the text they were given —
+    /// a cue is a shortcut for typing a tag, not a live reference to one.
+    func updateCue(_ cue: Cue) {
+        guard let index = cues.firstIndex(where: { $0.id == cue.id }) else { return }
+        cues[index] = cue
+    }
+
+    func deleteCue(id: UUID) {
+        cues.removeAll { $0.id == id }
     }
 
     private func saveSettings() {
@@ -397,7 +418,7 @@ Try it out. I think you'll love it.
     /// The file already carries a name, so there's nothing to prompt the user for.
     func importNote(title: String, content: String) {
         isLoadingNote = true
-        notes = TeleprompterParser.migratedToCueTags(content)
+        notes = content
         currentNoteId = nil
         isLoadingNote = false
         saveCurrentNote(title: title)
@@ -428,6 +449,7 @@ Try it out. I think you'll love it.
         notes = ""
         savedNotes = []
         currentNoteId = nil
+        cues = Cue.defaults
         userDefaults.removeObject(forKey: settingsKey)
         userDefaults.removeObject(forKey: notesKey)
         userDefaults.removeObject(forKey: savedNotesKey)

@@ -541,7 +541,7 @@ struct AttributedTextView: UIViewRepresentable {
         var lastProgressBucket: Double = -1
         var appliedProgress: Double = 0
         var wordRanges: [NSRange] = []
-        var wordIsCue: [Bool] = []
+        var wordIsNote: [Bool] = []
         var lastScrolledWordIndex: Int = -1
         var lastScrollTarget: CGFloat = -1
         var lastBoundsHeight: CGFloat = 0
@@ -592,7 +592,7 @@ struct AttributedTextView: UIViewRepresentable {
             coordinator.lastFontSize = fontSize
             coordinator.lastColorScheme = colorScheme
             coordinator.wordRanges = built.wordRanges
-            coordinator.wordIsCue = built.wordIsCue
+            coordinator.wordIsNote = built.wordIsNote
             coordinator.appliedProgress = highlightProgress
             coordinator.lastProgressBucket = (highlightProgress * 10).rounded(.down) / 10
             coordinator.lastScrolledWordIndex = -1
@@ -660,7 +660,7 @@ struct AttributedTextView: UIViewRepresentable {
         let storage = textView.textStorage
 
         storage.beginEditing()
-        for index in first...last where !coordinator.wordIsCue[index] {
+        for index in first...last where !coordinator.wordIsNote[index] {
             storage.addAttribute(
                 .foregroundColor,
                 value: textColor.withAlphaComponent(highlightAlpha(for: index)),
@@ -679,14 +679,14 @@ struct AttributedTextView: UIViewRepresentable {
         return 0.3 + CGFloat(blend) * 0.7
     }
 
-    private func buildAttributedString() -> (text: NSAttributedString, wordRanges: [NSRange], wordIsCue: [Bool]) {
+    private func buildAttributedString() -> (text: NSAttributedString, wordRanges: [NSRange], wordIsNote: [Bool]) {
         let result = NSMutableAttributedString()
         var wordRanges: [NSRange] = []
-        var wordIsCue: [Bool] = []
+        var wordIsNote: [Bool] = []
         let paragraphs = content.fullText.components(separatedBy: "\n\n")
 
         let textColor = colorScheme == .dark ? AppColors.UIColors.Dark.textPrimary : AppColors.UIColors.Light.textPrimary
-        let cueKern = fontSize * 0.05
+        let noteKern = fontSize * 0.05
 
         var globalWordIndex = 0
 
@@ -709,21 +709,21 @@ struct AttributedTextView: UIViewRepresentable {
 
                 for segment in segments {
                     switch segment {
-                    case .cue(let cueContent, let cueColor):
-                        let cueAttrs: [NSAttributedString.Key: Any] = [
+                    case .cue(let noteContent, let cueColor):
+                        let noteAttrs: [NSAttributedString.Key: Any] = [
                             .font: UIFont.systemFont(ofSize: fontSize * 0.72, weight: .semibold),
                             .foregroundColor: cueColor.uiColor(isDarkMode: colorScheme == .dark),
-                            .kern: cueKern
+                            .kern: noteKern
                         ]
-                        let cueWords = cueContent.split(separator: " ", omittingEmptySubsequences: true)
-                        for word in cueWords {
+                        let noteWords = noteContent.split(separator: " ", omittingEmptySubsequences: true)
+                        for word in noteWords {
                             if lineWordIndex > 0 {
-                                result.append(NSAttributedString(string: " ", attributes: cueAttrs))
+                                result.append(NSAttributedString(string: " ", attributes: noteAttrs))
                             }
                             let location = result.length
-                            result.append(NSAttributedString(string: String(word), attributes: cueAttrs))
+                            result.append(NSAttributedString(string: String(word), attributes: noteAttrs))
                             wordRanges.append(NSRange(location: location, length: result.length - location))
-                            wordIsCue.append(true)
+                            wordIsNote.append(true)
                             globalWordIndex += 1
                             lineWordIndex += 1
                         }
@@ -747,7 +747,7 @@ struct AttributedTextView: UIViewRepresentable {
                             let location = result.length
                             result.append(NSAttributedString(string: word, attributes: attrs))
                             wordRanges.append(NSRange(location: location, length: result.length - location))
-                            wordIsCue.append(false)
+                            wordIsNote.append(false)
 
                             globalWordIndex += 1
                             lineWordIndex += 1
@@ -763,7 +763,7 @@ struct AttributedTextView: UIViewRepresentable {
         paragraphStyle.paragraphSpacing = fontSize * 0.45
         result.addAttribute(.paragraphStyle, value: paragraphStyle, range: NSRange(location: 0, length: result.length))
 
-        return (result, wordRanges, wordIsCue)
+        return (result, wordRanges, wordIsNote)
     }
 }
 

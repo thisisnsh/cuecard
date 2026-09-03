@@ -23,7 +23,8 @@ struct HomeView: View {
     @State private var fileErrorMessage: String?
     @State private var timerPickerTransitionTask: Task<Void, Never>?
     @State private var isEditorFocused = false
-    @StateObject private var editorController = CueEditorController()
+    @State private var editorSelection = NSRange(location: 0, length: 0)
+    @State private var composerMode: CueComposerMode?
     @Environment(\.requestReview) private var requestReview
 
     private var hasNotes: Bool {
@@ -205,16 +206,14 @@ struct HomeView: View {
         }
     }
 
-    /// Drop a capsule in where the user is writing. The editor does the insertion so
-    /// the caret stays with the cue instead of jumping to the end of the script.
-    private func addCue() {
-        AnalyticsEvents.logButtonClick("add_cue", screen: "home")
-        editorController.insertCue()
-    }
+    /// Drop a cue tag in at the caret and leave the caret just after it, so the user
+    /// can keep typing without hunting for their place.
+    private func insertCue(_ cue: Cue) {
+        AnalyticsEvents.logButtonClick("insert_cue", screen: "home")
 
-    private func pickCueColor(_ color: CueColor) {
-        AnalyticsEvents.logButtonClick("cue_color", screen: "home")
-        editorController.apply(color)
+        let result = settingsService.notes.insertingCue(cue.tag, at: editorSelection)
+        settingsService.notes = result.text
+        editorSelection = NSRange(location: result.caret, length: 0)
     }
 
     var body: some View {
@@ -238,23 +237,29 @@ struct HomeView: View {
                     // Notes editor
                     NotesEditorView(
                         text: $settingsService.notes,
+                        selectedRange: $editorSelection,
                         isFocused: $isEditorFocused,
-                        colorScheme: colorScheme,
-                        controller: editorController
+                        colorScheme: colorScheme
                     )
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .ignoresSafeArea(.keyboard, edges: .bottom)
                 }
                 .animation(.easeInOut(duration: 0.25), value: remoteConfig.dismissedIDs)
             }
             .overlay(alignment: .bottom) {
                 if isEditorFocused {
                     CueBar(
-                        activeColor: editorController.activeColor,
-                        isEditingCue: editorController.isEditingCue,
+                        cues: settingsService.cues,
                         colorScheme: colorScheme,
-                        onAddCue: addCue,
-                        onPickColor: pickCueColor,
+                        onInsert: insertCue,
+                        onCreate: {
+                            AnalyticsEvents.logButtonClick("new_cue", screen: "home")
+                            composerMode = .create
+                        },
+                        onEdit: { composerMode = .edit($0) },
+                        onRecolor: { cue, color in
+                            settingsService.updateCue(Cue(id: cue.id, text: cue.text, color: color))
+                        },
+                        onDelete: { settingsService.deleteCue(id: $0.id) },
                         onDismissKeyboard: { isEditorFocused = false }
                     )
                     .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -375,6 +380,19 @@ struct HomeView: View {
             .sheet(isPresented: $showingSavedNotes) {
                 SavedNotesView()
             }
+            .sheet(item: $composerMode) { mode in
+                CueComposerSheet(mode: mode) { cue, keepInLibrary in
+                    switch mode {
+                    case .create:
+                        if keepInLibrary {
+                            settingsService.addCue(cue)
+                        }
+                        insertCue(cue)
+                    case .edit:
+                        settingsService.updateCue(cue)
+                    }
+                }
+            }
             .alert("Save Note", isPresented: $showingSaveDialog) {
                 TextField("Note title", text: $saveNoteTitle)
                 Button("Cancel", role: .cancel) { }
@@ -427,15 +445,15 @@ struct HomeView: View {
 /// Notes editor with live syntax highlighting for [note] cues
 struct NotesEditorView: View {
     @Binding var text: String
+    @Binding var selectedRange: NSRange
     @Binding var isFocused: Bool
     let colorScheme: ColorScheme
-    let controller: CueEditorController
 
     var body: some View {
         ZStack(alignment: .topLeading) {
             // Placeholder
             if text.isEmpty {
-                Text("Add your script here...\n\nTap + Cue above the keyboard to drop in a delivery reminder — it shows up as a colored capsule while you read, and is never spoken.")
+                Text("Add your script here...\n\nTap a cue below the script to drop in a delivery reminder like \"Welcome everyone [note smile and pause]\"")
                     .foregroundStyle(AppColors.textSecondary(for: colorScheme).opacity(0.6))
                     .padding(.horizontal, 20)
                     .padding(.vertical, 16)
@@ -444,9 +462,9 @@ struct NotesEditorView: View {
 
             CueTextEditor(
                 text: $text,
+                selectedRange: $selectedRange,
                 isFocused: $isFocused,
-                colorScheme: colorScheme,
-                controller: controller
+                colorScheme: colorScheme
             )
             .padding(.horizontal, 4)
             .padding(.vertical, 8)
