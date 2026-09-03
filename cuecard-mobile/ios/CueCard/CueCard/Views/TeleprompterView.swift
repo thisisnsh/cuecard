@@ -23,6 +23,9 @@ struct TeleprompterView: View {
     @State private var countdownValue: Int = 0
     @State private var isCountingDown = false
     @State private var countdownTimer: Timer?
+    /// Whether playback has begun since the last restart. The countdown only
+    /// runs on the first play; resuming from a pause starts right away.
+    @State private var hasStarted = false
     @Environment(\.scenePhase) private var scenePhase
 
     // Timer properties
@@ -284,6 +287,7 @@ struct TeleprompterView: View {
         pipManager.onPlayPauseFromPiP = { playing in
             if playing {
                 isPlaying = true
+                hasStarted = true
                 if !pipManager.isPiPActive {
                     startTimer()
                 }
@@ -300,6 +304,7 @@ struct TeleprompterView: View {
             isCountingDown = false
             elapsedTime = 0
             isPlaying = false
+            hasStarted = false
         }
 
         // Handle expand from PiP - app will come to foreground automatically
@@ -349,8 +354,8 @@ struct TeleprompterView: View {
     }
 
     private func startCountdownThenPlay() {
-        // If countdown is 0, play immediately
-        guard settings.countdownSeconds > 0 else {
+        // Only count down from the top of the script — a resume plays immediately
+        guard settings.countdownSeconds > 0, !hasStarted else {
             play()
             return
         }
@@ -383,6 +388,7 @@ struct TeleprompterView: View {
 
     private func play() {
         isPlaying = true
+        hasStarted = true
         startTimer()
         pipManager.updateState(elapsedTime: elapsedTime, isPlaying: true)
         Analytics.logEvent("teleprompter_play", parameters: nil)
@@ -410,6 +416,7 @@ struct TeleprompterView: View {
         isCountingDown = false
         elapsedTime = 0
         isPlaying = false
+        hasStarted = false
         pipManager.updateState(elapsedTime: 0, isPlaying: false)
         Analytics.logEvent("teleprompter_restart", parameters: nil)
     }
