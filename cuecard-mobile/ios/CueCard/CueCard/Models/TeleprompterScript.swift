@@ -12,56 +12,18 @@ enum TeleprompterLayout {
 
 // MARK: - Drawing the script
 
-/// A `[pause …]` in the drawn script: the characters its label takes up, and how
-/// long it waits.
-struct PauseMark {
-    /// The label's own characters. Every label is written to the same length, so
-    /// this range holds still for the life of the drawn script.
-    let range: NSRange
+/// A cue that holds the script still, and where it falls in the drawn script.
+struct CueHold {
+    /// The character the cue starts at.
+    let location: Int
     let seconds: Double
 }
 
-/// The script as the teleprompter draws it, and the pauses in it.
+/// The script as the teleprompter draws it, and the cues in it that hold.
 struct RenderedScript {
     let attributed: NSAttributedString
-    /// Every pause, in reading order.
-    let pauses: [PauseMark]
-}
-
-/// What a pause reads on screen.
-enum PauseState: Equatable {
-    /// Ahead of the reader, or holding them here, with this long left to wait.
-    case waiting(Double)
-    /// Behind the reader, or run down to nothing.
-    case expired
-}
-
-/// The words a pause is drawn with.
-///
-/// Both readings are the same number of characters in the same monospaced font,
-/// so a pause counting down is always exactly as wide as it was. That is what
-/// lets the label be rewritten every second without the script re-wrapping around
-/// it — every line stays where it was, and so does the reader.
-enum PauseLabel {
-
-    /// The widest a label gets, which is what the shorter one is padded out to.
-    private static let width = "Paused for 00:00".count
-
-    static func text(_ state: PauseState) -> String {
-        switch state {
-        case .waiting(let seconds):
-            // Rounded down, so the count reaches 00:00 and rests there for its
-            // last second rather than skipping from 00:01 to gone.
-            return padded("Paused for " + TeleprompterParser.formatTime(Int(max(seconds, 0))))
-        case .expired:
-            return padded("Expired pause")
-        }
-    }
-
-    private static func padded(_ text: String) -> String {
-        guard text.count < width else { return text }
-        return text + String(repeating: " ", count: width - text.count)
-    }
+    /// Every holding cue, in reading order.
+    let holds: [CueHold]
 }
 
 enum TeleprompterScript {
@@ -80,7 +42,7 @@ enum TeleprompterScript {
         isDarkMode: Bool
     ) -> RenderedScript {
         let result = NSMutableAttributedString()
-        var pauses: [PauseMark] = []
+        var holds: [CueHold] = []
 
         let textAttrs: [NSAttributedString.Key: Any] = [
             .font: UIFont.systemFont(ofSize: fontSize, weight: .medium),
@@ -90,12 +52,6 @@ enum TeleprompterScript {
             .font: UIFont.systemFont(ofSize: fontSize * 0.72, weight: .semibold),
             .foregroundColor: cueColor.uiColor(isDarkMode: isDarkMode),
             .kern: fontSize * 0.05
-        ]
-        // Small, grey and monospaced: an instruction to the reader rather than
-        // anything to say, and a width that holds still as it counts down.
-        let pauseAttrs: [NSAttributedString.Key: Any] = [
-            .font: UIFont.monospacedSystemFont(ofSize: max(fontSize * 0.5, 10), weight: .semibold),
-            .foregroundColor: isDarkMode ? AppColors.UIColors.Dark.textSecondary : AppColors.UIColors.Light.textSecondary
         ]
 
         for (paragraphIndex, paragraph) in text.components(separatedBy: "\n\n").enumerated() {
@@ -116,15 +72,11 @@ enum TeleprompterScript {
                     }
 
                     switch segment {
-                    case .cue(let cueText):
-                        result.append(NSAttributedString(string: cueText, attributes: cueAttrs))
-                    case .pause(let seconds):
-                        let label = PauseLabel.text(.waiting(seconds))
-                        pauses.append(PauseMark(
-                            range: NSRange(location: result.length, length: (label as NSString).length),
-                            seconds: seconds
-                        ))
-                        result.append(NSAttributedString(string: label, attributes: pauseAttrs))
+                    case .cue(let cue):
+                        if cue.holdSeconds > 0 {
+                            holds.append(CueHold(location: result.length, seconds: cue.holdSeconds))
+                        }
+                        result.append(NSAttributedString(string: cue.displayText, attributes: cueAttrs))
                     case .text(let content):
                         result.append(NSAttributedString(string: content, attributes: textAttrs))
                     }
@@ -139,43 +91,7 @@ enum TeleprompterScript {
             result.addAttribute(.paragraphStyle, value: paragraphStyle, range: NSRange(location: 0, length: result.length))
         }
 
-        return RenderedScript(attributed: result, pauses: pauses)
-    }
-
-    /// Write the live labels into a script already drawn: how long each pause has
-    /// left, or that it has run out.
-    ///
-    /// Every label is the same length, so nothing shifts and nothing re-wraps —
-    /// the countdown costs one paragraph's worth of redraw and leaves the reader's
-    /// place in the script exactly where it was.
-    static func applyPauseLabels(_ states: [PauseState], to storage: NSTextStorage, pauses: [PauseMark]) {
-        guard !pauses.isEmpty, states.count == pauses.count else { return }
-
-        let current = storage.string as NSString
-        var changes: [(range: NSRange, label: String)] = []
-
-        for (index, pause) in pauses.enumerated() {
-            guard NSMaxRange(pause.range) <= current.length else { return }
-
-            let label = PauseLabel.text(states[index])
-            if current.substring(with: pause.range) != label {
-                changes.append((pause.range, label))
-            }
-        }
-
-        guard !changes.isEmpty else { return }
-
-        storage.beginEditing()
-        for change in changes {
-            // Carry the attributes the label was drawn with rather than trusting
-            // what a plain replacement would inherit.
-            let attributes = storage.attributes(at: change.range.location, effectiveRange: nil)
-            storage.replaceCharacters(
-                in: change.range,
-                with: NSAttributedString(string: change.label, attributes: attributes)
-            )
-        }
-        storage.endEditing()
+        return RenderedScript(attributed: result, holds: holds)
     }
 }
 
@@ -303,68 +219,45 @@ struct ScriptLayout {
 
 // MARK: - Playback
 
-/// A pause written into the script, placed among the lines it wrapped into: the
-/// scroll stops with this line on the reading line for `seconds`, and the clock
-/// runs on through it.
-struct ScriptPause: Equatable {
+/// A pause written into the script: the scroll stops with this line on the
+/// reading line for `seconds`, and the clock runs on through it.
+struct ScriptHold: Equatable {
     let line: Double
     let seconds: Double
 }
 
 /// The script as the full-screen teleprompter laid it out. The reader's place is
-/// counted in these lines and every pause is placed among them; the overlay wraps
-/// the same script into more lines of its own, so it takes its place from here by
-/// character.
+/// counted in these lines and every holding cue is placed among them; the overlay
+/// wraps the same script into more lines of its own, so it takes its place from
+/// here by character.
 struct ScriptGeometry: Equatable {
     var map = ScriptLineMap()
-    /// Every pause, by the line it landed on, in reading order.
-    var pauses: [ScriptPause] = []
+    /// Every holding cue, by the line it landed on, in reading order.
+    var holds: [ScriptHold] = []
 
     var lineCount: Int { map.count }
 
-    /// Place the pauses among the lines the script wrapped into. A pause holds
-    /// when its own line reaches the reading line, wherever in that line it
+    /// Place the cues that hold the script among the lines it wrapped into. A cue
+    /// holds when its own line reaches the reading line, wherever in that line it
     /// happens to sit.
-    static func from(layout: ScriptLayout, pauses marks: [PauseMark]) -> ScriptGeometry {
+    static func from(layout: ScriptLayout, holds cueHolds: [CueHold]) -> ScriptGeometry {
         ScriptGeometry(
             map: layout.map,
-            pauses: marks.map {
-                ScriptPause(
-                    line: layout.map.line(forCharacter: Double($0.range.location)).rounded(.down),
+            holds: cueHolds.map {
+                ScriptHold(
+                    line: layout.map.line(forCharacter: Double($0.location)).rounded(.down),
                     seconds: $0.seconds
                 )
             }
         )
     }
-
-    /// What each pause reads, given where the reader is. Everything the reader has
-    /// gone past has run out, whether it was waited through or scrolled straight
-    /// over.
-    func pauseStates(at position: ScriptPosition) -> [PauseState] {
-        pauses.enumerated().map { index, pause in
-            if index == position.pauseIndex {
-                return .waiting(position.pauseRemaining)
-            }
-            if pause.line > position.line {
-                return .waiting(pause.seconds)
-            }
-            // Sharing the reader's line: the pauses after the one holding them are
-            // still to come. With none holding them, the line's pauses are behind.
-            if pause.line == position.line, let holding = position.pauseIndex, index > holding {
-                return .waiting(pause.seconds)
-            }
-            return .expired
-        }
-    }
 }
 
-/// Where the reader is in the script, and whether a pause is holding them there.
+/// Where the reader is in the script, and how much longer a cue is holding them
+/// there — zero when the script is free to scroll.
 struct ScriptPosition {
     var line: Double
-    /// The pause holding the reader here, if one is.
-    var pauseIndex: Int?
-    /// How long that pause has left. Zero when the script is free to scroll.
-    var pauseRemaining: Double
+    var holdRemaining: Double
 }
 
 /// Turns the clock into a place in the script.
@@ -390,12 +283,12 @@ struct ScriptPlayback: Equatable {
     }
 
     /// Where the reader is once the clock reads `time`: the anchor, plus however
-    /// many lines fit in the time since it was set, minus the pauses waited
-    /// through on the way.
+    /// many lines fit in the time since it was set, minus the holds passed through
+    /// on the way.
     func position(
         at time: Double,
         linesPerMinute: Double,
-        pauses: [ScriptPause],
+        holds: [ScriptHold],
         lineCount: Int
     ) -> ScriptPosition {
         let lastLine = Double(max(lineCount - 1, 0))
@@ -403,42 +296,30 @@ struct ScriptPlayback: Equatable {
 
         let linesPerSecond = linesPerMinute / 60
         guard linesPerSecond > 0 else {
-            return ScriptPosition(line: line, pauseIndex: nil, pauseRemaining: 0)
+            return ScriptPosition(line: line, holdRemaining: 0)
         }
 
-        // Time left to spend, walking forward from the anchor. A pause on the
+        // Time left to spend, walking forward from the anchor. A hold at the
         // anchor's own line counts: the anchor is only ever set by a restart or by
         // a drag, and both are a fresh arrival at that line. It can't fire twice,
-        // because coming out of a pause moves the clock, not the anchor.
+        // because coming out of a hold moves the clock, not the anchor.
         var remaining = max(time - anchorTime, 0)
 
-        for (index, pause) in pauses.enumerated() where pause.line >= line && pause.line <= lastLine {
-            let travel = (pause.line - line) / linesPerSecond
+        for hold in holds where hold.line >= line && hold.line <= lastLine {
+            let travel = (hold.line - line) / linesPerSecond
             if remaining < travel {
-                return ScriptPosition(
-                    line: line + remaining * linesPerSecond,
-                    pauseIndex: nil,
-                    pauseRemaining: 0
-                )
+                return ScriptPosition(line: line + remaining * linesPerSecond, holdRemaining: 0)
             }
 
             remaining -= travel
-            line = pause.line
+            line = hold.line
 
-            if remaining < pause.seconds {
-                return ScriptPosition(
-                    line: line,
-                    pauseIndex: index,
-                    pauseRemaining: pause.seconds - remaining
-                )
+            if remaining < hold.seconds {
+                return ScriptPosition(line: line, holdRemaining: hold.seconds - remaining)
             }
-            remaining -= pause.seconds
+            remaining -= hold.seconds
         }
 
-        return ScriptPosition(
-            line: min(line + remaining * linesPerSecond, lastLine),
-            pauseIndex: nil,
-            pauseRemaining: 0
-        )
+        return ScriptPosition(line: min(line + remaining * linesPerSecond, lastLine), holdRemaining: 0)
     }
 }
