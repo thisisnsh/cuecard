@@ -25,34 +25,13 @@ struct CueMatch {
     let range: NSRange
     /// Just the cue text inside the tag; empty for a cue with nothing written in it yet
     let contentRange: NSRange
-    /// The cue exactly as it is written, hold and all
     let content: String
-    /// The same cue as the teleprompter reads it
-    let run: CueRun
-}
-
-/// A `[cue …]` as the teleprompter reads it: the words to show, and how long the
-/// script should hold still on them.
-struct CueRun: Equatable {
-    /// The cue's own words, with any hold taken off the front
-    let text: String
-    /// Seconds the script holds with this cue on the reading line. Zero for a cue
-    /// the script just scrolls past.
-    let holdSeconds: Double
-
-    /// What the teleprompter draws — the hold first, then the words, which is how
-    /// the cue is written. What you type is what you read.
-    var displayText: String {
-        guard holdSeconds > 0 else { return text }
-        let label = TeleprompterParser.holdLabel(holdSeconds)
-        return text.isEmpty ? label : "\(label) \(text)"
-    }
 }
 
 /// A run of a single line: either spoken text or a delivery cue
 enum CueSegment {
     case text(String)
-    case cue(CueRun)
+    case cue(String)
 }
 
 /// Parser for teleprompter scripts with `[cue …]` delivery cues
@@ -74,13 +53,6 @@ enum TeleprompterParser {
     private static let cuePattern = #"\[(?:cue|note)(?::[A-Za-z]+)?(?:[ \t]+([^\]\n]*))?\]"#
 
     private static let cueRegex = try! NSRegularExpression(pattern: cuePattern, options: [])
-
-    /// A count of seconds opening a cue: `[cue 3s look up]`. The digits sit
-    /// against the `s` and the cue's own words follow, so a cue that merely starts
-    /// with a number — `[cue 3 fingers]` — is left as words.
-    private static let holdPattern = #"^(\d{1,3}(?:\.\d+)?)s(?:\s+|$)"#
-
-    private static let holdRegex = try! NSRegularExpression(pattern: holdPattern, options: [])
 
     /// What an empty cue opens with, and closes with. Typing `[` writes both at
     /// once, leaving the caret between them.
@@ -146,12 +118,10 @@ enum TeleprompterParser {
                 ? NSRange(location: NSMaxRange(match.range) - 1, length: 0)
                 : match.range(at: 1)
 
-            let content = nsText.substring(with: contentRange)
             return CueMatch(
                 range: match.range,
                 contentRange: contentRange,
-                content: content,
-                run: run(forContent: content)
+                content: nsText.substring(with: contentRange)
             )
         }
     }
@@ -164,35 +134,6 @@ enum TeleprompterParser {
         cueMatches(in: text).first {
             $0.range.location < location && location < NSMaxRange($0.range)
         }
-    }
-
-    /// Read a cue's contents: how long it holds the script, and what it says.
-    ///
-    /// A hold is written at the front as a count of seconds — `[cue 5s drink]`.
-    /// When the cue reaches the reading line the script stops there for that long,
-    /// and the clock carries on running through it.
-    static func run(forContent content: String) -> CueRun {
-        let trimmed = content.trimmingCharacters(in: .whitespaces)
-        let nsTrimmed = trimmed as NSString
-
-        guard let match = holdRegex.firstMatch(
-            in: trimmed,
-            options: [],
-            range: NSRange(location: 0, length: nsTrimmed.length)
-        ), let seconds = Double(nsTrimmed.substring(with: match.range(at: 1))), seconds > 0 else {
-            return CueRun(text: trimmed, holdSeconds: 0)
-        }
-
-        return CueRun(
-            text: nsTrimmed.substring(from: NSMaxRange(match.range)).trimmingCharacters(in: .whitespaces),
-            holdSeconds: seconds
-        )
-    }
-
-    /// A hold written back out the way it goes in: `3s`, or `2.5s`.
-    static func holdLabel(_ seconds: Double) -> String {
-        let whole = seconds.rounded()
-        return abs(seconds - whole) < 0.001 ? "\(Int(whole))s" : String(format: "%gs", seconds)
     }
 
     /// Split a single line into spoken text and cue runs.
@@ -220,7 +161,7 @@ enum TeleprompterParser {
                 }
             }
 
-            segments.append(.cue(match.run))
+            segments.append(.cue(match.content))
             lastEnd = NSMaxRange(match.range)
         }
 
@@ -247,8 +188,8 @@ enum TeleprompterParser {
         for line in text.components(separatedBy: "\n") where !line.isEmpty {
             for segment in segments(in: line) {
                 switch segment {
-                case .cue(let cue):
-                    for word in cue.displayText.split(whereSeparator: \.isWhitespace) {
+                case .cue(let cueText):
+                    for word in cueText.split(whereSeparator: \.isWhitespace) {
                         words.append(WordInfo(text: String(word), isCue: true))
                     }
                 case .text(let textContent):

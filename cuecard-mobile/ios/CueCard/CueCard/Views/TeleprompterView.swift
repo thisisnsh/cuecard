@@ -12,19 +12,12 @@ struct TeleprompterView: View {
     @StateObject private var pipManager = TeleprompterPiPManager.shared
 
     @State private var isPlaying = false
-    /// The clock. It counts the time spent speaking and nothing else: it starts,
-    /// it pauses, it goes back to zero on a restart. Moving through the script —
-    /// by dragging it, or by a cue holding it — leaves it alone.
     @State private var elapsedTime: Double = 0
     @State private var timer: Timer?
     @State private var timerStartDate: Date?
     @State private var elapsedTimeAtTimerStart: Double = 0
-    /// Where the script was last placed by hand, which is what the clock reading
-    /// is measured out from to say which line the reader is on.
-    @State private var playback = ScriptPlayback()
-    /// How the script wrapped on this screen, and which of those lines the cues
-    /// that hold it landed on. Empty until it lays out.
-    @State private var geometry = ScriptGeometry()
+    /// How many lines the script wrapped into on this screen. Zero until it lays out.
+    @State private var lineCount: Int = 0
     @State private var showControls = true
     @State private var controlsTimer: Timer?
     @State private var countdownValue: Int = 0
@@ -80,39 +73,47 @@ struct TeleprompterView: View {
     private static let topFade: CGFloat = 96
     private static let bottomFade: CGFloat = 140
 
-    /// The line the reader is on, and whether a cue is holding them there.
-    private var position: ScriptPosition {
-        playback.position(
-            at: elapsedTime,
-            linesPerMinute: Double(settings.linesPerMinute),
-            holds: geometry.holds,
-            lineCount: geometry.lineCount
-        )
+    /// How long the whole script takes at the current speed: the time for the
+    /// last line to reach the reading line. Zero until the script has laid out.
+    private var scriptDuration: Double {
+        duration(forLines: lineCount)
     }
+
+    private func duration(forLines lines: Int) -> Double {
+        guard lines > 1, settings.linesPerMinute > 0 else { return 0 }
+        return Double(lines - 1) * 60.0 / Double(settings.linesPerMinute)
+    }
+
+    /// Where on screen the line being read sits, as a fraction of the view height.
+    /// Just above centre: high enough to leave the next few lines in view, low
+    /// enough to read as the middle of the screen rather than the top of it.
+    ///
+    /// It doubles as the script's top inset, so the first line starts on the
+    /// reading line and a line's scroll target is its own position in the text.
+    private static let readingLineFraction: CGFloat = 0.45
 
     var body: some View {
         NavigationStack {
-            GeometryReader { proxy in
+            GeometryReader { geometry in
                 ZStack {
                     // Background - matches device theme
                     AppColors.background(for: colorScheme)
                         .ignoresSafeArea()
 
                     // The script scrolls at the reader's own pace: so many rendered
-                    // lines a minute, counted from the time on the clock — except
-                    // where a cue holds it still.
+                    // lines a minute, counted from the time on the clock.
                     AttributedTextView(
                         content: content,
                         cueColor: settings.cueColor,
                         fontSize: CGFloat(settings.fontSize),
-                        linePosition: position.line,
+                        linePosition: elapsedTime * Double(settings.linesPerMinute) / 60.0,
                         colorScheme: colorScheme,
-                        topPadding: proxy.size.height * TeleprompterLayout.readingLineFraction,
-                        bottomPadding: proxy.size.height * (1 - TeleprompterLayout.readingLineFraction),
+                        topPadding: geometry.size.height * Self.readingLineFraction,
+                        bottomPadding: geometry.size.height * (1 - Self.readingLineFraction),
                         snapToken: scriptSnapToken,
-                        onGeometryChange: { measured in
-                            geometry = measured
-                            pipManager.geometry = measured
+                        onLineCountChange: { lines in
+                            lineCount = lines
+                            pipManager.scriptDuration = duration(forLines: lines)
                         },
                         onScrub: { line in
                             scrub(toLine: line)
@@ -134,6 +135,18 @@ struct TeleprompterView: View {
                             Spacer()
 
                             HStack(spacing: 24) {
+                                // Backward 10 seconds
+                                Button(action: {
+                                    AnalyticsEvents.logButtonClick("seek_backward", screen: "teleprompter")
+                                    seekBackward()
+                                }) {
+                                    Image(systemName: "gobackward.10")
+                                        .font(.system(size: 24))
+                                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                                        .frame(width: 48, height: 48)
+                                        .glassedEffect(in: Circle())
+                                }
+
                                 // PiP toggle button
                                 if pipManager.isPiPPossible {
                                     Button(action: {
@@ -174,6 +187,18 @@ struct TeleprompterView: View {
                                         .font(.system(size: 20, weight: .semibold))
                                         .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                                         .frame(width: 52, height: 52)
+                                        .glassedEffect(in: Circle())
+                                }
+
+                                // Forward 10 seconds
+                                Button(action: {
+                                    AnalyticsEvents.logButtonClick("seek_forward", screen: "teleprompter")
+                                    seekForward()
+                                }) {
+                                    Image(systemName: "goforward.10")
+                                        .font(.system(size: 24))
+                                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                                        .frame(width: 48, height: 48)
                                         .glassedEffect(in: Circle())
                                 }
                             }
@@ -247,7 +272,7 @@ struct TeleprompterView: View {
             timerDuration: timerDuration,
             colorScheme: colorScheme
         )
-        pipManager.geometry = geometry
+        pipManager.scriptDuration = scriptDuration
 
         pipManager.onPiPClosed = {
             syncFromPiP()
@@ -283,7 +308,6 @@ struct TeleprompterView: View {
             stopCountdownTimer()
             isCountingDown = false
             elapsedTime = 0
-            playback = ScriptPlayback()
             isPlaying = false
             hasStarted = false
         }
@@ -302,17 +326,15 @@ struct TeleprompterView: View {
     /// the overlay expands back into the app.
     private func syncFromPiP() {
         elapsedTime = pipManager.elapsedTime
-        playback = pipManager.playback
         isPlaying = pipManager.isPlaying
         scriptSnapToken += 1
     }
 
     private func startPiP(minimizeApp: Bool = false) {
-        pipManager.geometry = geometry
+        pipManager.scriptDuration = scriptDuration
         pipManager.updateState(
             elapsedTime: elapsedTime,
             isPlaying: isPlaying,
-            playback: playback,
             countdownValue: countdownValue,
             isCountingDown: isCountingDown
         )
@@ -354,14 +376,14 @@ struct TeleprompterView: View {
         // Start countdown
         countdownValue = settings.countdownSeconds
         isCountingDown = true
-        pipManager.updateState(elapsedTime: elapsedTime, isPlaying: isPlaying, playback: playback, countdownValue: countdownValue, isCountingDown: true)
+        pipManager.updateState(elapsedTime: elapsedTime, isPlaying: isPlaying, countdownValue: countdownValue, isCountingDown: true)
 
         countdownTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
             Task { @MainActor in
                 withAnimation(.snappy) {
                     countdownValue -= 1
                 }
-                pipManager.updateState(elapsedTime: elapsedTime, isPlaying: isPlaying, playback: playback, countdownValue: countdownValue, isCountingDown: countdownValue > 0)
+                pipManager.updateState(elapsedTime: elapsedTime, isPlaying: isPlaying, countdownValue: countdownValue, isCountingDown: countdownValue > 0)
 
                 if countdownValue <= 0 {
                     stopCountdownTimer()
@@ -381,7 +403,7 @@ struct TeleprompterView: View {
         isPlaying = true
         hasStarted = true
         startTimer()
-        pipManager.updateState(elapsedTime: elapsedTime, isPlaying: true, playback: playback)
+        pipManager.updateState(elapsedTime: elapsedTime, isPlaying: true)
         Analytics.logEvent("teleprompter_play", parameters: nil)
         resetControlsTimer()
     }
@@ -391,36 +413,66 @@ struct TeleprompterView: View {
         if isCountingDown {
             stopCountdownTimer()
             isCountingDown = false
-            pipManager.updateState(elapsedTime: elapsedTime, isPlaying: false, playback: playback, countdownValue: 0, isCountingDown: false)
+            pipManager.updateState(elapsedTime: elapsedTime, isPlaying: false, countdownValue: 0, isCountingDown: false)
             return
         }
         isPlaying = false
         stopTimer()
-        pipManager.updateState(elapsedTime: elapsedTime, isPlaying: false, playback: playback)
+        pipManager.updateState(elapsedTime: elapsedTime, isPlaying: false)
         Analytics.logEvent("teleprompter_pause", parameters: nil)
     }
 
     /// Back to the first line, which the script scrolls up to rather than snapping.
-    /// The one thing that puts the clock back to zero.
     private func restart() {
         stopTimer()
         stopCountdownTimer()
         isCountingDown = false
         elapsedTime = 0
-        playback = ScriptPlayback()
         isPlaying = false
         hasStarted = false
-        pipManager.updateState(elapsedTime: 0, isPlaying: false, playback: playback)
+        pipManager.updateState(elapsedTime: 0, isPlaying: false)
         Analytics.logEvent("teleprompter_restart", parameters: nil)
     }
 
-    /// Pick up from wherever the reader dragged the script to. The line they left
-    /// on the reading line is where playback carries on from — and the clock,
-    /// which counts how long they have been speaking rather than how far down the
-    /// page they are, doesn't move for it.
+    private func seekForward() {
+        seek(by: 10)
+    }
+
+    private func seekBackward() {
+        seek(by: -10)
+    }
+
+    /// Move the script by a slice of time, which at the current speed is
+    /// `linesPerMinute × seconds / 60` lines. The scroll animates across them.
+    private func seek(by seconds: Double) {
+        let end = scriptDuration > 0 ? scriptDuration : .greatestFiniteMagnitude
+        let target = min(max(elapsedTime + seconds, 0), end)
+        guard target != elapsedTime else { return }
+
+        elapsedTime = target
+        // Reset wall-clock anchor so the timer continues from the new position
+        if timerStartDate != nil {
+            timerStartDate = Date()
+            elapsedTimeAtTimerStart = elapsedTime
+        }
+        pipManager.updateState(elapsedTime: elapsedTime, isPlaying: isPlaying)
+    }
+
+    /// Pick up from wherever the reader dragged the script to. The line they
+    /// left on the reading line is the line the clock now reads from, so playback
+    /// carries on from there instead of snapping back.
     private func scrub(toLine line: Double) {
-        playback.place(atLine: line, time: elapsedTime, lineCount: geometry.lineCount)
-        pipManager.updateState(elapsedTime: elapsedTime, isPlaying: isPlaying, playback: playback)
+        let end = scriptDuration > 0 ? scriptDuration : .greatestFiniteMagnitude
+        let target = min(max(line * 60.0 / Double(settings.linesPerMinute), 0), end)
+        guard abs(target - elapsedTime) > 0.001 else { return }
+
+        elapsedTime = target
+        // Reset wall-clock anchor so the timer continues from the new position
+        if timerStartDate != nil {
+            timerStartDate = Date()
+            elapsedTimeAtTimerStart = elapsedTime
+        }
+        pipManager.updateState(elapsedTime: elapsedTime, isPlaying: isPlaying)
     }
 
     private func stopAndDismiss() {
@@ -450,7 +502,7 @@ struct TeleprompterView: View {
             Task { @MainActor in
                 guard let startDate = timerStartDate else { return }
                 elapsedTime = elapsedTimeAtTimerStart + Date().timeIntervalSince(startDate)
-                pipManager.updateState(elapsedTime: elapsedTime, isPlaying: isPlaying, playback: playback)
+                pipManager.updateState(elapsedTime: elapsedTime, isPlaying: isPlaying)
             }
         }
     }
@@ -500,9 +552,9 @@ struct AttributedTextView: UIViewRepresentable {
     /// coming back from the overlay. The script settles at the new position
     /// instead of easing there.
     let snapToken: Int
-    /// Reports how the script wrapped on this screen — which the overlay reads its
-    /// own place from, and which is what puts every holding cue on a line.
-    let onGeometryChange: (ScriptGeometry) -> Void
+    /// Reports how many lines the script laid out into, which is what turns the
+    /// lines-per-minute setting into a duration.
+    let onLineCountChange: (Int) -> Void
     /// Reports where the reader dragged the script to, in rendered lines, so
     /// playback can carry on from there.
     let onScrub: (Double) -> Void
@@ -517,12 +569,10 @@ struct AttributedTextView: UIViewRepresentable {
         var lastFontSize: CGFloat = 0
         var lastCueColor: CueColor?
         var lastColorScheme: ColorScheme = .dark
-        /// The script as it is laid out on this screen.
-        var layout = ScriptLayout()
-        /// The cues that hold, by the character they start at, from the last build.
-        var cueHolds: [CueHold] = []
+        /// The scroll offset that puts each rendered line on the reading line.
+        var lineOffsets: [CGFloat] = []
         var lastLayoutSize: CGSize = .zero
-        var lastReportedGeometry: ScriptGeometry?
+        var lastReportedLineCount = -1
         var lastTarget: CGFloat = -1
         var lastSnapToken = 0
         /// True from the moment a drag starts until the script comes to rest, so
@@ -597,7 +647,30 @@ struct AttributedTextView: UIViewRepresentable {
 
             let offset = scrollView.contentOffset.y
             lastTarget = offset
-            onScrub?(layout.line(forOffset: offset))
+            onScrub?(linePosition(forOffset: offset))
+        }
+
+        /// The inverse of the line-to-offset map: which line, fractionally, sits on
+        /// the reading line at this scroll offset.
+        private func linePosition(forOffset offset: CGFloat) -> Double {
+            guard lineOffsets.count > 1 else { return 0 }
+            guard offset > lineOffsets[0] else { return 0 }
+            guard offset < lineOffsets[lineOffsets.count - 1] else { return Double(lineOffsets.count - 1) }
+
+            var low = 0
+            var high = lineOffsets.count - 1
+            while low + 1 < high {
+                let mid = (low + high) / 2
+                if lineOffsets[mid] <= offset {
+                    low = mid
+                } else {
+                    high = mid
+                }
+            }
+
+            let span = lineOffsets[low + 1] - lineOffsets[low]
+            guard span > 0 else { return Double(low) }
+            return Double(low) + Double((offset - lineOffsets[low]) / span)
         }
 
         @objc private func step(_ link: CADisplayLink) {
@@ -658,47 +731,43 @@ struct AttributedTextView: UIViewRepresentable {
             || coordinator.lastColorScheme != colorScheme
 
         if needsFullRebuild {
-            let rendered = TeleprompterScript.render(
-                text: content.fullText,
-                fontSize: fontSize,
-                cueColor: cueColor,
-                isDarkMode: colorScheme == .dark
-            )
-            textView.attributedText = rendered.attributed
+            textView.attributedText = buildAttributedString()
             textView.layoutIfNeeded()
 
             coordinator.lastContentId = contentId
             coordinator.lastFontSize = fontSize
             coordinator.lastCueColor = cueColor
             coordinator.lastColorScheme = colorScheme
-            coordinator.cueHolds = rendered.holds
-            coordinator.layout = ScriptLayout()
+            coordinator.lineOffsets = []
             coordinator.lastLayoutSize = .zero
         }
 
         // The line the reader is on sits on the reading line, and the text is inset
         // from the top by exactly that distance — so a line's target offset is just
         // its own position within the laid-out text.
-        // `.zero` means nothing has been measured yet: the size the coordinator
-        // starts on, and the one a rebuild puts it back to.
         let layoutSize = textView.bounds.size
-        let isFirstLayout = coordinator.lastLayoutSize == .zero
+        let isFirstLayout = coordinator.lineOffsets.isEmpty
         if isFirstLayout || coordinator.lastLayoutSize != layoutSize {
             coordinator.lastLayoutSize = layoutSize
-            coordinator.layout = ScriptLayout.measure(textView)
+            coordinator.lineOffsets = lineOffsets(for: textView)
 
-            let geometry = ScriptGeometry.from(layout: coordinator.layout, holds: coordinator.cueHolds)
-            if geometry != coordinator.lastReportedGeometry {
-                coordinator.lastReportedGeometry = geometry
+            let lineCount = coordinator.lineOffsets.count
+            if lineCount != coordinator.lastReportedLineCount {
+                coordinator.lastReportedLineCount = lineCount
                 // Out of the layout pass this call is inside.
                 DispatchQueue.main.async {
-                    onGeometryChange(geometry)
+                    onLineCountChange(lineCount)
                 }
             }
         }
 
-        guard !coordinator.layout.isEmpty else { return }
-        let target = coordinator.layout.offset(forLine: linePosition)
+        let offsets = coordinator.lineOffsets
+        guard offsets.count > 1 else { return }
+
+        let position = min(max(linePosition, 0), Double(offsets.count - 1))
+        let line = min(Int(position), offsets.count - 2)
+        let fraction = CGFloat(position - Double(line))
+        let target = offsets[line] + (offsets[line + 1] - offsets[line]) * fraction
 
         let maxY = max(0, textView.contentSize.height - textView.bounds.height)
         let scrollY = min(max(target, 0), maxY)
@@ -716,6 +785,84 @@ struct AttributedTextView: UIViewRepresentable {
         // dragged by hand while paused stays where they put it.
         guard abs(scrollY - coordinator.lastTarget) > 0.05 else { return }
         coordinator.ease(to: scrollY, in: textView)
+    }
+
+    /// The scroll offset that puts each rendered line on the reading line, one
+    /// entry per line the script actually wraps into on this screen.
+    private func lineOffsets(for textView: UITextView) -> [CGFloat] {
+        let layoutManager = textView.layoutManager
+        let container = textView.textContainer
+        layoutManager.ensureLayout(for: container)
+
+        // Line fragments are measured inside the text container, which is already
+        // the offset that line should be scrolled to.
+        var offsets: [CGFloat] = []
+        let glyphRange = layoutManager.glyphRange(for: container)
+        var glyphIndex = glyphRange.location
+
+        while glyphIndex < NSMaxRange(glyphRange) {
+            var lineRange = NSRange(location: 0, length: 0)
+            let fragment = layoutManager.lineFragmentRect(forGlyphAt: glyphIndex, effectiveRange: &lineRange)
+            offsets.append(fragment.origin.y)
+
+            guard lineRange.length > 0 else { break }
+            glyphIndex = NSMaxRange(lineRange)
+        }
+
+        return offsets
+    }
+
+    private func buildAttributedString() -> NSAttributedString {
+        let result = NSMutableAttributedString()
+        let paragraphs = content.fullText.components(separatedBy: "\n\n")
+
+        let textColor = colorScheme == .dark ? AppColors.UIColors.Dark.textPrimary : AppColors.UIColors.Light.textPrimary
+        let textAttrs: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: fontSize, weight: .medium),
+            .foregroundColor: textColor
+        ]
+        let cueAttrs: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: fontSize * 0.72, weight: .semibold),
+            .foregroundColor: cueColor.uiColor(isDarkMode: colorScheme == .dark),
+            .kern: fontSize * 0.05
+        ]
+
+        for (paragraphIndex, paragraph) in paragraphs.enumerated() {
+            if paragraphIndex > 0 {
+                result.append(NSAttributedString(string: "\n"))
+            }
+
+            let lines = paragraph.components(separatedBy: "\n")
+
+            for (lineIndex, line) in lines.enumerated() {
+                if lineIndex > 0 {
+                    result.append(NSAttributedString(string: "\n"))
+                }
+
+                if line.isEmpty { continue }
+
+                for (segmentIndex, segment) in TeleprompterParser.segments(in: line).enumerated() {
+                    if segmentIndex > 0 {
+                        result.append(NSAttributedString(string: " ", attributes: textAttrs))
+                    }
+
+                    switch segment {
+                    case .cue(let cueText):
+                        result.append(NSAttributedString(string: cueText, attributes: cueAttrs))
+                    case .text(let text):
+                        result.append(NSAttributedString(string: text, attributes: textAttrs))
+                    }
+                }
+            }
+        }
+
+        // Add paragraph style for line spacing
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineSpacing = fontSize * 0.18
+        paragraphStyle.paragraphSpacing = fontSize * 0.45
+        result.addAttribute(.paragraphStyle, value: paragraphStyle, range: NSRange(location: 0, length: result.length))
+
+        return result
     }
 }
 
