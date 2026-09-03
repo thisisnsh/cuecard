@@ -126,6 +126,16 @@ enum TeleprompterParser {
         }
     }
 
+    /// The cue tag the caret is sitting inside, if it is inside one.
+    ///
+    /// A caret resting against either bracket counts as outside: that's a spot a
+    /// new cue can legitimately go, and cues don't nest.
+    static func cueTag(containing location: Int, in text: String) -> CueMatch? {
+        cueMatches(in: text).first {
+            $0.range.location < location && location < NSMaxRange($0.range)
+        }
+    }
+
     /// Split a single line into spoken text and cue runs.
     ///
     /// Shared by the teleprompter and the PiP overlay so both render cues identically.

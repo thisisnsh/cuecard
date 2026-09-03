@@ -22,7 +22,6 @@ struct TeleprompterView: View {
     @State private var showControls = true
     @State private var controlsTimer: Timer?
     @State private var currentWordIndex: Int = 0
-    @State private var dragOffset: CGFloat = 0
     @State private var countdownValue: Int = 0
     @State private var isCountingDown = false
     @State private var countdownTimer: Timer?
@@ -64,6 +63,11 @@ struct TeleprompterView: View {
         return " \(TeleprompterParser.formatTime(Int(elapsedTime))) "
     }
 
+    /// How far the script fades into the background at each end. The reading line
+    /// sits a third of the way down, well clear of both.
+    private static let topFade: CGFloat = 96
+    private static let bottomFade: CGFloat = 140
+
     var body: some View {
         NavigationStack {
             GeometryReader { geometry in
@@ -94,6 +98,9 @@ struct TeleprompterView: View {
                             resetControlsTimer()
                         }
                     )
+                    // Lines arrive and leave through a fade rather than being cut
+                    // off flat against the toolbar and the controls.
+                    .scriptEdgeFade(for: colorScheme, top: Self.topFade, bottom: Self.bottomFade)
 
                     // Controls overlay
                     if showControls {
@@ -206,27 +213,6 @@ struct TeleprompterView: View {
             }
         }
         .persistentSystemOverlays(.hidden)
-        .offset(x: dragOffset)
-        .gesture(
-            DragGesture()
-                .onChanged { value in
-                    // Only respond to swipes starting from left edge (first 40 points)
-                    if value.startLocation.x < 40 && value.translation.width > 0 {
-                        dragOffset = value.translation.width
-                    }
-                }
-                .onEnded { value in
-                    if value.startLocation.x < 40 && value.translation.width > 100 {
-                        // Swipe was far enough, dismiss
-                        stopAndDismiss()
-                    } else {
-                        // Reset position
-                        withAnimation(.spring(response: 0.3)) {
-                            dragOffset = 0
-                        }
-                    }
-                }
-        )
         .onDisappear {
             stopTimer()
             stopControlsTimer()

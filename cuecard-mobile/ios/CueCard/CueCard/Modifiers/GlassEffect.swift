@@ -48,3 +48,44 @@ extension Shape {
             }
     }
 }
+
+// MARK: - Script Edge Fade
+
+extension View {
+    /// Fades a scrolling script into the background at its top and bottom edges,
+    /// so lines arrive and leave instead of being cut off mid-stroke.
+    ///
+    /// The fades are painted in the background color rather than masked, so they
+    /// cover the text without touching whatever floats above them.
+    func scriptEdgeFade(for colorScheme: ColorScheme, top: CGFloat, bottom: CGFloat) -> some View {
+        let color = AppColors.background(for: colorScheme)
+
+        return overlay(alignment: .top) {
+            EdgeFade(color: color, height: top, isTop: true)
+        }
+        .overlay(alignment: .bottom) {
+            EdgeFade(color: color, height: bottom, isTop: false)
+        }
+    }
+}
+
+/// One end of the fade: solid against its edge, gone by the far side.
+private struct EdgeFade: View {
+    let color: Color
+    let height: CGFloat
+    let isTop: Bool
+
+    var body: some View {
+        LinearGradient(
+            stops: [
+                .init(color: color, location: 0),
+                .init(color: color.opacity(0.9), location: 0.45),
+                .init(color: color.opacity(0), location: 1)
+            ],
+            startPoint: isTop ? .top : .bottom,
+            endPoint: isTop ? .bottom : .top
+        )
+        .frame(height: height)
+        .allowsHitTesting(false)
+    }
+}

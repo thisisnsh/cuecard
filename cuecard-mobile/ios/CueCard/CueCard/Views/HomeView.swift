@@ -26,6 +26,11 @@ struct HomeView: View {
     @StateObject private var editorController = CueEditorController()
     @Environment(\.requestReview) private var requestReview
 
+    /// How much of the editor's bottom the controls row covers: the play button
+    /// and the timer beside it, plus the gap they sit above. The script keeps this
+    /// much room clear so its last line never rests underneath them.
+    private static let controlsHeight: CGFloat = 52 + 24
+
     private var hasNotes: Bool {
         !settingsService.notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
@@ -240,7 +245,8 @@ struct HomeView: View {
                         controller: editorController,
                         cueColor: settingsService.settings.cueColor,
                         colorScheme: colorScheme,
-                        bottomOverlayHeight: isEditorFocused ? CueBar.height : 0
+                        keyboardOverlayHeight: CueBar.height,
+                        restingOverlayHeight: Self.controlsHeight
                     )
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     // The editor makes its own room for the keyboard, as scroll
@@ -431,8 +437,10 @@ struct NotesEditorView: View {
     let controller: CueEditorController
     let cueColor: CueColor
     let colorScheme: ColorScheme
-    /// Room the cue bar takes at the bottom, so the text can scroll clear of it.
-    var bottomOverlayHeight: CGFloat = 0
+    /// Room the cue bar takes at the bottom while the keyboard is up.
+    var keyboardOverlayHeight: CGFloat = 0
+    /// Room the home controls take at the bottom once the keyboard has gone.
+    var restingOverlayHeight: CGFloat = 0
 
     var body: some View {
         ZStack(alignment: .topLeading) {
@@ -441,7 +449,7 @@ struct NotesEditorView: View {
                 Text("Add your script here...\n\nTap Add Cue below the script — or just type [ — to drop in a delivery reminder like \"Welcome everyone [cue smile and pause]\"")
                     .foregroundStyle(AppColors.textSecondary(for: colorScheme).opacity(0.6))
                     .padding(.horizontal, 20)
-                    .padding(.vertical, 16)
+                    .padding(.top, CueTextEditor.edgeFade + 8)
                     .allowsHitTesting(false)
             }
 
@@ -451,12 +459,19 @@ struct NotesEditorView: View {
                 controller: controller,
                 cueColor: cueColor,
                 colorScheme: colorScheme,
-                bottomOverlayHeight: bottomOverlayHeight
+                keyboardOverlayHeight: keyboardOverlayHeight,
+                restingOverlayHeight: restingOverlayHeight
             )
             .padding(.horizontal, 4)
-            .padding(.vertical, 8)
         }
+        // Lines arrive and leave through a fade instead of being cut off against
+        // the toolbar above and the controls below.
+        .scriptEdgeFade(for: colorScheme, top: CueTextEditor.edgeFade, bottom: Self.bottomFade)
     }
+
+    /// The bottom fade reaches up past the floating controls, so a line is gone
+    /// before it can pass behind them.
+    private static let bottomFade: CGFloat = 72
 }
 
 /// View for displaying and managing saved notes

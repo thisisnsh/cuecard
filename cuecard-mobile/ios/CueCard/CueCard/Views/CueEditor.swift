@@ -26,9 +26,19 @@ private struct KeyboardAnimation {
 final class CueTextView: UITextView {
     /// Height of the cue bar covering the bottom of the editor while the keyboard
     /// is up. It rides with the keyboard, so it only counts when the keyboard does.
-    var bottomOverlayHeight: CGFloat = 0 {
+    var keyboardOverlayHeight: CGFloat = 0 {
         didSet {
-            guard bottomOverlayHeight != oldValue else { return }
+            guard keyboardOverlayHeight != oldValue else { return }
+            updateBottomInset()
+        }
+    }
+
+    /// Height of what floats over the bottom of the editor once the keyboard has
+    /// gone — the timer and play controls — so the last line can scroll clear of
+    /// them instead of resting underneath.
+    var restingOverlayHeight: CGFloat = 0 {
+        didSet {
+            guard restingOverlayHeight != oldValue else { return }
             updateBottomInset()
         }
     }
@@ -81,11 +91,11 @@ final class CueTextView: UITextView {
         updateBottomInset()
     }
 
-    /// Keep clear whatever covers the bottom of the editor: the keyboard, and the
-    /// cue bar on top of it. Nothing when the keyboard is away — the bar goes too.
+    /// Keep clear whatever covers the bottom of the editor: the keyboard and the
+    /// cue bar on top of it while it's up, the home controls once it's gone.
     private func updateBottomInset(travellingWith animation: KeyboardAnimation? = nil) {
         let overlap = keyboardOverlap()
-        let inset = overlap > 0 ? overlap + bottomOverlayHeight : 0
+        let inset = overlap > 0 ? overlap + keyboardOverlayHeight : restingOverlayHeight
         guard inset != appliedBottomInset else { return }
         appliedBottomInset = inset
 
@@ -172,7 +182,8 @@ final class CueEditorController: ObservableObject {
 
 /// Script editor that renders `[cue …]` tags in the cue color while you type, and
 /// writes the brackets for you: pressing `[` drops in a whole empty cue with the
-/// caret inside it, so a cue is never left half-open.
+/// caret inside it, so a cue is never left half-open — except inside a cue, where
+/// there is nothing left for it to open.
 struct CueTextEditor: UIViewRepresentable {
     @Binding var text: String
     @Binding var isFocused: Bool
@@ -180,16 +191,22 @@ struct CueTextEditor: UIViewRepresentable {
     let cueColor: CueColor
     let colorScheme: ColorScheme
     /// Height of the cue bar floating over the bottom of the editor, if it's showing.
-    var bottomOverlayHeight: CGFloat = 0
+    var keyboardOverlayHeight: CGFloat = 0
+    /// Height of whatever floats over the bottom of the editor with the keyboard away.
+    var restingOverlayHeight: CGFloat = 0
 
     static let fontSize: CGFloat = 16
+
+    /// How far the script fades into the background at the top and bottom edges.
+    /// The text starts and ends this far in, so no line sits inside a fade.
+    static let edgeFade: CGFloat = 28
 
     func makeUIView(context: Context) -> CueTextView {
         let textView = CueTextView()
         textView.delegate = context.coordinator
         context.coordinator.textView = textView
         textView.backgroundColor = .clear
-        textView.textContainerInset = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
+        textView.textContainerInset = UIEdgeInsets(top: Self.edgeFade, left: 16, bottom: Self.edgeFade, right: 16)
         textView.textContainer.lineFragmentPadding = 0
         textView.alwaysBounceVertical = true
         textView.keyboardDismissMode = .interactive
@@ -202,7 +219,8 @@ struct CueTextEditor: UIViewRepresentable {
         context.coordinator.parent = self
         context.coordinator.textView = textView
         controller.coordinator = context.coordinator
-        textView.bottomOverlayHeight = bottomOverlayHeight
+        textView.keyboardOverlayHeight = keyboardOverlayHeight
+        textView.restingOverlayHeight = restingOverlayHeight
 
         let styleChanged = context.coordinator.appliedColorScheme != colorScheme
             || context.coordinator.appliedCueColor != cueColor
@@ -303,6 +321,12 @@ struct CueTextEditor: UIViewRepresentable {
             replacementText text: String
         ) -> Bool {
             if text == "[", range.length == 0 {
+                // Cues don't nest, and in here both brackets are already written,
+                // so `[` has nothing left to do.
+                guard TeleprompterParser.cueTag(containing: range.location, in: textView.text) == nil else {
+                    return false
+                }
+
                 replace(
                     range,
                     with: TeleprompterParser.emptyCueTag,
@@ -324,8 +348,12 @@ struct CueTextEditor: UIViewRepresentable {
         func insertEmptyCue() {
             guard let textView else { return }
 
-            // Past the end of a selection, so a cue never eats the words it's next to.
-            let location = NSMaxRange(textView.selectedRange)
+            // Past the end of a selection, so a cue never eats the words it's next
+            // to — and past the end of the cue the caret is in, since cues don't nest.
+            var location = NSMaxRange(textView.selectedRange)
+            if let enclosing = TeleprompterParser.cueTag(containing: location, in: textView.text) {
+                location = NSMaxRange(enclosing.range)
+            }
             let insertion = (textView.text as NSString).emptyCueInsertion(at: location)
 
             replace(
