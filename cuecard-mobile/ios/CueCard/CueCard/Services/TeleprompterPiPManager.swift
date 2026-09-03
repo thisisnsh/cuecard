@@ -35,6 +35,20 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
     private var teleprompterContentView: TeleprompterPiPContentView?
     private var pipContentView: TeleprompterPiPContentView?
     private var pipWindow: UIWindow?
+    /// Frosts the mirrored script on the way out. The overlay and the app lay
+    /// the same words out at different sizes, so a straight crossfade shows two
+    /// scripts at once — going soft first covers the difference.
+    private var handBackBlurView: UIVisualEffectView?
+    private var handBackAnimator: UIViewPropertyAnimator?
+
+    /// Where the window hosting the mirrored script sits: behind the app while
+    /// the overlay runs, in front of it for the hand-back.
+    private static let hiddenSourceLevel: UIWindow.Level = .normal - 1
+    private static let visibleSourceLevel: UIWindow.Level = .normal + 1
+    /// How long the mirrored script takes to dissolve after the overlay has
+    /// closed into it, and how far it opens out while it goes.
+    private static let handBackFadeDuration: TimeInterval = 0.45
+    private static let handBackScale: CGFloat = 1.06
 
     // MARK: - Timers
 
@@ -97,6 +111,7 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
             return false
         }
 
+        hideSourceBehindApp()
         lastSourceRenderTimestamp = 0
         updateContentView()
         pipController.startPictureInPicture()
@@ -206,11 +221,14 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
     func cleanup() {
         stopDisplayLink()
         stopPlaybackTimer()
+        hideSourceBehindApp()
         pipController?.stopPictureInPicture()
         pipController = nil
         pipViewController = nil
         teleprompterContentView?.removeFromSuperview()
         teleprompterContentView = nil
+        handBackBlurView?.removeFromSuperview()
+        handBackBlurView = nil
         pipContentView?.removeFromSuperview()
         pipContentView = nil
         pipWindow?.isHidden = true
@@ -274,6 +292,23 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
             contentView.trailingAnchor.constraint(equalTo: hostVC.view.trailingAnchor)
         ])
 
+        // Sits over the mirrored script doing nothing until the hand-back, when
+        // it takes on a blur to soften the script as it goes.
+        let blurView = UIVisualEffectView(effect: nil)
+        blurView.isUserInteractionEnabled = false
+        // The blur is tinted for the interface style it resolves against, and
+        // the teleprompter's theme is the app's, not necessarily the system's.
+        blurView.overrideUserInterfaceStyle = isDarkMode ? .dark : .light
+        blurView.translatesAutoresizingMaskIntoConstraints = false
+        hostVC.view.addSubview(blurView)
+        NSLayoutConstraint.activate([
+            blurView.topAnchor.constraint(equalTo: hostVC.view.topAnchor),
+            blurView.bottomAnchor.constraint(equalTo: hostVC.view.bottomAnchor),
+            blurView.leadingAnchor.constraint(equalTo: hostVC.view.leadingAnchor),
+            blurView.trailingAnchor.constraint(equalTo: hostVC.view.trailingAnchor)
+        ])
+        self.handBackBlurView = blurView
+
         // Host the source view in a window behind the app's own. The system
         // animates the overlay out of, and back into, this view's place on
         // screen, so it sits where the script is rather than off-screen —
@@ -288,7 +323,7 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
         window.rootViewController = hostVC
         window.isHidden = false
         window.isUserInteractionEnabled = false
-        window.windowLevel = .normal - 1
+        window.windowLevel = Self.hiddenSourceLevel
         self.pipWindow = window
 
         // Create the PiP video call view controller
@@ -329,6 +364,61 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
         // Start rendering
         startDisplayLink()
         updateContentView()
+    }
+
+    // MARK: - Hand-back Transition
+
+    /// Bring the mirrored script in front of the app for the closing animation.
+    /// The system fades the overlay into this view, so it has to be something
+    /// the reader can actually see — behind the app window there is nothing to
+    /// fade into and the overlay just blinks out at the end of its travel.
+    private func showSourceForHandBack() {
+        guard let window = pipWindow else { return }
+        handBackAnimator?.stopAnimation(true)
+        handBackAnimator = nil
+        window.layer.removeAllAnimations()
+        window.alpha = 1
+        window.transform = .identity
+        handBackBlurView?.effect = nil
+        window.windowLevel = Self.visibleSourceLevel
+    }
+
+    /// Dissolve the mirrored script once the overlay has closed into it. It
+    /// keeps opening outward the way it was travelling, goes soft, and then
+    /// clears — so the overlay reads as widening into the teleprompter rather
+    /// than stopping in the middle of the screen and being cut.
+    private func fadeOutSourceAfterHandBack() {
+        guard let window = pipWindow, window.windowLevel == Self.visibleSourceLevel else { return }
+
+        let animator = UIViewPropertyAnimator(duration: Self.handBackFadeDuration, curve: .easeOut) { [weak self] in
+            window.transform = CGAffineTransform(scaleX: Self.handBackScale, y: Self.handBackScale)
+            self?.handBackBlurView?.effect = UIBlurEffect(style: .regular)
+        }
+        // The blur leads and the script clears behind it, so the words go soft
+        // before they go away instead of thinning out while still sharp.
+        animator.addAnimations({ window.alpha = 0 }, delayFactor: 0.3)
+        animator.addCompletion { [weak self] _ in
+            self?.resetSourceWindow()
+        }
+        handBackAnimator = animator
+        animator.startAnimation()
+    }
+
+    /// Put the window back behind the app, cancelling a dissolve still in flight.
+    private func hideSourceBehindApp() {
+        handBackAnimator?.stopAnimation(true)
+        handBackAnimator = nil
+        pipWindow?.layer.removeAllAnimations()
+        resetSourceWindow()
+    }
+
+    private func resetSourceWindow() {
+        handBackAnimator = nil
+        handBackBlurView?.effect = nil
+        guard let window = pipWindow else { return }
+        window.windowLevel = Self.hiddenSourceLevel
+        window.alpha = 1
+        window.transform = .identity
     }
 
     // MARK: - Content Rendering
@@ -429,6 +519,7 @@ extension TeleprompterPiPManager: AVPictureInPictureControllerDelegate {
             isRenderingToPiP = false
             lastSourceRenderTimestamp = 0
             updateContentView()
+            showSourceForHandBack()
         }
     }
 
@@ -436,6 +527,7 @@ extension TeleprompterPiPManager: AVPictureInPictureControllerDelegate {
         Task { @MainActor in
             isPiPActive = false
             onPiPClosed?()
+            fadeOutSourceAfterHandBack()
         }
     }
 
@@ -444,6 +536,7 @@ extension TeleprompterPiPManager: AVPictureInPictureControllerDelegate {
             isPiPActive = false
             isRenderingToPiP = false
             stopPlaybackTimer()
+            hideSourceBehindApp()
             onPiPClosed?()
         }
     }
