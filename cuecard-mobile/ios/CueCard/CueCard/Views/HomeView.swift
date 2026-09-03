@@ -23,7 +23,7 @@ struct HomeView: View {
     @State private var fileErrorMessage: String?
     @State private var timerPickerTransitionTask: Task<Void, Never>?
     @State private var isEditorFocused = false
-    @State private var editorSelection = NSRange(location: 0, length: 0)
+    @StateObject private var editorController = CueEditorController()
     @Environment(\.requestReview) private var requestReview
 
     private var hasNotes: Bool {
@@ -212,10 +212,7 @@ struct HomeView: View {
     /// can write the cue without hunting for their place.
     private func insertCue() {
         AnalyticsEvents.logButtonClick("insert_cue", screen: "home")
-
-        let result = settingsService.notes.insertingEmptyCue(at: editorSelection)
-        settingsService.notes = result.text
-        editorSelection = NSRange(location: result.caret, length: 0)
+        editorController.insertCue()
     }
 
     var body: some View {
@@ -239,8 +236,8 @@ struct HomeView: View {
                     // Notes editor
                     NotesEditorView(
                         text: $settingsService.notes,
-                        selectedRange: $editorSelection,
                         isFocused: $isEditorFocused,
+                        controller: editorController,
                         cueColor: settingsService.settings.cueColor,
                         colorScheme: colorScheme,
                         bottomOverlayHeight: isEditorFocused ? CueBar.height : 0
@@ -430,8 +427,8 @@ struct HomeView: View {
 /// Notes editor with live syntax highlighting for [cue] tags
 struct NotesEditorView: View {
     @Binding var text: String
-    @Binding var selectedRange: NSRange
     @Binding var isFocused: Bool
+    let controller: CueEditorController
     let cueColor: CueColor
     let colorScheme: ColorScheme
     /// Room the cue bar takes at the bottom, so the text can scroll clear of it.
@@ -450,8 +447,8 @@ struct NotesEditorView: View {
 
             CueTextEditor(
                 text: $text,
-                selectedRange: $selectedRange,
                 isFocused: $isFocused,
+                controller: controller,
                 cueColor: cueColor,
                 colorScheme: colorScheme,
                 bottomOverlayHeight: bottomOverlayHeight

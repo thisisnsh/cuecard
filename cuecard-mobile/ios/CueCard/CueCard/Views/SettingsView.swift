@@ -64,7 +64,6 @@ struct SettingsView: View {
             teleprompterSection
             textSizeSection
             overlaySection
-            cueSection
             appearanceSection
             resetSection
             diagnosticsSection
@@ -202,8 +201,14 @@ struct SettingsView: View {
         }
     }
 
-    private var cueSection: some View {
-        Section("Cues") {
+    private var appearanceSection: some View {
+        Section("Appearance") {
+            Picker("Theme", selection: $settingsService.settings.themePreference) {
+                ForEach(ThemePreference.allCases, id: \.self) { theme in
+                    Text(theme.rawValue).tag(theme)
+                }
+            }
+
             VStack(alignment: .leading, spacing: 12) {
                 Text("Cue Color")
 
@@ -240,16 +245,6 @@ struct SettingsView: View {
                 Text("Every cue in every script is shown in this color.")
                     .font(.footnote)
                     .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-            }
-        }
-    }
-
-    private var appearanceSection: some View {
-        Section("Appearance") {
-            Picker("Theme", selection: $settingsService.settings.themePreference) {
-                ForEach(ThemePreference.allCases, id: \.self) { theme in
-                    Text(theme.rawValue).tag(theme)
-                }
             }
         }
     }

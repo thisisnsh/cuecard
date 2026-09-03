@@ -155,13 +155,28 @@ final class CueTextView: UITextView {
     }
 }
 
+/// A handle on the editor's text view, so the cue bar can insert at the caret.
+///
+/// Inserting through the text binding instead would rewrite the whole document,
+/// which parks the caret at the end — the cue has to go in the same way typing
+/// does, or it lands in the right place and the caret doesn't.
+@MainActor
+final class CueEditorController: ObservableObject {
+    fileprivate weak var coordinator: CueTextEditor.Coordinator?
+
+    /// Drop an empty cue at the caret and leave the caret inside it.
+    func insertCue() {
+        coordinator?.insertEmptyCue()
+    }
+}
+
 /// Script editor that renders `[cue …]` tags in the cue color while you type, and
 /// writes the brackets for you: pressing `[` drops in a whole empty cue with the
 /// caret inside it, so a cue is never left half-open.
 struct CueTextEditor: UIViewRepresentable {
     @Binding var text: String
-    @Binding var selectedRange: NSRange
     @Binding var isFocused: Bool
+    let controller: CueEditorController
     let cueColor: CueColor
     let colorScheme: ColorScheme
     /// Height of the cue bar floating over the bottom of the editor, if it's showing.
@@ -172,6 +187,7 @@ struct CueTextEditor: UIViewRepresentable {
     func makeUIView(context: Context) -> CueTextView {
         let textView = CueTextView()
         textView.delegate = context.coordinator
+        context.coordinator.textView = textView
         textView.backgroundColor = .clear
         textView.textContainerInset = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
         textView.textContainer.lineFragmentPadding = 0
@@ -184,6 +200,8 @@ struct CueTextEditor: UIViewRepresentable {
 
     func updateUIView(_ textView: CueTextView, context: Context) {
         context.coordinator.parent = self
+        context.coordinator.textView = textView
+        controller.coordinator = context.coordinator
         textView.bottomOverlayHeight = bottomOverlayHeight
 
         let styleChanged = context.coordinator.appliedColorScheme != colorScheme
@@ -197,12 +215,6 @@ struct CueTextEditor: UIViewRepresentable {
         }
         context.coordinator.appliedColorScheme = colorScheme
         context.coordinator.appliedCueColor = cueColor
-
-        let clamped = Self.clamp(selectedRange, to: textView.text as NSString)
-        if textView.selectedRange != clamped {
-            textView.selectedRange = clamped
-            textView.scrollCaretIntoView()
-        }
 
         // SwiftUI's .focused() doesn't reach into a UIViewRepresentable, so drive
         // first responder status from the binding instead — but after this update
@@ -224,13 +236,9 @@ struct CueTextEditor: UIViewRepresentable {
     }
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(parent: self)
-    }
-
-    private static func clamp(_ range: NSRange, to text: NSString) -> NSRange {
-        let location = min(max(range.location, 0), text.length)
-        let length = min(max(range.length, 0), text.length - location)
-        return NSRange(location: location, length: length)
+        let coordinator = Coordinator(parent: self)
+        controller.coordinator = coordinator
+        return coordinator
     }
 
     // MARK: - Highlighting
@@ -278,6 +286,7 @@ struct CueTextEditor: UIViewRepresentable {
 
     class Coordinator: NSObject, UITextViewDelegate {
         var parent: CueTextEditor
+        weak var textView: CueTextView?
         var appliedColorScheme: ColorScheme?
         var appliedCueColor: CueColor?
 
@@ -311,6 +320,26 @@ struct CueTextEditor: UIViewRepresentable {
             return true
         }
 
+        /// Write an empty cue in at the caret, as if it had been typed there.
+        func insertEmptyCue() {
+            guard let textView else { return }
+
+            // Past the end of a selection, so a cue never eats the words it's next to.
+            let location = NSMaxRange(textView.selectedRange)
+            let insertion = (textView.text as NSString).emptyCueInsertion(at: location)
+
+            replace(
+                NSRange(location: location, length: 0),
+                with: insertion.text,
+                caret: location + insertion.caretOffset,
+                in: textView
+            )
+
+            if !textView.isFirstResponder {
+                textView.becomeFirstResponder()
+            }
+        }
+
         /// The range of an untouched `[cue ]` the caret is sitting inside, if this
         /// backspace is the one deleting its trailing space. A cue with anything
         /// written in it deletes a character at a time like ordinary text.
@@ -339,12 +368,10 @@ struct CueTextEditor: UIViewRepresentable {
                 colorScheme: parent.colorScheme
             )
 
-            let selection = NSRange(location: caret, length: 0)
-            textView.selectedRange = selection
+            textView.selectedRange = NSRange(location: caret, length: 0)
             textView.inputDelegate?.textDidChange(textView)
 
             parent.text = textView.text
-            parent.selectedRange = selection
             (textView as? CueTextView)?.scrollCaretIntoView()
         }
 
@@ -358,17 +385,10 @@ struct CueTextEditor: UIViewRepresentable {
             textView.selectedRange = selection
 
             parent.text = textView.text
-            parent.selectedRange = selection
 
             // UITextView's own scroll-to-caret ignores the bottom inset, so the
             // last line would slide under the cue bar as it's typed.
             (textView as? CueTextView)?.scrollCaretIntoView()
-        }
-
-        func textViewDidChangeSelection(_ textView: UITextView) {
-            let selection = textView.selectedRange
-            guard parent.selectedRange != selection else { return }
-            parent.selectedRange = selection
         }
 
         func textViewDidBeginEditing(_ textView: UITextView) {
@@ -385,28 +405,23 @@ struct CueTextEditor: UIViewRepresentable {
 
 // MARK: - Cue insertion
 
-extension String {
-    /// Insert an empty cue at `range`, adding the spaces needed so it doesn't
-    /// collide with the surrounding words. Returns the caret position inside the
-    /// tag, ready for the cue to be typed.
-    func insertingEmptyCue(at range: NSRange) -> (text: String, caret: Int) {
-        let nsText = self as NSString
-        let location = min(max(range.location + range.length, 0), nsText.length)
-
-        let previous = location > 0 ? nsText.substring(with: NSRange(location: location - 1, length: 1)) : ""
-        let next = location < nsText.length ? nsText.substring(with: NSRange(location: location, length: 1)) : ""
+extension NSString {
+    /// The text to splice in for an empty cue at `location`, spaced so it doesn't
+    /// collide with the words either side of it, and how far into that text the
+    /// caret belongs — between the brackets, ready for the cue to be typed.
+    func emptyCueInsertion(at location: Int) -> (text: String, caretOffset: Int) {
+        let previous = location > 0 ? substring(with: NSRange(location: location - 1, length: 1)) : ""
+        let next = location < length ? substring(with: NSRange(location: location, length: 1)) : ""
 
         let needsLeadingSpace = !previous.isEmpty && previous.rangeOfCharacter(from: .whitespacesAndNewlines) == nil
         let needsTrailingSpace = !next.isEmpty && next.rangeOfCharacter(from: .whitespacesAndNewlines) == nil
 
         let leading = needsLeadingSpace ? " " : ""
-        let insertion = leading + TeleprompterParser.emptyCueTag + (needsTrailingSpace ? " " : "")
-        let updated = nsText.replacingCharacters(in: NSRange(location: location, length: 0), with: insertion)
-        let caret = location
-            + (leading as NSString).length
+        let text = leading + TeleprompterParser.emptyCueTag + (needsTrailingSpace ? " " : "")
+        let caretOffset = (leading as NSString).length
             + (TeleprompterParser.cueTagPrefix as NSString).length
 
-        return (updated, caret)
+        return (text, caretOffset)
     }
 }
 
