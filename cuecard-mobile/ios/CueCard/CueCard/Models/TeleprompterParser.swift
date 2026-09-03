@@ -3,7 +3,7 @@ import Foundation
 /// Represents the teleprompter content
 /// Text is displayed as a continuous flow with word-by-word highlighting
 struct TeleprompterContent {
-    /// The full text content (with [note] tags for styling)
+    /// The full text content (with [cue] tags for styling)
     let fullText: String
     /// All words for highlighting, in reading order (cue words included)
     let words: [WordInfo]
@@ -18,10 +18,10 @@ struct WordInfo: Identifiable {
     /// The cue this word belongs to, or nil for spoken script text
     let cueColor: CueColor?
 
-    var isNote: Bool { cueColor != nil }
+    var isCue: Bool { cueColor != nil }
 }
 
-/// A `[note …]` tag located in a piece of text
+/// A `[cue …]` tag located in a piece of text
 struct CueMatch {
     /// The whole tag, brackets included
     let range: NSRange
@@ -29,6 +29,34 @@ struct CueMatch {
     let contentRange: NSRange
     let content: String
     let color: CueColor
+
+    /// The scaffolding around the cue text: `[cue:green ` and the closing `]`.
+    /// Editors hide these; exported files keep them.
+    var syntaxRanges: [NSRange] {
+        let contentEnd = contentRange.location + contentRange.length
+        let rangeEnd = range.location + range.length
+
+        return [
+            NSRange(location: range.location, length: contentRange.location - range.location),
+            NSRange(location: contentEnd, length: rangeEnd - contentEnd)
+        ].filter { $0.length > 0 }
+    }
+
+    /// Where a caret sitting inside the hidden scaffolding should go instead, or nil
+    /// if this cue doesn't contain it. Escaping forward out of the opening tag and
+    /// backward out of the closing one keeps the cue behaving like a single word.
+    func caretEscape(from location: Int) -> Int? {
+        let contentEnd = contentRange.location + contentRange.length
+        let rangeEnd = range.location + range.length
+
+        if location > range.location && location < contentRange.location {
+            return contentRange.location
+        }
+        if location > contentEnd && location < rangeEnd {
+            return rangeEnd
+        }
+        return nil
+    }
 }
 
 /// A run of a single line: either spoken text or a delivery cue
@@ -37,30 +65,49 @@ enum CueSegment {
     case cue(text: String, color: CueColor)
 }
 
-/// Parser for teleprompter scripts with `[note …]` delivery cues
+/// Parser for teleprompter scripts with `[cue …]` delivery cues
 ///
-/// Two forms are supported, and both mean the same thing apart from color:
-/// - `[note smile]` — the original form, rendered in the fallback color
-/// - `[note:green smile]` — an explicitly colored cue
+/// `[cue:green smile]` is what the app writes. Two older spellings still parse so
+/// that existing and imported scripts keep working: `[cue smile]` without a color,
+/// and `[note …]`, the name this tag had before. `migratedToCueTags` rewrites both
+/// into the explicit form, which is also what gets exported.
 ///
-/// The color name has to be one of `CueColor`'s cases. An unknown name (`[note:mauve x]`)
-/// simply doesn't match, so it stays on screen as literal text instead of silently
-/// swallowing a word.
+/// A cue never spans a line or contains a bracket, and the color name has to be one
+/// of `CueColor`'s cases.
+/// An unknown name (`[cue:mauve x]`) simply doesn't match, so it stays on screen as
+/// literal text instead of silently swallowing the rest of the script.
 enum TeleprompterParser {
 
-    /// `[note]` / `[note:color]` followed by the cue text
+    /// `[cue]` / `[cue:color]` followed by the cue text, and the `[note …]` spelling
+    /// it replaced. The text may be empty — that's a capsule the user hasn't filled in.
     private static let cuePattern: String = {
         let colors = CueColor.allCases.map(\.rawValue).joined(separator: "|")
-        return #"\[note(?::(\#(colors)))?\s+([^\]]+)\]"#
+        return #"\[(?:cue|note)(?::(\#(colors)))?[ \t]+([^\]\[\n]*)\]"#
     }()
 
     private static let cueRegex = try! NSRegularExpression(pattern: cuePattern, options: [])
 
-    /// Build the tag for a cue. The bare `[note text]` form is used for the fallback
-    /// color so scripts stay readable and compatible with what users already typed.
+    /// Build the tag for a cue. The color is always written out, so a script says the
+    /// same thing wherever it ends up.
     static func cueTag(text: String, color: CueColor) -> String {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        return color == .fallback ? "[note \(trimmed)]" : "[note:\(color.rawValue) \(trimmed)]"
+        return "[cue:\(color.rawValue) \(trimmed)]"
+    }
+
+    /// Rewrite older tags — `[note …]`, or a cue with no color — into the explicit
+    /// `[cue:color …]` form, leaving everything else, including text that only looks
+    /// like a tag, untouched.
+    static func migratedToCueTags(_ text: String) -> String {
+        let matches = cueMatches(in: text)
+        guard !matches.isEmpty else { return text }
+
+        var result = text as NSString
+        for match in matches.reversed() {
+            let tag = cueTag(text: match.content, color: match.color)
+            guard result.substring(with: match.range) != tag else { continue }
+            result = result.replacingCharacters(in: match.range, with: tag) as NSString
+        }
+        return result as String
     }
 
     /// Parse script content for teleprompter display

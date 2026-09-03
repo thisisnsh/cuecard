@@ -632,8 +632,8 @@ private class TeleprompterPiPContentView: UIView {
     ) -> NSAttributedString {
         let result = NSMutableAttributedString()
         let font = UIFont.systemFont(ofSize: fontSize, weight: .medium)
-        let noteFont = UIFont.systemFont(ofSize: fontSize * 0.72, weight: .semibold)
-        let noteKern = fontSize * 0.05
+        let cueFont = UIFont.systemFont(ofSize: fontSize * 0.72, weight: .semibold)
+        let cueKern = fontSize * 0.05
 
         let textColor = isDarkMode ? AppColors.UIColors.Dark.textPrimary : AppColors.UIColors.Light.textPrimary
 
@@ -658,18 +658,18 @@ private class TeleprompterPiPContentView: UIView {
 
                 for segment in segments {
                     switch segment {
-                    case .cue(let noteContent, let cueColor):
-                        let noteAttrs: [NSAttributedString.Key: Any] = [
-                            .font: noteFont,
+                    case .cue(let cueContent, let cueColor):
+                        let cueAttrs: [NSAttributedString.Key: Any] = [
+                            .font: cueFont,
                             .foregroundColor: cueColor.uiColor(isDarkMode: isDarkMode),
-                            .kern: noteKern
+                            .kern: cueKern
                         ]
-                        let noteWords = noteContent.split(separator: " ", omittingEmptySubsequences: true)
-                        for word in noteWords {
+                        let cueWords = cueContent.split(separator: " ", omittingEmptySubsequences: true)
+                        for word in cueWords {
                             if lineWordIndex > 0 {
-                                result.append(NSAttributedString(string: " ", attributes: noteAttrs))
+                                result.append(NSAttributedString(string: " ", attributes: cueAttrs))
                             }
-                            result.append(NSAttributedString(string: String(word), attributes: noteAttrs))
+                            result.append(NSAttributedString(string: String(word), attributes: cueAttrs))
                             lineWordIndex += 1
                         }
                     case .text(let textContent):

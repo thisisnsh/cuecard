@@ -43,34 +43,3 @@ enum CueColor: String, Codable, CaseIterable, Identifiable {
         }
     }
 }
-
-/// A reusable delivery cue in the user's library.
-///
-/// Cues are just shortcuts for writing tags — once inserted, the script text is the
-/// only source of truth, so editing or deleting a cue never rewrites past scripts.
-struct Cue: Codable, Identifiable, Equatable {
-    let id: UUID
-    var text: String
-    var color: CueColor
-
-    init(id: UUID = UUID(), text: String, color: CueColor) {
-        self.id = id
-        self.text = text
-        self.color = color
-    }
-
-    /// The tag this cue writes into the script.
-    var tag: String {
-        TeleprompterParser.cueTag(text: text, color: color)
-    }
-
-    /// Seeded into the library on first launch.
-    static let defaults: [Cue] = [
-        Cue(text: "pause", color: .yellow),
-        Cue(text: "smile", color: .pink),
-        Cue(text: "breathe", color: .green),
-        Cue(text: "slow down", color: .blue),
-        Cue(text: "emphasize", color: .purple),
-        Cue(text: "look up", color: .red)
-    ]
-}
