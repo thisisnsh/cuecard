@@ -3,7 +3,7 @@ import Foundation
 /// Represents the teleprompter content
 /// Text is displayed as a continuous flow with word-by-word highlighting
 struct TeleprompterContent {
-    /// The full text content (with [note] tags for styling)
+    /// The full text content (with [cue] tags for styling)
     let fullText: String
     /// All words for highlighting, in reading order (cue words included)
     let words: [WordInfo]
@@ -15,52 +15,57 @@ struct TeleprompterContent {
 struct WordInfo: Identifiable {
     let id = UUID()
     let text: String
-    /// The cue this word belongs to, or nil for spoken script text
-    let cueColor: CueColor?
-
-    var isNote: Bool { cueColor != nil }
+    /// Whether the word belongs to a cue rather than the spoken script
+    let isCue: Bool
 }
 
-/// A `[note …]` tag located in a piece of text
+/// A `[cue …]` tag located in a piece of text
 struct CueMatch {
     /// The whole tag, brackets included
     let range: NSRange
-    /// Just the cue text inside the tag
+    /// Just the cue text inside the tag; empty for a cue with nothing written in it yet
     let contentRange: NSRange
     let content: String
-    let color: CueColor
 }
 
 /// A run of a single line: either spoken text or a delivery cue
 enum CueSegment {
     case text(String)
-    case cue(text: String, color: CueColor)
+    case cue(String)
 }
 
-/// Parser for teleprompter scripts with `[note …]` delivery cues
+/// Parser for teleprompter scripts with `[cue …]` delivery cues
 ///
-/// Two forms are supported, and both mean the same thing apart from color:
-/// - `[note smile]` — the original form, rendered in the fallback color
-/// - `[note:green smile]` — an explicitly colored cue
+/// `[cue smile]` is the form to write. `[note smile]` is the older spelling and
+/// means exactly the same thing, so scripts written before the rename keep
+/// working; importing or exporting rewrites them to `[cue …]`.
 ///
-/// The color name has to be one of `CueColor`'s cases. An unknown name (`[note:mauve x]`)
-/// simply doesn't match, so it stays on screen as literal text instead of silently
-/// swallowing a word.
+/// A tag only counts once its closing bracket is there — `[cue smi` is still
+/// plain text, so nothing changes under the user mid-word. Cues can't span lines
+/// for the same reason: a stray `[` shouldn't swallow the paragraphs after it.
+///
+/// Every cue is drawn in the one color from Settings. An older `[cue:green …]`
+/// still parses, but the color name is ignored and dropped on the next import
+/// or export.
 enum TeleprompterParser {
 
-    /// `[note]` / `[note:color]` followed by the cue text
-    private static let cuePattern: String = {
-        let colors = CueColor.allCases.map(\.rawValue).joined(separator: "|")
-        return #"\[note(?::(\#(colors)))?\s+([^\]]+)\]"#
-    }()
+    /// `[cue]` / `[note]`, an optional legacy `:color`, then the cue text
+    private static let cuePattern = #"\[(?:cue|note)(?::[A-Za-z]+)?(?:[ \t]+([^\]\n]*))?\]"#
 
     private static let cueRegex = try! NSRegularExpression(pattern: cuePattern, options: [])
 
-    /// Build the tag for a cue. The bare `[note text]` form is used for the fallback
-    /// color so scripts stay readable and compatible with what users already typed.
-    static func cueTag(text: String, color: CueColor) -> String {
+    /// What an empty cue opens with, and closes with. Typing `[` writes both at
+    /// once, leaving the caret between them.
+    static let cueTagPrefix = "[cue "
+    static let cueTagSuffix = "]"
+
+    /// The tag inserted for a cue that hasn't been written yet.
+    static let emptyCueTag = cueTagPrefix + cueTagSuffix
+
+    /// Build the tag for a cue.
+    static func cueTag(text: String) -> String {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        return color == .fallback ? "[note \(trimmed)]" : "[note:\(color.rawValue) \(trimmed)]"
+        return cueTagPrefix + trimmed + cueTagSuffix
     }
 
     /// Parse script content for teleprompter display
@@ -82,6 +87,21 @@ enum TeleprompterParser {
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    /// Rewrite every cue tag into the canonical `[cue …]` spelling.
+    ///
+    /// Used at the file boundary, so a script that leaves the app carries the
+    /// current syntax and one that arrives is brought up to it.
+    static func normalizingTags(in text: String) -> String {
+        let result = NSMutableString(string: text)
+
+        // Back to front, so replacing a tag doesn't shift the ones still to come.
+        for match in cueMatches(in: text).reversed() {
+            result.replaceCharacters(in: match.range, with: cueTag(text: match.content))
+        }
+
+        return result as String
+    }
+
     /// Find every cue tag in the text, in order
     static func cueMatches(in text: String) -> [CueMatch] {
         let nsText = text as NSString
@@ -92,17 +112,16 @@ enum TeleprompterParser {
         )
 
         return matches.map { match in
-            let colorRange = match.range(at: 1)
-            let color = colorRange.location == NSNotFound
-                ? CueColor.fallback
-                : CueColor(rawValue: nsText.substring(with: colorRange)) ?? .fallback
-            let contentRange = match.range(at: 2)
+            // `[cue]` carries no text group at all; treat it as an empty cue
+            // sitting just inside the closing bracket.
+            let contentRange = match.range(at: 1).location == NSNotFound
+                ? NSRange(location: NSMaxRange(match.range) - 1, length: 0)
+                : match.range(at: 1)
 
             return CueMatch(
                 range: match.range,
                 contentRange: contentRange,
-                content: nsText.substring(with: contentRange),
-                color: color
+                content: nsText.substring(with: contentRange)
             )
         }
     }
@@ -132,8 +151,8 @@ enum TeleprompterParser {
                 }
             }
 
-            segments.append(.cue(text: match.content, color: match.color))
-            lastEnd = match.range.location + match.range.length
+            segments.append(.cue(match.content))
+            lastEnd = NSMaxRange(match.range)
         }
 
         // Text after the last cue
@@ -159,13 +178,13 @@ enum TeleprompterParser {
         for line in text.components(separatedBy: "\n") where !line.isEmpty {
             for segment in segments(in: line) {
                 switch segment {
-                case .cue(let cueText, let color):
+                case .cue(let cueText):
                     for word in cueText.split(whereSeparator: \.isWhitespace) {
-                        words.append(WordInfo(text: String(word), cueColor: color))
+                        words.append(WordInfo(text: String(word), isCue: true))
                     }
                 case .text(let textContent):
                     for word in textContent.split(whereSeparator: \.isWhitespace) {
-                        words.append(WordInfo(text: String(word), cueColor: nil))
+                        words.append(WordInfo(text: String(word), isCue: false))
                     }
                 }
             }

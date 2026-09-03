@@ -64,6 +64,7 @@ struct SettingsView: View {
             teleprompterSection
             textSizeSection
             overlaySection
+            cueSection
             appearanceSection
             resetSection
             diagnosticsSection
@@ -197,6 +198,48 @@ struct SettingsView: View {
                 }
                 .pickerStyle(.segmented)
                 .labelsHidden()
+            }
+        }
+    }
+
+    private var cueSection: some View {
+        Section("Cues") {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Cue Color")
+
+                HStack(spacing: 14) {
+                    ForEach(CueColor.allCases) { option in
+                        Button {
+                            settingsService.settings.cueColor = option
+                        } label: {
+                            Circle()
+                                .fill(option.color(for: colorScheme))
+                                .frame(width: 28, height: 28)
+                                .overlay {
+                                    if option == settingsService.settings.cueColor {
+                                        Image(systemName: "checkmark")
+                                            .font(.system(size: 12, weight: .bold))
+                                            .foregroundStyle(AppColors.background(for: colorScheme))
+                                    }
+                                }
+                                .overlay(
+                                    Circle()
+                                        .stroke(
+                                            AppColors.textPrimary(for: colorScheme),
+                                            lineWidth: option == settingsService.settings.cueColor ? 2 : 0
+                                        )
+                                        .padding(-4)
+                                )
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(option.displayName)
+                    }
+                }
+                .padding(.vertical, 4)
+
+                Text("Every cue in every script is shown in this color.")
+                    .font(.footnote)
+                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
             }
         }
     }

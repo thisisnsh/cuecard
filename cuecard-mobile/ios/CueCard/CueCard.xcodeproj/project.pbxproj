@@ -26,7 +26,7 @@
 		018 /* FirebaseCrashlytics in Frameworks */ = {isa = PBXBuildFile; productRef = 305 /* FirebaseCrashlytics */; };
 		019 /* ReviewPromptService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 114 /* ReviewPromptService.swift */; };
 		020 /* ScriptDocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 115 /* ScriptDocument.swift */; };
-		022 /* Cue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 116 /* Cue.swift */; };
+		022 /* CueColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 116 /* CueColor.swift */; };
 		023 /* CueEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 117 /* CueEditor.swift */; };
 		024 /* RemoteConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 118 /* RemoteConfig.swift */; };
 		025 /* RemoteConfigService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 119 /* RemoteConfigService.swift */; };
@@ -50,7 +50,7 @@
 		113 /* AppColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppColors.swift; sourceTree = "<group>"; };
 		114 /* ReviewPromptService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewPromptService.swift; sourceTree = "<group>"; };
 		115 /* ScriptDocument.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptDocument.swift; sourceTree = "<group>"; };
-		116 /* Cue.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Cue.swift; sourceTree = "<group>"; };
+		116 /* CueColor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueColor.swift; sourceTree = "<group>"; };
 		117 /* CueEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueEditor.swift; sourceTree = "<group>"; };
 		118 /* RemoteConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteConfig.swift; sourceTree = "<group>"; };
 		119 /* RemoteConfigService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteConfigService.swift; sourceTree = "<group>"; };
@@ -134,7 +134,7 @@
 				111 /* TeleprompterParser.swift */,
 				113 /* AppColors.swift */,
 				115 /* ScriptDocument.swift */,
-				116 /* Cue.swift */,
+				116 /* CueColor.swift */,
 				118 /* RemoteConfig.swift */,
 			);
 			path = Models;
@@ -275,7 +275,7 @@
 				015 /* TeleprompterParser.swift in Sources */,
 				016 /* TeleprompterPiPManager.swift in Sources */,
 				020 /* ScriptDocument.swift in Sources */,
-				022 /* Cue.swift in Sources */,
+				022 /* CueColor.swift in Sources */,
 				023 /* CueEditor.swift in Sources */,
 				024 /* RemoteConfig.swift in Sources */,
 				025 /* RemoteConfigService.swift in Sources */,

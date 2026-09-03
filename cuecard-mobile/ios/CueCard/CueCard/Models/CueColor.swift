@@ -1,9 +1,12 @@
 import SwiftUI
 
-/// A color a delivery cue can be tagged with.
+/// The color every delivery cue is drawn in.
 ///
-/// The raw value is written into the script as `[note:green pause]`, so it has to
-/// stay stable once shipped — renaming a case orphans every script that uses it.
+/// One color covers the whole app — the choice lives in Settings, not in the
+/// script — so changing it recolors every cue in every script at once.
+///
+/// The raw value is persisted with the settings, so it has to stay stable once
+/// shipped: renaming a case resets that user's choice back to the default.
 enum CueColor: String, Codable, CaseIterable, Identifiable {
     case pink
     case yellow
@@ -14,8 +17,8 @@ enum CueColor: String, Codable, CaseIterable, Identifiable {
 
     var id: String { rawValue }
 
-    /// Used when a cue carries no explicit color, i.e. the original `[note text]` form.
-    static let fallback: CueColor = .pink
+    /// What cues are drawn in until the user picks something else.
+    static let `default`: CueColor = .pink
 
     var displayName: String {
         rawValue.capitalized
@@ -42,35 +45,4 @@ enum CueColor: String, Codable, CaseIterable, Identifiable {
         case .red: return isDarkMode ? AppColors.UIColors.Dark.red : AppColors.UIColors.Light.red
         }
     }
-}
-
-/// A reusable delivery cue in the user's library.
-///
-/// Cues are just shortcuts for writing tags — once inserted, the script text is the
-/// only source of truth, so editing or deleting a cue never rewrites past scripts.
-struct Cue: Codable, Identifiable, Equatable {
-    let id: UUID
-    var text: String
-    var color: CueColor
-
-    init(id: UUID = UUID(), text: String, color: CueColor) {
-        self.id = id
-        self.text = text
-        self.color = color
-    }
-
-    /// The tag this cue writes into the script.
-    var tag: String {
-        TeleprompterParser.cueTag(text: text, color: color)
-    }
-
-    /// Seeded into the library on first launch.
-    static let defaults: [Cue] = [
-        Cue(text: "pause", color: .yellow),
-        Cue(text: "smile", color: .pink),
-        Cue(text: "breathe", color: .green),
-        Cue(text: "slow down", color: .blue),
-        Cue(text: "emphasize", color: .purple),
-        Cue(text: "look up", color: .red)
-    ]
 }

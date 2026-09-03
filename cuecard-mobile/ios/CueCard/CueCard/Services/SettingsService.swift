@@ -69,6 +69,8 @@ struct TeleprompterSettings: Codable, Equatable {
     var timerSeconds: Int
     var themePreference: ThemePreference
     var countdownSeconds: Int
+    /// The color every `[cue …]` in every script is drawn in.
+    var cueColor: CueColor
 
     /// Computed font size from preset
     var fontSize: Int {
@@ -90,7 +92,8 @@ struct TeleprompterSettings: Codable, Equatable {
         timerMinutes: 1,
         timerSeconds: 0,
         themePreference: .system,
-        countdownSeconds: 5
+        countdownSeconds: 5,
+        cueColor: .default
     )
 
     /// Scroll speed range (multiplier)
@@ -118,6 +121,7 @@ struct TeleprompterSettings: Codable, Equatable {
         case timerSeconds
         case themePreference
         case countdownSeconds
+        case cueColor
     }
 
     init(
@@ -130,7 +134,8 @@ struct TeleprompterSettings: Codable, Equatable {
         timerMinutes: Int,
         timerSeconds: Int,
         themePreference: ThemePreference,
-        countdownSeconds: Int
+        countdownSeconds: Int,
+        cueColor: CueColor
     ) {
         self.fontSizePreset = fontSizePreset
         self.pipFontSizePreset = pipFontSizePreset
@@ -142,6 +147,7 @@ struct TeleprompterSettings: Codable, Equatable {
         self.timerSeconds = timerSeconds
         self.themePreference = themePreference
         self.countdownSeconds = countdownSeconds
+        self.cueColor = cueColor
     }
 
     init(from decoder: Decoder) throws {
@@ -156,6 +162,7 @@ struct TeleprompterSettings: Codable, Equatable {
         timerSeconds = try container.decode(Int.self, forKey: .timerSeconds)
         themePreference = try container.decode(ThemePreference.self, forKey: .themePreference)
         countdownSeconds = try container.decodeIfPresent(Int.self, forKey: .countdownSeconds) ?? 5
+        cueColor = try container.decodeIfPresent(CueColor.self, forKey: .cueColor) ?? .default
     }
 
     func encode(to encoder: Encoder) throws {
@@ -170,6 +177,7 @@ struct TeleprompterSettings: Codable, Equatable {
         try container.encode(timerSeconds, forKey: .timerSeconds)
         try container.encode(themePreference, forKey: .themePreference)
         try container.encode(countdownSeconds, forKey: .countdownSeconds)
+        try container.encode(cueColor, forKey: .cueColor)
     }
 }
 
@@ -200,7 +208,9 @@ class SettingsService: ObservableObject {
     private let notesKey = "cuecard_notes"
     private let savedNotesKey = "cuecard_saved_notes"
     private let currentNoteIdKey = "cuecard_current_note_id"
-    private let cuesKey = "cuecard_cues"
+    /// Cues used to be saved in a library. They're written straight into the
+    /// script now, so the stored library is cleared out on the way past.
+    private let retiredCuesKey = "cuecard_cues"
     private var isLoadingNote = false
 
     @Published var settings: TeleprompterSettings {
@@ -233,36 +243,29 @@ class SettingsService: ObservableObject {
         }
     }
 
-    /// The user's reusable delivery cues, in the order they appear in the cue bar
-    @Published var cues: [Cue] = [] {
-        didSet {
-            saveCues()
-        }
-    }
-
     /// Default text for new notes
     static let defaultNoteText = """
 Welcome everyone.
 
 I'm excited to be here today to talk about CueCard.
 
-[note:pink smile and pause]
+[cue smile and pause]
 
 It keeps your speaker notes visible above all apps, so you can use your existing camera apps and still read your notes.
 
-[note:yellow pause]
+[cue pause]
 
 It has a timer so you know if you're being brief… or too passionate.
 
-[note:green light chuckle]
+[cue light chuckle]
 
 And the colored highlights?
 
-[note:purple emphasize]
+[cue emphasize]
 
 Those are your secret cues — reminders to smile, pause, or not panic.
 
-[note:yellow pause]
+[cue pause]
 
 Try it out. I think you'll love it.
 """
@@ -294,43 +297,12 @@ Try it out. I think you'll love it.
             self.currentNoteId = id
         }
 
-        // Load cues, seeding the starter set the first time around
-        if let data = userDefaults.data(forKey: cuesKey),
-           let decoded = try? JSONDecoder().decode([Cue].self, from: data) {
-            self.cues = decoded
-        } else {
-            self.cues = Cue.defaults
-            userDefaults.set(try? JSONEncoder().encode(Cue.defaults), forKey: cuesKey)
-        }
+        userDefaults.removeObject(forKey: retiredCuesKey)
 
         // Notes start empty - users can add sample text via the button
         if needsSave {
             saveSettings()
         }
-    }
-
-    private func saveCues() {
-        if let encoded = try? JSONEncoder().encode(cues) {
-            userDefaults.set(encoded, forKey: cuesKey)
-        }
-    }
-
-    // MARK: - Cues
-
-    /// Add a cue to the front of the library, where it's easiest to reach next time
-    func addCue(_ cue: Cue) {
-        cues.insert(cue, at: 0)
-    }
-
-    /// Update a saved cue. Scripts already written keep the text they were given —
-    /// a cue is a shortcut for typing a tag, not a live reference to one.
-    func updateCue(_ cue: Cue) {
-        guard let index = cues.firstIndex(where: { $0.id == cue.id }) else { return }
-        cues[index] = cue
-    }
-
-    func deleteCue(id: UUID) {
-        cues.removeAll { $0.id == id }
     }
 
     private func saveSettings() {
@@ -449,7 +421,6 @@ Try it out. I think you'll love it.
         notes = ""
         savedNotes = []
         currentNoteId = nil
-        cues = Cue.defaults
         userDefaults.removeObject(forKey: settingsKey)
         userDefaults.removeObject(forKey: notesKey)
         userDefaults.removeObject(forKey: savedNotesKey)

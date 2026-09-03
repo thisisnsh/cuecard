@@ -258,6 +258,7 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
         // Create the teleprompter content view
         let contentView = TeleprompterPiPContentView(frame: CGRect(x: 0, y: 0, width: pipWidth, height: pipHeight))
         contentView.isDarkMode = isDarkMode
+        contentView.cueColor = settings.cueColor
         self.teleprompterContentView = contentView
 
         // Create a host view controller
@@ -286,6 +287,7 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
         // Add content to PiP VC's view
         let pipContent = TeleprompterPiPContentView(frame: .zero)
         pipContent.isDarkMode = isDarkMode
+        pipContent.cueColor = settings.cueColor
         pipVC.view.addSubview(pipContent)
         pipContent.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
@@ -462,6 +464,13 @@ private class TeleprompterPiPContentView: UIView {
         didSet {
             lastTimerColor = nil
             updateColors()
+        }
+    }
+
+    var cueColor: CueColor = .default {
+        didSet {
+            guard cueColor != oldValue else { return }
+            lastContentId = ""
         }
     }
 
@@ -658,7 +667,7 @@ private class TeleprompterPiPContentView: UIView {
 
                 for segment in segments {
                     switch segment {
-                    case .cue(let noteContent, let cueColor):
+                    case .cue(let noteContent):
                         let noteAttrs: [NSAttributedString.Key: Any] = [
                             .font: noteFont,
                             .foregroundColor: cueColor.uiColor(isDarkMode: isDarkMode),

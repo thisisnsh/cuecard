@@ -80,6 +80,7 @@ struct TeleprompterView: View {
 
                     AttributedTextView(
                         content: content,
+                        cueColor: settings.cueColor,
                         fontSize: CGFloat(settings.fontSize),
                         currentWordIndex: currentWordIndex,
                         highlightProgress: highlightProgress,
@@ -522,6 +523,7 @@ struct TeleprompterView: View {
 /// UITextView wrapper for attributed text with word highlighting
 struct AttributedTextView: UIViewRepresentable {
     let content: TeleprompterContent
+    let cueColor: CueColor
     let fontSize: CGFloat
     let currentWordIndex: Int
     let highlightProgress: Double
@@ -537,6 +539,7 @@ struct AttributedTextView: UIViewRepresentable {
     class Coordinator: NSObject {
         var lastContentId: String?
         var lastFontSize: CGFloat = 0
+        var lastCueColor: CueColor?
         var lastColorScheme: ColorScheme = .dark
         var lastProgressBucket: Double = -1
         var appliedProgress: Double = 0
@@ -580,6 +583,7 @@ struct AttributedTextView: UIViewRepresentable {
         let contentId = content.fullText
         let needsFullRebuild = coordinator.lastContentId != contentId
             || coordinator.lastFontSize != fontSize
+            || coordinator.lastCueColor != cueColor
             || coordinator.lastColorScheme != colorScheme
 
         if needsFullRebuild {
@@ -590,6 +594,7 @@ struct AttributedTextView: UIViewRepresentable {
 
             coordinator.lastContentId = contentId
             coordinator.lastFontSize = fontSize
+            coordinator.lastCueColor = cueColor
             coordinator.lastColorScheme = colorScheme
             coordinator.wordRanges = built.wordRanges
             coordinator.wordIsNote = built.wordIsNote
@@ -709,7 +714,7 @@ struct AttributedTextView: UIViewRepresentable {
 
                 for segment in segments {
                     switch segment {
-                    case .cue(let noteContent, let cueColor):
+                    case .cue(let noteContent):
                         let noteAttrs: [NSAttributedString.Key: Any] = [
                             .font: UIFont.systemFont(ofSize: fontSize * 0.72, weight: .semibold),
                             .foregroundColor: cueColor.uiColor(isDarkMode: colorScheme == .dark),

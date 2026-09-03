@@ -114,12 +114,14 @@ final class CueTextView: UITextView {
     }
 }
 
-/// Script editor that renders `[note …]` cues in their own color while you type,
-/// and reports the caret back so cues can be inserted where the user is writing.
+/// Script editor that renders `[cue …]` tags in the cue color while you type, and
+/// writes the brackets for you: pressing `[` drops in a whole empty cue with the
+/// caret inside it, so a cue is never left half-open.
 struct CueTextEditor: UIViewRepresentable {
     @Binding var text: String
     @Binding var selectedRange: NSRange
     @Binding var isFocused: Bool
+    let cueColor: CueColor
     let colorScheme: ColorScheme
     /// Height of the cue bar floating over the bottom of the editor, if it's showing.
     var bottomOverlayHeight: CGFloat = 0
@@ -135,7 +137,7 @@ struct CueTextEditor: UIViewRepresentable {
         textView.alwaysBounceVertical = true
         textView.keyboardDismissMode = .interactive
         textView.text = text
-        Self.applyHighlighting(to: textView, colorScheme: colorScheme)
+        Self.applyHighlighting(to: textView, cueColor: cueColor, colorScheme: colorScheme)
         return textView
     }
 
@@ -143,13 +145,17 @@ struct CueTextEditor: UIViewRepresentable {
         context.coordinator.parent = self
         textView.bottomOverlayHeight = bottomOverlayHeight
 
+        let styleChanged = context.coordinator.appliedColorScheme != colorScheme
+            || context.coordinator.appliedCueColor != cueColor
+
         if textView.text != text {
             textView.text = text
-            Self.applyHighlighting(to: textView, colorScheme: colorScheme)
-        } else if context.coordinator.appliedColorScheme != colorScheme {
-            Self.applyHighlighting(to: textView, colorScheme: colorScheme)
+            Self.applyHighlighting(to: textView, cueColor: cueColor, colorScheme: colorScheme)
+        } else if styleChanged {
+            Self.applyHighlighting(to: textView, cueColor: cueColor, colorScheme: colorScheme)
         }
         context.coordinator.appliedColorScheme = colorScheme
+        context.coordinator.appliedCueColor = cueColor
 
         let clamped = Self.clamp(selectedRange, to: textView.text as NSString)
         if textView.selectedRange != clamped {
@@ -178,29 +184,30 @@ struct CueTextEditor: UIViewRepresentable {
 
     // MARK: - Highlighting
 
-    static func applyHighlighting(to textView: UITextView, colorScheme: ColorScheme) {
+    static func applyHighlighting(to textView: UITextView, cueColor: CueColor, colorScheme: ColorScheme) {
         // Recoloring mid-composition would drop the in-progress marked text.
         guard textView.markedTextRange == nil else { return }
 
         let isDarkMode = colorScheme == .dark
         let baseAttributes = baseAttributes(isDarkMode: isDarkMode)
+        let tagColor = cueColor.uiColor(isDarkMode: isDarkMode)
         let storage = textView.textStorage
         let fullRange = NSRange(location: 0, length: storage.length)
 
         storage.beginEditing()
         storage.setAttributes(baseAttributes, range: fullRange)
 
+        // Only closed tags are colored, so a cue being typed stays plain text
+        // until its bracket lands.
         for match in TeleprompterParser.cueMatches(in: textView.text) {
-            let cueColor = match.color.uiColor(isDarkMode: isDarkMode)
-
             // The tag syntax stays visible — and editable — but recedes.
             storage.addAttributes([
-                .foregroundColor: cueColor.withAlphaComponent(0.45),
+                .foregroundColor: tagColor.withAlphaComponent(0.45),
                 .font: UIFont.systemFont(ofSize: fontSize, weight: .medium)
             ], range: match.range)
 
             storage.addAttributes([
-                .foregroundColor: cueColor,
+                .foregroundColor: tagColor,
                 .font: UIFont.systemFont(ofSize: fontSize, weight: .semibold)
             ], range: match.contentRange)
         }
@@ -221,14 +228,82 @@ struct CueTextEditor: UIViewRepresentable {
     class Coordinator: NSObject, UITextViewDelegate {
         var parent: CueTextEditor
         var appliedColorScheme: ColorScheme?
+        var appliedCueColor: CueColor?
 
         init(parent: CueTextEditor) {
             self.parent = parent
         }
 
+        /// Writes both brackets on `[`, and takes them both back away again on the
+        /// backspace that follows, so a `[` meant literally costs one extra keystroke
+        /// instead of six.
+        func textView(
+            _ textView: UITextView,
+            shouldChangeTextIn range: NSRange,
+            replacementText text: String
+        ) -> Bool {
+            if text == "[", range.length == 0 {
+                replace(
+                    range,
+                    with: TeleprompterParser.emptyCueTag,
+                    caret: range.location + (TeleprompterParser.cueTagPrefix as NSString).length,
+                    in: textView
+                )
+                return false
+            }
+
+            if text.isEmpty, range.length == 1, let emptyCue = emptyCueSurrounding(range, in: textView) {
+                replace(emptyCue, with: "[", caret: emptyCue.location + 1, in: textView)
+                return false
+            }
+
+            return true
+        }
+
+        /// The range of an untouched `[cue ]` the caret is sitting inside, if this
+        /// backspace is the one deleting its trailing space. A cue with anything
+        /// written in it deletes a character at a time like ordinary text.
+        private func emptyCueSurrounding(_ range: NSRange, in textView: UITextView) -> NSRange? {
+            let prefixLength = (TeleprompterParser.cueTagPrefix as NSString).length
+            let tagLength = (TeleprompterParser.emptyCueTag as NSString).length
+            let start = range.location - (prefixLength - 1)
+
+            let full = textView.text as NSString
+            guard start >= 0, start + tagLength <= full.length else { return nil }
+
+            let candidate = NSRange(location: start, length: tagLength)
+            guard full.substring(with: candidate) == TeleprompterParser.emptyCueTag else { return nil }
+            return candidate
+        }
+
+        /// Edit the text ourselves, then run everything `textViewDidChange` would have.
+        private func replace(_ range: NSRange, with replacement: String, caret: Int, in textView: UITextView) {
+            // The keyboard has to be told about an edit it didn't make itself, or it
+            // keeps autocorrecting against the text it still thinks is there.
+            textView.inputDelegate?.textWillChange(textView)
+            textView.textStorage.replaceCharacters(in: range, with: replacement)
+            CueTextEditor.applyHighlighting(
+                to: textView,
+                cueColor: parent.cueColor,
+                colorScheme: parent.colorScheme
+            )
+
+            let selection = NSRange(location: caret, length: 0)
+            textView.selectedRange = selection
+            textView.inputDelegate?.textDidChange(textView)
+
+            parent.text = textView.text
+            parent.selectedRange = selection
+            (textView as? CueTextView)?.scrollCaretIntoView()
+        }
+
         func textViewDidChange(_ textView: UITextView) {
             let selection = textView.selectedRange
-            CueTextEditor.applyHighlighting(to: textView, colorScheme: parent.colorScheme)
+            CueTextEditor.applyHighlighting(
+                to: textView,
+                cueColor: parent.cueColor,
+                colorScheme: parent.colorScheme
+            )
             textView.selectedRange = selection
 
             parent.text = textView.text
@@ -260,9 +335,10 @@ struct CueTextEditor: UIViewRepresentable {
 // MARK: - Cue insertion
 
 extension String {
-    /// Insert a cue tag at `range`, adding the spaces needed so it doesn't collide
-    /// with the surrounding words. Returns the caret position after the tag.
-    func insertingCue(_ tag: String, at range: NSRange) -> (text: String, caret: Int) {
+    /// Insert an empty cue at `range`, adding the spaces needed so it doesn't
+    /// collide with the surrounding words. Returns the caret position inside the
+    /// tag, ready for the cue to be typed.
+    func insertingEmptyCue(at range: NSRange) -> (text: String, caret: Int) {
         let nsText = self as NSString
         let location = min(max(range.location + range.length, 0), nsText.length)
 
@@ -272,9 +348,12 @@ extension String {
         let needsLeadingSpace = !previous.isEmpty && previous.rangeOfCharacter(from: .whitespacesAndNewlines) == nil
         let needsTrailingSpace = !next.isEmpty && next.rangeOfCharacter(from: .whitespacesAndNewlines) == nil
 
-        let insertion = (needsLeadingSpace ? " " : "") + tag + (needsTrailingSpace ? " " : "")
+        let leading = needsLeadingSpace ? " " : ""
+        let insertion = leading + TeleprompterParser.emptyCueTag + (needsTrailingSpace ? " " : "")
         let updated = nsText.replacingCharacters(in: NSRange(location: location, length: 0), with: insertion)
-        let caret = location + (insertion as NSString).length - (needsTrailingSpace ? 1 : 0)
+        let caret = location
+            + (leading as NSString).length
+            + (TeleprompterParser.cueTagPrefix as NSString).length
 
         return (updated, caret)
     }
@@ -282,74 +361,34 @@ extension String {
 
 // MARK: - Cue bar
 
-/// The row of reusable cues that sits above the keyboard while writing a script.
+/// The strip above the keyboard while a script is being written: one button to
+/// drop a cue in at the caret, and one to get the keyboard out of the way.
 struct CueBar: View {
     /// The bar's height. The editor keeps this much room clear at the bottom so
     /// the line being typed never hides behind it.
     static let height: CGFloat = 54
 
-    let cues: [Cue]
     let colorScheme: ColorScheme
-    var onInsert: (Cue) -> Void
-    var onCreate: () -> Void
-    var onEdit: (Cue) -> Void
-    var onRecolor: (Cue, CueColor) -> Void
-    var onDelete: (Cue) -> Void
+    var onAddCue: () -> Void
     var onDismissKeyboard: () -> Void
 
     var body: some View {
         HStack(spacing: 10) {
-            Button(action: onCreate) {
-                Image(systemName: "plus")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                    .frame(width: 34, height: 34)
-                    .glassedEffect(in: Circle())
-            }
-            .accessibilityLabel("New cue")
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    ForEach(cues) { cue in
-                        Button {
-                            onInsert(cue)
-                        } label: {
-                            CueChip(cue: cue, colorScheme: colorScheme)
-                        }
-                        .buttonStyle(.plain)
-                        .contextMenu {
-                            Button {
-                                onEdit(cue)
-                            } label: {
-                                Label("Edit", systemImage: "pencil")
-                            }
-
-                            Menu {
-                                ForEach(CueColor.allCases) { color in
-                                    Button {
-                                        onRecolor(cue, color)
-                                    } label: {
-                                        if color == cue.color {
-                                            Label(color.displayName, systemImage: "checkmark")
-                                        } else {
-                                            Text(color.displayName)
-                                        }
-                                    }
-                                }
-                            } label: {
-                                Label("Color", systemImage: "paintpalette")
-                            }
-
-                            Button(role: .destructive) {
-                                onDelete(cue)
-                            } label: {
-                                Label("Delete", systemImage: "trash")
-                            }
-                        }
-                    }
+            Button(action: onAddCue) {
+                HStack(spacing: 6) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 13, weight: .bold))
+                    Text("Add Cue")
+                        .font(.subheadline.weight(.semibold))
                 }
-                .padding(.vertical, 2)
+                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                .padding(.horizontal, 16)
+                .frame(height: 34)
+                .glassedEffect(in: Capsule())
             }
+            .buttonStyle(.plain)
+
+            Spacer(minLength: 0)
 
             Button(action: onDismissKeyboard) {
                 Image(systemName: "keyboard.chevron.compact.down")
@@ -368,189 +407,5 @@ struct CueBar: View {
                 .fill(AppColors.textSecondary(for: colorScheme).opacity(0.15))
                 .frame(height: 0.5)
         }
-    }
-}
-
-private struct CueChip: View {
-    let cue: Cue
-    let colorScheme: ColorScheme
-
-    var body: some View {
-        Text(cue.text)
-            .font(.subheadline.weight(.semibold))
-            .lineLimit(1)
-            .foregroundStyle(cue.color.color(for: colorScheme))
-            .padding(.horizontal, 14)
-            .frame(height: 34)
-            .background(
-                Capsule()
-                    .fill(cue.color.color(for: colorScheme).opacity(colorScheme == .dark ? 0.18 : 0.13))
-            )
-            .overlay(
-                Capsule()
-                    .stroke(cue.color.color(for: colorScheme).opacity(0.35), lineWidth: 1)
-            )
-    }
-}
-
-// MARK: - Composer
-
-/// What the composer sheet is doing: writing a brand new cue, or editing a saved one.
-enum CueComposerMode: Identifiable {
-    case create
-    case edit(Cue)
-
-    var id: String {
-        switch self {
-        case .create: return "create"
-        case .edit(let cue): return cue.id.uuidString
-        }
-    }
-}
-
-/// Sheet for writing a cue on the spot, or reworking one already in the library.
-struct CueComposerSheet: View {
-    let mode: CueComposerMode
-    /// Called with the finished cue and whether a newly written one should be kept.
-    var onCommit: (Cue, Bool) -> Void
-
-    @Environment(\.dismiss) private var dismiss
-    @Environment(\.colorScheme) private var colorScheme
-    @State private var text: String
-    @State private var color: CueColor
-    @State private var saveToLibrary = true
-    @FocusState private var isTextFieldFocused: Bool
-
-    init(mode: CueComposerMode, onCommit: @escaping (Cue, Bool) -> Void) {
-        self.mode = mode
-        self.onCommit = onCommit
-
-        switch mode {
-        case .create:
-            _text = State(initialValue: "")
-            _color = State(initialValue: .fallback)
-        case .edit(let cue):
-            _text = State(initialValue: cue.text)
-            _color = State(initialValue: cue.color)
-        }
-    }
-
-    private var isEditing: Bool {
-        if case .edit = mode { return true }
-        return false
-    }
-
-    private var trimmedText: String {
-        text.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
-    /// `]` would terminate the tag early, so it can't appear inside a cue.
-    private var isValid: Bool {
-        !trimmedText.isEmpty && !trimmedText.contains("]") && !trimmedText.contains("\n")
-    }
-
-    var body: some View {
-        NavigationStack {
-            ZStack {
-                AppColors.background(for: colorScheme)
-                    .ignoresSafeArea()
-
-                VStack(alignment: .leading, spacing: 24) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        TextField("smile and pause", text: $text)
-                            .font(.title3.weight(.semibold))
-                            .foregroundStyle(color.color(for: colorScheme))
-                            .focused($isTextFieldFocused)
-                            .submitLabel(.done)
-                            .onSubmit(commit)
-                            .padding(.horizontal, 16)
-                            .frame(height: 52)
-                            .background(
-                                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                                    .fill(color.color(for: colorScheme).opacity(colorScheme == .dark ? 0.15 : 0.1))
-                            )
-
-                        Text("Cues aren't read aloud — they're your reminders on screen.")
-                            .font(.footnote)
-                            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                    }
-
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Color")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-
-                        HStack(spacing: 14) {
-                            ForEach(CueColor.allCases) { option in
-                                Button {
-                                    color = option
-                                } label: {
-                                    Circle()
-                                        .fill(option.color(for: colorScheme))
-                                        .frame(width: 30, height: 30)
-                                        .overlay {
-                                            if option == color {
-                                                Image(systemName: "checkmark")
-                                                    .font(.system(size: 13, weight: .bold))
-                                                    .foregroundStyle(AppColors.background(for: colorScheme))
-                                            }
-                                        }
-                                        .overlay(
-                                            Circle()
-                                                .stroke(
-                                                    AppColors.textPrimary(for: colorScheme),
-                                                    lineWidth: option == color ? 2 : 0
-                                                )
-                                                .padding(-4)
-                                        )
-                                }
-                                .buttonStyle(.plain)
-                                .accessibilityLabel(option.displayName)
-                            }
-                        }
-                    }
-
-                    if !isEditing {
-                        Toggle(isOn: $saveToLibrary) {
-                            Text("Keep in my cues")
-                                .font(.subheadline)
-                                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                        }
-                        .tint(AppColors.green(for: colorScheme))
-                    }
-
-                    Spacer(minLength: 0)
-                }
-                .padding(20)
-            }
-            .navigationTitle(isEditing ? "Edit Cue" : "New Cue")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(AppColors.background(for: colorScheme), for: .navigationBar)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
-
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(isEditing ? "Save" : "Insert", action: commit)
-                        .fontWeight(.semibold)
-                        .disabled(!isValid)
-                }
-            }
-        }
-        .presentationDetents([.height(isEditing ? 330 : 380)])
-        .onAppear { isTextFieldFocused = true }
-    }
-
-    private func commit() {
-        guard isValid else { return }
-
-        switch mode {
-        case .create:
-            onCommit(Cue(text: trimmedText, color: color), saveToLibrary)
-        case .edit(let cue):
-            onCommit(Cue(id: cue.id, text: trimmedText, color: color), true)
-        }
-        dismiss()
     }
 }
