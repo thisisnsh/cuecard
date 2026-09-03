@@ -60,10 +60,9 @@ struct SettingsView: View {
             remoteMessageSection
             userInfoSection
             rateSection
-            countdownSection
             teleprompterSection
-            textSizeSection
-            overlaySection
+            inAppPrompterSection
+            floatingPrompterSection
             appearanceSection
             resetSection
             diagnosticsSection
@@ -112,8 +111,10 @@ struct SettingsView: View {
         return "User"
     }
 
-    private var countdownSection: some View {
-        Section("Countdown") {
+    /// Everything that shapes a run: how long before it starts, how fast the
+    /// highlight moves, and the color every cue is drawn in.
+    private var teleprompterSection: some View {
+        Section("Teleprompter") {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     Text("Start Delay")
@@ -133,11 +134,7 @@ struct SettingsView: View {
                 )
             }
             .padding(.vertical, 4)
-        }
-    }
 
-    private var teleprompterSection: some View {
-        Section("Teleprompter") {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     Text("Highlight Speed")
@@ -157,57 +154,6 @@ struct SettingsView: View {
                 )
             }
             .padding(.vertical, 4)
-        }
-    }
-
-    private var textSizeSection: some View {
-        Section("Text Size") {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("App Text Size")
-                Picker("App Text Size", selection: $settingsService.settings.fontSizePreset) {
-                    ForEach(FontSizePreset.allCases, id: \.self) { preset in
-                        Text(preset.rawValue).tag(preset)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-            }
-
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Overlay Text Size")
-                Picker("Overlay Text Size", selection: $settingsService.settings.pipFontSizePreset) {
-                    ForEach(FontSizePreset.allCases, id: \.self) { preset in
-                        Text(preset.rawValue).tag(preset)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-            }
-        }
-    }
-
-    private var overlaySection: some View {
-        Section("Overlay") {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Overlay Dimension Ratio")
-                Picker("Overlay Dimension Ratio", selection: $settingsService.settings.overlayAspectRatio) {
-                    ForEach(OverlayAspectRatio.allCases, id: \.self) { ratio in
-                        Text(ratio.rawValue).tag(ratio)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-            }
-        }
-    }
-
-    private var appearanceSection: some View {
-        Section("Appearance") {
-            Picker("Theme", selection: $settingsService.settings.themePreference) {
-                ForEach(ThemePreference.allCases, id: \.self) { theme in
-                    Text(theme.rawValue).tag(theme)
-                }
-            }
 
             VStack(alignment: .leading, spacing: 12) {
                 Text("Cue Color")
@@ -245,6 +191,57 @@ struct SettingsView: View {
                 Text("Every cue is shown in this color.")
                     .font(.footnote)
                     .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+            }
+        }
+    }
+
+    private var inAppPrompterSection: some View {
+        Section("In-App Prompter") {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Text Size")
+                Picker("Text Size", selection: $settingsService.settings.fontSizePreset) {
+                    ForEach(FontSizePreset.allCases, id: \.self) { preset in
+                        Text(preset.rawValue).tag(preset)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+            }
+        }
+    }
+
+    private var floatingPrompterSection: some View {
+        Section("Floating Prompter") {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Text Size")
+                Picker("Text Size", selection: $settingsService.settings.pipFontSizePreset) {
+                    ForEach(FontSizePreset.allCases, id: \.self) { preset in
+                        Text(preset.rawValue).tag(preset)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+            }
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Dimension Ratio")
+                Picker("Dimension Ratio", selection: $settingsService.settings.overlayAspectRatio) {
+                    ForEach(OverlayAspectRatio.allCases, id: \.self) { ratio in
+                        Text(ratio.rawValue).tag(ratio)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+            }
+        }
+    }
+
+    private var appearanceSection: some View {
+        Section("Appearance") {
+            Picker("Theme", selection: $settingsService.settings.themePreference) {
+                ForEach(ThemePreference.allCases, id: \.self) { theme in
+                    Text(theme.rawValue).tag(theme)
+                }
             }
         }
     }
