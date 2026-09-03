@@ -112,7 +112,7 @@ struct SettingsView: View {
     }
 
     /// Everything that shapes a run: how long before it starts, how fast the
-    /// highlight moves, and the color every cue is drawn in.
+    /// script scrolls, and the color every cue is drawn in.
     private var teleprompterSection: some View {
         Section("Teleprompter") {
             VStack(alignment: .leading, spacing: 8) {
@@ -137,20 +137,20 @@ struct SettingsView: View {
 
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Text("Highlight Speed")
+                    Text("Scroll Speed")
                     Spacer()
-                    Text("\(settingsService.settings.wordsPerMinute) WPM")
+                    Text("\(settingsService.settings.linesPerMinute) lines/min")
                         .foregroundStyle(.secondary)
                         .monospacedDigit()
                 }
 
                 Slider(
                     value: Binding(
-                        get: { Double(settingsService.settings.wordsPerMinute) },
-                        set: { settingsService.settings.wordsPerMinute = Int($0) }
+                        get: { Double(settingsService.settings.linesPerMinute) },
+                        set: { settingsService.settings.linesPerMinute = Int($0) }
                     ),
-                    in: Double(TeleprompterSettings.wpmRange.lowerBound)...Double(TeleprompterSettings.wpmRange.upperBound),
-                    step: 10
+                    in: Double(TeleprompterSettings.lpmRange.lowerBound)...Double(TeleprompterSettings.lpmRange.upperBound),
+                    step: 1
                 )
             }
             .padding(.vertical, 4)

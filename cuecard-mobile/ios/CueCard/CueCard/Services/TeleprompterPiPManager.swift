@@ -20,7 +20,11 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
     private(set) var timerDuration: Int = 0
     private(set) var elapsedTime: Double = 0
     private(set) var isDarkMode: Bool = true
-    private(set) var totalWords: Int = 0
+    /// How long the script runs for, set by the teleprompter from the lines it
+    /// rendered and the speed. The overlay wraps the same script into more lines
+    /// than the full screen does, so it covers its own content over that time
+    /// rather than counting lines of its own — the two stay on the same word.
+    var scriptDuration: Double = 0
     private(set) var countdownValue: Int = 0
     private(set) var isCountingDown: Bool = false
 
@@ -68,14 +72,11 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
         self.elapsedTime = 0
         self.isDarkMode = colorScheme == .dark
 
-        let parsedContent = TeleprompterParser.parseNotes(text)
-        totalWords = parsedContent.words.count
-
         setupPiP()
     }
 
     /// Update current state from TeleprompterView
-    func updateState(elapsedTime: Double, isPlaying: Bool, currentWordIndex: Int = 0, countdownValue: Int = 0, isCountingDown: Bool = false) {
+    func updateState(elapsedTime: Double, isPlaying: Bool, countdownValue: Int = 0, isCountingDown: Bool = false) {
         self.elapsedTime = elapsedTime
         self.isPlaying = isPlaying
         self.countdownValue = countdownValue
@@ -180,7 +181,8 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
 
     /// Seek forward 10 seconds
     func seekForward() {
-        elapsedTime = min(elapsedTime + 10, timerDuration > 0 ? Double(timerDuration + 60) : 3600)
+        let end = scriptDuration > 0 ? scriptDuration : (timerDuration > 0 ? Double(timerDuration + 60) : 3600)
+        elapsedTime = min(elapsedTime + 10, end)
         // Reset wall-clock anchor so the playback timer continues from the new position
         if playbackTimerStartDate != nil {
             playbackTimerStartDate = Date()
@@ -370,8 +372,7 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
                 timerDuration: timerDuration,
                 remainingTime: remainingTime,
                 elapsedTime: elapsedTime,
-                totalWords: totalWords,
-                wordsPerMinute: settings.wordsPerMinute,
+                scriptDuration: scriptDuration,
                 isCountingDown: isCountingDown
             )
         }
@@ -384,8 +385,7 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
             timerDuration: timerDuration,
             remainingTime: remainingTime,
             elapsedTime: elapsedTime,
-            totalWords: totalWords,
-            wordsPerMinute: settings.wordsPerMinute,
+            scriptDuration: scriptDuration,
             isCountingDown: isCountingDown
         )
     }
@@ -580,8 +580,7 @@ private class TeleprompterPiPContentView: UIView {
         timerDuration: Int,
         remainingTime: Int,
         elapsedTime: Double,
-        totalWords: Int,
-        wordsPerMinute: Int,
+        scriptDuration: Double,
         isCountingDown: Bool = false
     ) {
         let needsFullRebuild = lastContentId != text
@@ -596,7 +595,7 @@ private class TeleprompterPiPContentView: UIView {
         }
 
         // Continuous time-based scroll
-        updateContinuousScroll(elapsedTime: elapsedTime, totalWords: totalWords, wordsPerMinute: wordsPerMinute)
+        updateContinuousScroll(elapsedTime: elapsedTime, scriptDuration: scriptDuration)
 
         if lastTimerText != timerText {
             lastTimerText = timerText
@@ -620,12 +619,10 @@ private class TeleprompterPiPContentView: UIView {
         }
     }
 
-    private func updateContinuousScroll(elapsedTime: Double, totalWords: Int, wordsPerMinute: Int) {
-        guard totalWords > 0, wordsPerMinute > 0 else { return }
+    private func updateContinuousScroll(elapsedTime: Double, scriptDuration: Double) {
+        guard scriptDuration > 0 else { return }
 
-        let wordsPerSecond = Double(wordsPerMinute) / 60.0
-        let totalReadDuration = Double(totalWords) / wordsPerSecond
-        let scrollFraction = min(max(elapsedTime / totalReadDuration, 0), 1)
+        let scrollFraction = min(max(elapsedTime / scriptDuration, 0), 1)
         let maxY = max(0, textView.contentSize.height - textView.bounds.height)
         let targetY = scrollFraction * maxY
 

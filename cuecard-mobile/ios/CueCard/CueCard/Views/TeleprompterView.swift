@@ -12,16 +12,14 @@ struct TeleprompterView: View {
     @StateObject private var pipManager = TeleprompterPiPManager.shared
 
     @State private var isPlaying = false
-    @State private var scrollOffset: CGFloat = 0
     @State private var elapsedTime: Double = 0
     @State private var timer: Timer?
     @State private var timerStartDate: Date?
     @State private var elapsedTimeAtTimerStart: Double = 0
-    @State private var contentHeight: CGFloat = 0
-    @State private var viewHeight: CGFloat = 0
+    /// How many lines the script wrapped into on this screen. Zero until it lays out.
+    @State private var lineCount: Int = 0
     @State private var showControls = true
     @State private var controlsTimer: Timer?
-    @State private var currentWordIndex: Int = 0
     @State private var countdownValue: Int = 0
     @State private var isCountingDown = false
     @State private var countdownTimer: Timer?
@@ -64,9 +62,28 @@ struct TeleprompterView: View {
     }
 
     /// How far the script fades into the background at each end. The reading line
-    /// sits a third of the way down, well clear of both.
+    /// sits clear of both.
     private static let topFade: CGFloat = 96
     private static let bottomFade: CGFloat = 140
+
+    /// How long the whole script takes at the current speed: the time for the
+    /// last line to reach the reading line. Zero until the script has laid out.
+    private var scriptDuration: Double {
+        duration(forLines: lineCount)
+    }
+
+    private func duration(forLines lines: Int) -> Double {
+        guard lines > 1, settings.linesPerMinute > 0 else { return 0 }
+        return Double(lines - 1) * 60.0 / Double(settings.linesPerMinute)
+    }
+
+    /// Where on screen the line being read sits, as a fraction of the view height.
+    /// Just above centre: high enough to leave the next few lines in view, low
+    /// enough to read as the middle of the screen rather than the top of it.
+    ///
+    /// It doubles as the script's top inset, so the first line starts on the
+    /// reading line and a line's scroll target is its own position in the text.
+    private static let readingLineFraction: CGFloat = 0.45
 
     var body: some View {
         NavigationStack {
@@ -76,21 +93,20 @@ struct TeleprompterView: View {
                     AppColors.background(for: colorScheme)
                         .ignoresSafeArea()
 
-                    // Teleprompter content with attributed text
-                    let wordsPerSecond = Double(settings.wordsPerMinute) / 60.0
-                    let highlightProgress = (elapsedTime == 0 && !isPlaying)
-                        ? -Double.greatestFiniteMagnitude
-                        : (elapsedTime * wordsPerSecond)
-
+                    // The script scrolls at the reader's own pace: so many rendered
+                    // lines a minute, counted from the time on the clock.
                     AttributedTextView(
                         content: content,
                         cueColor: settings.cueColor,
                         fontSize: CGFloat(settings.fontSize),
-                        currentWordIndex: currentWordIndex,
-                        highlightProgress: highlightProgress,
+                        linePosition: elapsedTime * Double(settings.linesPerMinute) / 60.0,
                         colorScheme: colorScheme,
-                        topPadding: geometry.size.height * 0.4,
-                        bottomPadding: geometry.size.height * 0.6,
+                        topPadding: geometry.size.height * Self.readingLineFraction,
+                        bottomPadding: geometry.size.height * (1 - Self.readingLineFraction),
+                        onLineCountChange: { lines in
+                            lineCount = lines
+                            pipManager.scriptDuration = duration(forLines: lines)
+                        },
                         onTap: {
                             withAnimation(.easeInOut(duration: 0.2)) {
                                 showControls.toggle()
@@ -182,7 +198,6 @@ struct TeleprompterView: View {
 
                 }
                 .onAppear {
-                    viewHeight = geometry.size.height
                     setupPiP()
                     Analytics.logEvent("teleprompter_started", parameters: [
                         "word_count": content.words.count,
@@ -226,7 +241,6 @@ struct TeleprompterView: View {
                 // Sync state when coming back to foreground
                 elapsedTime = pipManager.elapsedTime
                 isPlaying = pipManager.isPlaying
-                updateCurrentWord()
             }
         }
     }
@@ -248,11 +262,11 @@ struct TeleprompterView: View {
             timerDuration: timerDuration,
             colorScheme: colorScheme
         )
+        pipManager.scriptDuration = scriptDuration
 
         pipManager.onPiPClosed = {
             elapsedTime = pipManager.elapsedTime
             isPlaying = pipManager.isPlaying
-            updateCurrentWord()
             if isPlaying {
                 startTimer()
             }
@@ -261,7 +275,6 @@ struct TeleprompterView: View {
         pipManager.onPiPRestoreUI = {
             elapsedTime = pipManager.elapsedTime
             isPlaying = pipManager.isPlaying
-            updateCurrentWord()
             if isPlaying {
                 startTimer()
             }
@@ -286,8 +299,6 @@ struct TeleprompterView: View {
             stopCountdownTimer()
             isCountingDown = false
             elapsedTime = 0
-            currentWordIndex = 0
-            scrollOffset = 0
             isPlaying = false
         }
 
@@ -295,7 +306,6 @@ struct TeleprompterView: View {
         pipManager.onExpandFromPiP = {
             elapsedTime = pipManager.elapsedTime
             isPlaying = pipManager.isPlaying
-            updateCurrentWord()
             if isPlaying {
                 startTimer()
             }
@@ -303,10 +313,10 @@ struct TeleprompterView: View {
     }
 
     private func startPiP(minimizeApp: Bool = false) {
+        pipManager.scriptDuration = scriptDuration
         pipManager.updateState(
             elapsedTime: elapsedTime,
             isPlaying: isPlaying,
-            currentWordIndex: currentWordIndex,
             countdownValue: countdownValue,
             isCountingDown: isCountingDown
         )
@@ -348,14 +358,14 @@ struct TeleprompterView: View {
         // Start countdown
         countdownValue = settings.countdownSeconds
         isCountingDown = true
-        pipManager.updateState(elapsedTime: elapsedTime, isPlaying: isPlaying, currentWordIndex: currentWordIndex, countdownValue: countdownValue, isCountingDown: true)
+        pipManager.updateState(elapsedTime: elapsedTime, isPlaying: isPlaying, countdownValue: countdownValue, isCountingDown: true)
 
         countdownTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
             Task { @MainActor in
                 withAnimation(.snappy) {
                     countdownValue -= 1
                 }
-                pipManager.updateState(elapsedTime: elapsedTime, isPlaying: isPlaying, currentWordIndex: currentWordIndex, countdownValue: countdownValue, isCountingDown: countdownValue > 0)
+                pipManager.updateState(elapsedTime: elapsedTime, isPlaying: isPlaying, countdownValue: countdownValue, isCountingDown: countdownValue > 0)
 
                 if countdownValue <= 0 {
                     stopCountdownTimer()
@@ -374,7 +384,7 @@ struct TeleprompterView: View {
     private func play() {
         isPlaying = true
         startTimer()
-        pipManager.updateState(elapsedTime: elapsedTime, isPlaying: true, currentWordIndex: currentWordIndex)
+        pipManager.updateState(elapsedTime: elapsedTime, isPlaying: true)
         Analytics.logEvent("teleprompter_play", parameters: nil)
         resetControlsTimer()
     }
@@ -384,55 +394,48 @@ struct TeleprompterView: View {
         if isCountingDown {
             stopCountdownTimer()
             isCountingDown = false
-            pipManager.updateState(elapsedTime: elapsedTime, isPlaying: false, currentWordIndex: currentWordIndex, countdownValue: 0, isCountingDown: false)
+            pipManager.updateState(elapsedTime: elapsedTime, isPlaying: false, countdownValue: 0, isCountingDown: false)
             return
         }
         isPlaying = false
         stopTimer()
-        pipManager.updateState(elapsedTime: elapsedTime, isPlaying: false, currentWordIndex: currentWordIndex)
+        pipManager.updateState(elapsedTime: elapsedTime, isPlaying: false)
         Analytics.logEvent("teleprompter_pause", parameters: nil)
     }
 
+    /// Back to the first line, which the script scrolls up to rather than snapping.
     private func restart() {
         stopTimer()
         stopCountdownTimer()
         isCountingDown = false
         elapsedTime = 0
-        currentWordIndex = 0
-        scrollOffset = 0
         isPlaying = false
-        pipManager.updateState(elapsedTime: 0, isPlaying: false, currentWordIndex: 0)
+        pipManager.updateState(elapsedTime: 0, isPlaying: false)
         Analytics.logEvent("teleprompter_restart", parameters: nil)
     }
 
     private func seekForward() {
-        // Seek forward 10 seconds worth of words
-        guard !content.words.isEmpty else { return }
-        let wordsPerSecond = Double(settings.wordsPerMinute) / 60.0
-        let wordsToSkip = Int(10 * wordsPerSecond)
-        currentWordIndex = min(currentWordIndex + wordsToSkip, content.words.count - 1)
-        elapsedTime = Double(currentWordIndex) / wordsPerSecond
-        // Reset wall-clock anchor so the timer continues from the new position
-        if timerStartDate != nil {
-            timerStartDate = Date()
-            elapsedTimeAtTimerStart = elapsedTime
-        }
-        pipManager.updateState(elapsedTime: elapsedTime, isPlaying: isPlaying, currentWordIndex: currentWordIndex)
+        seek(by: 10)
     }
 
     private func seekBackward() {
-        // Seek backward 10 seconds worth of words
-        guard !content.words.isEmpty else { return }
-        let wordsPerSecond = Double(settings.wordsPerMinute) / 60.0
-        let wordsToSkip = Int(10 * wordsPerSecond)
-        currentWordIndex = max(currentWordIndex - wordsToSkip, 0)
-        elapsedTime = Double(currentWordIndex) / wordsPerSecond
+        seek(by: -10)
+    }
+
+    /// Move the script by a slice of time, which at the current speed is
+    /// `linesPerMinute × seconds / 60` lines. The scroll animates across them.
+    private func seek(by seconds: Double) {
+        let end = scriptDuration > 0 ? scriptDuration : .greatestFiniteMagnitude
+        let target = min(max(elapsedTime + seconds, 0), end)
+        guard target != elapsedTime else { return }
+
+        elapsedTime = target
         // Reset wall-clock anchor so the timer continues from the new position
         if timerStartDate != nil {
             timerStartDate = Date()
             elapsedTimeAtTimerStart = elapsedTime
         }
-        pipManager.updateState(elapsedTime: elapsedTime, isPlaying: isPlaying, currentWordIndex: currentWordIndex)
+        pipManager.updateState(elapsedTime: elapsedTime, isPlaying: isPlaying)
     }
 
     private func stopAndDismiss() {
@@ -462,7 +465,7 @@ struct TeleprompterView: View {
             Task { @MainActor in
                 guard let startDate = timerStartDate else { return }
                 elapsedTime = elapsedTimeAtTimerStart + Date().timeIntervalSince(startDate)
-                updateCurrentWord()
+                pipManager.updateState(elapsedTime: elapsedTime, isPlaying: isPlaying)
             }
         }
     }
@@ -471,18 +474,6 @@ struct TeleprompterView: View {
         timer?.invalidate()
         timer = nil
         timerStartDate = nil  // Prevents stale Task blocks from writing elapsedTime
-    }
-
-    private func updateCurrentWord() {
-        if !content.words.isEmpty {
-            let wordsPerSecond = Double(settings.wordsPerMinute) / 60.0
-            let newWordIndex = min(Int(elapsedTime * wordsPerSecond), content.words.count - 1)
-            if newWordIndex != currentWordIndex && newWordIndex >= 0 {
-                currentWordIndex = newWordIndex
-            }
-        }
-
-        pipManager.updateState(elapsedTime: elapsedTime, isPlaying: isPlaying, currentWordIndex: currentWordIndex)
     }
 
     // MARK: - Controls Timer
@@ -506,16 +497,23 @@ struct TeleprompterView: View {
     }
 }
 
-/// UITextView wrapper for attributed text with word highlighting
+/// UITextView wrapper that scrolls the script by rendered line
+///
+/// The script is one continuous block at one brightness — the position on the
+/// screen is what says where the reader is, so nothing is highlighted.
 struct AttributedTextView: UIViewRepresentable {
     let content: TeleprompterContent
     let cueColor: CueColor
     let fontSize: CGFloat
-    let currentWordIndex: Int
-    let highlightProgress: Double
+    /// How far into the script the reader is, in rendered lines. Fractional: the
+    /// scroll interpolates between lines rather than stepping between them.
+    let linePosition: Double
     let colorScheme: ColorScheme
     let topPadding: CGFloat
     let bottomPadding: CGFloat
+    /// Reports how many lines the script laid out into, which is what turns the
+    /// lines-per-minute setting into a duration.
+    let onLineCountChange: (Int) -> Void
     let onTap: (() -> Void)?
 
     func makeCoordinator() -> Coordinator {
@@ -527,14 +525,21 @@ struct AttributedTextView: UIViewRepresentable {
         var lastFontSize: CGFloat = 0
         var lastCueColor: CueColor?
         var lastColorScheme: ColorScheme = .dark
-        var lastProgressBucket: Double = -1
-        var appliedProgress: Double = 0
-        var wordRanges: [NSRange] = []
-        var wordIsNote: [Bool] = []
-        var lastScrolledWordIndex: Int = -1
-        var lastScrollTarget: CGFloat = -1
-        var lastBoundsHeight: CGFloat = 0
+        /// The scroll offset that puts each rendered line on the reading line.
+        var lineOffsets: [CGFloat] = []
+        var lastLayoutSize: CGSize = .zero
+        var lastReportedLineCount = -1
+        var lastTarget: CGFloat = -1
         var onTap: (() -> Void)?
+
+        /// The scroll eases toward the target on its own display link rather than
+        /// being written straight to the text view. Playback moves the target in
+        /// small steps and the easing is invisible; a seek or a restart moves it a
+        /// long way and the same easing carries the script there smoothly.
+        private static let timeConstant: Double = 0.12
+        private weak var textView: UITextView?
+        private var displayLink: CADisplayLink?
+        private var lastTimestamp: CFTimeInterval = 0
 
         init(onTap: (() -> Void)?) {
             self.onTap = onTap
@@ -542,6 +547,50 @@ struct AttributedTextView: UIViewRepresentable {
 
         @objc func handleTap() {
             onTap?()
+        }
+
+        /// Place the script without easing, for the first layout and after a rebuild.
+        func settle(at offset: CGFloat, in textView: UITextView) {
+            stopEasing()
+            lastTarget = offset
+            self.textView = textView
+            textView.contentOffset = CGPoint(x: 0, y: offset)
+        }
+
+        func ease(to offset: CGFloat, in textView: UITextView) {
+            lastTarget = offset
+            self.textView = textView
+
+            guard displayLink == nil else { return }
+            lastTimestamp = 0
+            let link = CADisplayLink(target: self, selector: #selector(step))
+            link.add(to: .main, forMode: .common)
+            displayLink = link
+        }
+
+        func stopEasing() {
+            displayLink?.invalidate()
+            displayLink = nil
+        }
+
+        @objc private func step(_ link: CADisplayLink) {
+            guard let textView else {
+                stopEasing()
+                return
+            }
+
+            let elapsed = lastTimestamp == 0 ? link.duration : link.timestamp - lastTimestamp
+            lastTimestamp = link.timestamp
+
+            let distance = lastTarget - textView.contentOffset.y
+            guard abs(distance) > 0.05 else {
+                textView.contentOffset = CGPoint(x: 0, y: lastTarget)
+                stopEasing()
+                return
+            }
+
+            let advance = distance * (1 - exp(-elapsed / Self.timeConstant))
+            textView.contentOffset = CGPoint(x: 0, y: textView.contentOffset.y + advance)
         }
     }
 
@@ -561,6 +610,10 @@ struct AttributedTextView: UIViewRepresentable {
         return textView
     }
 
+    static func dismantleUIView(_ uiView: UITextView, coordinator: Coordinator) {
+        coordinator.stopEasing()
+    }
+
     func updateUIView(_ textView: UITextView, context: Context) {
         let coordinator = context.coordinator
         coordinator.onTap = onTap
@@ -573,113 +626,97 @@ struct AttributedTextView: UIViewRepresentable {
             || coordinator.lastColorScheme != colorScheme
 
         if needsFullRebuild {
-            let built = buildAttributedString()
-            textView.attributedText = built.text
+            textView.attributedText = buildAttributedString()
             textView.layoutIfNeeded()
-            textView.contentOffset = .zero
 
             coordinator.lastContentId = contentId
             coordinator.lastFontSize = fontSize
             coordinator.lastCueColor = cueColor
             coordinator.lastColorScheme = colorScheme
-            coordinator.wordRanges = built.wordRanges
-            coordinator.wordIsNote = built.wordIsNote
-            coordinator.appliedProgress = highlightProgress
-            coordinator.lastProgressBucket = (highlightProgress * 10).rounded(.down) / 10
-            coordinator.lastScrolledWordIndex = -1
-            coordinator.lastScrollTarget = -1
-            coordinator.lastBoundsHeight = 0
-        } else {
-            // Only the few words inside the fade window change color, so recolor
-            // those in place instead of rebuilding and re-laying out the document.
-            let progressBucket = (highlightProgress * 10).rounded(.down) / 10
-            if coordinator.lastProgressBucket != progressBucket {
-                coordinator.lastProgressBucket = progressBucket
-                applyHighlight(to: textView, coordinator: coordinator)
+            coordinator.lineOffsets = []
+            coordinator.lastLayoutSize = .zero
+        }
+
+        // The line the reader is on sits on the reading line, and the text is inset
+        // from the top by exactly that distance — so a line's target offset is just
+        // its own position within the laid-out text.
+        let layoutSize = textView.bounds.size
+        let isFirstLayout = coordinator.lineOffsets.isEmpty
+        if isFirstLayout || coordinator.lastLayoutSize != layoutSize {
+            coordinator.lastLayoutSize = layoutSize
+            coordinator.lineOffsets = lineOffsets(for: textView)
+
+            let lineCount = coordinator.lineOffsets.count
+            if lineCount != coordinator.lastReportedLineCount {
+                coordinator.lastReportedLineCount = lineCount
+                // Out of the layout pass this call is inside.
+                DispatchQueue.main.async {
+                    onLineCountChange(lineCount)
+                }
             }
         }
 
-        // Auto-scroll to current word
-        guard currentWordIndex < coordinator.wordRanges.count else { return }
+        let offsets = coordinator.lineOffsets
+        guard offsets.count > 1 else { return }
 
-        let boundsHeight = textView.bounds.height
-        guard currentWordIndex != coordinator.lastScrolledWordIndex
-            || boundsHeight != coordinator.lastBoundsHeight else { return }
+        let position = min(max(linePosition, 0), Double(offsets.count - 1))
+        let line = min(Int(position), offsets.count - 2)
+        let fraction = CGFloat(position - Double(line))
+        let target = offsets[line] + (offsets[line + 1] - offsets[line]) * fraction
 
-        coordinator.lastScrolledWordIndex = currentWordIndex
-        coordinator.lastBoundsHeight = boundsHeight
+        let maxY = max(0, textView.contentSize.height - textView.bounds.height)
+        let scrollY = min(max(target, 0), maxY)
 
-        var scrollY: CGFloat = 0
-        if currentWordIndex > 0 {
-            let range = coordinator.wordRanges[currentWordIndex]
-            let glyphRange = textView.layoutManager.glyphRange(forCharacterRange: range, actualCharacterRange: nil)
-            let rect = textView.layoutManager.boundingRect(forGlyphRange: glyphRange, in: textView.textContainer)
-
-            let targetY = rect.origin.y + topPadding - (boundsHeight / 3)
-            let maxY = textView.contentSize.height - boundsHeight
-            scrollY = max(0, min(targetY, maxY))
+        if isFirstLayout || needsFullRebuild {
+            coordinator.settle(at: scrollY, in: textView)
+            return
         }
 
-        // Re-target only on a real move, so the eased scroll can finish instead of
-        // being restarted and snapped on every frame.
-        guard abs(scrollY - coordinator.lastScrollTarget) > 0.5 else { return }
-        coordinator.lastScrollTarget = scrollY
+        // Only move when the target itself moved, so a script the reader has
+        // dragged by hand while paused stays where they put it.
+        guard abs(scrollY - coordinator.lastTarget) > 0.05 else { return }
+        coordinator.ease(to: scrollY, in: textView)
+    }
 
-        UIView.animate(withDuration: 0.3, delay: 0, options: [.curveEaseInOut, .allowUserInteraction, .beginFromCurrentState]) {
-            textView.contentOffset = CGPoint(x: 0, y: scrollY)
+    /// The scroll offset that puts each rendered line on the reading line, one
+    /// entry per line the script actually wraps into on this screen.
+    private func lineOffsets(for textView: UITextView) -> [CGFloat] {
+        let layoutManager = textView.layoutManager
+        let container = textView.textContainer
+        layoutManager.ensureLayout(for: container)
+
+        // Line fragments are measured inside the text container, which is already
+        // the offset that line should be scrolled to.
+        var offsets: [CGFloat] = []
+        let glyphRange = layoutManager.glyphRange(for: container)
+        var glyphIndex = glyphRange.location
+
+        while glyphIndex < NSMaxRange(glyphRange) {
+            var lineRange = NSRange(location: 0, length: 0)
+            let fragment = layoutManager.lineFragmentRect(forGlyphAt: glyphIndex, effectiveRange: &lineRange)
+            offsets.append(fragment.origin.y)
+
+            guard lineRange.length > 0 else { break }
+            glyphIndex = NSMaxRange(lineRange)
         }
+
+        return offsets
     }
 
-    private func applyHighlight(to textView: UITextView, coordinator: Coordinator) {
-        let wordCount = coordinator.wordRanges.count
-        guard wordCount > 0 else { return }
-
-        let previous = coordinator.appliedProgress
-        let current = highlightProgress
-        coordinator.appliedProgress = current
-
-        // Words below the window are fully faded and words above it are fully lit,
-        // so only the span the window swept over since the last pass can have changed.
-        let limit = Double(wordCount)
-        let lower = min(max(min(previous, current) - 1, -1), limit)
-        let upper = min(max(max(previous, current) + Self.fadeRange + 1, -1), limit)
-        let first = max(0, Int(lower.rounded(.down)))
-        let last = min(wordCount - 1, Int(upper.rounded(.up)))
-        guard first <= last else { return }
-
-        let textColor = colorScheme == .dark ? AppColors.UIColors.Dark.textPrimary : AppColors.UIColors.Light.textPrimary
-        let storage = textView.textStorage
-
-        storage.beginEditing()
-        for index in first...last where !coordinator.wordIsNote[index] {
-            storage.addAttribute(
-                .foregroundColor,
-                value: textColor.withAlphaComponent(highlightAlpha(for: index)),
-                range: coordinator.wordRanges[index]
-            )
-        }
-        storage.endEditing()
-    }
-
-    private static let fadeRange = 2.0
-
-    private func highlightAlpha(for index: Int) -> CGFloat {
-        let distance = highlightProgress - Double(index)
-        let t = min(max((distance + Self.fadeRange) / Self.fadeRange, 0.0), 1.0)
-        let blend = t * t * (3.0 - 2.0 * t)
-        return 0.3 + CGFloat(blend) * 0.7
-    }
-
-    private func buildAttributedString() -> (text: NSAttributedString, wordRanges: [NSRange], wordIsNote: [Bool]) {
+    private func buildAttributedString() -> NSAttributedString {
         let result = NSMutableAttributedString()
-        var wordRanges: [NSRange] = []
-        var wordIsNote: [Bool] = []
         let paragraphs = content.fullText.components(separatedBy: "\n\n")
 
         let textColor = colorScheme == .dark ? AppColors.UIColors.Dark.textPrimary : AppColors.UIColors.Light.textPrimary
-        let noteKern = fontSize * 0.05
-
-        var globalWordIndex = 0
+        let textAttrs: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: fontSize, weight: .medium),
+            .foregroundColor: textColor
+        ]
+        let cueAttrs: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: fontSize * 0.72, weight: .semibold),
+            .foregroundColor: cueColor.uiColor(isDarkMode: colorScheme == .dark),
+            .kern: fontSize * 0.05
+        ]
 
         for (paragraphIndex, paragraph) in paragraphs.enumerated() {
             if paragraphIndex > 0 {
@@ -695,54 +732,16 @@ struct AttributedTextView: UIViewRepresentable {
 
                 if line.isEmpty { continue }
 
-                let segments = TeleprompterParser.segments(in: line)
-                var lineWordIndex = 0
+                for (segmentIndex, segment) in TeleprompterParser.segments(in: line).enumerated() {
+                    if segmentIndex > 0 {
+                        result.append(NSAttributedString(string: " ", attributes: textAttrs))
+                    }
 
-                for segment in segments {
                     switch segment {
-                    case .cue(let noteContent):
-                        let noteAttrs: [NSAttributedString.Key: Any] = [
-                            .font: UIFont.systemFont(ofSize: fontSize * 0.72, weight: .semibold),
-                            .foregroundColor: cueColor.uiColor(isDarkMode: colorScheme == .dark),
-                            .kern: noteKern
-                        ]
-                        let noteWords = noteContent.split(separator: " ", omittingEmptySubsequences: true)
-                        for word in noteWords {
-                            if lineWordIndex > 0 {
-                                result.append(NSAttributedString(string: " ", attributes: noteAttrs))
-                            }
-                            let location = result.length
-                            result.append(NSAttributedString(string: String(word), attributes: noteAttrs))
-                            wordRanges.append(NSRange(location: location, length: result.length - location))
-                            wordIsNote.append(true)
-                            globalWordIndex += 1
-                            lineWordIndex += 1
-                        }
-                    case .text(let textContent):
-                        let words = textContent.split(separator: " ", omittingEmptySubsequences: true).map(String.init)
-                        for word in words {
-                            if lineWordIndex > 0 {
-                                result.append(NSAttributedString(string: " ", attributes: [
-                                    .font: UIFont.systemFont(ofSize: fontSize, weight: .medium),
-                                    .foregroundColor: textColor
-                                ]))
-                            }
-
-                            let alpha = highlightAlpha(for: globalWordIndex)
-                            let color = textColor.withAlphaComponent(alpha)
-
-                            let attrs: [NSAttributedString.Key: Any] = [
-                                .font: UIFont.systemFont(ofSize: fontSize, weight: .medium),
-                                .foregroundColor: color
-                            ]
-                            let location = result.length
-                            result.append(NSAttributedString(string: word, attributes: attrs))
-                            wordRanges.append(NSRange(location: location, length: result.length - location))
-                            wordIsNote.append(false)
-
-                            globalWordIndex += 1
-                            lineWordIndex += 1
-                        }
+                    case .cue(let cueText):
+                        result.append(NSAttributedString(string: cueText, attributes: cueAttrs))
+                    case .text(let text):
+                        result.append(NSAttributedString(string: text, attributes: textAttrs))
                     }
                 }
             }
@@ -754,7 +753,7 @@ struct AttributedTextView: UIViewRepresentable {
         paragraphStyle.paragraphSpacing = fontSize * 0.45
         result.addAttribute(.paragraphStyle, value: paragraphStyle, range: NSRange(location: 0, length: result.length))
 
-        return (result, wordRanges, wordIsNote)
+        return result
     }
 }
 

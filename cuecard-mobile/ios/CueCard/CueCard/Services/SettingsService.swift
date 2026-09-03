@@ -63,7 +63,7 @@ struct TeleprompterSettings: Codable, Equatable {
     var pipFontSizePreset: FontSizePreset
     var overlayAspectRatio: OverlayAspectRatio
     var scrollSpeed: Double
-    var wordsPerMinute: Int
+    /// Scroll speed, in lines of the script as the teleprompter renders them.
     var linesPerMinute: Int
     var timerMinutes: Int
     var timerSeconds: Int
@@ -87,8 +87,7 @@ struct TeleprompterSettings: Codable, Equatable {
         pipFontSizePreset: .medium,
         overlayAspectRatio: .ratio16x9,
         scrollSpeed: 1.0,
-        wordsPerMinute: 150,
-        linesPerMinute: 10,
+        linesPerMinute: 30,
         timerMinutes: 1,
         timerSeconds: 0,
         themePreference: .system,
@@ -99,11 +98,8 @@ struct TeleprompterSettings: Codable, Equatable {
     /// Scroll speed range (multiplier)
     static let scrollSpeedRange = 0.5...3.0
 
-    /// Words per minute range
-    static let wpmRange = 50...300
-
     /// Lines per minute range
-    static let lpmRange = 5...30
+    static let lpmRange = 5...60
 
     /// Get timer duration in seconds
     var timerDurationSeconds: Int {
@@ -115,6 +111,7 @@ struct TeleprompterSettings: Codable, Equatable {
         case pipFontSizePreset
         case overlayAspectRatio
         case scrollSpeed
+        /// Only read, and only to carry an older speed setting over. See `init(from:)`.
         case wordsPerMinute
         case linesPerMinute
         case timerMinutes
@@ -129,7 +126,6 @@ struct TeleprompterSettings: Codable, Equatable {
         pipFontSizePreset: FontSizePreset,
         overlayAspectRatio: OverlayAspectRatio,
         scrollSpeed: Double,
-        wordsPerMinute: Int,
         linesPerMinute: Int,
         timerMinutes: Int,
         timerSeconds: Int,
@@ -141,7 +137,6 @@ struct TeleprompterSettings: Codable, Equatable {
         self.pipFontSizePreset = pipFontSizePreset
         self.overlayAspectRatio = overlayAspectRatio
         self.scrollSpeed = scrollSpeed
-        self.wordsPerMinute = wordsPerMinute
         self.linesPerMinute = linesPerMinute
         self.timerMinutes = timerMinutes
         self.timerSeconds = timerSeconds
@@ -156,8 +151,14 @@ struct TeleprompterSettings: Codable, Equatable {
         pipFontSizePreset = try container.decode(FontSizePreset.self, forKey: .pipFontSizePreset)
         overlayAspectRatio = try container.decodeIfPresent(OverlayAspectRatio.self, forKey: .overlayAspectRatio) ?? .ratio16x9
         scrollSpeed = try container.decode(Double.self, forKey: .scrollSpeed)
-        wordsPerMinute = try container.decode(Int.self, forKey: .wordsPerMinute)
-        linesPerMinute = try container.decode(Int.self, forKey: .linesPerMinute)
+        // Speed used to be set in words a minute, back when a highlight ran along
+        // the words. Settings saved then carry the old figure and no usable line
+        // speed, so convert it: a line holds about five words at the sizes on offer.
+        if let wordsPerMinute = try container.decodeIfPresent(Int.self, forKey: .wordsPerMinute) {
+            linesPerMinute = min(max(wordsPerMinute / 5, TeleprompterSettings.lpmRange.lowerBound), TeleprompterSettings.lpmRange.upperBound)
+        } else {
+            linesPerMinute = try container.decodeIfPresent(Int.self, forKey: .linesPerMinute) ?? TeleprompterSettings.default.linesPerMinute
+        }
         timerMinutes = try container.decode(Int.self, forKey: .timerMinutes)
         timerSeconds = try container.decode(Int.self, forKey: .timerSeconds)
         themePreference = try container.decode(ThemePreference.self, forKey: .themePreference)
@@ -171,7 +172,6 @@ struct TeleprompterSettings: Codable, Equatable {
         try container.encode(pipFontSizePreset, forKey: .pipFontSizePreset)
         try container.encode(overlayAspectRatio, forKey: .overlayAspectRatio)
         try container.encode(scrollSpeed, forKey: .scrollSpeed)
-        try container.encode(wordsPerMinute, forKey: .wordsPerMinute)
         try container.encode(linesPerMinute, forKey: .linesPerMinute)
         try container.encode(timerMinutes, forKey: .timerMinutes)
         try container.encode(timerSeconds, forKey: .timerSeconds)
