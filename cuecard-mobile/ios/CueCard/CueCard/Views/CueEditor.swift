@@ -168,7 +168,7 @@ final class CueTextView: UITextView {
 /// A handle on the editor's text view, so the cue bar can insert at the caret.
 ///
 /// Inserting through the text binding instead would rewrite the whole document,
-/// which parks the caret at the end — the cue has to go in the same way typing
+/// which parks the caret at the end — a tag has to go in the same way typing
 /// does, or it lands in the right place and the caret doesn't.
 @MainActor
 final class CueEditorController: ObservableObject {
@@ -178,12 +178,17 @@ final class CueEditorController: ObservableObject {
     func insertCue() {
         coordinator?.insertEmptyCue()
     }
+
+    /// Drop a pause at the caret with its seconds selected, ready to be typed over.
+    func insertPause() {
+        coordinator?.insertPause()
+    }
 }
 
-/// Script editor that renders `[cue …]` tags in the cue color while you type, and
-/// writes the brackets for you: pressing `[` drops in a whole empty cue with the
-/// caret inside it, so a cue is never left half-open — except inside a cue, where
-/// there is nothing left for it to open.
+/// Script editor that renders `[cue …]` tags in the cue color and `[pause …]` in
+/// grey while you type, and writes the brackets for you: pressing `[` drops in a
+/// whole empty cue with the caret inside it, so a cue is never left half-open —
+/// except inside a tag, where there is nothing left for it to open.
 struct CueTextEditor: UIViewRepresentable {
     @Binding var text: String
     @Binding var isFocused: Bool
@@ -267,26 +272,31 @@ struct CueTextEditor: UIViewRepresentable {
 
         let isDarkMode = colorScheme == .dark
         let baseAttributes = baseAttributes(isDarkMode: isDarkMode)
-        let tagColor = cueColor.uiColor(isDarkMode: isDarkMode)
         let storage = textView.textStorage
         let fullRange = NSRange(location: 0, length: storage.length)
 
         storage.beginEditing()
         storage.setAttributes(baseAttributes, range: fullRange)
 
-        // Only closed tags are colored, so a cue being typed stays plain text
-        // until its bracket lands.
-        for match in TeleprompterParser.cueMatches(in: textView.text) {
+        // Only closed tags are colored, so one being typed stays plain text until
+        // its bracket lands.
+        for tag in TeleprompterParser.tags(in: textView.text) {
+            // A pause is grey wherever it is shown — it is the teleprompter
+            // waiting, not something the cue color has a say in.
+            let tagColor = tag.isPause
+                ? (isDarkMode ? AppColors.UIColors.Dark.textSecondary : AppColors.UIColors.Light.textSecondary)
+                : cueColor.uiColor(isDarkMode: isDarkMode)
+
             // The tag syntax stays visible — and editable — but recedes.
             storage.addAttributes([
                 .foregroundColor: tagColor.withAlphaComponent(0.45),
                 .font: UIFont.systemFont(ofSize: fontSize, weight: .medium)
-            ], range: match.range)
+            ], range: tag.range)
 
             storage.addAttributes([
                 .foregroundColor: tagColor,
                 .font: UIFont.systemFont(ofSize: fontSize, weight: .semibold)
-            ], range: match.contentRange)
+            ], range: tag.contentRange)
         }
         storage.endEditing()
 
@@ -321,23 +331,29 @@ struct CueTextEditor: UIViewRepresentable {
             replacementText text: String
         ) -> Bool {
             if text == "[", range.length == 0 {
-                // Cues don't nest, and in here both brackets are already written,
+                // Tags don't nest, and in here both brackets are already written,
                 // so `[` has nothing left to do.
-                guard TeleprompterParser.cueTag(containing: range.location, in: textView.text) == nil else {
+                guard TeleprompterParser.tag(containing: range.location, in: textView.text) == nil else {
                     return false
                 }
 
+                let caret = range.location + (TeleprompterParser.cueTagPrefix as NSString).length
                 replace(
                     range,
                     with: TeleprompterParser.emptyCueTag,
-                    caret: range.location + (TeleprompterParser.cueTagPrefix as NSString).length,
+                    selecting: NSRange(location: caret, length: 0),
                     in: textView
                 )
                 return false
             }
 
             if text.isEmpty, range.length == 1, let emptyCue = emptyCueSurrounding(range, in: textView) {
-                replace(emptyCue, with: "[", caret: emptyCue.location + 1, in: textView)
+                replace(
+                    emptyCue,
+                    with: "[",
+                    selecting: NSRange(location: emptyCue.location + 1, length: 0),
+                    in: textView
+                )
                 return false
             }
 
@@ -348,18 +364,44 @@ struct CueTextEditor: UIViewRepresentable {
         func insertEmptyCue() {
             guard let textView else { return }
 
-            // Past the end of a selection, so a cue never eats the words it's next
-            // to — and past the end of the cue the caret is in, since cues don't nest.
-            var location = NSMaxRange(textView.selectedRange)
-            if let enclosing = TeleprompterParser.cueTag(containing: location, in: textView.text) {
-                location = NSMaxRange(enclosing.range)
-            }
+            let location = insertionPoint(in: textView)
             let insertion = (textView.text as NSString).emptyCueInsertion(at: location)
+            insert(insertion, at: location, in: textView)
+        }
 
+        /// Write a pause in at the caret with its seconds selected, so typing a
+        /// number puts a different one in without any hunting.
+        func insertPause() {
+            guard let textView else { return }
+
+            let location = insertionPoint(in: textView)
+            let insertion = (textView.text as NSString).pauseInsertion(at: location)
+            insert(insertion, at: location, in: textView)
+        }
+
+        /// Where a tag dropped in from the bar belongs: past the end of a selection,
+        /// so it never eats the words it is next to — and past the end of the tag
+        /// the caret is in, since tags don't nest.
+        private func insertionPoint(in textView: UITextView) -> Int {
+            let location = NSMaxRange(textView.selectedRange)
+            guard let enclosing = TeleprompterParser.tag(containing: location, in: textView.text) else {
+                return location
+            }
+            return NSMaxRange(enclosing.range)
+        }
+
+        private func insert(
+            _ insertion: (text: String, selection: NSRange),
+            at location: Int,
+            in textView: UITextView
+        ) {
             replace(
                 NSRange(location: location, length: 0),
                 with: insertion.text,
-                caret: location + insertion.caretOffset,
+                selecting: NSRange(
+                    location: location + insertion.selection.location,
+                    length: insertion.selection.length
+                ),
                 in: textView
             )
 
@@ -385,7 +427,12 @@ struct CueTextEditor: UIViewRepresentable {
         }
 
         /// Edit the text ourselves, then run everything `textViewDidChange` would have.
-        private func replace(_ range: NSRange, with replacement: String, caret: Int, in textView: UITextView) {
+        private func replace(
+            _ range: NSRange,
+            with replacement: String,
+            selecting selection: NSRange,
+            in textView: UITextView
+        ) {
             // The keyboard has to be told about an edit it didn't make itself, or it
             // keeps autocorrecting against the text it still thinks is there.
             textView.inputDelegate?.textWillChange(textView)
@@ -396,7 +443,7 @@ struct CueTextEditor: UIViewRepresentable {
                 colorScheme: parent.colorScheme
             )
 
-            textView.selectedRange = NSRange(location: caret, length: 0)
+            textView.selectedRange = selection
             textView.inputDelegate?.textDidChange(textView)
 
             parent.text = textView.text
@@ -434,29 +481,50 @@ struct CueTextEditor: UIViewRepresentable {
 // MARK: - Cue insertion
 
 extension NSString {
-    /// The text to splice in for an empty cue at `location`, spaced so it doesn't
-    /// collide with the words either side of it, and how far into that text the
-    /// caret belongs — between the brackets, ready for the cue to be typed.
-    func emptyCueInsertion(at location: Int) -> (text: String, caretOffset: Int) {
+    /// The text to splice in for an empty cue at `location`, and where to leave the
+    /// caret in it — between the brackets, ready for the cue to be typed.
+    func emptyCueInsertion(at location: Int) -> (text: String, selection: NSRange) {
+        let spacing = tagSpacing(at: location)
+        let text = spacing.leading + TeleprompterParser.emptyCueTag + spacing.trailing
+        let caret = (spacing.leading as NSString).length
+            + (TeleprompterParser.cueTagPrefix as NSString).length
+
+        return (text, NSRange(location: caret, length: 0))
+    }
+
+    /// The text to splice in for a pause at `location`, and which part of it to
+    /// select — the seconds, so a different number can be typed straight over the
+    /// one it comes with.
+    func pauseInsertion(at location: Int) -> (text: String, selection: NSRange) {
+        let spacing = tagSpacing(at: location)
+        let seconds = TeleprompterParser.secondsLabel(TeleprompterParser.defaultPauseSeconds)
+        let text = spacing.leading
+            + TeleprompterParser.pauseTagPrefix + seconds + TeleprompterParser.tagSuffix
+            + spacing.trailing
+        let start = (spacing.leading as NSString).length
+            + (TeleprompterParser.pauseTagPrefix as NSString).length
+
+        return (text, NSRange(location: start, length: (seconds as NSString).length))
+    }
+
+    /// The spaces a tag needs either side of it at `location` so it doesn't collide
+    /// with the words already there.
+    private func tagSpacing(at location: Int) -> (leading: String, trailing: String) {
         let previous = location > 0 ? substring(with: NSRange(location: location - 1, length: 1)) : ""
         let next = location < length ? substring(with: NSRange(location: location, length: 1)) : ""
 
         let needsLeadingSpace = !previous.isEmpty && previous.rangeOfCharacter(from: .whitespacesAndNewlines) == nil
         let needsTrailingSpace = !next.isEmpty && next.rangeOfCharacter(from: .whitespacesAndNewlines) == nil
 
-        let leading = needsLeadingSpace ? " " : ""
-        let text = leading + TeleprompterParser.emptyCueTag + (needsTrailingSpace ? " " : "")
-        let caretOffset = (leading as NSString).length
-            + (TeleprompterParser.cueTagPrefix as NSString).length
-
-        return (text, caretOffset)
+        return (needsLeadingSpace ? " " : "", needsTrailingSpace ? " " : "")
     }
 }
 
 // MARK: - Cue bar
 
-/// The strip above the keyboard while a script is being written: one button to
-/// drop a cue in at the caret, and one to get the keyboard out of the way.
+/// The strip above the keyboard while a script is being written: a button to drop
+/// a cue in at the caret, one to drop a pause in, and one to get the keyboard out
+/// of the way.
 struct CueBar: View {
     /// The bar's height. The editor keeps this much room clear at the bottom so
     /// the line being typed never hides behind it.
@@ -464,23 +532,13 @@ struct CueBar: View {
 
     let colorScheme: ColorScheme
     var onAddCue: () -> Void
+    var onAddPause: () -> Void
     var onDismissKeyboard: () -> Void
 
     var body: some View {
         HStack(spacing: 10) {
-            Button(action: onAddCue) {
-                HStack(spacing: 6) {
-                    Image(systemName: "plus")
-                        .font(.system(size: 13, weight: .bold))
-                    Text("Add Cue")
-                        .font(.subheadline.weight(.semibold))
-                }
-                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                .padding(.horizontal, 16)
-                .frame(height: 34)
-                .glassedEffect(in: Capsule())
-            }
-            .buttonStyle(.plain)
+            tagButton("Add Cue", icon: "plus", action: onAddCue)
+            tagButton("Add Pause", icon: "pause", action: onAddPause)
 
             Spacer(minLength: 0)
 
@@ -501,5 +559,23 @@ struct CueBar: View {
                 .fill(AppColors.textSecondary(for: colorScheme).opacity(0.15))
                 .frame(height: 0.5)
         }
+    }
+
+    private func tagButton(_ title: String, icon: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.system(size: 12, weight: .bold))
+                Text(title)
+                    .font(.subheadline.weight(.semibold))
+                    .lineLimit(1)
+                    .fixedSize()
+            }
+            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+            .padding(.horizontal, 14)
+            .frame(height: 34)
+            .glassedEffect(in: Capsule())
+        }
+        .buttonStyle(.plain)
     }
 }

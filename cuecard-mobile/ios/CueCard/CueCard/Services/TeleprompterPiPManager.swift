@@ -20,7 +20,7 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
     private(set) var timerDuration: Int = 0
     private(set) var elapsedTime: Double = 0
     private(set) var isDarkMode: Bool = true
-    /// How the script wrapped on the full screen, and where the cues that hold it
+    /// How the script wrapped on the full screen, and where the pauses in it
     /// landed. The overlay wraps the same script into more lines than the full
     /// screen does, so it works out its own place from these lines by character
     /// rather than counting lines of its own — the two stay on the same word.
@@ -453,10 +453,11 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
         let position = playback.position(
             at: elapsedTime,
             linesPerMinute: Double(settings.linesPerMinute),
-            holds: geometry.holds,
+            pauses: geometry.pauses,
             lineCount: geometry.lineCount
         )
         let character = geometry.map.character(forLine: position.line)
+        let pauseStates = geometry.pauseStates(at: position)
 
         // Show countdown value if counting down (in mm:ss format), otherwise show timer
         let timerText = isCountingDown ? TeleprompterParser.formatTime(countdownValue) : TeleprompterParser.formatTime(remainingTime)
@@ -469,6 +470,7 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
                 timerDuration: timerDuration,
                 remainingTime: remainingTime,
                 characterPosition: character,
+                pauseStates: pauseStates,
                 isCountingDown: isCountingDown
             )
         }
@@ -480,6 +482,7 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
             timerDuration: timerDuration,
             remainingTime: remainingTime,
             characterPosition: character,
+            pauseStates: pauseStates,
             isCountingDown: isCountingDown
         )
     }
@@ -562,6 +565,8 @@ private class TeleprompterPiPContentView: UIView {
     /// The script as this view has it laid out — its own wrapping, which is much
     /// tighter than the full screen's.
     private var layout = ScriptLayout()
+    /// Where each pause's label sits in this view's own copy of the script.
+    private var pauses: [PauseMark] = []
     private var lastRenderKey: String = ""
     private var lastLayoutSize: CGSize = .zero
     private var lastTimerText: String?
@@ -703,23 +708,27 @@ private class TeleprompterPiPContentView: UIView {
         timerDuration: Int,
         remainingTime: Int,
         characterPosition: Double,
+        pauseStates: [PauseState],
         isCountingDown: Bool = false
     ) {
         let renderKey = "\(fontSize)\n\(text)"
         if lastRenderKey != renderKey {
             lastRenderKey = renderKey
-            textView.attributedText = TeleprompterScript.render(
+            let rendered = TeleprompterScript.render(
                 text: text,
                 fontSize: fontSize,
                 cueColor: cueColor,
                 isDarkMode: isDarkMode
-            ).attributed
+            )
+            textView.attributedText = rendered.attributed
+            pauses = rendered.pauses
             textView.layoutIfNeeded()
             lastLayoutSize = .zero
             lastTimerText = nil
             lastTimerColor = nil
         }
 
+        TeleprompterScript.applyPauseLabels(pauseStates, to: textView.textStorage, pauses: pauses)
         scroll(toCharacter: characterPosition)
 
         if lastTimerText != timerText {

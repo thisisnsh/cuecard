@@ -220,6 +220,13 @@ struct HomeView: View {
         editorController.insertCue()
     }
 
+    /// Drop a pause in at the caret with its seconds selected, so the length can be
+    /// typed straight over the one it arrives with.
+    private func insertPause() {
+        AnalyticsEvents.logButtonClick("insert_pause", screen: "home")
+        editorController.insertPause()
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -261,6 +268,7 @@ struct HomeView: View {
                     CueBar(
                         colorScheme: colorScheme,
                         onAddCue: insertCue,
+                        onAddPause: insertPause,
                         onDismissKeyboard: { isEditorFocused = false }
                     )
                     .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -446,7 +454,7 @@ struct NotesEditorView: View {
         ZStack(alignment: .topLeading) {
             // Placeholder
             if text.isEmpty {
-                Text("Add your script here...\n\nTap Add Cue below the script — or just type [ — to drop in a delivery reminder like \"Welcome everyone [cue smile and pause]\"\n\nOpen a cue with seconds — [cue 3s breathe] — and the script waits there that long while the clock runs on.")
+                Text("Add your script here...\n\nTap Add Cue below the script — or just type [ — to drop in a delivery reminder like \"Welcome everyone [cue smile and wave]\"\n\nTap Add Pause for a beat like [pause 5]: the script waits there five seconds while the clock runs on.")
                     .foregroundStyle(AppColors.textSecondary(for: colorScheme).opacity(0.6))
                     .padding(.horizontal, 20)
                     .padding(.top, CueTextEditor.edgeFade + 8)

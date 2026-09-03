@@ -22,8 +22,8 @@ struct TeleprompterView: View {
     /// Where the script was last placed by hand, which is what the clock reading
     /// is measured out from to say which line the reader is on.
     @State private var playback = ScriptPlayback()
-    /// How the script wrapped on this screen, and which of those lines the cues
-    /// that hold it landed on. Empty until it lays out.
+    /// How the script wrapped on this screen, and which of those lines the pauses
+    /// landed on. Empty until it lays out.
     @State private var geometry = ScriptGeometry()
     @State private var showControls = true
     @State private var controlsTimer: Timer?
@@ -80,12 +80,12 @@ struct TeleprompterView: View {
     private static let topFade: CGFloat = 96
     private static let bottomFade: CGFloat = 140
 
-    /// The line the reader is on, and whether a cue is holding them there.
+    /// The line the reader is on, and whether a pause is holding them there.
     private var position: ScriptPosition {
         playback.position(
             at: elapsedTime,
             linesPerMinute: Double(settings.linesPerMinute),
-            holds: geometry.holds,
+            pauses: geometry.pauses,
             lineCount: geometry.lineCount
         )
     }
@@ -106,6 +106,7 @@ struct TeleprompterView: View {
                         cueColor: settings.cueColor,
                         fontSize: CGFloat(settings.fontSize),
                         linePosition: position.line,
+                        pauseStates: geometry.pauseStates(at: position),
                         colorScheme: colorScheme,
                         topPadding: proxy.size.height * TeleprompterLayout.readingLineFraction,
                         bottomPadding: proxy.size.height * (1 - TeleprompterLayout.readingLineFraction),
@@ -493,6 +494,9 @@ struct AttributedTextView: UIViewRepresentable {
     /// How far into the script the reader is, in rendered lines. Fractional: the
     /// scroll interpolates between lines rather than stepping between them.
     let linePosition: Double
+    /// What each pause in the script reads right now — counting down while it
+    /// holds the reader, expired once they are past it.
+    let pauseStates: [PauseState]
     let colorScheme: ColorScheme
     let topPadding: CGFloat
     let bottomPadding: CGFloat
@@ -519,8 +523,8 @@ struct AttributedTextView: UIViewRepresentable {
         var lastColorScheme: ColorScheme = .dark
         /// The script as it is laid out on this screen.
         var layout = ScriptLayout()
-        /// The cues that hold, by the character they start at, from the last build.
-        var cueHolds: [CueHold] = []
+        /// Where each pause's label sits in the drawn script, from the last build.
+        var pauses: [PauseMark] = []
         var lastLayoutSize: CGSize = .zero
         var lastReportedGeometry: ScriptGeometry?
         var lastTarget: CGFloat = -1
@@ -671,23 +675,27 @@ struct AttributedTextView: UIViewRepresentable {
             coordinator.lastFontSize = fontSize
             coordinator.lastCueColor = cueColor
             coordinator.lastColorScheme = colorScheme
-            coordinator.cueHolds = rendered.holds
+            coordinator.pauses = rendered.pauses
             coordinator.layout = ScriptLayout()
             coordinator.lastLayoutSize = .zero
         }
 
+        // Every label is written to the same width, so a pause counting down leaves
+        // every line where it was — but it still goes in before anything measures.
+        TeleprompterScript.applyPauseLabels(pauseStates, to: textView.textStorage, pauses: coordinator.pauses)
+
         // The line the reader is on sits on the reading line, and the text is inset
         // from the top by exactly that distance — so a line's target offset is just
-        // its own position within the laid-out text.
-        // `.zero` means nothing has been measured yet: the size the coordinator
-        // starts on, and the one a rebuild puts it back to.
+        // its own position within the laid-out text. `.zero` means nothing has been
+        // measured yet: the size the coordinator starts on, and the one a rebuild
+        // puts it back to.
         let layoutSize = textView.bounds.size
         let isFirstLayout = coordinator.lastLayoutSize == .zero
         if isFirstLayout || coordinator.lastLayoutSize != layoutSize {
             coordinator.lastLayoutSize = layoutSize
             coordinator.layout = ScriptLayout.measure(textView)
 
-            let geometry = ScriptGeometry.from(layout: coordinator.layout, holds: coordinator.cueHolds)
+            let geometry = ScriptGeometry.from(layout: coordinator.layout, pauses: coordinator.pauses)
             if geometry != coordinator.lastReportedGeometry {
                 coordinator.lastReportedGeometry = geometry
                 // Out of the layout pass this call is inside.
