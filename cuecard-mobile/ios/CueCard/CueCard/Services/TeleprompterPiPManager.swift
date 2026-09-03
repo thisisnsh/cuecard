@@ -274,11 +274,20 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
             contentView.trailingAnchor.constraint(equalTo: hostVC.view.trailingAnchor)
         ])
 
-        // Create a hidden window to host the source view
+        // Host the source view in a window behind the app's own. The system
+        // animates the overlay out of, and back into, this view's place on
+        // screen, so it sits where the script is rather than off-screen —
+        // otherwise the overlay flies in from nowhere on the way back.
         let window = UIWindow(windowScene: windowScene)
-        window.frame = CGRect(x: -1000, y: -1000, width: pipWidth, height: pipHeight)
+        window.frame = CGRect(
+            x: (screenBounds.width - pipWidth) / 2,
+            y: (screenBounds.height - pipHeight) / 2,
+            width: pipWidth,
+            height: pipHeight
+        )
         window.rootViewController = hostVC
         window.isHidden = false
+        window.isUserInteractionEnabled = false
         window.windowLevel = .normal - 1
         self.pipWindow = window
 
@@ -442,7 +451,13 @@ extension TeleprompterPiPManager: AVPictureInPictureControllerDelegate {
     nonisolated func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, restoreUserInterfaceForPictureInPictureStopWithCompletionHandler completionHandler: @escaping (Bool) -> Void) {
         Task { @MainActor in
             onPiPRestoreUI?()
-            completionHandler(true)
+            // Let the teleprompter lay out at the position the overlay is on
+            // before the system animates back into it. Reporting the restore
+            // done straight away hands over a screen still showing the old
+            // position, and the script visibly catches up mid-animation.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.03) {
+                completionHandler(true)
+            }
         }
     }
 }

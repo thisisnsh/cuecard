@@ -26,6 +26,10 @@ struct TeleprompterView: View {
     /// Whether playback has begun since the last restart. The countdown only
     /// runs on the first play; resuming from a pause starts right away.
     @State private var hasStarted = false
+    /// Bumped whenever the reader's position comes back from the overlay rather
+    /// than from this view's own clock. The script jumps straight to it instead
+    /// of easing, so the app is already where the overlay was when it expands.
+    @State private var scriptSnapToken = 0
     @Environment(\.scenePhase) private var scenePhase
 
     // Timer properties
@@ -106,9 +110,13 @@ struct TeleprompterView: View {
                         colorScheme: colorScheme,
                         topPadding: geometry.size.height * Self.readingLineFraction,
                         bottomPadding: geometry.size.height * (1 - Self.readingLineFraction),
+                        snapToken: scriptSnapToken,
                         onLineCountChange: { lines in
                             lineCount = lines
                             pipManager.scriptDuration = duration(forLines: lines)
+                        },
+                        onScrub: { line in
+                            scrub(toLine: line)
                         },
                         onTap: {
                             withAnimation(.easeInOut(duration: 0.2)) {
@@ -242,8 +250,7 @@ struct TeleprompterView: View {
                 startPiP(minimizeApp: false)
             } else if newPhase == .active && pipManager.isPiPActive {
                 // Sync state when coming back to foreground
-                elapsedTime = pipManager.elapsedTime
-                isPlaying = pipManager.isPlaying
+                syncFromPiP()
             }
         }
     }
@@ -268,16 +275,14 @@ struct TeleprompterView: View {
         pipManager.scriptDuration = scriptDuration
 
         pipManager.onPiPClosed = {
-            elapsedTime = pipManager.elapsedTime
-            isPlaying = pipManager.isPlaying
+            syncFromPiP()
             if isPlaying {
                 startTimer()
             }
         }
 
         pipManager.onPiPRestoreUI = {
-            elapsedTime = pipManager.elapsedTime
-            isPlaying = pipManager.isPlaying
+            syncFromPiP()
             if isPlaying {
                 startTimer()
             }
@@ -309,12 +314,20 @@ struct TeleprompterView: View {
 
         // Handle expand from PiP - app will come to foreground automatically
         pipManager.onExpandFromPiP = {
-            elapsedTime = pipManager.elapsedTime
-            isPlaying = pipManager.isPlaying
+            syncFromPiP()
             if isPlaying {
                 startTimer()
             }
         }
+    }
+
+    /// Take the reader's position back from the overlay. The script snaps to it
+    /// rather than scrolling there, so the two are already on the same line when
+    /// the overlay expands back into the app.
+    private func syncFromPiP() {
+        elapsedTime = pipManager.elapsedTime
+        isPlaying = pipManager.isPlaying
+        scriptSnapToken += 1
     }
 
     private func startPiP(minimizeApp: Bool = false) {
@@ -445,6 +458,23 @@ struct TeleprompterView: View {
         pipManager.updateState(elapsedTime: elapsedTime, isPlaying: isPlaying)
     }
 
+    /// Pick up from wherever the reader dragged the script to. The line they
+    /// left on the reading line is the line the clock now reads from, so playback
+    /// carries on from there instead of snapping back.
+    private func scrub(toLine line: Double) {
+        let end = scriptDuration > 0 ? scriptDuration : .greatestFiniteMagnitude
+        let target = min(max(line * 60.0 / Double(settings.linesPerMinute), 0), end)
+        guard abs(target - elapsedTime) > 0.001 else { return }
+
+        elapsedTime = target
+        // Reset wall-clock anchor so the timer continues from the new position
+        if timerStartDate != nil {
+            timerStartDate = Date()
+            elapsedTimeAtTimerStart = elapsedTime
+        }
+        pipManager.updateState(elapsedTime: elapsedTime, isPlaying: isPlaying)
+    }
+
     private func stopAndDismiss() {
         stopTimer()
         stopCountdownTimer()
@@ -518,16 +548,23 @@ struct AttributedTextView: UIViewRepresentable {
     let colorScheme: ColorScheme
     let topPadding: CGFloat
     let bottomPadding: CGFloat
+    /// Changes when the position was set from outside this view's own clock —
+    /// coming back from the overlay. The script settles at the new position
+    /// instead of easing there.
+    let snapToken: Int
     /// Reports how many lines the script laid out into, which is what turns the
     /// lines-per-minute setting into a duration.
     let onLineCountChange: (Int) -> Void
+    /// Reports where the reader dragged the script to, in rendered lines, so
+    /// playback can carry on from there.
+    let onScrub: (Double) -> Void
     let onTap: (() -> Void)?
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(onTap: onTap)
+        Coordinator(onTap: onTap, onScrub: onScrub)
     }
 
-    class Coordinator: NSObject {
+    class Coordinator: NSObject, UITextViewDelegate {
         var lastContentId: String?
         var lastFontSize: CGFloat = 0
         var lastCueColor: CueColor?
@@ -537,7 +574,12 @@ struct AttributedTextView: UIViewRepresentable {
         var lastLayoutSize: CGSize = .zero
         var lastReportedLineCount = -1
         var lastTarget: CGFloat = -1
+        var lastSnapToken = 0
+        /// True from the moment a drag starts until the script comes to rest, so
+        /// playback leaves the scroll alone while the reader has hold of it.
+        var isUserScrolling = false
         var onTap: (() -> Void)?
+        var onScrub: ((Double) -> Void)?
 
         /// The scroll eases toward the target on its own display link rather than
         /// being written straight to the text view. Playback moves the target in
@@ -548,8 +590,9 @@ struct AttributedTextView: UIViewRepresentable {
         private var displayLink: CADisplayLink?
         private var lastTimestamp: CFTimeInterval = 0
 
-        init(onTap: (() -> Void)?) {
+        init(onTap: (() -> Void)?, onScrub: ((Double) -> Void)?) {
             self.onTap = onTap
+            self.onScrub = onScrub
         }
 
         @objc func handleTap() {
@@ -580,6 +623,56 @@ struct AttributedTextView: UIViewRepresentable {
             displayLink = nil
         }
 
+        // MARK: Dragging
+
+        func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+            isUserScrolling = true
+            stopEasing()
+        }
+
+        func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+            guard !decelerate else { return }
+            handOffScroll(scrollView)
+        }
+
+        func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
+            handOffScroll(scrollView)
+        }
+
+        /// Hand the resting position back as a line number and take it as the new
+        /// target, so the next update has nothing to correct.
+        private func handOffScroll(_ scrollView: UIScrollView) {
+            guard isUserScrolling else { return }
+            isUserScrolling = false
+
+            let offset = scrollView.contentOffset.y
+            lastTarget = offset
+            onScrub?(linePosition(forOffset: offset))
+        }
+
+        /// The inverse of the line-to-offset map: which line, fractionally, sits on
+        /// the reading line at this scroll offset.
+        private func linePosition(forOffset offset: CGFloat) -> Double {
+            guard lineOffsets.count > 1 else { return 0 }
+            guard offset > lineOffsets[0] else { return 0 }
+            guard offset < lineOffsets[lineOffsets.count - 1] else { return Double(lineOffsets.count - 1) }
+
+            var low = 0
+            var high = lineOffsets.count - 1
+            while low + 1 < high {
+                let mid = (low + high) / 2
+                if lineOffsets[mid] <= offset {
+                    low = mid
+                } else {
+                    high = mid
+                }
+            }
+
+            let span = lineOffsets[low + 1] - lineOffsets[low]
+            guard span > 0 else { return Double(low) }
+            return Double(low) + Double((offset - lineOffsets[low]) / span)
+        }
+
         @objc private func step(_ link: CADisplayLink) {
             guard let textView else {
                 stopEasing()
@@ -606,6 +699,7 @@ struct AttributedTextView: UIViewRepresentable {
         textView.isEditable = false
         textView.isSelectable = false
         textView.backgroundColor = .clear
+        textView.delegate = context.coordinator
         textView.showsVerticalScrollIndicator = false
         textView.alwaysBounceVertical = true
         textView.textContainerInset = UIEdgeInsets(top: topPadding, left: 24, bottom: bottomPadding, right: 24)
@@ -624,7 +718,11 @@ struct AttributedTextView: UIViewRepresentable {
     func updateUIView(_ textView: UITextView, context: Context) {
         let coordinator = context.coordinator
         coordinator.onTap = onTap
+        coordinator.onScrub = onScrub
         textView.textContainerInset = UIEdgeInsets(top: topPadding, left: 24, bottom: bottomPadding, right: 24)
+
+        let needsSnap = coordinator.lastSnapToken != snapToken
+        coordinator.lastSnapToken = snapToken
 
         let contentId = content.fullText
         let needsFullRebuild = coordinator.lastContentId != contentId
@@ -674,10 +772,14 @@ struct AttributedTextView: UIViewRepresentable {
         let maxY = max(0, textView.contentSize.height - textView.bounds.height)
         let scrollY = min(max(target, 0), maxY)
 
-        if isFirstLayout || needsFullRebuild {
+        if isFirstLayout || needsFullRebuild || needsSnap {
             coordinator.settle(at: scrollY, in: textView)
             return
         }
+
+        // A drag in progress owns the scroll; playback picks up from wherever it
+        // is let go of.
+        guard !coordinator.isUserScrolling else { return }
 
         // Only move when the target itself moved, so a script the reader has
         // dragged by hand while paused stays where they put it.
