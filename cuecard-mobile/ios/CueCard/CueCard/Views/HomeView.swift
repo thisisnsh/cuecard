@@ -446,7 +446,7 @@ struct NotesEditorView: View {
         ZStack(alignment: .topLeading) {
             // Placeholder
             if text.isEmpty {
-                Text("Add your script here...\n\nTap Add Cue below the script — or just type [ — to drop in a delivery reminder like \"Welcome everyone [cue smile and pause]\"")
+                Text("Add your script here...\n\nTap Add Cue below the script — or just type [ — to drop in a delivery reminder like \"Welcome everyone [cue smile and pause]\"\n\nOpen a cue with seconds — [cue 3s breathe] — and the script waits there that long while the clock runs on.")
                     .foregroundStyle(AppColors.textSecondary(for: colorScheme).opacity(0.6))
                     .padding(.horizontal, 20)
                     .padding(.top, CueTextEditor.edgeFade + 8)

@@ -20,11 +20,14 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
     private(set) var timerDuration: Int = 0
     private(set) var elapsedTime: Double = 0
     private(set) var isDarkMode: Bool = true
-    /// How long the script runs for, set by the teleprompter from the lines it
-    /// rendered and the speed. The overlay wraps the same script into more lines
-    /// than the full screen does, so it covers its own content over that time
+    /// How the script wrapped on the full screen, and where the cues that hold it
+    /// landed. The overlay wraps the same script into more lines than the full
+    /// screen does, so it works out its own place from these lines by character
     /// rather than counting lines of its own — the two stay on the same word.
-    var scriptDuration: Double = 0
+    var geometry = ScriptGeometry()
+    /// Where the script was last placed by hand. The overlay keeps its own copy so
+    /// it can carry playback on alone while the app is in the background.
+    private(set) var playback = ScriptPlayback()
     private(set) var countdownValue: Int = 0
     private(set) var isCountingDown: Bool = false
 
@@ -90,9 +93,16 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
     }
 
     /// Update current state from TeleprompterView
-    func updateState(elapsedTime: Double, isPlaying: Bool, countdownValue: Int = 0, isCountingDown: Bool = false) {
+    func updateState(
+        elapsedTime: Double,
+        isPlaying: Bool,
+        playback: ScriptPlayback,
+        countdownValue: Int = 0,
+        isCountingDown: Bool = false
+    ) {
         self.elapsedTime = elapsedTime
         self.isPlaying = isPlaying
+        self.playback = playback
         self.countdownValue = countdownValue
         self.isCountingDown = isCountingDown
         needsContentViewUpdate = true
@@ -141,6 +151,7 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
     func restartFromPiP() {
         stopPlaybackTimer()
         elapsedTime = 0
+        playback = ScriptPlayback()
         isPlaying = false
         onRestartFromPiP?()
         updateContentView()
@@ -191,29 +202,6 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
     /// Toggle play/pause
     func togglePlayPause() {
         isPlaying.toggle()
-        updateContentView()
-    }
-
-    /// Seek forward 10 seconds
-    func seekForward() {
-        let end = scriptDuration > 0 ? scriptDuration : (timerDuration > 0 ? Double(timerDuration + 60) : 3600)
-        elapsedTime = min(elapsedTime + 10, end)
-        // Reset wall-clock anchor so the playback timer continues from the new position
-        if playbackTimerStartDate != nil {
-            playbackTimerStartDate = Date()
-            elapsedTimeAtPlaybackStart = elapsedTime
-        }
-        updateContentView()
-    }
-
-    /// Seek backward 10 seconds
-    func seekBackward() {
-        elapsedTime = max(elapsedTime - 10, 0)
-        // Reset wall-clock anchor so the playback timer continues from the new position
-        if playbackTimerStartDate != nil {
-            playbackTimerStartDate = Date()
-            elapsedTimeAtPlaybackStart = elapsedTime
-        }
         updateContentView()
     }
 
@@ -459,6 +447,17 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
         let fontSize = CGFloat(settings.pipFontSize)
         let remainingTime = timerDuration > 0 ? timerDuration - Int(elapsedTime) : Int(elapsedTime)
 
+        // The same sum the full screen does, over the lines the full screen
+        // measured — then handed over as a character, which is the one thing the
+        // two layouts have in common.
+        let position = playback.position(
+            at: elapsedTime,
+            linesPerMinute: Double(settings.linesPerMinute),
+            holds: geometry.holds,
+            lineCount: geometry.lineCount
+        )
+        let character = geometry.map.character(forLine: position.line)
+
         // Show countdown value if counting down (in mm:ss format), otherwise show timer
         let timerText = isCountingDown ? TeleprompterParser.formatTime(countdownValue) : TeleprompterParser.formatTime(remainingTime)
 
@@ -466,12 +465,10 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
             teleprompterContentView?.update(
                 text: text,
                 fontSize: fontSize,
-                isPlaying: isPlaying,
                 timerText: timerText,
                 timerDuration: timerDuration,
                 remainingTime: remainingTime,
-                elapsedTime: elapsedTime,
-                scriptDuration: scriptDuration,
+                characterPosition: character,
                 isCountingDown: isCountingDown
             )
         }
@@ -479,12 +476,10 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
         pipContentView?.update(
             text: text,
             fontSize: fontSize,
-            isPlaying: isPlaying,
             timerText: timerText,
             timerDuration: timerDuration,
             remainingTime: remainingTime,
-            elapsedTime: elapsedTime,
-            scriptDuration: scriptDuration,
+            characterPosition: character,
             isCountingDown: isCountingDown
         )
     }
@@ -564,12 +559,19 @@ private class TeleprompterPiPContentView: UIView {
     private let bottomGradientView = UIView()
     private var topGradientLayer: CAGradientLayer?
     private var bottomGradientLayer: CAGradientLayer?
-    private var lastContentId: String = ""
+    /// The script as this view has it laid out — its own wrapping, which is much
+    /// tighter than the full screen's.
+    private var layout = ScriptLayout()
+    private var lastRenderKey: String = ""
+    private var lastLayoutSize: CGSize = .zero
     private var lastTimerText: String?
     private var lastTimerColor: UIColor?
 
     var isDarkMode: Bool = true {
         didSet {
+            guard isDarkMode != oldValue else { return }
+            // The script is drawn in these colors, so it has to be drawn again.
+            lastRenderKey = ""
             lastTimerColor = nil
             updateColors()
         }
@@ -578,7 +580,7 @@ private class TeleprompterPiPContentView: UIView {
     var cueColor: CueColor = .default {
         didSet {
             guard cueColor != oldValue else { return }
-            lastContentId = ""
+            lastRenderKey = ""
         }
     }
 
@@ -598,7 +600,6 @@ private class TeleprompterPiPContentView: UIView {
         textView.isScrollEnabled = true
         textView.showsVerticalScrollIndicator = false
         textView.backgroundColor = .clear
-        textView.textContainerInset = UIEdgeInsets(top: 40, left: 12, bottom: 40, right: 12)
         textView.textContainer.lineFragmentPadding = 0
         textView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(textView)
@@ -650,6 +651,21 @@ private class TeleprompterPiPContentView: UIView {
         super.layoutSubviews()
         topGradientLayer?.frame = topGradientView.bounds
         bottomGradientLayer?.frame = bottomGradientView.bounds
+        updateTextInsets()
+    }
+
+    /// Hold the reading line at the same height through the overlay as through the
+    /// full screen, by insetting the text down to it. A line's own position in the
+    /// laid-out text is then the offset that brings it there — see `ScriptLayout`.
+    private func updateTextInsets() {
+        let height = textView.bounds.height
+        guard height > 0 else { return }
+
+        let top = height * TeleprompterLayout.readingLineFraction
+        guard abs(textView.textContainerInset.top - top) > 0.5 else { return }
+
+        textView.textContainerInset = UIEdgeInsets(top: top, left: 12, bottom: height - top, right: 12)
+        lastLayoutSize = .zero
     }
 
     private func updateColors() {
@@ -683,27 +699,28 @@ private class TeleprompterPiPContentView: UIView {
     func update(
         text: String,
         fontSize: CGFloat,
-        isPlaying: Bool,
         timerText: String,
         timerDuration: Int,
         remainingTime: Int,
-        elapsedTime: Double,
-        scriptDuration: Double,
+        characterPosition: Double,
         isCountingDown: Bool = false
     ) {
-        let needsFullRebuild = lastContentId != text
-
-        if needsFullRebuild {
-            textView.attributedText = buildAttributedString(text: text, fontSize: fontSize)
+        let renderKey = "\(fontSize)\n\(text)"
+        if lastRenderKey != renderKey {
+            lastRenderKey = renderKey
+            textView.attributedText = TeleprompterScript.render(
+                text: text,
+                fontSize: fontSize,
+                cueColor: cueColor,
+                isDarkMode: isDarkMode
+            ).attributed
             textView.layoutIfNeeded()
-            textView.contentOffset = .zero
-            lastContentId = text
+            lastLayoutSize = .zero
             lastTimerText = nil
             lastTimerColor = nil
         }
 
-        // Continuous time-based scroll
-        updateContinuousScroll(elapsedTime: elapsedTime, scriptDuration: scriptDuration)
+        scroll(toCharacter: characterPosition)
 
         if lastTimerText != timerText {
             lastTimerText = timerText
@@ -727,90 +744,23 @@ private class TeleprompterPiPContentView: UIView {
         }
     }
 
-    private func updateContinuousScroll(elapsedTime: Double, scriptDuration: Double) {
-        guard scriptDuration > 0 else { return }
+    /// Bring the character the reader is on to the reading line. The full screen
+    /// says which character that is; where it falls in the overlay's own, much
+    /// narrower lines is this view's business.
+    private func scroll(toCharacter character: Double) {
+        if lastLayoutSize != textView.bounds.size {
+            lastLayoutSize = textView.bounds.size
+            layout = ScriptLayout.measure(textView)
+        }
+        guard !layout.isEmpty else { return }
 
-        let scrollFraction = min(max(elapsedTime / scriptDuration, 0), 1)
+        let target = layout.offset(forLine: layout.map.line(forCharacter: character))
         let maxY = max(0, textView.contentSize.height - textView.bounds.height)
-        let targetY = scrollFraction * maxY
+        let targetY = min(max(target, 0), maxY)
 
-        // The target is an exact function of elapsed time, so track it directly.
+        // The target is an exact function of where the reader is, so track it directly.
         if abs(textView.contentOffset.y - targetY) > 0.01 {
-            textView.setContentOffset(CGPoint(x: 0, y: targetY), animated: false)
+            textView.contentOffset = CGPoint(x: 0, y: targetY)
         }
-    }
-
-    private func buildAttributedString(
-        text: String,
-        fontSize: CGFloat
-    ) -> NSAttributedString {
-        let result = NSMutableAttributedString()
-        let font = UIFont.systemFont(ofSize: fontSize, weight: .medium)
-        let noteFont = UIFont.systemFont(ofSize: fontSize * 0.72, weight: .semibold)
-        let noteKern = fontSize * 0.05
-
-        let textColor = isDarkMode ? AppColors.UIColors.Dark.textPrimary : AppColors.UIColors.Light.textPrimary
-
-        let paragraphs = text.components(separatedBy: "\n\n")
-
-        for (paragraphIndex, paragraph) in paragraphs.enumerated() {
-            if paragraphIndex > 0 {
-                result.append(NSAttributedString(string: "\n"))
-            }
-
-            let lines = paragraph.components(separatedBy: "\n")
-
-            for (lineIndex, line) in lines.enumerated() {
-                if lineIndex > 0 {
-                    result.append(NSAttributedString(string: "\n"))
-                }
-
-                if line.isEmpty { continue }
-
-                let segments = TeleprompterParser.segments(in: line)
-                var lineWordIndex = 0
-
-                for segment in segments {
-                    switch segment {
-                    case .cue(let noteContent):
-                        let noteAttrs: [NSAttributedString.Key: Any] = [
-                            .font: noteFont,
-                            .foregroundColor: cueColor.uiColor(isDarkMode: isDarkMode),
-                            .kern: noteKern
-                        ]
-                        let noteWords = noteContent.split(separator: " ", omittingEmptySubsequences: true)
-                        for word in noteWords {
-                            if lineWordIndex > 0 {
-                                result.append(NSAttributedString(string: " ", attributes: noteAttrs))
-                            }
-                            result.append(NSAttributedString(string: String(word), attributes: noteAttrs))
-                            lineWordIndex += 1
-                        }
-                    case .text(let textContent):
-                        let wordAttrs: [NSAttributedString.Key: Any] = [
-                            .font: font,
-                            .foregroundColor: textColor
-                        ]
-                        let words = textContent.split(separator: " ", omittingEmptySubsequences: true).map(String.init)
-                        for word in words {
-                            if lineWordIndex > 0 {
-                                result.append(NSAttributedString(string: " ", attributes: wordAttrs))
-                            }
-                            result.append(NSAttributedString(string: word, attributes: wordAttrs))
-                            lineWordIndex += 1
-                        }
-                    }
-                }
-            }
-        }
-
-        let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.lineSpacing = fontSize * 0.18
-        paragraphStyle.paragraphSpacing = fontSize * 0.45
-        if result.length > 0 {
-            result.addAttribute(.paragraphStyle, value: paragraphStyle, range: NSRange(location: 0, length: result.length))
-        }
-
-        return result
     }
 }

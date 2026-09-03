@@ -31,6 +31,7 @@
 		024 /* RemoteConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 118 /* RemoteConfig.swift */; };
 		025 /* RemoteConfigService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 119 /* RemoteConfigService.swift */; };
 		026 /* RemoteMessageViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 120 /* RemoteMessageViews.swift */; };
+		027 /* TeleprompterScript.swift in Sources */ = {isa = PBXBuildFile; fileRef = 121 /* TeleprompterScript.swift */; };
 		AA7130F62F04E5BC00F5C366 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = AA7130F52F04E5BC00F5C366 /* GoogleService-Info.plist */; };
 		AA856D562F060DFC00B0CBC6 /* GlassEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA856D542F060DFC00B0CBC6 /* GlassEffect.swift */; };
 /* End PBXBuildFile section */
@@ -55,6 +56,7 @@
 		118 /* RemoteConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteConfig.swift; sourceTree = "<group>"; };
 		119 /* RemoteConfigService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteConfigService.swift; sourceTree = "<group>"; };
 		120 /* RemoteMessageViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteMessageViews.swift; sourceTree = "<group>"; };
+		121 /* TeleprompterScript.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeleprompterScript.swift; sourceTree = "<group>"; };
 		201 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		501 /* CueCard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CueCard.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA2E5C0E2F0F38B500E1D079 /* CueCard.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CueCard.entitlements; sourceTree = "<group>"; };
@@ -132,6 +134,7 @@
 			isa = PBXGroup;
 			children = (
 				111 /* TeleprompterParser.swift */,
+				121 /* TeleprompterScript.swift */,
 				113 /* AppColors.swift */,
 				115 /* ScriptDocument.swift */,
 				116 /* CueColor.swift */,
@@ -273,6 +276,7 @@
 				AA856D562F060DFC00B0CBC6 /* GlassEffect.swift in Sources */,
 				014 /* TeleprompterView.swift in Sources */,
 				015 /* TeleprompterParser.swift in Sources */,
+				027 /* TeleprompterScript.swift in Sources */,
 				016 /* TeleprompterPiPManager.swift in Sources */,
 				020 /* ScriptDocument.swift in Sources */,
 				022 /* CueColor.swift in Sources */,
