@@ -239,7 +239,8 @@ struct HomeView: View {
                         text: $settingsService.notes,
                         selectedRange: $editorSelection,
                         isFocused: $isEditorFocused,
-                        colorScheme: colorScheme
+                        colorScheme: colorScheme,
+                        bottomOverlayHeight: isEditorFocused ? CueBar.height : 0
                     )
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
@@ -448,6 +449,8 @@ struct NotesEditorView: View {
     @Binding var selectedRange: NSRange
     @Binding var isFocused: Bool
     let colorScheme: ColorScheme
+    /// Room the cue bar takes at the bottom, so the text can scroll clear of it.
+    var bottomOverlayHeight: CGFloat = 0
 
     var body: some View {
         ZStack(alignment: .topLeading) {
@@ -464,7 +467,8 @@ struct NotesEditorView: View {
                 text: $text,
                 selectedRange: $selectedRange,
                 isFocused: $isFocused,
-                colorScheme: colorScheme
+                colorScheme: colorScheme,
+                bottomOverlayHeight: bottomOverlayHeight
             )
             .padding(.horizontal, 4)
             .padding(.vertical, 8)

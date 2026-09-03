@@ -1,6 +1,119 @@
 import SwiftUI
 import UIKit
 
+/// The editor's scroll view. It keeps the caret clear of whatever covers the
+/// bottom of the screen — the keyboard, and the cue bar riding above it — so the
+/// line being typed stays visible.
+final class CueTextView: UITextView {
+    /// Height of the cue bar overlaying the bottom of the editor, in points.
+    var bottomOverlayHeight: CGFloat = 0 {
+        didSet {
+            guard bottomOverlayHeight != oldValue else { return }
+            setNeedsLayout()
+        }
+    }
+
+    /// Breathing room left between the caret and whatever sits below it.
+    private static let caretPadding: CGFloat = 8
+
+    private var keyboardScreenFrame: CGRect = .null
+    private var appliedBottomInset: CGFloat?
+    private var lastBoundsHeight: CGFloat?
+
+    override init(frame: CGRect, textContainer: NSTextContainer?) {
+        super.init(frame: frame, textContainer: textContainer)
+        observeKeyboard()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        observeKeyboard()
+    }
+
+    private func observeKeyboard() {
+        let center = NotificationCenter.default
+        center.addObserver(
+            self,
+            selector: #selector(keyboardFrameChanged),
+            name: UIResponder.keyboardWillChangeFrameNotification,
+            object: nil
+        )
+        center.addObserver(
+            self,
+            selector: #selector(keyboardWillHide),
+            name: UIResponder.keyboardWillHideNotification,
+            object: nil
+        )
+    }
+
+    @objc private func keyboardFrameChanged(_ notification: Notification) {
+        let frame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue
+        keyboardScreenFrame = frame?.cgRectValue ?? .null
+        setNeedsLayout()
+    }
+
+    @objc private func keyboardWillHide(_ notification: Notification) {
+        keyboardScreenFrame = .null
+        setNeedsLayout()
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+
+        let heightChanged = bounds.height != lastBoundsHeight
+        lastBoundsHeight = bounds.height
+
+        let inset = bottomOverlayHeight + keyboardOverlap()
+        let insetChanged = inset != appliedBottomInset
+        if insetChanged {
+            appliedBottomInset = inset
+            contentInset.bottom = inset
+            verticalScrollIndicatorInsets.bottom = inset
+        }
+
+        // Opening the keyboard shrinks the editor, which can leave the caret
+        // below the fold; follow it back into view.
+        if heightChanged || insetChanged {
+            scrollCaretIntoView()
+        }
+    }
+
+    /// How much of the editor the keyboard covers. Usually nothing — SwiftUI
+    /// already lifts the editor clear of it — but measuring means the caret stays
+    /// visible even when it doesn't.
+    private func keyboardOverlap() -> CGFloat {
+        guard !keyboardScreenFrame.isNull, let window else { return 0 }
+
+        let keyboard = convert(window.convert(keyboardScreenFrame, from: nil), from: window)
+        guard keyboard.intersects(bounds) else { return 0 }
+        return max(0, bounds.maxY - keyboard.minY)
+    }
+
+    /// Scroll so the caret sits inside the part of the editor nothing is covering.
+    func scrollCaretIntoView() {
+        guard isFirstResponder, let caret = selectedTextRange?.end else { return }
+
+        let rect = caretRect(for: caret).insetBy(dx: 0, dy: -Self.caretPadding)
+        guard rect.minY.isFinite, rect.maxY.isFinite else { return }
+
+        let visibleTop = contentOffset.y + adjustedContentInset.top
+        let visibleBottom = contentOffset.y + bounds.height - adjustedContentInset.bottom
+
+        var target = contentOffset.y
+        if rect.maxY > visibleBottom {
+            target += rect.maxY - visibleBottom
+        } else if rect.minY < visibleTop {
+            target -= visibleTop - rect.minY
+        } else {
+            return
+        }
+
+        let lowest = -adjustedContentInset.top
+        let highest = max(lowest, contentSize.height + adjustedContentInset.bottom - bounds.height)
+        contentOffset.y = min(max(target, lowest), highest)
+    }
+}
+
 /// Script editor that renders `[note …]` cues in their own color while you type,
 /// and reports the caret back so cues can be inserted where the user is writing.
 struct CueTextEditor: UIViewRepresentable {
@@ -8,11 +121,13 @@ struct CueTextEditor: UIViewRepresentable {
     @Binding var selectedRange: NSRange
     @Binding var isFocused: Bool
     let colorScheme: ColorScheme
+    /// Height of the cue bar floating over the bottom of the editor, if it's showing.
+    var bottomOverlayHeight: CGFloat = 0
 
     static let fontSize: CGFloat = 16
 
-    func makeUIView(context: Context) -> UITextView {
-        let textView = UITextView()
+    func makeUIView(context: Context) -> CueTextView {
+        let textView = CueTextView()
         textView.delegate = context.coordinator
         textView.backgroundColor = .clear
         textView.textContainerInset = UIEdgeInsets(top: 8, left: 16, bottom: 8, right: 16)
@@ -24,8 +139,9 @@ struct CueTextEditor: UIViewRepresentable {
         return textView
     }
 
-    func updateUIView(_ textView: UITextView, context: Context) {
+    func updateUIView(_ textView: CueTextView, context: Context) {
         context.coordinator.parent = self
+        textView.bottomOverlayHeight = bottomOverlayHeight
 
         if textView.text != text {
             textView.text = text
@@ -38,6 +154,7 @@ struct CueTextEditor: UIViewRepresentable {
         let clamped = Self.clamp(selectedRange, to: textView.text as NSString)
         if textView.selectedRange != clamped {
             textView.selectedRange = clamped
+            textView.scrollCaretIntoView()
         }
 
         // SwiftUI's .focused() doesn't reach into a UIViewRepresentable, so drive
@@ -116,6 +233,10 @@ struct CueTextEditor: UIViewRepresentable {
 
             parent.text = textView.text
             parent.selectedRange = selection
+
+            // UITextView's own scroll-to-caret ignores the bottom inset, so the
+            // last line would slide under the cue bar as it's typed.
+            (textView as? CueTextView)?.scrollCaretIntoView()
         }
 
         func textViewDidChangeSelection(_ textView: UITextView) {
@@ -163,6 +284,10 @@ extension String {
 
 /// The row of reusable cues that sits above the keyboard while writing a script.
 struct CueBar: View {
+    /// The bar's height. The editor keeps this much room clear at the bottom so
+    /// the line being typed never hides behind it.
+    static let height: CGFloat = 54
+
     let cues: [Cue]
     let colorScheme: ColorScheme
     var onInsert: (Cue) -> Void
@@ -236,7 +361,7 @@ struct CueBar: View {
             .accessibilityLabel("Hide keyboard")
         }
         .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .frame(height: Self.height)
         .background(AppColors.background(for: colorScheme).opacity(0.94))
         .overlay(alignment: .top) {
             Rectangle()
