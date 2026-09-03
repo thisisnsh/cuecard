@@ -242,7 +242,7 @@ struct SettingsView: View {
                 }
                 .padding(.vertical, 4)
 
-                Text("Every cue in every script is shown in this color.")
+                Text("Every cue is shown in this color.")
                     .font(.footnote)
                     .foregroundStyle(AppColors.textSecondary(for: colorScheme))
             }
