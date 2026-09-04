@@ -95,6 +95,23 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
         self.isPlaying = isPlaying
         self.countdownValue = countdownValue
         self.isCountingDown = isCountingDown
+
+        // While the overlay is up it runs its own clock off a start date, so a
+        // position pushed from the teleprompter has to carry that anchor with
+        // it. Left where it was, the next render overwrites the push with
+        // wherever the overlay had got to on its own: a resume jumps the whole
+        // of the pause, and a seek snaps back within the frame.
+        if isPlaying {
+            if playbackTimer != nil {
+                playbackTimerStartDate = Date()
+                elapsedTimeAtPlaybackStart = elapsedTime
+            } else if isRenderingToPiP {
+                startPlaybackTimer()
+            }
+        } else {
+            stopPlaybackTimer()
+        }
+
         needsContentViewUpdate = true
     }
 
@@ -500,6 +517,7 @@ extension TeleprompterPiPManager: AVPictureInPictureControllerDelegate {
         Task { @MainActor in
             isPiPActive = true
             isRenderingToPiP = true
+            pipContentView?.isLive = true
             // Start playback timer if already playing when PiP starts
             if isPlaying {
                 startPlaybackTimer()
@@ -517,6 +535,7 @@ extension TeleprompterPiPManager: AVPictureInPictureControllerDelegate {
         Task { @MainActor in
             stopPlaybackTimer()
             isRenderingToPiP = false
+            pipContentView?.isLive = false
             lastSourceRenderTimestamp = 0
             updateContentView()
             showSourceForHandBack()
@@ -535,6 +554,7 @@ extension TeleprompterPiPManager: AVPictureInPictureControllerDelegate {
         Task { @MainActor in
             isPiPActive = false
             isRenderingToPiP = false
+            pipContentView?.isLive = false
             stopPlaybackTimer()
             hideSourceBehindApp()
             onPiPClosed?()
@@ -568,6 +588,40 @@ private class TeleprompterPiPContentView: UIView {
     private var lastTimerText: String?
     private var lastTimerColor: UIColor?
 
+    /// How far the script scrolls over its whole run, and the text view size it
+    /// was measured at. Measured from the laid-out text rather than read back
+    /// from the text view every frame — see `refreshScrollRange()`.
+    private var scrollRange: CGFloat = 0
+    private var scrollRangeSize: CGSize = .zero
+    private var textHeight: CGFloat = 0
+    private var textHeightWidth: CGFloat = -1
+    private var needsScrollRange = true
+    /// How far into the script the last update put the reader. Kept so a resize
+    /// can put the script back at the same place in the text at the new size.
+    private var lastScrollFraction: CGFloat = 0
+    /// Set when the position has to be taken up without easing: the first
+    /// layout, a rebuild, or a resize.
+    private var needsSettle = true
+
+    /// The scroll eases toward its target instead of being written straight to
+    /// the text view, the same way the full-screen script does. Playback moves
+    /// the target in small steps so the easing is invisible; what it takes out
+    /// is the jitter from the target being sampled a moment late whenever the
+    /// main thread is busy.
+    private static let scrollTimeConstant: Double = 0.12
+    private var targetOffset: CGFloat = 0
+    private var lastScrollTimestamp: CFTimeInterval = 0
+
+    /// True while this view is the copy showing in the overlay. The mirrored
+    /// copy behind the app is only kept roughly current, so it takes positions
+    /// straight rather than easing toward them.
+    var isLive = false {
+        didSet {
+            guard isLive != oldValue else { return }
+            lastScrollTimestamp = 0
+        }
+    }
+
     var isDarkMode: Bool = true {
         didSet {
             lastTimerColor = nil
@@ -593,6 +647,12 @@ private class TeleprompterPiPContentView: UIView {
     }
 
     private func setupViews() {
+        // Touching the layout manager puts the text view on TextKit 1, where the
+        // whole script can be laid out up front. Left on TextKit 2 it lays out
+        // only what is on screen and estimates the rest, so the height it
+        // reports keeps being revised as the script scrolls — and a position
+        // measured as a fraction of that height jumps every time it is.
+        _ = textView.layoutManager
         textView.isEditable = false
         textView.isSelectable = false
         textView.isScrollEnabled = true
@@ -650,6 +710,34 @@ private class TeleprompterPiPContentView: UIView {
         super.layoutSubviews()
         topGradientLayer?.frame = topGradientView.bounds
         bottomGradientLayer?.frame = bottomGradientView.bounds
+        refreshScrollRange()
+    }
+
+    /// Measure how far the script scrolls, laying the whole of it out to do it.
+    /// The measurement only has to be redone when the text view changes size,
+    /// and the text itself only when the width changes — a taller or shorter
+    /// window reads the same lines.
+    private func refreshScrollRange() {
+        let size = textView.bounds.size
+        guard size.width > 0, size.height > 0 else { return }
+        guard needsScrollRange || size != scrollRangeSize else { return }
+        needsScrollRange = false
+        scrollRangeSize = size
+
+        if textHeightWidth != size.width {
+            textHeightWidth = size.width
+            // On TextKit 1 this lays the whole script out to answer, which is the
+            // point: the height comes back exact and stays put, instead of being
+            // an estimate that gets revised as the script scrolls.
+            textHeight = textView.sizeThatFits(
+                CGSize(width: size.width, height: .greatestFiniteMagnitude)
+            ).height
+        }
+
+        scrollRange = max(0, textHeight - size.height)
+        // A resize keeps the reader on the same part of the script rather than
+        // easing across to it from where the old size had them.
+        settleScroll(at: lastScrollFraction * scrollRange)
     }
 
     private func updateColors() {
@@ -696,13 +784,16 @@ private class TeleprompterPiPContentView: UIView {
         if needsFullRebuild {
             textView.attributedText = buildAttributedString(text: text, fontSize: fontSize)
             textView.layoutIfNeeded()
-            textView.contentOffset = .zero
             lastContentId = text
             lastTimerText = nil
             lastTimerColor = nil
+            textHeightWidth = -1
+            needsScrollRange = true
+            needsSettle = true
         }
 
         // Continuous time-based scroll
+        refreshScrollRange()
         updateContinuousScroll(elapsedTime: elapsedTime, scriptDuration: scriptDuration)
 
         if lastTimerText != timerText {
@@ -730,14 +821,46 @@ private class TeleprompterPiPContentView: UIView {
     private func updateContinuousScroll(elapsedTime: Double, scriptDuration: Double) {
         guard scriptDuration > 0 else { return }
 
-        let scrollFraction = min(max(elapsedTime / scriptDuration, 0), 1)
-        let maxY = max(0, textView.contentSize.height - textView.bounds.height)
-        let targetY = scrollFraction * maxY
+        lastScrollFraction = CGFloat(min(max(elapsedTime / scriptDuration, 0), 1))
+        let targetY = lastScrollFraction * scrollRange
 
-        // The target is an exact function of elapsed time, so track it directly.
-        if abs(textView.contentOffset.y - targetY) > 0.01 {
-            textView.setContentOffset(CGPoint(x: 0, y: targetY), animated: false)
+        if needsSettle || !isLive {
+            needsSettle = false
+            settleScroll(at: targetY)
+        } else {
+            ease(to: targetY)
         }
+    }
+
+    /// Take the position up without easing, for a first layout, a rebuild or a
+    /// resize — nothing the reader should see the script travel across.
+    private func settleScroll(at offset: CGFloat) {
+        targetOffset = offset
+        lastScrollTimestamp = 0
+        guard textView.contentOffset.y != offset else { return }
+        textView.contentOffset = CGPoint(x: 0, y: offset)
+    }
+
+    /// Move a step of the way toward the target, by however much time has passed
+    /// since the last one. This rides the overlay's own render clock rather than
+    /// a display link of its own: the display link stops once the app is in the
+    /// background, and the overlay carries on from a timer there.
+    private func ease(to offset: CGFloat) {
+        targetOffset = offset
+
+        let now = CACurrentMediaTime()
+        let elapsed = lastScrollTimestamp == 0 ? 0 : now - lastScrollTimestamp
+        lastScrollTimestamp = now
+        guard elapsed > 0 else { return }
+
+        let distance = targetOffset - textView.contentOffset.y
+        guard abs(distance) > 0.05 else {
+            textView.contentOffset = CGPoint(x: 0, y: targetOffset)
+            return
+        }
+
+        let advance = distance * (1 - exp(-elapsed / Self.scrollTimeConstant))
+        textView.contentOffset = CGPoint(x: 0, y: textView.contentOffset.y + advance)
     }
 
     private func buildAttributedString(
