@@ -1,6 +1,14 @@
 name: Deploy Website
 
-# Builds the 11ty site and publishes cuecard-website/_site to GitHub Pages.
+# Builds the 11ty site and — only when a human asks for it — publishes
+# cuecard-website/_site to GitHub Pages.
+#
+# Pushing NEVER publishes. A push to main (or a PR) runs the build and the
+# verification step as CI, so a broken site is caught immediately, but it stops
+# there. Publishing to cuecard.dev is an explicit action: open Actions →
+# "Deploy Website" → "Run workflow", which is the only event that reaches the
+# deploy job.
+#
 # The site is fully static: there is no PHP and no .htaccess, so Pages serves
 # 404.html natively and the /ios and /android shortlinks are generated as
 # meta-refresh pages from src/_data/shortlinks.json. src/CNAME pins the
@@ -17,6 +25,11 @@ on:
       - 'cuecard-website/**'
       - '.github/workflows/deploy-website.yml'
   workflow_dispatch:
+    inputs:
+      publish:
+        description: 'Publish the built site to GitHub Pages (cuecard.dev)'
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -66,18 +79,22 @@ jobs:
             exit 1
           fi
 
+      # Everything below only runs for a manual, opted-in dispatch. On a push
+      # the workflow ends here, having proved the site still builds.
       - name: Configure Pages
-        if: github.event_name != 'pull_request'
+        if: github.event_name == 'workflow_dispatch' && inputs.publish
         uses: actions/configure-pages@v5
 
       - name: Upload Pages artifact
-        if: github.event_name != 'pull_request'
+        if: github.event_name == 'workflow_dispatch' && inputs.publish
         uses: actions/upload-pages-artifact@v3
         with:
           path: cuecard-website/_site
 
   deploy:
-    if: github.event_name != 'pull_request'
+    # Publishing is deliberate: only a manual run of this workflow with the
+    # publish input left on can reach GitHub Pages.
+    if: github.event_name == 'workflow_dispatch' && inputs.publish
     needs: build
     runs-on: ubuntu-latest
     environment:
