@@ -1,0 +1,71 @@
+name: Build App - Android
+
+# Compile check and lint only. Nothing signed leaves here; the Play-ready
+# bundle is built from a release keystore that CI does not hold.
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+    paths:
+      - 'cuecard-mobile/android/**'
+      - '.github/workflows/build-android.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # The Gradle toolchain targets JVM 17, but AGP 8.13 itself wants to run
+      # on 17 or newer, and 21 is what the app is built on locally.
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Create Firebase config
+        env:
+          GOOGLE_SERVICES_B64: ${{ secrets.ANDROID_GOOGLE_SERVICES_JSON_B64 }}
+        working-directory: cuecard-mobile/android/app
+        run: |
+          set -euo pipefail
+          test -n "$GOOGLE_SERVICES_B64" || {
+            echo "::error::ANDROID_GOOGLE_SERVICES_JSON_B64 is not set"; exit 1; }
+          # google-services.json is gitignored, and the Google Services plugin
+          # fails the build outright without it.
+          printf '%s' "$GOOGLE_SERVICES_B64" | base64 --decode > google-services.json
+          python3 -m json.tool google-services.json > /dev/null
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('cuecard-mobile/android/gradle/wrapper/gradle-wrapper.properties', 'cuecard-mobile/android/**/*.gradle.kts') }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      - name: Build debug APK
+        working-directory: cuecard-mobile/android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Lint
+        working-directory: cuecard-mobile/android
+        run: ./gradlew lintDebug --no-daemon
+
+      # Lint writes to a file rather than the console, so put it in the log.
+      # A warning does not fail the build, but it should still be readable
+      # without downloading anything.
+      - name: Show lint report
+        if: always()
+        working-directory: cuecard-mobile/android
+        run: cat app/build/reports/lint-results-debug.txt || true
