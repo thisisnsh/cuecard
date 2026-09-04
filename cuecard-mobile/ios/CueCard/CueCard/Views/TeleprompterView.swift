@@ -281,11 +281,13 @@ struct TeleprompterView: View {
             }
         }
 
+        // Take the position, but leave the clock stopped. The overlay spends the
+        // length of its closing animation opening into a picture of this screen,
+        // and the picture is taken now — scrolling on underneath it would put the
+        // script a few lines past where the animation lands. The clock starts
+        // again on close, below, which is the moment the picture comes away.
         pipManager.onPiPRestoreUI = {
             syncFromPiP()
-            if isPlaying {
-                startTimer()
-            }
         }
 
         // Handle play/pause from PiP controls
