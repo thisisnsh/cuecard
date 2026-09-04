@@ -7,12 +7,19 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import com.thisisnsh.cuecard.android.models.AppColors
+import com.thisisnsh.cuecard.android.services.AuthenticationService
+import com.thisisnsh.cuecard.android.services.RemoteConfigService
+import com.thisisnsh.cuecard.android.services.SettingsService
 import com.thisisnsh.cuecard.android.services.TeleprompterPiPManager
-import com.thisisnsh.cuecard.android.ui.screens.MainScreen
-import com.thisisnsh.cuecard.android.ui.theme.CueCardTheme
+import com.thisisnsh.cuecard.android.views.ContentView
 
 class MainActivity : ComponentActivity() {
 
@@ -22,16 +29,30 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // Check PiP support
         pipManager.checkPiPSupport(this)
+        pipManager.attach(this)
 
         setContent {
-            CueCardTheme {
+            val context = LocalContext.current
+            val authService = remember { AuthenticationService(context) }
+            val settingsService = remember { SettingsService.getInstance(context) }
+            val remoteConfig = remember { RemoteConfigService.getInstance(context) }
+            val settings by settingsService.settings.collectAsState()
+
+            LaunchedEffect(Unit) {
+                settingsService.loadSettings()
+            }
+
+            CueCardTheme(themePreference = settings.themePreference) {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
+                    color = AppColors.background(LocalIsDarkTheme.current)
                 ) {
-                    MainScreen()
+                    ContentView(
+                        authService = authService,
+                        settingsService = settingsService,
+                        remoteConfig = remoteConfig
+                    )
                 }
             }
         }
@@ -39,11 +60,13 @@ class MainActivity : ComponentActivity() {
 
     override fun onUserLeaveHint() {
         super.onUserLeaveHint()
-        // Enter PiP when user presses home button (if PiP is possible and playing)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+        // Below API 31 there is no auto-enter, so leaving the app during a run
+        // opens the overlay from here instead.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S &&
             pipManager.isPiPPossible &&
-            pipManager.isPlaying) {
-            pipManager.enterPiP(this)
+            pipManager.isPlaying
+        ) {
+            pipManager.enterPiP()
         }
     }
 
@@ -58,5 +81,10 @@ class MainActivity : ComponentActivity() {
         } else {
             pipManager.onPiPModeExited()
         }
+    }
+
+    override fun onDestroy() {
+        pipManager.detach(this)
+        super.onDestroy()
     }
 }

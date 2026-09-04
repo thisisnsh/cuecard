@@ -25,7 +25,14 @@ android {
     }
 
     buildTypes {
+        debug {
+            // The parallel to the CRASHLYTICS_TEST_CRASH environment variable the
+            // iOS build reads: it puts the test-crash row in Settings.
+            buildConfigField("boolean", "DIAGNOSTICS", "true")
+        }
+
         release {
+            buildConfigField("boolean", "DIAGNOSTICS", "false")
             isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -46,8 +53,14 @@ android {
         jvmTarget = "17"
     }
 
+    lint {
+        textReport = true
+        textOutput = file("build/reports/lint-results-debug.txt")
+    }
+
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     packaging {
@@ -63,6 +76,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
     implementation("androidx.activity:activity-compose:1.9.3")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
 
     // Compose
     implementation(platform("androidx.compose:compose-bom:2024.12.01"))
@@ -71,7 +85,6 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
-    implementation("androidx.navigation:navigation-compose:2.8.5")
 
     // Firebase
     implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
@@ -84,6 +97,9 @@ dependencies {
     implementation("androidx.credentials:credentials:1.5.0-rc01")
     implementation("androidx.credentials:credentials-play-services-auth:1.5.0-rc01")
     implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+
+    // Play In-App Review
+    implementation("com.google.android.play:review-ktx:2.0.2")
 
     // Coil for image loading
     implementation("io.coil-kt:coil-compose:2.7.0")
