@@ -1,41 +1,37 @@
-<section class="download-section" id="download">
-    <div class="section-header">
-        <span class="section-tag">Download</span>
-        <h2 class="section-title">{{ (platform.downloadTitle if platform else downloadTitle) | safe }}</h2>
-        <p class="section-desc">{{ (platform.downloadDesc if platform else downloadDesc) | safe }}</p>
+{% from "partials/icons.njk" import icon %}
+{#
+  The desktop downloads. Everything with an id here is filled in at runtime by
+  script.js from the GitHub releases API - the release dropdown, the per-asset
+  buttons and the download counter - so the ids are load-bearing.
+#}
+<section class="download-section{% if downloadSolid %} solid{% endif %}" id="download" aria-labelledby="download-h">
+    <div class="wrap">
+        <p class="micro section-tag">Download</p>
+        <h2 class="section-h section-title" id="download-h">{{ (platform.downloadTitle if platform else downloadTitle) | safe }}</h2>
+        <p class="body section-desc">{{ (platform.downloadDesc if platform else downloadDesc) | safe }}</p>
 
-        <p class="download-stats">
-            <span class="total-downloads" id="total-downloads"></span>
-        </p>
-    </div>
+        <p class="download-stats"><span class="total-downloads" id="total-downloads"></span></p>
 
-    <div class="download-container">
-        <div class="release-selector">
-            <label for="release-select">Release:</label>
-            <select id="release-select" class="release-dropdown">
-                <option value="">Loading releases...</option>
-            </select>
-        </div>
+        <div class="download-container">
+            <div class="release-selector">
+                <label for="release-select">Release</label>
+                <select id="release-select" class="release-dropdown">
+                    <option value="">Loading releases…</option>
+                </select>
+            </div>
 
-        <div class="download-grid" id="download-grid">
-            <div class="download-loading">Loading releases...</div>
-        </div>
+            <div class="download-grid" id="download-grid">
+                <div class="download-loading">Loading releases…</div>
+            </div>
 
-        <div class="release-notes-button-container">
-            <a href="https://github.com/thisisnsh/cuecard/releases"
-               target="_blank"
-               rel="noopener"
-               class="btn btn-secondary release-notes-btn"
-               id="release-notes-btn">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                    <polyline points="14 2 14 8 20 8"/>
-                    <line x1="16" y1="13" x2="8" y2="13"/>
-                    <line x1="16" y1="17" x2="8" y2="17"/>
-                    <polyline points="10 9 9 9 8 9"/>
-                </svg>
-                Show Release Notes
-            </a>
+            <p class="backline release-notes-button-container">
+                <a href="{{ site.releases }}" target="_blank" rel="noopener" class="release-notes-btn" id="release-notes-btn">
+                    {{ icon("book", 15) }} Release notes {{ icon("arrow", 14) }}
+                </a>
+                <a href="{{ site.github }}" target="_blank" rel="noopener">
+                    {{ icon("github", 15) }} Read the source {{ icon("arrow", 14) }}
+                </a>
+            </p>
         </div>
     </div>
 </section>

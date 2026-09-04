@@ -1,0 +1,16 @@
+{% from "partials/icons.njk" import icon %}
+<section class="cta" aria-labelledby="cta-h">
+    <div class="wrap">
+        <h2 class="display reveal" id="cta-h">{{ (ctaHeading or "Stop memorising.<br /><em>Start talking.</em>") | safe }}</h2>
+        <p class="body reveal d1">{{ (ctaBody or "Write it once, put it on the glass, and say it like you mean it. Free, open source, no subscription.") | safe }}</p>
+        <div class="actions reveal d2">
+            <a class="btn btn-primary" href="{{ ctaPrimaryHref or site.ios }}"{% if not ctaPrimaryHref %} target="_blank" rel="noopener"{% endif %}>
+                {{ icon(ctaPrimaryIcon or "apple", 17) }}{{ ctaPrimaryText or "Get CueCard on iOS" }}
+            </a>
+            <a class="btn btn-ghost" href="{{ ctaSecondaryHref or '/desktop/' }}">
+                {{ icon(ctaSecondaryIcon or "monitor", 17) }}{{ ctaSecondaryText or "Get it for Mac and Windows" }}
+            </a>
+        </div>
+        <span class="meta-note reveal d2">{{ ctaNote or "Android coming soon · iOS 17+ · macOS and Windows" }}</span>
+    </div>
+</section>

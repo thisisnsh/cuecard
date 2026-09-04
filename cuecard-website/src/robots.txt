@@ -1,11 +1,13 @@
-# CueCard - Invisible Speaker Notes
+# CueCard — a teleprompter that floats over every other app, and speaker notes
+# that stay invisible while you share your screen.
 # https://cuecard.dev
 
 User-agent: *
 Allow: /
 
-# Sitemap
-Sitemap: https://cuecard.dev/sitemap.xml
+# The store shortlinks are meta-refresh stubs, not pages. They already carry
+# noindex; keeping crawlers out of them saves everyone the round trip.
+Disallow: /ios/
+Disallow: /android/
 
-# Crawl-delay (optional, for politeness)
-Crawl-delay: 1
+Sitemap: https://cuecard.dev/sitemap.xml

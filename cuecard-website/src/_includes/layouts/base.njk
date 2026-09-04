@@ -3,14 +3,24 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
     <title>{{ title }}</title>
     <meta name="description" content="{{ description }}">
     {% if keywords %}<meta name="keywords" content="{{ keywords }}">{% endif %}
     <meta name="author" content="CueCard">
-    <meta name="robots" content="index, follow">
+    <meta name="robots" content="{% if noindex %}noindex, follow{% else %}index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1{% endif %}">
     <meta name="theme-color" content="#000000">
-    {% if canonical %}<link rel="canonical" href="{{ canonical }}">{% endif %}
+    <meta name="apple-mobile-web-app-title" content="CueCard">
+    <meta name="format-detection" content="telephone=no">
+    {# Safari on iOS turns this into the App Store banner - the fastest install
+       path there is, and this is now a mobile-first site. #}
+    <meta name="apple-itunes-app" content="app-id=6757321325">
+    {% if canonical %}
+    <link rel="canonical" href="{{ canonical }}">
+    <link rel="alternate" hreflang="en" href="{{ canonical }}">
+    <link rel="alternate" hreflang="x-default" href="{{ canonical }}">
+    {% endif %}
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
@@ -18,10 +28,12 @@
     <meta property="og:title" content="{{ ogTitle or title }}">
     <meta property="og:description" content="{{ ogDescription or description }}">
     <meta property="og:image" content="https://cuecard.dev/assets/og-image.png">
-    {% if ogImageWidth %}<meta property="og:image:width" content="{{ ogImageWidth }}">{% endif %}
-    {% if ogImageHeight %}<meta property="og:image:height" content="{{ ogImageHeight }}">{% endif %}
+    <meta property="og:image:width" content="{{ ogImageWidth or '1280' }}">
+    <meta property="og:image:height" content="{{ ogImageHeight or '640' }}">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:alt" content="{{ ogImageAlt or 'CueCard - a teleprompter that floats over every other app.' }}">
     <meta property="og:site_name" content="CueCard">
-    {% if ogLocale %}<meta property="og:locale" content="{{ ogLocale }}">{% endif %}
+    <meta property="og:locale" content="{{ ogLocale or 'en_US' }}">
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
@@ -29,18 +41,91 @@
     <meta name="twitter:title" content="{{ twitterTitle or ogTitle or title }}">
     <meta name="twitter:description" content="{{ twitterDescription or ogDescription or description }}">
     <meta name="twitter:image" content="https://cuecard.dev/assets/og-image.png">
+    <meta name="twitter:image:alt" content="{{ ogImageAlt or 'CueCard - a teleprompter that floats over every other app.' }}">
 
-    {% block jsonld %}{% endblock %}
+    <!-- Own stylesheet first: it is render-blocking by necessity, the webfont is not -->
+    <link rel="stylesheet" href="/styles.css">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/styles.css">
+    {# Nunito is the cross-platform stand-in for SF Pro Rounded, which Apple
+       devices render natively through ui-rounded. It must never hold up the
+       first paint, so it arrives as a print stylesheet and is promoted on load. #}
+    <link rel="stylesheet" media="print" onload="this.media='all'; this.onload=null"
+          href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap"></noscript>
+
+    {# reveal-on-scroll is an enhancement; with no JS the page must still read. #}
+    <noscript><style>.reveal{opacity:1;transform:none}</style></noscript>
+
+    {% if not noVideo %}<link rel="preload" as="image" href="{{ site.video.poster }}" fetchpriority="high">{% endif %}
+
     <link rel="icon" type="image/png" href="/assets/favicon-96x96.png" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
     <link rel="shortcut icon" href="/assets/favicon.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png" />
     <link rel="manifest" href="/assets/site.webmanifest" />
+
+    {# The site-wide graph: who publishes this, what site it is, which page this
+       is, and how you got here. Page templates add their own SoftwareApplication,
+       FAQPage and VideoObject blocks on top through the jsonld block below. #}
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "{{ site.url }}/#org",
+          "name": "CueCard",
+          "url": "{{ site.url }}/",
+          "email": "{{ site.email }}",
+          "sameAs": ["{{ site.github }}"],
+          "logo": {
+            "@type": "ImageObject",
+            "@id": "{{ site.url }}/#logo",
+            "url": "{{ site.url }}/assets/web-app-manifest-512x512.png",
+            "width": 512,
+            "height": 512,
+            "caption": "CueCard"
+          },
+          "image": { "@id": "{{ site.url }}/#logo" }
+        },
+        {
+          "@type": "WebSite",
+          "@id": "{{ site.url }}/#website",
+          "url": "{{ site.url }}/",
+          "name": "CueCard",
+          "description": "A teleprompter that floats over every other app on your phone, and speaker notes that stay invisible while you share your screen on a computer.",
+          "publisher": { "@id": "{{ site.url }}/#org" },
+          "inLanguage": "en"
+        },
+        {
+          "@type": "WebPage",
+          "@id": "{{ canonical or (site.url + page.url) }}#webpage",
+          "url": "{{ canonical or (site.url + page.url) }}",
+          "name": {{ (pageName or title) | dump | safe }},
+          "description": {{ description | dump | safe }},
+          "isPartOf": { "@id": "{{ site.url }}/#website" },
+          {% if crumbs %}"breadcrumb": { "@id": "{{ canonical or (site.url + page.url) }}#breadcrumb" },{% endif %}
+          "inLanguage": "en"
+        }{% if crumbs %},
+        {
+          "@type": "BreadcrumbList",
+          "@id": "{{ canonical or (site.url + page.url) }}#breadcrumb",
+          "itemListElement": [
+            {% for c in crumbs %}{
+              "@type": "ListItem",
+              "position": {{ loop.index }},
+              "name": {{ c.name | dump | safe }},
+              "item": "{{ site.url }}{{ c.url }}"
+            }{% if not loop.last %},{% endif %}{% endfor %}
+          ]
+        }{% endif %}
+      ]
+    }
+    </script>
+
+    {% block jsonld %}{% endblock %}
 
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-XEWZHB7QKW"></script>
@@ -52,7 +137,10 @@
     </script>
 </head>
 
-<body>
+<body{% if noVideo %} class="no-video"{% endif %}>
+    {% include "partials/icon-sprite.njk" %}
+    {% if not noVideo %}{% include "partials/video-bg.njk" %}{% endif %}
+
     {% block body %}{{ content | safe }}{% endblock %}
 
     <script src="/script.js"></script>

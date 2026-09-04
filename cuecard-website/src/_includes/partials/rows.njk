@@ -1,0 +1,25 @@
+{#
+  Numbered, ruled feature rows. No boxes, no icons - the number and the hairline
+  above it are the whole structure, which is what keeps a long page of these
+  readable instead of feeling like a wall of cards.
+
+  Set featureRows to a list of { h, p }.
+#}
+<section class="rows{% if rowsSolid %} solid{% endif %}" id="{{ rowsId or 'features' }}" aria-labelledby="{{ rowsId or 'features' }}-h">
+    <div class="wrap">
+        <p class="micro">{{ rowsMicro or "What you get" }}</p>
+        <h2 class="section-h" id="{{ rowsId or 'features' }}-h">{{ rowsHeading | safe }}</h2>
+        {% if rowsNote %}<p class="body">{{ rowsNote | safe }}</p>{% endif %}
+        <ol class="rowlist">
+            {% for f in featureRows %}
+            <li class="row reveal">
+                <span class="row-n">{{ "0" + loop.index if loop.index < 10 else loop.index }}</span>
+                <div class="row-body">
+                    <h3>{{ f.h }}</h3>
+                    <p>{{ f.p | safe }}</p>
+                </div>
+            </li>
+            {% endfor %}
+        </ol>
+    </div>
+</section>

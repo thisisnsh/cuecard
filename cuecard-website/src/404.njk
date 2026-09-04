@@ -1,27 +1,35 @@
 ---
 layout: layouts/base.njk
-title: "CueCard - Page Not Found"
-description: "CueCard page not found."
 permalink: "404.html"
+title: "Page not found - CueCard"
+description: "That page does not exist. Here is the way back to the CueCard teleprompter for iPhone, and to the desktop app for Mac and Windows."
+noindex: true
 ---
-
 {% block body %}
+{% set navPrimaryHref = site.ios %}
+{% set navPrimaryIcon = "apple" %}
+{% set navPrimaryText = "Get it on iOS" %}
 {% include "partials/nav.njk" %}
 
 <main>
-    <section class="hero" style="min-height: 80vh;">
-        <h1 style="font-family: var(--font-display); font-size: clamp(4rem, 15vw, 8rem); font-weight: 800; color: var(--text-primary); margin-bottom: var(--space-md); line-height: 1;">404</h1>
-        <p class="hero-subtitle" style="margin-bottom: var(--space-xl); padding-top: 0;">
-            Oops! The page you're looking for doesn't exist.
-        </p>
-        <div class="hero-cta" style="justify-content: center;">
-            <a href="/" class="btn btn-primary">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                    <polyline points="9 22 9 12 15 12 15 22"/>
-                </svg>
-                <span>Back to Home</span>
-            </a>
+    <section class="hero hero-404" aria-labelledby="hero-h">
+        <div class="wrap">
+            <p class="micro">404</p>
+            <h1 class="display" id="hero-h">Lost your <em>place</em>?</h1>
+            <p class="body">
+                That page is not here. Which is ironic, for a product whose whole job is
+                keeping you on the line you were on. Here is the way back.
+            </p>
+            <div class="actions">
+                <a class="btn btn-primary" href="/">The mobile teleprompter</a>
+                <a class="btn btn-ghost" href="/desktop/">The desktop app</a>
+            </div>
+            <p class="backline">
+                <a href="/faq/">FAQ</a>
+                <a href="/blog/">Blog</a>
+                <a href="/privacy/">Privacy</a>
+                <a href="mailto:{{ site.email }}">Contact</a>
+            </p>
         </div>
     </section>
 </main>

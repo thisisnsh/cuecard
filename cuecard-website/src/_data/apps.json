@@ -53,7 +53,8 @@
         "question": "Is there a desktop version?",
         "answer": "Yes! CueCard is also available for macOS and Windows with additional features like Google Slides sync. <a href=\"/\">Try the desktop version</a>."
       }
-    ]
+    ],
+    "icon": "phone"
   },
   {
     "slug": "mobile/ios",
@@ -109,7 +110,8 @@
         "question": "Is there a desktop version for Mac?",
         "answer": "Yes! CueCard is also available for macOS with additional features like Google Slides sync. <a href=\"/\">Try the desktop version</a>."
       }
-    ]
+    ],
+    "icon": "apple"
   },
   {
     "slug": "mobile/android",
@@ -165,7 +167,8 @@
         "question": "Is there a desktop version for Windows?",
         "answer": "Yes! CueCard is also available for Windows with additional features like Google Slides sync. <a href=\"/\">Try the desktop version</a>."
       }
-    ]
+    ],
+    "icon": "android"
   },
   {
     "slug": "mobile/instagram",
@@ -221,7 +224,9 @@
         "question": "Will my followers see the teleprompter?",
         "answer": "No! CueCard floats above the Instagram app on your screen. Your followers only see your polished content, not your notes."
       }
-    ]
+    ],
+    "subject": "Instagram",
+    "icon": "instagram"
   },
   {
     "slug": "mobile/tiktok",
@@ -277,7 +282,9 @@
         "question": "Can I resize the teleprompter window?",
         "answer": "Yes! Resize and position the floating window wherever works best for your recording setup."
       }
-    ]
+    ],
+    "subject": "TikTok",
+    "icon": "tiktok"
   },
   {
     "slug": "mobile/youtube",
@@ -333,7 +340,9 @@
         "question": "Is CueCard free for YouTubers?",
         "answer": "Yes! CueCard is completely free. Perfect for creators at any subscriber count."
       }
-    ]
+    ],
+    "subject": "YouTube",
+    "icon": "youtube"
   },
   {
     "slug": "mobile/linkedin",
@@ -389,7 +398,9 @@
         "question": "Is CueCard free for professionals?",
         "answer": "Yes! CueCard is completely free and perfect for business professionals."
       }
-    ]
+    ],
+    "subject": "LinkedIn",
+    "icon": "linkedin"
   },
   {
     "slug": "mobile/facebook",
@@ -443,9 +454,11 @@
       },
       {
         "question": "Is CueCard free?",
-        "answer": "Yes! CueCard is completely free and available for iOS and Android."
+        "answer": "Yes! CueCard is completely free and open source. It is on the App Store for iOS now, and Android is coming soon."
       }
-    ]
+    ],
+    "subject": "Facebook",
+    "icon": "facebook"
   },
   {
     "slug": "mobile/snapchat",
@@ -499,9 +512,11 @@
       },
       {
         "question": "Is CueCard free?",
-        "answer": "Yes! CueCard is completely free and available for iOS and Android."
+        "answer": "Yes! CueCard is completely free and open source. It is on the App Store for iOS now, and Android is coming soon."
       }
-    ]
+    ],
+    "subject": "Snapchat",
+    "icon": "snapchat"
   },
   {
     "slug": "mobile/twitter",
@@ -555,8 +570,10 @@
       },
       {
         "question": "Is CueCard free?",
-        "answer": "Yes! CueCard is completely free and available for iOS and Android."
+        "answer": "Yes! CueCard is completely free and open source. It is on the App Store for iOS now, and Android is coming soon."
       }
-    ]
+    ],
+    "subject": "X",
+    "icon": "twitter"
   }
 ]

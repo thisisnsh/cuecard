@@ -1,49 +1,87 @@
-<section class="hero">
-    <p class="hero-subtitle">
-        {{ (platform.heroSubtitle if platform else heroSubtitle) | safe }}
-    </p>
-    <div class="hero-gif-card" id="hero-gif-card">
-        <iframe
-            width="1004"
-            height="643"
-            class="hero-gif"
-            id="hero-video"
-            src="https://www.youtube.com/embed/VQ85qXoMfis?autoplay=1&mute=1&loop=1&playlist=VQ85qXoMfis&controls=0&modestbranding=1&rel=0&showinfo=0"
-            title="{{ videoTitle or 'CueCard - Invisible Speaker Notes' }}"
-            frameborder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            referrerpolicy="strict-origin-when-cross-origin"
-            allowfullscreen>
-        </iframe>
-    </div>
-    <p class="hero-tagline shimmer">
-        Sync notes from Google Slides, or paste notes for any other meeting.
-    </p>
-    <div class="hero-cta">
-        <a href="{{ downloadBtnHref or '#download' }}" class="btn btn-primary" id="hero-download-btn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="7 10 12 15 17 10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
-            <span id="hero-download-text">Download CueCard</span>
-        </a>
-        <a href="https://github.com/thisisnsh/cuecard" target="_blank" class="btn btn-secondary view-source-btn" id="hero-source-btn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-            </svg>
-            <span id="hero-stars-text">View Source</span>
-        </a>
-    </div>
-    <div class="hero-platforms">
-        <p class="platforms-label">Undetectable On:</p>
-        <div class="platforms-logos">
-            <a href="/zoom/" class="platform-logo platform-zoom">Zoom</a>
-            <a href="/microsoft-teams/" class="platform-logo platform-teams">Microsoft Teams</a>
-            <a href="/google-meet/" class="platform-logo platform-meet">Google Meet</a>
+{% from "partials/icons.njk" import icon %}
+{#
+  The opening passage of every page.
+
+  It degrades on purpose: a page that only sets `heroSubtitle` - which is all
+  the older platform and role pages do - still gets a full hero, with that line
+  promoted from a stray paragraph to the page's <h1>. Pages that have more to
+  say set heroMicro, heroTitle and heroBody instead.
+
+  The demo is a facade, not an embed: a poster and a play button, with the
+  YouTube iframe swapped in on the first click. A third-party player loaded on
+  every page view would be the single heaviest thing on this site and would be
+  watched by almost nobody.
+#}
+<section class="hero{% if heroClass %} {{ heroClass }}{% endif %}" aria-labelledby="hero-h">
+    <div class="wrap">
+        {% include "partials/breadcrumbs.njk" %}
+
+        {% if heroMicro %}<p class="micro reveal">{{ heroMicro }}</p>{% endif %}
+
+        <h1 class="display hero-subtitle{% if heroLong %} display-long{% endif %} reveal d1" id="hero-h">
+            {{ (heroTitle or (platform.heroSubtitle if platform else heroSubtitle)) | safe }}
+        </h1>
+
+        {% if heroBody %}<p class="body reveal d2">{{ heroBody | safe }}</p>{% endif %}
+
+        <div class="actions hero-cta reveal d3">
+            {% set primaryHref = heroPrimaryHref or downloadBtnHref or "#download" %}
+            <a class="btn btn-primary" href="{{ primaryHref }}" id="hero-download-btn"{% if heroPrimaryExternal %} target="_blank" rel="noopener"{% endif %}>
+                {{ icon(heroPrimaryIcon or "download", 17) }}
+                <span id="hero-download-text"{% if primaryHref == "#download" %} data-download-count{% endif %}>{{ heroPrimaryText or "Download CueCard" }}</span>
+            </a>
+
+            {% if heroSecondaryText %}
+            <a class="btn btn-ghost" href="{{ heroSecondaryHref }}"{% if heroSecondaryExternal %} target="_blank" rel="noopener"{% endif %}>
+                {% if heroSecondaryIcon %}{{ icon(heroSecondaryIcon, 17) }}{% endif %}{{ heroSecondaryText }}
+            </a>
+            {% else %}
+            <a class="btn btn-ghost view-source-btn" href="{{ site.github }}" target="_blank" rel="noopener" id="hero-source-btn">
+                {{ icon("github", 17) }}<span id="hero-stars-text">View source</span>
+            </a>
+            {% endif %}
         </div>
-        <p class="platforms-more">
-            <a href="{{ faqLink or '#faq-undetectable' }}">and more...</a>
-        </p>
+
+        <span class="meta-note reveal d3">{{ heroNote or "Free · Open source · No subscription" }}</span>
+
+        {% if heroTagline %}<p class="hero-tagline shimmer reveal d3">{{ heroTagline | safe }}</p>{% endif %}
+
+        {# The demo. Only rendered when the page names a video. #}
+        {% if heroVideoId %}
+        <div class="hero-gif-card reveal d3" id="hero-gif-card">
+            <button class="video-facade" type="button"
+                    data-video="{{ heroVideoId }}"
+                    aria-label="Play the demo: {{ heroVideoTitle or 'CueCard demo' }}">
+                <img class="video-facade-poster" src="https://i.ytimg.com/vi/{{ heroVideoId }}/maxresdefault.jpg"
+                     alt="" width="1280" height="720" loading="lazy" decoding="async">
+                <span class="video-facade-play">{{ icon("play", 26) }}</span>
+                <span class="video-facade-label">{{ heroVideoTitle or "Watch the demo" }}</span>
+            </button>
+        </div>
+        {% endif %}
+
+        {# The strip of apps this page is about. `social` on the mobile side,
+           `meeting` on the desktop side - the wording of the label is what
+           carries the keyword, so it differs per side rather than being generic. #}
+        {% set strip = heroStrip or "meeting" %}
+        {% if strip != "none" %}
+        <div class="hero-platforms reveal">
+            <p class="platforms-label">{{ stripLabel or ("Reads over:" if strip == "social" else "Undetectable on:") }}</p>
+            <ul class="platforms-logos">
+                {% if strip == "social" %}
+                {% for a in site.socialApps %}
+                <li><a href="/mobile/{{ a.slug }}/" class="platform-logo">{{ icon(a.icon, 17) }}<span>{{ a.name }}</span></a></li>
+                {% endfor %}
+                {% else %}
+                {% for a in site.meetingApps %}
+                <li><a href="/{{ a.slug }}/" class="platform-logo platform-{{ a.icon }}">{{ icon(a.icon, 17) }}<span>{{ a.name }}</span></a></li>
+                {% endfor %}
+                {% endif %}
+            </ul>
+            <p class="platforms-more">
+                <a href="{{ faqLink or '#faq' }}">{{ stripMore or "and every other app on your screen" }} {{ icon("arrow", 14) }}</a>
+            </p>
+        </div>
+        {% endif %}
     </div>
 </section>

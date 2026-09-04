@@ -1,8 +1,14 @@
 // CueCard Website - Interactions & Animations
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize hero gif loading
-    initHeroGifLoading();
+    // The fixed reel behind the page, loaded only when it is worth loading
+    initBackgroundVideo();
+
+    // The demo player, swapped in for its poster on the first click
+    initVideoFacade();
+
+    // The menu on narrow screens
+    initNavToggle();
 
     // Initialize scroll reveal animations
     initScrollReveal();
@@ -36,67 +42,135 @@ document.addEventListener('DOMContentLoaded', () => {
 
 });
 
-// Hero GIF Loading - Show poster first, then load actual gif
-function initHeroGifLoading() {
-    const heroGif = document.getElementById('hero-gif');
-    if (!heroGif) return;
+/* The background reel.
 
-    const heroGifCard = document.getElementById('hero-gif-card');
-    const gifSrc = heroGif.dataset.gifSrc;
-    if (!gifSrc) return;
+   The poster is already painted by the time this runs, so the only job here is
+   to decide whether this visitor should also pay for the video, and to fade it
+   in over the poster once it can actually play. If it never can, the poster
+   simply stays and nothing is broken. */
+function initBackgroundVideo() {
+    const video = document.getElementById('bgvideo');
+    const loading = document.getElementById('video-loading');
+    const poster = document.querySelector('.videobg-poster');
 
-    // Preload the actual gif
-    const gifImage = new Image();
-    gifImage.onload = () => {
-        // Once loaded, swap to the actual gif
-        heroGif.src = gifSrc;
-        if (heroGifCard) {
-            setTimeout(() => {
-                heroGifCard.classList.add('hero-gif-loaded');
-            }, 2000);
-        }
+    // A broken poster should be absent, not a browser's torn-image mark.
+    if (poster) poster.addEventListener('error', () => poster.remove(), { once: true });
+
+    if (!video) return;
+
+    // Respect explicit accessibility and bandwidth preferences. Everyone else,
+    // phones included, gets the reel.
+    const conn = navigator.connection || {};
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || conn.saveData === true) {
+        video.remove();
+        return;
+    }
+
+    if (loading) loading.hidden = false;
+
+    const addSource = (type, src) => {
+        if (!src) return;
+        const source = document.createElement('source');
+        source.type = type;
+        source.src = src;
+        video.appendChild(source);
     };
-    gifImage.src = gifSrc;
+
+    let settled = false;
+    const settle = () => {
+        if (settled) return;
+        settled = true;
+        if (loading) loading.hidden = true;
+    };
+
+    video.addEventListener('canplay', () => {
+        settle();
+        // The poster stays underneath, so the crossfade reveals nothing.
+        video.classList.add('is-ready');
+        const played = video.play();
+        if (played && played.catch) played.catch(() => {});
+    }, { once: true });
+
+    video.addEventListener('error', settle, { once: true });
+
+    addSource('video/webm', video.dataset.webm);
+    addSource('video/mp4', video.dataset.mp4);
+    video.preload = 'auto';
+    video.load();
 }
 
-// Scroll Reveal Animation
+/* The demo player.
+
+   Every page ships a still and a play button rather than a YouTube iframe; the
+   real player is only built when someone asks for it. A third-party embed on
+   every page view would be the heaviest thing on this site and would be watched
+   by a small fraction of the people who paid for it. */
+function initVideoFacade() {
+    document.querySelectorAll('.video-facade').forEach(facade => {
+        facade.addEventListener('click', () => {
+            const id = facade.dataset.video;
+            if (!id) return;
+
+            const frame = document.createElement('iframe');
+            frame.src = 'https://www.youtube.com/embed/' + id +
+                '?autoplay=1&rel=0&modestbranding=1&playsinline=1';
+            frame.title = facade.getAttribute('aria-label') || 'CueCard demo';
+            frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+            frame.referrerPolicy = 'strict-origin-when-cross-origin';
+            frame.allowFullscreen = true;
+            frame.setAttribute('frameborder', '0');
+
+            facade.replaceWith(frame);
+        }, { once: true });
+    });
+}
+
+/* The menu on narrow screens. The links are a plain block that is hidden by a
+   media query and shown by this class, so with no JS at all the nav is still a
+   row of working links rather than a button that does nothing. */
+function initNavToggle() {
+    const toggle = document.getElementById('nav-toggle');
+    const links = document.getElementById('nav-links');
+    if (!toggle || !links) return;
+
+    toggle.addEventListener('click', () => {
+        const open = links.classList.toggle('open');
+        toggle.setAttribute('aria-expanded', String(open));
+    });
+
+    // Following a link should close the menu behind you.
+    links.addEventListener('click', (event) => {
+        if (event.target.closest('a')) {
+            links.classList.remove('open');
+            toggle.setAttribute('aria-expanded', 'false');
+        }
+    });
+}
+
+/* Reveal on scroll.
+
+   Purely additive: the elements start at opacity 0 in the stylesheet, and a
+   <noscript> rule in the head undoes that, so a reader without JS sees the page
+   rather than a column of blanks. */
 function initScrollReveal() {
-    const revealElements = document.querySelectorAll('.use-case-card, .feature-card, .faq-item');
+    const items = document.querySelectorAll('.reveal, .feature-card, .faq-item');
+    if (!items.length) return;
 
-    const revealOnScroll = () => {
-        const windowHeight = window.innerHeight;
+    if (!('IntersectionObserver' in window) ||
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        items.forEach(el => el.classList.add('in', 'revealed'));
+        return;
+    }
 
-        revealElements.forEach((element, index) => {
-            const elementTop = element.getBoundingClientRect().top;
-            const revealPoint = 100;
-
-            if (elementTop < windowHeight - revealPoint) {
-                // Add staggered delay based on index within viewport
-                element.style.transitionDelay = `${(index % 4) * 0.1}s`;
-                element.classList.add('revealed');
-            }
-        });
-    };
-
-    // Add CSS for reveal animation
-    const style = document.createElement('style');
-    style.textContent = `
-        .use-case-card, .feature-card, .faq-item {
-            opacity: 0;
-            transform: translateY(30px);
-            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    const observer = new IntersectionObserver(entries => {
+        for (const entry of entries) {
+            if (!entry.isIntersecting) continue;
+            entry.target.classList.add('in', 'revealed');
+            observer.unobserve(entry.target);
         }
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
 
-        .use-case-card.revealed, .feature-card.revealed, .faq-item.revealed {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    `;
-    document.head.appendChild(style);
-
-    // Run on load and scroll
-    window.addEventListener('scroll', revealOnScroll, { passive: true });
-    revealOnScroll(); // Initial check
+    items.forEach(el => observer.observe(el));
 }
 
 // Smooth Scroll for Anchor Links
@@ -105,6 +179,7 @@ function initSmoothScroll() {
         anchor.addEventListener('click', function (e) {
             e.preventDefault();
             const href = this.getAttribute('href');
+            if (!href || href === '#') return;
             const target = document.querySelector(href);
             if (target) {
                 // If target is a details element, open it
@@ -121,44 +196,16 @@ function initSmoothScroll() {
     });
 }
 
-// Navbar Background on Scroll
+/* The masthead is opaque and sticky from the first paint, so there is no
+   scrolled state to paint. The class is still toggled for anything that wants
+   to hang off it. */
 function initNavbarScroll() {
     const nav = document.querySelector('.nav');
-    let lastScroll = 0;
+    if (!nav) return;
 
-    window.addEventListener('scroll', () => {
-        const currentScroll = window.pageYOffset;
-
-        // Add/remove scrolled class for styling
-        if (currentScroll > 50) {
-            nav.classList.add('nav-scrolled');
-        } else {
-            nav.classList.remove('nav-scrolled');
-        }
-
-        // Hide/show on scroll direction (optional - commented out for simplicity)
-        // if (currentScroll > lastScroll && currentScroll > 100) {
-        //     nav.style.transform = 'translateY(-100%)';
-        // } else {
-        //     nav.style.transform = 'translateY(0)';
-        // }
-
-        lastScroll = currentScroll;
-    }, { passive: true });
-
-    // Add CSS for scrolled state
-    const style = document.createElement('style');
-    style.textContent = `
-        .nav {
-            transition: background 0.3s ease, border-color 0.3s ease;
-        }
-
-        .nav-scrolled {
-            background: rgba(0, 0, 0, 0.95);
-            border-bottom-color: rgba(255, 255, 255, 0.1);
-        }
-    `;
-    document.head.appendChild(style);
+    const onScroll = () => nav.classList.toggle('nav-scrolled', window.scrollY > 12);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
 }
 
 // FAQ Accordion Enhancement
@@ -421,59 +468,6 @@ function updateTimestampColor(element, seconds) {
     } else if (seconds <= 10) {
         element.classList.add('timestamp-warning');
     }
-}
-
-// Cursor trail effect (subtle, optional)
-function initCursorEffect() {
-    const cursor = document.createElement('div');
-    cursor.classList.add('cursor-glow');
-    document.body.appendChild(cursor);
-
-    const style = document.createElement('style');
-    style.textContent = `
-        .cursor-glow {
-            position: fixed;
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, rgba(26, 178, 196, 0.1) 0%, transparent 70%);
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 0;
-            transform: translate(-50%, -50%);
-            transition: opacity 0.3s ease;
-            opacity: 0;
-        }
-
-        body:hover .cursor-glow {
-            opacity: 1;
-        }
-    `;
-    document.head.appendChild(style);
-
-    let mouseX = 0, mouseY = 0;
-    let cursorX = 0, cursorY = 0;
-
-    document.addEventListener('mousemove', (e) => {
-        mouseX = e.clientX;
-        mouseY = e.clientY;
-    });
-
-    function animateCursor() {
-        cursorX += (mouseX - cursorX) * 0.1;
-        cursorY += (mouseY - cursorY) * 0.1;
-
-        cursor.style.left = cursorX + 'px';
-        cursor.style.top = cursorY + 'px';
-
-        requestAnimationFrame(animateCursor);
-    }
-
-    animateCursor();
-}
-
-// Initialize cursor effect only on desktop
-if (window.matchMedia('(hover: hover)').matches && window.innerWidth > 1024) {
-    initCursorEffect();
 }
 
 // Handle GIF placeholder interactions
@@ -827,17 +821,18 @@ function calculateTotalDownloads() {
         `;
     }
 
-    // Update nav download button with total downloads
-    const navDownloadCount = document.getElementById('nav-download-count');
-    if (navDownloadCount && totalDownloads > 0) {
-        navDownloadCount.textContent = formatNumber(totalDownloads) + " Downloads";
-    }
+    // Hang the count off the download buttons as social proof. It is appended
+    // rather than substituted: a button that reads only "505 Downloads" has
+    // stopped saying what pressing it does.
+    const withCount = (el) => {
+        if (!el || !(totalDownloads > 0)) return;
+        const label = el.dataset.label || el.textContent.trim();
+        el.dataset.label = label;
+        el.textContent = label + ' · ' + formatNumber(totalDownloads);
+    };
 
-    // Update hero download button with total downloads
-    const heroDownloadText = document.getElementById('hero-download-text');
-    if (heroDownloadText && totalDownloads > 0) {
-        heroDownloadText.textContent = formatNumber(totalDownloads) + " Downloads";
-    }
+    withCount(document.querySelector('#nav-download-count[data-download-count]'));
+    withCount(document.querySelector('#hero-download-text[data-download-count]'));
 }
 
 function populateReleaseDropdown() {

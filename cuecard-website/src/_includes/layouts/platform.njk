@@ -1,27 +1,30 @@
 {% extends "layouts/base.njk" %}
 
+{# The page's own questions first - they carry the app's name, which is the
+   phrase this page is trying to rank for - then the rest of the desktop bank,
+   then the general ones. Nothing is asked twice. #}
+{% set platformFaq = faq.withGeneral(faq.merge(platform.faqJsonLd, faq.desktop)) %}
+
 {% block jsonld %}
 <script type="application/ld+json">
 {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    "name": "{{ jsonLdName }}",
+    "@id": "{{ platform.canonical }}#app",
+    "name": "{{ platform.jsonLdName }}",
     "applicationCategory": "BusinessApplication",
+    "applicationSubCategory": "Presentation Teleprompter",
     "operatingSystem": "macOS, Windows",
-    "description": "{{ jsonLdDescription }}",
-    "url": "{{ canonical }}",
-    "downloadUrl": "https://github.com/thisisnsh/cuecard/releases",
+    "description": {{ platform.jsonLdDescription | dump | safe }},
+    "url": "{{ platform.canonical }}",
+    "downloadUrl": "{{ site.releases }}",
+    "installUrl": "{{ site.releases }}",
+    "image": "https://cuecard.dev/assets/og-image.png",
     "softwareVersion": "1.4.1",
-    "author": {
-        "@type": "Organization",
-        "name": "CueCard",
-        "url": "https://cuecard.dev"
-    },
-    "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-    },
+    "isAccessibleForFree": true,
+    "author": { "@id": "https://cuecard.dev/#org" },
+    "publisher": { "@id": "https://cuecard.dev/#org" },
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD", "availability": "https://schema.org/InStock" },
     "featureList": [
         {% for feature in platform.jsonLdFeatures %}"{{ feature }}"{% if not loop.last %},{% endif %}
         {% endfor %}
@@ -32,15 +35,15 @@
 {
     "@context": "https://schema.org",
     "@type": "FAQPage",
+    "@id": "{{ platform.canonical }}#faq",
+    "isPartOf": { "@id": "{{ platform.canonical }}#webpage" },
+    "inLanguage": "en",
     "mainEntity": [
-        {% for faq in platform.faqJsonLd %}
+        {% for item in platformFaq %}
         {
             "@type": "Question",
-            "name": "{{ faq.question }}",
-            "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "{{ faq.answer }}"
-            }
+            "name": {{ item.question | dump | safe }},
+            "acceptedAnswer": { "@type": "Answer", "text": {{ item.answer | striptags | dump | safe }} }
         }{% if not loop.last %},{% endif %}
         {% endfor %}
     ]
@@ -49,16 +52,62 @@
 {% endblock %}
 
 {% block body %}
-{% set navCtaText = "Download on iOS or Android" %}
-{% set navCtaTextMobile = "Download for Mobile" %}
-{% set navCtaHref = "/mobile/" %}
+{% set navPrimaryHref = "#download" %}
+{% set navPrimaryIcon = "download" %}
+{% set navPrimaryText = "Download" %}
+{% set navCtaText = "Filming on your phone instead? CueCard floats over every app on iOS" %}
+{% set navCtaTextMobile = "Also on iOS" %}
+{% set navCtaHref = "/" %}
 {% include "partials/nav.njk" %}
 
 <main>
+    {% set heroMicro = "CueCard for " + platform.name %}
+    {% set heroTitle = platform.heroSubtitle %}
+    {% set heroLong = true %}
+    {% set heroBody = platform.jsonLdDescription %}
+    {% set heroPrimaryHref = "#download" %}
+    {% set heroPrimaryIcon = "download" %}
+    {% set heroPrimaryText = "Download CueCard" %}
+    {% set heroSecondaryText = "Watch the demo" %}
+    {% set heroSecondaryHref = site.youtube.desktop.watch %}
+    {% set heroSecondaryIcon = "play" %}
+    {% set heroSecondaryExternal = true %}
+    {% set heroNote = "Free · Open source · macOS and Windows" %}
+    {% set heroStrip = "meeting" %}
+    {% set faqLink = "#faq" %}
     {% include "partials/hero.njk" %}
+
+    {% set featureRows = features.forApp(platform.name, "meeting") %}
+    {% set rowsMicro = "What you get" %}
+    {% set rowsHeading = "Everything " + platform.name + " sees is your slide" %}
+    {% set rowsId = "features" %}
+    {% set rowsSolid = true %}
+    {% include "partials/rows.njk" %}
+
     {% include "partials/features.njk" %}
+
+    {% set gridRoles = site.desktopRoles %}
+    {% set gridBase = "/" %}
+    {% set gridId = "roles" %}
+    {% set gridMicro = "Made for" %}
+    {% set gridHeading = "Whoever has to hold the room" %}
+    {% set gridSuffix = "speaker notes" %}
+    {% include "partials/rolegrid.njk" %}
+
     {% include "partials/download.njk" %}
+
+    {% set faqItems = platformFaq %}
+    {% set faqHeading = "Questions about CueCard and " + platform.name %}
     {% include "partials/faq.njk" %}
+
+    {% set ctaHeading = "Know your lines.<br /><em>Show your slides.</em>" %}
+    {% set ctaPrimaryHref = "#download" %}
+    {% set ctaPrimaryIcon = "download" %}
+    {% set ctaPrimaryText = "Download for Mac or Windows" %}
+    {% set ctaSecondaryHref = "/" %}
+    {% set ctaSecondaryIcon = "phone" %}
+    {% set ctaSecondaryText = "Get the mobile teleprompter" %}
+    {% include "partials/cta.njk" %}
 </main>
 
 {% include "partials/footer.njk" %}

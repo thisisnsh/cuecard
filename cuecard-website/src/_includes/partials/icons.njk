@@ -1,0 +1,11 @@
+{#
+  {% from "partials/icons.njk" import icon %}  →  {{ icon("tiktok", 18) }}
+
+  Renders a <use> against the sprite that base.njk drops at the top of <body>,
+  so a page with forty icons carries forty six-byte references and one copy of
+  each path. Icons are always decorative here - every one of them sits next to
+  the word it illustrates - so they are hidden from assistive technology.
+#}
+{% macro icon(name, size = 18, cls = "") -%}
+<svg class="icon icon-{{ name }}{% if cls %} {{ cls }}{% endif %}" width="{{ size }}" height="{{ size }}" aria-hidden="true" focusable="false"><use href="#i-{{ name }}"/></svg>
+{%- endmacro %}

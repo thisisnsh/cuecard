@@ -9,40 +9,40 @@ eleventyComputed:
   description: "{{ mobileProfession.description }}"
   keywords: "{{ mobileProfession.keywords }}"
   canonical: "{{ mobileProfession.canonical }}"
+  pageName: "CueCard for {{ mobileProfession.name }}"
   ogTitle: "{{ mobileProfession.ogTitle }}"
   ogDescription: "{{ mobileProfession.ogDescription }}"
   ogUrl: "{{ mobileProfession.canonical }}"
-  ogImageWidth: "1280"
-  ogImageHeight: "640"
   ogLocale: "en_US"
 layout: layouts/mobile-profession.njk
 ---
+{% set roleFaq = faq.withGeneral(mobileProfession.faq) %}
 {% block jsonld %}
 <script type="application/ld+json">
 {
     "@context": "https://schema.org",
     "@type": "MobileApplication",
+    "@id": "{{ mobileProfession.canonical }}#app",
     "name": "CueCard for {{ mobileProfession.name }}",
     "applicationCategory": "UtilitiesApplication",
-    "operatingSystem": "iOS, Android",
-    "description": "{{ mobileProfession.description }}",
+    "applicationSubCategory": "Teleprompter",
+    "operatingSystem": "iOS 17.0 or later",
+    "description": {{ mobileProfession.description | dump | safe }},
     "url": "{{ mobileProfession.canonical }}",
+    "downloadUrl": "{{ site.ios }}",
+    "installUrl": "{{ site.ios }}",
+    "image": "https://cuecard.dev/assets/og-image.png",
     "softwareVersion": "1.0.0",
-    "author": {
-        "@type": "Organization",
-        "name": "CueCard",
-        "url": "https://cuecard.dev"
-    },
-    "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-    },
+    "isAccessibleForFree": true,
+    "author": { "@id": "https://cuecard.dev/#org" },
+    "publisher": { "@id": "https://cuecard.dev/#org" },
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD", "availability": "https://schema.org/InStock" },
     "featureList": [
         "Floating teleprompter over any app",
-        "Auto-scroll at custom speed",
-        "Resizable teleprompter window",
-        "Works with Camera, Instagram, TikTok, and more"
+        "Auto-scroll at a speed you set, with word-by-word highlighting",
+        "Delivery cues written into the script and never spoken",
+        "Overlay sized to 16:9, 4:3 or 1:1",
+        "Countdown before the script starts, and a timer while it runs"
     ]
 }
 </script>
@@ -50,15 +50,15 @@ layout: layouts/mobile-profession.njk
 {
     "@context": "https://schema.org",
     "@type": "FAQPage",
+    "@id": "{{ mobileProfession.canonical }}#faq",
+    "isPartOf": { "@id": "{{ mobileProfession.canonical }}#webpage" },
+    "inLanguage": "en",
     "mainEntity": [
-        {% for faq in mobileProfession.faq %}
+        {% for item in roleFaq %}
         {
             "@type": "Question",
-            "name": "{{ faq.question }}",
-            "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "{{ faq.answer | replace('"', '\\"') | striptags }}"
-            }
+            "name": {{ item.question | dump | safe }},
+            "acceptedAnswer": { "@type": "Answer", "text": {{ item.answer | striptags | dump | safe }} }
         }{% if not loop.last %},{% endif %}
         {% endfor %}
     ]
@@ -67,162 +67,90 @@ layout: layouts/mobile-profession.njk
 {% endblock %}
 
 {% block body %}
-<nav class="nav">
-    <a href="/mobile/{{ mobileProfession.slug }}/" class="nav-logo">
-        <img class="logo-icon" src="/assets/logo-circle.png" width="32" height="32" alt="" aria-hidden="true">
-        <span>CueCard</span>
-    </a>
-    <div class="nav-links">
-        <a href="https://github.com/thisisnsh/cuecard" target="_blank" rel="noopener" class="nav-link github-link">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-            </svg>
-            <span class="star-count" id="github-stars">Star</span>
-        </a>
-    </div>
-</nav>
-<div class="nav-secondary">
-    {% if mobileProfession.desktopCounterpart %}
-    <a href="/{{ mobileProfession.desktopCounterpart }}/" class="nav-secondary-btn">
-        <span class="nav-secondary-text">Download for Mac or Windows</span>
-        <span class="nav-secondary-text-mobile">Download for Desktop</span>
-    </a>
-    {% else %}
-    <a href="/" class="nav-secondary-btn">
-        <span class="nav-secondary-text">Download for Mac or Windows</span>
-        <span class="nav-secondary-text-mobile">Download for Desktop</span>
-    </a>
-    {% endif %}
-</div>
+{% set navPrimaryHref = site.ios %}
+{% set navPrimaryIcon = "apple" %}
+{% set navPrimaryText = "Get it on iOS" %}
+{% if mobileProfession.desktopCounterpart %}
+{% set navCtaHref = "/" + mobileProfession.desktopCounterpart + "/" %}
+{% else %}
+{% set navCtaHref = "/desktop/" %}
+{% endif %}
+{% set navCtaText = "Presenting from a Mac or PC? CueCard hides your speaker notes there too" %}
+{% set navCtaTextMobile = "Also for Mac and Windows" %}
+{% include "partials/nav.njk" %}
 
 <main>
-    <!-- Hero Section -->
-    <section class="hero hero-app">
-        <p class="hero-subtitle">
-            {{ mobileProfession.heroSubtitle | safe }}
-        </p>
+    {% set heroClass = "hero-app" %}
+    {% set heroMicro = "CueCard for " + mobileProfession.name %}
+    {% set heroTitle = mobileProfession.heroSubtitle %}
+    {% set heroLong = true %}
+    {% set heroBody = "A floating teleprompter built for " + mobileProfession.targetAudience + ". Your script sits on top of whatever app you are recording in, auto-scrolling while you talk, so you keep your eyes up and your takes whole." %}
+    {% set heroPrimaryHref = site.ios %}
+    {% set heroPrimaryExternal = true %}
+    {% set heroPrimaryIcon = "apple" %}
+    {% set heroPrimaryText = "Download on iOS" %}
+    {% set heroSecondaryText = "Watch the demo" %}
+    {% set heroSecondaryHref = site.youtube.mobile.watch %}
+    {% set heroSecondaryIcon = "play" %}
+    {% set heroSecondaryExternal = true %}
+    {% set heroNote = "Free · iOS 17+ · Android coming soon · Open source" %}
+    {% set heroTagline = "No more forgetting your lines or switching screens." %}
+    {% set heroStrip = "social" %}
+    {% set stripMore = "and every other app you record in" %}
+    {% set faqLink = "#faq" %}
+    {% include "partials/hero.njk" %}
 
-        <!-- App Store Buttons -->
-        <div class="app-store-buttons" id="download">
-            <a href="https://apps.apple.com/app/cuecard-teleprompter/id6757321325" target="_blank" rel="noopener" class="app-store-btn">
-                <svg viewBox="0 2 24 24" fill="currentColor">
-                    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
-                </svg>
-                <span class="app-store-label">
-                    <span class="app-store-name app-store-name-full">Download on iOS</span>
-                    <span class="app-store-name app-store-name-short">Download</span>
-                </span>
-            </a>
-            <span class="app-store-btn app-store-btn-disabled">
-                <svg viewBox="0 2 24 24" fill="currentColor">
-                    <path d="M17.6 9.48l1.43-2.49a.25.25 0 0 0-.09-.34.25.25 0 0 0-.34.09l-1.45 2.5A7.007 7.007 0 0 0 12 8c-1.84 0-3.55.7-4.8 1.84L5.75 7.09a.25.25 0 0 0-.34-.09.25.25 0 0 0-.09.34l1.43 2.49A5.987 5.987 0 0 0 4 14.5V19c0 .55.45 1 1 1h1v2c0 .55.45 1 1 1s1-.45 1-1v-2h8v2c0 .55.45 1 1 1s1-.45 1-1v-2h1c.55 0 1-.45 1-1v-4.5c0-1.56-.6-3-1.6-4.02zM8 14a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm8 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
-                </svg>
-                <span class="app-store-label">
-                    <span class="app-store-name app-store-name-full">Coming Soon on Android</span>
-                    <span class="app-store-name app-store-name-short">Coming Soon</span>
-                </span>
-            </span>
-        </div>
+    <section class="solid" aria-labelledby="get-h">
+        <div class="wrap">
+            <p class="micro">Get the app</p>
+            <h2 class="section-h" id="get-h">On your phone in under a minute</h2>
+            {% include "partials/app-store.njk" %}
 
+            {% if mobileProfession.useCases %}
+            <p class="micro footer-micro-2">What {{ mobileProfession.name | lower }} use it for</p>
+            <ul class="crestgrid">
+                {% for use in mobileProfession.useCases %}
+                <li><span class="usecase">{{ use }}</span></li>
+                {% endfor %}
+            </ul>
+            {% endif %}
 
-        <div class="app-screenshots">
-            <div class="app-screenshot-card">
-                <img src="/assets/app-ios1.jpg" alt="CueCard Teleprompter floating over camera" class="app-screenshot">
-            </div>
-            <div class="app-screenshot-card">
-                <img src="/assets/app-ios2.jpg" alt="CueCard with timer and notes" class="app-screenshot">
-            </div>
-            <div class="app-screenshot-card">
-                <img src="/assets/app-ios3.jpg" alt="CueCard features - resizable, floats over apps" class="app-screenshot">
-            </div>
-        </div>
-
-        <p class="hero-tagline shimmer">
-            No more forgetting your lines or switching screens.
-        </p>
-    </section>
-
-    <!-- Features Section -->
-    <section class="features">
-        <div class="section-header">
-            <span class="section-tag">Features</span>
-            <h2 class="section-title">Everything You Need<br class="desktop-br"> to Stay on Script</h2>
-        </div>
-
-        <div class="app-features-grid">
-            <div class="app-feature-item">
-                <div class="app-feature-icon">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="7" y="2" width="10" height="20" rx="5"></rect>
-                        <path d="M12 7v4"></path>
-                        <path d="M10.5 16l1.5 1.5 1.5-1.5"></path>
-                    </svg>
+            <div class="app-screenshots">
+                <div class="app-screenshot-card">
+                    <img src="/assets/app-ios1.jpg" alt="The CueCard teleprompter floating above the camera app" class="app-screenshot" width="1260" height="2736" loading="lazy" decoding="async">
                 </div>
-                <h3 class="app-feature-title">Auto-Scroll Teleprompter</h3>
-                <p class="app-feature-desc">Auto-scroll your script at a comfortable pace so you can stay focused.</p>
-            </div>
-            <div class="app-feature-item">
-                <div class="app-feature-icon">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
-                        <polyline points="2 17 12 22 22 17"></polyline>
-                        <polyline points="2 12 12 17 22 12"></polyline>
-                    </svg>
+                <div class="app-screenshot-card">
+                    <img src="/assets/app-ios2.jpg" alt="A CueCard script with the timer running and a delivery cue highlighted" class="app-screenshot" width="1260" height="2736" loading="lazy" decoding="async">
                 </div>
-                <h3 class="app-feature-title">Floats Over All Apps</h3>
-                <p class="app-feature-desc">Your notes stay visible while using Camera, Instagram, TikTok, or any other app.</p>
-            </div>
-            <div class="app-feature-item">
-                <div class="app-feature-icon">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="15 3 21 3 21 9"></polyline>
-                        <polyline points="9 21 3 21 3 15"></polyline>
-                        <line x1="21" y1="3" x2="14" y2="10"></line>
-                        <line x1="3" y1="21" x2="10" y2="14"></line>
-                    </svg>
+                <div class="app-screenshot-card">
+                    <img src="/assets/app-ios3.jpg" alt="CueCard settings: overlay size, text size and scroll speed" class="app-screenshot" width="1260" height="2736" loading="lazy" decoding="async">
                 </div>
-                <h3 class="app-feature-title">Resizable Window</h3>
-                <p class="app-feature-desc">Adjust the teleprompter size to fit your screen perfectly.</p>
-            </div>
-            <div class="app-feature-item">
-                <div class="app-feature-icon">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="4 7 4 4 20 4 20 7"></polyline>
-                        <line x1="9" y1="20" x2="15" y2="20"></line>
-                        <line x1="12" y1="4" x2="12" y2="20"></line>
-                    </svg>
-                </div>
-                <h3 class="app-feature-title">Adjustable Text</h3>
-                <p class="app-feature-desc">Customize font size and scroll speed for comfortable reading.</p>
             </div>
         </div>
     </section>
 
+    {% set featureRows = features.mobile %}
+    {% set rowsMicro = "What you get" %}
+    {% set rowsHeading = "Everything you need to stay on script" %}
+    {% set rowsId = "features" %}
+    {% include "partials/rows.njk" %}
+
+    {% set syntaxKind = "mobile" %}
     {% include "partials/features.njk" %}
 
-    <!-- FAQ Section -->
-    <section class="faq">
-        <div class="section-header">
-            <span class="section-tag">FAQ</span>
-            <h2 class="section-title">Questions?<br />We've got answers.</h2>
-        </div>
+    {% set appRows = site.socialApps %}
+    {% set appBase = "/mobile/" %}
+    {% set stripId = "apps" %}
+    {% set stripMicro = "Record anywhere" %}
+    {% set stripHeading = "It floats over the app you already film in" %}
+    {% set stripSolid = true %}
+    {% include "partials/applist.njk" %}
 
-        {% for faq in mobileProfession.faq %}
-        <details class="faq-item" {% if loop.first %}open{% endif %}>
-            <summary class="faq-question">
-                <span>{{ faq.question }}</span>
-                <svg class="faq-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M6 9l6 6 6-6" />
-                </svg>
-            </summary>
-            <div class="faq-answer">
-                <p>{{ faq.answer | safe }}</p>
-            </div>
-        </details>
-        {% endfor %}
+    {% set faqItems = roleFaq %}
+    {% set faqHeading = "Questions from " + mobileProfession.name | lower %}
+    {% include "partials/faq.njk" %}
 
-        {% include "partials/faq-cta.njk" %}
-    </section>
+    {% include "partials/cta.njk" %}
 </main>
 
 {% include "partials/footer.njk" %}

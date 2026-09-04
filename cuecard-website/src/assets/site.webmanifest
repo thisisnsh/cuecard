@@ -1,7 +1,7 @@
 {
-  "name": "CueCard - Invisible Speaker Notes",
+  "name": "CueCard — Teleprompter & Speaker Notes",
   "short_name": "CueCard",
-  "description": "Invisible speaker notes for Zoom, Google Meet, and Microsoft Teams. Sync from Google Slides or paste notes for any meeting.",
+  "description": "A teleprompter that floats over every other app on your phone, and speaker notes that stay invisible while you share your screen on Zoom, Google Meet or Microsoft Teams.",
   "icons": [
     {
       "src": "/assets/web-app-manifest-192x192.png",

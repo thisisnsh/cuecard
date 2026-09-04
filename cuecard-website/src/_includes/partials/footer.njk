@@ -1,90 +1,100 @@
+{% from "partials/icons.njk" import icon %}
+{#
+  The footer is the site's index. Every page CueCard has is reachable from
+  here, arranged by which half of the product it belongs to: the phone app on
+  one side with the apps you record over, the computer app on the other with
+  the apps you present through, and a line at the foot of each column pointing
+  at the other side - because most people arrive knowing about one and not the
+  other.
+#}
 <footer class="footer">
-    <div class="footer-content">
-        <div class="footer-grid">
-            <!-- Company Section -->
-            <div class="footer-section">
-                <h4 class="footer-section-title">
-                    <a href="/">CueCard</a>
-                </h4>
-                <ul class="footer-section-links">
-                    <li><a href="https://github.com/thisisnsh/cuecard" target="_blank" rel="noopener">GitHub</a></li>
-                    <li><a href="/blog/">Blog</a></li>
-                    <li><a href="/privacy/">Privacy Policy</a></li>
-                    <li><a href="/faq/">FAQ</a></li>
-                    <li><a href="mailto:support@cuecard.dev">Support</a></li>
-                    <li><a href="/terms/">Terms of Service</a></li>
-                </ul>
-            </div>
+    <div class="footer-inner footer-content">
 
-            <!-- Platforms Section -->
-            <div class="footer-section">
-                <h4 class="footer-section-title">Platforms</h4>
-                <ul class="footer-section-links">
-                    <li><a href="/mobile/facebook/">Facebook</a></li>
-                    <li><a href="/google-meet/">Google Meet</a></li>
-                    <li><a href="/google-slides/">Google Slides</a></li>
-                    <li><a href="/mobile/instagram/">Instagram</a></li>
-                    <li><a href="/mobile/linkedin/">LinkedIn</a></li>
-                    <li><a href="/microsoft-teams/">Microsoft Teams</a></li>
-                    <li><a href="/mobile/snapchat/">Snapchat</a></li>
-                    <li><a href="/mobile/tiktok/">TikTok</a></li>
-                    <li><a href="/mobile/twitter/">Twitter</a></li>
-                    <li><a href="/mobile/youtube/">YouTube</a></li>
-                    <li><a href="/zoom/">Zoom</a></li>
-                </ul>
-            </div>
-
-            <!-- Desktop App Section -->
-            <div class="footer-section">
-                <h4 class="footer-section-title">
-                    <a href="/">Desktop App</a>
-                </h4>
-                <ul class="footer-section-links">
-                    <li><a href="/coaches/">For Coaches</a></li>
-                    <li><a href="/consultants/">For Consultants</a></li>
-                    <li><a href="/course-creators/">For Course Creators</a></li>
-                    <li><a href="/executives/">For Executives</a></li>
-                    <li><a href="/fitness-instructors/">For Fitness Instructors</a></li>
-                    <li><a href="/lawyers/">For Lawyers</a></li>
-                    <li><a href="/realtors/">For Realtors</a></li>
-                    <li><a href="/sales/">For Sales</a></li>
-                    <li><a href="/students/">For Students</a></li>
-                    <li><a href="/teachers/">For Teachers</a></li>
-                    <li><a href="/trainers/">For Trainers</a></li>
-                    <li><a href="/webinar-hosts/">For Webinar Hosts</a></li>
-                </ul>
-            </div>
-
-            <!-- Mobile App Section -->
-            <div class="footer-section">
-                <h4 class="footer-section-title">
-                    <a href="/mobile/">Mobile App</a>
-                </h4>
-                <ul class="footer-section-links">
-                    <li><a href="/mobile/ios/">For iOS</a></li>
-                    <li><a href="/mobile/android/">For Android</a></li>
-                    <li><a href="/mobile/coaches/">For Coaches</a></li>
-                    <li><a href="/mobile/content-creators/">For Content Creators</a></li>
-                    <li><a href="/mobile/course-creators/">For Course Creators</a></li>
-                    <li><a href="/mobile/fitness-instructors/">For Fitness Instructors</a></li>
-                    <li><a href="/mobile/podcasters/">For Podcasters</a></li>
-                    <li><a href="/mobile/realtors/">For Realtors</a></li>
-                    <li><a href="/mobile/sales/">For Sales</a></li>
-                    <li><a href="/mobile/streamers/">For Streamers</a></li>
-                    <li><a href="/mobile/teachers/">For Teachers</a></li>
-                    <li><a href="/mobile/tiktokers/">For TikTokers</a></li>
-                    <li><a href="/mobile/vloggers/">For Vloggers</a></li>
-                    <li><a href="/mobile/youtubers/">For YouTubers</a></li>
-                </ul>
-            </div>
-        </div>
-
-        <div class="footer-bottom">
-            <a href="/" class="footer-brand">
-                <img class="logo-icon" src="/assets/logo-circle.png" width="24" height="24" alt="" aria-hidden="true">
-                <span>CueCard</span>
+        <div class="footer-col footer-col-brand">
+            <a class="brand footer-brand" href="/">
+                <img class="brand-mark logo-icon" src="/assets/logo-circle.png" width="26" height="26" alt="" loading="lazy" decoding="async">
+                <span class="brand-text">Cue<b>Card</b></span>
             </a>
-            <p class="footer-copy">&copy; 2025 CueCard. Open Source under MIT License.</p>
+            <p class="footer-blurb">
+                A teleprompter that floats over every other app on your phone, and speaker
+                notes that stay invisible while you share your screen on your computer.
+                Free and open source.
+            </p>
+            <ul class="footer-list">
+                <li><a href="/">Mobile app</a></li>
+                <li><a href="/desktop/">Desktop app</a></li>
+                <li><a href="/blog/">Blog</a></li>
+                <li><a href="/faq/">FAQ</a></li>
+                <li><a href="/privacy/">Privacy policy</a></li>
+                <li><a href="/terms/">Terms of service</a></li>
+            </ul>
+            <ul class="footer-social">
+                <li><a href="{{ site.github }}" target="_blank" rel="noopener" aria-label="CueCard on GitHub">{{ icon("github", 18) }}</a></li>
+                <li><a href="{{ site.ios }}" target="_blank" rel="noopener" aria-label="CueCard on the App Store">{{ icon("apple", 18) }}</a></li>
+                <li><a href="mailto:{{ site.email }}" aria-label="Email CueCard support">{{ icon("mail", 18) }}</a></li>
+            </ul>
         </div>
+
+        <div class="footer-col">
+            <p class="micro"><a href="/">CueCard Mobile</a></p>
+            <ul class="footer-list footer-list-lead">
+                <li><a href="/mobile/ios/">{{ icon("apple", 15) }} iPhone and iPad</a></li>
+                <li><a href="/mobile/android/">{{ icon("android", 15) }} Android — coming soon</a></li>
+            </ul>
+
+            <p class="micro footer-micro-2">Read your script over</p>
+            <ul class="footer-list footer-list-2">
+                {% for a in site.socialApps %}
+                <li><a href="/mobile/{{ a.slug }}/">{{ icon(a.icon, 14) }} {{ a.name }}</a></li>
+                {% endfor %}
+            </ul>
+
+            <p class="micro footer-micro-2">Made for</p>
+            <ul class="footer-list footer-list-2">
+                {% for r in site.mobileRoles %}
+                <li><a href="/mobile/{{ r.slug }}/">{{ r.name }}</a></li>
+                {% endfor %}
+            </ul>
+
+            <p class="footer-cross">
+                <a href="/google-slides/">Presenting from Google Slides too? CueCard syncs those notes on desktop {{ icon("arrow", 14) }}</a>
+            </p>
+        </div>
+
+        <div class="footer-col">
+            <p class="micro"><a href="/desktop/">CueCard Desktop</a></p>
+            <ul class="footer-list footer-list-lead">
+                <li><a href="/desktop/#download">{{ icon("apple", 15) }} macOS</a></li>
+                <li><a href="/desktop/#download">{{ icon("monitor", 15) }} Windows</a></li>
+                <li><a href="{{ site.releases }}" target="_blank" rel="noopener">{{ icon("download", 15) }} All releases</a></li>
+            </ul>
+
+            <p class="micro footer-micro-2">Stay invisible on</p>
+            <ul class="footer-list footer-list-2">
+                {% for a in site.meetingApps %}
+                <li><a href="/{{ a.slug }}/">{{ icon(a.icon, 14) }} {{ a.name }}</a></li>
+                {% endfor %}
+            </ul>
+
+            <p class="micro footer-micro-2">Made for</p>
+            <ul class="footer-list footer-list-2">
+                {% for r in site.desktopRoles %}
+                <li><a href="/{{ r.slug }}/">{{ r.name }}</a></li>
+                {% endfor %}
+            </ul>
+
+            <p class="footer-cross">
+                <a href="/">Filming on your phone instead? The floating teleprompter is here {{ icon("arrow", 14) }}</a>
+            </p>
+        </div>
+
+    </div>
+
+    <div class="footer-base footer-bottom">
+        <p class="copy footer-copy">© {{ site.year }} CueCard — free and open source under the MIT licence.</p>
+        <p class="disclaimer">
+            Not affiliated with Apple, Google, Microsoft, Zoom, Meta, ByteDance, Snap or X.
+            Product names are used only to say which apps CueCard sits alongside.
+        </p>
     </div>
 </footer>

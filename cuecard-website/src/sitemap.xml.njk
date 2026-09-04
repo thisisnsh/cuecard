@@ -3,240 +3,46 @@ eleventyExcludeFromCollections: true
 permalink: "sitemap.xml"
 ---
 <?xml version="1.0" encoding="UTF-8"?>
+{#- Generated from the same data the pages are, so it cannot drift: the last
+    hand-maintained version of this file had fallen eight URLs behind, including
+    /faq/ and every social-app page.
+
+    The /ios/ and /android/ shortlinks are deliberately absent - they are
+    noindex meta-refresh stubs pointing at the app stores, not pages. -#}
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <!-- Main Pages -->
-  <url>
-    <loc>https://cuecard.dev/</loc>
-    <lastmod>2025-12-30</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>https://cuecard.dev/desktop/</loc>
-    <lastmod>2025-12-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://cuecard.dev/blog/</loc>
-    <lastmod>{% if blogs and blogs.length %}{{ blogs[0].datetime }}{% else %}2025-12-30{% endif %}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  {% for blog in blogs %}
-  <url>
-    <loc>https://cuecard.dev/blog/{{ blog.slug }}/</loc>
-    <lastmod>{{ blog.datetime }}</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  {% endfor %}
+  {%- set today = "2026-09-04" -%}
 
-  <!-- Platform-Specific Landing Pages -->
-  <url>
-    <loc>https://cuecard.dev/zoom/</loc>
-    <lastmod>2025-12-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://cuecard.dev/google-meet/</loc>
-    <lastmod>2025-12-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://cuecard.dev/microsoft-teams/</loc>
-    <lastmod>2025-12-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://cuecard.dev/google-slides/</loc>
-    <lastmod>2025-12-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
+  {# The two products, and the pages that serve both. #}
+  <url><loc>https://cuecard.dev/</loc><lastmod>{{ today }}</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://cuecard.dev/desktop/</loc><lastmod>{{ today }}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://cuecard.dev/faq/</loc><lastmod>{{ today }}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://cuecard.dev/blog/</loc><lastmod>{% if blogs and blogs.length %}{{ blogs[0].datetime }}{% else %}{{ today }}{% endif %}</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
 
-  <!-- Desktop Profession Pages -->
-  <url>
-    <loc>https://cuecard.dev/teachers/</loc>
-    <lastmod>2025-12-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://cuecard.dev/students/</loc>
-    <lastmod>2025-12-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://cuecard.dev/sales/</loc>
-    <lastmod>2025-12-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://cuecard.dev/trainers/</loc>
-    <lastmod>2025-12-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://cuecard.dev/coaches/</loc>
-    <lastmod>2025-12-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://cuecard.dev/executives/</loc>
-    <lastmod>2025-12-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://cuecard.dev/consultants/</loc>
-    <lastmod>2025-12-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://cuecard.dev/lawyers/</loc>
-    <lastmod>2025-12-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://cuecard.dev/webinar-hosts/</loc>
-    <lastmod>2025-12-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://cuecard.dev/course-creators/</loc>
-    <lastmod>2025-12-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://cuecard.dev/realtors/</loc>
-    <lastmod>2025-12-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://cuecard.dev/fitness-instructors/</loc>
-    <lastmod>2025-12-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
+  {# The mobile app: its own page, the two platforms, and one page per app it
+     is read over. #}
+  {%- for app in apps %}
+  <url><loc>{{ app.canonical }}</loc><lastmod>{{ today }}</lastmod><changefreq>monthly</changefreq><priority>{% if app.slug == "mobile" %}0.9{% else %}0.8{% endif %}</priority></url>
+  {%- endfor %}
 
-  <!-- Mobile App Pages -->
-  <url>
-    <loc>https://cuecard.dev/mobile/</loc>
-    <lastmod>2025-12-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://cuecard.dev/mobile/ios/</loc>
-    <lastmod>2025-12-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://cuecard.dev/mobile/android/</loc>
-    <lastmod>2025-12-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
+  {# The desktop app's meeting and presentation pages. #}
+  {%- for platform in platforms %}
+  <url><loc>{{ platform.canonical }}</loc><lastmod>{{ today }}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  {%- endfor %}
 
-  <!-- Mobile Profession Pages -->
-  <url>
-    <loc>https://cuecard.dev/mobile/content-creators/</loc>
-    <lastmod>2025-12-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://cuecard.dev/mobile/vloggers/</loc>
-    <lastmod>2025-12-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://cuecard.dev/mobile/youtubers/</loc>
-    <lastmod>2025-12-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://cuecard.dev/mobile/tiktokers/</loc>
-    <lastmod>2025-12-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://cuecard.dev/mobile/podcasters/</loc>
-    <lastmod>2025-12-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://cuecard.dev/mobile/streamers/</loc>
-    <lastmod>2025-12-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://cuecard.dev/mobile/teachers/</loc>
-    <lastmod>2025-12-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://cuecard.dev/mobile/coaches/</loc>
-    <lastmod>2025-12-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://cuecard.dev/mobile/course-creators/</loc>
-    <lastmod>2025-12-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://cuecard.dev/mobile/realtors/</loc>
-    <lastmod>2025-12-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://cuecard.dev/mobile/fitness-instructors/</loc>
-    <lastmod>2025-12-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://cuecard.dev/mobile/sales/</loc>
-    <lastmod>2025-12-30</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
+  {# Roles, on each side of the product. #}
+  {%- for profession in professions %}
+  <url><loc>{{ profession.canonical }}</loc><lastmod>{{ today }}</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  {%- endfor %}
+  {%- for role in mobileProfessions %}
+  <url><loc>{{ role.canonical }}</loc><lastmod>{{ today }}</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  {%- endfor %}
 
-  <!-- Legal Pages -->
-  <url>
-    <loc>https://cuecard.dev/privacy/</loc>
-    <lastmod>2025-12-29</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
-  </url>
-  <url>
-    <loc>https://cuecard.dev/terms/</loc>
-    <lastmod>2025-12-29</lastmod>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
-  </url>
+  {# Posts. #}
+  {%- for blog in blogs %}
+  <url><loc>https://cuecard.dev/blog/{{ blog.slug }}/</loc><lastmod>{{ blog.datetime }}</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  {%- endfor %}
+
+  {# The documents. #}
+  <url><loc>https://cuecard.dev/privacy/</loc><lastmod>{{ today }}</lastmod><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://cuecard.dev/terms/</loc><lastmod>{{ today }}</lastmod><changefreq>yearly</changefreq><priority>0.3</priority></url>
 </urlset>

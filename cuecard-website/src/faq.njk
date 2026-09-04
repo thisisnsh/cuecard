@@ -1,50 +1,100 @@
 ---
 layout: layouts/base.njk
-title: "CueCard FAQ - All Questions Answered"
-description: "All CueCard FAQs in one place, covering desktop, mobile, roles, and platforms."
-canonical: "https://cuecard.dev/faq/"
-ogTitle: "CueCard FAQ"
-ogDescription: "All CueCard FAQs in one place, covering desktop, mobile, roles, and platforms."
 permalink: "faq/index.html"
+title: "CueCard FAQ - Every Question About the Teleprompter App, Answered"
+description: "Every question we get asked about CueCard: the floating teleprompter for iPhone and iPad, the invisible speaker notes app for Zoom, Google Meet and Microsoft Teams on Mac and Windows, and what it costs (nothing)."
+keywords: "cuecard faq, teleprompter app faq, floating teleprompter questions, invisible speaker notes faq, zoom speaker notes, google meet notes, microsoft teams notes, google slides sync, free teleprompter, android teleprompter"
+canonical: "https://cuecard.dev/faq/"
+pageName: "CueCard FAQ"
+ogTitle: "CueCard FAQ - every question, answered"
+ogDescription: "Everything people ask about the floating teleprompter on iOS and the invisible speaker notes app for Mac and Windows."
+ogLocale: "en_US"
+crumbs:
+  - name: "CueCard"
+    url: "/"
+  - name: "FAQ"
+    url: "/faq/"
 ---
+{% block jsonld %}
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "@id": "https://cuecard.dev/faq/#faq",
+    "isPartOf": { "@id": "https://cuecard.dev/faq/#webpage" },
+    "inLanguage": "en",
+    "mainEntity": [
+        {% for item in faq.items %}
+        {
+            "@type": "Question",
+            "name": {{ item.question | dump | safe }},
+            "acceptedAnswer": { "@type": "Answer", "text": {{ item.answer | striptags | dump | safe }} }
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ]
+}
+</script>
+{% endblock %}
+
 {% block body %}
-{% set navCtaText = "Download on iOS or Android" %}
-{% set navCtaTextMobile = "Download for Mobile" %}
-{% set navCtaHref = "/mobile/" %}
+{% set navPrimaryHref = site.ios %}
+{% set navPrimaryIcon = "apple" %}
+{% set navPrimaryText = "Get it on iOS" %}
 {% include "partials/nav.njk" %}
 
 <main data-faq-page>
-    <section class="faq faq-page-hero">
-        <div class="section-header">
-            <h1 class="section-title">FAQ</h1>
-        </div>
-        <div class="faq-search">
-            <svg class="faq-search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" aria-hidden="true">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-            <input class="faq-search-input" id="faq-search" type="search"
-                placeholder="Search questions and answers" aria-label="Search questions and answers">
+    {% from "partials/icons.njk" import icon %}
+    <section class="hero faq-page-hero" aria-labelledby="hero-h">
+        <div class="wrap">
+            {% include "partials/breadcrumbs.njk" %}
+            <p class="micro">Frequently asked</p>
+            <h1 class="display" id="hero-h">{{ faq.items | length }} questions, <em>answered</em>.</h1>
+            <p class="body">
+                Everything people ask about CueCard, in one place: the floating teleprompter on
+                <a href="/">iPhone and iPad</a>, the invisible speaker notes app for
+                <a href="/desktop/">Mac and Windows</a>, and what the whole thing costs — which is
+                nothing. Start typing to narrow the list.
+            </p>
+            <div class="faq-search">
+                {{ icon("search", 18, "faq-search-icon") }}
+                <input class="faq-search-input" id="faq-search" type="search"
+                       placeholder="Search questions and answers" aria-label="Search questions and answers">
+            </div>
         </div>
     </section>
 
-    <section class="faq faq-page-list">
-        {% for faqItem in faq.items %}
-        <details class="faq-item" {% if loop.first %}open{% endif %}>
-            <summary class="faq-question">
-                <span>{{ faqItem.question }}</span>
-                <svg class="faq-icon" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2">
-                    <path d="M6 9l6 6 6-6" />
-                </svg>
-            </summary>
-            <div class="faq-answer">
-                <p>{{ faqItem.answer | safe }}</p>
+    {% for group in faq.groups %}
+    <section class="faq faq-page-list faq-group" id="{{ group.id }}" aria-labelledby="{{ group.id }}-h">
+        <div class="wrap wrap-narrow">
+            <p class="micro">{{ group.intro }}</p>
+            <h2 class="section-h" id="{{ group.id }}-h">{{ group.title }}</h2>
+            <div class="faq-list">
+                {% for item in group.items %}
+                <details class="faq-item"{% if item.id %} id="{{ item.id }}"{% endif %}>
+                    <summary class="faq-question">
+                        <span>{{ item.question }}</span>
+                        {{ icon("chevron", 20, "faq-icon") }}
+                    </summary>
+                    <div class="faq-answer">
+                        <p>{{ item.answer | safe }}</p>
+                    </div>
+                </details>
+                {% endfor %}
             </div>
-        </details>
-        {% endfor %}
+        </div>
     </section>
+    {% endfor %}
+
+    {% set ctaHeading = "Still wondering?<br /><em>Just ask.</em>" %}
+    {% set ctaBody = 'Email <a href="mailto:support@cuecard.dev">support@cuecard.dev</a> or open an issue on GitHub. Both are read by a person.' %}
+    {% set ctaPrimaryHref = "mailto:" + site.email %}
+    {% set ctaPrimaryIcon = "mail" %}
+    {% set ctaPrimaryText = "Email support" %}
+    {% set ctaSecondaryHref = site.issues %}
+    {% set ctaSecondaryIcon = "github" %}
+    {% set ctaSecondaryText = "Open an issue" %}
+    {% set ctaNote = "Free · Open source · MIT licensed" %}
+    {% include "partials/cta.njk" %}
 </main>
 
 {% include "partials/footer.njk" %}

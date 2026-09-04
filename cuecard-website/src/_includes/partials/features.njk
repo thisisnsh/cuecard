@@ -1,48 +1,73 @@
-<section class="features syntax-notes">
-    <div class="section-header">
-        <span class="section-tag">Feature</span>
-        <h2 class="section-title">On Time, Every Time.<br class="desktop-br"> Note It.</h2>
-    </div>
+{#
+  The script syntax, shown rather than described: the same passage as you type
+  it and as CueCard renders it. Two panels, side by side on a wide screen and
+  stacked on a narrow one, with the second one live - script.js counts the
+  timestamp down, so the difference between the columns is visible rather than
+  claimed.
 
-    <div class="features-grid">
-        <div class="feature-card">
-            <div class="feature-header">
-                <span class="feature-number">01</span>
-                <h3 class="feature-title">What You Write</h3>
-            </div>
-            <p class="feature-desc">Write your notes naturally on CueCard, or optionally add <code>[time]</code>
-                and <code>[note]</code> tags to guide timing and tone.</p>
-            <div class="notes-preview notes-preview-raw" aria-label="Sample of raw speaker notes">
-                <div class="notes-content">[time 00:55]
+  The two apps do not read the same tags. The desktop app understands
+  [time mm:ss] as well as cues; the phone app's parser handles cues only and
+  takes its timer from the app rather than from the script. Set
+  syntaxKind = "mobile" to show the phone's version, which is the honest one on
+  every /mobile/ page.
 
-                    Imagine your notes floating above the deck. [note smile] I've
-                    been using CueCard to do that.
+  The classes .timestamp and .action-tag are load-bearing: script.js finds them.
+#}
+{% set mobileSyntax = syntaxKind == "mobile" %}
+<section class="features syntax-notes{% if syntaxSolid %} solid{% endif %}" id="syntax" aria-labelledby="syntax-h">
+    <div class="wrap">
+        <p class="micro section-tag">{{ syntaxMicro or "The script" }}</p>
+        <h2 class="section-h section-title" id="syntax-h">{{ syntaxHeading or "Write it plainly. Read it like a pro." }}</h2>
+        <p class="body">
+            {% if syntaxBody %}{{ syntaxBody | safe }}
+            {% elif mobileSyntax %}Type your script the way you would say it. One optional tag does the rest: a cue, which reminds you how to say the next line and is drawn in its own colour so you take it in without reading it out.
+            {% else %}Type your script the way you would say it. Two optional tags do the rest: a timestamp to keep you honest about length, and a cue to remind you how to say the next line — shown to you, never spoken.{% endif %}
+        </p>
 
-                    It has a [note emphasize] timer and that sub-note thingy,
-                    which [note shrug a little] makes me sound way more human.
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-header">
+                    <span class="feature-number row-n">01</span>
+                    <h3 class="feature-title">What you write</h3>
+                </div>
+                <p class="feature-desc">
+                    Plain text, plus <code>[cue]</code>{% if not mobileSyntax %} and <code>[time]</code>{% endif %} wherever they help.
+                    The older <code>[note]</code> spelling still works.
+                </p>
+                <div class="notes-preview notes-preview-raw" aria-label="Sample of a raw CueCard script">
+                    <div class="notes-content">{% if not mobileSyntax %}[time 00:55]
 
-                    [note widen the eyes] You gotta try this out.
+                        {% endif %}Imagine your notes floating above the deck. [cue smile] I've
+                        been using CueCard to do that.
+
+                        It has a [cue emphasize] timer and that sub-note thingy,
+                        which [cue shrug a little] makes me sound way more human.
+
+                        [cue widen the eyes] You gotta try this out.
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="feature-card">
-            <div class="feature-header">
-                <span class="feature-number">02</span>
-                <h3 class="feature-title">What You See</h3>
-            </div>
-            <p class="feature-desc">CueCard highlights timestamps, and action cues while the on-screen timer
-                gently counts down.</p>
-            <div class="notes-preview notes-preview-raw" aria-live="off">
-                <div class="notes-content"><span class="timestamp" data-time="55">[00:55]</span>
+            <div class="feature-card">
+                <div class="feature-header">
+                    <span class="feature-number row-n">02</span>
+                    <h3 class="feature-title">What you see</h3>
+                </div>
+                <p class="feature-desc">
+                    {% if mobileSyntax %}Cues are lit in the colour you picked and the word you are on is highlighted as the script scrolls, so your eye catches them without your mouth doing.
+                    {% else %}Timestamps count down on screen and cues are lit in their own colour, so your eye catches them without your mouth doing.{% endif %}
+                </p>
+                <div class="notes-preview notes-preview-rendered" aria-live="off">
+                    <div class="notes-content">{% if not mobileSyntax %}<span class="timestamp" data-time="55">[00:55]</span>
 
-                    Imagine your notes floating above the deck. <span class="action-tag">[smile]</span> I've
-                    been using CueCard to do that.
+                        {% endif %}Imagine your notes floating above the deck. <span class="action-tag">[smile]</span> I've
+                        been using CueCard to do that.
 
-                    It has a <span class="action-tag">[emphasize]</span> timer and that sub-note thingy,
-                    which <span class="action-tag">[shrug a little]</span> makes me sound way more human.
+                        It has a <span class="action-tag">[emphasize]</span> timer and that sub-note thingy,
+                        which <span class="action-tag">[shrug a little]</span> makes me sound way more human.
 
-                    <span class="action-tag">[widen the eyes]</span> You gotta try this out.
+                        <span class="action-tag">[widen the eyes]</span> You gotta try this out.
+                    </div>
                 </div>
             </div>
         </div>

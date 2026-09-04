@@ -1,0 +1,27 @@
+{#
+  The reel, as a fixed layer the whole page scrolls over.
+
+  Order matters. The poster is a plain <img> so it paints with the first paint
+  and is the LCP element - the backdrop is a real frame from the very start,
+  never a black rectangle. The <video> carries no source at all until script.js
+  decides this visitor should get one, and stays transparent until it can play,
+  so the crossfade has nothing to reveal. With site.video.enabled off there is
+  no <video> element at all and the poster simply is the background.
+#}
+<div class="videobg" aria-hidden="true">
+    <img class="videobg-poster" src="{{ site.video.poster }}" alt=""
+         width="{{ site.video.posterWidth }}" height="{{ site.video.posterHeight }}"
+         fetchpriority="high" decoding="async">
+    {% if site.video.enabled %}
+    <video class="videobg-media" id="bgvideo" muted playsinline autoplay loop
+           preload="none" tabindex="-1"
+           data-mp4="{{ site.video.mp4 }}" data-webm="{{ site.video.webm }}"></video>
+    {% endif %}
+    <div class="videobg-scrim"></div>
+</div>
+{% if site.video.enabled %}
+<div class="video-loading" id="video-loading" role="status" hidden>
+    <i class="video-loading-spinner" aria-hidden="true"></i>
+    <span>Video loading</span>
+</div>
+{% endif %}

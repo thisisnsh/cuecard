@@ -1,0 +1,26 @@
+{% from "partials/icons.njk" import icon %}
+{#
+  The apps CueCard is used over or hidden from, as full-width ruled rows - one
+  per app, each linking to its own page. Set appRows to a list of
+  { name, slug, icon, use } and appBase to the URL prefix.
+#}
+<section class="strip{% if stripSolid %} solid{% endif %}" id="{{ stripId or 'apps' }}" aria-labelledby="{{ stripId or 'apps' }}-h">
+    <div class="wrap">
+        <p class="micro">{{ stripMicro or "Works over" }}</p>
+        <h2 class="section-h" id="{{ stripId or 'apps' }}-h">{{ stripHeading | safe }}</h2>
+        {% if stripNote %}<p class="body">{{ stripNote | safe }}</p>{% endif %}
+        <ul class="leaguerows">
+            {% for a in appRows %}
+            <li class="leaguerow reveal">
+                <a href="{{ appBase }}{{ a.slug }}/">
+                    <span class="lr-icon">{{ icon(a.icon, 22) }}</span>
+                    <span class="lr-name">{{ a.name }}</span>
+                    <span class="lr-meta">{{ a.use }}</span>
+                    {% if appState %}<span class="lr-state{% if appStateLive %} is-live{% endif %}">{{ appState }}</span>{% endif %}
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% if stripFoot %}<p class="strip-note">{{ stripFoot | safe }}</p>{% endif %}
+    </div>
+</section>

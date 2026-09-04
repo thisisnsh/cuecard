@@ -1,36 +1,44 @@
 ---
 layout: layouts/base.njk
 title: "CueCard - Invisible Speaker Notes for Zoom, Google Meet, and Teams"
-description: "CueCard keeps speaker notes invisible during Zoom, Google Meet, and Microsoft Teams screen sharing. Sync from Google Slides or paste notes instantly."
-keywords: "invisible speaker notes, zoom speaker notes, google meet notes, microsoft teams notes, presentation notes, teleprompter, google slides sync, undetectable notes, screen sharing notes, meeting notes app, presenter notes, zoom teleprompter, teams teleprompter, meet teleprompter"
+description: "CueCard keeps speaker notes invisible during Zoom, Google Meet, and Microsoft Teams screen sharing. Sync from Google Slides or paste notes instantly. Free for macOS and Windows."
+keywords: "invisible speaker notes, zoom speaker notes, google meet notes, microsoft teams notes, presentation notes, teleprompter, google slides sync, undetectable notes, screen sharing notes, meeting notes app, presenter notes, zoom teleprompter, teams teleprompter, meet teleprompter, mac teleprompter, windows teleprompter"
 canonical: "https://cuecard.dev/desktop/"
+pageName: "CueCard for Mac and Windows - invisible speaker notes"
 ogTitle: "CueCard - Invisible Speaker Notes for Zoom, Google Meet, and Teams"
 ogDescription: "Keep speaker notes invisible on Zoom, Google Meet, and Teams. Sync from Google Slides or paste notes for any meeting."
-ogImageWidth: "1280"
-ogImageHeight: "640"
 ogLocale: "en_US"
+crumbs:
+  - name: "CueCard"
+    url: "/"
+  - name: "Desktop app"
+    url: "/desktop/"
 ---
 {% block jsonld %}
 <script type="application/ld+json">
 {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
+    "@id": "https://cuecard.dev/desktop/#app",
     "name": "CueCard",
     "applicationCategory": "BusinessApplication",
+    "applicationSubCategory": "Presentation Teleprompter",
     "operatingSystem": "macOS, Windows",
     "description": "CueCard keeps speaker notes invisible during Zoom, Google Meet, and Microsoft Teams screen sharing. Sync from Google Slides or paste notes instantly.",
-    "url": "https://cuecard.dev",
+    "url": "https://cuecard.dev/desktop/",
     "downloadUrl": "https://github.com/thisisnsh/cuecard/releases",
+    "installUrl": "https://github.com/thisisnsh/cuecard/releases",
+    "image": "https://cuecard.dev/assets/og-image.png",
     "softwareVersion": "1.4.1",
-    "author": {
-        "@type": "Organization",
-        "name": "CueCard",
-        "url": "https://cuecard.dev"
-    },
+    "isAccessibleForFree": true,
+    "author": { "@id": "https://cuecard.dev/#org" },
+    "publisher": { "@id": "https://cuecard.dev/#org" },
+    "video": { "@id": "https://cuecard.dev/desktop/#demo" },
     "offers": {
         "@type": "Offer",
         "price": "0",
-        "priceCurrency": "USD"
+        "priceCurrency": "USD",
+        "availability": "https://schema.org/InStock"
     },
     "aggregateRating": {
         "@type": "AggregateRating",
@@ -50,85 +58,112 @@ ogLocale: "en_US"
 <script type="application/ld+json">
 {
     "@context": "https://schema.org",
+    "@type": "VideoObject",
+    "@id": "https://cuecard.dev/desktop/#demo",
+    "name": {{ site.youtube.desktop.title | dump | safe }},
+    "description": {{ site.youtube.desktop.description | dump | safe }},
+    "thumbnailUrl": ["{{ site.youtube.desktop.thumb }}"],
+    "uploadDate": "{{ site.youtube.desktop.uploadDate }}",
+    "duration": "{{ site.youtube.desktop.duration }}",
+    "embedUrl": "{{ site.youtube.desktop.embed }}",
+    "contentUrl": "{{ site.youtube.desktop.watch }}",
+    "publisher": { "@id": "https://cuecard.dev/#org" }
+}
+</script>
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
     "@type": "FAQPage",
+    "@id": "https://cuecard.dev/desktop/#faq",
+    "isPartOf": { "@id": "https://cuecard.dev/desktop/#webpage" },
+    "inLanguage": "en",
     "mainEntity": [
+        {% for item in faq.withGeneral(faq.desktop) %}
         {
             "@type": "Question",
-            "name": "Is CueCard invisible on Zoom, Google Meet, and Microsoft Teams?",
-            "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Yes, CueCard is designed to be undetectable on Zoom, Teams, Google Meet, and similar video conferencing apps. Your speaker notes remain invisible during screen sharing."
-            }
-        },
-        {
-            "@type": "Question",
-            "name": "Can I sync speaker notes from Google Slides?",
-            "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Yes, CueCard can sync notes directly from Google Slides using a browser extension available for Safari, Chrome, and Firefox."
-            }
-        },
-        {
-            "@type": "Question",
-            "name": "Can I use CueCard for any meeting without Google Slides?",
-            "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Yes! You can type or paste notes directly into CueCard for any meeting. Google Slides sync is optional - CueCard works as a standalone teleprompter for all your presentations and meetings."
-            }
-        },
-        {
-            "@type": "Question",
-            "name": "Is CueCard free?",
-            "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Yes, CueCard is completely free and open source under the MIT License."
-            }
-        }
+            "name": {{ item.question | dump | safe }},
+            "acceptedAnswer": { "@type": "Answer", "text": {{ item.answer | striptags | dump | safe }} }
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
     ]
 }
 </script>
 {% endblock %}
 
 {% block body %}
-{% set navCtaText = "Download on iOS or Android" %}
-{% set navCtaTextMobile = "Download for Mobile" %}
-{% set navCtaHref = "/mobile/" %}
+{% set navPrimaryHref = "#download" %}
+{% set navPrimaryIcon = "download" %}
+{% set navPrimaryText = "Download" %}
+{% set navCtaText = "Filming on your phone instead? CueCard floats over every app on iOS" %}
+{% set navCtaTextMobile = "Also on iOS" %}
+{% set navCtaHref = "/" %}
 {% include "partials/nav.njk" %}
 
 <main>
-    {% set heroSubtitle = 'Speaker notes visible only to you during screen sharing — for <span class="highlight highlight-yellow">presentations</span>, <span class="highlight highlight-green">meetings</span>, and more.' %}
-    {% set videoTitle = "CueCard - Invisible Speaker Notes" %}
-    {% set downloadBtnHref = "#download" %}
+    {% set heroMicro = "CueCard Desktop · macOS · Windows" %}
+    {% set heroTitle = 'Speaker notes only <em>you</em> can see.' %}
+    {% set heroBody = 'CueCard puts your notes on screen while you present and keeps them out of the screen share. On <strong>Zoom</strong>, <strong>Google Meet</strong> and <strong>Microsoft Teams</strong> your audience gets the deck and nothing else — the notes are excluded from screen capture at the system level, so it is not a trick of window placement you have to keep an eye on. Sync them live from <strong>Google Slides</strong>, or paste a script in for any meeting at all.' %}
+    {% set heroPrimaryHref = "#download" %}
+    {% set heroPrimaryIcon = "download" %}
+    {% set heroPrimaryText = "Download for Mac or Windows" %}
+    {% set heroSecondaryText = "Watch the demo" %}
+    {% set heroSecondaryHref = site.youtube.desktop.watch %}
+    {% set heroSecondaryIcon = "play" %}
+    {% set heroSecondaryExternal = true %}
+    {% set heroNote = "Free · Open source · macOS and Windows" %}
+    {% set heroVideoId = site.youtube.desktop.id %}
+    {% set heroVideoTitle = "CueCard on the desktop" %}
+    {% set heroStrip = "meeting" %}
     {% set faqLink = "#faq-undetectable" %}
+    {% set stripMore = "and anything else that shares a screen" %}
     {% include "partials/hero.njk" %}
+
+    {% set featureRows = features.desktop %}
+    {% set rowsMicro = "What you get" %}
+    {% set rowsHeading = "Everything the call sees is your slide" %}
+    {% set rowsId = "features" %}
+    {% set rowsSolid = true %}
+    {% include "partials/rows.njk" %}
 
     {% include "partials/features.njk" %}
 
-    {% set downloadTitle = "Ready to present<br class=\"desktop-br\"> like a pro?" %}
-    {% set downloadDesc = "Download CueCard and never fumble through a presentation again." %}
+    {% set appRows = site.meetingApps %}
+    {% set appBase = "/" %}
+    {% set stripId = "apps" %}
+    {% set stripMicro = "Undetectable on" %}
+    {% set stripHeading = "The apps you present through, and one you present from" %}
+    {% set stripNote = "CueCard is hidden at the operating-system level rather than per app, so this is not a list you have to be on — it is the list of pages we have written about." %}
+    {% set appState = "Invisible" %}
+    {% set appStateLive = true %}
+    {% set stripSolid = true %}
+    {% include "partials/applist.njk" %}
+
+    {% set gridRoles = site.desktopRoles %}
+    {% set gridBase = "/" %}
+    {% set gridId = "roles" %}
+    {% set gridMicro = "Made for" %}
+    {% set gridHeading = "Whoever has to hold the room" %}
+    {% set gridSuffix = "speaker notes" %}
+    {% include "partials/rolegrid.njk" %}
+
+    {% set downloadTitle = "Ready to present like a pro?" %}
+    {% set downloadDesc = "Pick your platform. The browser extension for Google Slides is in the same list." %}
     {% include "partials/download.njk" %}
 
-    {% set showFaqCta = false %}
+    {% set faqItems = faq.withGeneral(faq.desktop) %}
+    {% set faqHeading = "Everything people ask before downloading" %}
     {% include "partials/faq.njk" %}
 
-    <!-- Mobile App FAQ -->
-    <section class="faq faq-followup">
-        <details class="faq-item">
-            <summary class="faq-question">
-                <span>Is there a mobile app for CueCard?</span>
-                <svg class="faq-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M6 9l6 6 6-6" />
-                </svg>
-            </summary>
-            <div class="faq-answer">
-                <p>
-                    Yes! CueCard is available on <a href="https://apps.apple.com/app/cuecard-teleprompter/id6757321325">iOS</a> with Android coming soon. The mobile app features a floating teleprompter that works over any app.
-                    <a href="/mobile/">Learn more about CueCard Mobile</a>.
-                </p>
-            </div>
-        </details>
-        {% include "partials/faq-cta.njk" %}
-    </section>
+    {% set ctaHeading = "Know your lines.<br /><em>Show your slides.</em>" %}
+    {% set ctaBody = "Free on macOS and Windows, and free on your phone too. Open source, no subscription, nothing to cancel." %}
+    {% set ctaPrimaryHref = "#download" %}
+    {% set ctaPrimaryIcon = "download" %}
+    {% set ctaPrimaryText = "Download for Mac or Windows" %}
+    {% set ctaSecondaryHref = "/" %}
+    {% set ctaSecondaryIcon = "phone" %}
+    {% set ctaSecondaryText = "Get the mobile teleprompter" %}
+    {% set ctaNote = "macOS · Windows · iOS · Android coming soon" %}
+    {% include "partials/cta.njk" %}
 </main>
 
 {% include "partials/footer.njk" %}

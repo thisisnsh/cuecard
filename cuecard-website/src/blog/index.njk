@@ -9,13 +9,49 @@ ogDescription: "Speaker notes tips, teleprompter workflows, and presentation bes
 ogImageWidth: "1280"
 ogImageHeight: "640"
 ogLocale: "en_US"
+pageName: "CueCard Blog"
+crumbs:
+  - name: "CueCard"
+    url: "/"
+  - name: "Blog"
+    url: "/blog/"
 ---
+{% block jsonld %}
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    "@id": "https://cuecard.dev/blog/#blog",
+    "name": "CueCard Blog",
+    "description": "Speaker notes tips, teleprompter workflows, and presentation best practices.",
+    "url": "https://cuecard.dev/blog/",
+    "inLanguage": "en",
+    "publisher": { "@id": "https://cuecard.dev/#org" },
+    "blogPost": [
+        {% for blog in blogs %}
+        {
+            "@type": "BlogPosting",
+            "@id": "https://cuecard.dev/blog/{{ blog.slug }}/#post",
+            "headline": {{ blog.title | dump | safe }},
+            "url": "https://cuecard.dev/blog/{{ blog.slug }}/",
+            "datePublished": "{{ blog.datetime }}",
+            "author": { "@type": "Person", "name": {{ blog.author | dump | safe }} }
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ]
+}
+</script>
+{% endblock %}
+
 {% block body %}
-{% set downloadHref = "/#download" %}
+{% set navPrimaryHref = site.ios %}
+{% set navPrimaryIcon = "apple" %}
+{% set navPrimaryText = "Get it on iOS" %}
 {% include "partials/nav.njk" %}
 
 <main class="blog-page">
     <header class="blog-hero">
+        <div class="wrap">{% include "partials/breadcrumbs.njk" %}</div>
         <p class="blog-eyebrow">CueCard Blog</p>
         <h1 class="blog-page-title">Speaker notes that stay invisible.</h1>
         <p class="blog-page-subtitle">
@@ -46,10 +82,10 @@ ogLocale: "en_US"
 
     <section class="blog-cta">
         <h2 class="blog-cta-title">Download CueCard</h2>
-        <p class="blog-cta-subtitle">Choose the desktop app or the mobile teleprompter.</p>
+        <p class="blog-cta-subtitle">A floating teleprompter on your phone, invisible speaker notes on your computer. Both free.</p>
         <div class="blog-cta-actions">
-            <a class="btn btn-primary" href="/#download">Download for Desktop</a>
-            <a class="btn btn-secondary" href="/mobile/">Download for Mobile</a>
+            <a class="btn btn-primary" href="{{ site.ios }}" target="_blank" rel="noopener">Get the mobile teleprompter</a>
+            <a class="btn btn-secondary" href="/desktop/#download">Download for Mac or Windows</a>
         </div>
     </section>
 </main>

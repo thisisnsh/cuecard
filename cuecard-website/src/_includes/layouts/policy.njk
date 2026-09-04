@@ -1,12 +1,17 @@
+---
+# The documents read better on a plain black ground than over a moving reel.
+noVideo: true
+---
 {% extends "layouts/base.njk" %}
 
 {% block body %}
-<div class="noise-overlay"></div>
-
-{% set showNavLinks = false %}
+{% set navPrimaryHref = site.ios %}
+{% set navPrimaryIcon = "apple" %}
+{% set navPrimaryText = "Get it on iOS" %}
 {% include "partials/nav.njk" %}
 
 <main class="policy-page">
+    <div class="wrap">{% include "partials/breadcrumbs.njk" %}</div>
     {{ content | safe }}
 </main>
 
