@@ -147,18 +147,6 @@ struct TeleprompterView: View {
                             Spacer()
 
                             HStack(spacing: 24) {
-                                // Backward 10 seconds
-                                Button(action: {
-                                    AnalyticsEvents.logButtonClick("seek_backward", screen: "teleprompter")
-                                    seekBackward()
-                                }) {
-                                    Image(systemName: "gobackward.10")
-                                        .font(.system(size: 24))
-                                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                                        .frame(width: 48, height: 48)
-                                        .glassedEffect(in: Circle())
-                                }
-
                                 // PiP toggle button
                                 if pipManager.isPiPPossible {
                                     Button(action: {
@@ -199,18 +187,6 @@ struct TeleprompterView: View {
                                         .font(.system(size: 20, weight: .semibold))
                                         .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                                         .frame(width: 52, height: 52)
-                                        .glassedEffect(in: Circle())
-                                }
-
-                                // Forward 10 seconds
-                                Button(action: {
-                                    AnalyticsEvents.logButtonClick("seek_forward", screen: "teleprompter")
-                                    seekForward()
-                                }) {
-                                    Image(systemName: "goforward.10")
-                                        .font(.system(size: 24))
-                                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                                        .frame(width: 48, height: 48)
                                         .glassedEffect(in: Circle())
                                 }
                             }
@@ -454,30 +430,6 @@ struct TeleprompterView: View {
         Analytics.logEvent("teleprompter_restart", parameters: nil)
     }
 
-    private func seekForward() {
-        seek(by: 10)
-    }
-
-    private func seekBackward() {
-        seek(by: -10)
-    }
-
-    /// Move the script by a slice of time, which at the current speed is
-    /// `linesPerMinute × seconds / 60` lines. The scroll animates across them.
-    private func seek(by seconds: Double) {
-        let end = scriptDuration > 0 ? scriptDuration : .greatestFiniteMagnitude
-        let target = min(max(elapsedTime + seconds, 0), end)
-        guard target != elapsedTime else { return }
-
-        elapsedTime = target
-        // Reset wall-clock anchor so the timer continues from the new position
-        if timerStartDate != nil {
-            timerStartDate = Date()
-            elapsedTimeAtTimerStart = elapsedTime
-        }
-        pipManager.updateState(elapsedTime: elapsedTime, isPlaying: isPlaying)
-    }
-
     /// Pick up from wherever the reader dragged the script to. The line they
     /// left on the reading line is the line the clock now reads from, so playback
     /// carries on from there instead of snapping back.
@@ -603,7 +555,7 @@ struct AttributedTextView: UIViewRepresentable {
 
         /// The scroll eases toward the target on its own display link rather than
         /// being written straight to the text view. Playback moves the target in
-        /// small steps and the easing is invisible; a seek or a restart moves it a
+        /// small steps and the easing is invisible; a restart or a drag moves it a
         /// long way and the same easing carries the script there smoothly.
         private static let timeConstant: Double = 0.12
         private weak var textView: UITextView?
