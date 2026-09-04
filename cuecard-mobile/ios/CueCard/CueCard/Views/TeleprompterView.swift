@@ -30,6 +30,14 @@ struct TeleprompterView: View {
     /// than from this view's own clock. The script jumps straight to it instead
     /// of easing, so the app is already where the overlay was when it expands.
     @State private var scriptSnapToken = 0
+    /// How far the script has arrived. One at all times except across a return
+    /// from the overlay, where it is taken away as the overlay starts closing
+    /// and brought back once the overlay has gone — so the reader is handed a
+    /// blank page for that moment and the script comes up onto it, rather than
+    /// having the overlay lift off a screen that was finished all along.
+    @State private var scriptOpacity: Double = 1
+    /// How long the script takes to arrive.
+    private static let scriptFadeInDuration: Double = 0.35
     @Environment(\.scenePhase) private var scenePhase
 
     // Timer properties
@@ -128,6 +136,10 @@ struct TeleprompterView: View {
                     // Lines arrive and leave through a fade rather than being cut
                     // off flat against the toolbar and the controls.
                     .scriptEdgeFade(for: colorScheme, top: Self.topFade, bottom: Self.bottomFade)
+                    // Held back while the overlay is closing, so the script
+                    // arrives on the blank page rather than being there waiting
+                    // behind it. See `scriptOpacity`.
+                    .opacity(scriptOpacity)
 
                     // Controls overlay
                     if showControls {
@@ -274,20 +286,26 @@ struct TeleprompterView: View {
         )
         pipManager.scriptDuration = scriptDuration
 
+        // The overlay has gone by the time this runs, so this is the moment the
+        // screen is the reader's again: the script comes up onto the blank page,
+        // and the clock starts with it.
         pipManager.onPiPClosed = {
             syncFromPiP()
+            withAnimation(.easeOut(duration: Self.scriptFadeInDuration)) {
+                scriptOpacity = 1
+            }
             if isPlaying {
                 startTimer()
             }
         }
 
-        // Take the position, but leave the clock stopped. The overlay spends the
-        // length of its closing animation opening into a picture of this screen,
-        // and the picture is taken now — scrolling on underneath it would put the
-        // script a few lines past where the animation lands. The clock starts
-        // again on close, below, which is the moment the picture comes away.
+        // Take the position, clear the script, and leave the clock stopped. The
+        // overlay's own clock stopped when it began closing and close reports
+        // that position back, so running on here only earns a jump backwards to
+        // it. Both start again on close, above.
         pipManager.onPiPRestoreUI = {
             syncFromPiP()
+            scriptOpacity = 0
         }
 
         // Handle play/pause from PiP controls

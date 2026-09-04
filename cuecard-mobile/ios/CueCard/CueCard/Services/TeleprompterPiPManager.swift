@@ -35,31 +35,10 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
     private var teleprompterContentView: TeleprompterPiPContentView?
     private var pipContentView: TeleprompterPiPContentView?
     private var pipWindow: UIWindow?
-    private var pipHostViewController: UIViewController?
-    /// Where the window hosting the mirrored script sits while the overlay is
-    /// running: centred, at the overlay's own shape, so the overlay shrinks out
-    /// of a rectangle the same shape it is going to be.
-    private var sourceFrame: CGRect = .zero
-    /// Frosts the mirrored script on the way out. The overlay and the app lay
-    /// the same words out at different sizes, so a straight crossfade shows two
-    /// scripts at once — going soft first covers the difference.
-    private var handBackBlurView: UIVisualEffectView?
-    private var handBackAnimator: UIViewPropertyAnimator?
-    /// A picture of the teleprompter, held in the source view for the length of
-    /// the return so the overlay has the app itself to open into.
-    private var handBackSnapshot: UIView?
-    /// Set once that picture is in place, to keep the older centred hand-back
-    /// from also running.
-    private var isHandingBackToApp = false
 
-    /// Where the window hosting the mirrored script sits: behind the app while
-    /// the overlay runs, in front of it for the hand-back.
+    /// Where the window hosting the mirrored script sits: behind the app, for
+    /// the whole of the overlay's life. See `hideSourceBehindApp()`.
     private static let hiddenSourceLevel: UIWindow.Level = .normal - 1
-    private static let visibleSourceLevel: UIWindow.Level = .normal + 1
-    /// How long the mirrored script takes to dissolve after the overlay has
-    /// closed into it, and how far it opens out while it goes.
-    private static let handBackFadeDuration: TimeInterval = 0.45
-    private static let handBackScale: CGFloat = 1.06
 
     // MARK: - Timers
 
@@ -140,6 +119,7 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
         }
 
         hideSourceBehindApp()
+        restoreOverlayContent()
         lastSourceRenderTimestamp = 0
         updateContentView()
         pipController.startPictureInPicture()
@@ -255,10 +235,6 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
         pipViewController = nil
         teleprompterContentView?.removeFromSuperview()
         teleprompterContentView = nil
-        handBackBlurView?.removeFromSuperview()
-        handBackBlurView = nil
-        pipHostViewController = nil
-        sourceFrame = .zero
         pipContentView?.removeFromSuperview()
         pipContentView = nil
         pipWindow?.isHidden = true
@@ -322,37 +298,18 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
             contentView.trailingAnchor.constraint(equalTo: hostVC.view.trailingAnchor)
         ])
 
-        // Sits over the mirrored script doing nothing until the hand-back, when
-        // it takes on a blur to soften the script as it goes.
-        let blurView = UIVisualEffectView(effect: nil)
-        blurView.isUserInteractionEnabled = false
-        // The blur is tinted for the interface style it resolves against, and
-        // the teleprompter's theme is the app's, not necessarily the system's.
-        blurView.overrideUserInterfaceStyle = isDarkMode ? .dark : .light
-        blurView.translatesAutoresizingMaskIntoConstraints = false
-        hostVC.view.addSubview(blurView)
-        NSLayoutConstraint.activate([
-            blurView.topAnchor.constraint(equalTo: hostVC.view.topAnchor),
-            blurView.bottomAnchor.constraint(equalTo: hostVC.view.bottomAnchor),
-            blurView.leadingAnchor.constraint(equalTo: hostVC.view.leadingAnchor),
-            blurView.trailingAnchor.constraint(equalTo: hostVC.view.trailingAnchor)
-        ])
-        self.handBackBlurView = blurView
-
         // Host the source view in a window behind the app's own. The system
         // animates the overlay out of, and back into, this view's place on
         // screen, so it sits where the script is rather than off-screen —
         // otherwise the overlay flies in from nowhere on the way back.
         let window = UIWindow(windowScene: windowScene)
-        sourceFrame = CGRect(
+        window.frame = CGRect(
             x: (screenBounds.width - pipWidth) / 2,
             y: (screenBounds.height - pipHeight) / 2,
             width: pipWidth,
             height: pipHeight
         )
-        window.frame = sourceFrame
         window.rootViewController = hostVC
-        self.pipHostViewController = hostVC
         window.isHidden = false
         window.isUserInteractionEnabled = false
         window.windowLevel = Self.hiddenSourceLevel
@@ -361,6 +318,15 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
         // Create the PiP video call view controller
         let pipVC = AVPictureInPictureVideoCallViewController()
         pipVC.preferredContentSize = preferredSize
+        // The teleprompter's own background, sitting behind the script. It makes
+        // no difference while the overlay is running, since the script covers it
+        // and paints the same colour — it is what shows through in the moments
+        // the script does not: before the first frame is rendered, and once the
+        // overlay has been emptied for the way out. Left clear, those moments
+        // are the system's black rather than the reader's page.
+        pipVC.view.backgroundColor = isDarkMode
+            ? AppColors.UIColors.Dark.background
+            : AppColors.UIColors.Light.background
 
         // Add content to PiP VC's view
         let pipContent = TeleprompterPiPContentView(frame: .zero)
@@ -400,119 +366,41 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
 
     // MARK: - Hand-back Transition
 
-    /// The window the app itself is drawn in, as opposed to the one holding the
-    /// mirrored script.
-    private func foregroundAppWindow() -> UIWindow? {
-        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
-        let scene = scenes.first(where: { $0.activationState == .foregroundActive }) ?? scenes.first
-        return scene?.windows.first(where: { $0 !== pipWindow && !$0.isHidden && $0.windowLevel == .normal })
-    }
-
-    /// Put the app itself where the overlay is about to land, so the system's
-    /// own animation is the whole transition.
+    /// Take the script out of the overlay before the system takes the overlay
+    /// away.
     ///
-    /// The overlay always opens into the source view. Left at its running size
-    /// that is a rectangle in the middle of the screen, so the return reads as
-    /// three separate moves — the overlay grows to the middle, the app arrives
-    /// behind it, and the leftover rectangle is cleared. Widening the source to
-    /// the whole screen and filling it with a picture of the teleprompter makes
-    /// those one move: the overlay opens straight out into the script, and what
-    /// it lands on is what is already underneath.
-    private func prepareHandBackToApp() -> Bool {
-        guard let window = pipWindow,
-              let hostView = pipHostViewController?.view,
-              let appWindow = foregroundAppWindow(),
-              appWindow.bounds.width > 0,
-              let snapshot = appWindow.snapshotView(afterScreenUpdates: true) else { return false }
-
-        handBackAnimator?.stopAnimation(true)
-        handBackAnimator = nil
-        window.layer.removeAllAnimations()
-        window.alpha = 1
-        window.transform = .identity
-        handBackBlurView?.effect = nil
-
-        handBackSnapshot?.removeFromSuperview()
-        snapshot.translatesAutoresizingMaskIntoConstraints = false
-        hostView.addSubview(snapshot)
-        NSLayoutConstraint.activate([
-            snapshot.topAnchor.constraint(equalTo: hostView.topAnchor),
-            snapshot.bottomAnchor.constraint(equalTo: hostView.bottomAnchor),
-            snapshot.leadingAnchor.constraint(equalTo: hostView.leadingAnchor),
-            snapshot.trailingAnchor.constraint(equalTo: hostView.trailingAnchor)
-        ])
-        handBackSnapshot = snapshot
-
-        window.frame = appWindow.frame
-        window.layoutIfNeeded()
-        window.windowLevel = Self.visibleSourceLevel
-        return true
+    /// The overlay is the system's own window: it cannot be closed early, and
+    /// the travel it makes to the middle of the screen on the way out cannot be
+    /// skipped. What can be decided is whether there is anything in it to watch.
+    /// Emptied here, at the first moment the return is known about, the overlay
+    /// is already gone as far as the reader is concerned, and the trip it still
+    /// has to make is made blank over the teleprompter.
+    private func blankOverlay() {
+        pipContentView?.alpha = 0
     }
 
-    /// Take the picture away once the overlay has opened into it. Nothing is
-    /// animated: the live teleprompter underneath is the same screen, held at
-    /// the same line, so the swap has nothing to show.
-    private func finishHandBackToApp() {
-        resetSourceWindow()
+    /// Put the script back in, for the next time the overlay opens.
+    private func restoreOverlayContent() {
+        pipContentView?.alpha = 1
     }
 
-    /// Bring the mirrored script in front of the app for the closing animation.
-    /// The system fades the overlay into this view, so it has to be something
-    /// the reader can actually see — behind the app window there is nothing to
-    /// fade into and the overlay just blinks out at the end of its travel.
-    private func showSourceForHandBack() {
-        guard let window = pipWindow else { return }
-        handBackAnimator?.stopAnimation(true)
-        handBackAnimator = nil
-        window.layer.removeAllAnimations()
-        window.alpha = 1
-        window.transform = .identity
-        handBackBlurView?.effect = nil
-        window.windowLevel = Self.visibleSourceLevel
-    }
-
-    /// Dissolve the mirrored script once the overlay has closed into it. It
-    /// keeps opening outward the way it was travelling, goes soft, and then
-    /// clears — so the overlay reads as widening into the teleprompter rather
-    /// than stopping in the middle of the screen and being cut.
-    private func fadeOutSourceAfterHandBack() {
-        guard let window = pipWindow, window.windowLevel == Self.visibleSourceLevel else { return }
-
-        let animator = UIViewPropertyAnimator(duration: Self.handBackFadeDuration, curve: .easeOut) { [weak self] in
-            window.transform = CGAffineTransform(scaleX: Self.handBackScale, y: Self.handBackScale)
-            self?.handBackBlurView?.effect = UIBlurEffect(style: .regular)
-        }
-        // The blur leads and the script clears behind it, so the words go soft
-        // before they go away instead of thinning out while still sharp.
-        animator.addAnimations({ window.alpha = 0 }, delayFactor: 0.3)
-        animator.addCompletion { [weak self] _ in
-            self?.resetSourceWindow()
-        }
-        handBackAnimator = animator
-        animator.startAnimation()
-    }
-
-    /// Put the window back behind the app, cancelling a dissolve still in flight.
+    /// Keep the window holding the mirrored script behind the app, always.
+    ///
+    /// It exists for the way out: the system needs a view on screen to shrink
+    /// the overlay out of, and this is where the script is, so the overlay
+    /// leaves from the words rather than from nowhere. On the way back it is not
+    /// wanted. The overlay travels to the middle of the screen and stops there —
+    /// it will not open the rest of the way out however it is met — so bringing
+    /// the script up in front of the app only puts a second, differently
+    /// wrapped copy over the real one and leaves something to be cleared away
+    /// afterwards. Left where it is, the overlay reaches the middle and goes,
+    /// and the teleprompter is already underneath at full size.
     private func hideSourceBehindApp() {
-        handBackAnimator?.stopAnimation(true)
-        handBackAnimator = nil
-        pipWindow?.layer.removeAllAnimations()
-        resetSourceWindow()
-    }
-
-    private func resetSourceWindow() {
-        handBackAnimator = nil
-        handBackBlurView?.effect = nil
-        handBackSnapshot?.removeFromSuperview()
-        handBackSnapshot = nil
-        isHandingBackToApp = false
         guard let window = pipWindow else { return }
+        window.layer.removeAllAnimations()
         window.windowLevel = Self.hiddenSourceLevel
         window.alpha = 1
         window.transform = .identity
-        if sourceFrame != .zero {
-            window.frame = sourceFrame
-        }
     }
 
     // MARK: - Content Rendering
@@ -595,6 +483,12 @@ extension TeleprompterPiPManager: AVPictureInPictureControllerDelegate {
             isPiPActive = true
             isRenderingToPiP = true
             pipContentView?.isLive = true
+            // Every opening comes through here, `startPiP` and the system's own
+            // automatic one alike — and only that first kind ever gets to put
+            // the script back itself. Backgrounding the app takes the automatic
+            // one, so without this the overlay opens still emptied out from the
+            // last time it closed.
+            restoreOverlayContent()
             // Start playback timer if already playing when PiP starts
             if isPlaying {
                 startPlaybackTimer()
@@ -613,26 +507,23 @@ extension TeleprompterPiPManager: AVPictureInPictureControllerDelegate {
             stopPlaybackTimer()
             isRenderingToPiP = false
             pipContentView?.isLive = false
+            // Already done on the way in from the overlay's own button; this is
+            // for a stop from inside the app, which never goes through the
+            // restore handler.
+            blankOverlay()
             lastSourceRenderTimestamp = 0
             updateContentView()
-            // Only when the app is not already standing in for the source. A
-            // stop from inside the app never goes through the restore handler,
-            // so it still hands back through the mirrored script.
-            if !isHandingBackToApp {
-                showSourceForHandBack()
-            }
         }
     }
 
     nonisolated func pictureInPictureControllerDidStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
         Task { @MainActor in
             isPiPActive = false
+            // The overlay is off screen by now, so this is not seen. It leaves
+            // the emptying as something that lasts only as long as the closing
+            // does, rather than a state the overlay can be found resting in.
+            restoreOverlayContent()
             onPiPClosed?()
-            if isHandingBackToApp {
-                finishHandBackToApp()
-            } else {
-                fadeOutSourceAfterHandBack()
-            }
         }
     }
 
@@ -650,14 +541,18 @@ extension TeleprompterPiPManager: AVPictureInPictureControllerDelegate {
     nonisolated func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, restoreUserInterfaceForPictureInPictureStopWithCompletionHandler completionHandler: @escaping (Bool) -> Void) {
         Task { @MainActor in
             onPiPRestoreUI?()
+            // Empty the overlay here rather than at will-stop: this is the
+            // first the app hears of the return, and every frame the script is
+            // left in it is a frame of it sitting over the teleprompter.
+            blankOverlay()
             // Let the teleprompter lay out at the position the overlay is on
-            // before the picture of it is taken. The overlay opens into that
-            // picture, so it has to be showing the line the reader is on —
-            // taken straight away it holds the old position, and the script
-            // visibly catches up mid-animation.
-            try? await Task.sleep(nanoseconds: 30_000_000)
-            isHandingBackToApp = prepareHandBackToApp()
-            completionHandler(true)
+            // before the overlay goes. It is uncovering this screen, so this
+            // screen has to be on the line it left off at — reporting the
+            // restore done straight away uncovers the old position, and the
+            // script visibly catches up afterwards.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.03) {
+                completionHandler(true)
+            }
         }
     }
 }
