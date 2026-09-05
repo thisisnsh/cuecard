@@ -446,10 +446,13 @@ struct NotesEditorView: View {
         ZStack(alignment: .topLeading) {
             // Placeholder
             if text.isEmpty {
+                // Set on the editor's own font and insets, so the first line sits
+                // exactly where the caret waiting in front of it does.
                 Text("Add your script here...\n\nTap Add Cue below the script — or just type [ — to drop in a delivery reminder like \"Welcome everyone [cue smile and pause]\"")
+                    .font(.system(size: CueTextEditor.fontSize, weight: .medium))
                     .foregroundStyle(AppColors.textSecondary(for: colorScheme).opacity(0.6))
                     .padding(.horizontal, 20)
-                    .padding(.top, CueTextEditor.edgeFade + 8)
+                    .padding(.top, CueTextEditor.edgeFade)
                     .allowsHitTesting(false)
             }
 
