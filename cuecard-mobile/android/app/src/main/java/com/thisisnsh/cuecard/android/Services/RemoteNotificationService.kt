@@ -123,11 +123,13 @@ class RemoteNotificationService private constructor(context: Context) {
     }
 
     /**
-     * Everyone gets the same list from the worker, so all three of these checks
-     * are ours to make: drawable at all, still in date, not already waved away.
+     * Everyone gets the same list from the worker, so all four of these checks
+     * are ours to make: drawable at all, meant for this build, still in date,
+     * not already waved away.
      */
     private fun isShowable(notification: RemoteNotification): Boolean {
         if (!notification.isRenderable) return false
+        if (!notification.isTargeted()) return false
         if (notification.hasExpired()) return false
         if (_dismissedIds.value.contains(notification.id)) return false
 

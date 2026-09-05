@@ -122,10 +122,12 @@ final class RemoteNotificationService: ObservableObject {
         ])
     }
 
-    /// Everyone gets the same list from the worker, so all three of these checks
-    /// are ours to make: drawable at all, still in date, not already waved away.
+    /// Everyone gets the same list from the worker, so all four of these checks
+    /// are ours to make: drawable at all, meant for this build, still in date,
+    /// not already waved away.
     private func isShowable(_ notification: RemoteNotification) -> Bool {
         guard notification.isRenderable else { return false }
+        guard notification.isTargeted() else { return false }
         guard !notification.hasExpired() else { return false }
         guard !dismissedIDs.contains(notification.id) else { return false }
 

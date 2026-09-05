@@ -5,8 +5,9 @@ const SCHEMA: Schema = 1;
 
 // GET /v2/notifications
 //
-// The same list for everyone — no targeting, no per-client filtering. Clients
-// handle expiry, dismissal and the link allowlist themselves.
+// The same list for everyone. Clients do the filtering: expiry, dismissal, the
+// link allowlist, and the `targets` audience check all happen on device, which
+// is what keeps this response cacheable at the edge for every caller.
 export function handleNotifications(request: Request): Response {
   if (request.method !== "GET" && request.method !== "HEAD") {
     return new Response("Method Not Allowed", {

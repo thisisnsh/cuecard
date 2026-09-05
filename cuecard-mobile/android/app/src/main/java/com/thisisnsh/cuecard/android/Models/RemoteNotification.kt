@@ -1,5 +1,6 @@
 package com.thisisnsh.cuecard.android.models
 
+import com.thisisnsh.cuecard.android.BuildConfig
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -49,6 +50,31 @@ data class RemoteNotifications(
     }
 }
 
+/**
+ * The build asking for notifications, for the `targets` check below. Fixed for
+ * the life of the process.
+ */
+data class AppBuild(
+    val platform: String,
+    val version: List<Int>?,
+    val build: Int?
+) {
+    companion object {
+        /**
+         * `platform` is matched as a plain string rather than an enum: a platform
+         * this build doesn't recognise simply never matches, so the worker can
+         * start targeting a new one without breaking anything shipped. `version`
+         * is null if the version name turns out to be unreadable, in which case
+         * no version range matches and a targeted notification passes us by.
+         */
+        val CURRENT = AppBuild(
+            platform = "android",
+            version = parseVersionComponents(BuildConfig.VERSION_NAME),
+            build = BuildConfig.VERSION_CODE
+        )
+    }
+}
+
 /** One thing to show, on one surface. */
 data class RemoteNotification(
     val id: String,
@@ -59,6 +85,7 @@ data class RemoteNotification(
     val body: String? = null,
     val actions: List<Action> = emptyList(),
     val dismissible: Boolean = true,
+    val targets: List<Target> = emptyList(),
     val expiresAt: Instant? = null
 ) {
     /**
@@ -98,6 +125,55 @@ data class RemoteNotification(
                 fun from(value: String?): Kind? = entries.find { it.rawValue == value }
             }
         }
+    }
+
+    /**
+     * One audience a notification is for: a platform, optionally narrowed to a
+     * range of versions or builds. Every bound is inclusive.
+     */
+    data class Target(
+        val platform: String,
+        val minVersion: List<Int>? = null,
+        val maxVersion: List<Int>? = null,
+        val minBuild: Int? = null,
+        val maxBuild: Int? = null
+    ) {
+        fun matches(app: AppBuild): Boolean {
+            if (platform != app.platform) return false
+
+            // A bound this build can't be measured against doesn't match. A
+            // target we can't evaluate should reach nobody rather than everybody
+            // — the wrong audience is the whole thing targeting exists to avoid.
+            if (minVersion != null || maxVersion != null) {
+                val version = app.version ?: return false
+
+                if (minVersion != null && compareVersions(version, minVersion) < 0) return false
+                if (maxVersion != null && compareVersions(version, maxVersion) > 0) return false
+            }
+
+            if (minBuild != null || maxBuild != null) {
+                val build = app.build ?: return false
+
+                if (minBuild != null && build < minBuild) return false
+                if (maxBuild != null && build > maxBuild) return false
+            }
+
+            return true
+        }
+    }
+
+    /**
+     * Whether this build is in the audience. No targets means everyone, which is
+     * what every notification was before targeting existed.
+     *
+     * Enforced here alone: the worker serves one list and leaves the filtering to
+     * us, so a build too old to know about `targets` shows the notification to
+     * everyone regardless.
+     */
+    fun isTargeted(app: AppBuild = AppBuild.CURRENT): Boolean {
+        if (targets.isEmpty()) return true
+
+        return targets.any { it.matches(app) }
     }
 
     /**
@@ -142,6 +218,35 @@ data class RemoteNotification(
 // MARK: - Decoding
 
 /**
+ * "1.3.0" -> [1, 3, 0]. Null for anything that isn't one to four plain numbers
+ * separated by dots — a version we can't read is one we won't guess at.
+ */
+private fun parseVersionComponents(value: String): List<Int>? {
+    val parts = value.split(".")
+    if (parts.size !in 1..4) return null
+
+    return parts.map { part ->
+        if (part.isEmpty() || !part.all { it in '0'..'9' }) return null
+        part.toIntOrNull() ?: return null
+    }
+}
+
+/**
+ * Component-wise, padding the shorter side with zeroes, so 1.10.0 lands above
+ * 1.9.0 — which a plain string comparison gets backwards.
+ */
+private fun compareVersions(lhs: List<Int>, rhs: List<Int>): Int {
+    for (index in 0 until maxOf(lhs.size, rhs.size)) {
+        val left = lhs.getOrElse(index) { 0 }
+        val right = rhs.getOrElse(index) { 0 }
+
+        if (left != right) return left.compareTo(right)
+    }
+
+    return 0
+}
+
+/**
  * The worker writes plain ISO 8601; accept fractional seconds too in case that
  * ever changes underneath us.
  */
@@ -168,6 +273,31 @@ private data class ActionDTO(
 }
 
 @Serializable
+private data class TargetDTO(
+    val platform: String,
+    val minVersion: String? = null,
+    val maxVersion: String? = null,
+    val minBuild: Int? = null,
+    val maxBuild: Int? = null
+) {
+    fun toTarget(): RemoteNotification.Target = RemoteNotification.Target(
+        platform = platform,
+        minVersion = minVersion?.let(::parseBound),
+        maxVersion = maxVersion?.let(::parseBound),
+        minBuild = minBuild,
+        maxBuild = maxBuild
+    )
+
+    /**
+     * A version string we can't parse is a bound we can't honour, so this throws
+     * and the notification goes with it — quieter than showing it to the builds
+     * the bound was written to exclude.
+     */
+    private fun parseBound(value: String): List<Int> =
+        parseVersionComponents(value) ?: throw IllegalArgumentException("Unreadable version: $value")
+}
+
+@Serializable
 private data class RemoteNotificationDTO(
     val id: String,
     val surface: String,
@@ -177,6 +307,7 @@ private data class RemoteNotificationDTO(
     val body: String? = null,
     val actions: List<ActionDTO>? = null,
     val dismissible: Boolean? = null,
+    val targets: List<TargetDTO>? = null,
     val expiresAt: String? = null
 ) {
     /**
@@ -196,6 +327,9 @@ private data class RemoteNotificationDTO(
             body = body,
             actions = actions?.map { it.toAction() } ?: emptyList(),
             dismissible = dismissible ?: true,
+            // A target we can't read would quietly widen the audience to
+            // everyone, so it takes the notification with it for the same reason.
+            targets = targets?.map { it.toTarget() } ?: emptyList(),
             expiresAt = expiresAt?.let { parseISO8601(it) }
         )
     }
