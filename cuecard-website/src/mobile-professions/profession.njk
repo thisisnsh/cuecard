@@ -87,41 +87,26 @@ layout: layouts/mobile-profession.njk
     {% set heroPrimaryExternal = true %}
     {% set heroPrimaryIcon = "apple" %}
     {% set heroPrimaryText = "Download on iOS" %}
-    {% set heroNote = "Free forever · No account · iOS 17+ · Android in closed testing" %}
+    {% set heroNote = "Free forever · No account · iOS 17+ · Android coming soon" %}
     {% set heroTagline = "No more forgetting your lines or switching screens." %}
     {% set heroStrip = "social" %}
     {% set stripMore = "and every other app you record in" %}
     {% set faqLink = "#faq" %}
     {% include "partials/hero.njk" %}
 
-    <section class="solid" aria-labelledby="get-h">
+    {% if mobileProfession.useCases %}
+    <section class="solid" aria-labelledby="uses-h">
         <div class="wrap">
-            <p class="micro">{{ icon("download", 13) }}Get the app</p>
-            <h2 class="section-h" id="get-h">On your phone in under a minute</h2>
-            {% include "partials/app-store.njk" %}
-
-            {% if mobileProfession.useCases %}
-            <p class="micro footer-micro-2">{{ icon("flag", 13) }}What {{ mobileProfession.name | lower }} use it for</p>
+            <p class="micro">{{ icon("flag", 13) }}Where it earns its place</p>
+            <h2 class="section-h" id="uses-h">What {{ mobileProfession.name | lower }} use it for</h2>
             <ul class="crestgrid">
                 {% for use in mobileProfession.useCases %}
                 <li><span class="usecase">{{ use }}</span></li>
                 {% endfor %}
             </ul>
-            {% endif %}
-
-            <div class="app-screenshots">
-                <div class="app-screenshot-card">
-                    <img src="/assets/app-ios1.jpg" alt="The CueCard teleprompter floating above the camera app" class="app-screenshot" width="1260" height="2736" loading="lazy" decoding="async">
-                </div>
-                <div class="app-screenshot-card">
-                    <img src="/assets/app-ios2.jpg" alt="A CueCard script with the timer running and a delivery cue highlighted" class="app-screenshot" width="1260" height="2736" loading="lazy" decoding="async">
-                </div>
-                <div class="app-screenshot-card">
-                    <img src="/assets/app-ios3.jpg" alt="CueCard settings: overlay size, text size and scroll speed" class="app-screenshot" width="1260" height="2736" loading="lazy" decoding="async">
-                </div>
-            </div>
         </div>
     </section>
+    {% endif %}
 
     {% set featureRows = features.mobile %}
     {% set rowsMicro = "What you get" %}
@@ -144,7 +129,9 @@ layout: layouts/mobile-profession.njk
     {% set faqHeading = "Questions from " + mobileProfession.name | lower %}
     {% include "partials/faq.njk" %}
 
-    {% include "partials/cta.njk" %}
+    {% set getHeading = "On your phone in under a minute" %}
+    {% set getBody = "Free, no account, nothing to cancel — and free on your computer too." %}
+    {% include "partials/getcuecard.njk" %}
 </main>
 
 {% include "partials/footer.njk" %}

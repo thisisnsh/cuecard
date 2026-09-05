@@ -83,7 +83,7 @@ crumbs:
 <main>
     {% set heroMicro = "CueCard Desktop · macOS · Windows" %}
     {% set heroTitle = 'Speaker notes only <em>you</em> can see.' %}
-    {% set heroBody = 'CueCard puts your notes on screen while you present and keeps them out of the screen share. On <strong>Zoom</strong>, <strong>Google Meet</strong> and <strong>Microsoft Teams</strong> your audience gets the deck and nothing else — the notes are excluded from screen capture at the system level, so it is not a trick of window placement you have to keep an eye on. Sync them live from <strong>Google Slides</strong>, or paste a script in for any meeting at all.' %}
+    {% set heroBody = 'Your notes sit on your screen and stay out of the screen share. On <strong>Zoom</strong>, <strong>Google Meet</strong> and <strong>Microsoft Teams</strong> the audience gets the deck and nothing else — they are excluded from screen capture at the system level, not parked out of the way and hoped for. Sync them live from <strong>Google Slides</strong>, or paste a script in.' %}
     {% set heroPrimaryHref = "#download" %}
     {% set heroPrimaryIcon = "download" %}
     {% set heroPrimaryText = "Download for Mac or Windows" %}
@@ -92,6 +92,9 @@ crumbs:
     {% set faqLink = "#faq-undetectable" %}
     {% set stripMore = "and anything else that shares a screen" %}
     {% include "partials/hero.njk" %}
+
+    {% set demoSolid = true %}
+    {% include "partials/demo.njk" %}
 
     {% set featureRows = features.desktop %}
     {% set rowsMicro = "What you get" %}
@@ -107,7 +110,7 @@ crumbs:
     {% set stripId = "apps" %}
     {% set stripMicro = "Undetectable on" %}
     {% set stripHeading = "The apps you present through, and one you present from" %}
-    {% set stripNote = "CueCard is hidden at the operating-system level rather than per app, so this is not a list you have to be on — it is the list of pages we have written about." %}
+    {% set stripNote = "It is hidden at the system level rather than per app, so this is a list of pages we have written, not a list you have to be on." %}
     {% set appState = "Invisible" %}
     {% set appStateLive = true %}
     {% set stripSolid = true %}
@@ -121,24 +124,13 @@ crumbs:
     {% set gridSuffix = "speaker notes" %}
     {% include "partials/rolegrid.njk" %}
 
-    {% set downloadTitle = "Ready to present like a pro?" %}
-    {% set downloadDesc = "Pick your platform. The browser extension for Google Slides is in the same list." %}
-    {% include "partials/download.njk" %}
-
     {% set faqItems = faq.withGeneral(faq.desktop) %}
     {% set faqHeading = "Everything people ask before downloading" %}
     {% include "partials/faq.njk" %}
 
-    {% set ctaHeading = "Know your lines.<br /><em>Show your slides.</em>" %}
-    {% set ctaBody = "Free on macOS and Windows, and free on your phone too. Open source, no subscription, nothing to cancel." %}
-    {% set ctaPrimaryHref = "#download" %}
-    {% set ctaPrimaryIcon = "download" %}
-    {% set ctaPrimaryText = "Download for Mac or Windows" %}
-    {% set ctaSecondaryHref = "/" %}
-    {% set ctaSecondaryIcon = "phone" %}
-    {% set ctaSecondaryText = "Get the mobile teleprompter" %}
-    {% set ctaNote = "macOS · Windows · iOS · Android coming soon" %}
-    {% include "partials/cta.njk" %}
+    {% set downloadTitle = "Know your lines. Show your slides." %}
+    {% set downloadDesc = "Free on macOS and Windows, and free on your phone too. Presenting from <a href=\"/google-slides/\">Google Slides</a>? Add the extension there." %}
+    {% include "partials/download.njk" %}
 </main>
 
 {% include "partials/footer.njk" %}

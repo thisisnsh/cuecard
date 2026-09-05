@@ -41,7 +41,7 @@ const mobile = [
   {
     question: "Is CueCard available on Android?",
     answer:
-      "Android is coming soon. The app is in closed testing on Google Play now and will be listed publicly when it is ready. The iOS app is available today."
+      "Android is coming soon. The iOS app is available today, and the Mac and Windows app is free to download now."
   },
   {
     question: "Which iPhones and iPads does CueCard support?",

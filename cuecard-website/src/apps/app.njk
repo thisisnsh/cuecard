@@ -77,64 +77,25 @@ layout: layouts/mobile-app.njk
 
 <main>
     {% set heroClass = "hero-app" %}
-    {% set heroMicro = app.name + (" · iOS · Android coming soon" if app.showIos and app.showAndroid else (" · iOS 17+" if app.showIos else " · Closed testing")) %}
+    {% set heroMicro = app.name + (" · iOS · Android coming soon" if app.showIos and app.showAndroid else (" · iOS 17+" if app.showIos else " · Coming soon")) %}
     {% set heroTitle = app.heroSubtitle %}
     {% set heroBody = app.appDescription %}
     {% set heroPrimaryHref = site.ios %}
     {% set heroPrimaryExternal = true %}
     {% set heroPrimaryIcon = "apple" %}
     {% set heroPrimaryText = "Download on iOS" %}
-    {% set heroNote = "Free forever · No account · iOS 17+ · Android in closed testing" %}
+    {% set heroNote = "Free forever · No account · iOS 17+ · Android coming soon" %}
     {% set heroTagline = app.promotionalText %}
     {% set heroStrip = "social" %}
     {% set stripMore = "and every other app you record in" %}
     {% set faqLink = "#faq" %}
     {% include "partials/hero.njk" %}
 
-    <section class="solid" aria-labelledby="get-h">
-        <div class="wrap">
-            <p class="micro">{{ icon("download", 13) }}Get the app</p>
-            <h2 class="section-h" id="get-h">On your phone in under a minute</h2>
-            {% set showIos = app.showIos %}
-            {% set showAndroid = app.showAndroid %}
-            {% include "partials/app-store.njk" %}
-
-            <div class="app-screenshots">
-                <div class="app-screenshot-card">
-                    <img src="/assets/app-ios1.jpg" alt="The CueCard teleprompter floating above the camera app" class="app-screenshot" width="1260" height="2736" loading="lazy" decoding="async">
-                </div>
-                <div class="app-screenshot-card">
-                    <img src="/assets/app-ios2.jpg" alt="A CueCard script with the timer running and a delivery cue highlighted" class="app-screenshot" width="1260" height="2736" loading="lazy" decoding="async">
-                </div>
-                <div class="app-screenshot-card">
-                    <img src="/assets/app-ios3.jpg" alt="CueCard settings: overlay size, text size and scroll speed" class="app-screenshot" width="1260" height="2736" loading="lazy" decoding="async">
-                </div>
-            </div>
-        </div>
-    </section>
-
     {% set featureRows = features.forApp(app.subject, "social") if app.subject else features.mobile %}
     {% set rowsMicro = "What you get" %}
     {% set rowsHeading = ("Reading a script over " + app.subject) if app.subject else "Built to be read out of the corner of your eye" %}
     {% set rowsId = "features" %}
     {% include "partials/rows.njk" %}
-
-    <!-- The app's own four-up feature summary, kept from the page this replaced. -->
-    <section class="features solid" aria-labelledby="highlights-h">
-        <div class="wrap">
-            <p class="micro">{{ icon("sparkle", 13) }}In short</p>
-            <h2 class="section-h" id="highlights-h">Everything you need to stay on script</h2>
-            <div class="app-features-grid">
-                {% for feature in app.features %}
-                <div class="app-feature-item">
-                    <div class="app-feature-icon">{{ icon(feature.icon, 24) }}</div>
-                    <h3 class="app-feature-title">{{ feature.title }}</h3>
-                    <p class="app-feature-desc">{{ feature.description }}</p>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-    </section>
 
     {% set syntaxKind = "mobile" %}
     {% include "partials/features.njk" %}
@@ -144,7 +105,7 @@ layout: layouts/mobile-app.njk
     {% set stripId = "apps" %}
     {% set stripMicro = "Record anywhere" %}
     {% set stripHeading = "It floats over the app you already film in" %}
-    {% set stripNote = "CueCard does not replace your camera app or ask you to record inside it. It sits on top of whatever you open, so the footage comes out of the app it always came out of." %}
+    {% set stripNote = "CueCard never replaces your camera app. It sits on top of whatever you open." %}
     {% set stripSolid = true %}
     {% include "partials/applist.njk" %}
 
@@ -160,7 +121,9 @@ layout: layouts/mobile-app.njk
     {% set faqHeading = "Questions about " + app.name %}
     {% include "partials/faq.njk" %}
 
-    {% include "partials/cta.njk" %}
+    {% set getHeading = "On your phone in under a minute" %}
+    {% set getBody = "Free, no account, nothing to cancel — and free on your computer too." %}
+    {% include "partials/getcuecard.njk" %}
 </main>
 
 {% include "partials/footer.njk" %}

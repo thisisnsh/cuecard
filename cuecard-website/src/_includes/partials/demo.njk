@@ -1,0 +1,20 @@
+{% from "partials/icons.njk" import icon %}
+{#
+  The demo, as a still that links out to YouTube.
+
+  Nothing is embedded: an iframe would load a third-party player on a page
+  whose whole design is one fixed reel behind the text, and it would cost more
+  than the film is worth. The still is the frame; pressing it opens YouTube.
+#}
+<section class="demo-sec{% if demoSolid %} solid{% endif %}" id="demo" aria-labelledby="demo-h">
+    <div class="wrap">
+        <p class="micro">{{ icon("sparkle", 13) }}{{ demoMicro or "See it work" }}</p>
+        <h2 class="section-h" id="demo-h">{{ demoHeading or "A minute of it, in use" }}</h2>
+        <a class="demo-card reveal" href="{{ site.demo.url }}" target="_blank" rel="noopener">
+            <img class="demo-thumb" src="{{ site.demo.thumb }}" alt="{{ site.demo.alt }}"
+                 width="1280" height="720" loading="lazy" decoding="async">
+            <span class="demo-play" aria-hidden="true"></span>
+            <span class="demo-label">{{ site.demo.title }} <em>Watch on YouTube {{ icon("arrow", 14) }}</em></span>
+        </a>
+    </div>
+</section>

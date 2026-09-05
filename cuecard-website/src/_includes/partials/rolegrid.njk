@@ -1,8 +1,9 @@
 {% from "partials/icons.njk" import icon %}
 {#
-  Roles, as a two-column ruled grid. Each cell is a page of its own; the small
-  second line is the keyword half of the anchor text - present for crawlers,
-  quiet for readers.
+  Roles, as a ruled grid. Each cell is a page of its own; the small second line
+  is the keyword half of the anchor text - present for crawlers, quiet for
+  readers - and the arrow is the same mark every other link row on the site
+  carries, so a cell reads as somewhere to go rather than a label.
 #}
 <section class="grid-sec{% if gridSolid %} solid{% endif %}" id="{{ gridId or 'roles' }}" aria-labelledby="{{ gridId or 'roles' }}-h">
     <div class="wrap">
@@ -14,6 +15,7 @@
             <li>
                 <a href="{{ gridBase }}{{ r.slug }}/">
                     <span>{{ r.name }}<em>{{ gridSuffix or "teleprompter" }}</em></span>
+                    {{ icon("arrow", 15, "crest-arrow") }}
                 </a>
             </li>
             {% endfor %}

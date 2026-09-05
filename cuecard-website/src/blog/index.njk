@@ -44,47 +44,46 @@ crumbs:
 {% endblock %}
 
 {% block body %}
+{% from "partials/icons.njk" import icon %}
 {% include "partials/nav.njk" %}
 
 <main class="blog-page">
-    <header class="blog-hero">
-        <div class="wrap">{% include "partials/breadcrumbs.njk" %}</div>
-        <p class="blog-eyebrow">Open source · CueCard Blog</p>
-        <h1 class="blog-page-title">Speaker notes that stay invisible.</h1>
-        <p class="blog-page-subtitle">
-            Practical guides for presenters, educators, and teams who want clean screen shares and confident delivery.
-        </p>
-    </header>
+    <section class="blog-hero" aria-labelledby="blog-h">
+        <div class="wrap">
+            {% include "partials/breadcrumbs.njk" %}
+            <p class="micro">{{ icon("book", 13) }}Open source · CueCard Blog</p>
+            <h1 class="display" id="blog-h">Speaker notes that stay <em>invisible</em>.</h1>
+            <p class="body">
+                Practical guides for presenters, educators and teams who want clean screen
+                shares and confident delivery.
+            </p>
+        </div>
+    </section>
 
-    <section class="blog-list">
-        {% for blog in blogs %}
-        <article class="blog-entry">
-            <header class="blog-entry-header">
+    <section class="blog-list solid" aria-label="Posts">
+        <div class="wrap">
+            {% for blog in blogs %}
+            <article class="blog-entry reveal">
                 <p class="blog-meta">
                     <time datetime="{{ blog.datetime }}">{{ blog.datetime }}</time>
                     <span class="blog-meta-separator">&middot;</span>
                     <span class="blog-author">{{ blog.author }}</span>
                 </p>
                 <h2 class="blog-entry-title">
-                    <a href="/blog/{{ blog.slug }}/" target="_blank" rel="noopener">{{ blog.title }}</a>
+                    <a href="/blog/{{ blog.slug }}/">{{ blog.title }}</a>
                 </h2>
-            </header>
-            <div class="blog-entry-content">
-                {{ blog.content | markdownExcerpt | safe }}
-            </div>
-            <a class="blog-entry-link" href="/blog/{{ blog.slug }}/" target="_blank" rel="noopener">Read full post</a>
-        </article>
-        {% endfor %}
-    </section>
-
-    <section class="blog-cta">
-        <h2 class="blog-cta-title">Download CueCard</h2>
-        <p class="blog-cta-subtitle">A floating teleprompter on your phone, invisible speaker notes on your computer. Both free.</p>
-        <div class="blog-cta-actions">
-            <a class="btn btn-primary" href="{{ site.ios }}" target="_blank" rel="noopener">Get the mobile teleprompter</a>
-            <a class="btn btn-secondary" href="/desktop/#download">Download for Mac or Windows</a>
+                <div class="blog-entry-content">
+                    {{ blog.content | markdownExcerpt | safe }}
+                </div>
+                <a class="blog-entry-link" href="/blog/{{ blog.slug }}/">Read full post {{ icon("arrow", 14) }}</a>
+            </article>
+            {% endfor %}
         </div>
     </section>
+
+    {% set getHeading = "Read it later. Download it now." %}
+    {% set getBody = "A floating teleprompter on your phone, invisible speaker notes on your computer. Both free." %}
+    {% include "partials/getcuecard.njk" %}
 </main>
 
 {% include "partials/footer.njk" %}

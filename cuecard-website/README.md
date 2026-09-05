@@ -2,13 +2,19 @@
 
 Static site that powers [cuecard.dev](https://cuecard.dev).
 
-Three pages carry the product. `/` is the landing page: it says what CueCard is,
-forks to both halves, and holds **the download hub** — every platform CueCard
-ships on, as a row apiece with its own button. `/mobile/` is the teleprompter
-that floats over every other app on a phone. `/desktop/` is the Mac and Windows
-app that keeps speaker notes invisible during screen sharing, along with every
-URL it already ranks for: `/zoom/`, `/google-meet/`, `/microsoft-teams/`,
-`/google-slides/` and all twelve desktop role pages are exactly where they were.
+Three pages carry the product. `/` is the landing page: it says what CueCard is
+and forks to both halves. `/mobile/` is the teleprompter that floats over every
+other app on a phone. `/desktop/` is the Mac and Windows app that keeps speaker
+notes invisible during screen sharing, along with every URL it already ranks
+for: `/zoom/`, `/google-meet/`, `/microsoft-teams/`, `/google-slides/` and all
+twelve desktop role pages are exactly where they were.
+
+Every product page is built from the same sections in the same order, and only
+the content changes: hero, the demo still, ruled feature rows, the script
+panels, the app rows, the role grid, the FAQ, and **the downloads last**. The
+standalone "one more call to action" section is gone from those pages, because
+the download section already is one. (`/faq/` is the exception: it closes on a
+line to support, which is the thing to do next from there.)
 
 ## Purpose
 
@@ -19,8 +25,8 @@ URL it already ranks for: `/zoom/`, `/google-meet/`, `/microsoft-teams/`,
 - One page per role, on each side: `/teachers/` and `/mobile/teachers/`
 - A 43-question FAQ at `/faq/`, with every page carrying the subset that fits it
 - Hosts the privacy policy (`privacy/`) and terms of service (`terms/`)
-- One download hub at `/#download`, generated from `site.downloadGroups`, which
-  is also what the header's download menu prints
+- A download section at the foot of every page, generated from
+  `site.downloadGroups`, which is also what the header's download menu prints
 
 ## Structure
 
@@ -28,7 +34,7 @@ URL it already ranks for: `/zoom/`, `/google-meet/`, `/microsoft-teams/`,
 cuecard-website/
 ├── .eleventy.js       # 11ty config (input src/, output _site/)
 ├── src/
-│   ├── index.njk      # The landing page: what CueCard is, and the download hub
+│   ├── index.njk      # The landing page: what CueCard is, and where to get it
 │   ├── desktop/       # The Mac and Windows app
 │   ├── faq.njk        # The whole FAQ bank, grouped
 │   ├── styles.css     # Editorial monochrome: hairlines, micro-labels, no boxes
@@ -38,14 +44,17 @@ cuecard-website/
 │   ├── CNAME          # Custom domain for GitHub Pages
 │   ├── _data/
 │   │   ├── site.js            # Every shared constant: URLs, video, downloads,
-│   │   │                      #   app lists, and the hand-written download total
+│   │   │                      #   the Slides extension, the demo film, app
+│   │   │                      #   lists, and the hand-written download total
 │   │   ├── features.js        # Feature rows, mobile and desktop
 │   │   ├── faq.js             # The FAQ bank and the helpers that slice it
 │   │   └── *.json             # Page content: apps, platforms, roles, blogs
 │   ├── _includes/
 │   │   ├── layouts/           # base.njk carries the head and the JSON-LD graph
-│   │   └── partials/          # hero, rows, applist, rolegrid, faq, cta, footer
-│   ├── assets/        # Favicons, manifest, screenshots, poster
+│   │   └── partials/          # hero, demo, rows, applist, rolegrid, faq,
+│   │   │                      #   getcuecard, extension, footer
+│   ├── assets/        # Favicons, manifest, poster, and the App Store
+│   │                  #   stills, which now only appear in structured data
 │   ├── privacy.njk    # Privacy policy
 │   └── terms.njk      # Terms of service
 └── _site/             # Build output (gitignored)
@@ -80,17 +89,33 @@ Step 3 is what starts emitting a `VideoObject` on every page. While
 `placeholder` is true, nothing is marked up — describing someone else's footage
 as CueCard's in structured data would be a lie, and Google reads it as one.
 
-## The download hub
+## The downloads
 
 `site.downloadGroups` in `src/_data/site.js` is the one list of everywhere
 CueCard can be had, grouped by the machine you are on. It is printed in three
 places and edited in one:
 
-- the header's **Download, it's free** menu (`partials/downloadmenu.njk`)
-- the `/#download` section on the landing page (`partials/getcuecard.njk`)
+- the header's **Download** menu (`partials/downloadmenu.njk`)
+- the `#download` section that closes every page (`partials/getcuecard.njk`);
+  the desktop pages close with `partials/download.njk` instead, which lists the
+  actual installers for a release
 - the `ItemList` in the landing page's structured data
 
-Adding a platform means adding an entry there and nothing else.
+Adding a platform means adding an entry there and nothing else. An entry with
+`soon: true` prints as a flat "Coming soon" row rather than a button, which is
+what Android is until it ships — it is never described as a beta anywhere.
+
+**The browser extension is not in that list.** It is not a version of CueCard;
+it is the piece that makes Google Slides work. It lives in `site.extension` and
+is printed by `partials/extension.njk` on `/google-slides/` and nowhere else,
+with a link to that page from the download menu and the download section.
+
+## The demo
+
+`site.demo` points at the one film that is CueCard's own, on YouTube.
+`partials/demo.njk` prints it as a still that links out — nothing is embedded,
+so no third-party player script loads on any page. It appears on the landing
+page and on the desktop side, which is what the film shows.
 
 The **download total** beside it (`site.downloadTotal`, currently `"1,100+"`) is
 a hand-written string, and deliberately so: the GitHub API only counts desktop

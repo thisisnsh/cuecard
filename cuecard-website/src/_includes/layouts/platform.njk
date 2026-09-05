@@ -69,6 +69,9 @@
     {% set faqLink = "#faq" %}
     {% include "partials/hero.njk" %}
 
+    {% set demoSolid = true %}
+    {% include "partials/demo.njk" %}
+
     {% set featureRows = features.forApp(platform.name, "meeting") %}
     {% set rowsMicro = "What you get" %}
     {% set rowsHeading = "Everything " + platform.name + " sees is your slide" %}
@@ -78,6 +81,8 @@
 
     {% include "partials/features.njk" %}
 
+    {% if platform.showExtension %}{% include "partials/extension.njk" %}{% endif %}
+
     {% set gridRoles = site.desktopRoles %}
     {% set gridBase = "/" %}
     {% set gridId = "roles" %}
@@ -86,20 +91,11 @@
     {% set gridSuffix = "speaker notes" %}
     {% include "partials/rolegrid.njk" %}
 
-    {% include "partials/download.njk" %}
-
     {% set faqItems = platformFaq %}
     {% set faqHeading = "Questions about CueCard and " + platform.name %}
     {% include "partials/faq.njk" %}
 
-    {% set ctaHeading = "Know your lines.<br /><em>Show your slides.</em>" %}
-    {% set ctaPrimaryHref = "#download" %}
-    {% set ctaPrimaryIcon = "download" %}
-    {% set ctaPrimaryText = "Download for Mac or Windows" %}
-    {% set ctaSecondaryHref = "/" %}
-    {% set ctaSecondaryIcon = "phone" %}
-    {% set ctaSecondaryText = "Get the mobile teleprompter" %}
-    {% include "partials/cta.njk" %}
+    {% include "partials/download.njk" %}
 </main>
 
 {% include "partials/footer.njk" %}

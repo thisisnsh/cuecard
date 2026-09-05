@@ -1,0 +1,41 @@
+{% from "partials/icons.njk" import icon %}
+{#
+  The Google Slides extension, in the same rows as a download but said plainly
+  for what it is: a bridge between the deck and the desktop app, not a fourth
+  version of CueCard. This is the only page it appears on.
+#}
+<section class="get extension-sec{% if extensionSolid !== false %} solid{% endif %}" id="extension" aria-labelledby="extension-h">
+    <div class="wrap">
+        <p class="micro">{{ icon("slides", 13) }}The extension</p>
+        <h2 class="section-h" id="extension-h">{{ extensionHeading or "One extension, and the notes follow the slide" }}</h2>
+        <p class="body">
+            CueCard's browser extension is not another version of the app — it is the piece
+            that makes Google Slides work. It reads the speaker notes for the slide you are
+            on and hands them to the desktop app, live. You still need
+            <a href="/desktop/">CueCard for Mac or Windows</a> to read them from.
+        </p>
+
+        <div class="getgroups">
+            <div class="getgroup reveal">
+                <div class="getgroup-head">
+                    <h3 class="getgroup-title">{{ icon("layers", 17) }}Add it to your browser</h3>
+                    <p class="getgroup-note">{{ site.extension.note }}</p>
+                </div>
+                <ul class="getrows">
+                    {% for d in site.extension.items %}
+                    <li class="getrow">
+                        <span class="getrow-icon">{{ icon(d.icon, 22) }}</span>
+                        <span class="getrow-body">
+                            <span class="getrow-name">{{ d.name }}</span>
+                            <span class="getrow-meta">{{ d.meta }}</span>
+                        </span>
+                        <a class="btn btn-primary getrow-btn" href="{{ d.href }}"{% if d.href[0] != "/" %} target="_blank" rel="noopener"{% endif %}>
+                            {{ d.cta }}{{ icon("arrow", 14) }}
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>

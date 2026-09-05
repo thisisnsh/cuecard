@@ -19,8 +19,8 @@ const site = {
   releases: "https://github.com/thisisnsh/cuecard/releases",
   year,
 
-  // Stores. Android is in closed testing, so it is announced as coming soon
-  // everywhere rather than linked as if it were shipping.
+  // Stores. Android is not out: it is announced as coming soon everywhere
+  // rather than linked as if it were shipping, and never as a beta.
   ios: "https://apps.apple.com/app/cuecard-teleprompter/id6757321325",
   android: "https://play.google.com/apps/testing/com.thisisnsh.cuecard.android",
   androidComingSoon: true,
@@ -59,9 +59,13 @@ const site = {
   },
 
   // ── Where CueCard can actually be had ───────────────────────────────────
-  // One list, used in three places: the header's download menu, the download
-  // section on the home page, and the footer. They cannot drift apart because
-  // there is only one of them.
+  // One list, used in two places: the header's download menu and the download
+  // section that closes every page. They cannot drift apart because there is
+  // only one of them.
+  //
+  // The browser extension is not a version of CueCard - it is the piece that
+  // makes Google Slides work - so it is not in here. It lives on
+  // /google-slides/, in site.extension.
   //
   // An `href` starting with "/" is a page on this site; anything else is a
   // store and opens in a new tab.
@@ -70,7 +74,7 @@ const site = {
       id: "phone",
       label: "On your phone",
       icon: "phone",
-      note: "The teleprompter floats on top of whatever you are filming in.",
+      note: "Floats on top of whatever you are filming in.",
       items: [
         {
           name: "iPhone and iPad",
@@ -81,13 +85,14 @@ const site = {
           more: "/mobile/ios/",
         },
         {
+          // Android is not out. It is listed so the page is honest about what
+          // is coming, and it is a link to its own page rather than a store.
           name: "Android",
           icon: "android",
-          meta: "Closed testing on Google Play",
-          cta: "Join the beta",
-          state: "Beta",
-          href: "https://play.google.com/apps/testing/com.thisisnsh.cuecard.android",
-          more: "/mobile/android/",
+          meta: "In development",
+          cta: "Coming soon",
+          soon: true,
+          href: "/mobile/android/",
         },
       ],
     },
@@ -100,7 +105,7 @@ const site = {
         {
           name: "macOS",
           icon: "apple",
-          meta: "macOS 13 or later · Apple silicon and Intel",
+          meta: "macOS 13 or later",
           cta: "Download",
           href: "/desktop/#download",
           more: "/desktop/",
@@ -108,43 +113,60 @@ const site = {
         {
           name: "Windows",
           icon: "windows",
-          meta: "Windows 10 or later · x64 and ARM",
+          meta: "Windows 10 or later",
           cta: "Download",
           href: "/desktop/#download",
           more: "/desktop/",
         },
       ],
     },
-    {
-      id: "browser",
-      label: "In your browser",
-      icon: "layers",
-      note: "Sends your Google Slides speaker notes to the desktop app, live.",
-      items: [
-        {
-          name: "Chrome",
-          icon: "chrome",
-          meta: "Also Edge, Brave and Arc",
-          cta: "Web Store",
-          href: "https://chromewebstore.google.com/detail/mfphcgcbbahhahofibnenonbgjnabamg",
-        },
-        {
-          name: "Firefox",
-          icon: "firefox",
-          meta: "Firefox 109 or later",
-          cta: "Add-ons",
-          href: "https://addons.mozilla.org/en-US/firefox/addon/cuecard-extension/",
-        },
-        {
-          name: "Safari",
-          icon: "safari",
-          meta: "Installed by the macOS app",
-          cta: "Download",
-          href: "/desktop/#download",
-        },
-      ],
-    },
   ],
+
+  // ── The Google Slides extension ─────────────────────────────────────────
+  // Not a version of CueCard: a bridge. It reads the speaker notes out of the
+  // deck you are presenting and hands them to the desktop app, live. It is
+  // shown on /google-slides/ and nowhere else, because on any other page it
+  // reads as a fourth platform, which it is not.
+  extension: {
+    page: "/google-slides/",
+    note: "Sends your Google Slides speaker notes to the desktop app as you advance.",
+    items: [
+      {
+        name: "Chrome",
+        icon: "chrome",
+        meta: "Also Edge, Brave and Arc",
+        cta: "Web Store",
+        href: "https://chromewebstore.google.com/detail/mfphcgcbbahhahofibnenonbgjnabamg",
+      },
+      {
+        name: "Firefox",
+        icon: "firefox",
+        meta: "Firefox 109 or later",
+        cta: "Add-ons",
+        href: "https://addons.mozilla.org/en-US/firefox/addon/cuecard-extension/",
+      },
+      {
+        name: "Safari",
+        icon: "safari",
+        meta: "Installed by the macOS app",
+        cta: "Download",
+        href: "/desktop/#download",
+      },
+    ],
+  },
+
+  // ── The demo film ───────────────────────────────────────────────────────
+  // The one moving picture on the site that is CueCard's own. It is not
+  // embedded: a still links out to YouTube, so no third-party player script
+  // loads on any page. (The reel behind the page is atmosphere; this is the
+  // thing to actually watch.)
+  demo: {
+    id: "VQ85qXoMfis",
+    url: "https://www.youtube.com/watch?v=VQ85qXoMfis",
+    thumb: "https://img.youtube.com/vi/VQ85qXoMfis/maxresdefault.jpg",
+    title: "CueCard - speaker notes only you can see",
+    alt: "CueCard's speaker notes sitting on screen while a deck is shared - watch the demo on YouTube",
+  },
 
   // The download total, written by hand. It is a claim about the product, not
   // a live figure: the GitHub API only knows about desktop release assets, so

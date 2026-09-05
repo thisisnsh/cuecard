@@ -121,8 +121,8 @@
     "ogDescription": "Sync Google Slides speaker notes to CueCard for invisible notes during screen sharing. Notes update as you change slides.",
     "heroSubtitle": "Your <em>Google Slides</em> notes, off the shared screen.",
     "videoTitle": "CueCard - Sync Speaker Notes from Google Slides",
-    "downloadTitle": "Ready to sync<br class=\"desktop-br\"> your Google Slides notes?",
-    "downloadDesc": "Download CueCard and never fumble through a Google Slides presentation again.",
+    "downloadTitle": "Ready to sync your Google Slides notes?",
+    "downloadDesc": "Download CueCard for Mac or Windows, then add the extension above.",
     "jsonLdName": "CueCard for Google Slides",
     "jsonLdDescription": "Sync speaker notes from Google Slides to CueCard and keep them invisible while screen sharing. Notes update as you move through slides.",
     "jsonLdFeatures": [
@@ -145,6 +145,7 @@
         "question": "Which browsers support the Google Slides extension?",
         "answer": "The CueCard browser extension is available for Chrome, Firefox, and Safari, allowing you to sync notes from Google Slides on any major browser."
       }
-    ]
+    ],
+    "showExtension": true
   }
 ]

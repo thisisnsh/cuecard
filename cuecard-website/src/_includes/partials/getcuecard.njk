@@ -1,25 +1,25 @@
 {% from "partials/icons.njk" import icon %}
 {#
-  Get CueCard: every place the app exists, as rows, each with its own button.
-
-  This is the site's one download hub, and it is the reason the home page has
-  no single hero-sized "Download" button any more. CueCard is six things on
-  three kinds of machine; one button had to lie about five of them. A row per
-  platform states the requirement, says what pressing it actually opens, and -
-  where there is a page about that platform - links to it, so the section is
-  also the home page's strongest set of internal links.
+  The download section. It closes every page - it is the last thing on all of
+  them, because it is the answer to the only question most people arrive with,
+  and a reader who has got that far has read the argument for it.
 
   Everything here comes from site.downloadGroups, the same list the header's
-  download menu prints.
+  download menu prints. A page that only wants one of the groups - the phone
+  pages want the phone one - passes it in as getGroups.
+
+  The browser extension is deliberately not here. It is not a version of
+  CueCard, it is what makes Google Slides work, and it lives on that page.
 #}
+{% set groups = getGroups or site.downloadGroups %}
 <section class="get{% if getSolid !== false %} solid{% endif %}" id="download" aria-labelledby="get-h">
     <div class="wrap">
         <p class="micro">{{ icon("download", 13) }}{{ getMicro or "Get CueCard" }}</p>
         <h2 class="section-h" id="get-h">{{ getHeading or "Free on every screen you speak from" }}</h2>
-        <p class="body">{{ getBody or "One app, three shapes: a floating teleprompter on your phone, invisible speaker notes on your computer, and a browser extension that feeds it your Google Slides notes. Nothing costs anything, nothing asks for an account, and all of it is on GitHub." | safe }}</p>
+        <p class="body">{{ getBody or "No account, no subscription, nothing to cancel. All of it is on GitHub." | safe }}</p>
 
         <div class="getgroups">
-            {% for g in site.downloadGroups %}
+            {% for g in groups %}
             <div class="getgroup reveal">
                 <div class="getgroup-head">
                     <h3 class="getgroup-title">{{ icon(g.icon, 17) }}{{ g.label }}</h3>
@@ -32,13 +32,16 @@
                         <span class="getrow-body">
                             <span class="getrow-name">
                                 {% if d.more %}<a href="{{ d.more }}">{{ d.name }}</a>{% else %}{{ d.name }}{% endif %}
-                                {% if d.state %}<em class="getrow-state">{{ d.state }}</em>{% endif %}
                             </span>
                             <span class="getrow-meta">{{ d.meta }}</span>
                         </span>
+                        {% if d.soon %}
+                        <a class="getrow-soon" href="{{ d.href }}">{{ d.cta }}</a>
+                        {% else %}
                         <a class="btn btn-primary getrow-btn" href="{{ d.href }}"{% if d.href[0] != "/" %} target="_blank" rel="noopener"{% endif %}>
                             {{ d.cta }}{{ icon("arrow", 14) }}
                         </a>
+                        {% endif %}
                     </li>
                     {% endfor %}
                 </ul>
@@ -47,7 +50,7 @@
         </div>
 
         <p class="backline">
-            <a href="{{ site.releases }}" target="_blank" rel="noopener">{{ icon("book", 15) }} Every release, with notes {{ icon("arrow", 14) }}</a>
+            <a href="{{ site.extension.page }}">{{ icon("slides", 15) }} Google Slides extension {{ icon("arrow", 14) }}</a>
             <a href="{{ site.github }}" target="_blank" rel="noopener">{{ icon("code", 15) }} Read the source {{ icon("arrow", 14) }}</a>
             <a href="/faq/">{{ icon("help", 15) }} Trouble installing? {{ icon("arrow", 14) }}</a>
         </p>

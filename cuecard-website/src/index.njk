@@ -2,7 +2,7 @@
 layout: layouts/base.njk
 permalink: /
 title: "CueCard - Free Open Source Teleprompter for iPhone, Android, Mac and Windows"
-description: "CueCard is a free, open source teleprompter. On your phone your script floats above the camera, Instagram or TikTok and auto-scrolls while you record. On your Mac or PC your speaker notes stay invisible during Zoom, Google Meet and Microsoft Teams screen sharing. Download it for iOS, Android, macOS, Windows, Chrome, Firefox and Safari."
+description: "CueCard is a free, open source teleprompter. On your phone your script floats above the camera, Instagram or TikTok and auto-scrolls while you record. On your Mac or PC your speaker notes stay invisible during Zoom, Google Meet and Microsoft Teams screen sharing. Free on iOS, macOS and Windows, with Android coming soon."
 keywords: "teleprompter app, free teleprompter, open source teleprompter, floating teleprompter, teleprompter iphone, teleprompter ipad, teleprompter android, teleprompter mac, teleprompter windows, script reader app, auto scroll teleprompter, on camera notes, speaker notes app, tiktok teleprompter, instagram reels teleprompter, youtube teleprompter, invisible speaker notes, zoom speaker notes, google meet notes, microsoft teams notes, google slides sync, undetectable notes"
 canonical: "https://cuecard.dev/"
 pageName: "CueCard - a teleprompter that floats over every other app"
@@ -127,9 +127,9 @@ ogLocale: "en_US"
 {% include "partials/nav.njk" %}
 
 <main>
-    {% set heroMicro = "iOS · Android · macOS · Windows" %}
+    {% set heroMicro = "iOS · Android soon · macOS · Windows" %}
     {% set heroTitle = 'Your script, floating over <em>everything</em> else.' %}
-    {% set heroBody = 'CueCard is a teleprompter that refuses to be a separate screen. On your <strong>phone</strong> it floats on top of the app you are already filming in — the camera, Instagram, TikTok, a live stream — auto-scrolling word by word, visible only to you. On your <strong>Mac or PC</strong> it does the mirror image: your speaker notes sit on your screen while you present and stay out of the screen share, so <strong>Zoom</strong>, <strong>Google Meet</strong> and <strong>Microsoft Teams</strong> show your audience the deck and nothing else.' %}
+    {% set heroBody = 'On your <strong>phone</strong>, a teleprompter that floats on top of the app you are filming in. On your <strong>Mac or PC</strong>, speaker notes that stay out of the screen share on <strong>Zoom</strong>, <strong>Google Meet</strong> and <strong>Microsoft Teams</strong>.' %}
     {% set heroPrimaryHref = "#download" %}
     {% set heroPrimaryIcon = "download" %}
     {% set heroPrimaryText = "Get CueCard, it's free" %}
@@ -137,11 +137,8 @@ ogLocale: "en_US"
     {% set heroStrip = "none" %}
     {% include "partials/hero.njk" %}
 
-    {# The download hub. It comes first, because it is the answer to the only
-       question most people arrive with, and because a page whose entire offer
-       is visible above the second scroll converts and indexes better than one
-       that hides its stores at the bottom. #}
-    {% include "partials/getcuecard.njk" %}
+    {% set demoSolid = true %}
+    {% include "partials/demo.njk" %}
 
     <!-- The two halves. Each is a full page of its own; this is the fork. -->
     <section id="apps" aria-labelledby="apps-h">
@@ -149,9 +146,8 @@ ogLocale: "en_US"
             <p class="micro">{{ icon("layers", 13) }}Two apps, one idea</p>
             <h2 class="section-h" id="apps-h">Whichever screen you have to talk to</h2>
             <p class="body">
-                The same principle solves two opposite problems. Filming, you need the words
-                <em>on</em> the thing you are looking at. Presenting, you need them anywhere the
-                other people cannot see. CueCard is both.
+                Filming, you need the words <em>on</em> the thing you are looking at.
+                Presenting, you need them where nobody else can see. CueCard is both.
             </p>
 
             <div class="halves">
@@ -159,11 +155,11 @@ ogLocale: "en_US"
                     <p class="half-tag">{{ icon("phone", 15) }}On your phone</p>
                     <h3 class="half-title"><a href="/mobile/">CueCard Mobile — the floating teleprompter</a></h3>
                     <p class="half-body">
-                        A window that sits above every other app on iPhone and iPad. Open the camera,
+                        A window above every other app on iPhone and iPad. Open the camera,
                         <a href="/mobile/instagram/">Instagram</a>, <a href="/mobile/tiktok/">TikTok</a>
-                        or <a href="/mobile/youtube/">YouTube</a> and your script is right there on the
-                        glass, scrolling at the speed you set. Nothing is recorded inside CueCard, so
-                        the footage still comes out of the app it always came out of.
+                        or <a href="/mobile/youtube/">YouTube</a> and your script is on the glass,
+                        scrolling at the speed you set. The footage still comes out of the app it
+                        always came out of.
                     </p>
                     <ul class="half-list">
                         <li>{{ icon("scroll", 15) }}Auto-scroll with word-by-word highlighting</li>
@@ -181,11 +177,10 @@ ogLocale: "en_US"
                     <p class="half-tag">{{ icon("monitor", 15) }}On your computer</p>
                     <h3 class="half-title"><a href="/desktop/">CueCard Desktop — invisible speaker notes</a></h3>
                     <p class="half-body">
-                        Notes that are excluded from screen capture at the operating-system level, so
-                        they are invisible on <a href="/zoom/">Zoom</a>,
-                        <a href="/google-meet/">Google Meet</a> and
-                        <a href="/microsoft-teams/">Microsoft Teams</a> by design rather than by
-                        parking a window somewhere and hoping. They sync live from
+                        Notes excluded from screen capture at the system level, so they are invisible
+                        on <a href="/zoom/">Zoom</a>, <a href="/google-meet/">Google Meet</a> and
+                        <a href="/microsoft-teams/">Microsoft Teams</a> by design, not by parking a
+                        window and hoping. They sync live from
                         <a href="/google-slides/">Google Slides</a> as you advance.
                     </p>
                     <ul class="half-list">
@@ -205,7 +200,7 @@ ogLocale: "en_US"
     {% set featureRows = features.mobile %}
     {% set rowsMicro = "What you get" %}
     {% set rowsHeading = "Built to be read out of the corner of your eye" %}
-    {% set rowsNote = "The phone app in detail. The <a href=\"/desktop/\">desktop app</a> has a list of its own." %}
+    {% set rowsNote = "The phone app. The <a href=\"/desktop/\">desktop app</a> has a list of its own." %}
     {% set rowsId = "features" %}
     {% set rowsSolid = true %}
     {% include "partials/rows.njk" %}
@@ -218,7 +213,7 @@ ogLocale: "en_US"
     {% set stripId = "record" %}
     {% set stripMicro = "Record anywhere" %}
     {% set stripHeading = "It floats over the app you already film in" %}
-    {% set stripNote = "CueCard does not replace your camera app or ask you to record inside it. It sits on top of whatever you open, so the footage comes out of the app it always came out of." %}
+    {% set stripNote = "CueCard never replaces your camera app. It sits on top of whatever you open." %}
     {% set stripSolid = true %}
     {% include "partials/applist.njk" %}
 
@@ -228,7 +223,7 @@ ogLocale: "en_US"
     {% set stripIcon = "eye-off" %}
     {% set stripMicro = "Undetectable on" %}
     {% set stripHeading = "And stays out of the call you are presenting to" %}
-    {% set stripNote = "CueCard is hidden at the operating-system level rather than per app, so this is not a list you have to be on — it is the list of pages we have written about." %}
+    {% set stripNote = "It is hidden at the system level rather than per app, so this is a list of pages we have written, not a list you have to be on." %}
     {% set appState = "Invisible" %}
     {% set appStateLive = true %}
     {% set stripSolid = false %}
@@ -257,16 +252,9 @@ ogLocale: "en_US"
     {% set faqHeading = "Everything people ask before installing" %}
     {% include "partials/faq.njk" %}
 
-    {% set ctaHeading = "Stop memorising.<br /><em>Start talking.</em>" %}
-    {% set ctaBody = "Write it once, put it on the glass, and say it like you mean it. Open source, free, no subscription, nothing to cancel." %}
-    {% set ctaPrimaryHref = "#download" %}
-    {% set ctaPrimaryIcon = "download" %}
-    {% set ctaPrimaryText = "Get CueCard" %}
-    {% set ctaSecondaryHref = site.github %}
-    {% set ctaSecondaryIcon = "github" %}
-    {% set ctaSecondaryText = "Read the source" %}
-    {% set ctaNote = "iOS · Android in closed testing · macOS · Windows · Chrome, Firefox and Safari" %}
-    {% include "partials/cta.njk" %}
+    {% set getHeading = "Stop memorising. Start talking." %}
+    {% set getBody = "Free on every screen you speak from. No account, no subscription, nothing to cancel — and all of it on GitHub." %}
+    {% include "partials/getcuecard.njk" %}
 </main>
 
 {% include "partials/footer.njk" %}

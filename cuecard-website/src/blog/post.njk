@@ -43,37 +43,39 @@ eleventyComputed:
 {% endblock %}
 
 {% block body %}
+{% from "partials/icons.njk" import icon %}
 {% include "partials/nav.njk" %}
 
 <main class="blog-page blog-post-page">
-    <header class="blog-post-header">
-        {% include "partials/breadcrumbs.njk" %}
-        <p class="blog-meta">
-            <span>Open source</span>
-            <span class="blog-meta-separator">&middot;</span>
-            <time datetime="{{ blog.datetime }}">{{ blog.datetime }}</time>
-            <span class="blog-meta-separator">&middot;</span>
-            <span class="blog-author">{{ blog.author }}</span>
-        </p>
-        <h1 class="blog-post-title">{{ blog.title }}</h1>
-    </header>
-
-    <article class="blog-entry-content">
-        {{ blog.content | markdownify | safe }}
-    </article>
-
-    <div class="blog-post-actions">
-        <a class="blog-entry-link" href="/blog/">Back to Blog</a>
-    </div>
-
-    <section class="blog-cta">
-        <h2 class="blog-cta-title">Download CueCard</h2>
-        <p class="blog-cta-subtitle">A floating teleprompter on your phone, invisible speaker notes on your computer. Both free.</p>
-        <div class="blog-cta-actions">
-            <a class="btn btn-primary" href="/#download">Every download, in one place</a>
-            <a class="btn btn-secondary" href="{{ site.github }}" target="_blank" rel="noopener">Read the source</a>
+    <section class="blog-post-header" aria-labelledby="post-h">
+        <div class="wrap">
+            {% include "partials/breadcrumbs.njk" %}
+            <p class="blog-meta">
+                <span>Open source</span>
+                <span class="blog-meta-separator">&middot;</span>
+                <time datetime="{{ blog.datetime }}">{{ blog.datetime }}</time>
+                <span class="blog-meta-separator">&middot;</span>
+                <span class="blog-author">{{ blog.author }}</span>
+            </p>
+            <h1 class="display display-long" id="post-h">{{ blog.title }}</h1>
         </div>
     </section>
+
+    <section class="blog-post-body solid" aria-label="Post">
+        <div class="wrap">
+            <article class="blog-entry-content">
+                {{ blog.content | markdownify | safe }}
+            </article>
+            <p class="backline">
+                <a href="/blog/">{{ icon("arrow", 15) }} Back to the blog</a>
+                <a href="{{ site.github }}" target="_blank" rel="noopener">{{ icon("code", 15) }} Read the source</a>
+            </p>
+        </div>
+    </section>
+
+    {% set getHeading = "Stop memorising. Start talking." %}
+    {% set getBody = "A floating teleprompter on your phone, invisible speaker notes on your computer. Both free." %}
+    {% include "partials/getcuecard.njk" %}
 </main>
 
 {% include "partials/footer.njk" %}

@@ -35,9 +35,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize GitHub stats and releases
     initGitHubData();
 
-    // Initialize mobile app screenshot scroll behavior
-    initAppScreenshotGallery();
-
 });
 
 /* The background reel.
@@ -257,79 +254,6 @@ function initFaqSearch() {
 
     searchInput.addEventListener('input', filterItems);
     filterItems();
-}
-
-function initAppScreenshotGallery() {
-    const gallery = document.querySelector('.hero.hero-app .app-screenshots');
-    if (!gallery) return;
-
-    const cards = Array.from(gallery.querySelectorAll('.app-screenshot-card'));
-    if (cards.length < 2) return;
-
-    const firstImage = cards[0].querySelector('.app-screenshot');
-    const secondImage = cards[1].querySelector('.app-screenshot');
-    if (!firstImage || !secondImage) return;
-
-    const cacheOriginal = (image) => {
-        if (!image.dataset.originalSrc) {
-            image.dataset.originalSrc = image.getAttribute('src') || '';
-            image.dataset.originalAlt = image.getAttribute('alt') || '';
-        }
-    };
-
-    cacheOriginal(firstImage);
-    cacheOriginal(secondImage);
-
-    const mediaQuery = window.matchMedia('(max-width: 768px)');
-
-    const applyMobileLayout = () => {
-        if (mediaQuery.matches) {
-            const firstSrc = firstImage.dataset.originalSrc;
-            const firstAlt = firstImage.dataset.originalAlt;
-            const secondSrc = secondImage.dataset.originalSrc;
-            const secondAlt = secondImage.dataset.originalAlt;
-
-            if (secondSrc) {
-                firstImage.setAttribute('src', secondSrc);
-            }
-            if (secondAlt) {
-                firstImage.setAttribute('alt', secondAlt);
-            }
-            if (firstSrc) {
-                secondImage.setAttribute('src', firstSrc);
-            }
-            if (firstAlt) {
-                secondImage.setAttribute('alt', firstAlt);
-            }
-
-            requestAnimationFrame(() => {
-                const target = cards[1];
-                const centeredLeft = target.offsetLeft - (gallery.clientWidth - target.clientWidth) / 2;
-                gallery.scrollLeft = centeredLeft;
-            });
-        } else {
-            if (firstImage.dataset.originalSrc) {
-                firstImage.setAttribute('src', firstImage.dataset.originalSrc);
-            }
-            if (firstImage.dataset.originalAlt) {
-                firstImage.setAttribute('alt', firstImage.dataset.originalAlt);
-            }
-            if (secondImage.dataset.originalSrc) {
-                secondImage.setAttribute('src', secondImage.dataset.originalSrc);
-            }
-            if (secondImage.dataset.originalAlt) {
-                secondImage.setAttribute('alt', secondImage.dataset.originalAlt);
-            }
-        }
-    };
-
-    applyMobileLayout();
-
-    if (typeof mediaQuery.addEventListener === 'function') {
-        mediaQuery.addEventListener('change', applyMobileLayout);
-    } else if (typeof mediaQuery.addListener === 'function') {
-        mediaQuery.addListener(applyMobileLayout);
-    }
 }
 
 // Timestamp countdown animation for syntax preview

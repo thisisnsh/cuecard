@@ -67,7 +67,7 @@
     {% set heroMicro = "CueCard for " + profession.name %}
     {% set heroTitle = profession.heroSubtitle %}
     {% set heroLong = true %}
-    {% set heroBody = "Speaker notes for " + profession.targetAudience + ", on macOS and Windows. They sit on your screen while you present and stay out of the screen share, so the people on the call see your deck and nothing else." %}
+    {% set heroBody = "Speaker notes for " + profession.targetAudience + ", on macOS and Windows. They sit on your screen while you present and stay out of the screen share." %}
     {% set heroPrimaryHref = "#download" %}
     {% set heroPrimaryIcon = "download" %}
     {% set heroPrimaryText = "Download CueCard" %}
@@ -104,22 +104,13 @@
 
     {% include "partials/features.njk" %}
 
-    {% set downloadTitle = "Ready to present like a pro?" %}
-    {% set downloadDesc = "Download CueCard and never fumble through a presentation again." %}
-    {% include "partials/download.njk" %}
-
     {% set faqItems = roleFaq %}
     {% set faqHeading = "Questions from " + profession.name | lower %}
     {% include "partials/faq.njk" %}
 
-    {% set ctaHeading = "Know your lines.<br /><em>Show your slides.</em>" %}
-    {% set ctaPrimaryHref = "#download" %}
-    {% set ctaPrimaryIcon = "download" %}
-    {% set ctaPrimaryText = "Download for Mac or Windows" %}
-    {% set ctaSecondaryHref = "/" %}
-    {% set ctaSecondaryIcon = "phone" %}
-    {% set ctaSecondaryText = "Get the mobile teleprompter" %}
-    {% include "partials/cta.njk" %}
+    {% set downloadTitle = "Know your lines. Show your slides." %}
+    {% set downloadDesc = "Free on macOS and Windows. No account, no subscription, nothing to cancel." %}
+    {% include "partials/download.njk" %}
 </main>
 
 {% include "partials/footer.njk" %}
