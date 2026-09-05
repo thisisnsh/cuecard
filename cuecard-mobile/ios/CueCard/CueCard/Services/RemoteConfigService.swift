@@ -18,7 +18,15 @@ final class RemoteConfigService: ObservableObject {
 
     /// Long enough that foregrounding the app repeatedly doesn't hammer the edge,
     /// short enough that pulling a bad message takes effect within a session.
+    ///
+    /// Debug builds get a few seconds instead, because the release interval makes
+    /// testing a message impossible: you edit the worker, background and foreground
+    /// the app, and nothing happens for a quarter of an hour.
+    #if DEBUG
+    private static let minimumRefreshInterval: TimeInterval = 5
+    #else
     private static let minimumRefreshInterval: TimeInterval = 15 * 60
+    #endif
 
     @Published private(set) var config: RemoteConfig = .empty
     @Published private(set) var dismissedIDs: Set<String> = []
@@ -34,6 +42,13 @@ final class RemoteConfigService: ObservableObject {
         let configuration = URLSessionConfiguration.default
         configuration.timeoutIntervalForRequest = 5
         configuration.waitsForConnectivity = false
+        // The worker sends `Cache-Control: max-age=300`, which URLSession honours
+        // by replaying its stored copy without ever going to the network. We do
+        // our own throttling and keep our own copy on disk, so a second layer of
+        // caching here buys nothing and hides a freshly deployed message for
+        // another five minutes.
+        configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
+        configuration.urlCache = nil
         return URLSession(configuration: configuration)
     }()
 
