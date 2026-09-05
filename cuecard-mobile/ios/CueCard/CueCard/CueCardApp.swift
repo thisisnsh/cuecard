@@ -8,7 +8,7 @@ struct CueCardApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
     @StateObject private var authService = AuthenticationService.shared
     @StateObject private var settingsService = SettingsService.shared
-    @StateObject private var remoteConfig = RemoteConfigService.shared
+    @StateObject private var notifications = RemoteNotificationService.shared
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
@@ -16,16 +16,16 @@ struct CueCardApp: App {
             ContentView()
                 .environmentObject(authService)
                 .environmentObject(settingsService)
-                .environmentObject(remoteConfig)
+                .environmentObject(notifications)
                 .preferredColorScheme(settingsService.settings.themePreference.colorScheme)
                 .task {
-                    await remoteConfig.refresh()
+                    await notifications.refresh()
                 }
                 .onChange(of: scenePhase) { phase in
                     // Coming back to the app is the natural moment to pick up a
                     // new notice. The service throttles itself, so this is cheap.
                     guard phase == .active else { return }
-                    Task { await remoteConfig.refresh() }
+                    Task { await notifications.refresh() }
                 }
         }
     }

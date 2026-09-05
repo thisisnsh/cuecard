@@ -5,19 +5,7 @@ import FirebaseCrashlytics
 
 struct LoginView: View {
     @EnvironmentObject var authService: AuthenticationService
-    @EnvironmentObject var remoteConfig: RemoteConfigService
     @Environment(\.colorScheme) var colorScheme
-
-    // A provider can be switched off remotely when it breaks on us — but only
-    // while the other one still works. Turning both off would leave no way into
-    // the app at all, so in that case the switches are ignored.
-    private var isAppleSignInAvailable: Bool {
-        remoteConfig.isAppleSignInEnabled || !remoteConfig.isGoogleSignInEnabled
-    }
-
-    private var isGoogleSignInAvailable: Bool {
-        remoteConfig.isGoogleSignInEnabled || !remoteConfig.isAppleSignInEnabled
-    }
 
     var body: some View {
         ZStack {
@@ -65,54 +53,50 @@ struct LoginView: View {
 
                 // Sign in section
                 VStack(spacing: 16) {
-                    if isAppleSignInAvailable {
-                        // Sign in with Apple button
-                        SignInWithAppleButton(.signIn) { request in
-                            request.requestedScopes = [.fullName, .email]
-                        } onCompletion: { _ in
-                            // Handled by AuthenticationService
-                        }
-                        .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
-                        .frame(height: 50)
-                        .cornerRadius(12)
-                        .disabled(authService.isLoading)
-                        .opacity(authService.isLoading ? 0.6 : 1)
-                        .onTapGesture {
-                            AnalyticsEvents.logButtonClick("sign_in_with_apple", screen: "login")
-                            authService.signInWithApple()
-                        }
-                        .allowsHitTesting(!authService.isLoading)
+                    // Sign in with Apple button
+                    SignInWithAppleButton(.signIn) { request in
+                        request.requestedScopes = [.fullName, .email]
+                    } onCompletion: { _ in
+                        // Handled by AuthenticationService
                     }
-
-                    if isGoogleSignInAvailable {
-                        // Google Sign in button
-                        Button(action: {
-                            AnalyticsEvents.logButtonClick("sign_in_with_google", screen: "login")
-                            Task {
-                                await authService.signInWithGoogle()
-                            }
-                        }) {
-                            HStack(spacing: 12) {
-                                Image("GoogleLogo")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: 20, height: 20)
-
-                                Text("Continue with Google")
-                                    .fontWeight(.semibold)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .fill(Color.white)
-                            )
-                            .foregroundStyle(.black)
-                            .shadow(color: .black.opacity(0.1), radius: 4, y: 2)
-                        }
-                        .disabled(authService.isLoading)
-                        .opacity(authService.isLoading ? 0.6 : 1)
+                    .signInWithAppleButtonStyle(colorScheme == .dark ? .white : .black)
+                    .frame(height: 50)
+                    .cornerRadius(12)
+                    .disabled(authService.isLoading)
+                    .opacity(authService.isLoading ? 0.6 : 1)
+                    .onTapGesture {
+                        AnalyticsEvents.logButtonClick("sign_in_with_apple", screen: "login")
+                        authService.signInWithApple()
                     }
+                    .allowsHitTesting(!authService.isLoading)
+
+                    // Google Sign in button
+                    Button(action: {
+                        AnalyticsEvents.logButtonClick("sign_in_with_google", screen: "login")
+                        Task {
+                            await authService.signInWithGoogle()
+                        }
+                    }) {
+                        HStack(spacing: 12) {
+                            Image("GoogleLogo")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 20, height: 20)
+
+                            Text("Continue with Google")
+                                .fontWeight(.semibold)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color.white)
+                        )
+                        .foregroundStyle(.black)
+                        .shadow(color: .black.opacity(0.1), radius: 4, y: 2)
+                    }
+                    .disabled(authService.isLoading)
+                    .opacity(authService.isLoading ? 0.6 : 1)
 
                     if authService.isLoading {
                         ProgressView()
@@ -180,5 +164,4 @@ struct FeatureRow: View {
 #Preview {
     LoginView()
         .environmentObject(AuthenticationService.shared)
-        .environmentObject(RemoteConfigService.shared)
 }

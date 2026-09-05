@@ -7,7 +7,7 @@ import FirebaseCrashlytics
 struct HomeView: View {
     @EnvironmentObject var authService: AuthenticationService
     @EnvironmentObject var settingsService: SettingsService
-    @EnvironmentObject var remoteConfig: RemoteConfigService
+    @EnvironmentObject var notifications: RemoteNotificationService
     @Environment(\.colorScheme) var colorScheme
     @State private var showingSettings = false
     @State private var showingTeleprompter = false
@@ -231,8 +231,8 @@ struct HomeView: View {
                     // Anything the worker wants people to see, above the script.
                     // Nothing to show is the normal case, and then this is a
                     // zero-height view the layout never notices.
-                    if let message = remoteConfig.message(for: .homeBanner) {
-                        RemoteMessageBanner(message: message)
+                    if let notification = notifications.notification(for: .homeBanner) {
+                        NotificationBanner(notification: notification)
                             .padding(.horizontal, 16)
                             .padding(.top, 12)
                             .transition(.move(edge: .top).combined(with: .opacity))
@@ -254,7 +254,7 @@ struct HomeView: View {
                     // gap it leaves behind on dismissal cuts the script off.
                     .ignoresSafeArea(.keyboard, edges: .bottom)
                 }
-                .animation(.easeInOut(duration: 0.25), value: remoteConfig.dismissedIDs)
+                .animation(.easeInOut(duration: 0.25), value: notifications.dismissedIDs)
             }
             .overlay(alignment: .bottom) {
                 if isEditorFocused {
@@ -593,7 +593,7 @@ struct SavedNotesView: View {
     HomeView()
         .environmentObject(AuthenticationService.shared)
         .environmentObject(SettingsService.shared)
-        .environmentObject(RemoteConfigService.shared)
+        .environmentObject(RemoteNotificationService.shared)
 }
 
 #Preview("Saved Notes") {
