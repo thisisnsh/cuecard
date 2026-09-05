@@ -73,14 +73,14 @@ import com.google.android.play.core.review.ReviewManagerFactory
 import com.thisisnsh.cuecard.android.AnalyticsEvents
 import com.thisisnsh.cuecard.android.LocalIsDarkTheme
 import com.thisisnsh.cuecard.android.models.AppColors
-import com.thisisnsh.cuecard.android.models.RemoteMessage
+import com.thisisnsh.cuecard.android.models.RemoteNotification
 import com.thisisnsh.cuecard.android.models.ScriptFile
 import com.thisisnsh.cuecard.android.models.TeleprompterParser
 import com.thisisnsh.cuecard.android.modifiers.Capsule
 import com.thisisnsh.cuecard.android.modifiers.glassed
 import com.thisisnsh.cuecard.android.modifiers.scriptEdgeFade
 import com.thisisnsh.cuecard.android.services.AuthenticationService
-import com.thisisnsh.cuecard.android.services.RemoteConfigService
+import com.thisisnsh.cuecard.android.services.RemoteNotificationService
 import com.thisisnsh.cuecard.android.services.ReviewPromptService
 import com.thisisnsh.cuecard.android.services.SettingsService
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -120,7 +120,7 @@ private val EDITOR_BOTTOM_FADE = 72.dp
 fun HomeView(
     authService: AuthenticationService,
     settingsService: SettingsService,
-    remoteConfig: RemoteConfigService
+    notifications: RemoteNotificationService
 ) {
     val isDark = LocalIsDarkTheme.current
     val context = LocalContext.current
@@ -130,8 +130,8 @@ fun HomeView(
     val settings by settingsService.settings.collectAsState()
     val savedNotes by settingsService.savedNotes.collectAsState()
     val currentNoteId by settingsService.currentNoteId.collectAsState()
-    val config by remoteConfig.config.collectAsState()
-    val dismissedIds by remoteConfig.dismissedIds.collectAsState()
+    val payload by notifications.payload.collectAsState()
+    val dismissedIds by notifications.dismissedIds.collectAsState()
 
     var showingSettings by remember { mutableStateOf(false) }
     var showingTeleprompter by remember { mutableStateOf(false) }
@@ -147,8 +147,8 @@ fun HomeView(
 
     val hasNotes = notes.trim().isNotEmpty()
 
-    val bannerMessage = remember(config, dismissedIds) {
-        remoteConfig.message(RemoteMessage.Surface.HOME_BANNER)
+    val banner = remember(payload, dismissedIds) {
+        notifications.notification(RemoteNotification.Surface.HOME_BANNER)
     }
 
     LaunchedEffect(Unit) {
@@ -378,10 +378,10 @@ fun HomeView(
                     // Anything the worker wants people to see, above the script.
                     // Nothing to show is the normal case, and then this is a
                     // zero-height view the layout never notices.
-                    bannerMessage?.let { message ->
-                        RemoteMessageBanner(
-                            message = message,
-                            remoteConfig = remoteConfig,
+                    banner?.let { notification ->
+                        NotificationBanner(
+                            notification = notification,
+                            notifications = notifications,
                             modifier = Modifier
                                 .padding(horizontal = 16.dp)
                                 .padding(top = 12.dp)
@@ -491,7 +491,7 @@ fun HomeView(
             SettingsView(
                 authService = authService,
                 settingsService = settingsService,
-                remoteConfig = remoteConfig,
+                notifications = notifications,
                 onDismiss = { showingSettings = false }
             )
         }
@@ -505,7 +505,6 @@ fun HomeView(
             TeleprompterView(
                 content = content,
                 settings = settings,
-                remoteConfig = remoteConfig,
                 onDismiss = {
                     showingTeleprompter = false
                     requestReviewIfEarned()

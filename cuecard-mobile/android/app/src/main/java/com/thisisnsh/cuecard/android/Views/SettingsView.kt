@@ -59,11 +59,11 @@ import com.thisisnsh.cuecard.android.BuildConfig
 import com.thisisnsh.cuecard.android.LocalIsDarkTheme
 import com.thisisnsh.cuecard.android.models.AppColors
 import com.thisisnsh.cuecard.android.models.CueColor
-import com.thisisnsh.cuecard.android.models.RemoteMessage
+import com.thisisnsh.cuecard.android.models.RemoteNotification
 import com.thisisnsh.cuecard.android.services.AuthenticationService
 import com.thisisnsh.cuecard.android.services.FontSizePreset
 import com.thisisnsh.cuecard.android.services.OverlayAspectRatio
-import com.thisisnsh.cuecard.android.services.RemoteConfigService
+import com.thisisnsh.cuecard.android.services.RemoteNotificationService
 import com.thisisnsh.cuecard.android.services.SettingsService
 import com.thisisnsh.cuecard.android.services.TeleprompterSettings
 import com.thisisnsh.cuecard.android.services.ThemePreference
@@ -74,7 +74,7 @@ import kotlinx.coroutines.launch
 fun SettingsView(
     authService: AuthenticationService,
     settingsService: SettingsService,
-    remoteConfig: RemoteConfigService,
+    notifications: RemoteNotificationService,
     onDismiss: () -> Unit
 ) {
     val isDark = LocalIsDarkTheme.current
@@ -83,15 +83,15 @@ fun SettingsView(
 
     val settings by settingsService.settings.collectAsState()
     val user by authService.currentUser.collectAsState()
-    val config by remoteConfig.config.collectAsState()
-    val dismissedIds by remoteConfig.dismissedIds.collectAsState()
+    val payload by notifications.payload.collectAsState()
+    val dismissedIds by notifications.dismissedIds.collectAsState()
 
     var showingDeleteConfirmation by remember { mutableStateOf(false) }
     var isDeletingAccount by remember { mutableStateOf(false) }
     var deleteErrorMessage by remember { mutableStateOf<String?>(null) }
 
-    val settingsMessage = remember(config, dismissedIds) {
-        remoteConfig.message(RemoteMessage.Surface.SETTINGS_ROW)
+    val settingsNotification = remember(payload, dismissedIds) {
+        notifications.notification(RemoteNotification.Surface.SETTINGS_ROW)
     }
 
     LaunchedEffect(Unit) {
@@ -136,11 +136,11 @@ fun SettingsView(
                 .verticalScroll(rememberScrollState())
         ) {
             // A notice from the worker, if there's one meant for Settings.
-            settingsMessage?.let { message ->
+            settingsNotification?.let { notification ->
                 SettingsSection(isDark = isDark) {
-                    RemoteMessageRow(
-                        message = message,
-                        remoteConfig = remoteConfig,
+                    NotificationRow(
+                        notification = notification,
+                        notifications = notifications,
                         modifier = Modifier.padding(horizontal = 20.dp)
                     )
                 }

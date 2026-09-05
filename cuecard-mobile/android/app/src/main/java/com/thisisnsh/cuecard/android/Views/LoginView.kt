@@ -43,18 +43,12 @@ import com.thisisnsh.cuecard.android.LocalIsDarkTheme
 import com.thisisnsh.cuecard.android.R
 import com.thisisnsh.cuecard.android.models.AppColors
 import com.thisisnsh.cuecard.android.services.AuthenticationService
-import com.thisisnsh.cuecard.android.services.RemoteConfigService
 import kotlinx.coroutines.launch
 
 @Composable
 fun LoginView(
-    authService: AuthenticationService,
-    @Suppress("UNUSED_PARAMETER") remoteConfig: RemoteConfigService
+    authService: AuthenticationService
 ) {
-    // A provider can be switched off remotely on iOS, but only while the other one
-    // still works. Android has one provider, so honouring `googleSignIn: false`
-    // here would lock every user out with no fallback — the flag is read, and the
-    // button stays.
     val isLoading by authService.isLoading.collectAsState()
     val error by authService.error.collectAsState()
     val scope = rememberCoroutineScope()

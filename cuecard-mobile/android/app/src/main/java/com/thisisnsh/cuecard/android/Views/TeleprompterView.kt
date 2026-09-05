@@ -71,7 +71,6 @@ import com.thisisnsh.cuecard.android.models.TeleprompterContent
 import com.thisisnsh.cuecard.android.models.TeleprompterParser
 import com.thisisnsh.cuecard.android.modifiers.scriptEdgeFade
 import com.thisisnsh.cuecard.android.modifiers.glassed
-import com.thisisnsh.cuecard.android.services.RemoteConfigService
 import com.thisisnsh.cuecard.android.services.ReviewPromptService
 import com.thisisnsh.cuecard.android.services.TeleprompterPiPManager
 import com.thisisnsh.cuecard.android.services.TeleprompterSettings
@@ -108,7 +107,6 @@ private const val EASE_TIME_CONSTANT = 0.12
 fun TeleprompterView(
     content: TeleprompterContent,
     settings: TeleprompterSettings,
-    remoteConfig: RemoteConfigService,
     onDismiss: () -> Unit
 ) {
     val isDark = LocalIsDarkTheme.current
@@ -254,13 +252,7 @@ fun TeleprompterView(
     // MARK: - The overlay
 
     DisposableEffect(Unit) {
-        // Remote kill switch. If the overlay starts misbehaving this turns it off
-        // for everyone without waiting on a release.
-        if (!remoteConfig.isPiPEnabled) {
-            pipManager.disable()
-        } else {
-            pipManager.configure(settings = settings, timerDuration = timerDuration)
-        }
+        pipManager.configure(settings = settings, timerDuration = timerDuration)
 
         pipManager.onPlayPauseFromPiP = { playing ->
             if (playing) {
