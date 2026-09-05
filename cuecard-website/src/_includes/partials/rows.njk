@@ -1,13 +1,15 @@
+{% from "partials/icons.njk" import icon %}
 {#
-  Numbered, ruled feature rows. No boxes, no icons - the number and the hairline
-  above it are the whole structure, which is what keeps a long page of these
-  readable instead of feeling like a wall of cards.
+  Numbered, ruled feature rows. No boxes - the number and the hairline above it
+  are the whole structure, which is what keeps a long page of these readable
+  instead of feeling like a wall of cards. The only icon is the small one on
+  the section label, which is a signpost rather than decoration.
 
   Set featureRows to a list of { h, p }.
 #}
 <section class="rows{% if rowsSolid %} solid{% endif %}" id="{{ rowsId or 'features' }}" aria-labelledby="{{ rowsId or 'features' }}-h">
     <div class="wrap">
-        <p class="micro">{{ rowsMicro or "What you get" }}</p>
+        <p class="micro">{{ icon(rowsIcon or "sparkle", 13) }}{{ rowsMicro or "What you get" }}</p>
         <h2 class="section-h" id="{{ rowsId or 'features' }}-h">{{ rowsHeading | safe }}</h2>
         {% if rowsNote %}<p class="body">{{ rowsNote | safe }}</p>{% endif %}
         <ol class="rowlist">

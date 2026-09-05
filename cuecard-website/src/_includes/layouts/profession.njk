@@ -53,9 +53,7 @@
 {% endblock %}
 
 {% block body %}
-{% set navPrimaryHref = "#download" %}
-{% set navPrimaryIcon = "download" %}
-{% set navPrimaryText = "Download" %}
+{% from "partials/icons.njk" import icon %}
 {% if profession.mobileCounterpart %}
 {% set navCtaHref = "/mobile/" + profession.mobileCounterpart + "/" %}
 {% else %}
@@ -73,11 +71,7 @@
     {% set heroPrimaryHref = "#download" %}
     {% set heroPrimaryIcon = "download" %}
     {% set heroPrimaryText = "Download CueCard" %}
-    {% set heroSecondaryText = "Watch the demo" %}
-    {% set heroSecondaryHref = site.youtube.desktop.watch %}
-    {% set heroSecondaryIcon = "play" %}
-    {% set heroSecondaryExternal = true %}
-    {% set heroNote = "Free · Open source · macOS and Windows" %}
+    {% set heroNote = "Free forever · No account · macOS 13+ and Windows 10+" %}
     {% set heroStrip = "meeting" %}
     {% set faqLink = "#faq" %}
     {% include "partials/hero.njk" %}
@@ -85,7 +79,7 @@
     {% if profession.useCases %}
     <section class="solid" aria-labelledby="uses-h">
         <div class="wrap">
-            <p class="micro">Where it earns its place</p>
+            <p class="micro">{{ icon("flag", 13) }}Where it earns its place</p>
             <h2 class="section-h" id="uses-h">What {{ profession.name | lower }} reach for it in</h2>
             <ul class="crestgrid">
                 {% for use in profession.useCases %}

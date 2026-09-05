@@ -4,11 +4,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // The fixed reel behind the page, loaded only when it is worth loading
     initBackgroundVideo();
 
-    // The demo player, swapped in for its poster on the first click
-    initVideoFacade();
-
-    // The menu on narrow screens
+    // The menu on narrow screens, and the header's download menu
     initNavToggle();
+    initDownloadMenu();
 
     // Initialize scroll reveal animations
     initScrollReveal();
@@ -99,32 +97,6 @@ function initBackgroundVideo() {
     video.load();
 }
 
-/* The demo player.
-
-   Every page ships a still and a play button rather than a YouTube iframe; the
-   real player is only built when someone asks for it. A third-party embed on
-   every page view would be the heaviest thing on this site and would be watched
-   by a small fraction of the people who paid for it. */
-function initVideoFacade() {
-    document.querySelectorAll('.video-facade').forEach(facade => {
-        facade.addEventListener('click', () => {
-            const id = facade.dataset.video;
-            if (!id) return;
-
-            const frame = document.createElement('iframe');
-            frame.src = 'https://www.youtube.com/embed/' + id +
-                '?autoplay=1&rel=0&modestbranding=1&playsinline=1';
-            frame.title = facade.getAttribute('aria-label') || 'CueCard demo';
-            frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
-            frame.referrerPolicy = 'strict-origin-when-cross-origin';
-            frame.allowFullscreen = true;
-            frame.setAttribute('frameborder', '0');
-
-            facade.replaceWith(frame);
-        }, { once: true });
-    });
-}
-
 /* The menu on narrow screens. The links are a plain block that is hidden by a
    media query and shown by this class, so with no JS at all the nav is still a
    row of working links rather than a button that does nothing. */
@@ -144,6 +116,33 @@ function initNavToggle() {
             links.classList.remove('open');
             toggle.setAttribute('aria-expanded', 'false');
         }
+    });
+}
+
+/* The header's download menu.
+
+   It is a <details>, so it already opens and closes with no JavaScript at all.
+   Everything here is a nicety on top: close when you click away from it, close
+   on Escape, and put focus back on the button when Escape closes it. */
+function initDownloadMenu() {
+    const menu = document.getElementById('nav-get');
+    if (!menu) return;
+
+    document.addEventListener('click', (event) => {
+        if (menu.open && !menu.contains(event.target)) menu.open = false;
+    });
+
+    document.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape' || !menu.open) return;
+        menu.open = false;
+        const summary = menu.querySelector('summary');
+        if (summary) summary.focus();
+    });
+
+    // Following a link out of the menu should not leave it hanging open when
+    // the page is restored from the back/forward cache.
+    menu.addEventListener('click', (event) => {
+        if (event.target.closest('a')) menu.open = false;
     });
 }
 
@@ -539,30 +538,29 @@ const GITHUB_REPO = 'thisisnsh/cuecard';
 // Deploy the Cloudflare Worker from /api/github-proxy-worker.js and set this URL
 const GITHUB_API_PROXY = 'https://cuecard.thisisnsh.workers.dev';
 let allReleases = [];
-let totalDownloads = 0;
 
-// Extension Store Integration
-const CHROME_EXTENSION_ID = 'mfphcgcbbahhahofibnenonbgjnabamg';
-const FIREFOX_ADDON_SLUG = 'cuecard-extension';
-let extensionDownloads = {
-    chrome: 0,
-    firefox: 0
-};
+/* Two things come from GitHub: the star count, which is on every page, and the
+   release list, which only the desktop download section uses.
 
+   The download *total* deliberately does not. GitHub only counts desktop
+   release assets, so a figure computed here would leave out the App Store
+   entirely and understate the real number by most of it. The line on the page
+   is a hand-written string in _data/site.js instead - see partials/stats.njk. */
 async function initGitHubData() {
+    const hasDownloadSection = !!document.getElementById('download-grid');
+
     try {
-        // Fetch stars and releases in parallel (don't wait for extension downloads)
         const [starsResult, releasesResult] = await Promise.all([
             fetchGitHubStars(),
-            fetchGitHubReleases()
+            hasDownloadSection ? fetchGitHubReleases() : Promise.resolve([])
         ]);
 
-        // Update stars count
         if (starsResult) {
             updateStarsCount(starsResult);
         }
 
-        // Update releases - use sample data if no releases found
+        if (!hasDownloadSection) return;
+
         if (releasesResult && releasesResult.length > 0) {
             allReleases = releasesResult;
         } else {
@@ -570,19 +568,13 @@ async function initGitHubData() {
             allReleases = getSampleReleaseData();
         }
 
-        calculateTotalDownloads();
         populateReleaseDropdown();
         displayRelease(allReleases[0]); // Show latest release by default
-
-        // Fetch extension downloads in background, then update total
-        fetchExtensionDownloads().then(() => {
-            calculateTotalDownloads();
-        });
     } catch (error) {
         console.error('Error fetching GitHub data:', error);
+        if (!hasDownloadSection) return;
         // Fall back to sample data on error
         allReleases = getSampleReleaseData();
-        calculateTotalDownloads();
         populateReleaseDropdown();
         displayRelease(allReleases[0]);
     }
@@ -722,12 +714,16 @@ async function fetchGitHubReleases() {
     }
 }
 
+/* The star count, wherever it appears - the stat line runs on every page and
+   the footer carries it too, so this writes to all of them. Each one's list
+   item starts hidden and is only revealed here, so a page that never hears
+   back from GitHub shows nothing rather than a placeholder that jumps. */
 function updateStarsCount(count) {
-    const starsElement = document.getElementById('github-stars');
-    if (starsElement) {
-        starsElement.textContent = formatNumber(count) + " GitHub Stars";
-    }
-
+    document.querySelectorAll('[data-github-stars]').forEach((el) => {
+        el.textContent = formatNumber(count);
+        const item = el.closest('[data-stars-item]');
+        if (item) item.hidden = false;
+    });
 }
 
 function formatNumber(num) {
@@ -737,102 +733,6 @@ function formatNumber(num) {
         return (num / 1000).toFixed(1) + 'k';
     }
     return num.toString();
-}
-
-// Fetch Firefox Add-on user count from AMO API
-async function fetchFirefoxDownloads() {
-    try {
-        const response = await fetch(`https://addons.mozilla.org/api/v5/addons/addon/${FIREFOX_ADDON_SLUG}/`);
-        if (!response.ok) {
-            throw new Error('Firefox API request failed');
-        }
-        const data = await response.json();
-        // Use average_daily_users as it represents active installs
-        return data.average_daily_users || 0;
-    } catch (error) {
-        console.log('Could not fetch Firefox extension downloads:', error);
-        return 0;
-    }
-}
-
-// Fetch Chrome Web Store user count via CORS proxy
-async function fetchChromeDownloads() {
-    try {
-        const storeUrl = `https://chromewebstore.google.com/detail/${CHROME_EXTENSION_ID}`;
-        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(storeUrl)}`;
-
-        const response = await fetch(proxyUrl);
-        if (!response.ok) {
-            throw new Error('Chrome proxy request failed');
-        }
-        const data = await response.json();
-        const html = data.contents;
-
-        // Extract user count from the page HTML (format: "X users" or "X,XXX users")
-        const userMatch = html.match(/>([\d,]+)\s*users?</i);
-        if (userMatch) {
-            return parseInt(userMatch[1].replace(/,/g, ''), 10);
-        }
-        return 0;
-    } catch (error) {
-        console.log('Could not fetch Chrome extension downloads:', error);
-        return 0;
-    }
-}
-
-// Fetch all extension download counts
-async function fetchExtensionDownloads() {
-    const [chromeCount, firefoxCount] = await Promise.all([
-        fetchChromeDownloads(),
-        fetchFirefoxDownloads()
-    ]);
-
-    extensionDownloads.chrome = chromeCount;
-    extensionDownloads.firefox = firefoxCount;
-
-    return extensionDownloads;
-}
-
-function calculateTotalDownloads() {
-    totalDownloads = 0;
-
-    // Add GitHub release downloads
-    allReleases.forEach(release => {
-        release.assets.forEach(asset => {
-            // Exclude files containing latest.json from total downloads
-            if (!asset.name.toLowerCase().includes('latest.json')) {
-                totalDownloads += asset.download_count;
-            }
-        });
-    });
-
-    // Add extension store downloads
-    totalDownloads += extensionDownloads.chrome + extensionDownloads.firefox;
-
-    const totalElement = document.getElementById('total-downloads');
-    if (totalElement && totalDownloads > 0) {
-        totalElement.innerHTML = `
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="7 10 12 15 17 10"/>
-                <line x1="12" y1="15" x2="12" y2="3"/>
-            </svg>
-            ${formatNumber(totalDownloads)} downloads
-        `;
-    }
-
-    // Hang the count off the download buttons as social proof. It is appended
-    // rather than substituted: a button that reads only "505 Downloads" has
-    // stopped saying what pressing it does.
-    const withCount = (el) => {
-        if (!el || !(totalDownloads > 0)) return;
-        const label = el.dataset.label || el.textContent.trim();
-        el.dataset.label = label;
-        el.textContent = label + ' · ' + formatNumber(totalDownloads);
-    };
-
-    withCount(document.querySelector('#nav-download-count[data-download-count]'));
-    withCount(document.querySelector('#hero-download-text[data-download-count]'));
 }
 
 function populateReleaseDropdown() {

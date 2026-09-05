@@ -6,7 +6,7 @@
 #}
 <section class="strip{% if stripSolid %} solid{% endif %}" id="{{ stripId or 'apps' }}" aria-labelledby="{{ stripId or 'apps' }}-h">
     <div class="wrap">
-        <p class="micro">{{ stripMicro or "Works over" }}</p>
+        <p class="micro">{{ icon(stripIcon or "grid", 13) }}{{ stripMicro or "Works over" }}</p>
         <h2 class="section-h" id="{{ stripId or 'apps' }}-h">{{ stripHeading | safe }}</h2>
         {% if stripNote %}<p class="body">{{ stripNote | safe }}</p>{% endif %}
         <ul class="leaguerows">

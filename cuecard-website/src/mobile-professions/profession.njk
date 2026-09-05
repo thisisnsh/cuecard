@@ -67,9 +67,7 @@ layout: layouts/mobile-profession.njk
 {% endblock %}
 
 {% block body %}
-{% set navPrimaryHref = site.ios %}
-{% set navPrimaryIcon = "apple" %}
-{% set navPrimaryText = "Get it on iOS" %}
+{% from "partials/icons.njk" import icon %}
 {% if mobileProfession.desktopCounterpart %}
 {% set navCtaHref = "/" + mobileProfession.desktopCounterpart + "/" %}
 {% else %}
@@ -89,11 +87,7 @@ layout: layouts/mobile-profession.njk
     {% set heroPrimaryExternal = true %}
     {% set heroPrimaryIcon = "apple" %}
     {% set heroPrimaryText = "Download on iOS" %}
-    {% set heroSecondaryText = "Watch the demo" %}
-    {% set heroSecondaryHref = site.youtube.mobile.watch %}
-    {% set heroSecondaryIcon = "play" %}
-    {% set heroSecondaryExternal = true %}
-    {% set heroNote = "Free · iOS 17+ · Android coming soon · Open source" %}
+    {% set heroNote = "Free forever · No account · iOS 17+ · Android in closed testing" %}
     {% set heroTagline = "No more forgetting your lines or switching screens." %}
     {% set heroStrip = "social" %}
     {% set stripMore = "and every other app you record in" %}
@@ -102,12 +96,12 @@ layout: layouts/mobile-profession.njk
 
     <section class="solid" aria-labelledby="get-h">
         <div class="wrap">
-            <p class="micro">Get the app</p>
+            <p class="micro">{{ icon("download", 13) }}Get the app</p>
             <h2 class="section-h" id="get-h">On your phone in under a minute</h2>
             {% include "partials/app-store.njk" %}
 
             {% if mobileProfession.useCases %}
-            <p class="micro footer-micro-2">What {{ mobileProfession.name | lower }} use it for</p>
+            <p class="micro footer-micro-2">{{ icon("flag", 13) }}What {{ mobileProfession.name | lower }} use it for</p>
             <ul class="crestgrid">
                 {% for use in mobileProfession.useCases %}
                 <li><span class="usecase">{{ use }}</span></li>

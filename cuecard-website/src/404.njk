@@ -6,22 +6,21 @@ description: "That page does not exist. Here is the way back to the CueCard tele
 noindex: true
 ---
 {% block body %}
-{% set navPrimaryHref = site.ios %}
-{% set navPrimaryIcon = "apple" %}
-{% set navPrimaryText = "Get it on iOS" %}
+{% from "partials/icons.njk" import icon %}
 {% include "partials/nav.njk" %}
 
 <main>
     <section class="hero hero-404" aria-labelledby="hero-h">
         <div class="wrap">
-            <p class="micro">404</p>
+            <p class="micro">{{ icon("code", 13) }}Open source · 404</p>
             <h1 class="display" id="hero-h">Lost your <em>place</em>?</h1>
             <p class="body">
                 That page is not here. Which is ironic, for a product whose whole job is
                 keeping you on the line you were on. Here is the way back.
             </p>
             <div class="actions">
-                <a class="btn btn-primary" href="/">The mobile teleprompter</a>
+                <a class="btn btn-primary" href="/#download">Every download</a>
+                <a class="btn btn-ghost" href="/mobile/">The mobile teleprompter</a>
                 <a class="btn btn-ghost" href="/desktop/">The desktop app</a>
             </div>
             <p class="backline">

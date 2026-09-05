@@ -43,15 +43,14 @@ eleventyComputed:
 {% endblock %}
 
 {% block body %}
-{% set navPrimaryHref = site.ios %}
-{% set navPrimaryIcon = "apple" %}
-{% set navPrimaryText = "Get it on iOS" %}
 {% include "partials/nav.njk" %}
 
 <main class="blog-page blog-post-page">
     <header class="blog-post-header">
         {% include "partials/breadcrumbs.njk" %}
         <p class="blog-meta">
+            <span>Open source</span>
+            <span class="blog-meta-separator">&middot;</span>
             <time datetime="{{ blog.datetime }}">{{ blog.datetime }}</time>
             <span class="blog-meta-separator">&middot;</span>
             <span class="blog-author">{{ blog.author }}</span>
@@ -71,8 +70,8 @@ eleventyComputed:
         <h2 class="blog-cta-title">Download CueCard</h2>
         <p class="blog-cta-subtitle">A floating teleprompter on your phone, invisible speaker notes on your computer. Both free.</p>
         <div class="blog-cta-actions">
-            <a class="btn btn-primary" href="{{ site.ios }}" target="_blank" rel="noopener">Get the mobile teleprompter</a>
-            <a class="btn btn-secondary" href="/desktop/#download">Download for Mac or Windows</a>
+            <a class="btn btn-primary" href="/#download">Every download, in one place</a>
+            <a class="btn btn-secondary" href="{{ site.github }}" target="_blank" rel="noopener">Read the source</a>
         </div>
     </section>
 </main>

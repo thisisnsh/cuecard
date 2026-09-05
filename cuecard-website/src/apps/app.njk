@@ -69,9 +69,7 @@ layout: layouts/mobile-app.njk
 {% endblock %}
 
 {% block body %}
-{% set navPrimaryHref = site.ios %}
-{% set navPrimaryIcon = "apple" %}
-{% set navPrimaryText = "Get it on iOS" %}
+{% from "partials/icons.njk" import icon %}
 {% set navCtaText = "Presenting from a Mac or PC? CueCard hides your speaker notes there too" %}
 {% set navCtaTextMobile = "Also for Mac and Windows" %}
 {% set navCtaHref = "/desktop/" %}
@@ -79,19 +77,14 @@ layout: layouts/mobile-app.njk
 
 <main>
     {% set heroClass = "hero-app" %}
-    {% set heroMicro = app.name + (" · iOS · Android coming soon" if app.showIos and app.showAndroid else "") %}
+    {% set heroMicro = app.name + (" · iOS · Android coming soon" if app.showIos and app.showAndroid else (" · iOS 17+" if app.showIos else " · Closed testing")) %}
     {% set heroTitle = app.heroSubtitle %}
-    {% set heroLong = true %}
     {% set heroBody = app.appDescription %}
     {% set heroPrimaryHref = site.ios %}
     {% set heroPrimaryExternal = true %}
     {% set heroPrimaryIcon = "apple" %}
     {% set heroPrimaryText = "Download on iOS" %}
-    {% set heroSecondaryText = "Watch the demo" %}
-    {% set heroSecondaryHref = site.youtube.mobile.watch %}
-    {% set heroSecondaryIcon = "play" %}
-    {% set heroSecondaryExternal = true %}
-    {% set heroNote = "Free · iOS 17+ · Android coming soon · Open source" %}
+    {% set heroNote = "Free forever · No account · iOS 17+ · Android in closed testing" %}
     {% set heroTagline = app.promotionalText %}
     {% set heroStrip = "social" %}
     {% set stripMore = "and every other app you record in" %}
@@ -100,7 +93,7 @@ layout: layouts/mobile-app.njk
 
     <section class="solid" aria-labelledby="get-h">
         <div class="wrap">
-            <p class="micro">Get the app</p>
+            <p class="micro">{{ icon("download", 13) }}Get the app</p>
             <h2 class="section-h" id="get-h">On your phone in under a minute</h2>
             {% set showIos = app.showIos %}
             {% set showAndroid = app.showAndroid %}
@@ -129,10 +122,9 @@ layout: layouts/mobile-app.njk
     <!-- The app's own four-up feature summary, kept from the page this replaced. -->
     <section class="features solid" aria-labelledby="highlights-h">
         <div class="wrap">
-            <p class="micro">In short</p>
+            <p class="micro">{{ icon("sparkle", 13) }}In short</p>
             <h2 class="section-h" id="highlights-h">Everything you need to stay on script</h2>
             <div class="app-features-grid">
-                {% from "partials/icons.njk" import icon %}
                 {% for feature in app.features %}
                 <div class="app-feature-item">
                     <div class="app-feature-icon">{{ icon(feature.icon, 24) }}</div>
@@ -146,6 +138,15 @@ layout: layouts/mobile-app.njk
 
     {% set syntaxKind = "mobile" %}
     {% include "partials/features.njk" %}
+
+    {% set appRows = site.socialApps %}
+    {% set appBase = "/mobile/" %}
+    {% set stripId = "apps" %}
+    {% set stripMicro = "Record anywhere" %}
+    {% set stripHeading = "It floats over the app you already film in" %}
+    {% set stripNote = "CueCard does not replace your camera app or ask you to record inside it. It sits on top of whatever you open, so the footage comes out of the app it always came out of." %}
+    {% set stripSolid = true %}
+    {% include "partials/applist.njk" %}
 
     {% set gridRoles = site.mobileRoles %}
     {% set gridBase = "/mobile/" %}

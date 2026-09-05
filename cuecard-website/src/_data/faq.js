@@ -275,4 +275,12 @@ function merge(first, second) {
   return (first || []).concat((second || []).filter((q) => !asked.has(q.question)));
 }
 
-module.exports = { items, groups, mobile, desktop, everywhere, withGeneral, merge };
+/**
+ * The home page's bank. The landing page is about both halves of CueCard, so
+ * it asks the phone questions, then the desktop questions it has not already
+ * answered, then the general ones - which is exactly what a visitor who does
+ * not yet know which half they want needs to read.
+ */
+const home = withGeneral(merge(mobile, desktop));
+
+module.exports = { items, groups, mobile, desktop, everywhere, home, withGeneral, merge };

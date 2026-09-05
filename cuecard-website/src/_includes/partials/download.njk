@@ -1,16 +1,17 @@
 {% from "partials/icons.njk" import icon %}
 {#
-  The desktop downloads. Everything with an id here is filled in at runtime by
-  script.js from the GitHub releases API - the release dropdown, the per-asset
-  buttons and the download counter - so the ids are load-bearing.
+  The desktop downloads: the exact installers for the release you pick, built
+  at runtime by script.js from the GitHub releases API. The ids here are
+  load-bearing - #release-select and #download-grid are what it looks for.
+
+  The wider "everywhere CueCard exists" list is a different section, on the
+  home page: partials/getcuecard.njk.
 #}
 <section class="download-section{% if downloadSolid %} solid{% endif %}" id="download" aria-labelledby="download-h">
     <div class="wrap">
-        <p class="micro section-tag">Download</p>
+        <p class="micro section-tag">{{ icon("download", 13) }}Download</p>
         <h2 class="section-h section-title" id="download-h">{{ (platform.downloadTitle if platform else downloadTitle) | safe }}</h2>
         <p class="body section-desc">{{ (platform.downloadDesc if platform else downloadDesc) | safe }}</p>
-
-        <p class="download-stats"><span class="total-downloads" id="total-downloads"></span></p>
 
         <div class="download-container">
             <div class="release-selector">

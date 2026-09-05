@@ -1,0 +1,29 @@
+{% from "partials/icons.njk" import icon %}
+{#
+  The download list, in its compact form: the thing that drops out of the
+  header button on every page. It reads from site.downloadGroups, which is the
+  same list the home page's Get CueCard section prints at full size, so the
+  header can never offer a platform the page does not, or miss one.
+#}
+<div class="dlmenu">
+    {% for g in site.downloadGroups %}
+    <div class="dlmenu-group">
+        <p class="dlmenu-label">{{ icon(g.icon, 13) }}{{ g.label }}</p>
+        <ul class="dlmenu-list">
+            {% for d in g.items %}
+            <li>
+                <a href="{{ d.href }}"{% if d.href[0] != "/" %} target="_blank" rel="noopener"{% endif %}>
+                    <span class="dlmenu-icon">{{ icon(d.icon, 17) }}</span>
+                    <span class="dlmenu-name">{{ d.name }}{% if d.state %} <em>{{ d.state }}</em>{% endif %}</span>
+                    <span class="dlmenu-cta">{{ d.cta }}{{ icon("arrow", 13) }}</span>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endfor %}
+    <p class="dlmenu-foot">
+        <a href="/#download">{{ icon("layers", 13) }} Compare every version</a>
+        <a href="{{ site.github }}" target="_blank" rel="noopener">{{ icon("code", 13) }} Read the source</a>
+    </p>
+</div>

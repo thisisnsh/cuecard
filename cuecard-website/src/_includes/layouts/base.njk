@@ -58,7 +58,9 @@
     {# reveal-on-scroll is an enhancement; with no JS the page must still read. #}
     <noscript><style>.reveal{opacity:1;transform:none}</style></noscript>
 
-    {% if not noVideo %}<link rel="preload" as="image" href="{{ site.video.poster }}" fetchpriority="high">{% endif %}
+    {% if not noVideo %}<link rel="preload" as="image" href="{{ site.video.poster }}" fetchpriority="high">
+{% if site.video.origin %}
+    <link rel="preconnect" href="{{ site.video.origin }}" crossorigin>{% endif %}{% endif %}
 
     <link rel="icon" type="image/png" href="/assets/favicon-96x96.png" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
@@ -124,6 +126,26 @@
       ]
     }
     </script>
+
+    {# The reel behind the page is the site's only video, so it is the site's
+       only VideoObject - and it stays unwritten while site.video.placeholder is
+       true, because the footage running there is borrowed. #}
+    {% if not noVideo and site.video.enabled and not site.video.placeholder %}
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "VideoObject",
+      "@id": "{{ site.url }}/#reel",
+      "name": {{ site.video.schema.name | dump | safe }},
+      "description": {{ site.video.schema.description | dump | safe }},
+      "thumbnailUrl": ["{{ site.video.poster }}"],
+      "contentUrl": "{{ site.video.mp4 }}",
+      "uploadDate": "{{ site.video.schema.uploadDate }}",
+      "duration": "{{ site.video.schema.duration }}",
+      "publisher": { "@id": "{{ site.url }}/#org" }
+    }
+    </script>
+    {% endif %}
 
     {% block jsonld %}{% endblock %}
 

@@ -1,13 +1,14 @@
 // Site-wide constants. Anything that appears on more than one page and would
 // be a bug to get out of step lives here, so a change lands everywhere at once.
 //
-// CueCard leads with the mobile teleprompter: cuecard.dev is the mobile app
-// site, and the Mac/Windows app keeps its own home at /desktop/ with every URL
-// it already ranked for left exactly where it was.
+// Three pages carry the product. / is the landing page - what CueCard is, the
+// fork between the two halves, and the download hub. /mobile/ is the phone
+// teleprompter. /desktop/ is the Mac and Windows app, with every URL it already
+// ranked for left exactly where it was.
 
 const year = new Date().getFullYear();
 
-module.exports = {
+const site = {
   name: "CueCard",
   shortName: "CueCard",
   tagline: "The teleprompter that floats over everything",
@@ -30,48 +31,126 @@ module.exports = {
   requiresDesktopShort: "macOS · Windows",
 
   // ── The background reel ─────────────────────────────────────────────────
-  // A fixed layer the whole page scrolls over, exactly like the poster frame
-  // it fades up from. `enabled` stays false until the real files are dropped
-  // in src/assets/ — with it off the poster simply stays, which is a complete,
-  // unbroken background rather than a 404 in the console.
+  // A fixed layer the whole page scrolls over. There is no video player
+  // anywhere on the site any more: this reel *is* the film, and the page reads
+  // on top of it.
+  //
+  // `placeholder` is the honest flag. While it is true these are borrowed
+  // files and nothing is marked up as a VideoObject, because structured data
+  // that describes someone else's footage is a lie. Drop CueCard's own three
+  // files in, point the URLs at them, fill in `schema`, set placeholder to
+  // false — and every page starts declaring the video to search engines.
   video: {
-    enabled: false,
-    mp4: "/assets/promo.mp4",
-    webm: "/assets/promo.webm",
-    poster: "/assets/cuecard-poster.png",
-    posterWidth: 1104,
-    posterHeight: 720,
+    enabled: true,
+    placeholder: true,
+    origin: "https://download.alldayidreamaboutsports.com",
+    mp4: "https://download.alldayidreamaboutsports.com/promo.mp4",
+    webm: "https://download.alldayidreamaboutsports.com/promo.webm",
+    poster: "https://download.alldayidreamaboutsports.com/promo-f1.webp",
+    posterWidth: 1440,
+    posterHeight: 810,
+    schema: {
+      name: "CueCard — a teleprompter that floats over every other app",
+      description:
+        "CueCard on iPhone and on the desktop: a floating teleprompter window that stays on top of the camera, Instagram or TikTok while you record, and speaker notes that stay out of the screen share while you present.",
+      uploadDate: "2026-01-01",
+      duration: "PT1M4S",
+    },
   },
 
-  // ── The canonical demos ─────────────────────────────────────────────────
-  // What the VideoObject blocks describe. `mobile` is a placeholder pointing
-  // at the existing reel until the mobile film is up: swap `id`, `title`,
-  // `uploadDate` and `duration` and every page follows.
-  youtube: {
-    mobile: {
-      placeholder: true,
-      id: "VQ85qXoMfis",
-      watch: "https://www.youtube.com/watch?v=VQ85qXoMfis",
-      embed: "https://www.youtube.com/embed/VQ85qXoMfis",
-      thumb: "https://i.ytimg.com/vi/VQ85qXoMfis/maxresdefault.jpg",
-      title: "CueCard Mobile - a teleprompter that floats over every app",
-      description:
-        "A walkthrough of CueCard on iPhone: a floating teleprompter window that stays on top of the camera, Instagram, TikTok or any other app, auto-scrolling your script while you record.",
-      uploadDate: "2025-12-28",
-      duration: "PT1M14S",
+  // ── Where CueCard can actually be had ───────────────────────────────────
+  // One list, used in three places: the header's download menu, the download
+  // section on the home page, and the footer. They cannot drift apart because
+  // there is only one of them.
+  //
+  // An `href` starting with "/" is a page on this site; anything else is a
+  // store and opens in a new tab.
+  downloadGroups: [
+    {
+      id: "phone",
+      label: "On your phone",
+      icon: "phone",
+      note: "The teleprompter floats on top of whatever you are filming in.",
+      items: [
+        {
+          name: "iPhone and iPad",
+          icon: "apple",
+          meta: "iOS 17 or later",
+          cta: "App Store",
+          href: "https://apps.apple.com/app/cuecard-teleprompter/id6757321325",
+          more: "/mobile/ios/",
+        },
+        {
+          name: "Android",
+          icon: "android",
+          meta: "Closed testing on Google Play",
+          cta: "Join the beta",
+          state: "Beta",
+          href: "https://play.google.com/apps/testing/com.thisisnsh.cuecard.android",
+          more: "/mobile/android/",
+        },
+      ],
     },
-    desktop: {
-      id: "VQ85qXoMfis",
-      watch: "https://www.youtube.com/watch?v=VQ85qXoMfis",
-      embed: "https://www.youtube.com/embed/VQ85qXoMfis",
-      thumb: "https://i.ytimg.com/vi/VQ85qXoMfis/maxresdefault.jpg",
-      title: "CueCard - invisible speaker notes for Zoom, Google Meet and Teams",
-      description:
-        "A walkthrough of CueCard on macOS and Windows: speaker notes that stay invisible while you share your screen on Zoom, Google Meet or Microsoft Teams, synced live from Google Slides.",
-      uploadDate: "2025-12-28",
-      duration: "PT1M14S",
+    {
+      id: "computer",
+      label: "On your computer",
+      icon: "monitor",
+      note: "Speaker notes that stay out of the screen share.",
+      items: [
+        {
+          name: "macOS",
+          icon: "apple",
+          meta: "macOS 13 or later · Apple silicon and Intel",
+          cta: "Download",
+          href: "/desktop/#download",
+          more: "/desktop/",
+        },
+        {
+          name: "Windows",
+          icon: "windows",
+          meta: "Windows 10 or later · x64 and ARM",
+          cta: "Download",
+          href: "/desktop/#download",
+          more: "/desktop/",
+        },
+      ],
     },
-  },
+    {
+      id: "browser",
+      label: "In your browser",
+      icon: "layers",
+      note: "Sends your Google Slides speaker notes to the desktop app, live.",
+      items: [
+        {
+          name: "Chrome",
+          icon: "chrome",
+          meta: "Also Edge, Brave and Arc",
+          cta: "Web Store",
+          href: "https://chromewebstore.google.com/detail/mfphcgcbbahhahofibnenonbgjnabamg",
+        },
+        {
+          name: "Firefox",
+          icon: "firefox",
+          meta: "Firefox 109 or later",
+          cta: "Add-ons",
+          href: "https://addons.mozilla.org/en-US/firefox/addon/cuecard-extension/",
+        },
+        {
+          name: "Safari",
+          icon: "safari",
+          meta: "Installed by the macOS app",
+          cta: "Download",
+          href: "/desktop/#download",
+        },
+      ],
+    },
+  ],
+
+  // The download total, written by hand. It is a claim about the product, not
+  // a live figure: the GitHub API only knows about desktop release assets, so
+  // anything computed from it undercounts the App Store badly. Edit the
+  // string and every page follows. The star count beside it *is* live.
+  downloadTotal: "1,100+",
 
   // ── The apps CueCard is read over, on a phone ───────────────────────────
   // Each has a page of its own; `icon` names a symbol in partials/icons.njk.
@@ -125,3 +204,13 @@ module.exports = {
     { name: "Webinar Hosts", slug: "webinar-hosts" },
   ],
 };
+
+// Every download as one flat list, in the order the groups print them. The
+// grouped shape is what the page reads; this is what schema and any counting
+// wants, and deriving it means the two can never disagree.
+site.downloads = site.downloadGroups.reduce(
+  (all, g) => all.concat(g.items.map((d) => ({ ...d, group: g.label }))),
+  []
+);
+
+module.exports = site;

@@ -37,9 +37,6 @@ crumbs:
 {% endblock %}
 
 {% block body %}
-{% set navPrimaryHref = site.ios %}
-{% set navPrimaryIcon = "apple" %}
-{% set navPrimaryText = "Get it on iOS" %}
 {% include "partials/nav.njk" %}
 
 <main data-faq-page>
@@ -47,7 +44,7 @@ crumbs:
     <section class="hero faq-page-hero" aria-labelledby="hero-h">
         <div class="wrap">
             {% include "partials/breadcrumbs.njk" %}
-            <p class="micro">Frequently asked</p>
+            <p class="micro">{{ icon("code", 13) }}Open source · Frequently asked</p>
             <h1 class="display" id="hero-h">{{ faq.items | length }} questions, <em>answered</em>.</h1>
             <p class="body">
                 Everything people ask about CueCard, in one place: the floating teleprompter on
@@ -55,6 +52,7 @@ crumbs:
                 <a href="/desktop/">Mac and Windows</a>, and what the whole thing costs — which is
                 nothing. Start typing to narrow the list.
             </p>
+            {% include "partials/stats.njk" %}
             <div class="faq-search">
                 {{ icon("search", 18, "faq-search-icon") }}
                 <input class="faq-search-input" id="faq-search" type="search"
@@ -66,7 +64,7 @@ crumbs:
     {% for group in faq.groups %}
     <section class="faq faq-page-list faq-group" id="{{ group.id }}" aria-labelledby="{{ group.id }}-h">
         <div class="wrap wrap-narrow">
-            <p class="micro">{{ group.intro }}</p>
+            <p class="micro">{{ icon("help", 13) }}{{ group.intro }}</p>
             <h2 class="section-h" id="{{ group.id }}-h">{{ group.title }}</h2>
             <div class="faq-list">
                 {% for item in group.items %}

@@ -52,9 +52,6 @@
 {% endblock %}
 
 {% block body %}
-{% set navPrimaryHref = "#download" %}
-{% set navPrimaryIcon = "download" %}
-{% set navPrimaryText = "Download" %}
 {% set navCtaText = "Filming on your phone instead? CueCard floats over every app on iOS" %}
 {% set navCtaTextMobile = "Also on iOS" %}
 {% set navCtaHref = "/" %}
@@ -63,16 +60,11 @@
 <main>
     {% set heroMicro = "CueCard for " + platform.name %}
     {% set heroTitle = platform.heroSubtitle %}
-    {% set heroLong = true %}
     {% set heroBody = platform.jsonLdDescription %}
     {% set heroPrimaryHref = "#download" %}
     {% set heroPrimaryIcon = "download" %}
     {% set heroPrimaryText = "Download CueCard" %}
-    {% set heroSecondaryText = "Watch the demo" %}
-    {% set heroSecondaryHref = site.youtube.desktop.watch %}
-    {% set heroSecondaryIcon = "play" %}
-    {% set heroSecondaryExternal = true %}
-    {% set heroNote = "Free · Open source · macOS and Windows" %}
+    {% set heroNote = "Free forever · No account · macOS 13+ and Windows 10+" %}
     {% set heroStrip = "meeting" %}
     {% set faqLink = "#faq" %}
     {% include "partials/hero.njk" %}

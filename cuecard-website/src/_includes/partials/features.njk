@@ -1,3 +1,4 @@
+{% from "partials/icons.njk" import icon %}
 {#
   The script syntax, shown rather than described: the same passage as you type
   it and as CueCard renders it. Two panels, side by side on a wide screen and
@@ -16,7 +17,7 @@
 {% set mobileSyntax = syntaxKind == "mobile" %}
 <section class="features syntax-notes{% if syntaxSolid %} solid{% endif %}" id="syntax" aria-labelledby="syntax-h">
     <div class="wrap">
-        <p class="micro section-tag">{{ syntaxMicro or "The script" }}</p>
+        <p class="micro section-tag">{{ icon("pen", 13) }}{{ syntaxMicro or "The script" }}</p>
         <h2 class="section-h section-title" id="syntax-h">{{ syntaxHeading or "Write it plainly. Read it like a pro." }}</h2>
         <p class="body">
             {% if syntaxBody %}{{ syntaxBody | safe }}

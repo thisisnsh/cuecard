@@ -21,13 +21,17 @@
                 Free and open source.
             </p>
             <ul class="footer-list">
-                <li><a href="/">Mobile app</a></li>
+                <li><a href="/mobile/">Mobile app</a></li>
                 <li><a href="/desktop/">Desktop app</a></li>
                 <li><a href="/blog/">Blog</a></li>
                 <li><a href="/faq/">FAQ</a></li>
+                <li><a href="{{ site.github }}" target="_blank" rel="noopener">Source code</a></li>
                 <li><a href="/privacy/">Privacy policy</a></li>
                 <li><a href="/terms/">Terms of service</a></li>
             </ul>
+            {% set statlineClass = "statline-footer" %}
+            {% include "partials/stats.njk" %}
+
             <ul class="footer-social">
                 <li><a href="{{ site.github }}" target="_blank" rel="noopener" aria-label="CueCard on GitHub">{{ icon("github", 18) }}</a></li>
                 <li><a href="{{ site.ios }}" target="_blank" rel="noopener" aria-label="CueCard on the App Store">{{ icon("apple", 18) }}</a></li>
@@ -36,20 +40,20 @@
         </div>
 
         <div class="footer-col">
-            <p class="micro"><a href="/">CueCard Mobile</a></p>
+            <p class="micro">{{ icon("phone", 13) }}<a href="/mobile/">CueCard Mobile</a></p>
             <ul class="footer-list footer-list-lead">
                 <li><a href="/mobile/ios/">{{ icon("apple", 15) }} iPhone and iPad</a></li>
-                <li><a href="/mobile/android/">{{ icon("android", 15) }} Android — coming soon</a></li>
+                <li><a href="/mobile/android/">{{ icon("android", 15) }} Android — closed testing</a></li>
             </ul>
 
-            <p class="micro footer-micro-2">Read your script over</p>
+            <p class="micro footer-micro-2">{{ icon("grid", 13) }}Read your script over</p>
             <ul class="footer-list footer-list-2">
                 {% for a in site.socialApps %}
                 <li><a href="/mobile/{{ a.slug }}/">{{ icon(a.icon, 14) }} {{ a.name }}</a></li>
                 {% endfor %}
             </ul>
 
-            <p class="micro footer-micro-2">Made for</p>
+            <p class="micro footer-micro-2">{{ icon("users", 13) }}Made for</p>
             <ul class="footer-list footer-list-2">
                 {% for r in site.mobileRoles %}
                 <li><a href="/mobile/{{ r.slug }}/">{{ r.name }}</a></li>
@@ -62,21 +66,21 @@
         </div>
 
         <div class="footer-col">
-            <p class="micro"><a href="/desktop/">CueCard Desktop</a></p>
+            <p class="micro">{{ icon("monitor", 13) }}<a href="/desktop/">CueCard Desktop</a></p>
             <ul class="footer-list footer-list-lead">
                 <li><a href="/desktop/#download">{{ icon("apple", 15) }} macOS</a></li>
                 <li><a href="/desktop/#download">{{ icon("monitor", 15) }} Windows</a></li>
                 <li><a href="{{ site.releases }}" target="_blank" rel="noopener">{{ icon("download", 15) }} All releases</a></li>
             </ul>
 
-            <p class="micro footer-micro-2">Stay invisible on</p>
+            <p class="micro footer-micro-2">{{ icon("eye-off", 13) }}Stay invisible on</p>
             <ul class="footer-list footer-list-2">
                 {% for a in site.meetingApps %}
                 <li><a href="/{{ a.slug }}/">{{ icon(a.icon, 14) }} {{ a.name }}</a></li>
                 {% endfor %}
             </ul>
 
-            <p class="micro footer-micro-2">Made for</p>
+            <p class="micro footer-micro-2">{{ icon("users", 13) }}Made for</p>
             <ul class="footer-list footer-list-2">
                 {% for r in site.desktopRoles %}
                 <li><a href="/{{ r.slug }}/">{{ r.name }}</a></li>
@@ -84,7 +88,7 @@
             </ul>
 
             <p class="footer-cross">
-                <a href="/">Filming on your phone instead? The floating teleprompter is here {{ icon("arrow", 14) }}</a>
+                <a href="/mobile/">Filming on your phone instead? The floating teleprompter is here {{ icon("arrow", 14) }}</a>
             </p>
         </div>
 

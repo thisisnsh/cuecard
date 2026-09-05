@@ -2,12 +2,13 @@
 
 Static site that powers [cuecard.dev](https://cuecard.dev).
 
-The site leads with **CueCard Mobile** — the teleprompter that floats over
-every other app on a phone. The Mac and Windows app, which keeps speaker notes
-invisible during screen sharing, keeps its own home at `/desktop/` along with
-every URL it already ranks for. Nothing was retired in that move: `/zoom/`,
-`/google-meet/`, `/microsoft-teams/`, `/google-slides/` and all twelve desktop
-role pages are exactly where they were.
+Three pages carry the product. `/` is the landing page: it says what CueCard is,
+forks to both halves, and holds **the download hub** — every platform CueCard
+ships on, as a row apiece with its own button. `/mobile/` is the teleprompter
+that floats over every other app on a phone. `/desktop/` is the Mac and Windows
+app that keeps speaker notes invisible during screen sharing, along with every
+URL it already ranks for: `/zoom/`, `/google-meet/`, `/microsoft-teams/`,
+`/google-slides/` and all twelve desktop role pages are exactly where they were.
 
 ## Purpose
 
@@ -18,7 +19,8 @@ role pages are exactly where they were.
 - One page per role, on each side: `/teachers/` and `/mobile/teachers/`
 - A 43-question FAQ at `/faq/`, with every page carrying the subset that fits it
 - Hosts the privacy policy (`privacy/`) and terms of service (`terms/`)
-- Provides download links to GitHub Releases and the App Store
+- One download hub at `/#download`, generated from `site.downloadGroups`, which
+  is also what the header's download menu prints
 
 ## Structure
 
@@ -26,16 +28,17 @@ role pages are exactly where they were.
 cuecard-website/
 ├── .eleventy.js       # 11ty config (input src/, output _site/)
 ├── src/
-│   ├── index.njk      # The mobile app, and the bridge to the desktop one
+│   ├── index.njk      # The landing page: what CueCard is, and the download hub
 │   ├── desktop/       # The Mac and Windows app
 │   ├── faq.njk        # The whole FAQ bank, grouped
 │   ├── styles.css     # Editorial monochrome: hairlines, micro-labels, no boxes
-│   ├── script.js      # Background reel, video facade, nav, FAQ search, releases
+│   ├── script.js      # Background reel, nav, download menu, FAQ search, releases
 │   ├── shortlink.njk  # Generates /ios and /android redirect pages
 │   ├── sitemap.xml.njk# Generated from the data files, so it cannot drift
 │   ├── CNAME          # Custom domain for GitHub Pages
 │   ├── _data/
-│   │   ├── site.js            # Every shared constant: URLs, video, app lists
+│   │   ├── site.js            # Every shared constant: URLs, video, downloads,
+│   │   │                      #   app lists, and the hand-written download total
 │   │   ├── features.js        # Feature rows, mobile and desktop
 │   │   ├── faq.js             # The FAQ bank and the helpers that slice it
 │   │   └── *.json             # Page content: apps, platforms, roles, blogs
@@ -53,22 +56,47 @@ by any static host.
 
 ## The background reel
 
-Every page scrolls over a fixed background layer. Today that layer is a still
-(`src/assets/cuecard-poster.png`), blurred and knocked back so it reads as
-atmosphere behind the type.
+There is no video *player* anywhere on this site. The film is a fixed layer that
+every page scrolls over: a poster frame paints with the first paint, and the
+reel fades up over it once it can play. Both are knocked back and blurred behind
+a scrim, so they read as atmosphere rather than as something to watch.
 
-To turn the video on, drop `promo.mp4` and `promo.webm` into `src/assets/` and
-set `video.enabled: true` in `src/_data/site.js`. Until then no `<video>` element
-is emitted at all, so there is nothing to 404. The poster stays underneath the
-video either way, which is what the crossfade fades up from.
+It is configured entirely by `video` in `src/_data/site.js`.
 
-## The demo videos
+**The reel running today is borrowed** — it is the
+alldayidreamaboutsports.com promo, standing in until CueCard's own film is cut,
+which is what `placeholder: true` records. To swap it in:
 
-`src/_data/site.js` holds two YouTube entries, `youtube.mobile` and
-`youtube.desktop`. They drive the play buttons, the poster frames and the
-`VideoObject` blocks. `youtube.mobile` is marked `placeholder: true` and
-currently points at the existing reel — swap its `id`, `title`, `uploadDate` and
-`duration` and every page follows.
+1. Encode three files — an MP4, a WebM and a first-frame poster. The recipe in
+   `alldayidreamaboutsports.com/scripts/encode-promo.sh` is the one these were
+   made with (H.264 ~2.5 Mbps, VP9 ~1.8 Mbps, a WebP still).
+2. Host them anywhere with a custom domain and cache rules — an R2 bucket does
+   it — and point `video.mp4`, `video.webm`, `video.poster` and `video.origin`
+   at them. `posterWidth`/`posterHeight` must match the poster, or the page
+   reflows when it loads.
+3. Fill in `video.schema` and set `placeholder: false`.
+
+Step 3 is what starts emitting a `VideoObject` on every page. While
+`placeholder` is true, nothing is marked up — describing someone else's footage
+as CueCard's in structured data would be a lie, and Google reads it as one.
+
+## The download hub
+
+`site.downloadGroups` in `src/_data/site.js` is the one list of everywhere
+CueCard can be had, grouped by the machine you are on. It is printed in three
+places and edited in one:
+
+- the header's **Download, it's free** menu (`partials/downloadmenu.njk`)
+- the `/#download` section on the landing page (`partials/getcuecard.njk`)
+- the `ItemList` in the landing page's structured data
+
+Adding a platform means adding an entry there and nothing else.
+
+The **download total** beside it (`site.downloadTotal`, currently `"1,100+"`) is
+a hand-written string, and deliberately so: the GitHub API only counts desktop
+release assets, so any computed figure would leave out the App Store entirely.
+Edit the string and every page follows. The GitHub star count next to it *is*
+live, fetched through the Cloudflare proxy in `api/`.
 
 ## Local Preview
 
@@ -102,7 +130,10 @@ npm run build   # writes _site/
 - `src/_data/site.js` is the single source of truth for URLs, store links, the
   app lists and the year. Change it there, not in a template
 - Icons live in `src/_includes/partials/icon-sprite.njk` as `<symbol>`s and are
-  used through the `icon()` macro in `partials/icons.njk`
+  used through the `icon()` macro in `partials/icons.njk`. Every section label
+  carries one; add the symbol first, then name it
+- The header's action button is identical on every page on purpose. It used to
+  be per-page, and the masthead visibly reflowed on every navigation
 - Update `assets/site.webmanifest` and the favicons when branding changes
 - Keep privacy/terms copies in sync with the legal docs used inside the apps
 - `src/CNAME` pins the custom domain. Removing it reverts the site to the

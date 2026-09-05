@@ -1,15 +1,18 @@
 {% from "partials/icons.njk" import icon %}
 {#
   The masthead. Sticky rather than fixed, so the optional cross-promotion strip
-  underneath can be any height it likes without a magic number in the CSS having
-  to agree with it.
+  underneath can be any height it likes without a magic number in the CSS
+  having to agree with it.
 
-  Pages steer it with four optional variables:
-    navPrimaryText / navPrimaryHref / navPrimaryIcon - the filled button. It
-      defaults to the App Store, because cuecard.dev is now the mobile site;
-      desktop pages point it at their own #download instead.
-    navCtaText / navCtaTextMobile / navCtaHref - the strip below, which is only
-      ever used to send a reader to the other half of the product.
+  The right-hand action is deliberately identical on every page — same words,
+  same width, same behaviour — because a button whose label changed per page
+  made the header visibly reflow on every navigation. It is a <details>, so it
+  opens with no JavaScript at all; script.js only adds the niceties (close on
+  outside click, close on Escape).
+
+  The one thing a page still steers is the strip below, which is only ever used
+  to send a reader to the other half of the product:
+    navCtaText / navCtaTextMobile / navCtaHref
 #}
 <header class="topbar" id="topbar">
     <nav class="nav" id="nav" aria-label="Main">
@@ -24,19 +27,25 @@
 
         <div class="nav-links" id="nav-links">
             {% if showNavLinks !== false %}
-            <a class="nav-link" href="/">Mobile</a>
+            <a class="nav-link" href="/mobile/">Mobile</a>
             <a class="nav-link" href="/desktop/">Desktop</a>
             <a class="nav-link" href="/blog/">Blog</a>
             <a class="nav-link" href="/faq/">FAQ</a>
-            <a class="nav-link github-link" href="{{ site.github }}" target="_blank" rel="noopener">
-                {{ icon("github", 17) }}<span class="star-count" id="github-stars">Star</span>
+            <a class="nav-link" href="{{ site.github }}" target="_blank" rel="noopener">
+                {{ icon("code", 16) }}Code
             </a>
             {% endif %}
-            <a class="btn btn-primary nav-cta download-link" id="nav-download-link"
-               href="{{ navPrimaryHref or site.ios }}"{% if not navPrimaryHref %} target="_blank" rel="noopener"{% endif %}>
-                {{ icon(navPrimaryIcon or "apple", 16) }}
-                <span id="nav-download-count"{% if navPrimaryHref == "#download" %} data-download-count{% endif %}>{{ navPrimaryText or "Get it on iOS" }}</span>
-            </a>
+
+            <details class="nav-get" id="nav-get">
+                <summary class="btn btn-primary nav-get-btn">
+                    {{ icon("download", 16) }}
+                    <span>Download, it's free</span>
+                    {{ icon("chevron", 15, "nav-get-caret") }}
+                </summary>
+                <div class="nav-get-panel">
+                    {% include "partials/downloadmenu.njk" %}
+                </div>
+            </details>
         </div>
     </nav>
 

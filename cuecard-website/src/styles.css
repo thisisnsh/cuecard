@@ -2,11 +2,12 @@
    CueCard - editorial monochrome.
 
    A reel plays behind everything as a fixed layer and the page scrolls over it.
-   Sections alternate between transparent, where the film shows through, and
-   solid, where you read - so the video is punctuation between passages of text
-   rather than a permanent distraction. Structure comes from hairline rules and
-   uppercase micro-labels, not from boxes or colour. Icons are line marks at the
-   scale of the text beside them; the only colour on the page is a cue.
+   There is no video player on the page - the reel is the film, and sections
+   alternate between transparent, where it shows through, and solid, where you
+   read, so it is punctuation between passages of text rather than a permanent
+   distraction. Structure comes from hairline rules and uppercase micro-labels,
+   each carrying one small mark, not from boxes or colour. Icons are line marks
+   at the scale of the text beside them; the only colour on the page is a cue.
 
    Order of business: tokens, the reel, chrome, type, then one block per kind of
    section, then the pages that have their own furniture (downloads, blog,
@@ -193,8 +194,73 @@ main, .footer, .topbar { position: relative; z-index: 2; }
   transition: color .2s var(--ease);
 }
 .nav-link:hover { color: var(--bone); }
-.nav-cta { margin-left: 4px; }
-.star-count { font-variant-numeric: tabular-nums; }
+
+/* The download menu. A <details>, so it opens with no JavaScript; the button
+   is the <summary>. Its label never changes between pages, which is the whole
+   point of it - the header used to reflow on every navigation because the
+   action on the right was a different width on every page. */
+.nav-get { position: relative; margin-left: 4px; }
+.nav-get-btn {
+  list-style: none; cursor: pointer;
+  padding: 11px 18px; font-size: 14px;
+  white-space: nowrap;
+}
+.nav-get-btn::-webkit-details-marker { display: none; }
+.nav-get-caret { transition: transform .22s var(--ease); }
+.nav-get[open] .nav-get-caret { transform: rotate(180deg); }
+
+.nav-get-panel {
+  position: absolute; top: calc(100% + 10px); right: 0; z-index: 50;
+  width: 340px; max-width: calc(100vw - 32px);
+  padding: 6px;
+  background: #0a0a0a;
+  border: 1px solid var(--hair-hi); border-radius: 16px;
+  box-shadow: 0 26px 60px rgba(0,0,0,0.72);
+  animation: dlmenu-in .18s var(--ease);
+}
+@keyframes dlmenu-in { from { opacity: 0; transform: translateY(-6px); } }
+
+.dlmenu-group + .dlmenu-group { border-top: 1px solid var(--hairline); margin-top: 6px; padding-top: 6px; }
+.dlmenu-label {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 12px 7px;
+  font-size: 10px; font-weight: 700; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--smoke);
+}
+.dlmenu-list { list-style: none; }
+.dlmenu-list a {
+  display: grid; grid-template-columns: 20px minmax(0, 1fr) auto;
+  align-items: center; gap: 12px;
+  padding: 10px 12px; border-radius: 10px;
+  transition: background .16s var(--ease);
+}
+.dlmenu-list a:hover { background: rgba(255,255,255,0.07); }
+.dlmenu-icon { display: flex; color: var(--ash); }
+.dlmenu-name {
+  font-family: var(--display); font-weight: 600; font-size: 14px;
+  letter-spacing: -0.012em; color: var(--bone);
+}
+.dlmenu-name em {
+  font-style: normal; font-size: 9.5px; font-weight: 800;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--cue); vertical-align: 1px; margin-left: 4px;
+}
+.dlmenu-cta {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11.5px; font-weight: 600; color: var(--smoke); white-space: nowrap;
+}
+.dlmenu-list a:hover .dlmenu-cta { color: var(--bone); }
+.dlmenu-foot {
+  display: flex; flex-wrap: wrap; gap: 8px 18px;
+  margin-top: 6px; padding: 12px;
+  border-top: 1px solid var(--hairline);
+}
+.dlmenu-foot a {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 600; color: var(--smoke);
+  transition: color .2s var(--ease);
+}
+.dlmenu-foot a:hover { color: var(--bone); }
 
 /* Two hairlines, because the rest of the page is made of hairlines too. */
 .nav-toggle {
@@ -239,7 +305,13 @@ main, .footer, .topbar { position: relative; z-index: 2; }
     width: 100%; padding: 14px 0; font-size: 16px;
     border-bottom: 1px solid var(--hairline);
   }
-  .nav-cta { margin: 16px 0 4px; width: 100%; }
+  .nav-get { width: 100%; margin: 16px 0 4px; }
+  .nav-get-btn { width: 100%; }
+  .nav-get-panel {
+    position: static; width: 100%; max-width: none;
+    margin-top: 10px; box-shadow: none;
+    animation: none;
+  }
 }
 
 @media (max-width: 560px) {
@@ -306,7 +378,7 @@ main > section:first-of-type { border-top: 0; }
 main > .blog-list:first-of-type { border-top: 0; }
 
 /* Solid sections are the passages of reading; the rest let the reel through. */
-.solid, .faq, .download-section, .features { background: var(--panel); }
+.solid, .faq, .download-section, .features, .get.solid { background: var(--panel); }
 
 section[id] { scroll-margin-top: 124px; }
 
@@ -314,7 +386,7 @@ section[id] { scroll-margin-top: 124px; }
 /* Uppercase micro-labels carry the structure that icons used to. */
 .micro,
 .section-tag {
-  display: block;
+  display: flex; align-items: center; gap: 9px;
   font-family: var(--ui);
   font-size: 11px; font-weight: 700;
   letter-spacing: 0.2em; text-transform: uppercase;
@@ -322,6 +394,8 @@ section[id] { scroll-margin-top: 124px; }
   padding-bottom: 13px; margin-bottom: clamp(20px, 3vw, 32px);
   border-bottom: 1px solid var(--hairline);
 }
+/* The mark is a signpost at label size, never an illustration. */
+.micro .icon, .section-tag .icon, .platforms-label .icon { color: var(--smoke); flex: none; }
 .micro a { color: inherit; transition: color .2s var(--ease); }
 .micro a:hover { color: var(--bone); }
 
@@ -361,6 +435,32 @@ section[id] { scroll-margin-top: 124px; }
 
 .meta-note { display: block; margin-top: 15px; font-size: 12.5px; color: var(--smoke); }
 
+/* Two facts and a licence, on one rule, on every page. The download total is
+   written by hand in _data/site.js; the star count arrives from the GitHub API
+   and its item stays hidden until it does, so nothing shifts on load. */
+.statline {
+  list-style: none;
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: 10px clamp(16px, 2.6vw, 30px);
+  margin-top: clamp(24px, 3vw, 32px);
+  padding-top: 16px;
+  border-top: 1px solid var(--hairline);
+}
+.statline li {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--smoke);
+}
+.statline .icon { color: var(--smoke); }
+.statline b {
+  font-family: var(--display); font-weight: 700; font-size: 14.5px;
+  letter-spacing: -0.01em; color: var(--bone);
+  font-variant-numeric: tabular-nums;
+}
+.statline a { display: inline-flex; align-items: center; gap: 8px; transition: color .2s var(--ease); }
+.statline a:hover { color: var(--bone); }
+.statline a:hover .icon { color: var(--cue); }
+.statline li[hidden] { display: none; }
+
 /* Inline highlights, inherited from the old site's hero copy. The word stays
    white and the colour goes under it as a rule: at 5rem a coloured word stops
    being emphasis and becomes the loudest thing on the page, which is the one
@@ -369,13 +469,17 @@ section[id] { scroll-margin-top: 124px; }
   color: var(--bone);
   background-image: linear-gradient(var(--rule, var(--hair-hi)), var(--rule, var(--hair-hi)));
   background-repeat: no-repeat;
-  background-position: 0 94%;
-  background-size: 100% 0.075em;
-  padding-bottom: 0.06em;
+  background-position: 0 96%;
+  background-size: 100% 0.06em;
+  padding-bottom: 0.08em;
 }
 .highlight-yellow { --rule: var(--cue); }
 .highlight-green  { --rule: var(--live); }
 .highlight-pink   { --rule: var(--hot); }
+/* At headline size every highlight takes the same rule. The colours are a
+   vocabulary for cues, and three of them in one <h1> reads as decoration
+   rather than as meaning. */
+.display .highlight, .section-h .highlight { --rule: var(--cue); }
 /* In running copy the same spans are small enough to carry the colour itself. */
 .body .highlight, .faq-answer .highlight, .row-body .highlight { color: var(--rule); }
 
@@ -451,51 +555,10 @@ code, .notes-content {
 .hero .body { max-width: 58ch; }
 .hero-404 { min-height: 74svh; display: flex; align-items: center; }
 
-/* The demo facade: a still and a play button, with the real player swapped in
-   on click. Sixteen-by-nine, edge to edge on a phone. */
-.hero-gif-card { margin-top: clamp(34px, 5vw, 56px); }
-.video-facade {
-  position: relative; display: block; width: 100%;
-  aspect-ratio: 16 / 9;
-  padding: 0; overflow: hidden; cursor: pointer;
-  background: #0a0a0a;
-  border: 1px solid var(--hairline); border-radius: 14px;
-  transition: border-color .2s var(--ease);
-}
-.video-facade:hover { border-color: var(--hair-hi); }
-.video-facade-poster {
-  position: absolute; inset: 0;
-  width: 100%; height: 100%; object-fit: cover;
-  opacity: .82; transition: opacity .3s var(--ease), transform .5s var(--ease);
-}
-.video-facade:hover .video-facade-poster { opacity: 1; transform: scale(1.015); }
-.video-facade-play {
-  position: absolute; inset: 0;
-  display: flex; align-items: center; justify-content: center;
-  color: var(--bone);
-}
-.video-facade-play .icon {
-  width: 62px; height: 62px;
-  padding: 16px; border-radius: 50%;
-  background: rgba(0,0,0,0.55);
-  backdrop-filter: blur(8px);
-  transition: transform .2s var(--ease), background .2s var(--ease);
-}
-.video-facade:hover .video-facade-play .icon { transform: scale(1.06); background: rgba(0,0,0,0.72); }
-.video-facade-label {
-  position: absolute; left: 16px; bottom: 14px;
-  font-family: var(--display); font-weight: 700; font-size: 13px;
-  color: var(--bone); text-align: left;
-  text-shadow: 0 1px 12px rgba(0,0,0,0.9);
-}
-.hero-gif-card iframe {
-  display: block; width: 100%; aspect-ratio: 16 / 9; height: auto;
-  border: 1px solid var(--hairline); border-radius: 14px;
-}
-
 /* The strip of apps a page is about. */
 .hero-platforms { margin-top: clamp(38px, 5vw, 60px); }
 .platforms-label {
+  display: flex; align-items: center; gap: 9px;
   font-size: 11px; font-weight: 700; letter-spacing: 0.2em;
   text-transform: uppercase; color: var(--smoke);
   padding-bottom: 13px; border-bottom: 1px solid var(--hairline);
@@ -517,6 +580,64 @@ code, .notes-content {
 .platforms-more { margin-top: 14px; font-size: 13.5px; color: var(--smoke); }
 .platforms-more a { display: inline-flex; align-items: center; gap: 7px; transition: color .2s var(--ease); }
 .platforms-more a:hover { color: var(--bone); }
+
+/* ════════════════════════ THE TWO HALVES ════════════════════════════════ */
+/* The fork on the home page: phone on one side, computer on the other. Two
+   columns of prose separated by a rule, because the choice between them is a
+   thing you read rather than a thing you scan. */
+.halves {
+  display: grid; gap: 0;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+  margin-top: clamp(30px, 4.4vw, 52px);
+  border-top: 1px solid var(--hairline);
+}
+.half {
+  padding: clamp(26px, 3.4vw, 40px) 0;
+  border-bottom: 1px solid var(--hairline);
+}
+.half + .half { border-top: 1px solid var(--hairline); margin-top: -1px; }
+@media (min-width: 800px) {
+  .half + .half {
+    border-top: 0; margin-top: 0;
+    padding-left: clamp(28px, 4vw, 56px);
+    border-left: 1px solid var(--hairline);
+  }
+  .half:first-child { padding-right: clamp(28px, 4vw, 56px); }
+}
+.half-tag {
+  display: flex; align-items: center; gap: 9px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--smoke);
+}
+.half-tag .icon { color: var(--smoke); }
+.half-title {
+  margin-top: 14px;
+  font-family: var(--display); font-weight: 700;
+  font-size: clamp(1.2rem, 2.2vw, 1.6rem); line-height: 1.16;
+  letter-spacing: -0.026em; color: var(--bone);
+}
+.half-title a { transition: color .2s var(--ease); }
+.half-title a:hover { color: var(--ash); }
+.half-body { margin-top: 13px; font-size: 15.5px; line-height: 1.66; color: var(--ash); }
+.half-body a { color: var(--bone); border-bottom: 1px solid var(--hair-hi); }
+.half-body a:hover { border-bottom-color: var(--bone); }
+.half-list { list-style: none; margin-top: 20px; display: grid; gap: 11px; }
+.half-list li {
+  display: flex; align-items: flex-start; gap: 11px;
+  font-size: 14px; line-height: 1.5; color: var(--smoke);
+}
+.half-list .icon { color: var(--ash); margin-top: 1px; }
+.half-links {
+  display: flex; flex-wrap: wrap; gap: 10px 22px;
+  margin-top: 22px; padding-top: 18px;
+  border-top: 1px solid var(--hairline);
+}
+.half-links a {
+  display: inline-flex; align-items: center; gap: 7px;
+  font-family: var(--display); font-weight: 700; font-size: 13.5px;
+  color: var(--ash); transition: color .2s var(--ease);
+}
+.half-links a:hover { color: var(--bone); }
 
 /* ════════════════════════ RULED FEATURE ROWS ════════════════════════════ */
 .rowlist { list-style: none; margin-top: clamp(30px, 4.4vw, 52px); }
@@ -729,9 +850,60 @@ code, .notes-content {
 /* ════════════════════════ FINAL CTA ═════════════════════════════════════ */
 .cta .display { max-width: 18ch; }
 
-/* ════════════════════════ DOWNLOADS ═════════════════════════════════════ */
-.download-stats { margin-top: 18px; font-size: 12.5px; color: var(--smoke); }
-.total-downloads { display: inline-flex; align-items: center; gap: 8px; }
+/* ════════════════════════ GET CUECARD ═══════════════════════════════════ */
+/* The home page's download section: a row per platform, each with the button
+   that belongs to it. Six things on three kinds of machine cannot be honestly
+   served by one button, and a row can also say what the machine needs, which
+   is the question a single button leaves you asking. */
+.getgroups { margin-top: clamp(30px, 4.4vw, 52px); display: grid; gap: clamp(34px, 4.4vw, 52px); }
+
+.getgroup-head {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px;
+  padding-bottom: 14px; border-bottom: 1px solid var(--hair-hi);
+}
+.getgroup-title {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-family: var(--display); font-weight: 700;
+  font-size: clamp(1.05rem, 1.9vw, 1.3rem); letter-spacing: -0.022em;
+  color: var(--bone);
+}
+.getgroup-title .icon { color: var(--ash); }
+.getgroup-note { font-size: 13.5px; color: var(--smoke); }
+
+.getrows { list-style: none; }
+.getrow {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr) auto;
+  align-items: center; gap: clamp(14px, 2.4vw, 26px);
+  padding: clamp(16px, 2.2vw, 22px) 0;
+  border-bottom: 1px solid var(--hairline);
+}
+.getrow-icon { display: flex; color: var(--ash); }
+.getrow-body { display: grid; gap: 4px; min-width: 0; }
+.getrow-name {
+  font-family: var(--display); font-weight: 700;
+  font-size: clamp(1.02rem, 1.8vw, 1.28rem); letter-spacing: -0.022em;
+  color: var(--bone);
+}
+.getrow-name a { transition: color .2s var(--ease); }
+.getrow-name a:hover { color: var(--ash); }
+.getrow-state {
+  font-style: normal; font-size: 9.5px; font-weight: 800;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--cue); vertical-align: 2px; margin-left: 7px;
+}
+.getrow-meta { font-size: 13px; color: var(--smoke); }
+.getrow-btn { padding: 10px 18px; font-size: 13.5px; white-space: nowrap; }
+
+@media (max-width: 620px) {
+  .getrow {
+    grid-template-columns: 26px minmax(0, 1fr);
+    row-gap: 14px;
+  }
+  .getrow-btn { grid-column: 1 / -1; width: 100%; }
+}
+
+/* ════════════════════════ DESKTOP RELEASE DOWNLOADS ═════════════════════ */
 .download-container { margin-top: clamp(26px, 3.6vw, 44px); }
 
 .release-selector {
@@ -826,6 +998,10 @@ code, .notes-content {
 }
 .footer-list a:hover { color: var(--bone); }
 .footer-list-lead a { color: var(--ash); font-weight: 600; }
+
+.statline-footer { margin-top: 22px; padding-top: 18px; }
+.statline-footer li { font-size: 12.5px; }
+.statline-footer b { font-size: 13.5px; }
 
 .footer-social { list-style: none; display: flex; gap: 10px; margin-top: 22px; }
 .footer-social a {
@@ -1005,5 +1181,5 @@ code, .notes-content {
   .reveal { opacity: 1; transform: none; transition: none; }
   .videobg-media { transition: none; }
   .leaguerow a:hover, .crestgrid a:hover { padding-left: 0; }
-  .video-facade:hover .video-facade-poster { transform: none; }
+  .nav-get-panel { animation: none; }
 }

@@ -33,7 +33,6 @@ crumbs:
     "isAccessibleForFree": true,
     "author": { "@id": "https://cuecard.dev/#org" },
     "publisher": { "@id": "https://cuecard.dev/#org" },
-    "video": { "@id": "https://cuecard.dev/desktop/#demo" },
     "offers": {
         "@type": "Offer",
         "price": "0",
@@ -58,21 +57,6 @@ crumbs:
 <script type="application/ld+json">
 {
     "@context": "https://schema.org",
-    "@type": "VideoObject",
-    "@id": "https://cuecard.dev/desktop/#demo",
-    "name": {{ site.youtube.desktop.title | dump | safe }},
-    "description": {{ site.youtube.desktop.description | dump | safe }},
-    "thumbnailUrl": ["{{ site.youtube.desktop.thumb }}"],
-    "uploadDate": "{{ site.youtube.desktop.uploadDate }}",
-    "duration": "{{ site.youtube.desktop.duration }}",
-    "embedUrl": "{{ site.youtube.desktop.embed }}",
-    "contentUrl": "{{ site.youtube.desktop.watch }}",
-    "publisher": { "@id": "https://cuecard.dev/#org" }
-}
-</script>
-<script type="application/ld+json">
-{
-    "@context": "https://schema.org",
     "@type": "FAQPage",
     "@id": "https://cuecard.dev/desktop/#faq",
     "isPartOf": { "@id": "https://cuecard.dev/desktop/#webpage" },
@@ -91,9 +75,6 @@ crumbs:
 {% endblock %}
 
 {% block body %}
-{% set navPrimaryHref = "#download" %}
-{% set navPrimaryIcon = "download" %}
-{% set navPrimaryText = "Download" %}
 {% set navCtaText = "Filming on your phone instead? CueCard floats over every app on iOS" %}
 {% set navCtaTextMobile = "Also on iOS" %}
 {% set navCtaHref = "/" %}
@@ -106,13 +87,7 @@ crumbs:
     {% set heroPrimaryHref = "#download" %}
     {% set heroPrimaryIcon = "download" %}
     {% set heroPrimaryText = "Download for Mac or Windows" %}
-    {% set heroSecondaryText = "Watch the demo" %}
-    {% set heroSecondaryHref = site.youtube.desktop.watch %}
-    {% set heroSecondaryIcon = "play" %}
-    {% set heroSecondaryExternal = true %}
-    {% set heroNote = "Free · Open source · macOS and Windows" %}
-    {% set heroVideoId = site.youtube.desktop.id %}
-    {% set heroVideoTitle = "CueCard on the desktop" %}
+    {% set heroNote = "Free forever · No account · macOS 13+ and Windows 10+" %}
     {% set heroStrip = "meeting" %}
     {% set faqLink = "#faq-undetectable" %}
     {% set stripMore = "and anything else that shares a screen" %}
