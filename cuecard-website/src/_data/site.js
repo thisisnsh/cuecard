@@ -15,7 +15,7 @@ const site = {
   shortName: "CueCard",
   tagline: "The teleprompter that floats over every app you film in",
   url: "https://cuecard.dev",
-  email: "support@cuecard.dev",
+  email: "hello@thisisnsh.com",
   github: "https://github.com/thisisnsh/cuecard",
   issues: "https://github.com/ThisIsNSH/CueCard/issues",
   releases: "https://github.com/thisisnsh/cuecard/releases",

@@ -141,7 +141,7 @@ We welcome contributions! CueCard is open source and built by the community.
 ## 💬 Support & Contact
 
 **Need help?**
-- Email: [support@cuecard.dev](mailto:support@cuecard.dev)
+- Email: [hello@thisisnsh.com](mailto:hello@thisisnsh.com)
 - Issues: [GitHub Issues](https://github.com/thisisnsh/cuecard/issues)
 
 **Legal & Resources:**

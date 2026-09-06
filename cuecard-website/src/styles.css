@@ -11,13 +11,12 @@
        objects rather than lists: screenshots, the demo links, the script
        syntax panels, the cross-sell to the other half of the product.
 
-   Behind all of it, fixed, is a page of prompter script that floats upward as
-   you scroll, and a running timer in the corner — the two things the app puts
-   on your screen. There is no video anywhere on this site.
+   Every section is one solid colour — paper, or the tint — and the two
+   alternating is the whole of the page's rhythm. There is no video and no
+   texture anywhere on this site.
 
-   Order: tokens, the prompter backdrop, chrome, type, the two section
-   designs, the pieces built from them, the pages with their own furniture,
-   then motion.
+   Order: tokens, chrome, type, the two section designs, the pieces built from
+   them, the pages with their own furniture, then touch and motion.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 :root {
@@ -90,89 +89,6 @@ button { font: inherit; color: inherit; }
 
 /* Icons are always the size of the word they sit beside, and never stretch. */
 .icon { flex: none; display: inline-block; vertical-align: -0.16em; }
-
-/* ════════════════════════ THE PROMPTER BACKDROP ═════════════════════════ */
-/* A fixed page of script behind everything, drifting upward as you scroll —
-   the app's own view, turned into the site's paper. It is set at a weight you
-   read *through* rather than *at*: the point is that the page you are reading
-   is sitting on a teleprompter. */
-.prompter-bg {
-  position: fixed; inset: 0; z-index: 0;
-  overflow: hidden; pointer-events: none;
-  background: var(--paper);
-}
-.prompter-bg::after {
-  /* Feathered at both ends so the script never collides with the masthead or
-     runs off the bottom edge as a hard line. */
-  content: ""; position: absolute; inset: 0;
-  background: linear-gradient(to bottom,
-    var(--paper) 0%, rgba(255,255,255,0) 22%,
-    rgba(255,255,255,0) 74%, var(--paper) 100%);
-}
-.prompter-bg-inner {
-  position: absolute;
-  left: 50%; top: 0;
-  width: min(1100px, 92vw);
-  transform: translate(-50%, 0);
-  will-change: transform;
-}
-.pb-line {
-  font-family: var(--display);
-  font-weight: 700;
-  font-size: clamp(1.05rem, 2vw, 1.6rem);
-  line-height: 1.45;
-  letter-spacing: -0.028em;
-  color: rgba(16, 16, 20, 0.021);
-  margin-bottom: 0.4em;
-}
-.pb-line.pb-cue { color: rgba(209, 0, 107, 0.042); font-size: 0.68em; }
-/* The line the prompter is "on" — one at a time, moved by script.js. */
-.pb-line.is-on { color: rgba(16, 16, 20, 0.042); }
-
-/* Everything that is not the backdrop sits above it. */
-main, .footer, .topbar, .stopwatch { position: relative; z-index: 2; }
-
-/* ════════════════════════ THE CORNER CLOCK ══════════════════════════════ */
-/* The app puts a running clock at the top of the prompter, so the site does
-   too. It counts how long you have been on the page, it can be paused, and it
-   is the only part of the chrome that moves. */
-.stopwatch {
-  position: fixed;
-  z-index: 30;
-  top: calc(var(--topbar-h, 68px) + 14px);
-  right: clamp(12px, 4vw, 28px);
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 7px 12px 7px 10px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid var(--hairline);
-  box-shadow: 0 6px 22px rgba(16, 16, 20, 0.07);
-  -webkit-backdrop-filter: saturate(1.4) blur(10px);
-  backdrop-filter: saturate(1.4) blur(10px);
-  cursor: pointer;
-  transition: border-color .2s var(--ease), box-shadow .2s var(--ease), opacity .3s var(--ease);
-}
-.stopwatch:hover { border-color: var(--hair-hi); box-shadow: 0 8px 26px rgba(16,16,20,0.1); }
-.stopwatch-dot {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: var(--live); flex: none;
-  animation: pulse 2s var(--ease) infinite;
-}
-.stopwatch-time {
-  font-family: var(--mono);
-  font-size: 12.5px; font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.02em;
-  color: var(--live);
-}
-.stopwatch-label {
-  font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
-  text-transform: uppercase; color: var(--smoke);
-}
-.stopwatch.is-paused .stopwatch-dot { animation: none; background: var(--smoke); }
-.stopwatch.is-paused .stopwatch-time { color: var(--smoke); }
-@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
-@media (max-width: 560px) { .stopwatch-label { display: none; } }
 
 /* ════════════════════════ MASTHEAD ══════════════════════════════════════ */
 .topbar {
@@ -376,10 +292,10 @@ main > section {
 }
 main > section:first-of-type { border-top: 0; }
 
-/* A tinted section is a passage of reading; a plain one lets the prompter
-   backdrop through. Alternating them is the page's whole rhythm. */
+/* Two solid colours, alternating: a tinted section is a passage of reading, a
+   plain one is paper. That alternation is the page's whole rhythm. */
+main > section { background: var(--paper); }
 .solid, .faq, .download-section, .get.solid { background: var(--leaf); }
-.hero { background: transparent; }
 
 section[id] { scroll-margin-top: 96px; }
 
@@ -1329,12 +1245,26 @@ code, .notes-content { font-family: var(--mono); font-size: 0.92em; }
 }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
+/* ════════════════════════ TOUCH ═════════════════════════════════════════ */
+/* On a finger, a link that is its own row has to be worth hitting. These sit
+   at 17-21px on a mouse, which is right for the type but under the 24px floor
+   a touch target wants, so they grow only where there is no cursor. Links
+   flowing inside a sentence are left alone: padding them apart would break the
+   line they are set in. */
+@media (pointer: coarse) {
+  .footer-list a,
+  .backline a,
+  .dlmenu-foot a,
+  .footer-social a,
+  .statline a { min-height: 24px; }
+  .crumbs a { display: inline-flex; align-items: center; min-height: 24px; }
+  .faq-question { min-height: 44px; }
+}
+
 /* ════════════════════════ MOTION ════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .reveal { opacity: 1; transform: none; transition: none; }
   .leaguerow a:hover, .crestgrid a:hover { padding-left: 0; }
   .nav-get-panel { animation: none; }
-  .stopwatch-dot { animation: none; }
-  .prompter-bg { display: none; }
 }

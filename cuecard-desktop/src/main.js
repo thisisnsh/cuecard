@@ -2228,10 +2228,10 @@ function setupFooter() {
     try {
       if (!openUrl) {
         console.error("Tauri opener API not available");
-        window.open("mailto:support@cuecard.dev", "_blank", "noopener,noreferrer");
+        window.open("mailto:hello@thisisnsh.com", "_blank", "noopener,noreferrer");
         return;
       }
-      await openUrl("mailto:support@cuecard.dev");
+      await openUrl("mailto:hello@thisisnsh.com");
     } catch (error) {
       console.error("Error opening support email:", error);
     }

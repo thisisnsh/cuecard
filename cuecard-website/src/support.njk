@@ -1,0 +1,222 @@
+---
+layout: layouts/base.njk
+permalink: "support/index.html"
+title: "CueCard Support - Get Help with the Teleprompter App"
+description: "Support for CueCard Teleprompter. Email a person, report a bug on GitHub, ask for your account and data to be deleted, or read the answers to the questions we get most."
+keywords: "cuecard support, teleprompter app support, cuecard help, cuecard contact, report a bug cuecard, cuecard account deletion, teleprompter app not working"
+canonical: "https://cuecard.dev/support/"
+pageName: "CueCard Support"
+ogTitle: "CueCard Support - get help with the teleprompter"
+ogDescription: "Email a person, report a bug, or ask us to delete your account. Every message is read."
+ogLocale: "en_US"
+crumbs:
+  - name: "CueCard"
+    url: "/"
+  - name: "Support"
+    url: "/support/"
+---
+{% block jsonld %}
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "ContactPage",
+    "@id": "https://cuecard.dev/support/#contactpage",
+    "isPartOf": { "@id": "https://cuecard.dev/#website" },
+    "inLanguage": "en",
+    "about": { "@id": "https://cuecard.dev/#org" },
+    "mainEntity": {
+        "@type": "Organization",
+        "@id": "https://cuecard.dev/#org",
+        "contactPoint": [
+            {
+                "@type": "ContactPoint",
+                "contactType": "customer support",
+                "email": "{{ site.email }}",
+                "url": "https://cuecard.dev/support/",
+                "availableLanguage": "English"
+            },
+            {
+                "@type": "ContactPoint",
+                "contactType": "technical support",
+                "url": "{{ site.issues }}",
+                "availableLanguage": "English"
+            }
+        ]
+    }
+}
+</script>
+{% endblock %}
+
+{% block body %}
+{% from "partials/icons.njk" import icon %}
+{% include "partials/nav.njk" %}
+
+<main>
+    <section class="hero" aria-labelledby="hero-h">
+        <div class="wrap">
+            {% include "partials/breadcrumbs.njk" %}
+            <h1 class="display reveal" id="hero-h">Something not working? <em>Tell us.</em></h1>
+            <p class="body reveal d1">
+                CueCard is made by a very small team, which means the person who reads your
+                email is the person who can fix the thing you are writing about. There is no
+                ticket queue and no bot in front of it.
+            </p>
+            <div class="actions reveal d2">
+                <a class="btn btn-primary" href="mailto:{{ site.email }}">
+                    {{ icon("mail", 17) }}Email {{ site.email }}
+                </a>
+                <a class="btn btn-ghost" href="{{ site.issues }}" target="_blank" rel="noopener">
+                    {{ icon("github", 17) }}Report a bug on GitHub
+                </a>
+            </div>
+            <span class="meta-note reveal d2">Usually answered within a couple of days · English</span>
+        </div>
+    </section>
+
+    {# The three ways in, and what each one is actually for. Sending a bug to
+       the inbox and a billing question to the issue tracker both work, but the
+       page may as well say which lands fastest. #}
+    <section class="rows solid" id="contact" aria-labelledby="contact-h">
+        <div class="wrap">
+            <p class="micro">{{ icon("mail", 13) }}Ways to reach us</p>
+            <h2 class="section-h" id="contact-h">Three doors, all of them open</h2>
+            <ol class="rowlist">
+                <li class="row reveal">
+                    <span class="row-n">01</span>
+                    <div class="row-body">
+                        <h3>Email</h3>
+                        <p>
+                            <a href="mailto:{{ site.email }}">{{ site.email }}</a> — for anything
+                            at all: a question, a bug, a feature you wish existed, or a request to
+                            delete your account. Tell us which device and which version you are on
+                            and the first reply is far more likely to be the useful one.
+                        </p>
+                    </div>
+                </li>
+                <li class="row reveal">
+                    <span class="row-n">02</span>
+                    <div class="row-body">
+                        <h3>GitHub issues</h3>
+                        <p>
+                            CueCard is open source, so bugs and feature requests live in the open on
+                            <a href="{{ site.issues }}" target="_blank" rel="noopener">the issue
+                            tracker</a>. Filing there means you can watch the fix happen, and it
+                            means the next person with the same problem finds your report.
+                        </p>
+                    </div>
+                </li>
+                <li class="row reveal">
+                    <span class="row-n">03</span>
+                    <div class="row-body">
+                        <h3>The FAQ</h3>
+                        <p>
+                            Most of what arrives in the inbox is already answered on
+                            <a href="/faq/">the FAQ page</a> — the overlay permission on iOS, why
+                            the notes stay invisible in a screen share, what CueCard costs. It is
+                            searchable, and it is the fastest answer available at 2am.
+                        </p>
+                    </div>
+                </li>
+            </ol>
+        </div>
+    </section>
+
+    {# The questions that arrive as support mail rather than as curiosity. Each
+       one is the short version; the FAQ page carries the long one. #}
+    <section id="common" aria-labelledby="common-h">
+        <div class="wrap wrap-narrow">
+            <p class="micro">{{ icon("help", 13) }}Before you write in</p>
+            <h2 class="section-h" id="common-h">The five we answer most</h2>
+            <div class="faq-list">
+                <details class="faq-item">
+                    <summary class="faq-question">
+                        <span>The prompter will not float over my other apps on iPhone</span>
+                        {{ icon("chevron", 20, "faq-icon") }}
+                    </summary>
+                    <div class="faq-answer">
+                        <p>
+                            The floating window needs the Picture in Picture permission, and iOS only
+                            offers it the first time you start the prompter. If you dismissed that
+                            prompt, quit CueCard, reopen it and start a script again. You need
+                            {{ site.requiresMobile }}. Still stuck? Write in and say which iPhone.
+                        </p>
+                    </div>
+                </details>
+                <details class="faq-item">
+                    <summary class="faq-question">
+                        <span>My notes showed up in the screen share on Zoom or Meet</span>
+                        {{ icon("chevron", 20, "faq-icon") }}
+                    </summary>
+                    <div class="faq-answer">
+                        <p>
+                            Share a <em>window</em> or a <em>tab</em> rather than your entire screen.
+                            Sharing the whole display shares everything on it, CueCard included —
+                            that is the operating system doing what it was asked, not a bug.
+                            <a href="/desktop/">How it works on the desktop app</a>.
+                        </p>
+                    </div>
+                </details>
+                <details class="faq-item">
+                    <summary class="faq-question">
+                        <span>Delete my account and the data attached to it</span>
+                        {{ icon("chevron", 20, "faq-icon") }}
+                    </summary>
+                    <div class="faq-answer">
+                        <p>
+                            Email <a href="mailto:{{ site.email }}">{{ site.email }}</a> from the
+                            address you signed in with and we will remove it. Your scripts live on
+                            your own device and go with the app when you uninstall it. What we hold
+                            and why is set out in the <a href="/privacy/">privacy policy</a>.
+                        </p>
+                    </div>
+                </details>
+                <details class="faq-item">
+                    <summary class="faq-question">
+                        <span>Google Slides notes are not reaching the desktop app</span>
+                        {{ icon("chevron", 20, "faq-icon") }}
+                    </summary>
+                    <div class="faq-answer">
+                        <p>
+                            The sync needs both halves: the desktop app open, and the browser
+                            extension installed in the browser you are presenting from. Both are
+                            on <a href="/google-slides/">the Google Slides page</a>.
+                        </p>
+                    </div>
+                </details>
+                <details class="faq-item">
+                    <summary class="faq-question">
+                        <span>When is Android coming?</span>
+                        {{ icon("chevron", 20, "faq-icon") }}
+                    </summary>
+                    <div class="faq-answer">
+                        <p>
+                            It is being built, and it is not out yet — we do not have a date to give
+                            you, and we would rather say so than invent one.
+                            <a href="/mobile/android/">The Android page</a> is where it will be
+                            announced.
+                        </p>
+                    </div>
+                </details>
+            </div>
+            <p class="backline">
+                <a href="/faq/">{{ icon("help", 15) }} Every question, answered {{ icon("arrow", 14) }}</a>
+                <a href="/privacy/">{{ icon("shield", 15) }} Privacy policy {{ icon("arrow", 14) }}</a>
+                <a href="/terms/">{{ icon("book", 15) }} Terms of service {{ icon("arrow", 14) }}</a>
+            </p>
+        </div>
+    </section>
+
+    {% set ctaHeading = "Still stuck?<br /><em>Just ask.</em>" %}
+    {% set ctaBody = 'Email <a href="mailto:' + site.email + '">' + site.email + '</a> or open an issue on GitHub. Both are read by a person.' %}
+    {% set ctaPrimaryHref = "mailto:" + site.email %}
+    {% set ctaPrimaryIcon = "mail" %}
+    {% set ctaPrimaryText = "Email support" %}
+    {% set ctaSecondaryHref = site.issues %}
+    {% set ctaSecondaryIcon = "github" %}
+    {% set ctaSecondaryText = "Open an issue" %}
+    {% set ctaNote = "Free · Open source · MIT licensed" %}
+    {% include "partials/cta.njk" %}
+</main>
+
+{% include "partials/footer.njk" %}
+{% endblock %}

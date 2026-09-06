@@ -5,7 +5,7 @@
   It degrades on purpose: a page that only sets `heroSubtitle` - which is all
   the older platform and role pages do - still gets a full hero, with that line
   promoted from a stray paragraph to the page's <h1>. Pages that have more to
-  say set heroMicro, heroTitle and heroBody instead.
+  say set heroTitle and heroBody instead.
 
   Set `heroDeck` and the hero becomes two columns: the argument on the left,
   and on the right the app actually running - the live prompter in
@@ -18,19 +18,13 @@
 
         <div class="{% if heroDeck %}hero-grid{% endif %}">
             <div class="hero-copy">
-                {# Every page says "open source" before it says anything else
-                   about itself. It is the most load-bearing fact about CueCard. #}
-                <p class="micro hero-micro reveal">
-                    {{ icon("code", 13) }}Free and open source{% if heroMicro %} · {{ heroMicro }}{% endif %}
-                </p>
-
-                <h1 class="display hero-subtitle{% if heroLong %} display-long{% endif %} reveal d1" id="hero-h">
+                <h1 class="display hero-subtitle{% if heroLong %} display-long{% endif %} reveal" id="hero-h">
                     {{ (heroTitle or (platform.heroSubtitle if platform else heroSubtitle)) | safe }}
                 </h1>
 
-                {% if heroBody %}<p class="body reveal d2">{{ heroBody | safe }}</p>{% endif %}
+                {% if heroBody %}<p class="body reveal d1">{{ heroBody | safe }}</p>{% endif %}
 
-                <div class="actions hero-cta reveal d3">
+                <div class="actions hero-cta reveal d2">
                     {% set primaryHref = heroPrimaryHref or downloadBtnHref or "#download" %}
                     <a class="btn btn-primary" href="{{ primaryHref }}"{% if heroPrimaryExternal %} target="_blank" rel="noopener"{% endif %}>
                         {{ icon(heroPrimaryIcon or "download", 17) }}{{ heroPrimaryText or "Get CueCard, it's free" }}
@@ -47,7 +41,7 @@
                     {% endif %}
                 </div>
 
-                {% if heroNote %}<span class="meta-note reveal d3">{{ heroNote }}</span>{% endif %}
+                {% if heroNote %}<span class="meta-note reveal d2">{{ heroNote }}</span>{% endif %}
 
                 {% include "partials/stats.njk" %}
 

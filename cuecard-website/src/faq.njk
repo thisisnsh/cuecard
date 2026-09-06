@@ -44,7 +44,6 @@ crumbs:
     <section class="hero faq-page-hero" aria-labelledby="hero-h">
         <div class="wrap">
             {% include "partials/breadcrumbs.njk" %}
-            <p class="micro">{{ icon("code", 13) }}Free and open source · Frequently asked</p>
             <h1 class="display" id="hero-h">{{ faq.items | length }} questions, <em>answered</em>.</h1>
             <p class="body">
                 Everything people ask about CueCard Teleprompter, in one place: the floating
@@ -84,7 +83,7 @@ crumbs:
     {% endfor %}
 
     {% set ctaHeading = "Still wondering?<br /><em>Just ask.</em>" %}
-    {% set ctaBody = 'Email <a href="mailto:support@cuecard.dev">support@cuecard.dev</a> or open an issue on GitHub. Both are read by a person.' %}
+    {% set ctaBody = 'Email <a href="mailto:' + site.email + '">' + site.email + '</a>, open an issue on GitHub, or start at <a href="/support/">support</a>. All of it is read by a person.' %}
     {% set ctaPrimaryHref = "mailto:" + site.email %}
     {% set ctaPrimaryIcon = "mail" %}
     {% set ctaPrimaryText = "Email support" %}

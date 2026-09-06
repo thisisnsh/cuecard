@@ -250,7 +250,7 @@ const everywhere = [
   {
     question: "How do I report a bug or ask for a feature?",
     answer:
-      'Open an issue on <a href="https://github.com/ThisIsNSH/CueCard/issues" target="_blank" rel="noopener">GitHub</a>, or email <a href="mailto:support@cuecard.dev">support@cuecard.dev</a>. Both are read.'
+      'Open an issue on <a href="https://github.com/ThisIsNSH/CueCard/issues" target="_blank" rel="noopener">GitHub</a>, or email <a href="mailto:hello@thisisnsh.com">hello@thisisnsh.com</a>. Both are read.'
   }
 ];
 

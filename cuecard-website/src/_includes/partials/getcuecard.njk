@@ -16,7 +16,7 @@
     <div class="wrap">
         <p class="micro">{{ icon("download", 13) }}{{ getMicro or "Get CueCard" }}</p>
         <h2 class="section-h" id="get-h">{{ getHeading or "Free on every screen you speak from" }}</h2>
-        <p class="body">{{ getBody or "No account, no subscription, nothing to cancel. All of it is on GitHub." | safe }}</p>
+        <p class="body">{{ getBody or "No subscription, nothing to cancel. All of it is on GitHub." | safe }}</p>
 
         <div class="getgroups{% if groups | length > 1 %} getgroups-2{% endif %}">
             {% for g in groups %}

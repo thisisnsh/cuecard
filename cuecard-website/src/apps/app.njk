@@ -77,7 +77,6 @@ layout: layouts/mobile-app.njk
 
 <main>
     {% set heroClass = "hero-app" %}
-    {% set heroMicro = app.name %}
     {% set heroTitle = app.heroSubtitle %}
     {% set heroBody = app.appDescription %}
     {% set heroPrimaryHref = site.ios %}
@@ -87,7 +86,7 @@ layout: layouts/mobile-app.njk
     {% set heroSecondaryText = "Watch the demo" %}
     {% set heroSecondaryHref = "#demo" %}
     {% set heroSecondaryIcon = "play" %}
-    {% set heroNote = "Free forever · No account · iOS 17+" + (" · Android coming soon" if app.showAndroid else "") %}
+    {% set heroNote = "Free forever · iOS 17+" + (" · Android coming soon" if app.showAndroid else "") %}
     {% set heroTagline = app.promotionalText %}
     {% set heroStrip = "social" %}
     {% set stripMore = "and every other app you record in" %}
@@ -141,7 +140,7 @@ layout: layouts/mobile-app.njk
     {% include "partials/faq.njk" %}
 
     {% set getHeading = "On your phone in under a minute" %}
-    {% set getBody = "Free, no account, nothing to cancel — and free on your computer too." %}
+    {% set getBody = "Free, no subscription, nothing to cancel — and free on your computer too." %}
     {% include "partials/getcuecard.njk" %}
 </main>
 

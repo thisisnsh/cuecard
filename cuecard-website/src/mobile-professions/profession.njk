@@ -80,7 +80,6 @@ layout: layouts/mobile-profession.njk
 
 <main>
     {% set heroClass = "hero-app" %}
-    {% set heroMicro = "CueCard for " + mobileProfession.name %}
     {% set heroTitle = mobileProfession.heroSubtitle %}
     {% set heroLong = true %}
     {% set heroBody = "A floating teleprompter built for " + mobileProfession.targetAudience + ". Your script sits on top of whatever app you are recording in, auto-scrolling while you talk, so you keep your eyes up and your takes whole." %}
@@ -92,7 +91,7 @@ layout: layouts/mobile-profession.njk
     {% set heroSecondaryText = "Watch the demo" %}
     {% set heroSecondaryHref = "#demo" %}
     {% set heroSecondaryIcon = "play" %}
-    {% set heroNote = "Free forever · No account · iOS 17+ · Android coming soon" %}
+    {% set heroNote = "Free forever · iOS 17+ · Android coming soon" %}
     {% set heroTagline = "No more forgetting your lines or switching screens." %}
     {% set heroStrip = "social" %}
     {% set stripMore = "and every other app you record in" %}
@@ -143,7 +142,7 @@ layout: layouts/mobile-profession.njk
     {% include "partials/faq.njk" %}
 
     {% set getHeading = "On your phone in under a minute" %}
-    {% set getBody = "Free, no account, nothing to cancel — and free on your computer too." %}
+    {% set getBody = "Free, no subscription, nothing to cancel — and free on your computer too." %}
     {% include "partials/getcuecard.njk" %}
 </main>
 

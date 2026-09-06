@@ -5,7 +5,8 @@
   hero, because "what does it actually look like" is the second question
   everybody has, and the argument reads better once it is answered.
 
-  Pass `shotIds` (a list) to show only some of them.
+  Pass `shotIds` (a list) to choose which. The default is the phone alone:
+  the iPad artwork is the iPad page's to show.
 #}
 <section class="shots{% if shotsSolid !== false %} solid{% endif %}" id="{{ shotsId or 'shots' }}" aria-labelledby="{{ shotsId or 'shots' }}-h">
     <div class="wrap">
@@ -14,7 +15,8 @@
         {% if shotsNote %}<p class="body">{{ shotsNote | safe }}</p>{% endif %}
 
         <div class="shots-grid">
-            {% for s in site.shots %}{% if not shotIds or s.id in shotIds %}
+            {% set showIds = shotIds or ["phone"] %}
+            {% for s in site.shots %}{% if s.id in showIds %}
             <figure class="shot reveal">
                 <img class="shot-media" src="{{ s.src }}"
                      srcset="{{ s.small }} 1100w, {{ s.src }} 2200w"

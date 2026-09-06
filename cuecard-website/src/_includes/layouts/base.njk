@@ -139,7 +139,6 @@
 
 <body>
     {% include "partials/icon-sprite.njk" %}
-    {% if not noPrompterBg %}{% include "partials/prompter-bg.njk" %}{% endif %}
 
     {% block body %}{{ content | safe }}{% endblock %}
 

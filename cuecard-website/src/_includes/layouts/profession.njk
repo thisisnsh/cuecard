@@ -64,14 +64,13 @@
 {% include "partials/nav.njk" %}
 
 <main>
-    {% set heroMicro = "CueCard for " + profession.name %}
     {% set heroTitle = profession.heroSubtitle %}
     {% set heroLong = true %}
     {% set heroBody = "Speaker notes for " + profession.targetAudience + ", on macOS and Windows. They sit on your screen while you present and stay out of the screen share." %}
     {% set heroPrimaryHref = "#download" %}
     {% set heroPrimaryIcon = "download" %}
     {% set heroPrimaryText = "Download CueCard" %}
-    {% set heroNote = "Free forever · No account · macOS 13+ and Windows 10+" %}
+    {% set heroNote = "Free forever · macOS 13+ and Windows 10+" %}
     {% set heroSecondaryText = "Watch the demo" %}
     {% set heroSecondaryHref = "#demo" %}
     {% set heroSecondaryIcon = "play" %}
@@ -120,7 +119,7 @@
     {% include "partials/faq.njk" %}
 
     {% set downloadTitle = "Know your lines. Show your slides." %}
-    {% set downloadDesc = "Free on macOS and Windows. No account, no subscription, nothing to cancel." %}
+    {% set downloadDesc = "Free on macOS and Windows. No subscription, nothing to cancel." %}
     {% include "partials/download.njk" %}
 </main>
 
