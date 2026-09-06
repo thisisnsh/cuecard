@@ -1,6 +1,7 @@
 package com.thisisnsh.cuecard.android.views
 
 import android.app.Activity
+import android.view.WindowManager
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -177,6 +178,15 @@ fun TeleprompterView(
             hide(WindowInsetsCompat.Type.navigationBars())
         }
         onDispose { controller?.show(WindowInsetsCompat.Type.navigationBars()) }
+    }
+
+    // A read is a stretch of looking without touching, which is exactly what the
+    // screen timeout takes for absence. Hold the screen for as long as the
+    // prompter is up.
+    DisposableEffect(view) {
+        val window = (view.context as? Activity)?.window
+        window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        onDispose { window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) }
     }
 
     // Android reports the overlay closing once, where iOS has a will-end and a

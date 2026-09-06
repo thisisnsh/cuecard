@@ -198,6 +198,10 @@ struct TeleprompterView: View {
                 }
                 .onAppear {
                     setupPiP()
+                    // A read is a stretch of looking without touching, which is
+                    // exactly what the idle timer takes for absence. Hold the
+                    // screen for as long as the prompter is up.
+                    UIApplication.shared.isIdleTimerDisabled = true
                     Analytics.logEvent("teleprompter_started", parameters: [
                         "word_count": content.words.count,
                         "timer_duration": timerDuration
@@ -231,6 +235,7 @@ struct TeleprompterView: View {
             stopTimer()
             stopControlsTimer()
             stopCountdownTimer()
+            UIApplication.shared.isIdleTimerDisabled = false
         }
         .onChange(of: scenePhase) { newPhase in
             if newPhase == .background && !pipManager.isPiPActive && pipManager.isPiPPossible {
