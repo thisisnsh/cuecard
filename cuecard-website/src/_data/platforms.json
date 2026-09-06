@@ -3,36 +3,37 @@
     "slug": "zoom",
     "name": "Zoom",
     "title": "Zoom Teleprompter & Invisible Speaker Notes - CueCard",
-    "description": "Keep speaker notes invisible during Zoom meetings and presentations. Sync from Google Slides or paste notes for any Zoom call.",
+    "description": "Keep your speaker notes on your screen and out of your screen share on Zoom. Works with any deck, and syncs notes from Google Slides. Free on Mac and Windows.",
     "keywords": "zoom speaker notes, invisible notes zoom, zoom teleprompter, zoom presentation notes, zoom meeting notes, undetectable notes zoom, zoom screen share notes, zoom presenter notes, zoom slide notes, zoom cue cards",
     "canonical": "https://cuecard.dev/zoom/",
     "ogTitle": "Zoom Teleprompter - invisible speaker notes",
-    "ogDescription": "Invisible speaker notes for Zoom screen sharing. Sync from Google Slides or paste notes for any Zoom meeting.",
+    "ogDescription": "Speaker notes that your Zoom screen share cannot see. Paste notes in for any deck, or sync them from Google Slides.",
     "heroSubtitle": "Speaker notes your <em>Zoom call</em> cannot see.",
     "videoTitle": "CueCard - Invisible Speaker Notes for Zoom",
-    "downloadTitle": "Ready to present<br class=\"desktop-br\"> on Zoom like a pro?",
-    "downloadDesc": "Download CueCard and never fumble through a Zoom presentation again.",
+    "downloadTitle": "Ready for your next Zoom call?",
+    "downloadDesc": "Download CueCard for Mac or Windows, paste your notes in, and share your screen without sharing them.",
     "jsonLdName": "CueCard for Zoom",
-    "jsonLdDescription": "Keep speaker notes invisible during Zoom meetings and presentations. Sync from Google Slides or paste notes for any Zoom call.",
+    "jsonLdDescription": "Your notes stay on your screen and out of the screen share. On Zoom, everyone else sees your deck and never your speaker notes. Paste your notes in to use CueCard with any deck, or add the browser extension so notes from Google Slides follow your slides.",
     "jsonLdFeatures": [
-      "Invisible speaker notes during Zoom screen sharing",
-      "Undetectable on Zoom calls",
-      "Sync notes from Google Slides",
-      "Built-in timer for presentations",
-      "Free and open source"
+      "Speaker notes hidden from your Zoom screen share",
+      "Works with any deck, or with no deck at all",
+      "[time 05:00] tags that count a section down on screen",
+      "[cue ...] reminders shown in their own colour",
+      "Google Slides notes that follow your slides, with the browser extension",
+      "Free on Mac and Windows"
     ],
     "faqJsonLd": [
       {
         "question": "Are speaker notes invisible on Zoom?",
-        "answer": "Yes, CueCard makes your speaker notes completely invisible during Zoom screen sharing. Other participants cannot see your notes while you present."
+        "answer": "Yes. The CueCard window is left out of screen capture by the operating system, so Zoom sends everyone your slides and never your notes, even though the window is right there on your screen. Try one practice share first to see it for yourself."
       },
       {
         "question": "How do I use speaker notes in Zoom meetings?",
-        "answer": "Download CueCard, paste or sync your notes from Google Slides, then start your Zoom meeting. Your notes appear only on your screen while remaining invisible to other participants during screen sharing."
+        "answer": "Install CueCard for Mac or Windows, paste your notes in or sync them from Google Slides, then start your Zoom call as usual. Your notes sit on your screen where you can read them, and stay out of what you share."
       },
       {
         "question": "Can I sync Google Slides notes for Zoom presentations?",
-        "answer": "Yes! CueCard syncs speaker notes directly from Google Slides using a browser extension. Your notes automatically appear in CueCard as you navigate through your slides during a Zoom presentation."
+        "answer": "Yes. Install the CueCard browser extension alongside the app, and the speaker notes for the slide you are on appear in CueCard and change as you move through the deck. Google Slides is optional, though — paste your notes straight in and CueCard works with any deck, or with none at all."
       }
     ]
   },
@@ -40,36 +41,37 @@
     "slug": "google-meet",
     "name": "Google Meet",
     "title": "Google Meet Teleprompter & Invisible Speaker Notes - CueCard",
-    "description": "Keep speaker notes invisible during Google Meet calls and presentations. Sync from Google Slides or paste notes for any Meet call.",
+    "description": "Keep your speaker notes on your screen and out of your screen share on Google Meet. Works with any deck, and syncs notes from Google Slides. Free on Mac and Windows.",
     "keywords": "google meet speaker notes, invisible notes google meet, google meet teleprompter, google meet presentation notes, meet meeting notes, undetectable notes meet, google meet screen share notes, meet presenter notes, google meet slide notes, google meet cue cards",
     "canonical": "https://cuecard.dev/google-meet/",
     "ogTitle": "Google Meet Teleprompter - invisible speaker notes",
-    "ogDescription": "Invisible speaker notes for Google Meet screen sharing. Sync from Google Slides or paste notes for any Meet call.",
+    "ogDescription": "Speaker notes that your Google Meet screen share cannot see. Paste notes in for any deck, or sync them from Google Slides.",
     "heroSubtitle": "Speaker notes your <em>Google Meet</em> cannot see.",
     "videoTitle": "CueCard - Invisible Speaker Notes for Google Meet",
-    "downloadTitle": "Ready to present<br class=\"desktop-br\"> on Google Meet like a pro?",
-    "downloadDesc": "Download CueCard and never fumble through a Google Meet presentation again.",
+    "downloadTitle": "Ready for your next Google Meet call?",
+    "downloadDesc": "Download CueCard for Mac or Windows, paste your notes in, and share your screen without sharing them.",
     "jsonLdName": "CueCard for Google Meet",
-    "jsonLdDescription": "Keep speaker notes invisible during Google Meet calls and presentations. Sync from Google Slides or paste notes for any Meet call.",
+    "jsonLdDescription": "Your notes stay on your screen and out of the screen share. On Google Meet, everyone else sees your deck and never your speaker notes. Paste your notes in to use CueCard with any deck, or add the browser extension so notes from Google Slides follow your slides.",
     "jsonLdFeatures": [
-      "Invisible speaker notes during Google Meet screen sharing",
-      "Undetectable on Meet calls",
-      "Sync notes from Google Slides",
-      "Built-in timer for presentations",
-      "Free and open source"
+      "Speaker notes hidden from your Google Meet screen share",
+      "Works with any deck, or with no deck at all",
+      "[time 05:00] tags that count a section down on screen",
+      "[cue ...] reminders shown in their own colour",
+      "Google Slides notes that follow your slides, with the browser extension",
+      "Free on Mac and Windows"
     ],
     "faqJsonLd": [
       {
         "question": "Are speaker notes invisible on Google Meet?",
-        "answer": "Yes, CueCard makes your speaker notes completely invisible during Google Meet screen sharing. Other participants cannot see your notes while you present."
+        "answer": "Yes. The CueCard window is left out of screen capture by the operating system, so Google Meet sends everyone your slides and never your notes, even though the window is right there on your screen. Try one practice share first to see it for yourself."
       },
       {
         "question": "How do I use speaker notes in Google Meet?",
-        "answer": "Download CueCard, paste or sync your notes from Google Slides, then start your Google Meet. Your notes appear only on your screen while remaining invisible to other participants during screen sharing."
+        "answer": "Install CueCard for Mac or Windows, paste your notes in or sync them from Google Slides, then start your Google Meet call as usual. Your notes sit on your screen where you can read them, and stay out of what you share."
       },
       {
         "question": "Can I sync Google Slides notes for Meet presentations?",
-        "answer": "Yes! CueCard syncs speaker notes directly from Google Slides using a browser extension. Your notes automatically appear in CueCard as you navigate through your slides during a Google Meet presentation."
+        "answer": "Yes. Install the CueCard browser extension alongside the app, and the speaker notes for the slide you are on appear in CueCard and change as you move through the deck. Google Slides is optional, though — paste your notes straight in and CueCard works with any deck, or with none at all."
       }
     ]
   },
@@ -77,36 +79,37 @@
     "slug": "microsoft-teams",
     "name": "Microsoft Teams",
     "title": "Microsoft Teams Teleprompter & Invisible Notes - CueCard",
-    "description": "Keep speaker notes invisible during Microsoft Teams meetings and presentations. Sync from Google Slides or paste notes for any Teams call.",
+    "description": "Keep your speaker notes on your screen and out of your screen share on Microsoft Teams. Works with any deck, and syncs notes from Google Slides. Free on Mac and Windows.",
     "keywords": "microsoft teams speaker notes, invisible notes teams, teams teleprompter, teams presentation notes, teams meeting notes, undetectable notes teams, teams screen share notes, teams presenter notes, teams slide notes, ms teams cue cards",
     "canonical": "https://cuecard.dev/microsoft-teams/",
     "ogTitle": "Microsoft Teams Teleprompter - invisible speaker notes",
-    "ogDescription": "Invisible speaker notes for Microsoft Teams screen sharing. Sync from Google Slides or paste notes for any Teams meeting.",
+    "ogDescription": "Speaker notes that your Microsoft Teams screen share cannot see. Paste notes in for any deck, or sync them from Google Slides.",
     "heroSubtitle": "Speaker notes your <em>Teams call</em> cannot see.",
     "videoTitle": "CueCard - Invisible Speaker Notes for Microsoft Teams",
-    "downloadTitle": "Ready to present<br class=\"desktop-br\"> on Teams like a pro?",
-    "downloadDesc": "Download CueCard and never fumble through a Teams presentation again.",
+    "downloadTitle": "Ready for your next Microsoft Teams call?",
+    "downloadDesc": "Download CueCard for Mac or Windows, paste your notes in, and share your screen without sharing them.",
     "jsonLdName": "CueCard for Microsoft Teams",
-    "jsonLdDescription": "Keep speaker notes invisible during Microsoft Teams meetings and presentations. Sync from Google Slides or paste notes for any Teams call.",
+    "jsonLdDescription": "Your notes stay on your screen and out of the screen share. On Microsoft Teams, everyone else sees your deck and never your speaker notes. Paste your notes in to use CueCard with any deck, or add the browser extension so notes from Google Slides follow your slides.",
     "jsonLdFeatures": [
-      "Invisible speaker notes during Teams screen sharing",
-      "Undetectable on Teams calls",
-      "Sync notes from Google Slides",
-      "Built-in timer for presentations",
-      "Free and open source"
+      "Speaker notes hidden from your Microsoft Teams screen share",
+      "Works with any deck, or with no deck at all",
+      "[time 05:00] tags that count a section down on screen",
+      "[cue ...] reminders shown in their own colour",
+      "Google Slides notes that follow your slides, with the browser extension",
+      "Free on Mac and Windows"
     ],
     "faqJsonLd": [
       {
         "question": "Are speaker notes invisible on Microsoft Teams?",
-        "answer": "Yes, CueCard makes your speaker notes completely invisible during Microsoft Teams screen sharing. Other participants cannot see your notes while you present."
+        "answer": "Yes. The CueCard window is left out of screen capture by the operating system, so Microsoft Teams sends everyone your slides and never your notes, even though the window is right there on your screen. Try one practice share first to see it for yourself."
       },
       {
         "question": "How do I use speaker notes in Teams meetings?",
-        "answer": "Download CueCard, paste or sync your notes from Google Slides, then start your Teams meeting. Your notes appear only on your screen while remaining invisible to other participants during screen sharing."
+        "answer": "Install CueCard for Mac or Windows, paste your notes in or sync them from Google Slides, then start your Microsoft Teams call as usual. Your notes sit on your screen where you can read them, and stay out of what you share."
       },
       {
         "question": "Can I use CueCard with PowerPoint on Teams?",
-        "answer": "Yes! While CueCard syncs directly with Google Slides, you can easily copy your PowerPoint speaker notes and paste them into CueCard for any Teams presentation."
+        "answer": "Yes. While CueCard syncs directly with Google Slides, you can easily copy your PowerPoint speaker notes and paste them into CueCard for any Teams presentation."
       }
     ]
   },
@@ -114,36 +117,37 @@
     "slug": "google-slides",
     "name": "Google Slides",
     "title": "Google Slides Speaker Notes, Synced Live - CueCard",
-    "description": "Sync speaker notes from Google Slides to CueCard and keep them invisible while screen sharing. Notes update as you move through slides.",
+    "description": "Read your Google Slides speaker notes on your own screen while you present. The notes follow your slides, and your screen share never shows them. Free on Mac and Windows.",
     "keywords": "google slides speaker notes, sync google slides notes, google slides teleprompter, google slides presenter notes, google slides notes app, google slides cue cards, presentation notes sync, google slides extension",
     "canonical": "https://cuecard.dev/google-slides/",
     "ogTitle": "Google Slides speaker notes, synced live to your screen",
-    "ogDescription": "Sync Google Slides speaker notes to CueCard for invisible notes during screen sharing. Notes update as you change slides.",
+    "ogDescription": "Your Google Slides speaker notes, on your screen and off the one you are sharing. They change as you move through the deck.",
     "heroSubtitle": "Your <em>Google Slides</em> notes, off the shared screen.",
     "videoTitle": "CueCard - Sync Speaker Notes from Google Slides",
-    "downloadTitle": "Ready to sync your Google Slides notes?",
-    "downloadDesc": "Download CueCard for Mac or Windows, then add the extension above.",
+    "downloadTitle": "Ready to read your Slides notes off your own screen?",
+    "downloadDesc": "Install the app below, then add the browser extension above. You need both.",
     "jsonLdName": "CueCard for Google Slides",
-    "jsonLdDescription": "Sync speaker notes from Google Slides to CueCard and keep them invisible while screen sharing. Notes update as you move through slides.",
+    "jsonLdDescription": "Present from Google Slides with your speaker notes on your own screen and out of the screen share. Install the CueCard app and the browser extension, and the notes for the slide you are on appear in CueCard and change as you move through the deck.",
     "jsonLdFeatures": [
-      "Sync speaker notes from Google Slides",
-      "Automatic note updates as you navigate slides",
-      "Browser extension for Chrome, Firefox, Safari",
-      "Invisible during screen sharing",
-      "Free and open source"
+      "Google Slides speaker notes that follow your slides",
+      "Speaker notes hidden from your screen share",
+      "A browser extension for Chrome, Firefox and Safari",
+      "Works with any other deck too, or with no deck at all",
+      "[time 05:00] tags that count a section down on screen",
+      "Free on Mac and Windows"
     ],
     "faqJsonLd": [
       {
-        "question": "How do I sync Google Slides notes to CueCard?",
-        "answer": "Install the CueCard browser extension for Chrome, Firefox, or Safari. Open your Google Slides presentation and CueCard will automatically sync your speaker notes as you navigate through slides."
+        "question": "Do I need anything besides the CueCard app?",
+        "answer": "Yes, one more thing: the CueCard browser extension. The app is the window your notes appear in, and the extension is what reads the notes out of your deck and sends them across. Google Slides needs both, and both are free."
       },
       {
         "question": "Do notes update automatically when I change slides?",
-        "answer": "Yes! CueCard automatically syncs and displays the speaker notes for your current slide in real-time as you navigate through your Google Slides presentation."
+        "answer": "Yes. Move to the next slide and CueCard shows that slide's speaker notes. You never have to scroll or click across to keep the two in step."
       },
       {
         "question": "Which browsers support the Google Slides extension?",
-        "answer": "The CueCard browser extension is available for Chrome, Firefox, and Safari, allowing you to sync notes from Google Slides on any major browser."
+        "answer": "Chrome, Firefox and Safari. The Chrome extension also covers Edge, Brave and Arc, and the Safari one is installed for you by the Mac app."
       }
     ],
     "showExtension": true

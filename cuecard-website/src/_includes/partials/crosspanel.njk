@@ -14,7 +14,7 @@
     <div class="wrap">
         <p class="micro">{{ icon(crossIcon or ("phone" if toMobile else "monitor"), 13) }}{{ crossMicro or ("Also on your phone" if toMobile else "Also on your computer") }}</p>
         <h2 class="section-h" id="{{ crossId or ('mobile-half' if toMobile else 'desktop-half') }}-h">
-            {{ (crossHeading or ("Filming, not presenting? Different problem." if toMobile else "Presenting, not filming? Different problem.")) | safe }}
+            {{ (crossHeading or ("Filming a video instead? There is an app for that." if toMobile else "Presenting instead of filming? There is an app for that.")) | safe }}
         </h2>
 
         <div class="crosspanel reveal">
@@ -23,12 +23,12 @@
                     {{ icon("layers" if toMobile else "eye-off", 13) }}{{ "CueCard Teleprompter for iPhone and iPad" if toMobile else "CueCard for Mac and Windows" }}
                 </p>
                 <h3 class="crosspanel-h">
-                    {{ (crossPanelH or ("A script that floats over the app you film in" if toMobile else "Speaker notes the screen share cannot see")) | safe }}
+                    {{ (crossPanelH or ("A script that floats over the app you film in" if toMobile else "Speaker notes your screen share cannot see")) | safe }}
                 </h3>
                 <p class="crosspanel-p">
                     {% if crossPanelP %}{{ crossPanelP | safe }}
-                    {% elif toMobile %}Open the camera, <a href="/mobile/instagram/">Instagram</a> or <a href="/mobile/tiktok/">TikTok</a> and your script is on the glass, auto-scrolling at the speed you set. The footage still comes out of the app it always came out of.
-                    {% else %}Notes excluded from screen capture at the system level, so the call gets your deck and nothing else. They sync live from <a href="/google-slides/">Google Slides</a> as you advance, or paste a script in for any meeting.{% endif %}
+                    {% elif toMobile %}Open the camera, <a href="/mobile/instagram/">Instagram</a> or <a href="/mobile/tiktok/">TikTok</a> and your script sits on top of it, scrolling at the speed you set. Your video still comes out of the app it always came out of.
+                    {% else %}The CueCard window is left out of screen capture by the operating system, so everyone on the call sees your slides and never your notes. Paste your notes in and use it with any deck — or with no deck at all. If you present from <a href="/google-slides/">Google Slides</a>, one extra browser extension makes your notes change along with your slides.{% endif %}
                 </p>
                 <p class="backline">
                     {% if toMobile %}
@@ -48,7 +48,7 @@
                     <a href="/mobile/{{ a.slug }}/">
                         {{ icon(a.icon, 18) }}
                         <span class="crosspanel-name">{{ a.name }}</span>
-                        <span class="crosspanel-state">Floats over</span>
+                        <span class="crosspanel-state">Sits on top</span>
                     </a>
                 </li>
                 {% endif %}{% endfor %}
@@ -58,7 +58,7 @@
                     <a href="/{{ a.slug }}/">
                         {{ icon(a.icon, 18) }}
                         <span class="crosspanel-name">{{ a.name }}</span>
-                        <span class="crosspanel-state">{{ "Syncs" if a.slug == "google-slides" else "Invisible" }}</span>
+                        <span class="crosspanel-state">{{ "Notes sync" if a.slug == "google-slides" else "Hidden" }}</span>
                     </a>
                 </li>
                 {% endfor %}

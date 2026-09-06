@@ -21,8 +21,8 @@
         <h2 class="section-h section-title" id="syntax-h">{{ syntaxHeading or "Write it plainly. Read it like a pro." }}</h2>
         <p class="body">
             {% if syntaxBody %}{{ syntaxBody | safe }}
-            {% elif mobileSyntax %}Type your script the way you would say it. One optional tag does the rest: a cue, which reminds you how to say the next line and is drawn in its own colour so you take it in without reading it out.
-            {% else %}Type your script the way you would say it. Two optional tags do the rest: a timestamp to keep you honest about length, and a cue to remind you how to say the next line — shown to you, never spoken.{% endif %}
+            {% elif mobileSyntax %}Type your script the way you would say it out loud. There is one optional tag to learn: a cue. A cue reminds you how to say the next line, and CueCard shows it in colour so you notice it without reading it out.
+            {% else %}Type your notes the way you would say them out loud. There are two optional tags to learn. A time tag counts a section down for you, and a cue reminds you how to say the next line. Both are shown to you and neither is meant to be read out.{% endif %}
         </p>
 
         <div class="features-grid">
@@ -32,8 +32,8 @@
                     <h3 class="feature-title">What you write</h3>
                 </div>
                 <p class="feature-desc">
-                    Plain text, plus <code>[cue]</code>{% if not mobileSyntax %} and <code>[time]</code>{% endif %} wherever they help.
-                    The older <code>[note]</code> spelling still works.
+                    Ordinary text, with <code>[cue]</code>{% if not mobileSyntax %} and <code>[time]</code>{% endif %} added wherever they help.
+                    If you have older scripts written with <code>[note]</code>, those still work too.
                 </p>
                 <div class="notes-preview notes-preview-raw" aria-label="Sample of a raw CueCard script">
                     <div class="notes-content">{% if not mobileSyntax %}[time 00:55]
@@ -55,8 +55,8 @@
                     <h3 class="feature-title">What you see</h3>
                 </div>
                 <p class="feature-desc">
-                    {% if mobileSyntax %}Cues are lit in the colour you picked and the word you are on is highlighted as the script scrolls, so your eye catches them without your mouth doing.
-                    {% else %}Timestamps count down on screen and cues are lit in their own colour, so your eye catches them without your mouth doing.{% endif %}
+                    {% if mobileSyntax %}Your cues show up in the colour you picked while the rest of the script scrolls past in plain text, so your eye catches them and your mouth does not.
+                    {% else %}Time tags count down on screen, and cues show up in their own colour, so your eye catches them and your mouth does not.{% endif %}
                 </p>
                 <div class="notes-preview notes-preview-rendered" aria-live="off">
                     <div class="notes-content">{% if not mobileSyntax %}<span class="timestamp" data-time="55">[00:55]</span>

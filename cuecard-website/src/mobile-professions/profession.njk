@@ -38,11 +38,11 @@ layout: layouts/mobile-profession.njk
     "publisher": { "@id": "https://cuecard.dev/#org" },
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD", "availability": "https://schema.org/InStock" },
     "featureList": [
-        "Floating teleprompter over any app",
-        "Auto-scroll at a speed you set, with word-by-word highlighting",
-        "Delivery cues written into the script and never spoken",
-        "Overlay sized to 16:9, 4:3 or 1:1",
-        "Countdown before the script starts, and a timer while it runs"
+        "Floating teleprompter that stays on top of every other app",
+        "Scrolls on its own at a speed you set, and pauses whenever you need it to",
+        "[cue ...] reminders shown in a colour you pick and never meant to be read out",
+        "A floating window you can shape, move and set the text size of",
+        "A countdown before the script starts and a timer while you talk"
     ]
 }
 </script>
@@ -73,7 +73,7 @@ layout: layouts/mobile-profession.njk
 {% else %}
 {% set navCtaHref = "/desktop/" %}
 {% endif %}
-{% set navCtaText = "Presenting from a Mac or PC? CueCard hides your speaker notes there too" %}
+{% set navCtaText = "Presenting from a Mac or PC instead? CueCard keeps your speaker notes out of your screen share" %}
 {% set navCtaTextMobile = "Also for Mac and Windows" %}
 {% include "partials/nav.njk" %}
 
@@ -81,17 +81,20 @@ layout: layouts/mobile-profession.njk
     {% set heroClass = "hero-app" %}
     {% set heroTitle = mobileProfession.heroSubtitle %}
     {% set heroLong = true %}
-    {% set heroBody = "A floating teleprompter built for " + mobileProfession.targetAudience + ". Your script sits on top of whatever app you are recording in, auto-scrolling while you talk, so you keep your eyes up and your takes whole." %}
-    {% set heroPrimaryHref = site.ios %}
-    {% set heroPrimaryExternal = true %}
-    {% set heroPrimaryIcon = "apple" %}
-    {% set heroPrimaryText = "Download on iOS" %}
-    {% set heroPrimaryText = "Get it free on the App Store" %}
-    {% set heroSecondaryText = "Watch the demo" %}
-    {% set heroSecondaryHref = "#demo" %}
-    {% set heroSecondaryIcon = "play" %}
-    {% set heroNote = "Free forever · iOS 17+ · Android coming soon" %}
-    {% set heroTagline = "No more forgetting your lines or switching screens." %}
+    {% set heroBody = "A floating teleprompter built for " + mobileProfession.targetAudience + ". Your script sits on top of whatever app you are recording in and scrolls while you talk, so you can keep your eyes up and get the take in one go." %}
+    {% set heroButtons = [
+        {
+            text: "Get it free on iPhone & iPad",
+            href: site.ios,
+            icon: "apple",
+            style: "primary",
+            external: true
+        },
+        { text: "Get it for Mac & Windows", href: "/desktop/", icon: "monitor", style: "ghost" },
+        { text: "Watch the demo", href: "#demo", icon: "play", style: "ghost" }
+    ] %}
+    {% set heroNote = 'Free · iOS 17+ · <a href="/mobile/android/">Android coming soon</a>' %}
+    {% set heroTagline = "No more forgetting your lines or switching apps mid-take." %}
     {% set heroStrip = "social" %}
     {% set stripMore = "and every other app you record in" %}
     {% set faqLink = "#faq" %}
@@ -99,12 +102,12 @@ layout: layouts/mobile-profession.njk
     {% include "partials/hero.njk" %}
 
     {% set watchHeading = "A minute of it, in use" %}
-    {% set watchNote = "Nothing is embedded here — each one opens on YouTube." %}
+    {% set watchNote = "Short films of the app doing the one thing it is for. Each opens on YouTube." %}
     {% set watchSolid = true %}
     {% include "partials/watch.njk" %}
 
     {% if mobileProfession.useCases %}
-    <section aria-labelledby="uses-h">
+    <section class="uses" aria-labelledby="uses-h">
         <div class="wrap">
             <p class="micro">{{ icon("flag", 13) }}Where it earns its place</p>
             <h2 class="section-h" id="uses-h">What {{ mobileProfession.name | lower }} use it for</h2>
@@ -124,24 +127,20 @@ layout: layouts/mobile-profession.njk
     {% set rowsSolid = true %}
     {% include "partials/rows.njk" %}
 
-    {% set appRows = site.socialApps %}
-    {% set appBase = "/mobile/" %}
-    {% set stripId = "apps" %}
-    {% set stripMicro = "Record anywhere" %}
-    {% set stripHeading = "It floats over the app you already film in" %}
-    {% include "partials/applist.njk" %}
-
-    {% set bigscreenSolid = true %}
+    {% set bigscreenSolid = false %}
     {% include "partials/bigscreen.njk" %}
 
+    {% set crossSolid = true %}
     {% include "partials/crosspanel.njk" %}
 
     {% set faqItems = roleFaq %}
     {% set faqHeading = "Questions from " + mobileProfession.name | lower %}
+    {% set faqSolid = false %}
     {% include "partials/faq.njk" %}
 
+    {% set getSolid = true %}
     {% set getHeading = "On your phone in under a minute" %}
-    {% set getBody = "Free, no subscription, nothing to cancel — and free on your computer too." %}
+    {% set getBody = "Free, with no subscription and nothing to cancel — and free on your computer too." %}
     {% include "partials/getcuecard.njk" %}
 </main>
 

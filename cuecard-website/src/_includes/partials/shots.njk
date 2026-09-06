@@ -30,5 +30,10 @@
             </figure>
             {% endif %}{% endfor %}
         </div>
+
+        {# A reader who came looking for a computer app should not have to
+           scroll to the bottom of a page about a phone app to find out there
+           is one. #}
+        {% if shotsFoot %}<p class="shots-foot">{{ shotsFoot | safe }}</p>{% endif %}
     </div>
 </section>

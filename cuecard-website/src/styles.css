@@ -293,9 +293,13 @@ main > section {
 main > section:first-of-type { border-top: 0; }
 
 /* Two solid colours, alternating: a tinted section is a passage of reading, a
-   plain one is paper. That alternation is the page's whole rhythm. */
+   plain one is paper. That alternation is the page's whole rhythm, so every
+   section takes its colour the same way - from the `solid` class - and no
+   section type is hard-wired to one of them. A page that hard-wires one ends
+   up printing two tinted sections against each other, which is exactly what
+   the FAQ and the download block used to do at the foot of every page. */
 main > section { background: var(--paper); }
-.solid, .faq, .download-section, .get.solid { background: var(--leaf); }
+.solid { background: var(--leaf); }
 
 section[id] { scroll-margin-top: 96px; }
 
@@ -356,6 +360,17 @@ section[id] { scroll-margin-top: 96px; }
 .body a:hover, .section-desc a:hover { border-bottom-color: var(--cue); color: var(--cue); }
 
 .meta-note { display: block; margin-top: 14px; font-size: 12.5px; color: var(--smoke); }
+.meta-note a { color: var(--ash); border-bottom: 1px solid var(--hairline); }
+.meta-note a:hover { color: var(--cue); border-bottom-color: var(--cue); }
+
+/* The line under the screenshots that sends a reader to the other app. A
+   sentence, so it is a block rather than the flex row .strip-note is. */
+.shots-foot {
+  margin-top: clamp(18px, 2.4vw, 26px);
+  font-size: 13.5px; line-height: 1.65; color: var(--smoke);
+}
+.shots-foot a { color: var(--ink); border-bottom: 1px solid var(--hair-hi); }
+.shots-foot a:hover { color: var(--cue); border-bottom-color: var(--cue); }
 
 /* Two facts and a licence, on one rule, on every page. */
 .statline {

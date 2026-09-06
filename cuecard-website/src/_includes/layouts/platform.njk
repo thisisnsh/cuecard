@@ -51,44 +51,57 @@
 {% endblock %}
 
 {% block body %}
-{% set navCtaText = "Filming on your phone instead? CueCard Teleprompter floats over every app on iPhone and iPad" %}
+{% set navCtaText = "Filming a video on your phone instead? CueCard Teleprompter floats over every app on iPhone and iPad" %}
 {% set navCtaTextMobile = "Also on iPhone and iPad" %}
 {% set navCtaHref = "/" %}
 {% include "partials/nav.njk" %}
 
+{# The Google Slides page is the odd one out. The others are about a call you
+   share your screen on; this one is about the deck itself, and it is the only
+   place the browser extension is explained - so it carries an extra section
+   and, in exchange, the full desktop feature list rather than four rows
+   reworded around a meeting app. That changes the section count, and with it
+   which sections are tinted, so the alternation is worked out from this flag
+   rather than set section by section. #}
+{% set isSlides = true if platform.showExtension else false %}
+
 <main>
     {% set heroTitle = platform.heroSubtitle %}
     {% set heroBody = platform.jsonLdDescription %}
-    {% set heroPrimaryHref = "#download" %}
-    {% set heroPrimaryIcon = "download" %}
-    {% set heroPrimaryText = "Download CueCard" %}
-    {% set heroNote = "Free forever · macOS 13+ and Windows 10+" %}
-    {% set heroSecondaryText = "Watch the demo" %}
-    {% set heroSecondaryHref = "#demo" %}
-    {% set heroSecondaryIcon = "play" %}
+    {% set heroButtons = [
+        { text: "Download for Mac", href: "#download", icon: "apple", style: "primary", os: "mac" },
+        { text: "Download for Windows", href: "#download", icon: "windows", style: "primary", os: "windows" },
+        { text: "Watch the demo", href: "#demo", icon: "play", style: "ghost" }
+    ] %}
+    {% set heroNote = "Free · macOS 13+ and Windows 10+" %}
     {% set heroStrip = "meeting" %}
     {% set faqLink = "#faq" %}
     {% set heroDeck = true %}
     {% include "partials/hero.njk" %}
 
-    {% set watchHeading = "See it on a real call" %}
-    {% set demoIds = ["desktop", "phone"] %}
+    {% set watchHeading = "A minute of it, on a shared screen" %}
+    {% set watchNote = "A short film of the notes staying off the screen everyone else can see. It opens on YouTube." %}
+    {% set demoIds = ["desktop"] %}
     {% set watchSolid = true %}
     {% include "partials/watch.njk" %}
 
-    {% set featureRows = features.forApp(platform.name, "meeting") %}
+    {% if isSlides %}
+    {% set extensionSolid = false %}
+    {% include "partials/extension.njk" %}
+    {% endif %}
+
+    {% set featureRows = features.desktop if isSlides else features.forApp(platform.name, "meeting") %}
     {% set rowsMicro = "What you get" %}
-    {% set rowsHeading = "Everything " + platform.name + " sees is your slide" %}
+    {% set rowsHeading = ("Everything you get, on top of the slide sync" if isSlides else "Everything " + platform.name + " sees is your slide") %}
     {% set rowsId = "features" %}
+    {% set rowsSolid = isSlides %}
     {% include "partials/rows.njk" %}
 
-    {% set syntaxSolid = true %}
+    {% set syntaxSolid = not isSlides %}
     {% include "partials/features.njk" %}
 
-    {% if platform.showExtension %}{% include "partials/extension.njk" %}{% endif %}
-
     {% set crossMode = "mobile" %}
-    {% set crossSolid = true %}
+    {% set crossSolid = isSlides %}
     {% include "partials/crosspanel.njk" %}
 
     {% set gridRoles = site.desktopRoles %}
@@ -97,12 +110,15 @@
     {% set gridMicro = "Made for" %}
     {% set gridHeading = "Whoever has to hold the room" %}
     {% set gridSuffix = "speaker notes" %}
+    {% set gridSolid = not isSlides %}
     {% include "partials/rolegrid.njk" %}
 
     {% set faqItems = platformFaq %}
     {% set faqHeading = "Questions about CueCard and " + platform.name %}
+    {% set faqSolid = isSlides %}
     {% include "partials/faq.njk" %}
 
+    {% set downloadSolid = not isSlides %}
     {% include "partials/download.njk" %}
 </main>
 

@@ -6,6 +6,10 @@
   the apps you present through, and a line at the foot of each column pointing
   at the other side - because most people arrive knowing about one and not the
   other.
+
+  The product is CueCard Teleprompter. The two columns are the two apps it
+  comes as, so they are headed by the machines they run on rather than by two
+  names that read like two separate products.
 #}
 <footer class="footer">
     <div class="footer-inner footer-content">
@@ -16,14 +20,15 @@
                 <span class="brand-text">Cue<b>Card</b></span>
             </a>
             <p class="footer-blurb">
-                CueCard Teleprompter is a free teleprompter for iPhone and iPad that floats over
-                every other app — plus speaker notes that stay invisible while you share your
-                screen on a Mac or PC. Open source, MIT licensed.
+                CueCard Teleprompter is a free teleprompter that comes in two parts. The app for
+                iPhone and iPad keeps your script on top of whatever you record in. The app for
+                Mac and Windows keeps your speaker notes on your screen and out of your screen
+                share. Both are free, open source and MIT licensed.
             </p>
             <ul class="footer-list">
-                <li><a href="/mobile/">Teleprompter for iPhone</a></li>
-                <li><a href="/mobile/ipad/">Teleprompter for iPad</a></li>
-                <li><a href="/desktop/">Desktop app</a></li>
+                <li><a href="/mobile/">The app for iPhone and iPad</a></li>
+                <li><a href="/desktop/">The app for Mac and Windows</a></li>
+                <li><a href="/google-slides/">The Google Slides extension</a></li>
                 <li><a href="/blog/">Blog</a></li>
                 <li><a href="/faq/">FAQ</a></li>
                 <li><a href="/support/">Support</a></li>
@@ -42,14 +47,14 @@
         </div>
 
         <div class="footer-col">
-            <p class="micro">{{ icon("phone", 13) }}<a href="/mobile/">CueCard Teleprompter</a></p>
+            <p class="micro">{{ icon("phone", 13) }}<a href="/mobile/">On iPhone and iPad</a></p>
             <ul class="footer-list footer-list-lead">
                 <li><a href="/mobile/ios/">{{ icon("apple", 15) }} iPhone</a></li>
                 <li><a href="/mobile/ipad/">{{ icon("tablet", 15) }} iPad</a></li>
                 <li><a href="/mobile/android/">{{ icon("android", 15) }} Android — coming soon</a></li>
             </ul>
 
-            <p class="micro footer-micro-2">{{ icon("grid", 13) }}Read your script over</p>
+            <p class="micro footer-micro-2">{{ icon("grid", 13) }}Record your video in</p>
             <ul class="footer-list footer-list-2">
                 {% for a in site.socialApps %}
                 <li><a href="/mobile/{{ a.slug }}/">{{ icon(a.icon, 14) }} {{ a.name }}</a></li>
@@ -64,19 +69,19 @@
             </ul>
 
             <p class="footer-cross">
-                <a href="/google-slides/">Presenting from Google Slides too? CueCard syncs those notes on desktop {{ icon("arrow", 14) }}</a>
+                <a href="/desktop/">Presenting on a Mac or PC as well? Your notes stay out of the screen share {{ icon("arrow", 14) }}</a>
             </p>
         </div>
 
         <div class="footer-col">
-            <p class="micro">{{ icon("monitor", 13) }}<a href="/desktop/">CueCard Desktop</a></p>
+            <p class="micro">{{ icon("monitor", 13) }}<a href="/desktop/">On Mac and Windows</a></p>
             <ul class="footer-list footer-list-lead">
                 <li><a href="/desktop/#download">{{ icon("apple", 15) }} macOS</a></li>
                 <li><a href="/desktop/#download">{{ icon("monitor", 15) }} Windows</a></li>
                 <li><a href="{{ site.releases }}" target="_blank" rel="noopener">{{ icon("download", 15) }} All releases</a></li>
             </ul>
 
-            <p class="micro footer-micro-2">{{ icon("eye-off", 13) }}Stay invisible on</p>
+            <p class="micro footer-micro-2">{{ icon("eye-off", 13) }}Stay hidden while you share</p>
             <ul class="footer-list footer-list-2">
                 {% for a in site.meetingApps %}
                 <li><a href="/{{ a.slug }}/">{{ icon(a.icon, 14) }} {{ a.name }}</a></li>
@@ -91,7 +96,7 @@
             </ul>
 
             <p class="footer-cross">
-                <a href="/mobile/">Filming on your phone instead? The floating teleprompter is here {{ icon("arrow", 14) }}</a>
+                <a href="/mobile/">Filming a video on your phone as well? The floating teleprompter is here {{ icon("arrow", 14) }}</a>
             </p>
         </div>
 

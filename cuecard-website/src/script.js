@@ -20,9 +20,43 @@ document.addEventListener('DOMContentLoaded', () => {
     // The counting [time] tag in the script-syntax panels
     initTimestampCountdowns();
 
+    // The Mac / Windows choice in a hero that offers both
+    initOsButtons();
+
     // GitHub stars, and the desktop release downloads
     initGitHubData();
 });
+
+
+/* A hero that offers a Mac download and a Windows download shows both, and
+   this drops the one the reader cannot use. It has to work that way round:
+   the page is built once and served to everyone, so both buttons are in the
+   HTML and a browser removes one, rather than a browser having to add one.
+
+   If we cannot tell which machine this is - and on iOS and Android we can, it
+   is neither - both buttons stay. Two working buttons is a worse hero than
+   one, but it is never a wrong one. */
+function initOsButtons() {
+    const buttons = document.querySelectorAll('[data-os-btn]');
+    if (!buttons.length) return;
+
+    const ua = navigator.userAgent || '';
+    const platform = navigator.userAgentData?.platform || navigator.platform || '';
+    const both = platform + ' ' + ua;
+
+    // An iPad reports itself as a Mac, so rule the touch devices out first:
+    // neither download on this page runs on one.
+    if (/iPhone|iPad|iPod|Android/i.test(ua) || (/Mac/i.test(both) && navigator.maxTouchPoints > 2)) return;
+
+    let os = null;
+    if (/Mac|Darwin/i.test(both)) os = 'mac';
+    else if (/Win/i.test(both)) os = 'windows';
+    if (!os) return;
+
+    buttons.forEach((button) => {
+        if (button.dataset.osBtn !== os) button.remove();
+    });
+}
 
 
 /* The live prompter in the hero.

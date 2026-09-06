@@ -69,23 +69,41 @@ layout: layouts/mobile-app.njk
 
 {% block body %}
 {% from "partials/icons.njk" import icon %}
-{% set navCtaText = "Presenting from a Mac or PC? CueCard hides your speaker notes there too" %}
+{% set navCtaText = "Presenting from a Mac or PC instead? CueCard keeps your speaker notes out of your screen share" %}
 {% set navCtaTextMobile = "Also for Mac and Windows" %}
 {% set navCtaHref = "/desktop/" %}
 {% include "partials/nav.njk" %}
+
+{# The iPad page is the one page here that drops the "also on iPad" card,
+   because it is already on it. That changes how many sections the page has,
+   and therefore which of them is tinted, so the whole alternation is worked
+   out from this one flag rather than set section by section. #}
+{% set hasBigscreen = app.slug != "mobile/ipad" %}
 
 <main>
     {% set heroClass = "hero-app" %}
     {% set heroTitle = app.heroSubtitle %}
     {% set heroBody = app.appDescription %}
-    {% set heroPrimaryHref = site.ios %}
-    {% set heroPrimaryExternal = true %}
-    {% set heroPrimaryIcon = "apple" %}
-    {% set heroPrimaryText = "Get it free on the App Store" %}
-    {% set heroSecondaryText = "Watch the demo" %}
-    {% set heroSecondaryHref = "#demo" %}
-    {% set heroSecondaryIcon = "play" %}
-    {% set heroNote = "Free forever · iOS 17+" + (" · Android coming soon" if app.showAndroid else "") %}
+    {% set heroButtons = [
+        {
+            text: "Get it free on iPhone & iPad",
+            href: site.ios,
+            icon: "apple",
+            style: "primary",
+            external: true
+        },
+        { text: "Get it for Mac & Windows", href: "/desktop/", icon: "monitor", style: "ghost" },
+        { text: "Watch the demo", href: "#demo", icon: "play", style: "ghost" }
+    ] %}
+    {# The Android page is about an app that is not out. It gets the same
+       buttons, because the iPhone and iPad app is the only thing there is to
+       press, but the line under them says so plainly rather than implying a
+       Play Store link is hiding somewhere. #}
+    {% if not app.showIos %}
+    {% set heroNote = "Android is still being built. The iPhone and iPad app is free and out now." %}
+    {% else %}
+    {% set heroNote = "Free · iOS 17+" + (' · <a href="/mobile/android/">Android coming soon</a>' if app.showAndroid else "") %}
+    {% endif %}
     {% set heroTagline = app.promotionalText %}
     {% set heroStrip = "social" %}
     {% set stripMore = "and every other app you record in" %}
@@ -94,12 +112,18 @@ layout: layouts/mobile-app.njk
     {% include "partials/hero.njk" %}
 
     {% if app.shotId %}{% set shotIds = [app.shotId] %}{% endif %}
-    {% set shotsHeading = ("The prompter, the floating window, and the dials behind them.") %}
+    {% set shotsHeading = "This is the whole app." %}
+    {% set shotsNote = "Read your script from the full screen, or shrink it into a small window that stays on top of whatever else you open." %}
+    {% set shotsFoot = 'Looking for the computer app instead? <a href="/desktop/">CueCard for Mac and Windows</a> keeps your speaker notes on your screen and out of your screen share.' %}
     {% include "partials/shots.njk" %}
 
     {% set watchHeading = "A minute of it, in use" %}
-    {% set watchNote = "Nothing is embedded here — each one opens on YouTube." %}
-    {% if app.demoId %}{% set demoIds = [app.demoId] %}{% endif %}
+    {% if app.demoId %}
+    {% set demoIds = [app.demoId] %}
+    {% set watchNote = "A short film of the app doing the one thing it is for. It opens on YouTube." %}
+    {% else %}
+    {% set watchNote = "One short film for the iPhone app, one for the same app on iPad, and one for the Mac and Windows app. Each opens on YouTube." %}
+    {% endif %}
     {% include "partials/watch.njk" %}
 
     {% set featureRows = features.forApp(app.subject, "social") if app.subject else features.mobile %}
@@ -109,16 +133,8 @@ layout: layouts/mobile-app.njk
     {% set rowsSolid = true %}
     {% include "partials/rows.njk" %}
 
-    {% set appRows = site.socialApps %}
-    {% set appBase = "/mobile/" %}
-    {% set stripId = "apps" %}
-    {% set stripMicro = "Record anywhere" %}
-    {% set stripHeading = "It floats over the app you already film in" %}
-    {% set stripNote = "CueCard never replaces your camera app. It sits on top of whatever you open." %}
-    {% include "partials/applist.njk" %}
-
-    {% if app.slug != "mobile/ipad" %}
-    {% set bigscreenSolid = true %}
+    {% if hasBigscreen %}
+    {% set bigscreenSolid = false %}
     {% include "partials/bigscreen.njk" %}
     {% endif %}
 
@@ -128,18 +144,20 @@ layout: layouts/mobile-app.njk
     {% set gridMicro = "Made for" %}
     {% set gridHeading = "Whatever it is you have to say on camera" %}
     {% set gridSuffix = "teleprompter app" %}
-    {% set gridSolid = (app.slug == "mobile/ipad") %}
+    {% set gridSolid = hasBigscreen %}
     {% include "partials/rolegrid.njk" %}
 
-    {% set crossSolid = (app.slug != "mobile/ipad") %}
+    {% set crossSolid = not hasBigscreen %}
     {% include "partials/crosspanel.njk" %}
 
     {% set faqItems = appFaq %}
     {% set faqHeading = "Questions about " + app.name %}
+    {% set faqSolid = hasBigscreen %}
     {% include "partials/faq.njk" %}
 
+    {% set getSolid = not hasBigscreen %}
     {% set getHeading = "On your phone in under a minute" %}
-    {% set getBody = "Free, no subscription, nothing to cancel — and free on your computer too." %}
+    {% set getBody = "Free, with no subscription and nothing to cancel — and free on your computer too." %}
     {% include "partials/getcuecard.njk" %}
 </main>
 

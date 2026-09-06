@@ -24,24 +24,46 @@
 
                 {% if heroBody %}<p class="body reveal d1">{{ heroBody | safe }}</p>{% endif %}
 
-                <div class="actions hero-cta reveal d2">
-                    {% set primaryHref = heroPrimaryHref or downloadBtnHref or "#download" %}
-                    <a class="btn btn-primary" href="{{ primaryHref }}"{% if heroPrimaryExternal %} target="_blank" rel="noopener"{% endif %}>
-                        {{ icon(heroPrimaryIcon or "download", 17) }}{{ heroPrimaryText or "Get CueCard, it's free" }}
-                    </a>
+                {# The buttons.
 
-                    {% if heroSecondaryText %}
-                    <a class="btn btn-ghost" href="{{ heroSecondaryHref }}"{% if heroSecondaryExternal %} target="_blank" rel="noopener"{% endif %}>
-                        {% if heroSecondaryIcon %}{{ icon(heroSecondaryIcon, 17) }}{% endif %}{{ heroSecondaryText }}
+                   A page can set heroButtons to a list of
+                   { text, href, icon, style, external, os } and get exactly
+                   those, in that order - which is how the home page names all
+                   three platforms instead of only the App Store, and how
+                   /desktop/ offers a Mac button and a Windows button. Set
+                   `os` to "mac" or "windows" and script.js drops the one the
+                   reader is not on; with no JavaScript both simply stay, which
+                   is still correct.
+
+                   Everything else still passes heroPrimary* / heroSecondary*,
+                   so no page had to change to keep working. #}
+                {% set primaryHref = heroPrimaryHref or downloadBtnHref or "#download" %}
+                {% set ctas = heroButtons or [
+                    {
+                        text: heroPrimaryText or "Get CueCard, it's free",
+                        href: primaryHref,
+                        icon: heroPrimaryIcon or "download",
+                        style: "primary",
+                        external: heroPrimaryExternal
+                    },
+                    {
+                        text: heroSecondaryText or "Read the source",
+                        href: heroSecondaryHref if heroSecondaryText else site.github,
+                        icon: heroSecondaryIcon if heroSecondaryText else "github",
+                        style: "ghost",
+                        external: heroSecondaryExternal if heroSecondaryText else true
+                    }
+                ] %}
+
+                <div class="actions hero-cta reveal d2">
+                    {% for b in ctas %}
+                    <a class="btn btn-{{ b.style or 'ghost' }}" href="{{ b.href }}"{% if b.os %} data-os-btn="{{ b.os }}"{% endif %}{% if b.external %} target="_blank" rel="noopener"{% endif %}>
+                        {% if b.icon %}{{ icon(b.icon, 17) }}{% endif %}{{ b.text }}
                     </a>
-                    {% else %}
-                    <a class="btn btn-ghost" href="{{ site.github }}" target="_blank" rel="noopener">
-                        {{ icon("github", 17) }}Read the source
-                    </a>
-                    {% endif %}
+                    {% endfor %}
                 </div>
 
-                {% if heroNote %}<span class="meta-note reveal d2">{{ heroNote }}</span>{% endif %}
+                {% if heroNote %}<span class="meta-note reveal d2">{{ heroNote | safe }}</span>{% endif %}
 
                 {% include "partials/stats.njk" %}
 
@@ -60,7 +82,7 @@
         {% set strip = heroStrip or "meeting" %}
         {% if strip != "none" %}
         <div class="hero-platforms reveal">
-            <p class="platforms-label">{{ icon("grid", 13) }}{{ stripLabel or ("Reads over:" if strip == "social" else "Undetectable on:") }}</p>
+            <p class="platforms-label">{{ icon("grid", 13) }}{{ stripLabel or ("Sits on top of:" if strip == "social" else "Hidden from:") }}</p>
             <ul class="platforms-logos">
                 {% if strip == "social" %}
                 {% for a in site.socialApps %}

@@ -10,48 +10,47 @@
     "ogTitle": "Free Teleprompter App for iPhone, iPad and Android",
     "ogDescription": "A free teleprompter that floats over any app on iPhone and iPad. Record where you always record; the script comes with you.",
     "heroSubtitle": "A teleprompter that stays <em>on top</em> of every app.",
-    "promotionalText": "No second phone, no printed page, no memorising.",
-    "appDescription": "CueCard Teleprompter keeps your script visible above any app, so you stay on script without switching screens. Recording, presenting or going live, the words come with you.",
+    "appDescription": "CueCard Teleprompter keeps your script on top of whatever app you are using, so you never have to switch apps in the middle of a take. Whether you are recording a video, presenting or going live, the words stay with you.",
     "showIos": true,
     "showAndroid": true,
     "features": [
       {
         "title": "Auto-Scroll Teleprompter",
-        "description": "Auto-scroll your script at a comfortable pace so you can stay focused.",
+        "description": "Your script scrolls on its own at a speed you set, and you can pause it or change that speed at any time.",
         "icon": "scroll"
       },
       {
         "title": "Floats Over All Apps",
-        "description": "Your notes stay visible while using Camera, Instagram, TikTok, or any other app.",
+        "description": "Your script stays on screen while you use the camera, Instagram, TikTok or any other app.",
         "icon": "layers"
       },
       {
         "title": "Resizable Window",
-        "description": "Adjust the teleprompter size to fit your screen perfectly.",
+        "description": "Make the floating window wide, square or tall, and drag it wherever it does not cover your face.",
         "icon": "resize"
       },
       {
         "title": "Adjustable Text",
-        "description": "Customize font size and scroll speed for comfortable reading.",
+        "description": "Set the text size and the scroll speed so the script is easy to read from wherever your phone is set up.",
         "icon": "type"
       }
     ],
     "faq": [
       {
         "question": "How does the floating teleprompter work?",
-        "answer": "CueCard creates a floating window that stays on top of all your apps. You can record videos, go live, or present while your notes remain visible only to you."
+        "answer": "CueCard opens a small window that stays on top of your other apps. Start the script scrolling, switch to the app you record in, and the window stays where you can read it. It is on your screen and not in front of the lens, so the camera never records it."
       },
       {
         "question": "Is CueCard available for iPhone and Android?",
-        "answer": "Yes! CueCard is available on the <a href=\"https://apps.apple.com/app/cuecard-teleprompter/id6757321325\">App Store</a> for iOS. Android is coming soon to the Google Play Store."
+        "answer": "The iPhone and iPad app is out now on the <a href=\"https://apps.apple.com/app/cuecard-teleprompter/id6757321325\">App Store</a>, and it is free. The Android app is still being built."
       },
       {
         "question": "Can I use it with my camera app?",
-        "answer": "CueCard floats over any app including your native camera, Instagram, TikTok, YouTube, and more."
+        "answer": "Yes. CueCard floats over any app, including your phone's own camera, Instagram, TikTok, YouTube and the rest."
       },
       {
-        "question": "Is there a desktop version?",
-        "answer": "Yes! CueCard is also available for macOS and Windows with additional features like Google Slides sync. <a href=\"/\">Try the desktop version</a>."
+        "question": "Is there a version for my computer?",
+        "answer": "Yes. <a href=\"/desktop/\">CueCard for Mac and Windows</a> keeps your speaker notes on your screen and out of your screen share on Zoom, Google Meet and Teams. It is a different app for a different job, and it is also free."
       }
     ],
     "icon": "phone"
@@ -74,22 +73,22 @@
     "features": [
       {
         "title": "Auto-Scroll Teleprompter",
-        "description": "Auto-scroll your script at a comfortable pace so you can stay focused.",
+        "description": "Your script scrolls on its own at a speed you set, and you can pause it or change that speed at any time.",
         "icon": "scroll"
       },
       {
         "title": "Floats Over All Apps",
-        "description": "Your notes stay visible while using Camera, Instagram, TikTok, or any other app.",
+        "description": "Your script stays on screen while you use the camera, Instagram, TikTok or any other app.",
         "icon": "layers"
       },
       {
         "title": "Resizable Window",
-        "description": "Adjust the teleprompter size to fit your iPhone or iPad screen.",
+        "description": "Make the floating window wide, square or tall, and drag it wherever it does not cover your face.",
         "icon": "resize"
       },
       {
         "title": "Adjustable Text",
-        "description": "Customize font size and scroll speed for comfortable reading.",
+        "description": "Set the text size and the scroll speed so the script is easy to read from wherever your phone is set up.",
         "icon": "type"
       }
     ],
@@ -100,7 +99,7 @@
       },
       {
         "question": "Is CueCard available on the App Store?",
-        "answer": "Yes! CueCard is available on the <a href=\"https://apps.apple.com/app/cuecard-teleprompter/id6757321325\">App Store</a>. Download it now for iPhone and iPad."
+        "answer": "Yes. CueCard is available on the <a href=\"https://apps.apple.com/app/cuecard-teleprompter/id6757321325\">App Store</a>. Download it now for iPhone and iPad."
       },
       {
         "question": "Does it work on iPad too?",
@@ -108,7 +107,7 @@
       },
       {
         "question": "Is there a desktop version for Mac?",
-        "answer": "Yes. <a href=\"/desktop/\">CueCard for Mac and Windows</a> keeps speaker notes out of a screen share on Zoom, Google Meet and Teams, and syncs them live from Google Slides."
+        "answer": "Yes. <a href=\"/desktop/\">CueCard for Mac and Windows</a> keeps your speaker notes on your screen and out of your screen share on Zoom, Google Meet and Teams. Paste your notes in to use it with any deck, or add the browser extension so notes from Google Slides follow your slides."
       }
     ],
     "icon": "apple",
@@ -135,23 +134,23 @@
     "features": [
       {
         "title": "The whole screen, or a corner of it",
-        "description": "Read full width at arm's length, or float the script in a small window over any app.",
-        "icon": "resize"
+        "icon": "resize",
+        "description": "Read the script across the full display, or shrink it into a small window that floats over any other app."
       },
       {
-        "title": "Auto-scroll at your pace",
-        "description": "Set the speed in lines per minute and the word you are on stays lit.",
-        "icon": "scroll"
+        "title": "Scrolls on its own, at your pace",
+        "icon": "scroll",
+        "description": "Set how fast the script moves and it scrolls by itself. Speed it up, slow it down or pause it whenever you need to."
       },
       {
         "title": "Cues in colour",
-        "description": "Write [cue smile] into the script and it shows without ever being read out.",
-        "icon": "pen"
+        "icon": "type",
+        "description": "Write [cue smile] into your script and it shows up in colour as a reminder for you, never as a line to read out."
       },
       {
-        "title": "Countdown and timer",
-        "description": "A start delay counts you in and a timer runs while you talk.",
-        "icon": "clock"
+        "title": "A countdown and a timer",
+        "icon": "layers",
+        "description": "A countdown gets you ready before the script starts, and a timer runs while you talk so you know how long you have been going."
       }
     ],
     "faq": [
@@ -165,7 +164,7 @@
       },
       {
         "question": "Is CueCard free on iPad?",
-        "answer": "Yes, completely. One app, one purchase price of nothing, no subscription and no paid tier — and the source is on GitHub."
+        "answer": "Yes, completely. There is no subscription and no paid tier, and the source code is on GitHub for anyone to read."
       },
       {
         "question": "Can I use an iPad as a teleprompter for a camera?",
@@ -176,7 +175,6 @@
         "answer": "CueCard behaves like any other iPad app: it resizes, it works alongside others, and the floating prompter stays above whatever you switch to."
       }
     ],
-    "subject": "iPad",
     "icon": "tablet"
   },
   {
@@ -190,29 +188,28 @@
     "ogTitle": "Android Teleprompter App - coming soon",
     "ogDescription": "Keep speaker notes visible over any app on Android. Stay on script while recording or presenting.",
     "heroSubtitle": "The floating teleprompter, coming to <em>Android</em>.",
-    "promotionalText": "Coming soon to Google Play.",
     "appDescription": "CueCard Teleprompter keeps your speaker notes visible above any app, so you can stay on script without switching screens. Whether you're recording a video, presenting, or speaking live, your notes flow with you wherever you go.",
     "showIos": false,
     "showAndroid": true,
     "features": [
       {
         "title": "Auto-Scroll Teleprompter",
-        "description": "Auto-scroll your script at a comfortable pace so you can stay focused.",
+        "description": "Your script scrolls on its own at a speed you set, and you can pause it or change that speed at any time.",
         "icon": "scroll"
       },
       {
         "title": "Floats Over All Apps",
-        "description": "Your notes stay visible while using Camera, Instagram, TikTok, or any other app.",
+        "description": "Your script stays on screen while you use the camera, Instagram, TikTok or any other app.",
         "icon": "layers"
       },
       {
         "title": "Resizable Window",
-        "description": "Adjust the teleprompter size to fit your screen perfectly.",
+        "description": "Make the floating window wide, square or tall, and drag it wherever it does not cover your face.",
         "icon": "resize"
       },
       {
         "title": "Adjustable Text",
-        "description": "Customize font size and scroll speed for comfortable reading.",
+        "description": "Set the text size and the scroll speed so the script is easy to read from wherever your phone is set up.",
         "icon": "type"
       }
     ],
@@ -223,7 +220,7 @@
       },
       {
         "question": "Is CueCard available on Google Play?",
-        "answer": "CueCard for Android is coming soon to the Google Play Store!"
+        "answer": "Not yet. The Android app is still being built. The iPhone and iPad app is free and out now, and so is the Mac and Windows app."
       },
       {
         "question": "Does it work with all Android phones?",
@@ -231,7 +228,7 @@
       },
       {
         "question": "Is there a desktop version for Windows?",
-        "answer": "Yes! CueCard is also available for Windows with additional features like Google Slides sync. <a href=\"/\">Try the desktop version</a>."
+        "answer": "Yes. <a href=\"/desktop/\">CueCard for Mac and Windows</a> is out now and free. It keeps your speaker notes on your screen and out of your screen share on Zoom, Google Meet and Teams."
       }
     ],
     "icon": "android"
@@ -254,41 +251,41 @@
     "features": [
       {
         "title": "Float Over Instagram",
-        "description": "Your script stays visible while you record Reels, Stories, or go Live.",
+        "description": "Your script stays on screen while you record a Reel or a Story, or while you go Live.",
         "icon": "layers"
       },
       {
         "title": "Auto-Scroll Teleprompter",
-        "description": "Auto-scroll your script at a comfortable pace so you can stay focused.",
+        "description": "Your script scrolls on its own at a speed you set, and you can pause it or change that speed at any time.",
         "icon": "scroll"
       },
       {
         "title": "Resizable Window",
-        "description": "Adjust the teleprompter size to fit your screen perfectly.",
+        "description": "Make the floating window wide, square or tall, and drag it wherever it does not cover your face.",
         "icon": "resize"
       },
       {
         "title": "Adjustable Text",
-        "description": "Customize font size and scroll speed for comfortable reading.",
+        "description": "Set the text size and the scroll speed so the script is easy to read from wherever your phone is set up.",
         "icon": "type"
       }
     ],
     "faq": [
       {
         "question": "Does CueCard work with Instagram Reels?",
-        "answer": "Yes! CueCard floats over the Instagram app, so you can see your script while recording Reels directly in Instagram."
+        "answer": "Yes. CueCard floats over the Instagram app, so you can see your script while recording Reels directly in Instagram."
       },
       {
         "question": "Can I use it for Instagram Stories?",
-        "answer": "Absolutely! Keep your talking points visible while recording Stories, whether it's a quick update or a longer narrative."
+        "answer": "Yes. Keep your talking points visible while recording Stories, whether it's a quick update or a longer narrative."
       },
       {
         "question": "Does it work with Instagram Live?",
-        "answer": "Yes! Float your notes over Instagram while going Live. Perfect for Q&A sessions, product launches, or any live content."
+        "answer": "Yes. Float your notes over Instagram while going Live. Perfect for Q&A sessions, product launches, or any live content."
       },
       {
         "question": "Will my followers see the teleprompter?",
-        "answer": "No! CueCard floats above the Instagram app on your screen. Your followers only see your polished content, not your notes."
+        "answer": "No. CueCard sits on top of the app on your screen, not in front of the lens, so the camera never records it. Your followers see you and nothing else. The one exception is screen recording, which captures your whole screen — close the prompter first if that is how you are recording."
       }
     ],
     "subject": "Instagram",
@@ -312,41 +309,41 @@
     "features": [
       {
         "title": "Float Over TikTok",
-        "description": "Your script stays visible while you record directly in the TikTok app.",
+        "description": "Your script stays on screen while you record straight into the TikTok app.",
         "icon": "layers"
       },
       {
         "title": "Auto-Scroll Teleprompter",
-        "description": "Auto-scroll your script at a comfortable pace so you can stay focused.",
+        "description": "Your script scrolls on its own at a speed you set, and you can pause it or change that speed at any time.",
         "icon": "scroll"
       },
       {
         "title": "Resizable Window",
-        "description": "Adjust the teleprompter size to fit your screen perfectly.",
+        "description": "Make the floating window wide, square or tall, and drag it wherever it does not cover your face.",
         "icon": "resize"
       },
       {
         "title": "Adjustable Text",
-        "description": "Customize font size and scroll speed for comfortable reading.",
+        "description": "Set the text size and the scroll speed so the script is easy to read from wherever your phone is set up.",
         "icon": "type"
       }
     ],
     "faq": [
       {
         "question": "Does CueCard work while recording in TikTok?",
-        "answer": "Yes! CueCard floats over the TikTok app, so you can see your script while recording directly in TikTok."
+        "answer": "Yes. CueCard floats over the TikTok app, so you can see your script while recording directly in TikTok."
       },
       {
         "question": "Can it help me nail trending sounds?",
-        "answer": "Absolutely! Keep your lip-sync lyrics or talking points visible so you nail the timing on trending sounds."
+        "answer": "Yes. Keep your lip-sync lyrics or talking points visible so you nail the timing on trending sounds."
       },
       {
         "question": "Will viewers see the teleprompter in my TikToks?",
-        "answer": "No! CueCard floats above the TikTok app on your screen. Your followers only see your confident delivery, not your notes."
+        "answer": "No. CueCard sits on top of the app on your screen, not in front of the lens, so the camera never records it. Your followers see you and nothing else. The one exception is screen recording, which captures your whole screen — close the prompter first if that is how you are recording."
       },
       {
         "question": "Can I resize the teleprompter window?",
-        "answer": "Yes! Resize and position the floating window wherever works best for your recording setup."
+        "answer": "Yes. Resize and position the floating window wherever works best for your recording setup."
       }
     ],
     "subject": "TikTok",
@@ -370,41 +367,41 @@
     "features": [
       {
         "title": "Float Over Camera",
-        "description": "Your script stays visible while you record videos for YouTube.",
+        "description": "Your script stays on screen while you record in your phone's own camera app.",
         "icon": "layers"
       },
       {
         "title": "Auto-Scroll Teleprompter",
-        "description": "Auto-scroll your script at a comfortable pace so you can stay focused.",
+        "description": "Your script scrolls on its own at a speed you set, and you can pause it or change that speed at any time.",
         "icon": "scroll"
       },
       {
         "title": "Resizable Window",
-        "description": "Adjust the teleprompter size to fit your screen perfectly.",
+        "description": "Make the floating window wide, square or tall, and drag it wherever it does not cover your face.",
         "icon": "resize"
       },
       {
         "title": "Adjustable Text",
-        "description": "Customize font size and scroll speed for comfortable reading.",
+        "description": "Set the text size and the scroll speed so the script is easy to read from wherever your phone is set up.",
         "icon": "type"
       }
     ],
     "faq": [
       {
         "question": "Can I use CueCard for YouTube Shorts?",
-        "answer": "Yes! CueCard is perfect for Shorts. Keep your hook and key points visible while recording quick vertical videos."
+        "answer": "Yes. CueCard is perfect for Shorts. Keep your hook and key points visible while recording quick vertical videos."
       },
       {
         "question": "Does it help with sponsored content?",
-        "answer": "Absolutely! Keep sponsor talking points, required disclosures, and key messages visible while recording ad reads."
+        "answer": "Yes. Keep sponsor talking points, required disclosures, and key messages visible while recording ad reads."
       },
       {
         "question": "Can I read longer scripts for full videos?",
-        "answer": "Yes! Use auto-scroll for longer scripts. CueCard scrolls at your preferred pace so you stay focused on delivery."
+        "answer": "Yes. Use auto-scroll for longer scripts. CueCard scrolls at your preferred pace so you stay focused on delivery."
       },
       {
         "question": "Is CueCard free for YouTubers?",
-        "answer": "Yes! CueCard is completely free. Perfect for creators at any subscriber count."
+        "answer": "Yes. CueCard is completely free. Perfect for creators at any subscriber count."
       }
     ],
     "subject": "YouTube",
@@ -428,41 +425,41 @@
     "features": [
       {
         "title": "Float Over Camera",
-        "description": "Your script stays visible while you record professional video content.",
+        "description": "Your script stays on screen while you record in your phone's own camera app.",
         "icon": "layers"
       },
       {
         "title": "Auto-Scroll Teleprompter",
-        "description": "Auto-scroll your script at a comfortable pace so you can stay focused.",
+        "description": "Your script scrolls on its own at a speed you set, and you can pause it or change that speed at any time.",
         "icon": "scroll"
       },
       {
         "title": "Resizable Window",
-        "description": "Adjust the teleprompter size to fit your screen perfectly.",
+        "description": "Make the floating window wide, square or tall, and drag it wherever it does not cover your face.",
         "icon": "resize"
       },
       {
         "title": "Adjustable Text",
-        "description": "Customize font size and scroll speed for comfortable reading.",
+        "description": "Set the text size and the scroll speed so the script is easy to read from wherever your phone is set up.",
         "icon": "type"
       }
     ],
     "faq": [
       {
         "question": "Is CueCard good for LinkedIn video content?",
-        "answer": "Yes! CueCard is perfect for creating professional LinkedIn videos. Keep your key points visible while recording thought leadership content."
+        "answer": "Yes. CueCard is perfect for creating professional LinkedIn videos. Keep your key points visible while recording thought leadership content."
       },
       {
         "question": "Can I use it for company updates?",
-        "answer": "Absolutely! Float your talking points while recording company announcements, product updates, or team introductions."
+        "answer": "Yes. Float your talking points while recording company announcements, product updates, or team introductions."
       },
       {
         "question": "Will my audience see the teleprompter?",
-        "answer": "No! CueCard floats above your camera app. Your LinkedIn connections only see your polished, professional delivery."
+        "answer": "No. CueCard sits on top of the app on your screen, not in front of the lens, so the camera never records it. Your connections see you and nothing else. The one exception is screen recording, which captures your whole screen — close the prompter first if that is how you are recording."
       },
       {
         "question": "Is CueCard free for professionals?",
-        "answer": "Yes! CueCard is completely free and perfect for business professionals."
+        "answer": "Yes. CueCard is completely free and perfect for business professionals."
       }
     ],
     "subject": "LinkedIn",
@@ -491,36 +488,36 @@
       },
       {
         "title": "Auto-Scroll Teleprompter",
-        "description": "Auto-scroll your script at a comfortable pace so you can stay focused.",
+        "description": "Your script scrolls on its own at a speed you set, and you can pause it or change that speed at any time.",
         "icon": "scroll"
       },
       {
         "title": "Resizable Window",
-        "description": "Adjust the teleprompter size to fit your screen perfectly.",
+        "description": "Make the floating window wide, square or tall, and drag it wherever it does not cover your face.",
         "icon": "resize"
       },
       {
         "title": "Adjustable Text",
-        "description": "Customize font size and scroll speed for comfortable reading.",
+        "description": "Set the text size and the scroll speed so the script is easy to read from wherever your phone is set up.",
         "icon": "type"
       }
     ],
     "faq": [
       {
         "question": "Does CueCard work with Facebook Reels?",
-        "answer": "Yes! CueCard floats over the Facebook app, so you can see your script while recording Reels directly in Facebook."
+        "answer": "Yes. CueCard floats over the Facebook app, so you can see your script while recording Reels directly in Facebook."
       },
       {
         "question": "Can I use it for Facebook Live?",
-        "answer": "Absolutely! Float your notes while going Live. Perfect for Q&A sessions, product demos, or community updates."
+        "answer": "Yes. Float your notes while going Live. Perfect for Q&A sessions, product demos, or community updates."
       },
       {
         "question": "Will my followers see the teleprompter?",
-        "answer": "No! CueCard floats above the Facebook app on your screen. Your audience only sees your polished content."
+        "answer": "No. CueCard sits on top of the app on your screen, not in front of the lens, so the camera never records it. Your audience see you and nothing else. The one exception is screen recording, which captures your whole screen — close the prompter first if that is how you are recording."
       },
       {
         "question": "Is CueCard free?",
-        "answer": "Yes! CueCard is completely free and open source. It is on the App Store for iOS now, and Android is coming soon."
+        "answer": "Yes. CueCard is completely free and open source. It is free on the App Store for iPhone and iPad now, and the Android app is still being built."
       }
     ],
     "subject": "Facebook",
@@ -549,36 +546,36 @@
       },
       {
         "title": "Auto-Scroll Teleprompter",
-        "description": "Auto-scroll your script at a comfortable pace so you can stay focused.",
+        "description": "Your script scrolls on its own at a speed you set, and you can pause it or change that speed at any time.",
         "icon": "scroll"
       },
       {
         "title": "Resizable Window",
-        "description": "Adjust the teleprompter size to fit your screen perfectly.",
+        "description": "Make the floating window wide, square or tall, and drag it wherever it does not cover your face.",
         "icon": "resize"
       },
       {
         "title": "Adjustable Text",
-        "description": "Customize font size and scroll speed for comfortable reading.",
+        "description": "Set the text size and the scroll speed so the script is easy to read from wherever your phone is set up.",
         "icon": "type"
       }
     ],
     "faq": [
       {
         "question": "Does CueCard work with Snapchat Stories?",
-        "answer": "Yes! CueCard floats over the Snapchat app, so you can see your script while recording Stories directly in Snapchat."
+        "answer": "Yes. CueCard floats over the Snapchat app, so you can see your script while recording Stories directly in Snapchat."
       },
       {
         "question": "Can I use it for Spotlight videos?",
-        "answer": "Absolutely! Keep your talking points visible while creating Spotlight content that could go viral."
+        "answer": "Yes. Keep your talking points visible while creating Spotlight content that could go viral."
       },
       {
         "question": "Will my friends see the teleprompter?",
-        "answer": "No! CueCard floats above the Snapchat app on your screen. Your audience only sees your polished content."
+        "answer": "No. CueCard sits on top of the app on your screen, not in front of the lens, so the camera never records it. Your audience see you and nothing else. The one exception is screen recording, which captures your whole screen — close the prompter first if that is how you are recording."
       },
       {
         "question": "Is CueCard free?",
-        "answer": "Yes! CueCard is completely free and open source. It is on the App Store for iOS now, and Android is coming soon."
+        "answer": "Yes. CueCard is completely free and open source. It is free on the App Store for iPhone and iPad now, and the Android app is still being built."
       }
     ],
     "subject": "Snapchat",
@@ -602,41 +599,41 @@
     "features": [
       {
         "title": "Float Over Camera",
-        "description": "Your script stays visible while you record video content for Twitter/X.",
+        "description": "Your script stays on screen while you record in your phone's own camera app.",
         "icon": "layers"
       },
       {
         "title": "Auto-Scroll Teleprompter",
-        "description": "Auto-scroll your script at a comfortable pace so you can stay focused.",
+        "description": "Your script scrolls on its own at a speed you set, and you can pause it or change that speed at any time.",
         "icon": "scroll"
       },
       {
         "title": "Resizable Window",
-        "description": "Adjust the teleprompter size to fit your screen perfectly.",
+        "description": "Make the floating window wide, square or tall, and drag it wherever it does not cover your face.",
         "icon": "resize"
       },
       {
         "title": "Adjustable Text",
-        "description": "Customize font size and scroll speed for comfortable reading.",
+        "description": "Set the text size and the scroll speed so the script is easy to read from wherever your phone is set up.",
         "icon": "type"
       }
     ],
     "faq": [
       {
         "question": "Is CueCard good for video tweets?",
-        "answer": "Yes! CueCard is perfect for recording video content for Twitter/X. Keep your key points visible while sharing your thoughts."
+        "answer": "Yes. CueCard is perfect for recording video content for Twitter/X. Keep your key points visible while sharing your thoughts."
       },
       {
         "question": "Can I use it for Twitter Spaces prep?",
-        "answer": "Absolutely! Float your talking points while preparing for or participating in Twitter Spaces discussions."
+        "answer": "Yes. Float your talking points while preparing for or participating in Twitter Spaces discussions."
       },
       {
         "question": "Will my followers see the teleprompter?",
-        "answer": "No! CueCard floats above your camera app. Your Twitter/X followers only see your polished, confident delivery."
+        "answer": "No. CueCard sits on top of the app on your screen, not in front of the lens, so the camera never records it. Your followers on X see you and nothing else. The one exception is screen recording, which captures your whole screen — close the prompter first if that is how you are recording."
       },
       {
         "question": "Is CueCard free?",
-        "answer": "Yes! CueCard is completely free and open source. It is on the App Store for iOS now, and Android is coming soon."
+        "answer": "Yes. CueCard is completely free and open source. It is free on the App Store for iPhone and iPad now, and the Android app is still being built."
       }
     ],
     "subject": "X",
@@ -687,7 +684,7 @@
       },
       {
         "question": "Will my Twitch viewers see my notes?",
-        "answer": "No. The prompter is a window on your own screen, not something in front of the lens. If you are screen sharing rather than filming, hide it first."
+        "answer": "No. CueCard sits on top of the app on your screen, not in front of the lens, so the camera never records it. Your viewers see you and nothing else. The one exception is screen recording, which captures your whole screen — close the prompter first if that is how you are recording."
       },
       {
         "question": "Is it good for sponsor reads?",

@@ -20,19 +20,19 @@
     "faq": [
       {
         "question": "Can students see my notes during screen sharing?",
-        "answer": "No! CueCard is designed to be invisible during screen sharing on Zoom, Google Meet, and Microsoft Teams. Your lesson plans and notes remain private."
+        "answer": "No. CueCard is designed to be invisible during screen sharing on Zoom, Google Meet, and Microsoft Teams. Your lesson plans and notes remain private."
       },
       {
         "question": "Can I sync notes from my Google Slides presentations?",
-        "answer": "Yes! CueCard can sync speaker notes directly from Google Slides, so you can use your existing lesson presentations."
+        "answer": "Yes. Install the CueCard browser extension alongside the app and the speaker notes for the slide you are on appear in CueCard, changing as you move through the deck. You do not have to use Google Slides, though — paste your notes straight in and CueCard works with any deck, or with none at all."
       },
       {
         "question": "Is CueCard suitable for live online classes?",
-        "answer": "Absolutely! CueCard is perfect for live teaching. Keep your talking points, student names, or lesson flow visible while sharing your screen."
+        "answer": "Yes. CueCard is perfect for live teaching. Keep your talking points, student names, or lesson flow visible while sharing your screen."
       },
       {
         "question": "Is there a mobile version for recording educational videos?",
-        "answer": "Yes! CueCard Mobile lets you record educational content with a floating teleprompter. <a href=\"/mobile/teachers/\">Learn more about CueCard for Teachers on mobile</a>."
+        "answer": "Yes. CueCard for iPhone and iPad lets you record educational content with a floating teleprompter. <a href=\"/mobile/teachers/\">Learn more about CueCard for Teachers on mobile</a>."
       }
     ]
   },
@@ -57,11 +57,11 @@
     "faq": [
       {
         "question": "Will my professor see my notes during the presentation?",
-        "answer": "No! CueCard is invisible during screen sharing. Your professor and classmates only see your presentation, not your speaker notes."
+        "answer": "No. CueCard is invisible during screen sharing. Your professor and classmates only see your presentation, not your speaker notes."
       },
       {
         "question": "Can I use CueCard for thesis or dissertation defense?",
-        "answer": "Yes! CueCard is perfect for high-stakes presentations like thesis defense. Keep your key points and data references handy without anyone noticing."
+        "answer": "Yes. CueCard is perfect for high-stakes presentations like thesis defense. Keep your key points and data references handy without anyone noticing."
       },
       {
         "question": "Does it work with PowerPoint and Google Slides?",
@@ -69,7 +69,7 @@
       },
       {
         "question": "Is CueCard free for students?",
-        "answer": "Yes! CueCard is completely free and open source. Perfect for students on a budget."
+        "answer": "Yes. CueCard is completely free and open source. Perfect for students on a budget."
       }
     ]
   },
@@ -94,19 +94,19 @@
     "faq": [
       {
         "question": "Can prospects see my notes during screen share demos?",
-        "answer": "No! CueCard is invisible during screen sharing. Your prospects only see your product demo, not your pricing notes or objection handlers."
+        "answer": "No. CueCard is invisible during screen sharing. Your prospects only see your product demo, not your pricing notes or objection handlers."
       },
       {
         "question": "Can I keep different notes for different products?",
-        "answer": "Yes! You can quickly paste or type different notes for each demo. Or sync from Google Slides if you use slide decks."
+        "answer": "Yes. You can quickly paste or type different notes for each demo. Or sync from Google Slides if you use slide decks."
       },
       {
         "question": "Does it work during live Zoom demos?",
-        "answer": "Absolutely! CueCard is designed for live calls. Keep your competitive differentiators, pricing tiers, and key features visible while demoing."
+        "answer": "Yes. CueCard is designed for live calls. Keep your competitive differentiators, pricing tiers, and key features visible while demoing."
       },
       {
         "question": "Is there a mobile version for recording sales videos?",
-        "answer": "Yes! CueCard Mobile lets you record product showcase videos with a floating teleprompter. <a href=\"/mobile/sales/\">Learn more about CueCard for Sales on mobile</a>."
+        "answer": "Yes. CueCard for iPhone and iPad lets you record product showcase videos with a floating teleprompter. <a href=\"/mobile/sales/\">Learn more about CueCard for Sales on mobile</a>."
       }
     ]
   },
@@ -131,19 +131,19 @@
     "faq": [
       {
         "question": "Can trainees see my notes during virtual training?",
-        "answer": "No! CueCard is invisible during screen sharing. Trainees only see your training materials, not your speaker notes or timing cues."
+        "answer": "No. CueCard is invisible during screen sharing. Trainees only see your training materials, not your speaker notes or timing cues."
       },
       {
         "question": "Can I include timing reminders in my notes?",
-        "answer": "Yes! Many trainers include timing cues like '[5 min]' or '[Break here]' in their notes. CueCard also has a built-in timer."
+        "answer": "Yes. Many trainers include timing cues like '[5 min]' or '[Break here]' in their notes. CueCard also has a built-in timer."
       },
       {
         "question": "Does it work for multi-hour training sessions?",
-        "answer": "Absolutely! CueCard is perfect for long sessions. Keep your entire curriculum visible and scroll through as you progress."
+        "answer": "Yes. CueCard is perfect for long sessions. Keep your entire curriculum visible and scroll through as you progress."
       },
       {
         "question": "Is CueCard free for corporate use?",
-        "answer": "Yes! CueCard is free and open source under the MIT License, suitable for personal and corporate use."
+        "answer": "Yes. CueCard is free and open source under the MIT License, suitable for personal and corporate use."
       }
     ]
   },
@@ -168,19 +168,19 @@
     "faq": [
       {
         "question": "Can clients see my notes during video coaching sessions?",
-        "answer": "No! CueCard is invisible during screen sharing. Your clients experience your full presence while you have helpful context at hand."
+        "answer": "No. CueCard is invisible during screen sharing. Your clients experience your full presence while you have helpful context at hand."
       },
       {
         "question": "Can I keep client-specific notes for each session?",
-        "answer": "Yes! Quickly paste client background, previous session notes, or coaching frameworks before each call."
+        "answer": "Yes. Quickly paste client background, previous session notes, or coaching frameworks before each call."
       },
       {
         "question": "Does it help with coaching frameworks?",
-        "answer": "Absolutely! Keep your favorite frameworks (GROW, CLEAR, etc.) visible as prompts during sessions."
+        "answer": "Yes. Keep your favorite frameworks (GROW, CLEAR, etc.) visible as prompts during sessions."
       },
       {
         "question": "Is there a mobile version for recording coaching content?",
-        "answer": "Yes! CueCard Mobile lets you record motivational videos with a floating teleprompter. <a href=\"/mobile/coaches/\">Learn more about CueCard for Coaches on mobile</a>."
+        "answer": "Yes. CueCard for iPhone and iPad lets you record motivational videos with a floating teleprompter. <a href=\"/mobile/coaches/\">Learn more about CueCard for Coaches on mobile</a>."
       }
     ]
   },
@@ -205,7 +205,7 @@
     "faq": [
       {
         "question": "Can board members see my notes during presentations?",
-        "answer": "No! CueCard is invisible during screen sharing. Your board sees your slides and data, not your talking points or sensitive notes."
+        "answer": "No. CueCard is invisible during screen sharing. Your board sees your slides and data, not your talking points or sensitive notes."
       },
       {
         "question": "Is it secure for confidential information?",
@@ -213,11 +213,11 @@
       },
       {
         "question": "Can I use it for investor presentations?",
-        "answer": "Absolutely! Keep your key metrics, funding details, and Q&A prep notes visible during high-stakes investor meetings."
+        "answer": "Yes. Keep your key metrics, funding details, and Q&A prep notes visible during high-stakes investor meetings."
       },
       {
         "question": "Is CueCard free?",
-        "answer": "Yes! CueCard is completely free and open source under the MIT License."
+        "answer": "Yes. CueCard is completely free and open source under the MIT License."
       }
     ]
   },
@@ -242,19 +242,19 @@
     "faq": [
       {
         "question": "Can clients see my notes during virtual presentations?",
-        "answer": "No! CueCard is invisible during screen sharing. Clients see your polished deliverables, not your speaker notes."
+        "answer": "No. CueCard is invisible during screen sharing. Clients see your polished deliverables, not your speaker notes."
       },
       {
         "question": "Can I sync notes from my consulting slide deck?",
-        "answer": "Yes! If you use Google Slides, CueCard can sync your speaker notes automatically. Otherwise, paste notes for any presentation."
+        "answer": "Yes. If you use Google Slides, CueCard can sync your speaker notes automatically. Otherwise, paste notes for any presentation."
       },
       {
         "question": "Does it help with complex data presentations?",
-        "answer": "Absolutely! Keep key data points, methodology notes, and talking points visible while presenting complex analyses."
+        "answer": "Yes. Keep key data points, methodology notes, and talking points visible while presenting complex analyses."
       },
       {
         "question": "Is CueCard free for consulting firms?",
-        "answer": "Yes! CueCard is free and open source under the MIT License, suitable for individual consultants and firms alike."
+        "answer": "Yes. CueCard is free and open source under the MIT License, suitable for individual consultants and firms alike."
       }
     ]
   },
@@ -279,7 +279,7 @@
     "faq": [
       {
         "question": "Can opposing counsel see my notes during virtual hearings?",
-        "answer": "No! CueCard is invisible during screen sharing. Only you can see your case notes, citations, and arguments."
+        "answer": "No. CueCard is invisible during screen sharing. Only you can see your case notes, citations, and arguments."
       },
       {
         "question": "Is it secure for confidential case information?",
@@ -287,11 +287,11 @@
       },
       {
         "question": "Can I use it during depositions?",
-        "answer": "Yes! Keep your questions, case facts, and key points visible during virtual depositions without anyone noticing."
+        "answer": "Yes. Keep your questions, case facts, and key points visible during virtual depositions without anyone noticing."
       },
       {
         "question": "Is CueCard free for law firms?",
-        "answer": "Yes! CueCard is completely free and open source under the MIT License."
+        "answer": "Yes. CueCard is completely free and open source under the MIT License."
       }
     ]
   },
@@ -316,19 +316,19 @@
     "faq": [
       {
         "question": "Can attendees see my notes during the webinar?",
-        "answer": "No! CueCard is invisible during screen sharing. Your attendees see your presentation, not your speaker notes or timing cues."
+        "answer": "No. CueCard is invisible during screen sharing. Your attendees see your presentation, not your speaker notes or timing cues."
       },
       {
         "question": "Can I include timing cues in my script?",
-        "answer": "Yes! Include timing markers like '[Pause for poll]' or '[15 min mark]' in your notes. CueCard also has a built-in timer."
+        "answer": "Yes. Include timing markers like '[Pause for poll]' or '[15 min mark]' in your notes. CueCard also has a built-in timer."
       },
       {
         "question": "Does it work with webinar platforms like Zoom Webinars?",
-        "answer": "Absolutely! CueCard works with Zoom Webinars, GoToWebinar, Webex Events, and any platform that uses screen sharing."
+        "answer": "Yes. CueCard works with Zoom Webinars, GoToWebinar, Webex Events, and any platform that uses screen sharing."
       },
       {
         "question": "Is CueCard free?",
-        "answer": "Yes! CueCard is completely free and open source."
+        "answer": "Yes. CueCard is completely free and open source."
       }
     ]
   },
@@ -353,19 +353,19 @@
     "faq": [
       {
         "question": "Can students see my notes in the recorded video?",
-        "answer": "No! CueCard is invisible in screen recordings. Your students see your polished lesson, not your speaker notes."
+        "answer": "No. CueCard is invisible in screen recordings. Your students see your polished lesson, not your speaker notes."
       },
       {
         "question": "Does it work for screencast recordings?",
-        "answer": "Yes! CueCard is perfect for recording screencasts. Keep your talking points visible while demonstrating software or concepts."
+        "answer": "Yes. CueCard is perfect for recording screencasts. Keep your talking points visible while demonstrating software or concepts."
       },
       {
         "question": "Can I use it for live cohort-based courses?",
-        "answer": "Absolutely! CueCard works great for live sessions on Zoom or other platforms, keeping your curriculum visible during teaching."
+        "answer": "Yes. CueCard works great for live sessions on Zoom or other platforms, keeping your curriculum visible during teaching."
       },
       {
         "question": "Is there a mobile version for recording course content?",
-        "answer": "Yes! CueCard Mobile lets you record educational videos on your phone with a floating teleprompter. <a href=\"/mobile/course-creators/\">Learn more about CueCard for Course Creators on mobile</a>."
+        "answer": "Yes. CueCard for iPhone and iPad lets you record educational videos on your phone with a floating teleprompter. <a href=\"/mobile/course-creators/\">Learn more about CueCard for Course Creators on mobile</a>."
       }
     ]
   },
@@ -390,19 +390,19 @@
     "faq": [
       {
         "question": "Can buyers see my notes during virtual tours?",
-        "answer": "No! CueCard is invisible during screen sharing. Buyers see the property, not your notes about square footage, features, or pricing."
+        "answer": "No. CueCard is invisible during screen sharing. Buyers see the property, not your notes about square footage, features, or pricing."
       },
       {
         "question": "Can I keep different notes for different properties?",
-        "answer": "Yes! Quickly paste property details, comparable sales, or neighborhood info before each showing."
+        "answer": "Yes. Quickly paste property details, comparable sales, or neighborhood info before each showing."
       },
       {
         "question": "Does it work for listing presentations?",
-        "answer": "Absolutely! Keep your market analysis, pricing strategy, and marketing plan visible while presenting to sellers."
+        "answer": "Yes. Keep your market analysis, pricing strategy, and marketing plan visible while presenting to sellers."
       },
       {
         "question": "Is there a mobile version for recording property walkthrough videos?",
-        "answer": "Yes! CueCard Mobile lets you record property walkthrough videos with a floating teleprompter. <a href=\"/mobile/realtors/\">Learn more about CueCard for Realtors on mobile</a>."
+        "answer": "Yes. CueCard for iPhone and iPad lets you record property walkthrough videos with a floating teleprompter. <a href=\"/mobile/realtors/\">Learn more about CueCard for Realtors on mobile</a>."
       }
     ]
   },
@@ -427,19 +427,19 @@
     "faq": [
       {
         "question": "Can clients see my notes during virtual fitness classes?",
-        "answer": "No! CueCard is invisible during screen sharing. Your clients see you leading the workout, not your exercise sequence or timing notes."
+        "answer": "No. CueCard is invisible during screen sharing. Your clients see you leading the workout, not your exercise sequence or timing notes."
       },
       {
         "question": "Can I include timing for each exercise?",
-        "answer": "Yes! Include timing like '[30 sec squats]' or '[Rest 15 sec]' in your notes. CueCard also has a built-in timer."
+        "answer": "Yes. Include timing like '[30 sec squats]' or '[Rest 15 sec]' in your notes. CueCard also has a built-in timer."
       },
       {
         "question": "Does it work when I'm showing myself on camera?",
-        "answer": "Absolutely! Your notes stay invisible whether you're screen sharing or just on camera. Perfect for demonstrating exercises."
+        "answer": "Yes. Your notes stay invisible whether you're screen sharing or just on camera. Perfect for demonstrating exercises."
       },
       {
         "question": "Is there a mobile version for recording workout videos?",
-        "answer": "Yes! CueCard Mobile lets you record fitness content with a floating teleprompter. <a href=\"/mobile/fitness-instructors/\">Learn more about CueCard for Fitness Instructors on mobile</a>."
+        "answer": "Yes. CueCard for iPhone and iPad lets you record fitness content with a floating teleprompter. <a href=\"/mobile/fitness-instructors/\">Learn more about CueCard for Fitness Instructors on mobile</a>."
       }
     ]
   }

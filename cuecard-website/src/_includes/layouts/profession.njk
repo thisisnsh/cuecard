@@ -22,12 +22,12 @@
     "publisher": { "@id": "https://cuecard.dev/#org" },
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD", "availability": "https://schema.org/InStock" },
     "featureList": [
-        "Invisible speaker notes during screen sharing",
-        "Sync notes from Google Slides",
-        "Works with Zoom, Google Meet, Microsoft Teams",
-        "Built-in timer and note tags",
-        "Undetectable teleprompter",
-        "Free and open source"
+        "Speaker notes hidden from your screen share",
+        "Works with any deck, or with no deck at all",
+        "[time 05:00] tags that count a section down on screen",
+        "[cue ...] reminders shown in their own colour",
+        "Google Slides notes that follow your slides, with the browser extension",
+        "Keyboard shortcuts for the window, the position and the timer"
     ]
 }
 </script>
@@ -58,33 +58,33 @@
 {% else %}
 {% set navCtaHref = "/" %}
 {% endif %}
-{% set navCtaText = "Filming on your phone instead? CueCard Teleprompter floats over every app on iPhone and iPad" %}
+{% set navCtaText = "Filming a video on your phone instead? CueCard Teleprompter floats over every app on iPhone and iPad" %}
 {% set navCtaTextMobile = "Also on iPhone and iPad" %}
 {% include "partials/nav.njk" %}
 
 <main>
     {% set heroTitle = profession.heroSubtitle %}
     {% set heroLong = true %}
-    {% set heroBody = "Speaker notes for " + profession.targetAudience + ", on macOS and Windows. They sit on your screen while you present and stay out of the screen share." %}
-    {% set heroPrimaryHref = "#download" %}
-    {% set heroPrimaryIcon = "download" %}
-    {% set heroPrimaryText = "Download CueCard" %}
-    {% set heroNote = "Free forever · macOS 13+ and Windows 10+" %}
-    {% set heroSecondaryText = "Watch the demo" %}
-    {% set heroSecondaryHref = "#demo" %}
-    {% set heroSecondaryIcon = "play" %}
+    {% set heroBody = "Speaker notes for " + profession.targetAudience + ", on Mac and Windows. Your notes stay on your screen while you present, and out of the screen everyone else is looking at." %}
+    {% set heroButtons = [
+        { text: "Download for Mac", href: "#download", icon: "apple", style: "primary", os: "mac" },
+        { text: "Download for Windows", href: "#download", icon: "windows", style: "primary", os: "windows" },
+        { text: "Watch the demo", href: "#demo", icon: "play", style: "ghost" }
+    ] %}
+    {% set heroNote = "Free · macOS 13+ and Windows 10+" %}
     {% set heroStrip = "meeting" %}
     {% set faqLink = "#faq" %}
     {% set heroDeck = true %}
     {% include "partials/hero.njk" %}
 
-    {% set watchHeading = "See it on a real call" %}
-    {% set demoIds = ["desktop", "phone"] %}
+    {% set watchHeading = "A minute of it, on a shared screen" %}
+    {% set watchNote = "A short film of the notes staying off the screen everyone else can see. It opens on YouTube." %}
+    {% set demoIds = ["desktop"] %}
     {% set watchSolid = true %}
     {% include "partials/watch.njk" %}
 
     {% if profession.useCases %}
-    <section aria-labelledby="uses-h">
+    <section class="uses" aria-labelledby="uses-h">
         <div class="wrap">
             <p class="micro">{{ icon("flag", 13) }}Where it earns its place</p>
             <h2 class="section-h" id="uses-h">What {{ profession.name | lower }} reach for it in</h2>
@@ -94,9 +94,9 @@
                 {% endfor %}
             </ul>
             {% if profession.mobileCounterpart %}
-            <p class="strip-note">
-                Filming rather than presenting? There is a
-                <a href="/mobile/{{ profession.mobileCounterpart }}/">floating teleprompter for {{ profession.name | lower }} on your phone</a> too.
+            <p class="shots-foot">
+                Filming a video rather than presenting? There is a
+                <a href="/mobile/{{ profession.mobileCounterpart }}/">floating teleprompter for {{ profession.name | lower }} on your phone</a> as well.
             </p>
             {% endif %}
         </div>
@@ -111,14 +111,17 @@
     {% include "partials/rows.njk" %}
 
     {% set crossMode = "mobile" %}
+    {% set crossSolid = false %}
     {% include "partials/crosspanel.njk" %}
 
     {% set faqItems = roleFaq %}
     {% set faqHeading = "Questions from " + profession.name | lower %}
+    {% set faqSolid = true %}
     {% include "partials/faq.njk" %}
 
     {% set downloadTitle = "Know your lines. Show your slides." %}
-    {% set downloadDesc = "Free on macOS and Windows. No subscription, nothing to cancel." %}
+    {% set downloadDesc = "Free on Mac and Windows. There is no subscription and nothing to cancel." %}
+    {% set downloadSolid = false %}
     {% include "partials/download.njk" %}
 </main>
 

@@ -20,19 +20,19 @@
     "faq": [
       {
         "question": "Does the teleprompter show in my recordings?",
-        "answer": "No! CueCard floats above your camera app. Your viewers only see you, not your script or notes."
+        "answer": "No, not when you film with the camera. CueCard sits on top of your camera app on screen rather than in front of the lens, so your viewers see you and not your script. The one exception is screen recording, which captures your whole screen — close the prompter first if that is how you are recording."
       },
       {
         "question": "Can I use it with Instagram and TikTok?",
-        "answer": "Yes! CueCard floats above any app including Instagram, TikTok, YouTube, and your native camera."
+        "answer": "Yes. CueCard floats above any app including Instagram, TikTok, YouTube, and your native camera."
       },
       {
         "question": "Can I control the scroll speed?",
-        "answer": "Absolutely! Adjust the auto-scroll speed to match your natural reading pace."
+        "answer": "Yes. Adjust the auto-scroll speed to match your natural reading pace."
       },
       {
         "question": "Is CueCard free?",
-        "answer": "Yes! CueCard is completely free and open source. It is on the App Store for iOS now, and Android is coming soon."
+        "answer": "Yes. CueCard is completely free and open source. It is on the App Store for iOS now, and Android is coming soon."
       }
     ]
   },
@@ -57,19 +57,19 @@
     "faq": [
       {
         "question": "Can I see my script while recording vlogs?",
-        "answer": "Yes! CueCard creates a floating teleprompter that stays above your camera app. Your script is always visible while you record."
+        "answer": "Yes. CueCard creates a floating teleprompter that stays above your camera app. Your script is always visible while you record."
       },
       {
         "question": "Will viewers see the teleprompter in my vlogs?",
-        "answer": "No! The floating window is only visible to you. Your viewers see your natural, confident delivery."
+        "answer": "No. CueCard sits on top of your camera app on screen, not in front of the lens, so the camera never records it. Your viewers see you and nothing else. The one exception is screen recording, which captures your whole screen — close the prompter first if that is how you are recording."
       },
       {
         "question": "Is it good for on-the-go vlogging?",
-        "answer": "Absolutely! Perfect for travel vlogs or any situation where you need to remember key points while recording."
+        "answer": "Yes. Perfect for travel vlogs or any situation where you need to remember key points while recording."
       },
       {
         "question": "Can I adjust the text size?",
-        "answer": "Yes! Customize the font size and window size to fit your screen and reading preference."
+        "answer": "Yes. Customize the font size and window size to fit your screen and reading preference."
       }
     ]
   },
@@ -94,19 +94,19 @@
     "faq": [
       {
         "question": "Can I use CueCard for YouTube Shorts?",
-        "answer": "Yes! CueCard is perfect for Shorts. Keep your hook and key points visible while recording quick vertical videos."
+        "answer": "Yes. CueCard is perfect for Shorts. Keep your hook and key points visible while recording quick vertical videos."
       },
       {
         "question": "Does it help with sponsored content?",
-        "answer": "Absolutely! Keep sponsor talking points, required disclosures, and key messages visible while recording ad reads."
+        "answer": "Yes. Keep sponsor talking points, required disclosures, and key messages visible while recording ad reads."
       },
       {
         "question": "Can I read longer scripts for full videos?",
-        "answer": "Yes! Use auto-scroll for longer scripts. CueCard scrolls at your preferred pace so you stay focused on delivery."
+        "answer": "Yes. Use auto-scroll for longer scripts. CueCard scrolls at your preferred pace so you stay focused on delivery."
       },
       {
         "question": "Is CueCard free for YouTubers?",
-        "answer": "Yes! CueCard is completely free. Perfect for creators at any subscriber count."
+        "answer": "Yes. CueCard is completely free. Perfect for creators at any subscriber count."
       }
     ]
   },
@@ -131,19 +131,19 @@
     "faq": [
       {
         "question": "Does CueCard work with the TikTok app?",
-        "answer": "Yes! CueCard floats above the TikTok app, so you can see your script while recording directly in TikTok."
+        "answer": "Yes. CueCard floats above the TikTok app, so you can see your script while recording directly in TikTok."
       },
       {
         "question": "Can it help me nail trending sounds?",
-        "answer": "Absolutely! Keep your lip-sync lyrics or talking points visible so you nail the timing on trending sounds."
+        "answer": "Yes. Keep your lip-sync lyrics or talking points visible so you nail the timing on trending sounds."
       },
       {
         "question": "Is the teleprompter visible in my TikToks?",
-        "answer": "No! CueCard is only visible to you. Your followers see your confident, natural delivery."
+        "answer": "No. CueCard is only visible to you. Your followers see your confident, natural delivery."
       },
       {
         "question": "Can I resize the teleprompter window?",
-        "answer": "Yes! Resize and position the floating window wherever works best for your recording setup."
+        "answer": "Yes. Resize and position the floating window wherever works best for your recording setup."
       }
     ]
   },
@@ -168,19 +168,19 @@
     "faq": [
       {
         "question": "Can I use CueCard for video podcasts?",
-        "answer": "Yes! CueCard is perfect for video podcasts. Keep your episode outline floating while you record on your phone."
+        "answer": "Yes. CueCard is perfect for video podcasts. Keep your episode outline floating while you record on your phone."
       },
       {
         "question": "Does it help during guest interviews?",
-        "answer": "Absolutely! Keep your interview questions and guest background visible so you never lose your place."
+        "answer": "Yes. Keep your interview questions and guest background visible so you never lose your place."
       },
       {
         "question": "Can viewers see my notes in the recording?",
-        "answer": "No! CueCard floats above your camera app. Your audience sees you, not your episode notes."
+        "answer": "No. CueCard sits on top of your camera app on screen, not in front of the lens, so the camera never records it. Your audience see you and nothing else. The one exception is screen recording, which captures your whole screen — close the prompter first if that is how you are recording."
       },
       {
         "question": "Is it good for solo episodes?",
-        "answer": "Yes! Keep your talking points visible so you cover everything without rambling or forgetting key segments."
+        "answer": "Yes. Keep your talking points visible so you cover everything without rambling or forgetting key segments."
       }
     ]
   },
@@ -205,19 +205,19 @@
     "faq": [
       {
         "question": "Does CueCard work with mobile streaming apps?",
-        "answer": "Yes! CueCard floats above any app including Twitch, YouTube Live, TikTok Live, and Instagram Live."
+        "answer": "Yes. CueCard floats above any app including Twitch, YouTube Live, TikTok Live, and Instagram Live."
       },
       {
         "question": "Can viewers see my notes during the stream?",
-        "answer": "No! CueCard is only visible to you. Your viewers see your stream, not your floating notes."
+        "answer": "No. CueCard sits on top of your camera app on screen, not in front of the lens, so the camera never records it. Your viewers see you and nothing else. The one exception is screen recording, which captures your whole screen — close the prompter first if that is how you are recording."
       },
       {
         "question": "Is it useful for IRL streams?",
-        "answer": "Absolutely! Keep location info, talking points, or sponsor reminders visible while streaming on the go."
+        "answer": "Yes. Keep location info, talking points, or sponsor reminders visible while streaming on the go."
       },
       {
         "question": "Can I use it for live Q&A sessions?",
-        "answer": "Yes! Keep prepared answers or topic notes visible so you can engage confidently with your chat."
+        "answer": "Yes. Keep prepared answers or topic notes visible so you can engage confidently with your chat."
       }
     ]
   },
@@ -242,19 +242,19 @@
     "faq": [
       {
         "question": "Can I use CueCard to record lesson videos for students?",
-        "answer": "Yes! CueCard is perfect for recording educational content. Keep your lesson outline floating while you record on your phone."
+        "answer": "Yes. CueCard is perfect for recording educational content. Keep your lesson outline floating while you record on your phone."
       },
       {
         "question": "Will students see the teleprompter in my videos?",
-        "answer": "No! CueCard floats above your camera app. Students only see you teaching, not your notes."
+        "answer": "No. CueCard sits on top of your camera app on screen, not in front of the lens, so the camera never records it. Your students see you and nothing else. The one exception is screen recording, which captures your whole screen — close the prompter first if that is how you are recording."
       },
       {
         "question": "Is there a desktop version for live online classes?",
-        "answer": "Yes! CueCard Desktop lets you keep invisible notes during live Zoom, Meet, or Teams classes. <a href=\"/teachers/\">Learn more about CueCard for Teachers on desktop</a>."
+        "answer": "Yes. CueCard for Mac and Windows lets you keep your notes off the screen during live Zoom, Meet, or Teams classes. <a href=\"/teachers/\">Learn more about CueCard for Teachers on desktop</a>."
       },
       {
         "question": "Is CueCard free for educators?",
-        "answer": "Yes! CueCard is completely free and open source. Perfect for teachers at any level."
+        "answer": "Yes. CueCard is completely free and open source. Perfect for teachers at any level."
       }
     ]
   },
@@ -279,19 +279,19 @@
     "faq": [
       {
         "question": "Can I use CueCard for recording coaching videos?",
-        "answer": "Yes! CueCard is perfect for recording motivational content, tips videos, and client messages on your phone."
+        "answer": "Yes. CueCard is perfect for recording motivational content, tips videos, and client messages on your phone."
       },
       {
         "question": "Will viewers see my notes in the video?",
-        "answer": "No! CueCard floats above your camera app. Your audience sees your authentic delivery, not your notes."
+        "answer": "No. CueCard sits on top of your camera app on screen, not in front of the lens, so the camera never records it. Your audience see you and nothing else. The one exception is screen recording, which captures your whole screen — close the prompter first if that is how you are recording."
       },
       {
         "question": "Is there a desktop version for live coaching sessions?",
-        "answer": "Yes! CueCard Desktop lets you keep invisible notes during Zoom coaching sessions. <a href=\"/coaches/\">Learn more about CueCard for Coaches on desktop</a>."
+        "answer": "Yes. CueCard for Mac and Windows lets you keep your notes off the screen during Zoom coaching sessions. <a href=\"/coaches/\">Learn more about CueCard for Coaches on desktop</a>."
       },
       {
         "question": "Can I use it for Instagram and LinkedIn content?",
-        "answer": "Absolutely! Record professional coaching content directly in any app with your script floating above."
+        "answer": "Yes. Record professional coaching content directly in any app with your script floating above."
       }
     ]
   },
@@ -316,19 +316,19 @@
     "faq": [
       {
         "question": "Can I record course content on my phone with CueCard?",
-        "answer": "Yes! CueCard is perfect for recording mobile course content with a floating teleprompter."
+        "answer": "Yes. CueCard is perfect for recording mobile course content with a floating teleprompter."
       },
       {
         "question": "Will students see the teleprompter in course videos?",
-        "answer": "No! CueCard floats above your camera. Students see your polished lesson, not your notes."
+        "answer": "No. CueCard sits on top of your camera app on screen, not in front of the lens, so the camera never records it. Your students see you and nothing else. The one exception is screen recording, which captures your whole screen — close the prompter first if that is how you are recording."
       },
       {
         "question": "Is there a desktop version for screencast recordings?",
-        "answer": "Yes! CueCard Desktop lets you keep invisible notes during screen recordings. <a href=\"/course-creators/\">Learn more about CueCard for Course Creators on desktop</a>."
+        "answer": "Yes. CueCard for Mac and Windows lets you keep your notes off the screen during screen recordings. <a href=\"/course-creators/\">Learn more about CueCard for Course Creators on desktop</a>."
       },
       {
         "question": "Is CueCard free for course creators?",
-        "answer": "Yes! CueCard is completely free and open source."
+        "answer": "Yes. CueCard is completely free and open source."
       }
     ]
   },
@@ -353,19 +353,19 @@
     "faq": [
       {
         "question": "Can I use CueCard while filming property walkthroughs?",
-        "answer": "Yes! CueCard floats your property details above the camera so you never forget square footage, features, or pricing."
+        "answer": "Yes. CueCard floats your property details above the camera so you never forget square footage, features, or pricing."
       },
       {
         "question": "Will buyers see my notes in the video?",
-        "answer": "No! CueCard floats above your camera app. Buyers see the property tour, not your notes."
+        "answer": "No. CueCard sits on top of your camera app on screen, not in front of the lens, so the camera never records it. Your buyers see you and nothing else. The one exception is screen recording, which captures your whole screen — close the prompter first if that is how you are recording."
       },
       {
         "question": "Is there a desktop version for virtual showings?",
-        "answer": "Yes! CueCard Desktop lets you keep invisible notes during Zoom property tours. <a href=\"/realtors/\">Learn more about CueCard for Realtors on desktop</a>."
+        "answer": "Yes. CueCard for Mac and Windows lets you keep your notes off the screen during Zoom property tours. <a href=\"/realtors/\">Learn more about CueCard for Realtors on desktop</a>."
       },
       {
         "question": "Can I use it for listing videos on social media?",
-        "answer": "Absolutely! Record professional property videos directly for Instagram, Facebook, or YouTube."
+        "answer": "Yes. Record professional property videos directly for Instagram, Facebook, or YouTube."
       }
     ]
   },
@@ -390,19 +390,19 @@
     "faq": [
       {
         "question": "Can I see my workout sequence while filming?",
-        "answer": "Yes! CueCard floats your exercise list, reps, and sets above your camera so you never miss a beat."
+        "answer": "Yes. CueCard floats your exercise list, reps, and sets above your camera so you never miss a beat."
       },
       {
         "question": "Will followers see the teleprompter in my videos?",
-        "answer": "No! CueCard floats above your camera app. Your followers see you working out, not your notes."
+        "answer": "No. CueCard sits on top of your camera app on screen, not in front of the lens, so the camera never records it. Your followers see you and nothing else. The one exception is screen recording, which captures your whole screen — close the prompter first if that is how you are recording."
       },
       {
         "question": "Is there a desktop version for live virtual classes?",
-        "answer": "Yes! CueCard Desktop lets you keep invisible notes during Zoom fitness classes. <a href=\"/fitness-instructors/\">Learn more about CueCard for Fitness Instructors on desktop</a>."
+        "answer": "Yes. CueCard for Mac and Windows lets you keep your notes off the screen during Zoom fitness classes. <a href=\"/fitness-instructors/\">Learn more about CueCard for Fitness Instructors on desktop</a>."
       },
       {
         "question": "Can I include timing for each exercise?",
-        "answer": "Yes! Include timing like '[30 sec squats]' in your notes. CueCard also auto-scrolls at your preferred pace."
+        "answer": "Yes. Include timing like '[30 sec squats]' in your notes. CueCard also auto-scrolls at your preferred pace."
       }
     ]
   },
@@ -427,19 +427,19 @@
     "faq": [
       {
         "question": "Can I use CueCard for recording product videos?",
-        "answer": "Yes! CueCard is perfect for recording product showcases, feature highlights, and personalized sales videos."
+        "answer": "Yes. CueCard is perfect for recording product showcases, feature highlights, and personalized sales videos."
       },
       {
         "question": "Will prospects see my notes in the video?",
-        "answer": "No! CueCard floats above your camera app. Prospects see your professional presentation, not your talking points."
+        "answer": "No. CueCard sits on top of your camera app on screen, not in front of the lens, so the camera never records it. Your prospects see you and nothing else. The one exception is screen recording, which captures your whole screen — close the prompter first if that is how you are recording."
       },
       {
         "question": "Is there a desktop version for live demo calls?",
-        "answer": "Yes! CueCard Desktop lets you keep invisible notes during Zoom product demos. <a href=\"/sales/\">Learn more about CueCard for Sales on desktop</a>."
+        "answer": "Yes. CueCard for Mac and Windows lets you keep your notes off the screen during Zoom product demos. <a href=\"/sales/\">Learn more about CueCard for Sales on desktop</a>."
       },
       {
         "question": "Can I use it for LinkedIn video content?",
-        "answer": "Absolutely! Record professional sales content for LinkedIn, email outreach, or any social platform."
+        "answer": "Yes. Record professional sales content for LinkedIn, email outreach, or any social platform."
       }
     ]
   }

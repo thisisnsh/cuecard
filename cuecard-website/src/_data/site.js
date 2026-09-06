@@ -54,9 +54,9 @@ const site = {
       width: 2200,
       height: 1192,
       label: "On iPhone",
-      alt: "CueCard Teleprompter on iPhone: the script scrolling with a countdown timer, the floating prompter reading over the home screen, and the settings for scroll speed and cue colour.",
+      alt: "CueCard Teleprompter on iPhone: the script scrolling with cues in pink and a timer running, the floating prompter window sitting on top of the home screen, and the settings for start delay, scroll speed, cue colour and text size.",
       caption:
-        "The prompter, the floating window over every other app, and the settings behind them.",
+        "The script scrolling, the floating window sitting on top of another app, and the settings behind both.",
     },
     {
       id: "ipad",
@@ -65,15 +65,18 @@ const site = {
       width: 2200,
       height: 978,
       label: "On iPad",
-      alt: "CueCard Teleprompter on iPad: a full-width script with play and restart controls, and the floating prompter window sitting over the home screen.",
+      alt: "CueCard Teleprompter on iPad: the script filling the screen with play and restart controls, and the floating prompter window sitting on top of the home screen.",
       caption:
-        "Same app, bigger glass. The iPad reads as a proper studio prompter at arm's length.",
+        "The same app on a bigger screen, easy to read from a few feet away.",
     },
   ],
 
   // ── The demos ───────────────────────────────────────────────────────────
   // Nothing is embedded anywhere on this site. Every demo is a link out to
   // YouTube, so no third-party player script loads on any page.
+  //
+  // A card carries a title and nothing else. It used to carry a second line
+  // under the title as well, which only ever said the title again.
   demos: [
     {
       id: "phone",
@@ -81,7 +84,6 @@ const site = {
       icon: "phone",
       url: "https://youtube.com/shorts/zSSABBm7K1Q",
       title: "The floating teleprompter on iPhone",
-      note: "Recording a Reel with the script on the glass.",
       shape: "portrait",
       primary: true,
     },
@@ -91,7 +93,6 @@ const site = {
       icon: "tablet",
       url: "https://youtube.com/shorts/cHfZ-XLuz1E",
       title: "CueCard Teleprompter on iPad",
-      note: "A big-screen prompter that still floats over everything.",
       shape: "portrait",
     },
     {
@@ -100,7 +101,6 @@ const site = {
       icon: "monitor",
       url: "https://youtu.be/lNKghjFrdTE",
       title: "Speaker notes only you can see",
-      note: "Notes staying out of a shared screen on Zoom, Meet and Teams.",
       shape: "landscape",
     },
   ],
@@ -117,7 +117,7 @@ const site = {
       id: "phone",
       label: "On your phone and iPad",
       icon: "phone",
-      note: "Floats on top of whatever you are filming in.",
+      note: "Your script floats on top of whatever app you record in.",
       items: [
         {
           name: "iPhone and iPad",
@@ -143,7 +143,7 @@ const site = {
       id: "computer",
       label: "On your computer",
       icon: "monitor",
-      note: "Speaker notes that stay out of the screen share.",
+      note: "Speaker notes that your screen share cannot see.",
       items: [
         {
           name: "macOS",
@@ -172,7 +172,7 @@ const site = {
   // reads as a fourth platform, which it is not.
   extension: {
     page: "/google-slides/",
-    note: "Sends your Google Slides speaker notes to the desktop app as you advance.",
+    note: "Sends your Google Slides speaker notes to the desktop app as you change slides.",
     items: [
       {
         name: "Chrome",

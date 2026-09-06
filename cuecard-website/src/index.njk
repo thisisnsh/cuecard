@@ -2,12 +2,12 @@
 layout: layouts/base.njk
 permalink: /
 title: "CueCard Teleprompter - Free Teleprompter App for iPhone"
-description: "A free teleprompter app for iPhone and iPad. Your script floats above the camera, Instagram or TikTok and auto-scrolls while you record. Free on Mac and PC too."
+description: "A free teleprompter app for iPhone and iPad. Your script sits on top of the camera, Instagram or TikTok and scrolls while you record. There is a free Mac and Windows app too."
 keywords: "cuecard teleprompter, teleprompter app, free teleprompter, teleprompter iphone, ipad teleprompter, teleprompter app for iphone, floating teleprompter, open source teleprompter, tiktok teleprompter, instagram reels teleprompter, snapchat teleprompter, youtube teleprompter, auto scroll teleprompter, script reader app, on camera notes, teleprompter android, teleprompter mac, teleprompter windows, zoom speaker notes, google meet notes, microsoft teams notes, invisible speaker notes"
 canonical: "https://cuecard.dev/"
 pageName: "CueCard Teleprompter - the teleprompter that floats over every app"
 ogTitle: "CueCard - the free teleprompter that floats over every app"
-ogDescription: "Free on iPhone and iPad. Your script floats above Instagram, TikTok, Snapchat or the camera while you record — and stays out of the screen share on Zoom and Meet."
+ogDescription: "Free on iPhone and iPad. Your script floats above Instagram, TikTok, Snapchat or the camera while you record. On Mac and Windows, your speaker notes stay out of your screen share."
 ogLocale: "en_US"
 ---
 {% block jsonld %}
@@ -21,7 +21,7 @@ ogLocale: "en_US"
     "applicationCategory": "UtilitiesApplication",
     "applicationSubCategory": "Teleprompter",
     "operatingSystem": "iOS 17.0 or later",
-    "description": "A free teleprompter app for iPhone and iPad that floats above every other app. Your script auto-scrolls, word by word, on top of the camera, Instagram, TikTok, Snapchat, a live stream or a video call, so you never switch away from what you are recording in.",
+    "description": "A free teleprompter app for iPhone and iPad that floats above every other app. Your script scrolls on its own on top of the camera, Instagram, TikTok, Snapchat, a live stream or a video call, so you never have to switch apps in the middle of a take.",
     "url": "https://cuecard.dev/",
     "downloadUrl": "https://apps.apple.com/app/cuecard-teleprompter/id6757321325",
     "installUrl": "https://apps.apple.com/app/cuecard-teleprompter/id6757321325",
@@ -36,12 +36,12 @@ ogLocale: "en_US"
     "publisher": { "@id": "https://cuecard.dev/#org" },
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD", "availability": "https://schema.org/InStock" },
     "featureList": [
-        "Floating teleprompter that stays above every other app",
-        "Auto-scroll set in lines per minute, with word-by-word highlighting",
-        "[cue ...] delivery cues shown in their own colour and never spoken",
-        "Overlay sized to 16:9, 4:3 or 1:1 with its own text size",
-        "Countdown before the script starts and a timer while it runs",
-        "Saved scripts, light and dark themes"
+        "Floating teleprompter that stays on top of every other app",
+        "Scrolls on its own at a speed you set, and pauses whenever you need it to",
+        "[cue ...] reminders shown in a colour you pick and never meant to be read out",
+        "A floating window you can shape, move and set the text size of",
+        "A countdown before the script starts and a timer while you talk",
+        "Saved scripts, and a light or dark appearance"
     ]
 }
 </script>
@@ -51,11 +51,11 @@ ogLocale: "en_US"
     "@type": "SoftwareApplication",
     "@id": "https://cuecard.dev/#desktopapp",
     "name": "CueCard for Mac and Windows",
-    "alternateName": "CueCard Desktop",
+    "alternateName": "CueCard Teleprompter for Mac and Windows",
     "applicationCategory": "BusinessApplication",
     "applicationSubCategory": "Presentation Teleprompter",
     "operatingSystem": "macOS, Windows",
-    "description": "CueCard keeps speaker notes invisible during Zoom, Google Meet and Microsoft Teams screen sharing. Sync them live from Google Slides or paste a script in for any meeting.",
+    "description": "CueCard keeps your speaker notes hidden from Zoom, Google Meet and Microsoft Teams screen sharing. Paste your notes in to use it with any deck, or add the browser extension so notes from Google Slides follow your slides.",
     "url": "https://cuecard.dev/desktop/",
     "downloadUrl": "https://github.com/thisisnsh/cuecard/releases",
     "installUrl": "https://github.com/thisisnsh/cuecard/releases",
@@ -66,12 +66,12 @@ ogLocale: "en_US"
     "publisher": { "@id": "https://cuecard.dev/#org" },
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD", "availability": "https://schema.org/InStock" },
     "featureList": [
-        "Invisible speaker notes during screen sharing",
-        "Sync notes from Google Slides",
-        "Works with Zoom, Google Meet, Microsoft Teams",
-        "Built-in timer and note tags",
-        "Undetectable teleprompter",
-        "Free and open source"
+        "Speaker notes hidden from your screen share",
+        "Works with any deck, or with no deck at all",
+        "[time 05:00] tags that count a section down on screen",
+        "[cue ...] reminders shown in their own colour",
+        "Google Slides notes that follow your slides, with the browser extension",
+        "Keyboard shortcuts for the window, the position and the timer"
     ]
 }
 </script>
@@ -119,33 +119,43 @@ ogLocale: "en_US"
 
 {% block body %}
 {% from "partials/icons.njk" import icon %}
-{# No cross-promotion strip here: the phone is what this page is for, and the
-   desktop app has a card of its own further down. #}
+{# The phone is what this page is for, but a reader who came looking for a
+   computer app should not have to work that out for themselves. The strip
+   under the header says where the other app is, and so does the line under
+   the screenshots and the card further down. #}
+{% set navCtaText = "Presenting from a Mac or PC instead? CueCard keeps your speaker notes out of your screen share" %}
+{% set navCtaTextMobile = "Also for Mac and Windows" %}
+{% set navCtaHref = "/desktop/" %}
 {% include "partials/nav.njk" %}
 
 <main>
     {% set heroTitle = 'The teleprompter that floats over <em>every app</em> you film in.' %}
-    {% set heroBody = 'Write your script. It sits on the glass above <strong>Instagram</strong>, <strong>TikTok</strong>, <strong>Snapchat</strong> or your camera and scrolls while you talk — so you look up, not down, and the take comes out whole.' %}
-    {% set heroPrimaryHref = site.ios %}
-    {% set heroPrimaryExternal = true %}
-    {% set heroPrimaryIcon = "apple" %}
-    {% set heroPrimaryText = "Get it free on iPhone & iPad" %}
-    {% set heroSecondaryText = "Watch the demo" %}
-    {% set heroSecondaryHref = "#demo" %}
-    {% set heroSecondaryIcon = "play" %}
-    {% set heroNote = "Free forever · iOS 17+ · Also on Mac and Windows" %}
+    {% set heroBody = 'Write your script. CueCard floats above <strong>Instagram</strong>, <strong>TikTok</strong>, <strong>Snapchat</strong>, or your camera and scrolls as you speak — so you can look up, stay on script, and nail the take.' %}
+    {% set heroButtons = [
+        {
+            text: "Get it free on iPhone & iPad",
+            href: site.ios,
+            icon: "apple",
+            style: "primary",
+            external: true
+        },
+        { text: "Get it for Mac & Windows", href: "/desktop/", icon: "monitor", style: "ghost" },
+        { text: "Watch the demo", href: "#demo", icon: "play", style: "ghost" }
+    ] %}
+    {% set heroNote = 'Free · iOS 17+ · macOS 13+ and Windows 10+ · <a href="/mobile/android/">Android coming soon</a>' %}
     {% set heroStrip = "social" %}
     {% set stripMore = "and every other app you record in" %}
     {% set faqLink = "#faq" %}
     {% set heroDeck = true %}
     {% include "partials/hero.njk" %}
 
-    {% set shotsHeading = 'The prompter, the floating window, and the dials behind them.' %}
-    {% set shotsNote = "Read from the whole display, or shrink the script into a window that stays above whatever you open." %}
+    {% set shotsHeading = 'This is the whole app.' %}
+    {% set shotsNote = "Read your script from the full screen, or shrink it into a small window that stays on top of whatever else you open." %}
+    {% set shotsFoot = 'Looking for the computer app instead? <a href="/desktop/">CueCard for Mac and Windows</a> keeps your speaker notes on your screen and out of your screen share.' %}
     {% include "partials/shots.njk" %}
 
     {% set watchHeading = "A minute of it, on each screen" %}
-    {% set watchNote = "Nothing is embedded here — each one opens on YouTube." %}
+    {% set watchNote = "One short film for the iPhone app, one for the same app on iPad, and one for the Mac and Windows app. Each opens on YouTube." %}
     {% include "partials/watch.njk" %}
 
     {% set featureRows = features.mobile %}
@@ -155,15 +165,7 @@ ogLocale: "en_US"
     {% set rowsSolid = true %}
     {% include "partials/rows.njk" %}
 
-    {% set appRows = site.socialApps %}
-    {% set appBase = "/mobile/" %}
-    {% set stripId = "record" %}
-    {% set stripMicro = "Record anywhere" %}
-    {% set stripHeading = "It floats over the app you already film in" %}
-    {% set stripNote = "CueCard never replaces your camera app. It sits on top of whatever you open." %}
-    {% include "partials/applist.njk" %}
-
-    {% set crossSolid = true %}
+    {% set crossSolid = false %}
     {% include "partials/crosspanel.njk" %}
 
     {% set gridRoles = site.mobileRoles %}
@@ -172,15 +174,17 @@ ogLocale: "en_US"
     {% set gridMicro = "Made for" %}
     {% set gridHeading = "Whatever it is you have to say on camera" %}
     {% set gridSuffix = "teleprompter app" %}
+    {% set gridSolid = true %}
     {% include "partials/rolegrid.njk" %}
 
     {% set faqItems = faq.home %}
     {% set faqHeading = "Asked before installing" %}
+    {% set faqSolid = false %}
     {% include "partials/faq.njk" %}
 
-    {% set getSolid = false %}
+    {% set getSolid = true %}
     {% set getHeading = "Stop memorising. Start talking." %}
-    {% set getBody = "Free on every screen you speak from. No subscription, nothing to cancel." %}
+    {% set getBody = "Free on every screen you speak from. There is no subscription and nothing to cancel." %}
     {% include "partials/getcuecard.njk" %}
 </main>
 
