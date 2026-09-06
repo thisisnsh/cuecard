@@ -569,13 +569,16 @@ fun NotesEditorView(
             .scriptEdgeFade(isDark = isDark, top = CUE_EDITOR_EDGE_FADE, bottom = EDITOR_BOTTOM_FADE)
     ) {
         if (text.isEmpty()) {
+            // Set on the editor's own font and insets, so the first line sits
+            // exactly where the caret waiting in front of it does.
             Text(
                 text = "Add your script here...\n\nTap Add Cue below the script — or just type [ — to drop in a delivery reminder like \"Welcome everyone [cue smile and pause]\"",
-                fontSize = 16.sp,
+                fontSize = CUE_EDITOR_FONT_SIZE,
+                fontWeight = FontWeight.Medium,
                 color = AppColors.textSecondary(isDark).copy(alpha = 0.6f),
                 modifier = Modifier
                     .padding(horizontal = 20.dp)
-                    .padding(top = CUE_EDITOR_EDGE_FADE + 8.dp)
+                    .padding(top = CUE_EDITOR_EDGE_FADE)
             )
         }
 

@@ -55,7 +55,7 @@ import com.thisisnsh.cuecard.android.modifiers.Capsule
 import com.thisisnsh.cuecard.android.modifiers.glassed
 
 /** Size of the text in the editor. */
-private val EDITOR_FONT_SIZE = 16.sp
+val CUE_EDITOR_FONT_SIZE = 16.sp
 
 /**
  * How far the script fades into the background at the top and bottom edges.
@@ -158,7 +158,7 @@ fun CueTextEditor(
     }
 
     val baseStyle = TextStyle(
-        fontSize = EDITOR_FONT_SIZE,
+        fontSize = CUE_EDITOR_FONT_SIZE,
         fontWeight = FontWeight.Medium,
         color = AppColors.textPrimary(isDark)
     )
