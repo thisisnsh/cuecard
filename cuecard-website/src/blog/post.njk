@@ -7,11 +7,11 @@ permalink: "blog/{{ blog.slug }}/index.html"
 layout: layouts/base.njk
 eleventyComputed:
   title: "{{ (blog.seoTitle or blog.title) | safe }} | CueCard"
-  description: "{{ blog.content | metaExcerpt }}"
+  description: "{{ blog.content | metaExcerpt | safe }}"
   keywords: "cuecard blog, speaker notes, teleprompter, presentation tips"
   canonical: "https://cuecard.dev/blog/{{ blog.slug }}/"
   ogTitle: "{{ (blog.seoTitle or blog.title) | safe }}"
-  ogDescription: "{{ blog.content | metaExcerpt }}"
+  ogDescription: "{{ blog.content | metaExcerpt | safe }}"
   ogImageWidth: "1200"
   ogImageHeight: "630"
   ogLocale: "en_US"
