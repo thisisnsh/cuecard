@@ -159,13 +159,23 @@ server rebuilds on save.
 
 ## Build & Deploy
 
-**Pushing does not publish.** A push to `main` (or a pull request) runs
-`.github/workflows/deploy-website.yml` as CI: it installs, builds and verifies
-the output, and stops there. Nothing reaches cuecard.dev.
+**Pushing publishes.** A push to `main` that touches `cuecard-website/**` (or
+the workflow file itself) runs `.github/workflows/deploy-website.yml`, which
+installs, builds, verifies the output and then deploys `_site/` to GitHub Pages
+at cuecard.dev. There is no confirmation step: merged to `main` means live,
+usually within a couple of minutes.
 
-Publishing is a deliberate action: **Actions → Deploy Website → Run workflow**,
-leaving the `publish` input on. That is the only event that reaches the deploy
-job.
+A **pull request** runs the same build and verification as CI and stops there —
+the deploy job is skipped, so a broken site is caught before it can be merged.
+Open one for anything you want checked without shipping it.
+
+**Actions → Deploy Website → Run workflow** publishes on demand — for a rebuild
+that no commit triggered, such as picking up a change made outside this
+directory. Unticking its `publish` input turns that run into a build-only check.
+
+The build refuses to publish an empty site: the verification step fails the run
+if `index.html`, `404.html`, `CNAME` or either shortlink page is missing or
+empty, or if any `.php` file reaches `_site/`, since Pages cannot serve one.
 
 To build locally:
 
