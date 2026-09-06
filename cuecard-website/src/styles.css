@@ -293,13 +293,18 @@ main > section {
 main > section:first-of-type { border-top: 0; }
 
 /* Two solid colours, alternating: a tinted section is a passage of reading, a
-   plain one is paper. That alternation is the page's whole rhythm, so every
-   section takes its colour the same way - from the `solid` class - and no
-   section type is hard-wired to one of them. A page that hard-wires one ends
-   up printing two tinted sections against each other, which is exactly what
-   the FAQ and the download block used to do at the foot of every page. */
+   plain one is paper. That alternation is the page's whole rhythm.
+
+   It is worked out from position, not from a class a template remembers to
+   set. Every page counts its sections differently - a role page has a `uses`
+   section, the Slides page has the extension, the iPad page has no "also on
+   iPad" card - so any hand-set colour was one edit away from printing two
+   tinted sections against each other. Counting from the top instead means the
+   hero is always paper, which is what it needs to be under the tinted nav
+   strip, and every section after it simply flips. Sections can be added and
+   removed and the rhythm cannot break. */
 main > section { background: var(--paper); }
-.solid { background: var(--leaf); }
+main > section:nth-of-type(even) { background: var(--leaf); }
 
 section[id] { scroll-margin-top: 96px; }
 
@@ -1102,7 +1107,11 @@ code, .notes-content { font-family: var(--mono); font-size: 0.92em; }
 .release-notes-btn { cursor: pointer; }
 
 /* ════════════════════════ FOOTER ════════════════════════════════════════ */
-.footer { background: var(--leaf); border-top: 1px solid var(--hairline); }
+/* The footer is the one band that is neither paper nor the tint. Whichever
+   colour a page happens to end on, the footer is a step darker than it, so the
+   page always has a floor rather than trailing off into a section the same
+   colour as itself. */
+.footer { background: var(--leaf-2); border-top: 1px solid var(--hairline); }
 .footer-inner {
   max-width: var(--maxw); margin: 0 auto;
   padding: clamp(40px, 5.5vw, 72px) var(--gutter) clamp(28px, 4vw, 44px);

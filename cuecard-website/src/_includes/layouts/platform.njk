@@ -58,11 +58,9 @@
 
 {# The Google Slides page is the odd one out. The others are about a call you
    share your screen on; this one is about the deck itself, and it is the only
-   place the browser extension is explained - so it carries an extra section
-   and, in exchange, the full desktop feature list rather than four rows
-   reworded around a meeting app. That changes the section count, and with it
-   which sections are tinted, so the alternation is worked out from this flag
-   rather than set section by section. #}
+   place the browser extension is explained - so it carries that section where
+   the meeting pages carry their own list of calls, and, in exchange, the full
+   desktop feature list rather than four rows reworded around a meeting app. #}
 {% set isSlides = true if platform.showExtension else false %}
 
 <main>
@@ -77,32 +75,29 @@
     {% set heroStrip = "meeting" %}
     {% set faqLink = "#faq" %}
     {% set heroDeck = true %}
+    {% set deckScript = deck.forMeeting(platform.name) %}
     {% include "partials/hero.njk" %}
-
-    {% set watchHeading = "A minute of it, on a shared screen" %}
-    {% set watchNote = "A short film of the notes staying off the screen everyone else can see. It opens on YouTube." %}
-    {% set demoIds = ["desktop"] %}
-    {% set watchSolid = true %}
-    {% include "partials/watch.njk" %}
-
-    {% if isSlides %}
-    {% set extensionSolid = false %}
-    {% include "partials/extension.njk" %}
-    {% endif %}
 
     {% set featureRows = features.desktop if isSlides else features.forApp(platform.name, "meeting") %}
     {% set rowsMicro = "What you get" %}
     {% set rowsHeading = ("Everything you get, on top of the slide sync" if isSlides else "Everything " + platform.name + " sees is your slide") %}
     {% set rowsId = "features" %}
-    {% set rowsSolid = isSlides %}
     {% include "partials/rows.njk" %}
 
-    {% set syntaxSolid = not isSlides %}
+    {% set watchHeading = "A minute of it, on a shared screen" %}
+    {% set watchNote = "A short film of the notes staying off the screen everyone else can see. It opens on YouTube." %}
+    {% set demoIds = ["desktop"] %}
+    {% include "partials/watch.njk" %}
+
     {% include "partials/features.njk" %}
 
-    {% set crossMode = "mobile" %}
-    {% set crossSolid = isSlides %}
-    {% include "partials/crosspanel.njk" %}
+    {% if isSlides %}
+    {% include "partials/extension.njk" %}
+    {% else %}
+    {% set usesHeading = "The " + platform.name + " calls people keep it open for" %}
+    {% set useItems = platform.useCases %}
+    {% include "partials/uses.njk" %}
+    {% endif %}
 
     {% set gridRoles = site.desktopRoles %}
     {% set gridBase = "/" %}
@@ -110,16 +105,17 @@
     {% set gridMicro = "Made for" %}
     {% set gridHeading = "Whoever has to hold the room" %}
     {% set gridSuffix = "speaker notes" %}
-    {% set gridSolid = not isSlides %}
     {% include "partials/rolegrid.njk" %}
+
+    {% set crossMode = "mobile" %}
+    {% set crossSubject = platform.name %}
+    {% include "partials/crosspanel.njk" %}
+
+    {% include "partials/download.njk" %}
 
     {% set faqItems = platformFaq %}
     {% set faqHeading = "Questions about CueCard and " + platform.name %}
-    {% set faqSolid = isSlides %}
     {% include "partials/faq.njk" %}
-
-    {% set downloadSolid = not isSlides %}
-    {% include "partials/download.njk" %}
 </main>
 
 {% include "partials/footer.njk" %}

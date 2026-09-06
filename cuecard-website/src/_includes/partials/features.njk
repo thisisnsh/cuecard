@@ -15,7 +15,7 @@
   The classes .timestamp and .action-tag are load-bearing: script.js finds them.
 #}
 {% set mobileSyntax = syntaxKind == "mobile" %}
-<section class="features syntax-notes{% if syntaxSolid %} solid{% endif %}" id="syntax" aria-labelledby="syntax-h">
+<section class="features syntax-notes" id="syntax" aria-labelledby="syntax-h">
     <div class="wrap">
         <p class="micro section-tag">{{ icon("pen", 13) }}{{ syntaxMicro or "The script" }}</p>
         <h2 class="section-h section-title" id="syntax-h">{{ syntaxHeading or "Write it plainly. Read it like a pro." }}</h2>
@@ -25,6 +25,13 @@
             {% else %}Type your notes the way you would say them out loud. There are two optional tags to learn. A time tag counts a section down for you, and a cue reminds you how to say the next line. Both are shown to you and neither is meant to be read out.{% endif %}
         </p>
 
+        {# The sample is the page's own hero script, shown twice: once as you
+           would type it and once as CueCard renders it. It used to be a fixed
+           passage, which meant every page carrying this section carried the
+           same eighty words as every other one - and meant the sample had
+           nothing to do with the script the reader had just watched scroll
+           past at the top of the page. #}
+        {% set sample = (deckScript or deck.standard) | take(7) %}
         <div class="features-grid">
             <div class="feature-card">
                 <div class="feature-header">
@@ -38,14 +45,8 @@
                 <div class="notes-preview notes-preview-raw" aria-label="Sample of a raw CueCard script">
                     <div class="notes-content">{% if not mobileSyntax %}[time 00:55]
 
-                        {% endif %}Imagine your notes floating above the deck. [cue smile] I've
-                        been using CueCard to do that.
-
-                        It has a [cue emphasize] timer and that sub-note thingy,
-                        which [cue shrug a little] makes me sound way more human.
-
-                        [cue widen the eyes] You gotta try this out.
-                    </div>
+{% endif %}{% for l in sample %}{% if l.cue %}[cue {{ l.cue }}] {% else %}{{ l.t }}
+{% endif %}{% endfor %}</div>
                 </div>
             </div>
 
@@ -61,14 +62,8 @@
                 <div class="notes-preview notes-preview-rendered" aria-live="off">
                     <div class="notes-content">{% if not mobileSyntax %}<span class="timestamp" data-time="55">[00:55]</span>
 
-                        {% endif %}Imagine your notes floating above the deck. <span class="action-tag">[smile]</span> I've
-                        been using CueCard to do that.
-
-                        It has a <span class="action-tag">[emphasize]</span> timer and that sub-note thingy,
-                        which <span class="action-tag">[shrug a little]</span> makes me sound way more human.
-
-                        <span class="action-tag">[widen the eyes]</span> You gotta try this out.
-                    </div>
+{% endif %}{% for l in sample %}{% if l.cue %}<span class="action-tag">[{{ l.cue }}]</span> {% else %}{{ l.t }}
+{% endif %}{% endfor %}</div>
                 </div>
             </div>
         </div>

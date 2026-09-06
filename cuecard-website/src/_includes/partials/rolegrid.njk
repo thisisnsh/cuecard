@@ -5,7 +5,7 @@
   readers - and the arrow is the same mark every other link row on the site
   carries, so a cell reads as somewhere to go rather than a label.
 #}
-<section class="grid-sec{% if gridSolid %} solid{% endif %}" id="{{ gridId or 'roles' }}" aria-labelledby="{{ gridId or 'roles' }}-h">
+<section class="grid-sec" id="{{ gridId or 'roles' }}" aria-labelledby="{{ gridId or 'roles' }}-h">
     <div class="wrap">
         <p class="micro">{{ icon(gridIcon or "users", 13) }}{{ gridMicro or "Made for" }}</p>
         <h2 class="section-h" id="{{ gridId or 'roles' }}-h">{{ gridHeading | safe }}</h2>

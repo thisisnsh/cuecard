@@ -7,7 +7,7 @@
 
   Set featureRows to a list of { h, p }.
 #}
-<section class="rows{% if rowsSolid %} solid{% endif %}" id="{{ rowsId or 'features' }}" aria-labelledby="{{ rowsId or 'features' }}-h">
+<section class="rows" id="{{ rowsId or 'features' }}" aria-labelledby="{{ rowsId or 'features' }}-h">
     <div class="wrap">
         <p class="micro">{{ icon(rowsIcon or "sparkle", 13) }}{{ rowsMicro or "What you get" }}</p>
         <h2 class="section-h" id="{{ rowsId or 'features' }}-h">{{ rowsHeading | safe }}</h2>

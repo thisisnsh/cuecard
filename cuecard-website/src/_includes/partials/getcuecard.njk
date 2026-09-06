@@ -1,8 +1,9 @@
 {% from "partials/icons.njk" import icon %}
 {#
-  The download section. It closes every page - it is the last thing on all of
-  them, because it is the answer to the only question most people arrive with,
-  and a reader who has got that far has read the argument for it.
+  The download section. It sits third from the bottom of every page, under the
+  argument and above the FAQ, because it is the answer to the only question
+  most people arrive with and a reader who has got that far has read the case
+  for it. The FAQ below it is for the ones who have not decided yet.
 
   Everything here comes from site.downloadGroups, the same list the header's
   download menu prints. A page that only wants one of the groups - the phone
@@ -12,7 +13,7 @@
   CueCard, it is what makes Google Slides work, and it lives on that page.
 #}
 {% set groups = getGroups or site.downloadGroups %}
-<section class="get{% if getSolid !== false %} solid{% endif %}" id="download" aria-labelledby="get-h">
+<section class="get" id="download" aria-labelledby="get-h">
     <div class="wrap">
         <p class="micro">{{ icon("download", 13) }}{{ getMicro or "Get CueCard" }}</p>
         <h2 class="section-h" id="get-h">{{ getHeading or "Free on every screen you speak from" }}</h2>

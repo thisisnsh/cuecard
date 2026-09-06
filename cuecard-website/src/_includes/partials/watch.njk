@@ -34,7 +34,7 @@
 </li>
 {% endmacro %}
 
-<section class="watch{% if watchSolid %} solid{% endif %}" id="{{ watchId or 'demo' }}" aria-labelledby="{{ watchId or 'demo' }}-h">
+<section class="watch" id="{{ watchId or 'demo' }}" aria-labelledby="{{ watchId or 'demo' }}-h">
     <div class="wrap">
         <p class="micro">{{ icon("play", 13) }}{{ watchMicro or "See it work" }}</p>
         <h2 class="section-h" id="{{ watchId or 'demo' }}-h">{{ (watchHeading or "A minute of it, on each screen") | safe }}</h2>

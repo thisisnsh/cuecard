@@ -12,6 +12,14 @@
     "videoTitle": "CueCard - Invisible Speaker Notes for Zoom",
     "downloadTitle": "Ready for your next Zoom call?",
     "downloadDesc": "Download CueCard for Mac or Windows, paste your notes in, and share your screen without sharing them.",
+    "useCases": [
+      "Client calls on Zoom",
+      "Zoom webinars",
+      "All-hands on Zoom",
+      "Sales demos over Zoom",
+      "Zoom interviews",
+      "Board and investor calls"
+    ],
     "jsonLdName": "CueCard for Zoom",
     "jsonLdDescription": "Your notes stay on your screen and out of the screen share. On Zoom, everyone else sees your deck and never your speaker notes. Paste your notes in to use CueCard with any deck, or add the browser extension so notes from Google Slides follow your slides.",
     "jsonLdFeatures": [
@@ -50,6 +58,14 @@
     "videoTitle": "CueCard - Invisible Speaker Notes for Google Meet",
     "downloadTitle": "Ready for your next Google Meet call?",
     "downloadDesc": "Download CueCard for Mac or Windows, paste your notes in, and share your screen without sharing them.",
+    "useCases": [
+      "Client calls on Meet",
+      "Google Meet webinars",
+      "Team stand-ups",
+      "Sales demos over Meet",
+      "Online classes on Meet",
+      "Meet interviews"
+    ],
     "jsonLdName": "CueCard for Google Meet",
     "jsonLdDescription": "Your notes stay on your screen and out of the screen share. On Google Meet, everyone else sees your deck and never your speaker notes. Paste your notes in to use CueCard with any deck, or add the browser extension so notes from Google Slides follow your slides.",
     "jsonLdFeatures": [
@@ -88,6 +104,14 @@
     "videoTitle": "CueCard - Invisible Speaker Notes for Microsoft Teams",
     "downloadTitle": "Ready for your next Microsoft Teams call?",
     "downloadDesc": "Download CueCard for Mac or Windows, paste your notes in, and share your screen without sharing them.",
+    "useCases": [
+      "Client calls on Teams",
+      "Teams live events",
+      "Town halls on Teams",
+      "Sales demos over Teams",
+      "Internal training sessions",
+      "Teams interviews"
+    ],
     "jsonLdName": "CueCard for Microsoft Teams",
     "jsonLdDescription": "Your notes stay on your screen and out of the screen share. On Microsoft Teams, everyone else sees your deck and never your speaker notes. Paste your notes in to use CueCard with any deck, or add the browser extension so notes from Google Slides follow your slides.",
     "jsonLdFeatures": [

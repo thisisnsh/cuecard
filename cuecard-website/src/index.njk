@@ -147,7 +147,14 @@ ogLocale: "en_US"
     {% set stripMore = "and every other app you record in" %}
     {% set faqLink = "#faq" %}
     {% set heroDeck = true %}
+    {% set deckScript = deck.standard %}
     {% include "partials/hero.njk" %}
+
+    {% set featureRows = features.mobile %}
+    {% set rowsMicro = "What you get" %}
+    {% set rowsHeading = "Built to be read out of the corner of your eye" %}
+    {% set rowsId = "features" %}
+    {% include "partials/rows.njk" %}
 
     {% set shotsHeading = 'This is the whole app.' %}
     {% set shotsNote = "Read your script from the full screen, or shrink it into a small window that stays on top of whatever else you open." %}
@@ -158,15 +165,8 @@ ogLocale: "en_US"
     {% set watchNote = "One short film for the iPhone app, one for the same app on iPad, and one for the Mac and Windows app. Each opens on YouTube." %}
     {% include "partials/watch.njk" %}
 
-    {% set featureRows = features.mobile %}
-    {% set rowsMicro = "What you get" %}
-    {% set rowsHeading = "Built to be read out of the corner of your eye" %}
-    {% set rowsId = "features" %}
-    {% set rowsSolid = true %}
-    {% include "partials/rows.njk" %}
-
-    {% set crossSolid = false %}
-    {% include "partials/crosspanel.njk" %}
+    {% set syntaxKind = "mobile" %}
+    {% include "partials/features.njk" %}
 
     {% set gridRoles = site.mobileRoles %}
     {% set gridBase = "/mobile/" %}
@@ -174,18 +174,17 @@ ogLocale: "en_US"
     {% set gridMicro = "Made for" %}
     {% set gridHeading = "Whatever it is you have to say on camera" %}
     {% set gridSuffix = "teleprompter app" %}
-    {% set gridSolid = true %}
     {% include "partials/rolegrid.njk" %}
 
-    {% set faqItems = faq.home %}
-    {% set faqHeading = "Asked before installing" %}
-    {% set faqSolid = false %}
-    {% include "partials/faq.njk" %}
+    {% include "partials/crosspanel.njk" %}
 
-    {% set getSolid = true %}
     {% set getHeading = "Stop memorising. Start talking." %}
     {% set getBody = "Free on every screen you speak from. There is no subscription and nothing to cancel." %}
     {% include "partials/getcuecard.njk" %}
+
+    {% set faqItems = faq.home %}
+    {% set faqHeading = "Asked before installing" %}
+    {% include "partials/faq.njk" %}
 </main>
 
 {% include "partials/footer.njk" %}

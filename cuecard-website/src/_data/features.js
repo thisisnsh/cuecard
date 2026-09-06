@@ -116,4 +116,72 @@ function forApp(name, kind) {
   ];
 }
 
-module.exports = { mobile, desktop, forApp };
+/**
+ * Six rows reworded around one role.
+ *
+ * The role pages used to print the `mobile` or `desktop` list verbatim, which
+ * meant twenty-four pages carrying the same six paragraphs as each other and
+ * as the page they were trying not to compete with. Same capabilities, said in
+ * the terms of the job the page is about.
+ */
+function forRole(name, audience, kind) {
+  const who = (audience || name || "").toLowerCase();
+
+  if (kind === "mobile") {
+    return [
+      {
+        h: "A script that stays up while you film",
+        p: `Whatever ${who} record in — the camera app, Instagram, TikTok, a live stream — CueCard floats above it, so the next line is on screen without you ever leaving the app you are shooting in.`,
+      },
+      {
+        h: "Scrolling you set once and then forget",
+        p: "Pick a speed that matches how you talk and the script moves on its own. Nudge it faster or slower part-way through, or pause it while you reset the shot.",
+      },
+      {
+        h: "Cues about how to say it, not what to say",
+        p: "Drop [cue smile] or [cue slow down] in wherever you keep tripping up, and it shows in the colour you picked as you pass it. It is a reminder, not another line to read.",
+      },
+      {
+        h: "A countdown in, and a clock while you talk",
+        p: `CueCard counts you in before the script starts moving, so you have a moment to settle. The timer then runs while you speak, which is how ${who} keep a take to the length it has to be.`,
+      },
+      {
+        h: "A window shaped to fit your shot",
+        p: "Make the prompter wide, square or tall, then drag it up under the lens. Your eyes stay next to the camera instead of dropping to the bottom of the screen.",
+      },
+      {
+        h: "Scripts saved, named and opened again",
+        p: `Save the ones ${who} use more than once — an intro, a sign-off, the explanation you give every week — and open them next time instead of typing them out again. You can import one from a file as well.`,
+      },
+    ];
+  }
+
+  return [
+    {
+      h: "Hidden from the screen you are sharing",
+      p: `The CueCard window is left out of screen capture by the operating system itself. On Zoom, Google Meet and Microsoft Teams the room sees your deck and never your notes — which is the whole reason ${who} keep it open.`,
+    },
+    {
+      h: "Notes for the deck you already present from",
+      p: "Paste them straight in and present from PowerPoint, Keynote, a PDF, or from nothing at all. If the deck is in Google Slides, the browser extension makes the notes change along with the slide.",
+    },
+    {
+      h: "Cues you read but never say out loud",
+      p: "Write [cue slow down] or [cue take a breath] into your notes and it appears in colour. It reminds you how to say the next part instead of handing you another line to get through.",
+    },
+    {
+      h: "Timing tags that count themselves down",
+      p: `Write [time 05:00] at the top of a section and CueCard counts those five minutes down on screen. It is the plainest way ${who} keep a thirty-minute slot to thirty minutes.`,
+    },
+    {
+      h: "A window that sits where you want it",
+      p: "Move it, resize it, and fade it back over the slide behind it, so your notes are near the camera you are looking into rather than somewhere you have to go hunting for.",
+    },
+    {
+      h: "Keyboard shortcuts for the whole thing",
+      p: "Show and hide the window, move it, resize it, and start or reset the timer from the keyboard, without ever clicking away from what you are presenting.",
+    },
+  ];
+}
+
+module.exports = { mobile, desktop, forApp, forRole };

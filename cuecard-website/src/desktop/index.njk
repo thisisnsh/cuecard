@@ -90,13 +90,8 @@ crumbs:
     {% set faqLink = "#faq" %}
     {% set stripMore = "and anything else that shares a screen" %}
     {% set heroDeck = true %}
+    {% set deckScript = deck.forMeeting("Zoom, Meet or Teams") %}
     {% include "partials/hero.njk" %}
-
-    {% set watchHeading = "Watch it disappear from a screen share" %}
-    {% set watchNote = "A short film of the notes staying off a shared screen, and two of the phone app for good measure. Each opens on YouTube." %}
-    {% set demoIds = ["desktop", "phone", "ipad"] %}
-    {% set watchSolid = true %}
-    {% include "partials/watch.njk" %}
 
     {% set featureRows = features.desktop %}
     {% set rowsMicro = "What you get" %}
@@ -104,12 +99,16 @@ crumbs:
     {% set rowsId = "features" %}
     {% include "partials/rows.njk" %}
 
-    {% set syntaxSolid = true %}
+    {% set watchHeading = "Watch it disappear from a screen share" %}
+    {% set watchNote = "A short film of the notes staying off a shared screen, and two of the phone app for good measure. Each opens on YouTube." %}
+    {% set demoIds = ["desktop", "phone", "ipad"] %}
+    {% include "partials/watch.njk" %}
+
     {% include "partials/features.njk" %}
 
-    {% set crossMode = "mobile" %}
-    {% set crossSolid = false %}
-    {% include "partials/crosspanel.njk" %}
+    {% set usesHeading = "The calls people keep it open for" %}
+    {% set useItems = site.desktopUses %}
+    {% include "partials/uses.njk" %}
 
     {% set gridRoles = site.desktopRoles %}
     {% set gridBase = "/" %}
@@ -117,18 +116,19 @@ crumbs:
     {% set gridMicro = "Made for" %}
     {% set gridHeading = "Whoever has to hold the room" %}
     {% set gridSuffix = "speaker notes" %}
-    {% set gridSolid = true %}
     {% include "partials/rolegrid.njk" %}
 
-    {% set faqItems = faq.desktopShort %}
-    {% set faqHeading = "Asked before downloading" %}
-    {% set faqSolid = false %}
-    {% include "partials/faq.njk" %}
+    {% set crossMode = "mobile" %}
+    {% set crossSubject = false %}
+    {% include "partials/crosspanel.njk" %}
 
     {% set downloadTitle = "Know your lines. Show your slides." %}
     {% set downloadDesc = "Free on macOS and Windows. If you present from <a href=\"/google-slides/\">Google Slides</a>, add the browser extension as well and your notes will follow your slides." %}
-    {% set downloadSolid = true %}
     {% include "partials/download.njk" %}
+
+    {% set faqItems = faq.desktopShort %}
+    {% set faqHeading = "Asked before downloading" %}
+    {% include "partials/faq.njk" %}
 </main>
 
 {% include "partials/footer.njk" %}

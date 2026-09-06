@@ -52,7 +52,6 @@
 {% endblock %}
 
 {% block body %}
-{% from "partials/icons.njk" import icon %}
 {% if profession.mobileCounterpart %}
 {% set navCtaHref = "/mobile/" + profession.mobileCounterpart + "/" %}
 {% else %}
@@ -75,54 +74,50 @@
     {% set heroStrip = "meeting" %}
     {% set faqLink = "#faq" %}
     {% set heroDeck = true %}
+    {% set deckScript = deck.forDesktopRole(profession.name, profession.targetAudience, profession.useCases[0]) %}
     {% include "partials/hero.njk" %}
+
+    {% set featureRows = features.forRole(profession.name, profession.targetAudience, "desktop") %}
+    {% set rowsMicro = "What you get" %}
+    {% set rowsHeading = "Everything the call sees is your slide" %}
+    {% set rowsId = "features" %}
+    {% include "partials/rows.njk" %}
 
     {% set watchHeading = "A minute of it, on a shared screen" %}
     {% set watchNote = "A short film of the notes staying off the screen everyone else can see. It opens on YouTube." %}
     {% set demoIds = ["desktop"] %}
-    {% set watchSolid = true %}
     {% include "partials/watch.njk" %}
 
-    {% if profession.useCases %}
-    <section class="uses" aria-labelledby="uses-h">
-        <div class="wrap">
-            <p class="micro">{{ icon("flag", 13) }}Where it earns its place</p>
-            <h2 class="section-h" id="uses-h">What {{ profession.name | lower }} reach for it in</h2>
-            <ul class="crestgrid">
-                {% for use in profession.useCases %}
-                <li><span class="usecase">{{ use }}</span></li>
-                {% endfor %}
-            </ul>
-            {% if profession.mobileCounterpart %}
-            <p class="shots-foot">
-                Filming a video rather than presenting? There is a
-                <a href="/mobile/{{ profession.mobileCounterpart }}/">floating teleprompter for {{ profession.name | lower }} on your phone</a> as well.
-            </p>
-            {% endif %}
-        </div>
-    </section>
-    {% endif %}
+    {% include "partials/features.njk" %}
 
-    {% set featureRows = features.desktop %}
-    {% set rowsMicro = "What you get" %}
-    {% set rowsHeading = "Everything the call sees is your slide" %}
-    {% set rowsId = "features" %}
-    {% set rowsSolid = true %}
-    {% include "partials/rows.njk" %}
+    {% set usesHeading = "What " + profession.name | lower + " reach for it in" %}
+    {% set useItems = profession.useCases %}
+    {% if profession.mobileCounterpart %}
+    {% set usesFoot = 'Filming a video rather than presenting? There is a <a href="/mobile/' + profession.mobileCounterpart + '/">floating teleprompter for ' + profession.name | lower + ' on your phone</a> as well.' %}
+    {% else %}
+    {% set usesFoot = false %}
+    {% endif %}
+    {% include "partials/uses.njk" %}
+
+    {% set gridRoles = site.desktopRoles %}
+    {% set gridBase = "/" %}
+    {% set gridId = "roles" %}
+    {% set gridMicro = "Made for" %}
+    {% set gridHeading = "Whoever else has to hold the room" %}
+    {% set gridSuffix = "speaker notes" %}
+    {% include "partials/rolegrid.njk" %}
 
     {% set crossMode = "mobile" %}
-    {% set crossSolid = false %}
+    {% set crossRole = profession.name %}
     {% include "partials/crosspanel.njk" %}
-
-    {% set faqItems = roleFaq %}
-    {% set faqHeading = "Questions from " + profession.name | lower %}
-    {% set faqSolid = true %}
-    {% include "partials/faq.njk" %}
 
     {% set downloadTitle = "Know your lines. Show your slides." %}
     {% set downloadDesc = "Free on Mac and Windows. There is no subscription and nothing to cancel." %}
-    {% set downloadSolid = false %}
     {% include "partials/download.njk" %}
+
+    {% set faqItems = roleFaq %}
+    {% set faqHeading = "Questions from " + profession.name | lower %}
+    {% include "partials/faq.njk" %}
 </main>
 
 {% include "partials/footer.njk" %}

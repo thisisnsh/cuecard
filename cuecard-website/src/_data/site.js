@@ -225,6 +225,19 @@ const site = {
     { name: "Google Slides", slug: "google-slides", icon: "slides", use: "Live note sync" },
   ],
 
+  // What the desktop app gets opened for. The role pages carry their own
+  // lists; this is the general one, for /desktop/.
+  desktopUses: [
+    "Client presentations",
+    "Sales demos",
+    "All-hands and town halls",
+    "Webinars",
+    "Investor pitches",
+    "Interviews and panels",
+    "Online classes",
+    "Product walkthroughs",
+  ],
+
   // Roles with a page on each side of the product. Kept in the order the
   // footer prints them, which is alphabetical so nothing looks ranked.
   mobileRoles: [

@@ -67,7 +67,6 @@ layout: layouts/mobile-profession.njk
 {% endblock %}
 
 {% block body %}
-{% from "partials/icons.njk" import icon %}
 {% if mobileProfession.desktopCounterpart %}
 {% set navCtaHref = "/" + mobileProfession.desktopCounterpart + "/" %}
 {% else %}
@@ -99,49 +98,49 @@ layout: layouts/mobile-profession.njk
     {% set stripMore = "and every other app you record in" %}
     {% set faqLink = "#faq" %}
     {% set heroDeck = true %}
+    {% set deckScript = deck.forMobileRole(mobileProfession.name, mobileProfession.targetAudience, mobileProfession.useCases[0]) %}
     {% include "partials/hero.njk" %}
 
-    {% set watchHeading = "A minute of it, in use" %}
-    {% set watchNote = "Short films of the app doing the one thing it is for. Each opens on YouTube." %}
-    {% set watchSolid = true %}
-    {% include "partials/watch.njk" %}
-
-    {% if mobileProfession.useCases %}
-    <section class="uses" aria-labelledby="uses-h">
-        <div class="wrap">
-            <p class="micro">{{ icon("flag", 13) }}Where it earns its place</p>
-            <h2 class="section-h" id="uses-h">What {{ mobileProfession.name | lower }} use it for</h2>
-            <ul class="crestgrid">
-                {% for use in mobileProfession.useCases %}
-                <li><span class="usecase">{{ use }}</span></li>
-                {% endfor %}
-            </ul>
-        </div>
-    </section>
-    {% endif %}
-
-    {% set featureRows = features.mobile %}
+    {% set featureRows = features.forRole(mobileProfession.name, mobileProfession.targetAudience, "mobile") %}
     {% set rowsMicro = "What you get" %}
     {% set rowsHeading = "Everything you need to stay on script" %}
     {% set rowsId = "features" %}
-    {% set rowsSolid = true %}
     {% include "partials/rows.njk" %}
 
-    {% set bigscreenSolid = false %}
+    {% set watchHeading = "A minute of it, in use" %}
+    {% set watchNote = "Short films of the app doing the one thing it is for. Each opens on YouTube." %}
+    {% include "partials/watch.njk" %}
+
+    {% set usesHeading = "What " + mobileProfession.name | lower + " use it for" %}
+    {% set useItems = mobileProfession.useCases %}
+    {% if mobileProfession.desktopCounterpart %}
+    {% set usesFoot = 'Presenting rather than filming? There are <a href="/' + mobileProfession.desktopCounterpart + '/">invisible speaker notes for ' + mobileProfession.name | lower + ' on a Mac or PC</a> as well.' %}
+    {% else %}
+    {% set usesFoot = false %}
+    {% endif %}
+    {% include "partials/uses.njk" %}
+
+    {% set bigscreenRole = mobileProfession.name %}
     {% include "partials/bigscreen.njk" %}
 
-    {% set crossSolid = true %}
+    {% set gridRoles = site.mobileRoles %}
+    {% set gridBase = "/mobile/" %}
+    {% set gridId = "roles" %}
+    {% set gridMicro = "Made for" %}
+    {% set gridHeading = "Whoever else has to say it on camera" %}
+    {% set gridSuffix = "teleprompter app" %}
+    {% include "partials/rolegrid.njk" %}
+
+    {% set crossRole = mobileProfession.name %}
     {% include "partials/crosspanel.njk" %}
 
-    {% set faqItems = roleFaq %}
-    {% set faqHeading = "Questions from " + mobileProfession.name | lower %}
-    {% set faqSolid = false %}
-    {% include "partials/faq.njk" %}
-
-    {% set getSolid = true %}
     {% set getHeading = "On your phone in under a minute" %}
     {% set getBody = "Free, with no subscription and nothing to cancel — and free on your computer too." %}
     {% include "partials/getcuecard.njk" %}
+
+    {% set faqItems = roleFaq %}
+    {% set faqHeading = "Questions from " + mobileProfession.name | lower %}
+    {% include "partials/faq.njk" %}
 </main>
 
 {% include "partials/footer.njk" %}

@@ -1,14 +1,14 @@
 {% from "partials/icons.njk" import icon %}
 {#
   The App Store artwork: one strip per device, side by side on a wide screen.
-  These are the only photographs on the site and they sit directly under the
-  hero, because "what does it actually look like" is the second question
-  everybody has, and the argument reads better once it is answered.
+  These are the only photographs on the site. They sit under the feature rows,
+  because "what does it actually look like" is the question that follows a list
+  of what it does.
 
   Pass `shotIds` (a list) to choose which. The default is the phone alone:
   the iPad artwork is the iPad page's to show.
 #}
-<section class="shots{% if shotsSolid !== false %} solid{% endif %}" id="{{ shotsId or 'shots' }}" aria-labelledby="{{ shotsId or 'shots' }}-h">
+<section class="shots" id="{{ shotsId or 'shots' }}" aria-labelledby="{{ shotsId or 'shots' }}-h">
     <div class="wrap">
         <p class="micro">{{ icon("sparkle", 13) }}{{ shotsMicro or "The app itself" }}</p>
         <h2 class="section-h" id="{{ shotsId or 'shots' }}-h">{{ (shotsHeading or "This is the whole thing.") | safe }}</h2>

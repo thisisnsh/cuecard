@@ -1,11 +1,15 @@
 {#
   The app, running, in the page.
 
-  Not a video and not a screenshot: the same script the App Store film uses,
-  scrolling at real lines-per-minute, with the cues in the cue colour and the
-  clock counting up, exactly as the phone does it. script.js drives it; with
-  no JavaScript it sits still and is simply a picture of the app, which is
-  fine, because that is what a screenshot would have been.
+  Not a video and not a screenshot: a real script, scrolling at real
+  lines-per-minute, with the cues in the cue colour and the clock counting up,
+  exactly as the phone does it. The lines come from _data/deck.js, and each
+  page passes its own set in as `deckScript` — a page about filming on TikTok
+  should not be running a script about a Zoom call, and forty-two pages should
+  not be running the same eleven sentences as each other.
+
+  script.js drives it; with no JavaScript it sits still and is simply a picture
+  of the app, which is fine, because that is what a screenshot would have been.
 
   It is also the hero's argument in one object: you can see the words move,
   see a cue go past without being read out, and see the timer run.
@@ -19,18 +23,9 @@
 
     <div class="deck-screen">
         <div class="deck-script" data-deck-script>
-            <p class="deck-line">Welcome everyone.</p>
-            <p class="deck-line">I'm excited to be here today to talk about CueCard.</p>
-            <p class="deck-line is-cue">smile and pause</p>
-            <p class="deck-line">It keeps your speaker notes visible above all apps, so you can use your existing camera apps and still read your notes.</p>
-            <p class="deck-line is-cue">pause</p>
-            <p class="deck-line">It has a timer so you know if you're being brief… or too passionate.</p>
-            <p class="deck-line is-cue">light chuckle</p>
-            <p class="deck-line">And the colored highlights?</p>
-            <p class="deck-line is-cue">emphasize</p>
-            <p class="deck-line">Those are your secret cues — reminders to smile, pause, or not panic.</p>
-            <p class="deck-line is-cue">pause</p>
-            <p class="deck-line">Try it out. I think you'll love it.</p>
+            {% for l in (deckScript or deck.standard) %}
+            <p class="deck-line{% if l.cue %} is-cue{% endif %}">{{ l.cue or l.t }}</p>
+            {% endfor %}
         </div>
     </div>
 

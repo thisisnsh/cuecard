@@ -7,7 +7,7 @@
   The wider "everywhere CueCard exists" list is a different section, on the
   home page: partials/getcuecard.njk.
 #}
-<section class="download-section{% if downloadSolid %} solid{% endif %}" id="download" aria-labelledby="download-h">
+<section class="download-section" id="download" aria-labelledby="download-h">
     <div class="wrap">
         <p class="micro section-tag">{{ icon("download", 13) }}Download</p>
         <h2 class="section-h section-title" id="download-h">{{ (platform.downloadTitle if platform else downloadTitle) | safe }}</h2>

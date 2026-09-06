@@ -7,10 +7,13 @@
   would be worse than either. So each half gets this on the other's pages: a
   card, the list of apps that half is about, and a way through to its own page.
 
-  Set crossMode = "mobile" to point at the phone instead of the computer.
+  Set crossMode = "mobile" to point at the phone instead of the computer, and
+  either crossRole (a job title) or crossSubject (an app, a call, a device) so
+  the paragraph is written around what this particular page is about. The copy
+  itself lives in _data/cross.js.
 #}
 {% set toMobile = crossMode == "mobile" %}
-<section class="crosssec{% if crossSolid %} solid{% endif %}" id="{{ crossId or ('mobile-half' if toMobile else 'desktop-half') }}" aria-labelledby="{{ crossId or ('mobile-half' if toMobile else 'desktop-half') }}-h">
+<section class="crosssec" id="{{ crossId or ('mobile-half' if toMobile else 'desktop-half') }}" aria-labelledby="{{ crossId or ('mobile-half' if toMobile else 'desktop-half') }}-h">
     <div class="wrap">
         <p class="micro">{{ icon(crossIcon or ("phone" if toMobile else "monitor"), 13) }}{{ crossMicro or ("Also on your phone" if toMobile else "Also on your computer") }}</p>
         <h2 class="section-h" id="{{ crossId or ('mobile-half' if toMobile else 'desktop-half') }}-h">
@@ -22,14 +25,13 @@
                 <p class="crosspanel-tag">
                     {{ icon("layers" if toMobile else "eye-off", 13) }}{{ "CueCard Teleprompter for iPhone and iPad" if toMobile else "CueCard for Mac and Windows" }}
                 </p>
-                <h3 class="crosspanel-h">
-                    {{ (crossPanelH or ("A script that floats over the app you film in" if toMobile else "Speaker notes your screen share cannot see")) | safe }}
-                </h3>
-                <p class="crosspanel-p">
-                    {% if crossPanelP %}{{ crossPanelP | safe }}
-                    {% elif toMobile %}Open the camera, <a href="/mobile/instagram/">Instagram</a> or <a href="/mobile/tiktok/">TikTok</a> and your script sits on top of it, scrolling at the speed you set. Your video still comes out of the app it always came out of.
-                    {% else %}The CueCard window is left out of screen capture by the operating system, so everyone on the call sees your slides and never your notes. Paste your notes in and use it with any deck — or with no deck at all. If you present from <a href="/google-slides/">Google Slides</a>, one extra browser extension makes your notes change along with your slides.{% endif %}
-                </p>
+                {% if crossRole %}
+                {% set panel = cross.toMobileForRole(crossRole) if toMobile else cross.toDesktopForRole(crossRole) %}
+                {% else %}
+                {% set panel = cross.toMobile(crossSubject) if toMobile else cross.toDesktop(crossSubject) %}
+                {% endif %}
+                <h3 class="crosspanel-h">{{ panel.h }}</h3>
+                <p class="crosspanel-p">{{ panel.p | safe }}</p>
                 <p class="backline">
                     {% if toMobile %}
                     <a href="/mobile/">{{ icon("phone", 15) }} See the phone app {{ icon("arrow", 14) }}</a>

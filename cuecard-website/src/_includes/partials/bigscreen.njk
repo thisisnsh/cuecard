@@ -1,37 +1,47 @@
 {% from "partials/icons.njk" import icon %}
 {#
-  "It's on the big screen too."
+  "It runs on the other size of screen too."
 
   The phone pages are the ones people land on, and almost nobody arrives
-  knowing the same app runs full size on an iPad. This is the card that tells
-  them, with the iPad film beside it. Same panel as partials/crosspanel.njk —
-  one design, two jobs.
+  knowing the same app runs full size on an iPad — so those pages point at the
+  iPad. The iPad page is the one page where that would be pointing at itself,
+  so it runs the same card the other way round and points at the phone. Same
+  panel as partials/crosspanel.njk — one design, two jobs.
+
+  Set bigscreenTo = "phone" for the reversed one.
 #}
-<section class="bigscreen{% if bigscreenSolid %} solid{% endif %}" id="ipad" aria-labelledby="ipad-h">
+{% set toPhone = bigscreenTo == "phone" %}
+{% set d = site.demo.phone if toPhone else site.demo.ipad %}
+<section class="bigscreen" id="{{ 'iphone' if toPhone else 'ipad' }}" aria-labelledby="{{ 'iphone' if toPhone else 'ipad' }}-h">
     <div class="wrap">
-        <p class="micro">{{ icon("tablet", 13) }}Also on big screens</p>
-        <h2 class="section-h" id="ipad-h">{{ (bigscreenHeading or "The same teleprompter, on <em>iPad</em>.") | safe }}</h2>
+        <p class="micro">{{ icon("phone" if toPhone else "tablet", 13) }}{{ "Also in your pocket" if toPhone else "Also on big screens" }}</p>
+        <h2 class="section-h" id="{{ 'iphone' if toPhone else 'ipad' }}-h">
+            {{ (bigscreenHeading or ("The same teleprompter, on <em>iPhone</em>." if toPhone else "The same teleprompter, on <em>iPad</em>.")) | safe }}
+        </h2>
 
         <div class="crosspanel reveal">
             <div>
-                <p class="crosspanel-tag">{{ icon("apple", 13) }}CueCard Teleprompter for iPad</p>
-                <h3 class="crosspanel-h">A screen big enough to read from a few feet away</h3>
+                <p class="crosspanel-tag">{{ icon("apple", 13) }}CueCard Teleprompter for {{ "iPhone" if toPhone else "iPad" }}</p>
+                {% set panel = cross.pocket(bigscreenSubject) if toPhone else cross.bigscreen(bigscreenSubject, bigscreenRole) %}
+                <h3 class="crosspanel-h">{{ panel.h }}</h3>
                 <p class="crosspanel-p">
-                    On an iPad the script can fill the whole display, so you can prop the iPad under
-                    a camera and read it from where you are standing, the way a studio teleprompter
-                    works. Or shrink it into the same floating window and film in whatever app you
-                    like.
-                    <a href="/mobile/ipad/">See CueCard Teleprompter on iPad</a>.
+                    {{ panel.p | safe }}
+                    {% if toPhone %}<a href="/mobile/ios/">See CueCard Teleprompter on iPhone</a>.
+                    {% else %}<a href="/mobile/ipad/">See CueCard Teleprompter on iPad</a>.{% endif %}
                 </p>
                 <p class="backline">
+                    {% if toPhone %}
+                    <a href="/mobile/ios/">{{ icon("phone", 15) }} The iPhone page {{ icon("arrow", 14) }}</a>
+                    {% else %}
                     <a href="/mobile/ipad/">{{ icon("tablet", 15) }} The iPad page {{ icon("arrow", 14) }}</a>
-                    <a href="{{ site.demo.ipad.url }}" target="_blank" rel="noopener">{{ icon("play", 15) }} Watch the iPad demo {{ icon("external", 13) }}</a>
+                    {% endif %}
+                    <a href="{{ d.url }}" target="_blank" rel="noopener">{{ icon("play", 15) }} Watch the {{ "iPhone" if toPhone else "iPad" }} demo {{ icon("external", 13) }}</a>
                 </p>
             </div>
 
-            <a class="watch-card watch-card--portrait reveal" href="{{ site.demo.ipad.url }}" target="_blank" rel="noopener">
+            <a class="watch-card watch-card--portrait reveal" href="{{ d.url }}" target="_blank" rel="noopener">
                 <span class="watch-top">
-                    <span class="watch-device">{{ icon("tablet", 13) }}iPad</span>
+                    <span class="watch-device">{{ icon("phone" if toPhone else "tablet", 13) }}{{ "iPhone" if toPhone else "iPad" }}</span>
                     <span class="watch-len">YouTube</span>
                 </span>
                 <span class="watch-frame" aria-hidden="true">
@@ -42,7 +52,7 @@
                     <i class="watch-rule w4"></i>
                     <i class="watch-play"></i>
                 </span>
-                <span class="watch-go">{{ site.demo.ipad.title }} {{ icon("external", 13) }}</span>
+                <span class="watch-go">{{ d.title }} {{ icon("external", 13) }}</span>
             </a>
         </div>
     </div>

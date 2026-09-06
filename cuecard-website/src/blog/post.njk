@@ -67,7 +67,7 @@ eleventyComputed:
         </div>
     </section>
 
-    <section class="blog-post-body solid" aria-label="Post">
+    <section class="blog-post-body" aria-label="Post">
         <div class="wrap">
             <article class="blog-entry-content">
                 {{ blog.content | markdownify | safe }}
@@ -81,7 +81,6 @@ eleventyComputed:
 
     {% set getHeading = "Stop memorising. Start talking." %}
     {% set getBody = "A floating teleprompter on your phone, invisible speaker notes on your computer. Both free." %}
-    {% set getSolid = false %}
     {% include "partials/getcuecard.njk" %}
 </main>
 

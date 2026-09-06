@@ -8,11 +8,11 @@
   Whatever list is passed here is also what the page's FAQPage block should
   carry, so the rich result and the page can never disagree.
 
-  It is tinted unless the page sets faqSolid to false, which is how a page
-  whose preceding section is already tinted keeps the alternation going.
+  Its colour is not its own business: sections alternate by position, from the
+  top of the page, in the stylesheet.
 #}
 {% set items = faqItems or faq.desktop %}
-<section class="faq{% if faqSolid !== false %} solid{% endif %}" id="{{ faqId or 'faq' }}" aria-labelledby="{{ faqId or 'faq' }}-h">
+<section class="faq" id="{{ faqId or 'faq' }}" aria-labelledby="{{ faqId or 'faq' }}-h">
     <div class="wrap wrap-narrow">
         <p class="micro">{{ icon("help", 13) }}{{ faqMicro or "Frequently asked" }}</p>
         <h2 class="section-h" id="{{ faqId or 'faq' }}-h">{{ faqHeading or "Questions, answered." }}</h2>

@@ -1,0 +1,21 @@
+{% from "partials/icons.njk" import icon %}
+{#
+  Where the thing actually gets used, as a ruled grid of short phrases.
+
+  It was written into the role layouts twice, word for word, before it was a
+  partial. Set `useItems` to a list of strings; `usesFoot` is an optional line
+  under the grid, which is where the role pages send a reader to their own
+  counterpart on the other half of the product.
+#}
+<section class="uses" id="{{ usesId or 'uses' }}" aria-labelledby="{{ usesId or 'uses' }}-h">
+    <div class="wrap">
+        <p class="micro">{{ icon("flag", 13) }}{{ usesMicro or "Where it earns its place" }}</p>
+        <h2 class="section-h" id="{{ usesId or 'uses' }}-h">{{ usesHeading | safe }}</h2>
+        <ul class="crestgrid">
+            {% for use in useItems %}
+            <li><span class="usecase">{{ use }}</span></li>
+            {% endfor %}
+        </ul>
+        {% if usesFoot %}<p class="shots-foot">{{ usesFoot | safe }}</p>{% endif %}
+    </div>
+</section>

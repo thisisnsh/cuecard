@@ -74,11 +74,10 @@ layout: layouts/mobile-app.njk
 {% set navCtaHref = "/desktop/" %}
 {% include "partials/nav.njk" %}
 
-{# The iPad page is the one page here that drops the "also on iPad" card,
-   because it is already on it. That changes how many sections the page has,
-   and therefore which of them is tinted, so the whole alternation is worked
-   out from this one flag rather than set section by section. #}
-{% set hasBigscreen = app.slug != "mobile/ipad" %}
+{# The iPad page cannot carry the "also on iPad" card, because it is already
+   on it. It runs the same card the other way round instead and points at the
+   phone, so every page here has the same shape. #}
+{% set onIpad = app.slug == "mobile/ipad" %}
 
 <main>
     {% set heroClass = "hero-app" %}
@@ -109,7 +108,14 @@ layout: layouts/mobile-app.njk
     {% set stripMore = "and every other app you record in" %}
     {% set faqLink = "#faq" %}
     {% set heroDeck = true %}
+    {% set deckScript = deck.forApp(app.subject, "my iPad" if app.slug == "mobile/ipad" else "my phone") %}
     {% include "partials/hero.njk" %}
+
+    {% set featureRows = features.forApp(app.subject, "social") if app.subject else features.mobile %}
+    {% set rowsMicro = "What you get" %}
+    {% set rowsHeading = ("Reading a script over " + app.subject) if app.subject else "Built to be read out of the corner of your eye" %}
+    {% set rowsId = "features" %}
+    {% include "partials/rows.njk" %}
 
     {% if app.shotId %}{% set shotIds = [app.shotId] %}{% endif %}
     {% set shotsHeading = "This is the whole app." %}
@@ -126,17 +132,9 @@ layout: layouts/mobile-app.njk
     {% endif %}
     {% include "partials/watch.njk" %}
 
-    {% set featureRows = features.forApp(app.subject, "social") if app.subject else features.mobile %}
-    {% set rowsMicro = "What you get" %}
-    {% set rowsHeading = ("Reading a script over " + app.subject) if app.subject else "Built to be read out of the corner of your eye" %}
-    {% set rowsId = "features" %}
-    {% set rowsSolid = true %}
-    {% include "partials/rows.njk" %}
-
-    {% if hasBigscreen %}
-    {% set bigscreenSolid = false %}
+    {% if onIpad %}{% set bigscreenTo = "phone" %}{% endif %}
+    {% set bigscreenSubject = app.subject %}
     {% include "partials/bigscreen.njk" %}
-    {% endif %}
 
     {% set gridRoles = site.mobileRoles %}
     {% set gridBase = "/mobile/" %}
@@ -144,21 +142,18 @@ layout: layouts/mobile-app.njk
     {% set gridMicro = "Made for" %}
     {% set gridHeading = "Whatever it is you have to say on camera" %}
     {% set gridSuffix = "teleprompter app" %}
-    {% set gridSolid = hasBigscreen %}
     {% include "partials/rolegrid.njk" %}
 
-    {% set crossSolid = not hasBigscreen %}
+    {% set crossSubject = app.subject %}
     {% include "partials/crosspanel.njk" %}
 
-    {% set faqItems = appFaq %}
-    {% set faqHeading = "Questions about " + app.name %}
-    {% set faqSolid = hasBigscreen %}
-    {% include "partials/faq.njk" %}
-
-    {% set getSolid = not hasBigscreen %}
     {% set getHeading = "On your phone in under a minute" %}
     {% set getBody = "Free, with no subscription and nothing to cancel — and free on your computer too." %}
     {% include "partials/getcuecard.njk" %}
+
+    {% set faqItems = appFaq %}
+    {% set faqHeading = "Questions about " + app.name %}
+    {% include "partials/faq.njk" %}
 </main>
 
 {% include "partials/footer.njk" %}

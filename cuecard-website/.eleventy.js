@@ -31,6 +31,10 @@ module.exports = function(eleventyConfig) {
     );
   };
 
+  // The first n items of a list. The syntax section wants the opening of the
+  // page's prompter script, not the whole of it.
+  eleventyConfig.addFilter("take", (list, n) => (list || []).slice(0, n));
+
   eleventyConfig.addFilter("markdownify", (value) => {
     if (!value) {
       return "";
