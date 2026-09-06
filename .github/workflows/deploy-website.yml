@@ -1,13 +1,12 @@
 name: Deploy Website
 
-# Builds the 11ty site and — only when a human asks for it — publishes
-# cuecard-website/_site to GitHub Pages.
+# Builds the 11ty site and publishes cuecard-website/_site to GitHub Pages.
 #
-# Pushing NEVER publishes. A push to main (or a PR) runs the build and the
-# verification step as CI, so a broken site is caught immediately, but it stops
-# there. Publishing to cuecard.dev is an explicit action: open Actions →
-# "Deploy Website" → "Run workflow", which is the only event that reaches the
-# deploy job.
+# A push to main that touches the site publishes it to cuecard.dev. A pull
+# request runs the build and the verification step as CI only, so a broken
+# site is caught before it can be merged. Actions → "Deploy Website" →
+# "Run workflow" still publishes on demand, and unticking its publish input
+# turns that run into a build-only check.
 #
 # The site is fully static: there is no PHP and no .htaccess, so Pages serves
 # 404.html natively and the /ios and /android shortlinks are generated as
@@ -79,22 +78,22 @@ jobs:
             exit 1
           fi
 
-      # Everything below only runs for a manual, opted-in dispatch. On a push
-      # the workflow ends here, having proved the site still builds.
+      # Everything below is skipped on a pull request: a PR proves the site
+      # still builds, and stops there.
       - name: Configure Pages
-        if: github.event_name == 'workflow_dispatch' && inputs.publish
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish)
         uses: actions/configure-pages@v5
 
       - name: Upload Pages artifact
-        if: github.event_name == 'workflow_dispatch' && inputs.publish
+        if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish)
         uses: actions/upload-pages-artifact@v3
         with:
           path: cuecard-website/_site
 
   deploy:
-    # Publishing is deliberate: only a manual run of this workflow with the
-    # publish input left on can reach GitHub Pages.
-    if: github.event_name == 'workflow_dispatch' && inputs.publish
+    # A push to main publishes; a manual run publishes unless its publish
+    # input was unticked; a pull request never does.
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish)
     needs: build
     runs-on: ubuntu-latest
     environment:
