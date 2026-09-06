@@ -1,5 +1,12 @@
 package com.thisisnsh.cuecard.android.views
 
+import android.app.Activity
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -51,6 +58,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.SpanStyle
@@ -75,6 +83,9 @@ import com.thisisnsh.cuecard.android.services.ReviewPromptService
 import com.thisisnsh.cuecard.android.services.TeleprompterPiPManager
 import com.thisisnsh.cuecard.android.services.TeleprompterSettings
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import kotlin.math.abs
 import kotlin.math.exp
 
@@ -101,6 +112,16 @@ private const val READING_LINE_FRACTION = 0.45f
  * way and the same easing carries the script there smoothly.
  */
 private const val EASE_TIME_CONSTANT = 0.12
+
+/**
+ * How long the script takes to arrive after the overlay has gone. The reader is
+ * handed a blank page for that moment and the script comes up onto it, rather
+ * than the overlay lifting off a screen that was finished all along.
+ */
+private const val SCRIPT_FADE_IN_MILLIS = 350
+
+/** How long the controls take to arrive and to leave. */
+private const val CONTROLS_FADE_MILLIS = 200
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -130,6 +151,40 @@ fun TeleprompterView(
      * on the first play; resuming from a pause starts right away.
      */
     var hasStarted by remember { mutableStateOf(false) }
+    /**
+     * How far the script has arrived. One at all times except across a return
+     * from the overlay, where it is taken away as the overlay closes and brought
+     * back once the overlay has gone — so the reader is handed a blank page for
+     * that moment and the script comes up onto it, rather than the overlay
+     * lifting off a screen that was finished all along.
+     */
+    var scriptVisible by remember { mutableStateOf(true) }
+    val scriptAlpha by animateFloatAsState(
+        targetValue = if (scriptVisible) 1f else 0f,
+        animationSpec = tween(durationMillis = SCRIPT_FADE_IN_MILLIS, easing = LinearOutSlowInEasing),
+        label = "scriptAlpha"
+    )
+
+    // Nothing but the script for as long as the prompter is up: the gesture bar
+    // goes with the rest of it, the way `persistentSystemOverlays(.hidden)` takes
+    // the home indicator away on iOS. A swipe from the edge still brings it back.
+    val view = LocalView.current
+    DisposableEffect(view) {
+        val window = (view.context as? Activity)?.window
+        val controller = window?.let { WindowCompat.getInsetsController(it, view) }
+        controller?.apply {
+            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            hide(WindowInsetsCompat.Type.navigationBars())
+        }
+        onDispose { controller?.show(WindowInsetsCompat.Type.navigationBars()) }
+    }
+
+    // Android reports the overlay closing once, where iOS has a will-end and a
+    // did-end, so the blanking hangs off the overlay's own state rather than off
+    // a pair of callbacks.
+    LaunchedEffect(pipManager.isPiPActive) {
+        scriptVisible = !pipManager.isPiPActive
+    }
 
     // The scroll offsets that put each rendered line on the reading line, and
     // where the script actually is right now.
@@ -508,6 +563,10 @@ fun TeleprompterView(
                         detectTapGestures { showControls = !showControls }
                     }
                     .scriptEdgeFade(isDark = isDark, top = TOP_FADE, bottom = BOTTOM_FADE)
+                    // Held back while the overlay is closing, so the script
+                    // arrives on the blank page rather than being there waiting
+                    // behind it. See `scriptVisible`.
+                    .graphicsLayer { alpha = scriptAlpha }
             ) {
                 val topPadding = with(density) { (viewportHeightPx * READING_LINE_FRACTION).toDp() }
                 val bottomPadding =
@@ -540,11 +599,14 @@ fun TeleprompterView(
                 }
             }
 
-            if (showControls) {
+            AnimatedVisibility(
+                visible = showControls,
+                modifier = Modifier.align(Alignment.BottomCenter),
+                enter = fadeIn(tween(CONTROLS_FADE_MILLIS)),
+                exit = fadeOut(tween(CONTROLS_FADE_MILLIS))
+            ) {
                 Row(
-                    modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .padding(bottom = 48.dp),
+                    modifier = Modifier.padding(bottom = 48.dp),
                     horizontalArrangement = Arrangement.spacedBy(24.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
