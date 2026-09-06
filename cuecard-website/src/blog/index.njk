@@ -1,13 +1,13 @@
 ---
 layout: layouts/base.njk
 title: "Teleprompter Tips & Speaker Notes Guides - CueCard Blog"
-description: "Teleprompter tips for filming on your phone, and speaker notes workflows for presenting on Zoom, Google Meet and Teams. From the team behind CueCard Teleprompter."
+description: "Teleprompter tips for filming on your phone, and speaker notes workflows for presenting on Zoom, Google Meet and Teams. From the team behind CueCard."
 keywords: "cuecard blog, speaker notes tips, teleprompter tips, presentation workflows, zoom speaker notes, google meet notes, teams presenter notes"
 canonical: "https://cuecard.dev/blog/"
 ogTitle: "CueCard Blog"
 ogDescription: "Speaker notes tips, teleprompter workflows, and presentation best practices."
-ogImageWidth: "1280"
-ogImageHeight: "640"
+ogImageWidth: "1200"
+ogImageHeight: "630"
 ogLocale: "en_US"
 pageName: "CueCard Blog"
 crumbs:
@@ -20,6 +20,15 @@ crumbs:
 <script type="application/ld+json">
 {
     "@context": "https://schema.org",
+    "@graph": [
+    {
+        "@type": "Person",
+        "@id": "{{ site.author.id }}",
+        "name": {{ site.author.name | dump | safe }},
+        "url": "{{ site.author.url }}",
+        "sameAs": [{% for profile in site.author.sameAs %}"{{ profile }}"{% if not loop.last %}, {% endif %}{% endfor %}]
+    },
+    {
     "@type": "Blog",
     "@id": "https://cuecard.dev/blog/#blog",
     "name": "CueCard Blog",
@@ -35,9 +44,11 @@ crumbs:
             "headline": {{ blog.title | dump | safe }},
             "url": "https://cuecard.dev/blog/{{ blog.slug }}/",
             "datePublished": "{{ blog.datetime }}",
-            "author": { "@type": "Person", "name": {{ blog.author | dump | safe }} }
+            "author": { "@id": "{{ site.author.id }}" }
         }{% if not loop.last %},{% endif %}
         {% endfor %}
+    ]
+    }
     ]
 }
 </script>

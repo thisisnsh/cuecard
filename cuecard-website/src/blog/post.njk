@@ -6,14 +6,14 @@ pagination:
 permalink: "blog/{{ blog.slug }}/index.html"
 layout: layouts/base.njk
 eleventyComputed:
-  title: "{{ blog.title | safe }} | CueCard Blog"
-  description: "{{ blog.content | markdownExcerpt | striptags | safe }}"
+  title: "{{ (blog.seoTitle or blog.title) | safe }} | CueCard"
+  description: "{{ blog.content | metaExcerpt }}"
   keywords: "cuecard blog, speaker notes, teleprompter, presentation tips"
   canonical: "https://cuecard.dev/blog/{{ blog.slug }}/"
-  ogTitle: "{{ blog.title | safe }}"
-  ogDescription: "{{ blog.content | markdownExcerpt | striptags | safe }}"
-  ogImageWidth: "1280"
-  ogImageHeight: "640"
+  ogTitle: "{{ (blog.seoTitle or blog.title) | safe }}"
+  ogDescription: "{{ blog.content | metaExcerpt }}"
+  ogImageWidth: "1200"
+  ogImageHeight: "630"
   ogLocale: "en_US"
   crumbs:
     - name: "CueCard"
@@ -28,13 +28,19 @@ eleventyComputed:
     "@type": "BlogPosting",
     "@id": "https://cuecard.dev/blog/{{ blog.slug }}/#post",
     "headline": {{ blog.title | dump | safe }},
-    "description": {{ blog.content | markdownExcerpt | striptags | dump | safe }},
+    "description": {{ blog.content | metaExcerpt | dump | safe }},
     "url": "https://cuecard.dev/blog/{{ blog.slug }}/",
     "datePublished": "{{ blog.datetime }}",
     "dateModified": "{{ blog.datetime }}",
     "inLanguage": "en",
     "image": "https://cuecard.dev/assets/og-image.png",
-    "author": { "@type": "Person", "name": {{ blog.author | dump | safe }} },
+    "author": {
+        "@type": "Person",
+        "@id": "{{ site.author.id }}",
+        "name": {{ site.author.name | dump | safe }},
+        "url": "{{ site.author.url }}",
+        "sameAs": [{% for profile in site.author.sameAs %}"{{ profile }}"{% if not loop.last %}, {% endif %}{% endfor %}]
+    },
     "publisher": { "@id": "https://cuecard.dev/#org" },
     "isPartOf": { "@id": "https://cuecard.dev/blog/#blog" },
     "mainEntityOfPage": { "@id": "https://cuecard.dev/blog/{{ blog.slug }}/#webpage" }

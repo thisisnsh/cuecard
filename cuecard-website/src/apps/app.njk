@@ -32,12 +32,11 @@ layout: layouts/mobile-app.njk
     "url": "{{ app.canonical }}",
     {% if app.showIos %}"downloadUrl": "{{ site.ios }}",
     "installUrl": "{{ site.ios }}",{% endif %}
-    "image": "https://cuecard.dev/assets/promo-{{ app.shotId or "mobile" }}.jpg",
+    "image": "{{ site.url }}{{ (site.shot[app.shotId] or site.shot.phone).src }}",
     "screenshot": [
-        "https://cuecard.dev/assets/promo-mobile.jpg",
-        "https://cuecard.dev/assets/promo-ipad.jpg"
+        {% for shot in site.shots %}"{{ site.url }}{{ shot.src }}"{% if not loop.last %},{% endif %}
+        {% endfor %}
     ],
-    "softwareVersion": "1.0.0",
     "isAccessibleForFree": true,
     "author": { "@id": "https://cuecard.dev/#org" },
     "publisher": { "@id": "https://cuecard.dev/#org" },

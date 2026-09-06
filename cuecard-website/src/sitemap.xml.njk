@@ -8,42 +8,48 @@ permalink: "sitemap.xml"
     /faq/ and every social-app page.
 
     The /ios/ and /android/ shortlinks are deliberately absent - they are
-    noindex meta-refresh stubs pointing at the app stores, not pages. -#}
+    noindex meta-refresh stubs pointing at the app stores, not pages.
+
+    Only the posts carry <lastmod>, because only the posts know when they
+    actually changed. Stamping the build date on the marketing pages would
+    claim all fifty-odd of them change on every deploy, and Google keeps using
+    lastmod only while it stays true - once it reads as noise it is discounted
+    for the whole site, which costs us the one moment it is worth having: a
+    page we really did rewrite, recrawled quickly. No date beats a wrong one. -#}
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  {%- set today = "2026-09-06" -%}
 
   {# The two products, and the pages that serve both. #}
-  <url><loc>https://cuecard.dev/</loc><lastmod>{{ today }}</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
-  <url><loc>https://cuecard.dev/desktop/</loc><lastmod>{{ today }}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://cuecard.dev/faq/</loc><lastmod>{{ today }}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://cuecard.dev/support/</loc><lastmod>{{ today }}</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://cuecard.dev/blog/</loc><lastmod>{% if blogs and blogs.length %}{{ blogs[0].datetime }}{% else %}{{ today }}{% endif %}</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://cuecard.dev/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://cuecard.dev/desktop/</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://cuecard.dev/faq/</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://cuecard.dev/support/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://cuecard.dev/blog/</loc>{% if blogs and blogs.length %}<lastmod>{{ blogs[0].datetime }}</lastmod>{% endif %}<changefreq>weekly</changefreq><priority>0.7</priority></url>
 
   {# The mobile app: its own page, the two platforms, and one page per app it
      is read over. #}
   {%- for app in apps %}
-  <url><loc>{{ app.canonical }}</loc><lastmod>{{ today }}</lastmod><changefreq>monthly</changefreq><priority>{% if app.slug == "mobile" %}0.9{% else %}0.8{% endif %}</priority></url>
+  <url><loc>{{ app.canonical }}</loc><changefreq>monthly</changefreq><priority>{% if app.slug == "mobile" %}0.9{% else %}0.8{% endif %}</priority></url>
   {%- endfor %}
 
   {# The desktop app's meeting and presentation pages. #}
   {%- for platform in platforms %}
-  <url><loc>{{ platform.canonical }}</loc><lastmod>{{ today }}</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>{{ platform.canonical }}</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   {%- endfor %}
 
   {# Roles, on each side of the product. #}
   {%- for profession in professions %}
-  <url><loc>{{ profession.canonical }}</loc><lastmod>{{ today }}</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>{{ profession.canonical }}</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   {%- endfor %}
   {%- for role in mobileProfessions %}
-  <url><loc>{{ role.canonical }}</loc><lastmod>{{ today }}</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>{{ role.canonical }}</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   {%- endfor %}
 
-  {# Posts. #}
+  {# Posts. The one place a real date is known. #}
   {%- for blog in blogs %}
   <url><loc>https://cuecard.dev/blog/{{ blog.slug }}/</loc><lastmod>{{ blog.datetime }}</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
   {%- endfor %}
 
   {# The documents. #}
-  <url><loc>https://cuecard.dev/privacy/</loc><lastmod>{{ today }}</lastmod><changefreq>yearly</changefreq><priority>0.3</priority></url>
-  <url><loc>https://cuecard.dev/terms/</loc><lastmod>{{ today }}</lastmod><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://cuecard.dev/privacy/</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://cuecard.dev/terms/</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
 </urlset>

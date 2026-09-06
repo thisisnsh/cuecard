@@ -6,9 +6,9 @@
 User-agent: *
 Allow: /
 
-# The store shortlinks are meta-refresh stubs, not pages. They already carry
-# noindex; keeping crawlers out of them saves everyone the round trip.
-Disallow: /ios/
-Disallow: /android/
+# /ios/ and /android/ are meta-refresh stubs pointing at the app stores, and
+# they carry noindex. They are deliberately NOT disallowed here: a crawler that
+# is blocked from fetching them never reads the noindex, and can still list the
+# bare URL. Letting it fetch the stub is what gets them dropped.
 
 Sitemap: https://cuecard.dev/sitemap.xml

@@ -27,6 +27,16 @@ const site = {
   android: "https://play.google.com/apps/testing/com.thisisnsh.cuecard.android",
   androidComingSoon: true,
 
+  // Who writes the posts. A name on its own is a string; this is an entity
+  // Google can resolve and tie to the same person elsewhere, which is what
+  // carries authorship across to the blog.
+  author: {
+    id: "https://cuecard.dev/#nishant",
+    name: "Nishant Hada",
+    url: "https://thisisnsh.com",
+    sameAs: ["https://github.com/thisisnsh", "https://www.linkedin.com/in/thisisnsh"],
+  },
+
   requiresMobile: "iOS 17.0 or later",
   requiresMobileShort: "iOS 17+",
   requiresDesktop: "macOS 13 or later, Windows 10 or later",
@@ -257,5 +267,10 @@ site.downloads = site.downloadGroups.reduce(
 
 // The demos, addressable by id, for the pages that only want one of them.
 site.demo = site.demos.reduce((map, d) => Object.assign(map, { [d.id]: d }), {});
+
+// The shots, addressable by id. An id and its file name are not the same thing
+// — the phone shot lives in promo-mobile.jpg — so anything that wants one looks
+// it up here rather than rebuilding the path out of the id and missing.
+site.shot = site.shots.reduce((map, s) => Object.assign(map, { [s.id]: s }), {});
 
 module.exports = site;
