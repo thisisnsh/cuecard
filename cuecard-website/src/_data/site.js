@@ -17,6 +17,7 @@ const site = {
   url: "https://cuecard.dev",
   email: "hello@thisisnsh.com",
   github: "https://github.com/thisisnsh/cuecard",
+  youtube: "https://www.youtube.com/@thisisnsh",
   issues: "https://github.com/ThisIsNSH/CueCard/issues",
   releases: "https://github.com/thisisnsh/cuecard/releases",
   year,
