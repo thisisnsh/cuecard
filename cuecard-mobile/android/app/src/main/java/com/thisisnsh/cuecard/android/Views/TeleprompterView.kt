@@ -319,23 +319,14 @@ fun TeleprompterView(
     DisposableEffect(Unit) {
         pipManager.configure(settings = settings, timerDuration = timerDuration)
 
+        // Straight to the same handlers the on-screen buttons use, so the overlay
+        // reports back what it did. Without that report the overlay's own button
+        // keeps saying Pause after a pause, and the next tap asks to pause again.
         pipManager.onPlayPauseFromPiP = { playing ->
-            if (playing) {
-                isPlaying = true
-                hasStarted = true
-            } else {
-                isPlaying = false
-            }
+            if (playing) play() else pause()
         }
 
-        pipManager.onRestartFromPiP = {
-            isCountingDown = false
-            countdownValue = 0
-            clock.doubleValue = 0.0
-            elapsedSeconds = 0
-            isPlaying = false
-            hasStarted = false
-        }
+        pipManager.onRestartFromPiP = { restart() }
 
         // Coming back from the overlay, the script is already where the overlay
         // left it, so it settles rather than scrolling there.
@@ -659,8 +650,7 @@ fun TeleprompterView(
                     Box(
                         modifier = Modifier
                             .size(72.dp)
-                            .background(AppColors.green(isDark), CircleShape)
-                            .glassed(CircleShape, isDark)
+                            .glassed(CircleShape, isDark, tint = AppColors.green(isDark))
                             .clickableWithoutRipple {
                                 AnalyticsEvents.logButtonClick(
                                     if (isPlaying || isCountingDown) "pause" else "play",

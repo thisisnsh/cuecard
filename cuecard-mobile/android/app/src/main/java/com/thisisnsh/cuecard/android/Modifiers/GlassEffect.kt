@@ -10,6 +10,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -19,21 +20,32 @@ import com.thisisnsh.cuecard.android.models.AppColors
 val Capsule: Shape = RoundedCornerShape(percent = 50)
 
 /**
- * The glass look the app's floating controls sit on, ported from the SwiftUI
+ * The look the app's floating controls sit on, ported from the SwiftUI
  * `Shape.glassed()`.
  *
  * Compose has no backdrop blur — `Modifier.blur` blurs a composable's own content,
- * not what sits behind it — so `.ultraThinMaterial` is approximated by a scrim of
- * the background color. That is the one place the pixel-match is an approximation
- * rather than a copy; the gradient and the stroke are exact.
+ * not what sits behind it — so there is nothing here for a scrim of the page color
+ * to frost. Painting one only tinted the page with itself and left the controls
+ * reading as flat outlines. Instead the surface is the page lifted toward the text
+ * color: an opaque fill that stands off the page the way the material does on iOS.
+ *
+ * `tint` gives a control its own fill — the green play buttons — and then nothing
+ * is painted over it, so the color stays the color it was asked for. The gradient
+ * and the stroke are the SwiftUI ones either way.
  */
-fun Modifier.glassed(shape: Shape = Capsule, isDark: Boolean): Modifier {
+fun Modifier.glassed(
+    shape: Shape = Capsule,
+    isDark: Boolean,
+    tint: Color? = null
+): Modifier {
     val primary = AppColors.textPrimary(isDark)
+    val surface = tint ?: primary
+        .copy(alpha = if (isDark) 0.16f else 0.10f)
+        .compositeOver(AppColors.background(isDark))
 
     return this
         .clip(shape)
-        // Standing in for `.ultraThinMaterial`.
-        .background(AppColors.background(isDark).copy(alpha = 0.6f), shape)
+        .background(surface, shape)
         .background(
             brush = Brush.linearGradient(
                 colors = listOf(

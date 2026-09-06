@@ -441,9 +441,7 @@ fun HomeView(
                             .padding(end = 20.dp, bottom = 24.dp)
                             .size(52.dp)
                             .alpha(if (hasNotes) 1f else 0.6f)
-                            .clip(CircleShape)
-                            .background(AppColors.green(isDark))
-                            .glassed(CircleShape, isDark)
+                            .glassed(CircleShape, isDark, tint = AppColors.green(isDark))
                             .clickableWithoutRipple {
                                 if (!hasNotes) return@clickableWithoutRipple
                                 AnalyticsEvents.logButtonClick("start_teleprompter", "home")
