@@ -5,6 +5,7 @@ import androidx.core.content.edit
 import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.analytics.logEvent
 import com.google.firebase.ktx.Firebase
+import com.thisisnsh.cuecard.android.BuildConfig
 import com.thisisnsh.cuecard.android.models.RemoteNotification
 import com.thisisnsh.cuecard.android.models.RemoteNotifications
 import kotlinx.coroutines.Dispatchers
@@ -63,6 +64,11 @@ class RemoteNotificationService private constructor(context: Context) {
                     readTimeout = TIMEOUT_MS
                     requestMethod = "GET"
                     setRequestProperty("Accept", "application/json")
+                    // The worker sends `Cache-Control: max-age=300`. We do our own
+                    // throttling and keep our own copy on disk, so a second layer
+                    // of caching here buys nothing and would hide a freshly
+                    // deployed notification for another five minutes.
+                    useCaches = false
                     try {
                         if (responseCode != 200) return@withContext null
                         inputStream.bufferedReader().use { it.readText() }
@@ -157,8 +163,13 @@ class RemoteNotificationService private constructor(context: Context) {
         /**
          * Long enough that foregrounding the app repeatedly doesn't hammer the edge,
          * short enough that pulling a bad notification takes effect within a session.
+         *
+         * Debug builds get a few seconds instead, because the release interval makes
+         * testing one impossible: you edit the worker, background and foreground the
+         * app, and nothing happens for a quarter of an hour.
          */
-        private const val MINIMUM_REFRESH_INTERVAL_MS = 15L * 60L * 1000L
+        private val MINIMUM_REFRESH_INTERVAL_MS =
+            if (BuildConfig.DEBUG) 5L * 1000L else 15L * 60L * 1000L
         private const val TIMEOUT_MS = 5000
 
         private const val PREFS_NAME = "cuecard_remote_config"
