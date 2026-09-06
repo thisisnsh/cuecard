@@ -5,14 +5,14 @@ pagination:
   alias: platform
 permalink: "{{ platform.slug }}/index.html"
 eleventyComputed:
-  title: "{{ platform.title }}"
-  description: "{{ platform.description }}"
-  keywords: "{{ platform.keywords }}"
-  canonical: "{{ platform.canonical }}"
-  pageName: "{{ platform.jsonLdName }}"
-  ogTitle: "{{ platform.ogTitle }}"
-  ogDescription: "{{ platform.ogDescription }}"
-  ogUrl: "{{ platform.canonical }}"
+  title: "{{ platform.title | safe }}"
+  description: "{{ platform.description | safe }}"
+  keywords: "{{ platform.keywords | safe }}"
+  canonical: "{{ platform.canonical | safe }}"
+  pageName: "{{ platform.jsonLdName | safe }}"
+  ogTitle: "{{ platform.ogTitle | safe }}"
+  ogDescription: "{{ platform.ogDescription | safe }}"
+  ogUrl: "{{ platform.canonical | safe }}"
   ogLocale: "en_US"
 layout: layouts/platform.njk
 ---

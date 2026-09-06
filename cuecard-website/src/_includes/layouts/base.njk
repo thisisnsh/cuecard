@@ -10,7 +10,7 @@
     {% if keywords %}<meta name="keywords" content="{{ keywords }}">{% endif %}
     <meta name="author" content="CueCard">
     <meta name="robots" content="{% if noindex %}noindex, follow{% else %}index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1{% endif %}">
-    <meta name="theme-color" content="#000000">
+    <meta name="theme-color" content="#ffffff">
     <meta name="apple-mobile-web-app-title" content="CueCard">
     <meta name="format-detection" content="telephone=no">
     {# Safari on iOS turns this into the App Store banner - the fastest install
@@ -58,10 +58,6 @@
     {# reveal-on-scroll is an enhancement; with no JS the page must still read. #}
     <noscript><style>.reveal{opacity:1;transform:none}</style></noscript>
 
-    {% if not noVideo %}<link rel="preload" as="image" href="{{ site.video.poster }}" fetchpriority="high">
-{% if site.video.origin %}
-    <link rel="preconnect" href="{{ site.video.origin }}" crossorigin>{% endif %}{% endif %}
-
     <link rel="icon" type="image/png" href="/assets/favicon-96x96.png" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
     <link rel="shortcut icon" href="/assets/favicon.ico" />
@@ -79,6 +75,7 @@
           "@type": "Organization",
           "@id": "{{ site.url }}/#org",
           "name": "CueCard",
+          "alternateName": "CueCard Teleprompter",
           "url": "{{ site.url }}/",
           "email": "{{ site.email }}",
           "sameAs": ["{{ site.github }}"],
@@ -96,8 +93,9 @@
           "@type": "WebSite",
           "@id": "{{ site.url }}/#website",
           "url": "{{ site.url }}/",
-          "name": "CueCard",
-          "description": "A teleprompter that floats over every other app on your phone, and speaker notes that stay invisible while you share your screen on a computer.",
+          "name": "CueCard Teleprompter",
+          "alternateName": "CueCard",
+          "description": "CueCard Teleprompter is a free teleprompter app for iPhone and iPad. Your script floats over the camera, Instagram, TikTok or Snapchat while you film — and on a Mac or PC the same notes stay out of the screen share on Zoom, Google Meet and Teams.",
           "publisher": { "@id": "{{ site.url }}/#org" },
           "inLanguage": "en"
         },
@@ -127,27 +125,7 @@
     }
     </script>
 
-    {# The reel behind the page is the site's only video, so it is the site's
-       only VideoObject - and it stays unwritten while site.video.placeholder is
-       true, because the footage running there is borrowed. #}
-    {% if not noVideo and site.video.enabled and not site.video.placeholder %}
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "VideoObject",
-      "@id": "{{ site.url }}/#reel",
-      "name": {{ site.video.schema.name | dump | safe }},
-      "description": {{ site.video.schema.description | dump | safe }},
-      "thumbnailUrl": ["{{ site.video.poster }}"],
-      "contentUrl": "{{ site.video.mp4 }}",
-      "uploadDate": "{{ site.video.schema.uploadDate }}",
-      "duration": "{{ site.video.schema.duration }}",
-      "publisher": { "@id": "{{ site.url }}/#org" }
-    }
-    </script>
-    {% endif %}
-
-    {% block jsonld %}{% endblock %}
+{% block jsonld %}{% endblock %}
 
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-XEWZHB7QKW"></script>
@@ -159,9 +137,9 @@
     </script>
 </head>
 
-<body{% if noVideo %} class="no-video"{% endif %}>
+<body>
     {% include "partials/icon-sprite.njk" %}
-    {% if not noVideo %}{% include "partials/video-bg.njk" %}{% endif %}
+    {% if not noPrompterBg %}{% include "partials/prompter-bg.njk" %}{% endif %}
 
     {% block body %}{{ content | safe }}{% endblock %}
 

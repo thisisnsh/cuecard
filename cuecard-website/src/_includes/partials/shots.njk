@@ -1,0 +1,32 @@
+{% from "partials/icons.njk" import icon %}
+{#
+  The App Store artwork: one strip per device, side by side on a wide screen.
+  These are the only photographs on the site and they sit directly under the
+  hero, because "what does it actually look like" is the second question
+  everybody has, and the argument reads better once it is answered.
+
+  Pass `shotIds` (a list) to show only some of them.
+#}
+<section class="shots{% if shotsSolid !== false %} solid{% endif %}" id="{{ shotsId or 'shots' }}" aria-labelledby="{{ shotsId or 'shots' }}-h">
+    <div class="wrap">
+        <p class="micro">{{ icon("sparkle", 13) }}{{ shotsMicro or "The app itself" }}</p>
+        <h2 class="section-h" id="{{ shotsId or 'shots' }}-h">{{ (shotsHeading or "This is the whole thing.") | safe }}</h2>
+        {% if shotsNote %}<p class="body">{{ shotsNote | safe }}</p>{% endif %}
+
+        <div class="shots-grid">
+            {% for s in site.shots %}{% if not shotIds or s.id in shotIds %}
+            <figure class="shot reveal">
+                <img class="shot-media" src="{{ s.src }}"
+                     srcset="{{ s.small }} 1100w, {{ s.src }} 2200w"
+                     sizes="(min-width: 1240px) 1140px, 94vw"
+                     width="{{ s.width }}" height="{{ s.height }}"
+                     alt="{{ s.alt }}" loading="lazy" decoding="async">
+                <figcaption class="shot-foot">
+                    <span class="shot-label">{{ icon("phone" if s.id == "phone" else "tablet", 15) }}{{ s.label }}</span>
+                    <span class="shot-cap">{{ s.caption }}</span>
+                </figcaption>
+            </figure>
+            {% endif %}{% endfor %}
+        </div>
+    </div>
+</section>

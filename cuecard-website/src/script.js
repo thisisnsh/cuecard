@@ -1,97 +1,286 @@
 // CueCard Website - Interactions & Animations
 
 document.addEventListener('DOMContentLoaded', () => {
-    // The fixed reel behind the page, loaded only when it is worth loading
-    initBackgroundVideo();
+    // The page of script behind everything, and the clock in the corner
+    initPrompterBackdrop();
+    initStopwatch();
+
+    // The live prompter in the hero: the app, running, in the page
+    initDeck();
 
     // The menu on narrow screens, and the header's download menu
     initNavToggle();
     initDownloadMenu();
 
-    // Initialize scroll reveal animations
+    // Reveal on scroll, smooth anchors, the sticky header's scrolled state
     initScrollReveal();
-
-    // Initialize smooth scroll for anchor links
     initSmoothScroll();
-
-    // Initialize navbar scroll effect
     initNavbarScroll();
 
-    // Initialize FAQ accordion
+    // The FAQ accordion and the search box on /faq/
     initFAQAccordion();
-
-    // Initialize FAQ search
     initFaqSearch();
 
-    // Initialize timestamp countdown demo
+    // The counting [time] tag in the script-syntax panels
     initTimestampCountdowns();
 
-    // Initialize Ghost Mode GIF animation
-    initGhostModeAnimation();
-
-    // Initialize hero badge typewriter
-    initHeroBadgeTypewriter();
-
-    // Initialize GitHub stats and releases
+    // GitHub stars, and the desktop release downloads
     initGitHubData();
-
 });
 
-/* The background reel.
 
-   The poster is already painted by the time this runs, so the only job here is
-   to decide whether this visitor should also pay for the video, and to fade it
-   in over the poster once it can actually play. If it never can, the poster
-   simply stays and nothing is broken. */
-function initBackgroundVideo() {
-    const video = document.getElementById('bgvideo');
-    const loading = document.getElementById('video-loading');
-    const poster = document.querySelector('.videobg-poster');
+/* The prompter backdrop.
 
-    // A broken poster should be absent, not a browser's torn-image mark.
-    if (poster) poster.addEventListener('error', () => poster.remove(), { once: true });
+   A page of script, fixed behind everything, drifting upward as you scroll —
+   the site is something you read down, so it may as well look like the thing
+   it is selling. The lines are written here rather than in the template on
+   purpose: copy set at five per cent contrast has no business being in the
+   HTML, where it would read as hidden text to a crawler and be worth a
+   penalty. With no JavaScript the page is simply white. */
+const BACKDROP_SCRIPT = [
+    ['line', 'Welcome everyone.'],
+    ['cue', 'smile and pause'],
+    ['line', "I'm excited to be here today."],
+    ['line', 'Your script sits on the glass,'],
+    ['line', 'above whatever you are filming in.'],
+    ['cue', 'slow down'],
+    ['line', 'It scrolls while you talk,'],
+    ['line', 'so your eyes stay near the lens.'],
+    ['cue', 'emphasize'],
+    ['line', 'Nobody watching ever sees it.'],
+    ['line', 'Not the camera. Not the call.'],
+    ['cue', 'pause'],
+    ['line', 'You just look like someone'],
+    ['line', 'who knew what to say.'],
+];
 
-    if (!video) return;
+function initPrompterBackdrop() {
+    const stage = document.querySelector('[data-prompter-bg]');
+    const inner = document.querySelector('[data-prompter-lines]');
+    if (!stage || !inner) return;
 
-    // Respect explicit accessibility and bandwidth preferences. Everyone else,
-    // phones included, gets the reel.
-    const conn = navigator.connection || {};
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || conn.saveData === true) {
-        video.remove();
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        stage.remove();
         return;
     }
 
-    if (loading) loading.hidden = false;
+    // Two passes of the script, so the column is always taller than the
+    // viewport and there is never an empty stretch behind a long page.
+    const frag = document.createDocumentFragment();
+    for (let pass = 0; pass < 2; pass++) {
+        for (const [kind, text] of BACKDROP_SCRIPT) {
+            const p = document.createElement('p');
+            p.className = kind === 'cue' ? 'pb-line pb-cue' : 'pb-line';
+            p.textContent = text;
+            frag.appendChild(p);
+        }
+    }
+    inner.appendChild(frag);
 
-    const addSource = (type, src) => {
-        if (!src) return;
-        const source = document.createElement('source');
-        source.type = type;
-        source.src = src;
-        video.appendChild(source);
+    const lines = Array.from(inner.children);
+    let ticking = false;
+    let lit = null;
+
+    const draw = () => {
+        ticking = false;
+        const doc = document.documentElement;
+        const scrolled = window.scrollY || doc.scrollTop || 0;
+        const travel = Math.max(1, doc.scrollHeight - window.innerHeight);
+        const progress = Math.min(1, scrolled / travel);
+
+        // The column runs from just below the fold to just above the top over
+        // the whole length of the page, so it reads as one continuous take
+        // rather than as parallax on a decoration.
+        const span = inner.offsetHeight + window.innerHeight;
+        inner.style.transform =
+            `translate(-50%, ${(window.innerHeight * 0.35 - progress * span).toFixed(1)}px)`;
+
+        // One line at a time sits a shade darker: the line the prompter is on.
+        const mid = window.innerHeight / 2;
+        let best = null;
+        let bestGap = Infinity;
+        for (const el of lines) {
+            const box = el.getBoundingClientRect();
+            if (box.bottom < 0 || box.top > window.innerHeight) continue;
+            const gap = Math.abs(box.top + box.height / 2 - mid);
+            if (gap < bestGap) { bestGap = gap; best = el; }
+        }
+        if (best !== lit) {
+            if (lit) lit.classList.remove('is-on');
+            if (best) best.classList.add('is-on');
+            lit = best;
+        }
     };
 
-    let settled = false;
-    const settle = () => {
-        if (settled) return;
-        settled = true;
-        if (loading) loading.hidden = true;
+    const onScroll = () => {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(draw);
     };
 
-    video.addEventListener('canplay', () => {
-        settle();
-        // The poster stays underneath, so the crossfade reveals nothing.
-        video.classList.add('is-ready');
-        const played = video.play();
-        if (played && played.catch) played.catch(() => {});
-    }, { once: true });
+    draw();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+}
 
-    video.addEventListener('error', settle, { once: true });
+/* The clock in the corner.
 
-    addSource('video/webm', video.dataset.webm);
-    addSource('video/mp4', video.dataset.mp4);
-    video.preload = 'auto';
-    video.load();
+   The app puts a running timer at the top of the prompter, so the site does
+   too: it counts how long you have been reading, and pressing it stops it,
+   exactly as pressing the one in the app does. It is the only piece of chrome
+   that moves, and it is the reason the page feels like the product. */
+function initStopwatch() {
+    const watch = document.querySelector('[data-stopwatch]');
+    const face = document.querySelector('[data-stopwatch-time]');
+    if (!watch || !face) return;
+
+    let seconds = 0;
+    let running = true;
+
+    const paint = () => {
+        const m = String(Math.floor(seconds / 60)).padStart(2, '0');
+        const s = String(seconds % 60).padStart(2, '0');
+        face.textContent = `${m}:${s}`;
+    };
+
+    setInterval(() => {
+        if (!running) return;
+        seconds += 1;
+        paint();
+    }, 1000);
+
+    watch.addEventListener('click', () => {
+        running = !running;
+        watch.classList.toggle('is-paused', !running);
+        watch.setAttribute('aria-label',
+            running ? 'Reading timer — press to pause' : 'Reading timer, paused — press to start');
+    });
+
+    // The header is sticky and its height changes between breakpoints; the
+    // clock hangs off it rather than off a number written twice.
+    const topbar = document.getElementById('topbar');
+    if (topbar) {
+        const setOffset = () =>
+            document.documentElement.style.setProperty('--topbar-h', `${topbar.offsetHeight}px`);
+        setOffset();
+        window.addEventListener('resize', setOffset, { passive: true });
+    }
+
+    paint();
+}
+
+/* The live prompter in the hero.
+
+   Not a video and not a GIF: the same script the App Store film uses,
+   scrolling at real lines per minute, with the cues in the cue colour and the
+   clock counting up. You can pause it, restart it and change its speed, which
+   is three of the app's controls demonstrated without a word of copy. */
+function initDeck() {
+    const deck = document.querySelector('[data-deck]');
+    if (!deck) return;
+
+    const script = deck.querySelector('[data-deck-script]');
+    const clock = deck.querySelector('[data-deck-clock]');
+    const toggle = deck.querySelector('[data-deck-toggle]');
+    const restart = deck.querySelector('[data-deck-restart]');
+    const speed = deck.querySelector('[data-deck-speed]');
+    const screen = deck.querySelector('.deck-screen');
+    if (!script || !screen) return;
+
+    const lines = Array.from(script.querySelectorAll('.deck-line'));
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    let offset = 0;          // pixels the script has travelled
+    let elapsed = 0;         // seconds on the clock
+    let running = !reduced;
+    let last = null;
+    let lit = null;
+
+    const linesPerMinute = () => Number(speed && speed.value) || 26;
+    // One "line" is one rendered line of type; the app sets its speed the same
+    // way, which is why the number on the slider means something.
+    const lineHeight = () => {
+        const h = parseFloat(getComputedStyle(lines[0] || script).lineHeight);
+        return Number.isFinite(h) && h > 0 ? h : 28;
+    };
+
+    const setRunning = (on) => {
+        running = on;
+        if (toggle) {
+            toggle.textContent = on ? 'Pause' : 'Play';
+            toggle.setAttribute('aria-label', on ? 'Pause the prompter' : 'Play the prompter');
+        }
+    };
+
+    const paintClock = () => {
+        if (!clock) return;
+        const total = Math.floor(elapsed);
+        const m = String(Math.floor(total / 60)).padStart(2, '0');
+        const s = String(total % 60).padStart(2, '0');
+        clock.textContent = `${m}:${s}`;
+        clock.classList.toggle('is-warn', total >= 45);
+    };
+
+    const highlight = () => {
+        const mid = screen.getBoundingClientRect().top + screen.offsetHeight * 0.42;
+        let best = null;
+        let bestGap = Infinity;
+        for (const el of lines) {
+            const box = el.getBoundingClientRect();
+            const gap = Math.abs(box.top + box.height / 2 - mid);
+            if (gap < bestGap) { bestGap = gap; best = el; }
+        }
+        if (best !== lit) {
+            if (lit) lit.classList.remove('is-on');
+            if (best) best.classList.add('is-on');
+            lit = best;
+        }
+    };
+
+    const reset = () => {
+        offset = 0;
+        elapsed = 0;
+        script.style.transform = 'translateY(0)';
+        paintClock();
+        highlight();
+    };
+
+    const frame = (now) => {
+        if (last === null) last = now;
+        const dt = Math.min(0.1, (now - last) / 1000);
+        last = now;
+
+        if (running) {
+            offset += (linesPerMinute() / 60) * lineHeight() * dt;
+            elapsed += dt;
+            // Run off the bottom and start again, so it is always doing
+            // something when someone scrolls back up to it.
+            const end = script.scrollHeight - screen.offsetHeight * 0.3;
+            if (offset > end) { offset = 0; elapsed = 0; }
+            script.style.transform = `translateY(${-offset.toFixed(1)}px)`;
+            paintClock();
+            highlight();
+        }
+        requestAnimationFrame(frame);
+    };
+
+    if (toggle) toggle.addEventListener('click', () => setRunning(!running));
+    if (restart) restart.addEventListener('click', () => { reset(); setRunning(true); });
+
+    // Nothing should animate off-screen: it is a demo, not a background task.
+    if ('IntersectionObserver' in window) {
+        let seen = true;
+        const io = new IntersectionObserver(([entry]) => {
+            if (!entry) return;
+            if (entry.isIntersecting && !seen && !reduced) { seen = true; setRunning(true); }
+            else if (!entry.isIntersecting && seen) { seen = false; running = false; }
+        }, { threshold: 0.15 });
+        io.observe(deck);
+    }
+
+    setRunning(running);
+    reset();
+    requestAnimationFrame(frame);
 }
 
 /* The menu on narrow screens. The links are a plain block that is hidden by a
@@ -315,66 +504,6 @@ function startTimestampCountdown(element, initialSeconds) {
 }
 
 // Hero badge typewriter animation
-function initHeroBadgeTypewriter() {
-    const heroBadge = document.querySelector('.hero-badge');
-    if (!heroBadge) return;
-
-    const messages = [
-        { text: 'Paste notes for any meeting', theme: 'green' },
-        { text: 'Sync notes from Google Slides', theme: 'yellow' },
-        { text: 'Free and Open Source', theme: 'white' }
-    ];
-
-    // Create span for animated text
-    const textSpan = document.createElement('span');
-    textSpan.className = 'hero-badge-text';
-    textSpan.textContent = messages[0].text;
-
-    // Clear badge and append span
-    heroBadge.textContent = '';
-    heroBadge.appendChild(textSpan);
-
-    const themes = ['hero-badge--yellow', 'hero-badge--green', 'hero-badge--white'];
-    const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-    const setTheme = (theme) => {
-        heroBadge.classList.remove(...themes);
-        heroBadge.classList.add(`hero-badge--${theme}`);
-    };
-
-    const typeText = async (text) => {
-        for (const char of text) {
-            textSpan.textContent += char;
-            await wait(60);
-        }
-    };
-
-    const deleteText = async () => {
-        while (textSpan.textContent.length > 0) {
-            textSpan.textContent = textSpan.textContent.slice(0, -1);
-            await wait(35);
-        }
-    };
-
-    const startTypewriter = async () => {
-        let index = 1;
-        await wait(1000);
-        await deleteText();
-        await wait(400);
-        while (true) {
-            const { text, theme } = messages[index];
-            setTheme(theme);
-            await typeText(text);
-            await wait(1500);
-            await deleteText();
-            await wait(400);
-            index = (index + 1) % messages.length;
-        }
-    };
-
-    startTypewriter();
-}
-
 function formatTimestamp(totalSeconds) {
     const sign = totalSeconds < 0 ? '-' : '';
     const absSeconds = Math.abs(totalSeconds);
@@ -1151,126 +1280,4 @@ function showDownloadError() {
             </div>
         `;
     }
-}
-
-// Ghost Mode GIF Animation
-function initGhostModeAnimation() {
-    const demo = document.querySelector('.gif-demo-visibility');
-    if (!demo) return;
-
-    const screenArea = demo.querySelector('.demo-screen-area');
-    const floatingApp = demo.querySelector('.demo-floating-app');
-    const toggleTrack = demo.querySelector('.demo-toggle-track');
-    const toggleThumb = demo.querySelector('.demo-toggle-thumb');
-    const bannerOn = demo.querySelector('.demo-banner-on');
-    const bannerOff = demo.querySelector('.demo-banner-off');
-    const cursor = demo.querySelector('.demo-cursor');
-
-    if (!screenArea || !floatingApp || !toggleTrack || !toggleThumb || !bannerOn || !bannerOff) return;
-
-    // Animation states
-    const setToggleOn = () => {
-        toggleTrack.style.background = '#19c332';
-        toggleThumb.style.left = '22px';
-    };
-
-    const setToggleOff = () => {
-        toggleTrack.style.background = '#444';
-        toggleThumb.style.left = '2px';
-    };
-
-    const showApp = () => {
-        floatingApp.style.opacity = '1';
-    };
-
-    const hideApp = () => {
-        floatingApp.style.opacity = '0';
-    };
-
-    const showDashedBox = () => {
-        screenArea.style.borderColor = '#19c332';
-    };
-
-    const hideDashedBox = () => {
-        screenArea.style.borderColor = 'transparent';
-    };
-
-    const showBannerOn = () => {
-        bannerOn.style.opacity = '1';
-        bannerOff.style.opacity = '0';
-    };
-
-    const showBannerOff = () => {
-        bannerOn.style.opacity = '0';
-        bannerOff.style.opacity = '1';
-    };
-
-    const showCursor = () => {
-        if (cursor) {
-            // Position cursor near the banner (bottom center area)
-            cursor.style.bottom = '15px';
-            cursor.style.left = 'calc(50% + 60px)';
-            cursor.style.opacity = '1';
-        }
-    };
-
-    const hideCursor = () => {
-        if (cursor) {
-            cursor.style.opacity = '0';
-        }
-    };
-
-    // Animation sequence
-    async function runAnimation() {
-        // Initial state: Toggle ON, screen sharing active
-        setToggleOn();
-        showApp();
-        showDashedBox();
-        showBannerOn();
-        hideCursor();
-
-        await sleep(1500);
-
-        // Step 1: Toggle OFF - CueCard hides (simulating it's hidden from screen share)
-        setToggleOff();
-        hideApp();
-
-        await sleep(1500);
-
-        // Step 2: Show cursor, then banner changes
-        showCursor();
-        await sleep(300);
-        showBannerOff();
-        hideDashedBox();
-        hideCursor();
-
-        await sleep(300);
-        showApp();
-
-        await sleep(1500);
-
-        // Step 3: Toggle ON
-        setToggleOn();
-
-        await sleep(1500);
-
-        // Step 4: Show cursor, then banner changes
-        showCursor();
-        await sleep(300);
-        showBannerOn();
-        showDashedBox();
-        hideCursor();
-
-        await sleep(1500);
-
-        // Loop
-        runAnimation();
-    }
-
-    function sleep(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
-    // Start animation
-    runAnimation();
 }

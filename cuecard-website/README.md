@@ -2,28 +2,44 @@
 
 Static site that powers [cuecard.dev](https://cuecard.dev).
 
-Three pages carry the product. `/` is the landing page: it says what CueCard is
-and forks to both halves. `/mobile/` is the teleprompter that floats over every
-other app on a phone. `/desktop/` is the Mac and Windows app that keeps speaker
-notes invisible during screen sharing, along with every URL it already ranks
-for: `/zoom/`, `/google-meet/`, `/microsoft-teams/`, `/google-slides/` and all
-twelve desktop role pages are exactly where they were.
+**The phone is the product.** `/` is CueCard Teleprompter on iPhone and iPad —
+the floating prompter, the App Store artwork, the demos. `/mobile/` and the
+pages beneath it are the same argument per device and per app you film in.
+`/desktop/` is the Mac and Windows app that keeps speaker notes invisible
+during screen sharing; it is kept whole because it ranks, but on every phone
+page it appears as one card rather than half the page. Every URL that existed
+before still exists: `/zoom/`, `/google-meet/`, `/microsoft-teams/`,
+`/google-slides/` and all twenty-four role pages are exactly where they were,
+with `/mobile/ipad/` and `/mobile/twitch/` added.
 
-Every product page is built from the same sections in the same order, and only
-the content changes: hero, the demo still, ruled feature rows, the script
-panels, the app rows, the role grid, the FAQ, and **the downloads last**. The
-standalone "one more call to action" section is gone from those pages, because
-the download section already is one. (`/faq/` is the exception: it closes on a
-line to support, which is the thing to do next from there.)
+## The two section designs
+
+Everything on the site is one of two objects, which is what keeps thirty-odd
+pages looking like one site:
+
+- **Ledger** — an eyebrow label on a hairline, a heading, one short lede, then
+  ruled rows. `partials/rows.njk` (numbered features), `partials/applist.njk`
+  (apps), `partials/rolegrid.njk` (roles), `partials/getcuecard.njk`
+  (downloads) and `partials/faq.njk` are all this.
+- **Card** — a bordered panel on tinted paper, for things that are objects
+  rather than lists. `partials/deck.njk` (the live prompter),
+  `partials/shots.njk` (the App Store artwork), `partials/watch.njk` (the demo
+  links), `partials/crosspanel.njk` and `partials/bigscreen.njk` (the other
+  half of the product, and the iPad) are all this.
+
+Sections alternate between plain paper and a tint — pass `solid` — and that
+alternation is the whole page rhythm. Sections are short on purpose: each says
+one thing, and none of them gets a screen and a half to say it.
 
 ## Purpose
 
-- Positions both apps, and sends readers between them from the nav, the body
-  copy and the footer
+- Leads with the phone everywhere, and still sends readers to the desktop app
+  from the nav strip, one card per page and the footer
 - One page per app CueCard is read over (`/mobile/instagram/`, `/mobile/tiktok/`
   …) and per app it hides from (`/zoom/`, `/microsoft-teams/` …)
 - One page per role, on each side: `/teachers/` and `/mobile/teachers/`
-- A 43-question FAQ at `/faq/`, with every page carrying the subset that fits it
+- A 44-question FAQ at `/faq/`; every other page carries a short curated subset
+  (`faq.home`, `faq.desktopShort`) rather than the whole bank
 - Hosts the privacy policy (`privacy/`) and terms of service (`terms/`)
 - A download section at the foot of every page, generated from
   `site.downloadGroups`, which is also what the header's download menu prints
@@ -37,24 +53,28 @@ cuecard-website/
 │   ├── index.njk      # The landing page: what CueCard is, and where to get it
 │   ├── desktop/       # The Mac and Windows app
 │   ├── faq.njk        # The whole FAQ bank, grouped
-│   ├── styles.css     # Editorial monochrome: hairlines, micro-labels, no boxes
-│   ├── script.js      # Background reel, nav, download menu, FAQ search, releases
+│   ├── styles.css     # Editorial, on paper: hairlines, micro-labels, two
+│   │                  #   section designs, one accent (the cue colour)
+│   ├── script.js      # Prompter backdrop, corner clock, the live prompter,
+│   │                  #   nav, download menu, FAQ search, releases
 │   ├── shortlink.njk  # Generates /ios and /android redirect pages
 │   ├── sitemap.xml.njk# Generated from the data files, so it cannot drift
 │   ├── CNAME          # Custom domain for GitHub Pages
 │   ├── _data/
-│   │   ├── site.js            # Every shared constant: URLs, video, downloads,
-│   │   │                      #   the Slides extension, the demo film, app
-│   │   │                      #   lists, and the hand-written download total
+│   │   ├── site.js            # Every shared constant: URLs, downloads, the
+│   │   │                      #   Slides extension, the three demo links, the
+│   │   │                      #   App Store artwork, app lists, and the
+│   │   │                      #   hand-written download total
 │   │   ├── features.js        # Feature rows, mobile and desktop
 │   │   ├── faq.js             # The FAQ bank and the helpers that slice it
 │   │   └── *.json             # Page content: apps, platforms, roles, blogs
 │   ├── _includes/
 │   │   ├── layouts/           # base.njk carries the head and the JSON-LD graph
-│   │   └── partials/          # hero, demo, rows, applist, rolegrid, faq,
-│   │   │                      #   getcuecard, extension, footer
-│   ├── assets/        # Favicons, manifest, poster, and the App Store
-│   │                  #   stills, which now only appear in structured data
+│   │   └── partials/          # prompter-bg, hero, deck, shots, watch, rows,
+│   │   │                      #   applist, crosspanel, bigscreen, rolegrid,
+│   │   │                      #   faq, getcuecard, extension, footer
+│   ├── assets/        # Favicons, manifest, and the two App Store strips
+│   │                  #   (promo-mobile.jpg, promo-ipad.jpg) the site shows
 │   ├── privacy.njk    # Privacy policy
 │   └── terms.njk      # Terms of service
 └── _site/             # Build output (gitignored)
@@ -63,31 +83,40 @@ cuecard-website/
 The site is fully static — no PHP, no server-side anything — so it can be served
 by any static host.
 
-## The background reel
+## The backdrop, the clock and the live prompter
 
-There is no video *player* anywhere on this site. The film is a fixed layer that
-every page scrolls over: a poster frame paints with the first paint, and the
-reel fades up over it once it can play. Both are knocked back and blurred behind
-a scrim, so they read as atmosphere rather than as something to watch.
+There is no video anywhere on this site — no player, no poster, no reel. What
+sits behind the page instead is the app:
 
-It is configured entirely by `video` in `src/_data/site.js`.
+- **`partials/prompter-bg.njk`** is a fixed page of prompter script that drifts
+  upward as you scroll, with one line lit at a time. The lines are written by
+  `initPrompterBackdrop()` in `script.js`, not by the template, and that is
+  deliberate: copy set at three per cent contrast has no business being in the
+  HTML, where a crawler reads it as hidden text. With no JavaScript the page is
+  simply white, which is what it should be anyway.
+- **The clock** in the same partial is the one the app puts above the script.
+  It counts how long you have been on the page and stops when you press it.
+- **`partials/deck.njk`** is the live prompter in the hero: the same script the
+  App Store film uses, scrolling at real lines per minute, cues in the cue
+  colour, clock counting. Pause, restart and the speed slider all work. Set
+  `heroDeck = true` on a page to get it.
 
-**The reel running today is borrowed** — it is the
-alldayidreamaboutsports.com promo, standing in until CueCard's own film is cut,
-which is what `placeholder: true` records. To swap it in:
+`prefers-reduced-motion` removes the backdrop and leaves the prompter still.
 
-1. Encode three files — an MP4, a WebM and a first-frame poster. The recipe in
-   `alldayidreamaboutsports.com/scripts/encode-promo.sh` is the one these were
-   made with (H.264 ~2.5 Mbps, VP9 ~1.8 Mbps, a WebP still).
-2. Host them anywhere with a custom domain and cache rules — an R2 bucket does
-   it — and point `video.mp4`, `video.webm`, `video.poster` and `video.origin`
-   at them. `posterWidth`/`posterHeight` must match the poster, or the page
-   reflows when it loads.
-3. Fill in `video.schema` and set `placeholder: false`.
+## The screenshots and the demos
 
-Step 3 is what starts emitting a `VideoObject` on every page. While
-`placeholder` is true, nothing is marked up — describing someone else's footage
-as CueCard's in structured data would be a lie, and Google reads it as one.
+`site.shots` holds the two App Store strips (iPhone and iPad) and
+`partials/shots.njk` prints them full width, directly under the hero — "what
+does it actually look like" is the second question everybody has.
+
+`site.demos` holds three YouTube links, one per device, and
+`partials/watch.njk` draws each as the device it was filmed on with a play mark
+over it. **Nothing is embedded**: an iframe would drag a third-party player
+onto every page it appeared on, and a link costs nothing. Pass `demoIds` to
+show a subset, in order.
+
+`partials/bigscreen.njk` is the "it's on iPad too" card that every phone page
+carries, with the iPad film beside it.
 
 ## The downloads
 
@@ -110,18 +139,13 @@ it is the piece that makes Google Slides work. It lives in `site.extension` and
 is printed by `partials/extension.njk` on `/google-slides/` and nowhere else,
 with a link to that page from the download menu and the download section.
 
-## The demo
+## The download total
 
-`site.demo` points at the one film that is CueCard's own, on YouTube.
-`partials/demo.njk` prints it as a still that links out — nothing is embedded,
-so no third-party player script loads on any page. It appears on the landing
-page and on the desktop side, which is what the film shows.
-
-The **download total** beside it (`site.downloadTotal`, currently `"1,100+"`) is
-a hand-written string, and deliberately so: the GitHub API only counts desktop
-release assets, so any computed figure would leave out the App Store entirely.
-Edit the string and every page follows. The GitHub star count next to it *is*
-live, fetched through the Cloudflare proxy in `api/`.
+`site.downloadTotal` (currently `"1,100+"`) is a hand-written string, and
+deliberately so: the GitHub API only counts desktop release assets, so any
+computed figure would leave out the App Store entirely. Edit the string and
+every page follows. The GitHub star count next to it *is* live, fetched through
+the Cloudflare proxy in `api/`.
 
 ## Local Preview
 
@@ -153,7 +177,12 @@ npm run build   # writes _site/
 ## Notes
 
 - `src/_data/site.js` is the single source of truth for URLs, store links, the
-  app lists and the year. Change it there, not in a template
+  app lists, the artwork, the demo links and the year. Change it there, not in
+  a template
+- Page titles in the `_data/*.json` files lead with the phrase people search
+  for and end with the brand, never the other way round. The front-matter
+  fields that read them are piped through `| safe`, because without it a `&`
+  in a title is escaped twice and ships as `&amp;amp;`
 - Icons live in `src/_includes/partials/icon-sprite.njk` as `<symbol>`s and are
   used through the `icon()` macro in `partials/icons.njk`. Every section label
   carries one; add the symbol first, then name it

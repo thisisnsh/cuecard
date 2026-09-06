@@ -1,9 +1,9 @@
 {% extends "layouts/base.njk" %}
 
 {# The page's own questions first - they carry the app's name, which is the
-   phrase this page is trying to rank for - then the rest of the desktop bank,
-   then the general ones. Nothing is asked twice. #}
-{% set platformFaq = faq.withGeneral(faq.merge(platform.faqJsonLd, faq.desktop)) %}
+   phrase this page is trying to rank for - then the short desktop bank.
+   Nothing is asked twice, and /faq/ still holds every question there is. #}
+{% set platformFaq = faq.merge(platform.faqJsonLd, faq.desktopShort) %}
 
 {% block jsonld %}
 <script type="application/ld+json">
@@ -52,8 +52,8 @@
 {% endblock %}
 
 {% block body %}
-{% set navCtaText = "Filming on your phone instead? CueCard floats over every app on iOS" %}
-{% set navCtaTextMobile = "Also on iOS" %}
+{% set navCtaText = "Filming on your phone instead? CueCard Teleprompter floats over every app on iPhone and iPad" %}
+{% set navCtaTextMobile = "Also on iPhone and iPad" %}
 {% set navCtaHref = "/" %}
 {% include "partials/nav.njk" %}
 
@@ -65,23 +65,33 @@
     {% set heroPrimaryIcon = "download" %}
     {% set heroPrimaryText = "Download CueCard" %}
     {% set heroNote = "Free forever · No account · macOS 13+ and Windows 10+" %}
+    {% set heroSecondaryText = "Watch the demo" %}
+    {% set heroSecondaryHref = "#demo" %}
+    {% set heroSecondaryIcon = "play" %}
     {% set heroStrip = "meeting" %}
     {% set faqLink = "#faq" %}
+    {% set heroDeck = true %}
     {% include "partials/hero.njk" %}
 
-    {% set demoSolid = true %}
-    {% include "partials/demo.njk" %}
+    {% set watchHeading = "See it on a real call" %}
+    {% set demoIds = ["desktop", "phone"] %}
+    {% set watchSolid = true %}
+    {% include "partials/watch.njk" %}
 
     {% set featureRows = features.forApp(platform.name, "meeting") %}
     {% set rowsMicro = "What you get" %}
     {% set rowsHeading = "Everything " + platform.name + " sees is your slide" %}
     {% set rowsId = "features" %}
-    {% set rowsSolid = true %}
     {% include "partials/rows.njk" %}
 
+    {% set syntaxSolid = true %}
     {% include "partials/features.njk" %}
 
     {% if platform.showExtension %}{% include "partials/extension.njk" %}{% endif %}
+
+    {% set crossMode = "mobile" %}
+    {% set crossSolid = true %}
+    {% include "partials/crosspanel.njk" %}
 
     {% set gridRoles = site.desktopRoles %}
     {% set gridBase = "/" %}

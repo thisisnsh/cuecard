@@ -7,52 +7,62 @@
   promoted from a stray paragraph to the page's <h1>. Pages that have more to
   say set heroMicro, heroTitle and heroBody instead.
 
-  There is no video player here any more. The film is the fixed reel behind the
-  whole page (partials/video-bg.njk), so the hero's job is words and one route
-  to a download, not a second thing to press.
+  Set `heroDeck` and the hero becomes two columns: the argument on the left,
+  and on the right the app actually running - the live prompter in
+  partials/deck.njk. That is the only thing on this site that moves of its own
+  accord, and it is not a video.
 #}
 <section class="hero{% if heroClass %} {{ heroClass }}{% endif %}" aria-labelledby="hero-h">
     <div class="wrap">
         {% include "partials/breadcrumbs.njk" %}
 
-        {# Every page says "open source" before it says anything else about
-           itself. It is the single most load-bearing fact about CueCard. #}
-        <p class="micro hero-micro reveal">
-            {{ icon("code", 13) }}Open source{% if heroMicro %} · {{ heroMicro }}{% endif %}
-        </p>
+        <div class="{% if heroDeck %}hero-grid{% endif %}">
+            <div class="hero-copy">
+                {# Every page says "open source" before it says anything else
+                   about itself. It is the most load-bearing fact about CueCard. #}
+                <p class="micro hero-micro reveal">
+                    {{ icon("code", 13) }}Free and open source{% if heroMicro %} · {{ heroMicro }}{% endif %}
+                </p>
 
-        <h1 class="display hero-subtitle{% if heroLong %} display-long{% endif %} reveal d1" id="hero-h">
-            {{ (heroTitle or (platform.heroSubtitle if platform else heroSubtitle)) | safe }}
-        </h1>
+                <h1 class="display hero-subtitle{% if heroLong %} display-long{% endif %} reveal d1" id="hero-h">
+                    {{ (heroTitle or (platform.heroSubtitle if platform else heroSubtitle)) | safe }}
+                </h1>
 
-        {% if heroBody %}<p class="body reveal d2">{{ heroBody | safe }}</p>{% endif %}
+                {% if heroBody %}<p class="body reveal d2">{{ heroBody | safe }}</p>{% endif %}
 
-        <div class="actions hero-cta reveal d3">
-            {% set primaryHref = heroPrimaryHref or downloadBtnHref or "#download" %}
-            <a class="btn btn-primary" href="{{ primaryHref }}"{% if heroPrimaryExternal %} target="_blank" rel="noopener"{% endif %}>
-                {{ icon(heroPrimaryIcon or "download", 17) }}{{ heroPrimaryText or "Download CueCard" }}
-            </a>
+                <div class="actions hero-cta reveal d3">
+                    {% set primaryHref = heroPrimaryHref or downloadBtnHref or "#download" %}
+                    <a class="btn btn-primary" href="{{ primaryHref }}"{% if heroPrimaryExternal %} target="_blank" rel="noopener"{% endif %}>
+                        {{ icon(heroPrimaryIcon or "download", 17) }}{{ heroPrimaryText or "Get CueCard, it's free" }}
+                    </a>
 
-            {% if heroSecondaryText %}
-            <a class="btn btn-ghost" href="{{ heroSecondaryHref }}"{% if heroSecondaryExternal %} target="_blank" rel="noopener"{% endif %}>
-                {% if heroSecondaryIcon %}{{ icon(heroSecondaryIcon, 17) }}{% endif %}{{ heroSecondaryText }}
-            </a>
-            {% else %}
-            <a class="btn btn-ghost" href="{{ site.github }}" target="_blank" rel="noopener">
-                {{ icon("github", 17) }}Read the source
-            </a>
+                    {% if heroSecondaryText %}
+                    <a class="btn btn-ghost" href="{{ heroSecondaryHref }}"{% if heroSecondaryExternal %} target="_blank" rel="noopener"{% endif %}>
+                        {% if heroSecondaryIcon %}{{ icon(heroSecondaryIcon, 17) }}{% endif %}{{ heroSecondaryText }}
+                    </a>
+                    {% else %}
+                    <a class="btn btn-ghost" href="{{ site.github }}" target="_blank" rel="noopener">
+                        {{ icon("github", 17) }}Read the source
+                    </a>
+                    {% endif %}
+                </div>
+
+                {% if heroNote %}<span class="meta-note reveal d3">{{ heroNote }}</span>{% endif %}
+
+                {% include "partials/stats.njk" %}
+
+                {% if heroTagline %}<p class="hero-tagline shimmer reveal d3">{{ heroTagline | safe }}</p>{% endif %}
+            </div>
+
+            {% if heroDeck %}
+            <div class="hero-deck">{% include "partials/deck.njk" %}</div>
             {% endif %}
         </div>
 
-        {% include "partials/stats.njk" %}
-
-        {% if heroNote %}<span class="meta-note reveal d3">{{ heroNote }}</span>{% endif %}
-
-        {% if heroTagline %}<p class="hero-tagline shimmer reveal d3">{{ heroTagline | safe }}</p>{% endif %}
-
-        {# The strip of apps this page is about. `social` on the mobile side,
+        {# The strip of apps this page is about. `social` on the phone side,
            `meeting` on the desktop side - the wording of the label is what
-           carries the keyword, so it differs per side rather than being generic. #}
+           carries the keyword, so it differs per side rather than being
+           generic. #}
         {% set strip = heroStrip or "meeting" %}
         {% if strip != "none" %}
         <div class="hero-platforms reveal">

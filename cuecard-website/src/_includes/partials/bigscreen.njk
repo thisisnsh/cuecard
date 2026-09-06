@@ -1,0 +1,48 @@
+{% from "partials/icons.njk" import icon %}
+{#
+  "It's on the big screen too."
+
+  The phone pages are the ones people land on, and almost nobody arrives
+  knowing the same app runs full size on an iPad. This is the card that tells
+  them, with the iPad film beside it. Same panel as partials/crosspanel.njk —
+  one design, two jobs.
+#}
+<section class="bigscreen{% if bigscreenSolid %} solid{% endif %}" id="ipad" aria-labelledby="ipad-h">
+    <div class="wrap">
+        <p class="micro">{{ icon("tablet", 13) }}Also on big screens</p>
+        <h2 class="section-h" id="ipad-h">{{ (bigscreenHeading or "The same teleprompter, on <em>iPad</em>.") | safe }}</h2>
+
+        <div class="crosspanel reveal">
+            <div>
+                <p class="crosspanel-tag">{{ icon("apple", 13) }}CueCard Teleprompter for iPad</p>
+                <h3 class="crosspanel-h">Room to read from across the room</h3>
+                <p class="crosspanel-p">
+                    On an iPad the script can fill the whole display, so you can prop it under a
+                    camera and read at arm's length like a studio prompter — or shrink it into the
+                    same floating window and film in whatever app you like.
+                    <a href="/mobile/ipad/">See CueCard Teleprompter on iPad</a>.
+                </p>
+                <p class="backline">
+                    <a href="/mobile/ipad/">{{ icon("tablet", 15) }} The iPad page {{ icon("arrow", 14) }}</a>
+                    <a href="{{ site.demo.ipad.url }}" target="_blank" rel="noopener">{{ icon("play", 15) }} Watch the iPad demo {{ icon("external", 13) }}</a>
+                </p>
+            </div>
+
+            <a class="watch-card watch-card--portrait reveal" href="{{ site.demo.ipad.url }}" target="_blank" rel="noopener">
+                <span class="watch-top">
+                    <span class="watch-device">{{ icon("tablet", 13) }}iPad</span>
+                    <span class="watch-len">YouTube</span>
+                </span>
+                <span class="watch-frame" aria-hidden="true">
+                    <i class="watch-rule w1"></i>
+                    <i class="watch-rule w2"></i>
+                    <i class="watch-rule is-cue"></i>
+                    <i class="watch-rule w3"></i>
+                    <i class="watch-rule w4"></i>
+                    <i class="watch-play"></i>
+                </span>
+                <span class="watch-go">{{ site.demo.ipad.title }} {{ icon("external", 13) }}</span>
+            </a>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,23 @@
+{#
+  The backdrop, and the clock.
+
+  A fixed page of prompter script sits behind everything and drifts upward as
+  you scroll — the site is a teleprompter you are reading down. The lines are
+  written by script.js rather than by this template, deliberately: text set at
+  five per cent contrast has no business being in the HTML where it would read
+  as hidden copy, and with no JavaScript the page is simply white, which is
+  what it should be anyway.
+
+  The clock is the one in the app, in the corner it lives in there. It counts
+  how long you have been on the page and stops when you press it.
+#}
+<div class="prompter-bg" aria-hidden="true" data-prompter-bg>
+    <div class="prompter-bg-inner" data-prompter-lines></div>
+</div>
+
+<button class="stopwatch" type="button" data-stopwatch
+        aria-label="Reading timer — press to pause">
+    <i class="stopwatch-dot" aria-hidden="true"></i>
+    <span class="stopwatch-time" data-stopwatch-time>00:00</span>
+    <span class="stopwatch-label">On air</span>
+</button>

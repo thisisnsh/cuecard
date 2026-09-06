@@ -1,0 +1,69 @@
+{% from "partials/icons.njk" import icon %}
+{#
+  The other half of the product, in one card.
+
+  The phone is what this site leads with, so the desktop app cannot have a
+  section the size of the phone's - but it ranks, it is real, and hiding it
+  would be worse than either. So each half gets this on the other's pages: a
+  card, the list of apps that half is about, and a way through to its own page.
+
+  Set crossMode = "mobile" to point at the phone instead of the computer.
+#}
+{% set toMobile = crossMode == "mobile" %}
+<section class="crosssec{% if crossSolid %} solid{% endif %}" id="{{ crossId or ('mobile-half' if toMobile else 'desktop-half') }}" aria-labelledby="{{ crossId or ('mobile-half' if toMobile else 'desktop-half') }}-h">
+    <div class="wrap">
+        <p class="micro">{{ icon(crossIcon or ("phone" if toMobile else "monitor"), 13) }}{{ crossMicro or ("Also on your phone" if toMobile else "Also on your computer") }}</p>
+        <h2 class="section-h" id="{{ crossId or ('mobile-half' if toMobile else 'desktop-half') }}-h">
+            {{ (crossHeading or ("Filming, not presenting? Different problem." if toMobile else "Presenting, not filming? Different problem.")) | safe }}
+        </h2>
+
+        <div class="crosspanel reveal">
+            <div>
+                <p class="crosspanel-tag">
+                    {{ icon("layers" if toMobile else "eye-off", 13) }}{{ "CueCard Teleprompter for iPhone and iPad" if toMobile else "CueCard for Mac and Windows" }}
+                </p>
+                <h3 class="crosspanel-h">
+                    {{ (crossPanelH or ("A script that floats over the app you film in" if toMobile else "Speaker notes the screen share cannot see")) | safe }}
+                </h3>
+                <p class="crosspanel-p">
+                    {% if crossPanelP %}{{ crossPanelP | safe }}
+                    {% elif toMobile %}Open the camera, <a href="/mobile/instagram/">Instagram</a> or <a href="/mobile/tiktok/">TikTok</a> and your script is on the glass, auto-scrolling at the speed you set. The footage still comes out of the app it always came out of.
+                    {% else %}Notes excluded from screen capture at the system level, so the call gets your deck and nothing else. They sync live from <a href="/google-slides/">Google Slides</a> as you advance, or paste a script in for any meeting.{% endif %}
+                </p>
+                <p class="backline">
+                    {% if toMobile %}
+                    <a href="/mobile/">{{ icon("phone", 15) }} See the phone app {{ icon("arrow", 14) }}</a>
+                    <a href="/mobile/ipad/">{{ icon("tablet", 15) }} And on iPad {{ icon("arrow", 14) }}</a>
+                    {% else %}
+                    <a href="/desktop/">{{ icon("monitor", 15) }} See the desktop app {{ icon("arrow", 14) }}</a>
+                    <a href="/desktop/#download">{{ icon("download", 15) }} macOS and Windows {{ icon("arrow", 14) }}</a>
+                    {% endif %}
+                </p>
+            </div>
+
+            <ul class="crosspanel-apps">
+                {% if toMobile %}
+                {% for a in site.socialApps %}{% if loop.index <= 4 %}
+                <li>
+                    <a href="/mobile/{{ a.slug }}/">
+                        {{ icon(a.icon, 18) }}
+                        <span class="crosspanel-name">{{ a.name }}</span>
+                        <span class="crosspanel-state">Floats over</span>
+                    </a>
+                </li>
+                {% endif %}{% endfor %}
+                {% else %}
+                {% for a in site.meetingApps %}
+                <li>
+                    <a href="/{{ a.slug }}/">
+                        {{ icon(a.icon, 18) }}
+                        <span class="crosspanel-name">{{ a.name }}</span>
+                        <span class="crosspanel-state">{{ "Syncs" if a.slug == "google-slides" else "Invisible" }}</span>
+                    </a>
+                </li>
+                {% endfor %}
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</section>

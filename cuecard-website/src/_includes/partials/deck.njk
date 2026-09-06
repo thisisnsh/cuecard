@@ -1,0 +1,47 @@
+{#
+  The app, running, in the page.
+
+  Not a video and not a screenshot: the same script the App Store film uses,
+  scrolling at real lines-per-minute, with the cues in the cue colour and the
+  clock counting up, exactly as the phone does it. script.js drives it; with
+  no JavaScript it sits still and is simply a picture of the app, which is
+  fine, because that is what a screenshot would have been.
+
+  It is also the hero's argument in one object: you can see the words move,
+  see a cue go past without being read out, and see the timer run.
+#}
+<div class="deck reveal d2" data-deck>
+    <div class="deck-bar">
+        <span class="deck-close" aria-hidden="true">✕</span>
+        <span class="deck-title">Teleprompter</span>
+        <span class="deck-clock" data-deck-clock>00:00</span>
+    </div>
+
+    <div class="deck-screen">
+        <div class="deck-script" data-deck-script>
+            <p class="deck-line">Welcome everyone.</p>
+            <p class="deck-line">I'm excited to be here today to talk about CueCard.</p>
+            <p class="deck-line is-cue">smile and pause</p>
+            <p class="deck-line">It keeps your speaker notes visible above all apps, so you can use your existing camera apps and still read your notes.</p>
+            <p class="deck-line is-cue">pause</p>
+            <p class="deck-line">It has a timer so you know if you're being brief… or too passionate.</p>
+            <p class="deck-line is-cue">light chuckle</p>
+            <p class="deck-line">And the colored highlights?</p>
+            <p class="deck-line is-cue">emphasize</p>
+            <p class="deck-line">Those are your secret cues — reminders to smile, pause, or not panic.</p>
+            <p class="deck-line is-cue">pause</p>
+            <p class="deck-line">Try it out. I think you'll love it.</p>
+        </div>
+    </div>
+
+    <div class="deck-controls">
+        <button class="deck-btn deck-btn-main" type="button" data-deck-toggle aria-label="Pause the prompter">Pause</button>
+        <button class="deck-btn" type="button" data-deck-restart aria-label="Start the script again">Restart</button>
+        <span class="deck-speed">
+            <label for="deck-speed">Speed</label>
+            <input id="deck-speed" type="range" min="12" max="60" step="2" value="26" data-deck-speed
+                   aria-label="Scroll speed in lines per minute">
+        </span>
+    </div>
+</div>
+<p class="deck-legend reveal d3">Live, not a video. <b>Pink lines are cues</b> — you see them, your audience never hears them.</p>

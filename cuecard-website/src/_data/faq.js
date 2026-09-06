@@ -15,9 +15,9 @@ const gh = "https://github.com/thisisnsh/cuecard";
 /** Questions about the phone app — the product cuecard.dev now leads with. */
 const mobile = [
   {
-    question: "What is CueCard Mobile?",
+    question: "What is CueCard Teleprompter?",
     answer:
-      'CueCard Mobile is a teleprompter for your phone that floats on top of every other app. Your script sits in a small window above the camera, Instagram, TikTok, a video call or anything else, auto-scrolling while you speak, so you never have to switch away from what you are recording in. It is on <a href="' +
+      'CueCard Teleprompter is a free teleprompter app for iPhone and iPad that floats on top of every other app. Your script sits in a small window above the camera, Instagram, TikTok, a video call or anything else, auto-scrolling while you speak, so you never have to switch away from what you are recording in. It is on <a href="' +
       store +
       '">iOS</a> today, with Android coming soon.'
   },
@@ -47,6 +47,11 @@ const mobile = [
     question: "Which iPhones and iPads does CueCard support?",
     answer:
       "Any iPhone or iPad running iOS 17 or later."
+  },
+  {
+    question: "Is there a teleprompter for iPad?",
+    answer:
+      'Yes, and the iPad is the best screen CueCard runs on. Read the script full width at arm\'s length like a studio prompter, or shrink it into a floating window over the app you are filming in. <a href="/mobile/ipad/">See CueCard Teleprompter on iPad</a>.'
   },
   {
     question: "Can I use CueCard while recording an Instagram Reel or a TikTok?",
@@ -251,8 +256,8 @@ const everywhere = [
 
 /** Everything, grouped, for /faq/. */
 const groups = [
-  { id: "mobile", title: "CueCard Mobile", intro: "The floating teleprompter for iPhone and iPad.", items: mobile },
-  { id: "desktop", title: "CueCard for Mac and Windows", intro: "Invisible speaker notes for screen sharing.", items: desktop },
+  { id: "mobile", title: "The teleprompter on iPhone and iPad", intro: "Filming, recording, going live.", items: mobile },
+  { id: "desktop", title: "Speaker notes on Mac and Windows", intro: "Invisible in a screen share.", items: desktop },
   { id: "general", title: "Price, privacy and the project", intro: "The questions that apply wherever you run it.", items: everywhere }
 ];
 
@@ -275,12 +280,44 @@ function merge(first, second) {
   return (first || []).concat((second || []).filter((q) => !asked.has(q.question)));
 }
 
-/**
- * The home page's bank. The landing page is about both halves of CueCard, so
- * it asks the phone questions, then the desktop questions it has not already
- * answered, then the general ones - which is exactly what a visitor who does
- * not yet know which half they want needs to read.
- */
-const home = withGeneral(merge(mobile, desktop));
+/** Pull named questions out of the bank, in the order asked for. */
+function pick(...questions) {
+  return questions
+    .map((q) => items.find((i) => i.question === q))
+    .filter(Boolean);
+}
 
-module.exports = { items, groups, mobile, desktop, everywhere, home, withGeneral, merge };
+/**
+ * The home page's bank - eight questions, not forty.
+ *
+ * The landing page used to print the phone bank, the desktop bank and the
+ * general one end to end, which ran to a screen and a half of accordion
+ * nobody opened. These are the eight people actually ask before installing,
+ * in the order they ask them, and /faq/ still carries every one of the rest.
+ */
+const home = pick(
+  "What is CueCard Teleprompter?",
+  "Does the teleprompter show up in my recorded video?",
+  "Can I use CueCard while recording an Instagram Reel or a TikTok?",
+  "Is CueCard a free teleprompter app?",
+  "Is there a teleprompter for iPad?",
+  "Is CueCard available on Android?",
+  "Is CueCard invisible on Zoom, Google Meet and Microsoft Teams?",
+  "How is this different from a hardware teleprompter?"
+);
+
+/** The trim for the desktop pages: what gets asked before downloading. */
+const desktopShort = pick(
+  "Is CueCard invisible on Zoom, Google Meet and Microsoft Teams?",
+  "Can other people see my notes during screen sharing or a recording?",
+  "How do I sync speaker notes from Google Slides?",
+  "Does CueCard work with PowerPoint, Keynote or a PDF?",
+  "Which operating systems does the desktop app run on?",
+  "Is CueCard free?"
+);
+
+module.exports = {
+  items, groups, mobile, desktop, everywhere,
+  home, desktopShort,
+  pick, withGeneral, merge
+};

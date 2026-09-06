@@ -5,14 +5,14 @@ pagination:
   alias: app
 permalink: "{{ app.slug }}/index.html"
 eleventyComputed:
-  title: "{{ app.title }}"
-  description: "{{ app.description }}"
-  keywords: "{{ app.keywords }}"
-  canonical: "{{ app.canonical }}"
-  pageName: "{{ app.name }}"
-  ogTitle: "{{ app.ogTitle }}"
-  ogDescription: "{{ app.ogDescription }}"
-  ogUrl: "{{ app.canonical }}"
+  title: "{{ app.title | safe }}"
+  description: "{{ app.description | safe }}"
+  keywords: "{{ app.keywords | safe }}"
+  canonical: "{{ app.canonical | safe }}"
+  pageName: "{{ app.name | safe }}"
+  ogTitle: "{{ app.ogTitle | safe }}"
+  ogDescription: "{{ app.ogDescription | safe }}"
+  ogUrl: "{{ app.canonical | safe }}"
   ogLocale: "en_US"
 layout: layouts/mobile-app.njk
 ---
@@ -24,6 +24,7 @@ layout: layouts/mobile-app.njk
     "@type": "MobileApplication",
     "@id": "{{ app.canonical }}#app",
     "name": "{{ app.name }}",
+    "alternateName": "CueCard Teleprompter",
     "applicationCategory": "UtilitiesApplication",
     "applicationSubCategory": "Teleprompter",
     "operatingSystem": "{% if app.showIos and app.showAndroid %}iOS, Android{% elif app.showIos %}iOS{% else %}Android{% endif %}",
@@ -31,11 +32,10 @@ layout: layouts/mobile-app.njk
     "url": "{{ app.canonical }}",
     {% if app.showIos %}"downloadUrl": "{{ site.ios }}",
     "installUrl": "{{ site.ios }}",{% endif %}
-    "image": "https://cuecard.dev/assets/og-image.png",
+    "image": "https://cuecard.dev/assets/promo-{{ app.shotId or "mobile" }}.jpg",
     "screenshot": [
-        "https://cuecard.dev/assets/app-ios1.jpg",
-        "https://cuecard.dev/assets/app-ios2.jpg",
-        "https://cuecard.dev/assets/app-ios3.jpg"
+        "https://cuecard.dev/assets/promo-mobile.jpg",
+        "https://cuecard.dev/assets/promo-ipad.jpg"
     ],
     "softwareVersion": "1.0.0",
     "isAccessibleForFree": true,
@@ -77,28 +77,39 @@ layout: layouts/mobile-app.njk
 
 <main>
     {% set heroClass = "hero-app" %}
-    {% set heroMicro = app.name + (" · iOS · Android coming soon" if app.showIos and app.showAndroid else (" · iOS 17+" if app.showIos else " · Coming soon")) %}
+    {% set heroMicro = app.name %}
     {% set heroTitle = app.heroSubtitle %}
     {% set heroBody = app.appDescription %}
     {% set heroPrimaryHref = site.ios %}
     {% set heroPrimaryExternal = true %}
     {% set heroPrimaryIcon = "apple" %}
-    {% set heroPrimaryText = "Download on iOS" %}
-    {% set heroNote = "Free forever · No account · iOS 17+ · Android coming soon" %}
+    {% set heroPrimaryText = "Get it free on the App Store" %}
+    {% set heroSecondaryText = "Watch the demo" %}
+    {% set heroSecondaryHref = "#demo" %}
+    {% set heroSecondaryIcon = "play" %}
+    {% set heroNote = "Free forever · No account · iOS 17+" + (" · Android coming soon" if app.showAndroid else "") %}
     {% set heroTagline = app.promotionalText %}
     {% set heroStrip = "social" %}
     {% set stripMore = "and every other app you record in" %}
     {% set faqLink = "#faq" %}
+    {% set heroDeck = true %}
     {% include "partials/hero.njk" %}
+
+    {% if app.shotId %}{% set shotIds = [app.shotId] %}{% endif %}
+    {% set shotsHeading = ("The prompter, the floating window, and the dials behind them.") %}
+    {% include "partials/shots.njk" %}
+
+    {% set watchHeading = "A minute of it, in use" %}
+    {% set watchNote = "Nothing is embedded here — each one opens on YouTube." %}
+    {% if app.demoId %}{% set demoIds = [app.demoId] %}{% endif %}
+    {% include "partials/watch.njk" %}
 
     {% set featureRows = features.forApp(app.subject, "social") if app.subject else features.mobile %}
     {% set rowsMicro = "What you get" %}
     {% set rowsHeading = ("Reading a script over " + app.subject) if app.subject else "Built to be read out of the corner of your eye" %}
     {% set rowsId = "features" %}
+    {% set rowsSolid = true %}
     {% include "partials/rows.njk" %}
-
-    {% set syntaxKind = "mobile" %}
-    {% include "partials/features.njk" %}
 
     {% set appRows = site.socialApps %}
     {% set appBase = "/mobile/" %}
@@ -106,8 +117,12 @@ layout: layouts/mobile-app.njk
     {% set stripMicro = "Record anywhere" %}
     {% set stripHeading = "It floats over the app you already film in" %}
     {% set stripNote = "CueCard never replaces your camera app. It sits on top of whatever you open." %}
-    {% set stripSolid = true %}
     {% include "partials/applist.njk" %}
+
+    {% if app.slug != "mobile/ipad" %}
+    {% set bigscreenSolid = true %}
+    {% include "partials/bigscreen.njk" %}
+    {% endif %}
 
     {% set gridRoles = site.mobileRoles %}
     {% set gridBase = "/mobile/" %}
@@ -115,7 +130,11 @@ layout: layouts/mobile-app.njk
     {% set gridMicro = "Made for" %}
     {% set gridHeading = "Whatever it is you have to say on camera" %}
     {% set gridSuffix = "teleprompter app" %}
+    {% set gridSolid = (app.slug == "mobile/ipad") %}
     {% include "partials/rolegrid.njk" %}
+
+    {% set crossSolid = (app.slug != "mobile/ipad") %}
+    {% include "partials/crosspanel.njk" %}
 
     {% set faqItems = appFaq %}
     {% set faqHeading = "Questions about " + app.name %}

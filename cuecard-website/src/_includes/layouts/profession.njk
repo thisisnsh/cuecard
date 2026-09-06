@@ -59,8 +59,8 @@
 {% else %}
 {% set navCtaHref = "/" %}
 {% endif %}
-{% set navCtaText = "Filming on your phone instead? CueCard floats over every app on iOS" %}
-{% set navCtaTextMobile = "Also on iOS" %}
+{% set navCtaText = "Filming on your phone instead? CueCard Teleprompter floats over every app on iPhone and iPad" %}
+{% set navCtaTextMobile = "Also on iPhone and iPad" %}
 {% include "partials/nav.njk" %}
 
 <main>
@@ -72,12 +72,21 @@
     {% set heroPrimaryIcon = "download" %}
     {% set heroPrimaryText = "Download CueCard" %}
     {% set heroNote = "Free forever · No account · macOS 13+ and Windows 10+" %}
+    {% set heroSecondaryText = "Watch the demo" %}
+    {% set heroSecondaryHref = "#demo" %}
+    {% set heroSecondaryIcon = "play" %}
     {% set heroStrip = "meeting" %}
     {% set faqLink = "#faq" %}
+    {% set heroDeck = true %}
     {% include "partials/hero.njk" %}
 
+    {% set watchHeading = "See it on a real call" %}
+    {% set demoIds = ["desktop", "phone"] %}
+    {% set watchSolid = true %}
+    {% include "partials/watch.njk" %}
+
     {% if profession.useCases %}
-    <section class="solid" aria-labelledby="uses-h">
+    <section aria-labelledby="uses-h">
         <div class="wrap">
             <p class="micro">{{ icon("flag", 13) }}Where it earns its place</p>
             <h2 class="section-h" id="uses-h">What {{ profession.name | lower }} reach for it in</h2>
@@ -100,9 +109,11 @@
     {% set rowsMicro = "What you get" %}
     {% set rowsHeading = "Everything the call sees is your slide" %}
     {% set rowsId = "features" %}
+    {% set rowsSolid = true %}
     {% include "partials/rows.njk" %}
 
-    {% include "partials/features.njk" %}
+    {% set crossMode = "mobile" %}
+    {% include "partials/crosspanel.njk" %}
 
     {% set faqItems = roleFaq %}
     {% set faqHeading = "Questions from " + profession.name | lower %}

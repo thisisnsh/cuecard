@@ -1,8 +1,8 @@
 ---
 layout: layouts/base.njk
-title: "CueCard - Invisible Speaker Notes for Zoom, Google Meet, and Teams"
-description: "CueCard keeps speaker notes invisible during Zoom, Google Meet, and Microsoft Teams screen sharing. Sync from Google Slides or paste notes instantly. Free for macOS and Windows."
-keywords: "invisible speaker notes, zoom speaker notes, google meet notes, microsoft teams notes, presentation notes, teleprompter, google slides sync, undetectable notes, screen sharing notes, meeting notes app, presenter notes, zoom teleprompter, teams teleprompter, meet teleprompter, mac teleprompter, windows teleprompter"
+title: "Teleprompter for Zoom, Google Meet & Teams - CueCard for Desktop"
+description: "CueCard is a free desktop teleprompter that keeps your speaker notes invisible during Zoom, Google Meet and Microsoft Teams screen sharing. Sync live from Google Slides or paste a script in. Free on macOS and Windows."
+keywords: "desktop teleprompter, teleprompter for zoom, teleprompter for google meet, teleprompter for teams, invisible speaker notes, zoom speaker notes, google meet notes, microsoft teams notes, presentation notes, teleprompter, google slides sync, undetectable notes, screen sharing notes, meeting notes app, presenter notes, zoom teleprompter, teams teleprompter, meet teleprompter, mac teleprompter, windows teleprompter"
 canonical: "https://cuecard.dev/desktop/"
 pageName: "CueCard for Mac and Windows - invisible speaker notes"
 ogTitle: "CueCard - Invisible Speaker Notes for Zoom, Google Meet, and Teams"
@@ -62,7 +62,7 @@ crumbs:
     "isPartOf": { "@id": "https://cuecard.dev/desktop/#webpage" },
     "inLanguage": "en",
     "mainEntity": [
-        {% for item in faq.withGeneral(faq.desktop) %}
+        {% for item in faq.desktopShort %}
         {
             "@type": "Question",
             "name": {{ item.question | dump | safe }},
@@ -75,34 +75,41 @@ crumbs:
 {% endblock %}
 
 {% block body %}
-{% set navCtaText = "Filming on your phone instead? CueCard floats over every app on iOS" %}
-{% set navCtaTextMobile = "Also on iOS" %}
+{% set navCtaText = "Filming on your phone instead? CueCard Teleprompter floats over every app on iPhone and iPad" %}
+{% set navCtaTextMobile = "Also on iPhone and iPad" %}
 {% set navCtaHref = "/" %}
 {% include "partials/nav.njk" %}
 
 <main>
-    {% set heroMicro = "CueCard Desktop · macOS · Windows" %}
+    {% set heroMicro = "CueCard Desktop · macOS and Windows" %}
     {% set heroTitle = 'Speaker notes only <em>you</em> can see.' %}
-    {% set heroBody = 'Your notes sit on your screen and stay out of the screen share. On <strong>Zoom</strong>, <strong>Google Meet</strong> and <strong>Microsoft Teams</strong> the audience gets the deck and nothing else — they are excluded from screen capture at the system level, not parked out of the way and hoped for. Sync them live from <strong>Google Slides</strong>, or paste a script in.' %}
+    {% set heroBody = 'Your notes sit on your screen and stay out of the screen share. On <strong>Zoom</strong>, <strong>Google Meet</strong> and <strong>Microsoft Teams</strong> the room gets the deck and nothing else — excluded from screen capture at the system level, not parked out of the way and hoped for.' %}
     {% set heroPrimaryHref = "#download" %}
     {% set heroPrimaryIcon = "download" %}
     {% set heroPrimaryText = "Download for Mac or Windows" %}
+    {% set heroSecondaryText = "Watch the demo" %}
+    {% set heroSecondaryHref = "#demo" %}
+    {% set heroSecondaryIcon = "play" %}
     {% set heroNote = "Free forever · No account · macOS 13+ and Windows 10+" %}
     {% set heroStrip = "meeting" %}
-    {% set faqLink = "#faq-undetectable" %}
+    {% set faqLink = "#faq" %}
     {% set stripMore = "and anything else that shares a screen" %}
+    {% set heroDeck = true %}
     {% include "partials/hero.njk" %}
 
-    {% set demoSolid = true %}
-    {% include "partials/demo.njk" %}
+    {% set watchHeading = "Watch it disappear from a screen share" %}
+    {% set watchNote = "Nothing is embedded here — each one opens on YouTube." %}
+    {% set demoIds = ["desktop", "phone", "ipad"] %}
+    {% set watchSolid = true %}
+    {% include "partials/watch.njk" %}
 
     {% set featureRows = features.desktop %}
     {% set rowsMicro = "What you get" %}
     {% set rowsHeading = "Everything the call sees is your slide" %}
     {% set rowsId = "features" %}
-    {% set rowsSolid = true %}
     {% include "partials/rows.njk" %}
 
+    {% set syntaxSolid = true %}
     {% include "partials/features.njk" %}
 
     {% set appRows = site.meetingApps %}
@@ -113,8 +120,11 @@ crumbs:
     {% set stripNote = "It is hidden at the system level rather than per app, so this is a list of pages we have written, not a list you have to be on." %}
     {% set appState = "Invisible" %}
     {% set appStateLive = true %}
-    {% set stripSolid = true %}
     {% include "partials/applist.njk" %}
+
+    {% set crossMode = "mobile" %}
+    {% set crossSolid = true %}
+    {% include "partials/crosspanel.njk" %}
 
     {% set gridRoles = site.desktopRoles %}
     {% set gridBase = "/" %}
@@ -124,12 +134,12 @@ crumbs:
     {% set gridSuffix = "speaker notes" %}
     {% include "partials/rolegrid.njk" %}
 
-    {% set faqItems = faq.withGeneral(faq.desktop) %}
-    {% set faqHeading = "Everything people ask before downloading" %}
+    {% set faqItems = faq.desktopShort %}
+    {% set faqHeading = "Asked before downloading" %}
     {% include "partials/faq.njk" %}
 
     {% set downloadTitle = "Know your lines. Show your slides." %}
-    {% set downloadDesc = "Free on macOS and Windows, and free on your phone too. Presenting from <a href=\"/google-slides/\">Google Slides</a>? Add the extension there." %}
+    {% set downloadDesc = "Free on macOS and Windows. Presenting from <a href=\"/google-slides/\">Google Slides</a>? Add the extension there." %}
     {% include "partials/download.njk" %}
 </main>
 

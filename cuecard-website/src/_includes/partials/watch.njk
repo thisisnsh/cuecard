@@ -1,0 +1,49 @@
+{% from "partials/icons.njk" import icon %}
+{#
+  The demos, as links out to YouTube.
+
+  Nothing on this site is embedded. An iframe would drag a third-party player
+  onto every page it appeared on and cost more than the film is worth, so each
+  demo is a card drawn as the device it was filmed on, with a play mark over
+  it, and pressing it opens YouTube.
+
+  Pass `demoIds` (a list of "phone", "ipad", "desktop") to show a subset, in
+  the order given.
+#}
+{% macro card(d) %}
+<li>
+    <a class="watch-card watch-card--{{ d.shape }} reveal" href="{{ d.url }}" target="_blank" rel="noopener">
+        <span class="watch-top">
+            <span class="watch-device">{{ icon(d.icon, 13) }}{{ d.device }}</span>
+            <span class="watch-len">YouTube</span>
+        </span>
+        <span class="watch-frame" aria-hidden="true">
+            <i class="watch-rule w1"></i>
+            <i class="watch-rule w2"></i>
+            <i class="watch-rule is-cue"></i>
+            <i class="watch-rule w3"></i>
+            <i class="watch-rule w4"></i>
+            <i class="watch-rule w2"></i>
+            <i class="watch-play"></i>
+        </span>
+        <span class="watch-body">
+            <span class="watch-title">{{ d.title }}</span>
+            <span class="watch-note">{{ d.note }}</span>
+        </span>
+        <span class="watch-go">Watch on YouTube {{ icon("external", 13) }}</span>
+    </a>
+</li>
+{% endmacro %}
+
+<section class="watch{% if watchSolid %} solid{% endif %}" id="{{ watchId or 'demo' }}" aria-labelledby="{{ watchId or 'demo' }}-h">
+    <div class="wrap">
+        <p class="micro">{{ icon("play", 13) }}{{ watchMicro or "See it work" }}</p>
+        <h2 class="section-h" id="{{ watchId or 'demo' }}-h">{{ (watchHeading or "A minute of it, on each screen") | safe }}</h2>
+        {% if watchNote %}<p class="body">{{ watchNote | safe }}</p>{% endif %}
+
+        <ul class="watchgrid">
+            {% if demoIds %}{% for id in demoIds %}{{ card(site.demo[id]) }}{% endfor %}
+            {% else %}{% for d in site.demos %}{{ card(d) }}{% endfor %}{% endif %}
+        </ul>
+    </div>
+</section>

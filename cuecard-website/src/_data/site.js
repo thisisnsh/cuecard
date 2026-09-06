@@ -1,17 +1,19 @@
 // Site-wide constants. Anything that appears on more than one page and would
 // be a bug to get out of step lives here, so a change lands everywhere at once.
 //
-// Three pages carry the product. / is the landing page - what CueCard is, the
-// fork between the two halves, and the download hub. /mobile/ is the phone
-// teleprompter. /desktop/ is the Mac and Windows app, with every URL it already
-// ranked for left exactly where it was.
+// The phone is the product. /  is CueCard Teleprompter on iPhone and iPad;
+// /desktop/ is the Mac and Windows app, kept whole because it ranks, but it
+// is the second half of the story on every page rather than the first.
 
 const year = new Date().getFullYear();
 
 const site = {
   name: "CueCard",
+  // The name to rank for. Used wherever a title, a heading or a schema block
+  // wants the full product name rather than the short one.
+  productName: "CueCard Teleprompter",
   shortName: "CueCard",
-  tagline: "The teleprompter that floats over everything",
+  tagline: "The teleprompter that floats over every app you film in",
   url: "https://cuecard.dev",
   email: "support@cuecard.dev",
   github: "https://github.com/thisisnsh/cuecard",
@@ -30,49 +32,79 @@ const site = {
   requiresDesktop: "macOS 13 or later, Windows 10 or later",
   requiresDesktopShort: "macOS · Windows",
 
-  // ── The background reel ─────────────────────────────────────────────────
-  // A fixed layer the whole page scrolls over. There is no video player
-  // anywhere on the site any more: this reel *is* the film, and the page reads
-  // on top of it.
-  //
-  // `placeholder` is the honest flag. While it is true these are borrowed
-  // files and nothing is marked up as a VideoObject, because structured data
-  // that describes someone else's footage is a lie. Drop CueCard's own three
-  // files in, point the URLs at them, fill in `schema`, set placeholder to
-  // false — and every page starts declaring the video to search engines.
-  video: {
-    enabled: true,
-    placeholder: true,
-    origin: "https://download.alldayidreamaboutsports.com",
-    mp4: "https://download.alldayidreamaboutsports.com/promo.mp4",
-    webm: "https://download.alldayidreamaboutsports.com/promo.webm",
-    poster: "https://download.alldayidreamaboutsports.com/promo-f1.webp",
-    posterWidth: 1440,
-    posterHeight: 810,
-    schema: {
-      name: "CueCard — a teleprompter that floats over every other app",
-      description:
-        "CueCard on iPhone and on the desktop: a floating teleprompter window that stays on top of the camera, Instagram or TikTok while you record, and speaker notes that stay out of the screen share while you present.",
-      uploadDate: "2026-01-01",
-      duration: "PT1M4S",
+  // ── The App Store artwork ───────────────────────────────────────────────
+  // The one place on the site that shows the app itself. Two strips, one per
+  // device, shown at full width under the hero.
+  shots: [
+    {
+      id: "phone",
+      src: "/assets/promo-mobile.jpg",
+      small: "/assets/promo-mobile-1100.jpg",
+      width: 2200,
+      height: 1192,
+      label: "On iPhone",
+      alt: "CueCard Teleprompter on iPhone: the script scrolling with a countdown timer, the floating prompter reading over the home screen, and the settings for scroll speed and cue colour.",
+      caption:
+        "The prompter, the floating window over every other app, and the settings behind them.",
     },
-  },
+    {
+      id: "ipad",
+      src: "/assets/promo-ipad.jpg",
+      small: "/assets/promo-ipad-1100.jpg",
+      width: 2200,
+      height: 978,
+      label: "On iPad",
+      alt: "CueCard Teleprompter on iPad: a full-width script with play and restart controls, and the floating prompter window sitting over the home screen.",
+      caption:
+        "Same app, bigger glass. The iPad reads as a proper studio prompter at arm's length.",
+    },
+  ],
+
+  // ── The demos ───────────────────────────────────────────────────────────
+  // Nothing is embedded anywhere on this site. Every demo is a link out to
+  // YouTube, so no third-party player script loads on any page.
+  demos: [
+    {
+      id: "phone",
+      device: "iPhone",
+      icon: "phone",
+      url: "https://youtube.com/shorts/zSSABBm7K1Q",
+      title: "The floating teleprompter on iPhone",
+      note: "Recording a Reel with the script on the glass.",
+      shape: "portrait",
+      primary: true,
+    },
+    {
+      id: "ipad",
+      device: "iPad",
+      icon: "tablet",
+      url: "https://youtube.com/shorts/cHfZ-XLuz1E",
+      title: "CueCard Teleprompter on iPad",
+      note: "A big-screen prompter that still floats over everything.",
+      shape: "portrait",
+    },
+    {
+      id: "desktop",
+      device: "Mac and Windows",
+      icon: "monitor",
+      url: "https://youtu.be/lNKghjFrdTE",
+      title: "Speaker notes only you can see",
+      note: "Notes staying out of a shared screen on Zoom, Meet and Teams.",
+      shape: "landscape",
+    },
+  ],
 
   // ── Where CueCard can actually be had ───────────────────────────────────
   // One list, used in two places: the header's download menu and the download
   // section that closes every page. They cannot drift apart because there is
   // only one of them.
   //
-  // The browser extension is not a version of CueCard - it is the piece that
-  // makes Google Slides work - so it is not in here. It lives on
-  // /google-slides/, in site.extension.
-  //
   // An `href` starting with "/" is a page on this site; anything else is a
   // store and opens in a new tab.
   downloadGroups: [
     {
       id: "phone",
-      label: "On your phone",
+      label: "On your phone and iPad",
       icon: "phone",
       note: "Floats on top of whatever you are filming in.",
       items: [
@@ -155,19 +187,6 @@ const site = {
     ],
   },
 
-  // ── The demo film ───────────────────────────────────────────────────────
-  // The one moving picture on the site that is CueCard's own. It is not
-  // embedded: a still links out to YouTube, so no third-party player script
-  // loads on any page. (The reel behind the page is atmosphere; this is the
-  // thing to actually watch.)
-  demo: {
-    id: "VQ85qXoMfis",
-    url: "https://www.youtube.com/watch?v=VQ85qXoMfis",
-    thumb: "https://img.youtube.com/vi/VQ85qXoMfis/maxresdefault.jpg",
-    title: "CueCard - speaker notes only you can see",
-    alt: "CueCard's speaker notes sitting on screen while a deck is shared - watch the demo on YouTube",
-  },
-
   // The download total, written by hand. It is a claim about the product, not
   // a live figure: the GitHub API only knows about desktop release assets, so
   // anything computed from it undercounts the App Store badly. Edit the
@@ -180,10 +199,11 @@ const site = {
     { name: "Instagram", slug: "instagram", icon: "instagram", use: "Reels" },
     { name: "TikTok", slug: "tiktok", icon: "tiktok", use: "TikToks" },
     { name: "YouTube", slug: "youtube", icon: "youtube", use: "Shorts and long form" },
+    { name: "Snapchat", slug: "snapchat", icon: "snapchat", use: "Spotlight" },
     { name: "LinkedIn", slug: "linkedin", icon: "linkedin", use: "Video posts" },
     { name: "Facebook", slug: "facebook", icon: "facebook", use: "Reels and Live" },
-    { name: "Snapchat", slug: "snapchat", icon: "snapchat", use: "Spotlight" },
     { name: "Twitter / X", slug: "twitter", icon: "twitter", use: "Video posts" },
+    { name: "Twitch", slug: "twitch", icon: "twitch", use: "Going live" },
   ],
 
   // ── The apps CueCard hides from, on a computer ──────────────────────────
@@ -234,5 +254,8 @@ site.downloads = site.downloadGroups.reduce(
   (all, g) => all.concat(g.items.map((d) => ({ ...d, group: g.label }))),
   []
 );
+
+// The demos, addressable by id, for the pages that only want one of them.
+site.demo = site.demos.reduce((map, d) => Object.assign(map, { [d.id]: d }), {});
 
 module.exports = site;

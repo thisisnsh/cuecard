@@ -2,16 +2,21 @@
   {
     "slug": "teachers",
     "name": "Teachers",
-    "title": "CueCard for Teachers - Invisible Speaker Notes",
+    "title": "Invisible Speaker Notes for Teachers - CueCard",
     "description": "Keep lesson plans and talking points visible during Zoom, Google Meet, or Teams classes while students see only your slides.",
     "keywords": "teacher teleprompter, online teaching notes, zoom teaching tips, google meet for teachers, invisible notes for educators, online class speaker notes, lesson plan teleprompter",
     "canonical": "https://cuecard.dev/teachers/",
-    "ogTitle": "CueCard for Teachers - Invisible Speaker Notes",
+    "ogTitle": "Invisible speaker notes for teachers",
     "ogDescription": "Keep lesson plans and talking points visible during online classes while students see only your slides.",
     "heroSubtitle": "<span class=\"highlight highlight-yellow\">Invisible notes</span> for online classes.<br class=\"desktop-br\"> Keep <span class=\"highlight highlight-green\">lesson plans</span> and <span class=\"highlight highlight-pink\">talking points</span> at your fingertips.",
     "targetAudience": "teachers and educators",
     "mobileCounterpart": "teachers",
-    "useCases": ["Online classes", "Virtual lectures", "Student presentations review", "Parent-teacher meetings"],
+    "useCases": [
+      "Online classes",
+      "Virtual lectures",
+      "Student presentations review",
+      "Parent-teacher meetings"
+    ],
     "faq": [
       {
         "question": "Can students see my notes during screen sharing?",
@@ -34,16 +39,21 @@
   {
     "slug": "students",
     "name": "Students",
-    "title": "CueCard for Students - Invisible Presentation Notes",
+    "title": "Invisible Speaker Notes for Students - CueCard",
     "description": "Present confidently with speaker notes visible only to you during class presentations on Zoom, Meet, or Teams.",
     "keywords": "student presentation tips, presentation notes app, college presentation teleprompter, student speaker notes, class presentation help, virtual presentation notes",
     "canonical": "https://cuecard.dev/students/",
-    "ogTitle": "CueCard for Students - Invisible Presentation Notes",
+    "ogTitle": "Invisible speaker notes for students",
     "ogDescription": "Present confidently with speaker notes visible only to you during class presentations.",
     "heroSubtitle": "<span class=\"highlight highlight-yellow\">Invisible notes</span> for class presentations.<br class=\"desktop-br\"> Keep <span class=\"highlight highlight-green\">talking points</span> and <span class=\"highlight highlight-pink\">key facts</span> at your fingertips.",
     "targetAudience": "students",
     "mobileCounterpart": null,
-    "useCases": ["Class presentations", "Thesis defense", "Group projects", "Virtual debates"],
+    "useCases": [
+      "Class presentations",
+      "Thesis defense",
+      "Group projects",
+      "Virtual debates"
+    ],
     "faq": [
       {
         "question": "Will my professor see my notes during the presentation?",
@@ -66,16 +76,21 @@
   {
     "slug": "sales",
     "name": "Sales Professionals",
-    "title": "CueCard for Sales - Invisible Demo Notes",
+    "title": "Invisible Speaker Notes for Sales Professionals - CueCard",
     "description": "Keep pricing, features, and objection handling visible during Zoom or Teams demos while prospects see only your presentation.",
     "keywords": "sales demo teleprompter, product demo notes, sales presentation tips, zoom sales calls, invisible notes for sales, demo talking points, sales pitch notes",
     "canonical": "https://cuecard.dev/sales/",
-    "ogTitle": "CueCard for Sales - Invisible Demo Notes",
+    "ogTitle": "Invisible speaker notes for sales professionals",
     "ogDescription": "Keep pricing and talking points visible during sales demos while prospects see only your presentation.",
     "heroSubtitle": "<span class=\"highlight highlight-yellow\">Invisible notes</span> for product demos.<br class=\"desktop-br\"> Keep <span class=\"highlight highlight-green\">pricing</span> and <span class=\"highlight highlight-pink\">objection handlers</span> at your fingertips.",
     "targetAudience": "sales professionals",
     "mobileCounterpart": "sales",
-    "useCases": ["Product demos", "Sales pitches", "Discovery calls", "Pricing discussions"],
+    "useCases": [
+      "Product demos",
+      "Sales pitches",
+      "Discovery calls",
+      "Pricing discussions"
+    ],
     "faq": [
       {
         "question": "Can prospects see my notes during screen share demos?",
@@ -98,16 +113,21 @@
   {
     "slug": "trainers",
     "name": "Corporate Trainers",
-    "title": "CueCard for Trainers - Invisible Training Notes",
+    "title": "Invisible Speaker Notes for Corporate Trainers - CueCard",
     "description": "Keep curriculum, exercises, and timing cues visible during virtual training sessions and workshops.",
     "keywords": "corporate training teleprompter, virtual training notes, training session tips, zoom training, invisible notes for trainers, workshop speaker notes, employee training tools",
     "canonical": "https://cuecard.dev/trainers/",
-    "ogTitle": "CueCard for Trainers - Invisible Training Notes",
+    "ogTitle": "Invisible speaker notes for corporate trainers",
     "ogDescription": "Keep curriculum and timing cues visible during virtual training sessions.",
     "heroSubtitle": "<span class=\"highlight highlight-yellow\">Invisible notes</span> for training sessions.<br class=\"desktop-br\"> Keep <span class=\"highlight highlight-green\">curriculum</span> and <span class=\"highlight highlight-pink\">timing cues</span> at your fingertips.",
     "targetAudience": "corporate trainers",
     "mobileCounterpart": null,
-    "useCases": ["Employee onboarding", "Skills training", "Compliance workshops", "Virtual workshops"],
+    "useCases": [
+      "Employee onboarding",
+      "Skills training",
+      "Compliance workshops",
+      "Virtual workshops"
+    ],
     "faq": [
       {
         "question": "Can trainees see my notes during virtual training?",
@@ -130,16 +150,21 @@
   {
     "slug": "coaches",
     "name": "Coaches",
-    "title": "CueCard for Coaches - Invisible Session Notes",
+    "title": "Invisible Speaker Notes for Coaches - CueCard",
     "description": "Keep client context, frameworks, and questions visible during coaching calls without breaking eye contact.",
     "keywords": "coaching teleprompter, life coach notes, business coach tools, coaching session notes, zoom coaching, invisible notes for coaches, coaching frameworks",
     "canonical": "https://cuecard.dev/coaches/",
-    "ogTitle": "CueCard for Coaches - Invisible Session Notes",
+    "ogTitle": "Invisible speaker notes for coaches",
     "ogDescription": "Keep client context and frameworks visible during coaching calls without breaking eye contact.",
     "heroSubtitle": "<span class=\"highlight highlight-yellow\">Invisible notes</span> for coaching sessions.<br class=\"desktop-br\"> Keep <span class=\"highlight highlight-green\">client context</span> and <span class=\"highlight highlight-pink\">frameworks</span> at your fingertips.",
     "targetAudience": "business and life coaches",
     "mobileCounterpart": "coaches",
-    "useCases": ["1:1 coaching sessions", "Group coaching", "Workshops", "Client check-ins"],
+    "useCases": [
+      "1:1 coaching sessions",
+      "Group coaching",
+      "Workshops",
+      "Client check-ins"
+    ],
     "faq": [
       {
         "question": "Can clients see my notes during video coaching sessions?",
@@ -162,16 +187,21 @@
   {
     "slug": "executives",
     "name": "Executives",
-    "title": "CueCard for Executives - Invisible Presenter Notes",
+    "title": "Invisible Speaker Notes for Executives - CueCard",
     "description": "Keep key metrics and announcements visible during board meetings and all-hands while screen sharing.",
     "keywords": "executive presentation tools, CEO speaker notes, board meeting teleprompter, all-hands presentation, leadership presentation tips, invisible notes for executives",
     "canonical": "https://cuecard.dev/executives/",
-    "ogTitle": "CueCard for Executives - Invisible Presenter Notes",
+    "ogTitle": "Invisible speaker notes for executives",
     "ogDescription": "Keep key metrics and announcements visible during board meetings and all-hands.",
     "heroSubtitle": "<span class=\"highlight highlight-yellow\">Invisible notes</span> for board meetings.<br class=\"desktop-br\"> Keep <span class=\"highlight highlight-green\">key metrics</span> and <span class=\"highlight highlight-pink\">announcements</span> at your fingertips.",
     "targetAudience": "executives and leadership",
     "mobileCounterpart": null,
-    "useCases": ["Board presentations", "All-hands meetings", "Investor updates", "Strategic reviews"],
+    "useCases": [
+      "Board presentations",
+      "All-hands meetings",
+      "Investor updates",
+      "Strategic reviews"
+    ],
     "faq": [
       {
         "question": "Can board members see my notes during presentations?",
@@ -194,16 +224,21 @@
   {
     "slug": "consultants",
     "name": "Consultants",
-    "title": "CueCard for Consultants - Invisible Client Notes",
+    "title": "Invisible Speaker Notes for Consultants - CueCard",
     "description": "Present recommendations and data with notes visible only to you during strategy sessions and client reviews.",
     "keywords": "consulting presentation tools, consultant speaker notes, strategy presentation teleprompter, client presentation tips, McKinsey presentation, invisible notes for consultants",
     "canonical": "https://cuecard.dev/consultants/",
-    "ogTitle": "CueCard for Consultants - Invisible Client Notes",
+    "ogTitle": "Invisible speaker notes for consultants",
     "ogDescription": "Present recommendations and data with notes visible only to you during client sessions.",
     "heroSubtitle": "<span class=\"highlight highlight-yellow\">Invisible notes</span> for client presentations.<br class=\"desktop-br\"> Keep <span class=\"highlight highlight-green\">recommendations</span> and <span class=\"highlight highlight-pink\">data points</span> at your fingertips.",
     "targetAudience": "consultants",
     "mobileCounterpart": null,
-    "useCases": ["Strategy presentations", "Client workshops", "Stakeholder meetings", "Project updates"],
+    "useCases": [
+      "Strategy presentations",
+      "Client workshops",
+      "Stakeholder meetings",
+      "Project updates"
+    ],
     "faq": [
       {
         "question": "Can clients see my notes during virtual presentations?",
@@ -226,16 +261,21 @@
   {
     "slug": "lawyers",
     "name": "Lawyers",
-    "title": "CueCard for Lawyers - Invisible Case Notes",
+    "title": "Invisible Speaker Notes for Lawyers - CueCard",
     "description": "Keep case facts and citations visible during virtual hearings, client meetings, and depositions.",
     "keywords": "lawyer presentation tools, legal presentation teleprompter, virtual court hearing notes, legal speaker notes, law firm presentation, invisible notes for attorneys",
     "canonical": "https://cuecard.dev/lawyers/",
-    "ogTitle": "CueCard for Lawyers - Invisible Case Notes",
+    "ogTitle": "Invisible speaker notes for lawyers",
     "ogDescription": "Keep case facts and citations visible during virtual hearings and client meetings.",
     "heroSubtitle": "<span class=\"highlight highlight-yellow\">Invisible notes</span> for virtual hearings.<br class=\"desktop-br\"> Keep <span class=\"highlight highlight-green\">citations</span> and <span class=\"highlight highlight-pink\">case facts</span> at your fingertips.",
     "targetAudience": "lawyers and attorneys",
     "mobileCounterpart": null,
-    "useCases": ["Virtual hearings", "Client presentations", "Depositions", "Settlement negotiations"],
+    "useCases": [
+      "Virtual hearings",
+      "Client presentations",
+      "Depositions",
+      "Settlement negotiations"
+    ],
     "faq": [
       {
         "question": "Can opposing counsel see my notes during virtual hearings?",
@@ -258,16 +298,21 @@
   {
     "slug": "webinar-hosts",
     "name": "Webinar Hosts",
-    "title": "CueCard for Webinar Hosts - Invisible Webinar Notes",
+    "title": "Invisible Speaker Notes for Webinar Hosts - CueCard",
     "description": "Host webinars with scripts, Q&A prompts, and timing cues visible only to you while presenting.",
     "keywords": "webinar teleprompter, webinar speaker notes, live webinar tips, webinar hosting tools, invisible notes for webinars, webinar presentation",
     "canonical": "https://cuecard.dev/webinar-hosts/",
-    "ogTitle": "CueCard for Webinar Hosts - Invisible Webinar Notes",
+    "ogTitle": "Invisible speaker notes for webinar hosts",
     "ogDescription": "Host webinars with scripts and timing cues visible only to you while presenting.",
     "heroSubtitle": "<span class=\"highlight highlight-yellow\">Invisible notes</span> for live webinars.<br class=\"desktop-br\"> Keep your <span class=\"highlight highlight-green\">script</span> and <span class=\"highlight highlight-pink\">timing cues</span> at your fingertips.",
     "targetAudience": "webinar hosts",
     "mobileCounterpart": null,
-    "useCases": ["Product webinars", "Educational webinars", "Lead generation events", "Panel discussions"],
+    "useCases": [
+      "Product webinars",
+      "Educational webinars",
+      "Lead generation events",
+      "Panel discussions"
+    ],
     "faq": [
       {
         "question": "Can attendees see my notes during the webinar?",
@@ -290,16 +335,21 @@
   {
     "slug": "course-creators",
     "name": "Course Creators",
-    "title": "CueCard for Course Creators - Invisible Recording Notes",
+    "title": "Invisible Speaker Notes for Course Creators - CueCard",
     "description": "Record courses with lesson outlines visible during screen recordings and live sessions.",
     "keywords": "course creator teleprompter, online course recording, screencast speaker notes, udemy course tips, educational content creation, invisible notes for courses",
     "canonical": "https://cuecard.dev/course-creators/",
-    "ogTitle": "CueCard for Course Creators - Invisible Recording Notes",
+    "ogTitle": "Invisible speaker notes for course creators",
     "ogDescription": "Record courses with lesson outlines visible during screen recordings and live sessions.",
     "heroSubtitle": "<span class=\"highlight highlight-yellow\">Invisible notes</span> for course recordings.<br class=\"desktop-br\"> Keep <span class=\"highlight highlight-green\">lesson outlines</span> and <span class=\"highlight highlight-pink\">talking points</span> at your fingertips.",
     "targetAudience": "online course creators",
     "mobileCounterpart": "course-creators",
-    "useCases": ["Course recording", "Tutorial creation", "Live cohort sessions", "Q&A sessions"],
+    "useCases": [
+      "Course recording",
+      "Tutorial creation",
+      "Live cohort sessions",
+      "Q&A sessions"
+    ],
     "faq": [
       {
         "question": "Can students see my notes in the recorded video?",
@@ -322,16 +372,21 @@
   {
     "slug": "realtors",
     "name": "Real Estate Agents",
-    "title": "CueCard for Realtors - Invisible Tour Notes",
+    "title": "Invisible Speaker Notes for Real Estate Agents - CueCard",
     "description": "Deliver virtual property tours with property details and pricing visible only to you on Zoom walkthroughs.",
     "keywords": "realtor teleprompter, virtual property tour tips, real estate presentation, zoom property showing, invisible notes for realtors, real estate agent tools",
     "canonical": "https://cuecard.dev/realtors/",
-    "ogTitle": "CueCard for Realtors - Invisible Tour Notes",
+    "ogTitle": "Invisible speaker notes for real estate agents",
     "ogDescription": "Deliver virtual property tours with details visible only to you during Zoom walkthroughs.",
     "heroSubtitle": "<span class=\"highlight highlight-yellow\">Invisible notes</span> for virtual property tours.<br class=\"desktop-br\"> Keep <span class=\"highlight highlight-green\">property details</span> and <span class=\"highlight highlight-pink\">pricing</span> at your fingertips.",
     "targetAudience": "real estate agents",
     "mobileCounterpart": "realtors",
-    "useCases": ["Virtual property tours", "Buyer consultations", "Listing presentations", "Market updates"],
+    "useCases": [
+      "Virtual property tours",
+      "Buyer consultations",
+      "Listing presentations",
+      "Market updates"
+    ],
     "faq": [
       {
         "question": "Can buyers see my notes during virtual tours?",
@@ -354,16 +409,21 @@
   {
     "slug": "fitness-instructors",
     "name": "Fitness Instructors",
-    "title": "CueCard for Fitness Instructors - Invisible Class Notes",
+    "title": "Invisible Speaker Notes for Fitness Instructors - CueCard",
     "description": "Lead virtual classes with workout sequences and timing visible only to you while on camera.",
     "keywords": "fitness instructor teleprompter, virtual fitness class tips, zoom workout notes, online fitness coaching, invisible notes for trainers, workout sequence notes",
     "canonical": "https://cuecard.dev/fitness-instructors/",
-    "ogTitle": "CueCard for Fitness Instructors - Invisible Class Notes",
+    "ogTitle": "Invisible speaker notes for fitness instructors",
     "ogDescription": "Lead virtual classes with workout sequences and timing visible only to you.",
     "heroSubtitle": "<span class=\"highlight highlight-yellow\">Invisible notes</span> for virtual fitness classes.<br class=\"desktop-br\"> Keep <span class=\"highlight highlight-green\">workout sequences</span> and <span class=\"highlight highlight-pink\">timing</span> at your fingertips.",
     "targetAudience": "fitness instructors",
     "mobileCounterpart": "fitness-instructors",
-    "useCases": ["Live virtual classes", "Personal training sessions", "Workout recordings", "Nutrition consultations"],
+    "useCases": [
+      "Live virtual classes",
+      "Personal training sessions",
+      "Workout recordings",
+      "Nutrition consultations"
+    ],
     "faq": [
       {
         "question": "Can clients see my notes during virtual fitness classes?",

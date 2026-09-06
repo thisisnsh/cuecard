@@ -18,7 +18,7 @@
         <h2 class="section-h" id="get-h">{{ getHeading or "Free on every screen you speak from" }}</h2>
         <p class="body">{{ getBody or "No account, no subscription, nothing to cancel. All of it is on GitHub." | safe }}</p>
 
-        <div class="getgroups">
+        <div class="getgroups{% if groups | length > 1 %} getgroups-2{% endif %}">
             {% for g in groups %}
             <div class="getgroup reveal">
                 <div class="getgroup-head">
