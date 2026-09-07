@@ -12,8 +12,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowOutward
@@ -29,8 +35,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -46,9 +50,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.crashlytics.ktx.crashlytics
@@ -80,6 +94,7 @@ fun SettingsView(
     val isDark = LocalIsDarkTheme.current
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val screenFocusManager = LocalFocusManager.current
 
     val settings by settingsService.settings.collectAsState()
     val user by authService.currentUser.collectAsState()
@@ -134,6 +149,11 @@ fun SettingsView(
                 .fillMaxSize()
                 .padding(padding)
                 .verticalScroll(rememberScrollState())
+                // A tap that no control claimed puts the keyboard away, so a
+                // number being typed has a way out anywhere on the screen.
+                .pointerInput(Unit) {
+                    detectTapGestures { screenFocusManager.clearFocus() }
+                }
         ) {
             // A notice from the worker, if there's one meant for Settings.
             settingsNotification?.let { notification ->
@@ -202,22 +222,22 @@ fun SettingsView(
             // MARK: - Teleprompter
 
             SettingsSection(title = "Teleprompter", isDark = isDark) {
-                SliderRow(
+                NumberRow(
                     label = "Start Delay",
+                    unit = "seconds",
                     value = settings.countdownSeconds,
-                    valueLabel = "${settings.countdownSeconds} seconds",
-                    range = 0..10,
+                    range = TeleprompterSettings.COUNTDOWN_RANGE,
                     isDark = isDark,
-                    onChange = { scope.launch { settingsService.updateCountdownSeconds(it) } }
+                    onCommit = { scope.launch { settingsService.updateCountdownSeconds(it) } }
                 )
 
-                SliderRow(
+                NumberRow(
                     label = "Scroll Speed",
+                    unit = "lines/min",
                     value = settings.linesPerMinute,
-                    valueLabel = "${settings.linesPerMinute} lines/min",
                     range = TeleprompterSettings.LPM_RANGE,
                     isDark = isDark,
-                    onChange = { scope.launch { settingsService.updateLinesPerMinute(it) } }
+                    onCommit = { scope.launch { settingsService.updateLinesPerMinute(it) } }
                 )
 
                 Column(
@@ -538,48 +558,84 @@ private fun SettingsSection(
     }
 }
 
-/** A labelled slider over a whole number of seconds or lines. */
+/**
+ * A labelled row holding a number the user types, rather than drags. The field
+ * keeps whatever is being typed and only becomes a setting once editing stops,
+ * so a half-typed figure is never held to the range.
+ */
 @Composable
-private fun SliderRow(
+private fun NumberRow(
     label: String,
+    unit: String,
     value: Int,
-    valueLabel: String,
     range: IntRange,
     isDark: Boolean,
-    onChange: (Int) -> Unit
+    onCommit: (Int) -> Unit
 ) {
-    Column(
-        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+    var text by remember(value) { mutableStateOf(value.toString()) }
+    var isFocused by remember { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
+    val focusRequester = remember { FocusRequester() }
+
+    fun commit() {
+        val typed = text.filter { it.isDigit() }.toIntOrNull()
+        val committed = typed?.coerceIn(range.first, range.last) ?: value
+        text = committed.toString()
+        if (committed != value) onCommit(committed)
+    }
+
+    Row(
+        modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = label,
-                fontSize = 17.sp,
-                color = AppColors.textPrimary(isDark)
+        Text(
+            text = label,
+            fontSize = 17.sp,
+            color = AppColors.textPrimary(isDark)
+        )
+        Spacer(modifier = Modifier.weight(1f))
+
+        // The number and its unit share one filled box, and the whole box is
+        // the target: tapping the unit starts editing, same as the digits.
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .clip(RoundedCornerShape(16.dp))
+                .background(AppColors.textSecondary(isDark).copy(alpha = 0.12f))
+                .clickableWithoutRipple { focusRequester.requestFocus() }
+                .padding(horizontal = 14.dp, vertical = 8.dp)
+        ) {
+            BasicTextField(
+                value = text,
+                onValueChange = { entered -> text = entered.filter { it.isDigit() }.take(3) },
+                singleLine = true,
+                textStyle = TextStyle(
+                    fontSize = 15.sp,
+                    fontFamily = FontFamily.Monospace,
+                    textAlign = TextAlign.End,
+                    color = AppColors.textPrimary(isDark)
+                ),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
+                cursorBrush = SolidColor(AppColors.textPrimary(isDark)),
+                modifier = Modifier
+                    .width(34.dp)
+                    .focusRequester(focusRequester)
+                    .onFocusChanged { state ->
+                        if (isFocused && !state.isFocused) commit()
+                        isFocused = state.isFocused
+                    }
             )
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.width(5.dp))
             Text(
-                text = valueLabel,
+                text = unit,
                 fontSize = 15.sp,
-                fontFamily = FontFamily.Monospace,
                 color = AppColors.textSecondary(isDark)
             )
         }
-
-        Slider(
-            value = value.toFloat(),
-            onValueChange = { onChange(it.toInt()) },
-            valueRange = range.first.toFloat()..range.last.toFloat(),
-            steps = (range.last - range.first - 1).coerceAtLeast(0),
-            colors = SliderDefaults.colors(
-                thumbColor = AppColors.textPrimary(isDark),
-                activeTrackColor = AppColors.green(isDark),
-                inactiveTrackColor = AppColors.textSecondary(isDark).copy(alpha = 0.3f),
-                activeTickColor = androidx.compose.ui.graphics.Color.Transparent,
-                inactiveTickColor = androidx.compose.ui.graphics.Color.Transparent
-            )
-        )
     }
 }
 

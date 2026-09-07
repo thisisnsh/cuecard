@@ -68,7 +68,7 @@ data class TeleprompterSettings(
     val overlayAspectRatio: OverlayAspectRatio = OverlayAspectRatio.RATIO_16X9,
     val scrollSpeed: Double = 1.0,
     /** Scroll speed, in lines of the script as the teleprompter renders them. */
-    val linesPerMinute: Int = 30,
+    val linesPerMinute: Int = 50,
     val timerMinutes: Int = 1,
     val timerSeconds: Int = 0,
     val themePreference: ThemePreference = ThemePreference.SYSTEM,
@@ -94,8 +94,11 @@ data class TeleprompterSettings(
         /** Scroll speed range (multiplier) */
         val SCROLL_SPEED_RANGE = 0.5..3.0
 
-        /** Lines per minute range */
-        val LPM_RANGE = 5..60
+        /** The speeds a typed lines-a-minute figure is held to. */
+        val LPM_RANGE = 1..300
+
+        /** The countdowns a typed start delay is held to. */
+        val COUNTDOWN_RANGE = 0..60
     }
 }
 
