@@ -8,8 +8,13 @@
   wrong one. The star count beside it is live, filled in by script.js; until it
   arrives the item is simply absent rather than a flickering zero.
 #}
+{# The count sends a reader to the download section. Every page carries one
+   except the five below - the legal and support pages, and the 404 - so on
+   those the link crosses to the home page's section instead of a dead hash. #}
+{% set statsPagesWithoutDownload = ["/faq/", "/support/", "/privacy/", "/terms/", "/404.html"] %}
+{% set statsDownloadHref = "/#download" if page.url in statsPagesWithoutDownload else "#download" %}
 <ul class="statline{% if statlineClass %} {{ statlineClass }}{% endif %}">
-    <li>{{ icon("download", 14) }}<b>{{ site.downloadTotal }}</b> downloads</li>
+    <li><a href="{{ statsDownloadHref }}">{{ icon("download", 14) }}<b>{{ site.downloadTotal }}</b> downloads</a></li>
     <li class="statline-stars" data-stars-item hidden>
         <a href="{{ site.github }}" target="_blank" rel="noopener">
             {{ icon("star", 14) }}<b data-github-stars>—</b> GitHub stars
