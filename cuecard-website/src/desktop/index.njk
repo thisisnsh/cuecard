@@ -75,7 +75,7 @@ crumbs:
 {% include "partials/nav.njk" %}
 
 <main>
-    {% set heroTitle = 'Speaker notes only <em>you</em> can see.' %}
+    {% set heroTitle = 'Speaker notes only <em>you</em> can see, on every call.' %}
     {% set heroBody = 'Your notes stay on your screen and out of the screen share. On <strong>Zoom</strong>, <strong>Google Meet</strong>, and <strong>Microsoft Teams</strong>, your audience sees the deck — and not your speaker notes.' %}
     {# Two download buttons rather than one that names both machines: script.js
        drops whichever one the reader is not on, so a Mac gets a Mac button.
@@ -85,7 +85,7 @@ crumbs:
         { text: "Download for Windows", href: "#download", icon: "windows", style: "primary", os: "windows" },
         { text: "Watch the demo", href: "#demo", icon: "play", style: "ghost" }
     ] %}
-    {% set heroNote = "Free · macOS 13+ and Windows 10+" %}
+    {% set heroNote = 'Free · <a href="#download">macOS 13+</a> and <a href="#download">Windows 10+</a>' %}
     {% set heroStrip = "meeting" %}
     {% set faqLink = "#faq" %}
     {% set stripMore = "and anything else that shares a screen" %}
@@ -106,9 +106,7 @@ crumbs:
 
     {% include "partials/features.njk" %}
 
-    {% set usesHeading = "The calls people keep it open for" %}
-    {% set useItems = site.desktopUses %}
-    {% include "partials/uses.njk" %}
+    {% include "partials/slidesync.njk" %}
 
     {% set gridRoles = site.desktopRoles %}
     {% set gridBase = "/" %}

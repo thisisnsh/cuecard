@@ -1,0 +1,56 @@
+{% from "partials/icons.njk" import icon %}
+{#
+  What the desktop app does that nothing else does: it reads a Google Slides
+  deck's own speaker notes and keeps up with them as the deck moves.
+
+  This is a description of a feature, not an install page. The extension's two
+  halves are offered on /google-slides/ and nowhere else - see the note in
+  _data/site.js - because a page that hands a reader an extension to install
+  makes it look like a fourth version of CueCard, which it is not. So this
+  section says what the sync does and sends anyone who wants it to that page.
+#}
+<section class="slidesync" id="slides" aria-labelledby="slides-h">
+    <div class="wrap">
+        <p class="micro">{{ icon("slides", 13) }}{{ slideSyncMicro or "If you present from Google Slides" }}</p>
+        <h2 class="section-h" id="slides-h">{{ (slideSyncHeading or "Your deck already holds the notes. <em>CueCard reads them.</em>") | safe }}</h2>
+
+        <div class="crosspanel reveal">
+            <div>
+                <p class="crosspanel-tag">{{ icon("layers", 13) }}The browser extension</p>
+                <h3 class="crosspanel-h">The notes follow your slides</h3>
+                <p class="crosspanel-p">
+                    Speaker notes are already written under every slide in your deck. The
+                    extension reads them out of Google Slides and hands them to the CueCard
+                    window as you move from one slide to the next — so there is nothing to
+                    paste before the call, and nothing to scroll for during it. The window
+                    stays out of your screen share, the way it always does.
+                </p>
+                <p class="backline">
+                    <a href="/google-slides/">{{ icon("slides", 15) }} CueCard for Google Slides {{ icon("arrow", 14) }}</a>
+                    <a href="/google-slides/#extension">{{ icon("layers", 15) }} Install the extension {{ icon("arrow", 14) }}</a>
+                </p>
+            </div>
+
+            <ol class="slidesteps">
+                <li>
+                    <span class="slidestep-n">1</span>
+                    <span class="slidestep-t">Present from your deck
+                        <small class="slidestep-d">In Chrome, Edge, Brave, Arc, Firefox or Safari.</small>
+                    </span>
+                </li>
+                <li>
+                    <span class="slidestep-n">2</span>
+                    <span class="slidestep-t">Change a slide
+                        <small class="slidestep-d">That slide's notes arrive in the CueCard window on their own.</small>
+                    </span>
+                </li>
+                <li>
+                    <span class="slidestep-n">3</span>
+                    <span class="slidestep-t">Read, and keep sharing
+                        <small class="slidestep-d">Your audience sees the deck. The notes are not on the screen they see.</small>
+                    </span>
+                </li>
+            </ol>
+        </div>
+    </div>
+</section>
