@@ -90,11 +90,9 @@ struct SettingsView: View {
             signOutSection
             deleteAccountSection
         }
-        // The number pad has no return key, so the way out is to leave the
-        // field: a scroll, or a tap anywhere that isn't a control of its own.
-        // A low-priority gesture, so rows and boxes still get their own taps.
+        // The number pad has no return key, so the way out of a field is a
+        // scroll, or a tap on the other field.
         .scrollDismissesKeyboard(.immediately)
-        .gesture(TapGesture().onEnded { focusedField = nil })
     }
 
     /// A notice from the worker, if there's one meant for Settings. Quieter than
