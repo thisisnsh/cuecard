@@ -13,10 +13,12 @@
 
 /** Pointing a phone page at the desktop app. */
 function toDesktop(subject) {
-  const about = subject ? `after the ${subject} take` : "when you are presenting instead";
+  const when = subject
+    ? `for the meeting after the ${subject} take`
+    : "when you are presenting rather than filming";
   return {
     h: "Speaker notes your screen share cannot see",
-    p: `The other half of CueCard runs on a Mac or PC, and it does the opposite trick: the window is left out of screen capture by the operating system, so a call sees your deck and never your notes. It is the one to open ${about} — same cues, same timer, nothing on the shared screen. Paste your notes in and use it with any deck, or with none at all, and if you present from <a href="/google-slides/">Google Slides</a> one extra browser extension makes the notes change along with the slide.`,
+    p: `The other half of CueCard runs on a Mac or PC, and it hides rather than floats: the window is left out of screen capture, so a call sees your deck and never your notes. Open it ${when}. Any deck, or none at all — and <a href="/google-slides/">Google Slides</a> notes can follow your slides.`,
   };
 }
 
@@ -25,18 +27,18 @@ function toDesktopForRole(role) {
   const who = (role || "").toLowerCase();
   return {
     h: "Speaker notes your screen share cannot see",
-    p: `Most ${who} who film on a phone also present from a laptop, and CueCard does that too. On a Mac or PC the window is left out of screen capture by the operating system, so a call sees your deck and never your notes — the same scripts and the same cues, hidden from everyone else on the line. It works with any deck, or with no deck at all, and <a href="/google-slides/">Google Slides</a> notes can follow your slides with one browser extension.`,
+    p: `Most ${who} present from a laptop as well as film on a phone. On a Mac or PC the CueCard window is left out of screen capture, so a call sees your deck and never your notes — same scripts, same cues, nothing on the shared screen.`,
   };
 }
 
 /** Pointing a desktop page at the phone app. */
 function toMobile(subject) {
-  const about = subject
-    ? `the one to open once the ${subject} call is over`
-    : "the one for filming rather than presenting";
+  const when = subject
+    ? `to open once the ${subject} call is over`
+    : "for filming rather than presenting";
   return {
     h: "A script that floats over the app you film in",
-    p: `The other half of CueCard runs on an iPhone or iPad, and it is ${about}. Your script sits in a small window on top of the camera, <a href="/mobile/instagram/">Instagram</a> or <a href="/mobile/tiktok/">TikTok</a>, scrolling at the speed you set, so you read your lines without ever leaving the app you are recording in. The video still comes out of that app exactly as it always has.`,
+    p: `The other half runs on an iPhone or iPad, and it is the one ${when}. Your script floats over the camera, <a href="/mobile/instagram/">Instagram</a> or <a href="/mobile/tiktok/">TikTok</a> and scrolls while you talk.`,
   };
 }
 
@@ -45,7 +47,7 @@ function toMobileForRole(role) {
   const who = (role || "").toLowerCase();
   return {
     h: "A script that floats over the app you film in",
-    p: `Plenty of ${who} end up on the other side of a camera sooner or later, and there is a CueCard for that as well. On an iPhone or iPad the script floats in a small window on top of the camera, <a href="/mobile/instagram/">Instagram</a> or <a href="/mobile/tiktok/">TikTok</a>, scrolling while you talk, so you keep your eyes up and get the take in one go rather than four.`,
+    p: `Plenty of ${who} end up on the other side of a camera too. On an iPhone or iPad the script floats over <a href="/mobile/instagram/">Instagram</a>, <a href="/mobile/tiktok/">TikTok</a> or the camera itself, scrolling while you talk.`,
   };
 }
 
@@ -61,13 +63,13 @@ function bigscreen(subject, role) {
     const who = role.toLowerCase();
     return {
       h: "A screen big enough to read from a few feet away",
-      p: `An iPad is the screen a good many ${who} end up propping under the lens, and CueCard fills it. The script runs the full width of the display, large enough to read from where you are standing with both hands free, which is what a studio teleprompter is for. Shrink it back into the floating window whenever you would rather film in an app instead.`,
+      p: `An iPad is the screen a good many ${who} end up propping under the lens. The script runs the full width of it, big enough to read from where you are standing with both hands free. Shrink it back into the floating window whenever you would rather film in an app.`,
     };
   }
   if (subject) {
     return {
       h: "A screen big enough to read from a few feet away",
-      p: `Filming ${subject} from an iPad works the same way, with more room. The script can take the whole display, so you prop the iPad under a camera and read it from a few feet back rather than holding a phone at arm's length. Or shrink it into the floating window and film in ${subject} exactly as you would on a phone.`,
+      p: `Filming ${subject} from an iPad gives you more room: the script can take the whole display, so you read it from a few feet back rather than holding a phone at arm's length. Or shrink it into the floating window and film as you would anyway.`,
     };
   }
   return {
