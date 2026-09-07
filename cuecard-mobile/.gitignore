@@ -23,10 +23,10 @@ ios/**/DerivedData/
 *.dSYM
 
 # Android
-android/.gradle/
+android/**/.gradle/
 android/build/
 android/app/build/
-android/local.properties
+android/**/local.properties
 android/*.iml
 android/.idea/
 android/captures/
