@@ -14,6 +14,15 @@ struct SettingsView: View {
     @State private var isDeletingAccount = false
     @State private var deleteErrorMessage: String?
 
+    /// The delay and the speed are typed rather than dragged, so each field
+    /// holds text while it is being edited and only becomes a setting once
+    /// editing stops.
+    private enum NumberField { case delay, speed }
+
+    @State private var countdownSecondsText = ""
+    @State private var linesPerMinuteText = ""
+    @FocusState private var focusedField: NumberField?
+
     private var isCrashlyticsTestEnabled: Bool {
         ProcessInfo.processInfo.environment["CRASHLYTICS_TEST_CRASH"] == "1"
     }
@@ -49,9 +58,21 @@ struct SettingsView: View {
                 }
         }
         .onAppear {
+            countdownSecondsText = String(settingsService.settings.countdownSeconds)
+            linesPerMinuteText = String(settingsService.settings.linesPerMinute)
             Analytics.logEvent(AnalyticsEventScreenView, parameters: [
                 AnalyticsParameterScreenName: "settings"
             ])
+        }
+        .onChange(of: focusedField) { field in
+            if field != .delay { commitCountdownSeconds() }
+            if field != .speed { commitLinesPerMinute() }
+        }
+        .onChange(of: settingsService.settings.countdownSeconds) { seconds in
+            if focusedField != .delay { countdownSecondsText = String(seconds) }
+        }
+        .onChange(of: settingsService.settings.linesPerMinute) { lines in
+            if focusedField != .speed { linesPerMinuteText = String(lines) }
         }
     }
 
@@ -69,6 +90,11 @@ struct SettingsView: View {
             signOutSection
             deleteAccountSection
         }
+        // The number pad has no return key, so the way out is to leave the
+        // field: a scroll, or a tap anywhere that isn't a control of its own.
+        // A low-priority gesture, so rows and boxes still get their own taps.
+        .scrollDismissesKeyboard(.immediately)
+        .gesture(TapGesture().onEnded { focusedField = nil })
     }
 
     /// A notice from the worker, if there's one meant for Settings. Quieter than
@@ -101,6 +127,28 @@ struct SettingsView: View {
         }
     }
 
+    /// Take what was typed as a countdown, holding it to the range a run can
+    /// wait for. Anything that isn't a number leaves the setting alone.
+    private func commitCountdownSeconds() {
+        let digits = countdownSecondsText.filter(\.isNumber)
+        if let typed = Int(digits) {
+            let clamped = min(max(typed, TeleprompterSettings.countdownRange.lowerBound), TeleprompterSettings.countdownRange.upperBound)
+            settingsService.settings.countdownSeconds = clamped
+        }
+        countdownSecondsText = String(settingsService.settings.countdownSeconds)
+    }
+
+    /// Take what was typed as a speed, holding it to the range the teleprompter
+    /// can scroll at. Anything that isn't a number leaves the setting alone.
+    private func commitLinesPerMinute() {
+        let digits = linesPerMinuteText.filter(\.isNumber)
+        if let typed = Int(digits) {
+            let clamped = min(max(typed, TeleprompterSettings.lpmRange.lowerBound), TeleprompterSettings.lpmRange.upperBound)
+            settingsService.settings.linesPerMinute = clamped
+        }
+        linesPerMinuteText = String(settingsService.settings.linesPerMinute)
+    }
+
     private func displayNameForUser(_ user: FirebaseAuth.User) -> String {
         if let displayName = user.displayName, !displayName.isEmpty {
             return displayName
@@ -111,49 +159,44 @@ struct SettingsView: View {
         return "User"
     }
 
+    /// One typed setting: the label, then the number and its unit together in
+    /// a filled box. The box is what says the figure can be changed, and the
+    /// unit sits inside it so what is being typed is never read bare.
+    private func numberRow(label: String, text: Binding<String>, field: NumberField, unit: String) -> some View {
+        HStack {
+            Text(label)
+            Spacer()
+            HStack(spacing: 5) {
+                TextField("", text: text)
+                    .keyboardType(.numberPad)
+                    .multilineTextAlignment(.trailing)
+                    .monospacedDigit()
+                    .focused($focusedField, equals: field)
+                    .frame(width: 34, alignment: .trailing)
+                Text(unit)
+                    .foregroundStyle(.secondary)
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(AppColors.textSecondary(for: colorScheme).opacity(0.12))
+            )
+            // The unit is part of the target: tapping anywhere in the box
+            // starts editing, not only the digits themselves.
+            .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .onTapGesture { focusedField = field }
+        }
+        .padding(.vertical, 4)
+    }
+
     /// Everything that shapes a run: how long before it starts, how fast the
     /// script scrolls, and the color every cue is drawn in.
     private var teleprompterSection: some View {
         Section("Teleprompter") {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text("Start Delay")
-                    Spacer()
-                    Text("\(settingsService.settings.countdownSeconds) seconds")
-                        .foregroundStyle(.secondary)
-                        .monospacedDigit()
-                }
+            numberRow(label: "Start Delay", text: $countdownSecondsText, field: .delay, unit: "seconds")
 
-                Slider(
-                    value: Binding(
-                        get: { Double(settingsService.settings.countdownSeconds) },
-                        set: { settingsService.settings.countdownSeconds = Int($0) }
-                    ),
-                    in: 0...10,
-                    step: 1
-                )
-            }
-            .padding(.vertical, 4)
-
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text("Scroll Speed")
-                    Spacer()
-                    Text("\(settingsService.settings.linesPerMinute) lines/min")
-                        .foregroundStyle(.secondary)
-                        .monospacedDigit()
-                }
-
-                Slider(
-                    value: Binding(
-                        get: { Double(settingsService.settings.linesPerMinute) },
-                        set: { settingsService.settings.linesPerMinute = Int($0) }
-                    ),
-                    in: Double(TeleprompterSettings.lpmRange.lowerBound)...Double(TeleprompterSettings.lpmRange.upperBound),
-                    step: 1
-                )
-            }
-            .padding(.vertical, 4)
+            numberRow(label: "Scroll Speed", text: $linesPerMinuteText, field: .speed, unit: "lines/min")
 
             VStack(alignment: .leading, spacing: 12) {
                 Text("Cue Color")

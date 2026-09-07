@@ -87,7 +87,7 @@ struct TeleprompterSettings: Codable, Equatable {
         pipFontSizePreset: .medium,
         overlayAspectRatio: .ratio16x9,
         scrollSpeed: 1.0,
-        linesPerMinute: 30,
+        linesPerMinute: 50,
         timerMinutes: 1,
         timerSeconds: 0,
         themePreference: .system,
@@ -98,8 +98,11 @@ struct TeleprompterSettings: Codable, Equatable {
     /// Scroll speed range (multiplier)
     static let scrollSpeedRange = 0.5...3.0
 
-    /// Lines per minute range
-    static let lpmRange = 5...60
+    /// The speeds a typed lines-a-minute figure is held to.
+    static let lpmRange = 1...300
+
+    /// The countdowns a typed start delay is held to.
+    static let countdownRange = 0...60
 
     /// Get timer duration in seconds
     var timerDurationSeconds: Int {
