@@ -775,11 +775,12 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Track app open event (after auth check so we have user info if available)
   trackAppOpen();
 
-  // Track initial screen view
-  trackScreenView('initial', 'CueCard Home');
-
   // Check for existing slide data
   await checkCurrentSlide();
+
+  // Open on the script, the way the phone app does. The welcome hero is for a
+  // first run only: nobody signed in, and nothing ever written.
+  await showView(await shouldShowWelcome() ? 'initial' : 'add-notes');
 
   // Listen for slide updates from the backend
   if (listen) {
@@ -828,6 +829,16 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   console.log("App initialization complete!");
 });
+
+// Whether this is a first run — the only time the welcome hero is what someone
+// wants to see. Anyone who has signed in or written a script gets the editor.
+async function shouldShowWelcome() {
+  if (isAuthenticated) return false;
+  const storedNotes = await getStoredValue(STORAGE_KEYS.ADD_NOTES_CONTENT);
+  if (storedNotes && storedNotes.trim()) return false;
+  const savedNotes = await getSavedNotes();
+  return savedNotes.length === 0;
+}
 
 // =============================================================================
 // NAVIGATION
@@ -1003,29 +1014,32 @@ function setupWelcomeActions() {
 
   const slidesLink = document.getElementById('slides-link');
   if (slidesLink) {
-    slidesLink.addEventListener('click', async (e) => {
+    slidesLink.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      trackSlidesSync();
-
-      // Check if we have slides scope
-      const hasSlidesScope = await hasScope('slides');
-      if (!hasSlidesScope) {
-        // Request slides scope
-        console.log("Slides scope not granted, requesting...");
-        await handleLogin('slides');
-        return;
-      }
-
-      // Show notes view with slide data or default message
-      if (currentSlideData) {
-        showView('notes');
-      } else {
-        displayNotes('Open a Google Slides presentation to see notes here.\n[note Install CueCard Extension to sync notes]');
-        window.title = 'No Slide Open';
-        showView('notes');
-      }
+      syncSlideNotes();
     });
+  }
+}
+
+// Show the notes for the slide that is open, asking for the scope if we have
+// not been given it yet.
+async function syncSlideNotes() {
+  trackSlidesSync();
+
+  const hasSlidesScope = await hasScope('slides');
+  if (!hasSlidesScope) {
+    console.log("Slides scope not granted, requesting...");
+    await handleLogin('slides');
+    return;
+  }
+
+  if (currentSlideData) {
+    await showView('notes');
+  } else {
+    displayNotes('Open a Google Slides presentation to see notes here.\n[note Install CueCard Extension to sync notes]');
+    window.title = 'No Slide Open';
+    await showView('notes');
   }
 }
 
@@ -1763,9 +1777,11 @@ async function handleLogout() {
   try {
     await invoke("logout");
     updateAuthUI(false, '');
-    // Reset to initial view if viewing slide notes
-    if (currentView === 'notes' && !manualNotes) {
-      showView('initial');
+    dismissSheet();
+    if (await shouldShowWelcome()) {
+      await showView('initial');
+    } else if (currentView === 'notes') {
+      await showView('add-notes');
     }
   } catch (error) {
     console.error("Error logging out:", error);
@@ -2272,6 +2288,14 @@ function setupMenu() {
     });
   }
 
+  const slidesSyncLink = document.getElementById('slides-sync-link');
+  if (slidesSyncLink) {
+    slidesSyncLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      syncSlideNotes();
+    });
+  }
+
   if (btnSavedNotes) {
     btnSavedNotes.addEventListener("click", (e) => {
       e.preventDefault();
@@ -2343,6 +2367,8 @@ function setupMenu() {
 function updateMenuItems() {
   const isSlidesView = currentView === 'notes';
   const isEditorView = currentView === 'add-notes';
+  const slidesSyncLink = document.getElementById('slides-sync-link');
+  if (slidesSyncLink) slidesSyncLink.classList.toggle('hidden', isSlidesView);
 
   if (refreshBtn) {
     refreshBtn.classList.toggle('hidden', !(isSlidesView && currentSlideData));
