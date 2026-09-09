@@ -653,6 +653,7 @@ let timerIntervals = []; // Store all timer interval IDs
 let autoScrollAnimationId = null; // Store auto-scroll animation frame ID
 let autoScrollHeldSeconds = 0; // Time spent hovering, which the script sits out
 let autoScrollHeldSince = null;
+let programmaticScrollTop = null; // The last scrollTop we set ourselves
 let autoScrollPausedByHover = false; // Tracks if auto-scroll is paused due to hover
 let timerMinutes = 1; // The run's length, set on the Set Timer pill
 let timerSeconds = 0;
@@ -1369,6 +1370,7 @@ function resetTimerCountdown() {
   const container = getScrollContainer();
   if (container) {
     container.scrollTop = 0;
+    programmaticScrollTop = 0;
   }
 
   updateTimerDisplay();
@@ -1402,6 +1404,13 @@ function getScrollContainer() {
 const LPM_MIN = 1;
 const LPM_MAX = 300;
 
+/**
+ * Where on screen the line being read sits, as a fraction of the view height.
+ * Just above centre: high enough to leave the next few lines in view, low
+ * enough to read as the middle of the screen rather than the top of it.
+ */
+const READING_LINE_FRACTION = 0.45;
+
 // One rendered line of the script, in pixels — what a line a minute is a minute of.
 function renderedLineHeight(container) {
   const lineHeight = parseFloat(getComputedStyle(container).lineHeight);
@@ -1428,7 +1437,10 @@ function startAutoScroll() {
       if (maxScroll > 0) {
         const held = autoScrollHeldSeconds + (autoScrollHeldSince ? (Date.now() - autoScrollHeldSince) / 1000 : 0);
         const lines = Math.max(elapsedSeconds - held, 0) * linesPerMinute / 60;
-        container.scrollTop = Math.min(lines * renderedLineHeight(container), maxScroll);
+        const target = lines * renderedLineHeight(container) - readingLineOffset(container);
+        container.scrollTop = Math.min(Math.max(target, 0), maxScroll);
+        // Remember what we wrote, so the scroll it fires is not read as a scrub.
+        programmaticScrollTop = container.scrollTop;
       }
     }
 
@@ -1448,12 +1460,40 @@ function stopAutoScroll() {
   autoScrollHeldSince = null;
 }
 
-// Setup hover listeners to pause auto-scroll
+// How far the reading line sits down the view.
+function readingLineOffset(container) {
+  return container.clientHeight * READING_LINE_FRACTION;
+}
+
+// Dragging the script moves the clock, not just the view, so pausing and
+// dragging back re-times the run instead of desynchronising it.
+function scrubToScrollTop(container) {
+  if (linesPerMinute <= 0) return;
+
+  const lineHeight = renderedLineHeight(container);
+  if (!lineHeight) return;
+
+  const lines = (container.scrollTop + readingLineOffset(container)) / lineHeight;
+  elapsedSeconds = Math.max(lines * 60 / linesPerMinute, 0);
+  autoScrollHeldSeconds = 0;
+  autoScrollHeldSince = autoScrollPausedByHover ? Date.now() : null;
+  updateTimerDisplay();
+}
+
+// Setup hover listeners to pause auto-scroll, and scrubbing by dragging
 function setupAutoScrollHoverListeners() {
   const containers = [notesInputHighlight, notesContent];
 
   containers.forEach(container => {
     if (!container) return;
+
+    container.addEventListener('scroll', () => {
+      // Ours, not the reader's.
+      if (programmaticScrollTop !== null && Math.abs(container.scrollTop - programmaticScrollTop) < 1) return;
+      programmaticScrollTop = null;
+      if (!hasStarted) return;
+      scrubToScrollTop(container);
+    });
 
     container.addEventListener('mouseenter', () => {
       if (autoScrollPausedByHover) return;

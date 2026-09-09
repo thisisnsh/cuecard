@@ -464,7 +464,7 @@ body {
   font: var(--font-script);
   color: var(--text-secondary);
   padding-top: 24px;
-  padding-bottom: 24px;
+  padding-bottom: 72px;
   white-space: pre-wrap;
   word-wrap: break-word;
   overflow-y: auto;
@@ -485,7 +485,7 @@ body {
   color: transparent;
   caret-color: var(--text-secondary);
   padding-top: 24px;
-  padding-bottom: 24px;
+  padding-bottom: 72px;
   position: relative;
   z-index: 1;
   -webkit-overflow-scrolling: touch;
@@ -539,21 +539,6 @@ body {
 #view-add-notes {
   position: relative;
 
-  /* Mask for fade in/out */
-  -webkit-mask-image: linear-gradient(to bottom,
-      transparent 0px,
-      var(--color-bg) 24px,
-      var(--color-bg) calc(100% - 24px),
-      transparent 100%);
-
-  mask-image: linear-gradient(to bottom,
-      transparent 0px,
-      var(--color-bg) 24px,
-      var(--color-bg) calc(100% - 24px),
-      transparent 100%);
-
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
 }
 
 /* Notes Display View */
@@ -570,7 +555,7 @@ body {
   white-space: pre-wrap;
   word-wrap: break-word;
   padding-top: 24px;
-  padding-bottom: 24px;
+  padding-bottom: 72px;
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
@@ -582,21 +567,6 @@ body {
 #view-notes {
   position: relative;
 
-  /* Mask for fade in/out */
-  -webkit-mask-image: linear-gradient(to bottom,
-      transparent 0px,
-      var(--color-bg) 24px,
-      var(--color-bg) calc(100% - 24px),
-      transparent 100%);
-
-  mask-image: linear-gradient(to bottom,
-      transparent 0px,
-      var(--color-bg) 24px,
-      var(--color-bg) calc(100% - 24px),
-      transparent 100%);
-
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
 }
 
 /* Syntax Highlighting for Notes */
@@ -781,6 +751,36 @@ body {
     transform: scaleX(1);
     opacity: 1;
   }
+}
+
+/* Edge fades, painted rather than masked, so the floating controls stay solid.
+   40 and 72 against the phone app's 96 and 140 — this window is 300px tall. */
+.script-fade::before,
+.script-fade::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.script-fade::before {
+  top: 0;
+  height: var(--fade-top, 40px);
+  background: var(--edge-fade-top);
+}
+
+.script-fade::after {
+  bottom: 0;
+  height: var(--fade-bottom, 72px);
+  background: var(--edge-fade-bottom);
+}
+
+/* A sheet has no controls floating over it, so its fades are the same at both ends. */
+.sheet-body.script-fade {
+  --fade-top: 16px;
+  --fade-bottom: 16px;
 }
 
 /* Selection Style */
