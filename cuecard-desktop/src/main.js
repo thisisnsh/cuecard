@@ -483,6 +483,38 @@ async function renameNote(noteId, title) {
   renderSavedNotesList();
 }
 
+// Open a saved note in the editor, and mark it as the most recently used.
+async function loadNoteFromList(noteId) {
+  const savedNotes = await getSavedNotes();
+  const index = savedNotes.findIndex(note => note.id === noteId);
+  if (index === -1) return;
+
+  const note = savedNotes[index];
+  currentNoteId = note.id;
+  note.updatedAt = new Date().toISOString();
+
+  savedNotes.unshift(savedNotes.splice(index, 1)[0]);
+  await setStoredValue(STORAGE_KEYS.SAVED_NOTES, savedNotes);
+
+  notesInput.value = note.content;
+  await setStoredValue(STORAGE_KEYS.ADD_NOTES_CONTENT, note.content);
+  notesInput.dispatchEvent(new Event('input', { bubbles: true }));
+
+  console.log("Note loaded from list");
+
+  dismissSheet();
+  await showView('add-notes');
+
+  // A note that was saved comes back read-only and highlighted.
+  isEditMode = false;
+  notesInputWrapper.classList.remove('edit-mode');
+  notesInput.readOnly = true;
+
+  updateToolbarTitle();
+  updateTransport();
+  updateMenuItems();
+}
+
 // Delete a note from the saved notes list
 async function deleteNoteFromList(noteId) {
   const savedNotes = await getSavedNotes();
@@ -570,7 +602,7 @@ async function renderSavedNotesList() {
 
   savedNotesList.querySelectorAll('.saved-note-item').forEach(item => {
     item.addEventListener('click', (e) => {
-      if (e.target.closest('.saved-note-action')) return;
+      if (e.target instanceof Element && e.target.closest('.saved-note-action')) return;
       loadNoteFromList(item.dataset.noteId);
     });
   });
@@ -953,10 +985,18 @@ function dismissSheet() {
   if (!sheet) return;
 
   sheet.classList.add('sheet-hiding');
+
+  let settled = false;
   const done = () => {
-    sheet.classList.add('hidden');
+    if (settled) return;
+    settled = true;
+    clearTimeout(fallback);
     sheet.removeEventListener('transitionend', done);
+    sheet.classList.add('hidden');
   };
+  // Reduced motion, or a window that is not compositing, means no transitionend
+  // and a sheet that never goes away. Put it away on the clock instead.
+  const fallback = setTimeout(done, 400);
   sheet.addEventListener('transitionend', done);
 }
 
@@ -1292,8 +1332,6 @@ function startTimerCountdown() {
 // Count the delay down in the header, in pink, then start.
 function runStartDelay() {
   countdownValue = countdownSeconds;
-  updateTimerDisplay();
-  updateTransport();
 
   countdownInterval = setInterval(() => {
     countdownValue -= 1;
@@ -1304,6 +1342,9 @@ function runStartDelay() {
     }
     updateTimerDisplay();
   }, 1000);
+
+  updateTimerDisplay();
+  updateTransport();
 }
 
 function stopStartDelay() {
@@ -2480,12 +2521,12 @@ function setupMenu() {
   // Clicking a menu item, or anything outside the menu, puts it away.
   if (appMenu) {
     appMenu.addEventListener("click", (e) => {
-      if (e.target.closest('.menu-item')) closeMenu();
+      if (e.target instanceof Element && e.target.closest('.menu-item')) closeMenu();
     });
   }
   document.addEventListener("click", (e) => {
     if (!menuOpen) return;
-    if (e.target.closest('.menu-wrap')) return;
+    if (e.target instanceof Element && e.target.closest('.menu-wrap')) return;
     closeMenu();
   });
   document.addEventListener("keydown", (e) => {
@@ -2924,6 +2965,23 @@ async function loadStoredSettings() {
   }
 }
 
+function clampCountdown(value) {
+  return Math.min(Math.max(Math.round(value), COUNTDOWN_MIN), COUNTDOWN_MAX);
+}
+
+// Take what was typed as a delay, holding it to the range a run can wait for.
+// Anything that isn't a number leaves the setting alone.
+async function commitCountdownField() {
+  if (!countdownField) return;
+  const typed = parseInt(countdownField.value.replace(/\D/g, ''), 10);
+  if (!Number.isNaN(typed)) {
+    countdownSeconds = clampCountdown(typed);
+    trackSettingChange('countdown_seconds', countdownSeconds);
+    await setStoredValue(STORAGE_KEYS.SETTINGS_COUNTDOWN_SECONDS, countdownSeconds);
+  }
+  countdownField.value = String(countdownSeconds);
+}
+
 function clampLpm(value) {
   return Math.min(Math.max(Math.round(value), LPM_MIN), LPM_MAX);
 }
@@ -2950,7 +3008,7 @@ async function commitSpeedField() {
 /** Put every setting back to what it ships as. */
 async function resetSettingsToDefaults() {
   countdownSeconds = 5;
-  linesPerMinute = 0;
+  linesPerMinute = DEFAULT_LINES_PER_MINUTE;
   fontSizePreset = DEFAULT_FONT_SIZE_PRESET;
   cueColor = DEFAULT_CUE_COLOR;
   timerMinutes = 1;
@@ -3123,7 +3181,7 @@ function setupSettings() {
   // Text size
   if (fontSizeSegmented) {
     fontSizeSegmented.addEventListener('click', async (e) => {
-      const segment = e.target.closest('.segment');
+      const segment = e.target instanceof Element ? e.target.closest('.segment') : null;
       if (!segment) return;
       fontSizePreset = segment.dataset.fontSize;
       applyFontSizePreset(fontSizePreset);
@@ -3144,7 +3202,7 @@ function setupSettings() {
       </button>`).join('');
 
     cueColorSwatches.addEventListener('click', async (e) => {
-      const swatch = e.target.closest('.cue-swatch');
+      const swatch = e.target instanceof Element ? e.target.closest('.cue-swatch') : null;
       if (!swatch) return;
       cueColor = swatch.dataset.cueColor;
       applyCueColor(cueColor);
@@ -3251,7 +3309,6 @@ function updateGhostModeIndicator() {
   if (!ghostModeIndicator) return;
   ghostModeIndicator.textContent = 'Ghost';
   ghostModeIndicator.title = 'Hidden from screenshots and recordings';
-  ghostModeIndicator.classList.toggle('ghost-off', !ghostMode);
 }
 
 // Update shortcuts button visibility based on shortcutsEnabled setting and current view
