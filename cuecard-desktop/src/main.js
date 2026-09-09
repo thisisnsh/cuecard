@@ -314,6 +314,7 @@ const STORAGE_KEYS = {
   SETTINGS_SHORTCUTS_ENABLED: 'settings_shortcuts_enabled',
   SETTINGS_AUTO_SCROLL_SPEED: 'settings_auto_scroll_speed',
   SETTINGS_LINES_PER_MINUTE: 'settings_lines_per_minute',
+  SETTINGS_FONT_SIZE_PRESET: 'settings_font_size_preset',
   SETTINGS_CUE_COLOR: 'settings_cue_color',
   SETTINGS_TIMER_MINUTES: 'settings_timer_minutes',
   SETTINGS_TIMER_SECONDS: 'settings_timer_seconds',
@@ -623,6 +624,7 @@ let timerMinutesField, timerSecondsField;
 let opacitySlider, opacityValue, ghostModeToggle, shortcutsToggle;
 let cueColorSwatches;
 let countdownField;
+let fontSizeSegmented;
 let themeSystemBtn, themeLightBtn, themeDarkBtn;
 let speedField;
 let editNoteBtn;
@@ -646,6 +648,7 @@ let shortcutsEnabled = true; // Default: true = global shortcuts are enabled
 // which iOS has no equivalent of but an always-on-top window wants.
 let linesPerMinute = 0;
 let cueColor = DEFAULT_CUE_COLOR; // the colour every cue in every script is drawn in
+let fontSizePreset = 'medium'; // how big the script is set
 
 // Timer State
 let timerState = 'stopped'; // 'stopped', 'running', 'paused'
@@ -743,6 +746,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   shortcutsToggle = document.getElementById("shortcuts-toggle");
   cueColorSwatches = document.getElementById("cue-color-swatches");
   countdownField = document.getElementById("countdown-field");
+  fontSizeSegmented = document.getElementById("font-size-segmented");
   themeSystemBtn = document.getElementById("theme-system");
   themeLightBtn = document.getElementById("theme-light");
   themeDarkBtn = document.getElementById("theme-dark");
@@ -2399,6 +2403,14 @@ const DEFAULT_GHOST_MODE = true; // true = ghost mode ON = hidden from screensho
 const DEFAULT_SHORTCUTS_ENABLED = true; // true = global shortcuts are enabled
 const DEFAULT_LINES_PER_MINUTE = 50; // what iOS scrolls at out of the box
 
+/**
+ * Script text sizes. iOS offers 20 / 28 / 40, sized for a full-screen prompter;
+ * 40px in a 300px-tall window shows about four lines. Medium is today's 20px,
+ * so nobody's script changes size on update.
+ */
+const FONT_SIZE_PRESETS = { small: 16, medium: 20, large: 28 };
+const DEFAULT_FONT_SIZE_PRESET = 'medium';
+
 // Apply theme based on preference ('system', 'light', 'dark')
 function applyTheme(theme) {
   let isLight = false;
@@ -2470,6 +2482,21 @@ async function migrateTimeTags(hasStoredDuration) {
   }
 
   await setStoredValue(STORAGE_KEYS.MIGRATED_TIME_TAGS, true);
+}
+
+// The script's size comes from one variable, which every surface reads.
+function applyFontSizePreset(preset) {
+  const size = FONT_SIZE_PRESETS[preset] || FONT_SIZE_PRESETS[DEFAULT_FONT_SIZE_PRESET];
+  document.documentElement.style.setProperty('--font-script-size', `${size}px`);
+  updateFontSizeSegments(preset);
+}
+
+function updateFontSizeSegments(preset) {
+  if (!fontSizeSegmented) return;
+  fontSizeSegmented.querySelectorAll('.segment').forEach(segment => {
+    segment.classList.toggle('selected', segment.dataset.fontSize === preset);
+    segment.setAttribute('aria-pressed', String(segment.dataset.fontSize === preset));
+  });
 }
 
 // Every cue in the app is drawn from this one variable.
@@ -2578,6 +2605,16 @@ async function loadStoredSettings() {
   }
   applyCueColor(cueColor);
 
+  // Load the script's text size
+  const storedPreset = await getStoredValue(STORAGE_KEYS.SETTINGS_FONT_SIZE_PRESET);
+  if (storedPreset in FONT_SIZE_PRESETS) {
+    fontSizePreset = storedPreset;
+  } else {
+    fontSizePreset = DEFAULT_FONT_SIZE_PRESET;
+    await setStoredValue(STORAGE_KEYS.SETTINGS_FONT_SIZE_PRESET, fontSizePreset);
+  }
+  applyFontSizePreset(fontSizePreset);
+
   // Load the scroll speed. It used to be a 0-2x multiplier applied per animation
   // frame; anyone who set one carries that figure and no lines-a-minute setting,
   // so convert it at the speed it actually scrolled — 1x moved a 24px line about
@@ -2643,6 +2680,18 @@ function setupSettings() {
         e.preventDefault();
         countdownField.blur();
       }
+    });
+  }
+
+  // Text size
+  if (fontSizeSegmented) {
+    fontSizeSegmented.addEventListener('click', async (e) => {
+      const segment = e.target.closest('.segment');
+      if (!segment) return;
+      fontSizePreset = segment.dataset.fontSize;
+      applyFontSizePreset(fontSizePreset);
+      trackSettingChange('font_size_preset', fontSizePreset);
+      await setStoredValue(STORAGE_KEYS.SETTINGS_FONT_SIZE_PRESET, fontSizePreset);
     });
   }
 
@@ -2803,6 +2852,7 @@ async function loadCurrentSettings() {
   }
 
   updateCueColorSwatches(cueColor);
+  updateFontSizeSegments(fontSizePreset);
   if (countdownField) countdownField.value = String(countdownSeconds);
 
   if (speedField) speedField.value = String(linesPerMinute);

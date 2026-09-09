@@ -1392,6 +1392,39 @@ body {
   text-align: right;
 }
 
+/* Segmented picker, after iOS's */
+.segmented {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 9px;
+  background: rgba(var(--text-primary-rgb), 0.12);
+}
+
+.segment {
+  font: var(--font-footnote);
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  border-radius: 7px;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.segment:hover {
+  color: var(--text-primary);
+}
+
+.segment.selected {
+  font-weight: 600;
+  color: var(--text-primary);
+  background: rgba(var(--color-bg-rgb), 0.9);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
 /* One typed setting: the number and its unit together in a filled box */
 .number-row {
   display: inline-flex;
