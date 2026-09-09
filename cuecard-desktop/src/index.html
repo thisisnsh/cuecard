@@ -11,15 +11,61 @@
 
 <body>
   <div class="app-container">
-    <header data-tauri-drag-region class="app-header">
-      <span class="app-header-title hidden" id="app-header-title">Settings</span>
-      <button class="btn-close" id="btn-close">Close</button>
-      <span class="header-timer hidden" id="header-timer">00:00</span>
-      <span class="footer-separator hidden" id="download-updates-separator">•</span>
-      <button class="btn-download-updates hidden" id="btn-download-updates">Download Updates</button>
-      <div class="header-actions">
-        <div class="ghost-mode-indicator hidden" id="ghost-mode-indicator">Ghost Mode Enabled</div>
-        <button class="footer-link hidden" id="btn-signout">Sign out</button>
+    <!-- Toolbar — the shape the phone app's navigation bar has -->
+    <header data-tauri-drag-region class="app-toolbar">
+      <button class="toolbar-icon" id="btn-saved-notes" aria-label="Saved Notes" title="Saved Notes">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M1.75 4.25a1 1 0 0 1 1-1h3.1a1 1 0 0 1 .78.37l.74.92a1 1 0 0 0 .78.37h5.1a1 1 0 0 1 1 1v6.34a1 1 0 0 1-1 1H2.75a1 1 0 0 1-1-1V4.25Z"
+            stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" />
+        </svg>
+      </button>
+
+      <div class="toolbar-center">
+        <span class="toolbar-title" id="toolbar-title">CueCard</span>
+        <span class="header-timer hidden" id="header-timer">00:00</span>
+      </div>
+
+      <div class="toolbar-actions">
+        <span class="ghost-mode-indicator hidden" id="ghost-mode-indicator">Ghost</span>
+
+        <div class="menu-wrap">
+          <button class="toolbar-icon" id="btn-menu" aria-label="More" title="More">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="3" cy="8" r="1.35" fill="currentColor" />
+              <circle cx="8" cy="8" r="1.35" fill="currentColor" />
+              <circle cx="13" cy="8" r="1.35" fill="currentColor" />
+            </svg>
+            <span class="menu-badge hidden" id="menu-badge"></span>
+          </button>
+
+          <div class="menu-popover hidden" id="app-menu" role="menu">
+            <button class="menu-item hidden" id="refresh-btn" role="menuitem">Refresh Note</button>
+            <button class="menu-item hidden" id="edit-note-btn" role="menuitem">Edit Note</button>
+            <div class="menu-separator hidden" id="menu-separator-note"></div>
+            <button class="menu-item hidden" id="btn-download-updates" role="menuitem">Download Updates</button>
+            <button class="menu-item" id="shortcuts-link" role="menuitem">Shortcuts</button>
+            <div class="menu-separator"></div>
+            <button class="menu-item" id="website-link" role="menuitem">Visit Site</button>
+            <button class="menu-item" id="support-link" role="menuitem">Support</button>
+            <button class="menu-item" id="bug-link" role="menuitem">Report Bug</button>
+            <div class="menu-separator hidden" id="menu-separator-account"></div>
+            <button class="menu-item menu-item-destructive hidden" id="btn-signout" role="menuitem">Sign out</button>
+          </div>
+        </div>
+
+        <button class="toolbar-icon" id="settings-link" aria-label="Settings" title="Settings">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="8" cy="8" r="2.15" stroke="currentColor" stroke-width="1.3" />
+            <path d="M8 1.6v1.5M8 12.9v1.5M14.4 8h-1.5M3.1 8H1.6M12.53 3.47l-1.06 1.06M4.53 11.47l-1.06 1.06M12.53 12.53l-1.06-1.06M4.53 4.53 3.47 3.47"
+              stroke="currentColor" stroke-width="1.3" stroke-linecap="round" />
+          </svg>
+        </button>
+
+        <button class="toolbar-icon toolbar-icon-close" id="btn-close" aria-label="Close" title="Close">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+          </svg>
+        </button>
       </div>
     </header>
 
@@ -238,15 +284,6 @@
         <button class="timer-btn timer-btn-start hidden" id="btn-start">Start</button>
         <button class="timer-btn timer-btn-pause hidden" id="btn-pause">Pause</button>
         <button class="timer-btn timer-btn-reset hidden" id="btn-reset">Reset</button>
-        <button class="footer-link hidden" id="refresh-btn">Refresh Note</button>
-        <button class="footer-link hidden" id="edit-note-btn">Edit Note</button>
-        <button class="footer-link" id="website-link">Visit Site</button>
-        <button class="footer-link hidden" id="support-link">Support</button>
-        <button class="footer-link hidden" id="bug-link">Report Bug</button>
-      </div>
-      <div class="footer-right">
-        <button class="footer-link" id="shortcuts-link">Shortcuts</button>
-        <button class="footer-link" id="settings-link">Settings</button>
       </div>
     </footer>
   </div>

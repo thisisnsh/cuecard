@@ -591,9 +591,10 @@ async function hasScope(scopeType) {
 // =============================================================================
 
 // DOM Elements
-let btnClose, btnDownloadUpdates, downloadUpdatesSeparator, btnSignOut;
+let btnClose, btnDownloadUpdates;
 let authBtn;
-let appContainer, appHeader, appHeaderTitle, viewInitial, viewAddNotes, viewNotes, viewSettings, viewShortcuts, viewSavedNotes;
+let appContainer, appToolbar, toolbarTitle, viewInitial, viewAddNotes, viewNotes, viewSettings, viewShortcuts, viewSavedNotes;
+let btnMenu, appMenu, menuBadge, menuSeparatorNote, menuSeparatorAccount, btnSignOut, btnSavedNotes;
 let linkGoBack;
 let notesInput, notesContent;
 let welcomeHeading, welcomeSubtext, welcomeActions;
@@ -664,12 +665,17 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Get DOM elements
   btnClose = document.getElementById("btn-close");
   btnDownloadUpdates = document.getElementById("btn-download-updates");
-  downloadUpdatesSeparator = document.getElementById("download-updates-separator");
-  btnSignOut = document.getElementById("btn-signout");
   authBtn = document.getElementById("auth-btn");
   appContainer = document.querySelector(".app-container");
-  appHeader = document.querySelector(".app-header");
-  appHeaderTitle = document.getElementById("app-header-title");
+  appToolbar = document.querySelector(".app-toolbar");
+  toolbarTitle = document.getElementById("toolbar-title");
+  btnMenu = document.getElementById("btn-menu");
+  appMenu = document.getElementById("app-menu");
+  menuBadge = document.getElementById("menu-badge");
+  menuSeparatorNote = document.getElementById("menu-separator-note");
+  menuSeparatorAccount = document.getElementById("menu-separator-account");
+  btnSignOut = document.getElementById("btn-signout");
+  btnSavedNotes = document.getElementById("btn-saved-notes");
   viewInitial = document.getElementById("view-initial");
   viewAddNotes = document.getElementById("view-add-notes");
   viewNotes = document.getElementById("view-notes");
@@ -720,8 +726,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Set up header handlers
   setupHeader();
 
-  // Set up footer handlers
-  setupFooter();
+  // Set up the ellipsis menu and the links inside it
+  setupMenu();
 
   // Set up update checker
   setupUpdateChecker();
@@ -1249,30 +1255,6 @@ function updateHeaderTimerVisibility() {
   headerTimer.classList.toggle('hidden', !isNotesView);
 }
 
-// Update footer separators - add .has-separator class to visible items that follow other visible items
-function updateFooterSeparators() {
-  const footerLeft = document.querySelector('.footer-left');
-  const footerRight = document.querySelector('.footer-right');
-
-  [footerLeft, footerRight].forEach(container => {
-    if (!container) return;
-
-    const children = Array.from(container.children);
-    let foundFirstVisible = false;
-
-    children.forEach(child => {
-      child.classList.remove('has-separator');
-
-      if (!child.classList.contains('hidden')) {
-        if (foundFirstVisible) {
-          child.classList.add('has-separator');
-        }
-        foundFirstVisible = true;
-      }
-    });
-  });
-}
-
 // Update timer button visibility based on state
 function updateTimerButtonVisibility() {
   if (!btnStart || !btnPause || !btnReset) return;
@@ -1318,8 +1300,6 @@ function updateTimerButtonVisibility() {
     btnPause.classList.add('hidden');
     btnReset.classList.add('hidden');
   }
-
-  updateFooterSeparators();
 }
 
 // =============================================================================
@@ -1434,7 +1414,7 @@ function updateEditNoteButtonVisibility() {
     }
   }
 
-  updateFooterSeparators();
+  updateMenuItems();
 }
 
 
@@ -1609,10 +1589,7 @@ function updateAuthUI(authenticated, name = '') {
     if (buttonIcon) buttonIcon.style.display = 'none';
     authBtn.classList.add('is-authenticated');
     authBtn.classList.add('hidden');
-    if (btnSignOut) {
-      const shouldShowSignOut = currentView !== 'notes' && currentView !== 'add-notes';
-      btnSignOut.classList.toggle('hidden', !shouldShowSignOut);
-    }
+    updateSignOutItem();
 
     // Update welcome heading with greeting and first name
     const firstName = getFirstName(name);
@@ -1632,9 +1609,7 @@ function updateAuthUI(authenticated, name = '') {
     if (buttonIcon) buttonIcon.style.display = 'block';
     authBtn.classList.remove('is-authenticated');
     authBtn.classList.remove('hidden');
-    if (btnSignOut) {
-      btnSignOut.classList.add('hidden');
-    }
+    updateSignOutItem();
 
     // Reset welcome heading to default
     welcomeHeading.innerHTML = 'CueCard\n<span class="version-text">1.4.1</span>';
@@ -1645,6 +1620,12 @@ function updateAuthUI(authenticated, name = '') {
       welcomeActions.classList.add('hidden');
     }
   }
+}
+
+// Sign out is offered in the menu only while there is an account to sign out of.
+function updateSignOutItem() {
+  if (btnSignOut) btnSignOut.classList.toggle('hidden', !isAuthenticated);
+  if (menuSeparatorAccount) menuSeparatorAccount.classList.toggle('hidden', !isAuthenticated);
 }
 
 // Handle login with specific scope
@@ -1789,80 +1770,17 @@ async function showView(viewName) {
     linkGoBack.classList.add('hidden');
   }
 
-  // Show settings link (shortcuts visibility handled by updateShortcutsVisibility)
-  settingsLink.classList.remove('hidden');
-
-  if (btnClose && appHeaderTitle && headerTimer) {
-    const isSettingsView = viewName === 'settings';
-    const isShortcutsView = viewName === 'shortcuts';
-    const isSavedNotesView = viewName === 'saved-notes';
-    const isNotesView = viewName === 'add-notes' || viewName === 'notes';
-
-    // Hide close button for settings, shortcuts, saved-notes and notes views, show only for initial view
-    btnClose.classList.toggle('hidden', isSettingsView || isShortcutsView || isSavedNotesView || isNotesView);
-    appHeaderTitle.classList.toggle('hidden', !isSettingsView && !isShortcutsView && !isSavedNotesView);
-
-    // Update header title text
-    if (isSettingsView) {
-      appHeaderTitle.textContent = 'Settings';
-    } else if (isShortcutsView) {
-      appHeaderTitle.textContent = 'Shortcuts';
-    } else if (isSavedNotesView) {
-      appHeaderTitle.textContent = 'Saved Notes';
-    }
-
-    updateHeaderTimerVisibility();
-  }
+  // The toolbar carries the same controls everywhere; only the title changes.
+  updateToolbarTitle();
+  updateHeaderTimerVisibility();
 
   if (ghostModeIndicator) {
     const shouldShowGhost = viewName === 'notes' || viewName === 'add-notes';
     ghostModeIndicator.classList.toggle('hidden', !shouldShowGhost);
   }
-  if (btnSignOut) {
-    const shouldShowSignOut = isAuthenticated && viewName !== 'notes' && viewName !== 'add-notes';
-    btnSignOut.classList.toggle('hidden', !shouldShowSignOut);
-  }
-
-  // Show/hide privacy, website, and settings links based on view
-  if (viewName === 'initial') {
-    // Initial view: show Visit Site, Settings
-    websiteLink.classList.remove('hidden');
-    supportLink.classList.add('hidden');
-    bugLink.classList.add('hidden');
-  } else if (viewName === 'settings') {
-    // Settings view: show Support, Report Bug (no Settings button or Visit Site)
-    websiteLink.classList.add('hidden');
-    supportLink.classList.remove('hidden');
-    bugLink.classList.remove('hidden');
-    settingsLink.classList.add('hidden');
-  } else if (viewName === 'shortcuts') {
-    // Shortcuts view: hide all footer links except go back
-    websiteLink.classList.add('hidden');
-    supportLink.classList.add('hidden');
-    bugLink.classList.add('hidden');
-    settingsLink.classList.add('hidden');
-  } else if (viewName === 'saved-notes') {
-    // Saved notes view: hide all footer links except go back
-    websiteLink.classList.add('hidden');
-    supportLink.classList.add('hidden');
-    bugLink.classList.add('hidden');
-    settingsLink.classList.add('hidden');
-  } else {
-    // Notes and Add-Notes views: hide all footer links except go back
-    websiteLink.classList.add('hidden');
-    supportLink.classList.add('hidden');
-    bugLink.classList.add('hidden');
-  }
 
   // Update shortcuts button visibility (respects both setting and current view)
   updateShortcutsVisibility();
-
-  // Show/hide slide info and refresh button based on view and slide data
-  if (viewName === 'notes' && currentSlideData) {
-    refreshBtn.classList.remove('hidden');
-  } else {
-    refreshBtn.classList.add('hidden');
-  }
 
   // Update timer button visibility
   updateTimerButtonVisibility();
@@ -1927,7 +1845,31 @@ async function showView(viewName) {
       break;
   }
 
-  updateFooterSeparators();
+  updateMenuItems();
+}
+
+// The toolbar title: the app, or whatever is open in front of it.
+function updateToolbarTitle() {
+  if (!toolbarTitle) return;
+
+  switch (currentView) {
+    case 'settings':
+      toolbarTitle.textContent = 'Settings';
+      break;
+    case 'shortcuts':
+      toolbarTitle.textContent = 'Shortcuts';
+      break;
+    case 'saved-notes':
+      toolbarTitle.textContent = 'Saved Notes';
+      break;
+    case 'notes':
+      toolbarTitle.textContent = currentSlideData
+        ? truncateText(currentSlideData.title || 'Untitled Presentation', 28)
+        : 'CueCard';
+      break;
+    default:
+      toolbarTitle.textContent = 'CueCard';
+  }
 }
 
 // Truncate text to max length with ellipsis
@@ -2147,9 +2089,9 @@ function setupHeader() {
 
         console.log('Update installed, preparing to relaunch');
 
-        // Hide the button before relaunch
+        // Hide the item before relaunch
         btnDownloadUpdates.classList.add('hidden');
-        downloadUpdatesSeparator.classList.add('hidden');
+        if (menuBadge) menuBadge.classList.add('hidden');
 
         // Relaunch the app
         await relaunch();
@@ -2188,25 +2130,72 @@ async function checkForUpdates() {
 
     if (update?.available) {
       console.log(`Update available: ${update.version}`);
-      // Show the download updates button
+      // Offer the update in the menu, and badge the menu so it is noticed
       btnDownloadUpdates.classList.remove('hidden');
-      downloadUpdatesSeparator.classList.remove('hidden');
+      if (menuBadge) menuBadge.classList.remove('hidden');
     } else {
       console.log('No updates available');
-      // Hide the button if no updates
       btnDownloadUpdates.classList.add('hidden');
-      downloadUpdatesSeparator.classList.add('hidden');
+      if (menuBadge) menuBadge.classList.add('hidden');
     }
   } catch (error) {
     console.error('Error checking for updates:', error);
-    // Hide button on error
     btnDownloadUpdates.classList.add('hidden');
-    downloadUpdatesSeparator.classList.add('hidden');
+    if (menuBadge) menuBadge.classList.add('hidden');
   }
 }
 
-// Footer Handlers
-function setupFooter() {
+// The ellipsis menu is open when this is true; a click anywhere else closes it.
+let menuOpen = false;
+
+function openMenu() {
+  if (!appMenu) return;
+  menuOpen = true;
+  appMenu.classList.remove('hidden');
+}
+
+function closeMenu() {
+  if (!appMenu) return;
+  menuOpen = false;
+  appMenu.classList.add('hidden');
+}
+
+// Menu Handlers
+function setupMenu() {
+  if (btnMenu) {
+    btnMenu.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (menuOpen) {
+        closeMenu();
+      } else {
+        openMenu();
+      }
+    });
+  }
+
+  // Clicking a menu item, or anything outside the menu, puts it away.
+  if (appMenu) {
+    appMenu.addEventListener("click", (e) => {
+      if (e.target.closest('.menu-item')) closeMenu();
+    });
+  }
+  document.addEventListener("click", (e) => {
+    if (!menuOpen) return;
+    if (e.target.closest('.menu-wrap')) return;
+    closeMenu();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === 'Escape' && menuOpen) closeMenu();
+  });
+
+  if (btnSavedNotes) {
+    btnSavedNotes.addEventListener("click", (e) => {
+      e.preventDefault();
+      showView('saved-notes');
+    });
+  }
+
   bugLink.addEventListener("click", async (e) => {
     e.preventDefault();
     console.log("Bug link clicked");
@@ -2267,6 +2256,25 @@ function setupFooter() {
     trackScreenView('shortcuts', 'CueCard Shortcuts');
     showView('shortcuts');
   });
+}
+
+// The menu shows only the items that mean something in the current view.
+function updateMenuItems() {
+  const isSlidesView = currentView === 'notes';
+  const isEditorView = currentView === 'add-notes';
+
+  if (refreshBtn) {
+    refreshBtn.classList.toggle('hidden', !(isSlidesView && currentSlideData));
+  }
+  if (editNoteBtn) {
+    editNoteBtn.classList.toggle('hidden', !(isEditorView && notesInput.value.trim()));
+    editNoteBtn.textContent = isEditMode ? 'Done' : 'Edit Note';
+  }
+  if (menuSeparatorNote) {
+    const anyNoteItem = (refreshBtn && !refreshBtn.classList.contains('hidden')) ||
+      (editNoteBtn && !editNoteBtn.classList.contains('hidden'));
+    menuSeparatorNote.classList.toggle('hidden', !anyNoteItem);
+  }
 }
 
 // =============================================================================

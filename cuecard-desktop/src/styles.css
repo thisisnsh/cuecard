@@ -831,88 +831,85 @@ body {
   color: var(--text-primary);
 }
 
-/* Header */
-.app-header {
+/* Toolbar */
+.app-toolbar {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
   gap: 8px;
-  padding: 18px 18px 0px 18px;
+  height: 36px;
+  flex: 0 0 36px;
+  padding: 0 12px;
   background: linear-gradient(to bottom, rgba(var(--color-bg-rgb), var(--bg-opacity)) 0%, transparent 100%);
-  transition: opacity 0.2s ease, transform 0.2s ease;
   pointer-events: none;
   cursor: grab;
 }
 
-/* 
-Aligned header/footer controls by normalizing font 
-weight and line-height across buttons/links/separators 
-*/
-.app-header button,
-.app-header .footer-separator,
-.app-footer button,
-.app-footer a,
-.app-footer .footer-separator,
-.app-footer #slide-info-btn {
-  font-family: inherit;
-  font-weight: 500;
-  line-height: 1;
-  display: inline-flex;
-  align-items: center;
-}
-
-.app-header:active {
+.app-toolbar:active {
   cursor: grabbing;
 }
 
-.app-container:hover .app-header {
+/* The chrome stays out of the way until the pointer is over the window. */
+.app-container:hover .app-toolbar {
   pointer-events: auto;
 }
 
-.drag-handle {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  background: none;
-  border: none;
-  cursor: move;
-  padding: 0;
-  display: flex;
+.toolbar-icon {
+  position: relative;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: opacity 0.15s ease;
-  opacity: 0.6;
-}
-
-.drag-handle:hover {
-  opacity: 1;
-}
-
-.drag-handle svg {
-  pointer-events: none;
-}
-
-.btn-close {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-secondary);
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  padding: 0;
   background: none;
   border: none;
+  border-radius: 8px;
+  color: var(--text-secondary);
   cursor: pointer;
-  padding: 0;
-  text-decoration: none;
-  transition: opacity 0.15s ease;
-  letter-spacing: 0.25px;
+  transition: color 0.15s ease, background 0.15s ease;
 }
 
-.btn-close:hover {
+.toolbar-icon:hover {
+  color: var(--text-primary);
+  background: rgba(var(--text-primary-rgb), 0.08);
+}
+
+.toolbar-icon-close:hover {
   color: var(--color-red);
 }
 
+.toolbar-icon svg {
+  pointer-events: none;
+}
+
+.toolbar-center {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8px;
+}
+
+.toolbar-title {
+  font: var(--font-title);
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
 .header-timer {
-  font-size: 12px;
+  font: var(--font-footnote);
   font-weight: 600;
-  font-stretch: expanded;
+  font-variant-numeric: tabular-nums;
   color: var(--color-green);
   letter-spacing: 0.25px;
   transition: color 0.3s ease;
@@ -930,24 +927,33 @@ weight and line-height across buttons/links/separators
   color: var(--color-red);
 }
 
-.app-header-title {
-  font-size: 12px;
+.ghost-mode-indicator {
+  font: var(--font-caption);
   font-weight: 600;
-  color: var(--text-primary);
-  letter-spacing: 0.25px;
+  letter-spacing: 0.3px;
+  color: var(--text-secondary);
+  border: 1px solid var(--welcome-border);
+  border-radius: 999px;
+  padding: 2px 7px;
+  margin-right: 4px;
+  pointer-events: none;
+  user-select: none;
 }
 
-.btn-download-updates {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  text-decoration: none;
-  letter-spacing: 0.25px;
+/* Ellipsis menu — a Menu has no HTML equivalent, so this is one. */
+.menu-wrap {
+  position: relative;
+  display: inline-flex;
+}
 
+.menu-badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-yellow);
   animation: blink 5s infinite;
 }
 
@@ -955,33 +961,66 @@ weight and line-height across buttons/links/separators
 
   0%,
   100% {
-    color: var(--text-secondary);
+    opacity: 0.45;
   }
 
   50% {
-    color: var(--color-yellow);
+    opacity: 1;
   }
 }
 
-.btn-download-updates:hover {
-  animation-play-state: paused;
-  opacity: 0.8;
-}
-
-.header-actions {
-  margin-left: auto;
+.menu-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  min-width: 180px;
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  padding: 5px;
+  border-radius: 12px;
+  background: var(--glass-bg);
+  background-image: var(--glass-sheen);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-stroke);
+  box-shadow: var(--glass-shadow);
 }
 
-.ghost-mode-indicator {
-  font: var(--font-caption);
-  font-weight: 600;
-  letter-spacing: 0.3px;
-  color: var(--text-secondary);
-  pointer-events: none;
-  user-select: none;
+.menu-item {
+  font: var(--font-subheadline);
+  text-align: left;
+  color: var(--text-primary);
+  background: none;
+  border: none;
+  border-radius: 7px;
+  padding: 7px 9px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.12s ease;
+}
+
+.menu-item:hover {
+  background: rgba(var(--text-primary-rgb), 0.1);
+}
+
+.menu-item-destructive {
+  color: var(--color-red);
+}
+
+.menu-item:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.menu-item:disabled:hover {
+  background: none;
+}
+
+.menu-separator {
+  height: 1px;
+  margin: 4px 6px;
+  background: rgba(var(--text-primary-rgb), 0.12);
 }
 
 /* Footer */
@@ -989,29 +1028,18 @@ weight and line-height across buttons/links/separators
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 18px 18px 18px;
+  padding: 0 18px 14px 18px;
   background: linear-gradient(to top, rgba(var(--color-bg-rgb), var(--bg-opacity)) 0%, transparent 100%);
 }
 
-.footer-left,
-.footer-right {
+.footer-left {
   display: flex;
   align-items: center;
-}
-
-/* Auto-separator for items that need it */
-.footer-left > .has-separator::before,
-.footer-right > .has-separator::before {
-  content: '•';
-  margin: 0 8px;
-  font-size: 12px;
-  color: var(--text-secondary);
-  opacity: 0.5;
+  gap: 14px;
 }
 
 .footer-link {
-  font-size: 12px;
-  font-weight: 500;
+  font: var(--font-footnote);
   color: var(--text-secondary);
   background: none;
   border: none;
@@ -1034,8 +1062,7 @@ weight and line-height across buttons/links/separators
 }
 
 .timer-btn {
-  font-size: 12px;
-  font-weight: 500;
+  font: var(--font-footnote);
   background: none;
   border: none;
   cursor: pointer;
@@ -1058,41 +1085,6 @@ weight and line-height across buttons/links/separators
 
 .timer-btn-pause {
   color: var(--color-yellow);
-}
-
-/* Footer Refresh Button and Slide Info */
-.refresh-btn {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  text-decoration: none;
-  transition: opacity 0.15s ease;
-  letter-spacing: 0.25px;
-}
-
-.refresh-btn:hover {
-  opacity: 0.8;
-}
-
-#slide-info-btn {
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  text-decoration: none;
-  transition: opacity 0.15s ease;
-  letter-spacing: 0.25px;
-}
-
-#slide-info-btn:hover {
-  opacity: 0.8;
 }
 
 /* Settings View */
