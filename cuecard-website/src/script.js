@@ -40,9 +40,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initFAQAccordion();
     initFaqSearch();
 
-    // The counting [time] tag in the script-syntax panels
-    initTimestampCountdowns();
-
     // The Mac / Windows choice in a hero that offers both
     initOsButtons();
 
@@ -365,82 +362,7 @@ function initFaqSearch() {
     filterItems();
 }
 
-// Timestamp countdown animation for syntax preview
-function initTimestampCountdowns() {
-    const timestamps = document.querySelectorAll('.timestamp');
-
-    timestamps.forEach(timestamp => {
-        const initialSeconds = parseTimestamp(timestamp.textContent.trim(), timestamp.dataset.time);
-        if (Number.isNaN(initialSeconds)) return;
-
-        startTimestampCountdown(timestamp, initialSeconds);
-    });
-}
-
-function parseTimestamp(textContent, fallbackSeconds) {
-    const match = textContent.match(/\[(-?)(\d+):(\d{2})\]/);
-    if (match) {
-        const sign = match[1] === '-' ? -1 : 1;
-        const minutes = parseInt(match[2], 10);
-        const seconds = parseInt(match[3], 10);
-        return sign * (minutes * 60 + seconds);
-    }
-
-    if (fallbackSeconds) {
-        const parsed = parseInt(fallbackSeconds, 10);
-        return Number.isNaN(parsed) ? NaN : parsed;
-    }
-
-    return NaN;
-}
-
-function startTimestampCountdown(element, initialSeconds) {
-    let currentSeconds = initialSeconds;
-    const minSeconds = -((59 * 60) + 59);
-
-    const updateDisplay = () => {
-        element.textContent = formatTimestamp(currentSeconds);
-        updateTimestampColor(element, currentSeconds);
-    };
-
-    if (currentSeconds <= minSeconds) {
-        currentSeconds = minSeconds;
-        updateDisplay();
-        return;
-    }
-
-    updateDisplay();
-
-    const intervalId = setInterval(() => {
-        currentSeconds -= 1;
-        if (currentSeconds <= minSeconds) {
-            currentSeconds = minSeconds;
-            updateDisplay();
-            clearInterval(intervalId);
-            return;
-        }
-        updateDisplay();
-    }, 1000);
-}
-
 // Hero badge typewriter animation
-function formatTimestamp(totalSeconds) {
-    const sign = totalSeconds < 0 ? '-' : '';
-    const absSeconds = Math.abs(totalSeconds);
-    const minutes = Math.floor(absSeconds / 60).toString().padStart(2, '0');
-    const seconds = (absSeconds % 60).toString().padStart(2, '0');
-    return `[${sign}${minutes}:${seconds}]`;
-}
-
-function updateTimestampColor(element, seconds) {
-    element.classList.remove('timestamp-warning', 'timestamp-danger');
-
-    if (seconds <= 0) {
-        element.classList.add('timestamp-danger');
-    } else if (seconds <= 10) {
-        element.classList.add('timestamp-warning');
-    }
-}
 
 // Handle GIF placeholder interactions
 document.querySelectorAll('.gif-placeholder').forEach(placeholder => {

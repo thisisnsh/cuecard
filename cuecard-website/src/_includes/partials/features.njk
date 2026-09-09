@@ -2,27 +2,19 @@
 {#
   The script syntax, shown rather than described: the same passage as you type
   it and as CueCard renders it. Two panels, side by side on a wide screen and
-  stacked on a narrow one, with the second one live - script.js counts the
-  timestamp down, so the difference between the columns is visible rather than
-  claimed.
+  stacked on a narrow one.
 
-  The two apps do not read the same tags. The desktop app understands
-  [time mm:ss] as well as cues; the phone app's parser handles cues only and
-  takes its timer from the app rather than from the script. Set
-  syntaxKind = "mobile" to show the phone's version, which is the honest one on
-  every /mobile/ page.
-
-  The classes .timestamp and .action-tag are load-bearing: script.js finds them.
+  Both apps read the same tags now - cues, and nothing else. Timing is set in
+  the app on desktop as well as on the phone, so there is one version of this
+  section rather than one per platform.
 #}
-{% set mobileSyntax = syntaxKind == "mobile" %}
 <section class="features syntax-notes" id="syntax" aria-labelledby="syntax-h">
     <div class="wrap">
         <p class="micro section-tag">{{ icon("pen", 13) }}{{ syntaxMicro or "The script" }}</p>
         <h2 class="section-h section-title" id="syntax-h">{{ syntaxHeading or "Write it plainly. Read it like a pro." }}</h2>
         <p class="body">
             {% if syntaxBody %}{{ syntaxBody | safe }}
-            {% elif mobileSyntax %}Type your script the way you would say it out loud. There is one optional tag to learn: a cue. A cue reminds you how to say the next line, and CueCard shows it in colour so you notice it without reading it out.
-            {% else %}Type your notes the way you would say them out loud. There are two optional tags to learn. A time tag counts a section down for you, and a cue reminds you how to say the next line. Both are shown to you and neither is meant to be read out.{% endif %}
+            {% else %}Type your script the way you would say it out loud. There is one optional tag to learn: a cue. A cue reminds you how to say the next line, and CueCard shows it in colour so you notice it without reading it out.{% endif %}
         </p>
 
         {# The sample is the page's own hero script, shown twice: once as you
@@ -39,12 +31,10 @@
                     <h3 class="feature-title">What you write</h3>
                 </div>
                 <p class="feature-desc">
-                    Ordinary text, with <code>[cue]</code>{% if not mobileSyntax %} and <code>[time]</code>{% endif %} added wherever they help.
+                    Ordinary text, with <code>[cue]</code> added wherever it helps.
                 </p>
                 <div class="notes-preview notes-preview-raw" aria-label="Sample of a raw CueCard script">
-                    <div class="notes-content">{% if not mobileSyntax %}[time 00:55]
-
-{% endif %}{% for l in sample %}{% if l.cue %}[cue {{ l.cue }}] {% else %}{{ l.t }}
+                    <div class="notes-content">{% for l in sample %}{% if l.cue %}[cue {{ l.cue }}] {% else %}{{ l.t }}
 {% endif %}{% endfor %}</div>
                 </div>
             </div>
@@ -55,13 +45,10 @@
                     <h3 class="feature-title">What you see</h3>
                 </div>
                 <p class="feature-desc">
-                    {% if mobileSyntax %}Your cues show up in the colour you picked while the rest of the script scrolls past in plain text, so your eye catches them and your mouth does not.
-                    {% else %}Time tags count down on screen, and cues show up in their own colour, so your eye catches them and your mouth does not.{% endif %}
+                    Your cues show up in the colour you picked while the rest of the script scrolls past in plain text, so your eye catches them and your mouth does not.
                 </p>
                 <div class="notes-preview notes-preview-rendered" aria-live="off">
-                    <div class="notes-content">{% if not mobileSyntax %}<span class="timestamp" data-time="55">[00:55]</span>
-
-{% endif %}{% for l in sample %}{% if l.cue %}<span class="action-tag">[{{ l.cue }}]</span> {% else %}{{ l.t }}
+                    <div class="notes-content">{% for l in sample %}{% if l.cue %}<span class="action-tag">[{{ l.cue }}]</span> {% else %}{{ l.t }}
 {% endif %}{% endfor %}</div>
                 </div>
             </div>

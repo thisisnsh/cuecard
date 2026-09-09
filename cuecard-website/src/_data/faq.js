@@ -185,9 +185,9 @@ const desktop = [
       "Yes. CueCard runs alongside whatever you present from. Paste your notes in and present as usual."
   },
   {
-    question: "How do the timer and note tags work?",
+    question: "How do the timer and cue tags work?",
     answer:
-      "Write <code>[time mm:ss]</code> where you want a section timed, and <code>[cue something]</code> where you want to remind yourself how to say the next part. The older <code>[note something]</code> spelling still works. Time tags count down on screen and cues are shown in colour, so you catch both without reading either of them out. Both are optional."
+      "Set how long you have on the Set Timer pill and CueCard counts it down on screen. Write <code>[cue something]</code> in your notes where you want to remind yourself how to say the next part; the older <code>[note something]</code> spelling still works. Cues are shown in colour, so you catch them without reading them out. Both are optional."
   },
   {
     question: "Can I change the window transparency?",

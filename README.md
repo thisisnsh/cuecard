@@ -76,11 +76,11 @@ CueCard focuses on the essentials so you can focus on your delivery.
 
 ### ⏰ On Time, Every Time
 
-Write notes naturally or add simple `[time]` tags to control pacing. Use tags like `[time 00:15]` or `[time 03:00]` to schedule sections of your speech. CueCard shows a subtle on-screen countdown for each time cue.
+Set how long you have on the **Set Timer** pill and CueCard counts it down on screen while you talk. The countdown turns yellow inside the last fifth of your slot and red once you go over, so you find out you are running long while you can still cut something.
 
-### 📝 Note It
+### 📝 Set the Tone
 
-CueCard helps you adjust tone and energy naturally—without memorizing every change. Add `[note]` tags directly in your notes to guide your delivery. You can write anything inside a note (e.g., `[note smile]`, `[note slow down]`, `[note emphasize]`). Notes appear as colored markers next to your text.
+CueCard helps you adjust tone and energy naturally—without memorizing every change. Add `[cue]` tags directly in your script to guide your delivery. You can write anything inside a cue (e.g., `[cue smile]`, `[cue slow down]`, `[cue emphasize]`). Cues appear as coloured markers next to your text, in whichever of the six colours you pick in Settings. The older `[note]` spelling still works.
 
 ### 👻 Ghost Mode
 

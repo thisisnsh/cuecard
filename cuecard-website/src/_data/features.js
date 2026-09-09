@@ -57,8 +57,8 @@ const desktop = [
     p: "Type something like [cue slow down] in your notes and it appears in colour. It reminds you how to say the next part instead of giving you another line to read.",
   },
   {
-    h: "Timing tags that count themselves down",
-    p: "Write [time 05:00] at the start of a section and CueCard counts those five minutes down on screen. It is the easiest way to keep a thirty-minute slot to thirty minutes.",
+    h: "A timer that counts your slot down",
+    p: "Set how long you have on the Set Timer pill and CueCard counts it down on screen while you talk. It is the easiest way to keep a thirty-minute slot to thirty minutes.",
   },
   {
     h: "Google Slides notes that follow your slides",
@@ -88,7 +88,7 @@ function forApp(name, kind) {
       },
       {
         h: "A countdown you can actually see",
-        p: `Write [time 05:00] into your notes and CueCard counts it down on screen, so a thirty-minute ${name} call stays thirty minutes.`,
+        p: `Set how long you have in CueCard and it counts down on screen, so a thirty-minute ${name} call stays thirty minutes.`,
       },
       {
         h: "On your phone as well",
@@ -170,8 +170,8 @@ function forRole(name, audience, kind) {
       p: "Write [cue slow down] or [cue take a breath] into your notes and it appears in colour. It reminds you how to say the next part instead of handing you another line to get through.",
     },
     {
-      h: "Timing tags that count themselves down",
-      p: `Write [time 05:00] at the top of a section and CueCard counts those five minutes down on screen. It is the plainest way ${who} keep a thirty-minute slot to thirty minutes.`,
+      h: "A timer that counts your slot down",
+      p: `Set how long you have on the Set Timer pill and CueCard counts it down on screen while you talk. It is the plainest way ${who} keep a thirty-minute slot to thirty minutes.`,
     },
     {
       h: "A window that sits where you want it",
