@@ -314,6 +314,9 @@ const STORAGE_KEYS = {
   SETTINGS_SHORTCUTS_ENABLED: 'settings_shortcuts_enabled',
   SETTINGS_AUTO_SCROLL_SPEED: 'settings_auto_scroll_speed',
   SETTINGS_CUE_COLOR: 'settings_cue_color',
+  SETTINGS_TIMER_MINUTES: 'settings_timer_minutes',
+  SETTINGS_TIMER_SECONDS: 'settings_timer_seconds',
+  MIGRATED_TIME_TAGS: 'migrated_time_tags',
   ADD_NOTES_CONTENT: 'add_notes_content',
   SAVED_NOTES: 'saved_notes'
 };
@@ -613,7 +616,8 @@ let shortcutsLink;
 let refreshBtn;
 let notesInputHighlight;
 let btnPlay, btnRestart, iconPlay, iconPause;
-let editorControls, timerControl, btnSetTimer, timerPicker, timerPickerDuration, btnCloseTimerPicker;
+let editorControls, timerControl, btnSetTimer, timerPicker, btnCloseTimerPicker;
+let timerMinutesField, timerSecondsField;
 let opacitySlider, opacityValue, ghostModeToggle, shortcutsToggle;
 let cueColorSwatches;
 let themeSystemBtn, themeLightBtn, themeDarkBtn;
@@ -644,11 +648,11 @@ let timerIntervals = []; // Store all timer interval IDs
 let autoScrollAnimationId = null; // Store auto-scroll animation frame ID
 let autoScrollAccumulator = 0; // Accumulator for sub-pixel scrolling
 let autoScrollPausedByHover = false; // Tracks if auto-scroll is paused due to hover
-let totalTimeSeconds = 0; // Total time from all [time] tags
-let remainingTimeSeconds = 0; // Current remaining time for countdown
+let timerMinutes = 1; // The run's length, set on the Set Timer pill
+let timerSeconds = 0;
+let elapsedSeconds = 0; // How far into the run we are; the clock everything reads
 
 // Notes metadata
-let notesHasTimeTags = false;
 
 // Edit Mode State
 let isEditMode = false; // false = done mode (readonly, highlighted), true = edit mode (editable, not highlighted)
@@ -717,7 +721,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   timerControl = document.getElementById("timer-control");
   btnSetTimer = document.getElementById("btn-set-timer");
   timerPicker = document.getElementById("timer-picker");
-  timerPickerDuration = document.getElementById("timer-picker-duration");
+  timerMinutesField = document.getElementById("timer-minutes");
+  timerSecondsField = document.getElementById("timer-seconds");
   btnCloseTimerPicker = document.getElementById("btn-close-timer-picker");
   opacitySlider = document.getElementById("opacity-slider");
   opacityValue = document.getElementById("opacity-value");
@@ -928,7 +933,6 @@ function startNewNote() {
 
   // Clear notes content
   notesContent.innerHTML = '';
-  notesHasTimeTags = false;
   updateHeaderTimerVisibility();
 
   // Clear slide info
@@ -998,13 +1002,8 @@ function setupWelcomeActions() {
       // Reset timer state for new note
       stopAllTimers();
       timerState = 'stopped';
-      totalTimeSeconds = 0;
-      remainingTimeSeconds = 0;
-      if (headerTimer) {
-        headerTimer.textContent = '00:00';
-        headerTimer.classList.remove('time-warning', 'time-overtime');
-        headerTimer.classList.add('time-countup');
-      }
+      elapsedSeconds = 0;
+      updateTimerDisplay();
       showView('add-notes');
       // Start in edit mode for new note
       isEditMode = true;
@@ -1166,6 +1165,19 @@ function setupTimerPill() {
       closeTimerPicker();
     });
   }
+
+  // A field holds text while it is being edited, and becomes the setting on
+  // the way out of it.
+  [timerMinutesField, timerSecondsField].forEach(field => {
+    if (!field) return;
+    field.addEventListener("blur", () => commitTimerFields());
+    field.addEventListener("keydown", (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        field.blur();
+      }
+    });
+  });
 }
 
 function openTimerPicker() {
@@ -1177,16 +1189,43 @@ function openTimerPicker() {
 
 function closeTimerPicker() {
   if (!timerControl || !timerPicker) return;
+  if (timerControl.classList.contains('expanded')) commitTimerFields();
   timerControl.classList.remove('expanded');
   timerPicker.classList.add('hidden');
 }
 
+// Show the stored duration in the two fields, unless one is being typed in.
 function updateTimerPickerDuration() {
-  if (!timerPickerDuration) return;
-  timerPickerDuration.textContent = formatTime(totalTimeSeconds);
+  if (!timerMinutesField || !timerSecondsField) return;
+  if (document.activeElement === timerMinutesField || document.activeElement === timerSecondsField) return;
+  timerMinutesField.value = String(timerMinutes).padStart(2, '0');
+  timerSecondsField.value = String(timerSeconds).padStart(2, '0');
 }
 
-// Start/Resume timer countdown
+// Take what was typed, holding minutes and seconds to what a clock can show.
+// Anything that isn't a number leaves the setting alone.
+async function commitTimerFields() {
+  const typedMinutes = parseInt(timerMinutesField.value.replace(/\D/g, ''), 10);
+  const typedSeconds = parseInt(timerSecondsField.value.replace(/\D/g, ''), 10);
+
+  if (!Number.isNaN(typedMinutes)) timerMinutes = Math.min(Math.max(typedMinutes, 0), 59);
+  if (!Number.isNaN(typedSeconds)) timerSeconds = Math.min(Math.max(typedSeconds, 0), 59);
+
+  await setStoredValue(STORAGE_KEYS.SETTINGS_TIMER_MINUTES, timerMinutes);
+  await setStoredValue(STORAGE_KEYS.SETTINGS_TIMER_SECONDS, timerSeconds);
+  trackSettingChange('timer_duration', timerDurationSeconds());
+
+  updateTimerPickerDuration();
+  // A run already under way is re-timed against the new duration.
+  updateTimerDisplay();
+}
+
+// How long the run is, as set on the Set Timer pill. Zero counts up instead.
+function timerDurationSeconds() {
+  return timerMinutes * 60 + timerSeconds;
+}
+
+// Start/Resume the run
 function startTimerCountdown() {
   console.log('[Timer] startTimerCountdown called, timerState:', timerState);
   if (timerState === 'running') return;
@@ -1195,52 +1234,51 @@ function startTimerCountdown() {
   timerState = 'running';
   updateTransport();
 
-  // Start auto-scroll if enabled
   startAutoScroll();
 
-  // Track elapsed time for count-up mode (when no [time] tags)
-  let elapsedSeconds = 0;
+  // The clock is read from wall time rather than counted in ticks, so pausing
+  // and resuming cannot make it drift.
+  const startedAt = Date.now();
+  const elapsedAtStart = elapsedSeconds;
 
-  // Update the single header timer every second
   const interval = setInterval(() => {
     if (timerState !== 'running') {
       clearInterval(interval);
       return;
     }
-
-    if (totalTimeSeconds > 0) {
-      // Count down mode (has [time] tags)
-      remainingTimeSeconds--;
-
-      const displayTime = formatTime(Math.abs(remainingTimeSeconds));
-
-      // Update the header timer display
-      headerTimer.classList.remove('time-countup');
-      if (remainingTimeSeconds < 0) {
-        headerTimer.textContent = `-${displayTime}`;
-        headerTimer.classList.add('time-overtime');
-        headerTimer.classList.remove('time-warning');
-      } else if (remainingTimeSeconds < 10) {
-        headerTimer.textContent = displayTime;
-        headerTimer.classList.add('time-warning');
-        headerTimer.classList.remove('time-overtime');
-      } else {
-        headerTimer.textContent = displayTime;
-        headerTimer.classList.remove('time-warning', 'time-overtime');
-      }
-    } else {
-      // Count up mode (no [time] tags) - white color
-      elapsedSeconds++;
-      headerTimer.textContent = formatTime(elapsedSeconds);
-      headerTimer.classList.remove('time-warning', 'time-overtime');
-      headerTimer.classList.add('time-countup');
-    }
-  }, 1000);
+    elapsedSeconds = elapsedAtStart + (Date.now() - startedAt) / 1000;
+    updateTimerDisplay();
+  }, 200);
 
   timerIntervals.push(interval);
 }
 
-// Pause timer countdown
+// The header clock, and the colour iOS gives it: green while there is room,
+// yellow inside the last fifth, red once the run has gone over.
+function updateTimerDisplay() {
+  if (!headerTimer) return;
+
+  const duration = timerDurationSeconds();
+  headerTimer.classList.remove('time-countup', 'time-warning', 'time-overtime');
+
+  // Nothing to count down to, so count up instead.
+  if (duration <= 0) {
+    headerTimer.textContent = formatTime(Math.floor(elapsedSeconds));
+    headerTimer.classList.add('time-countup');
+    return;
+  }
+
+  const remaining = duration - Math.floor(elapsedSeconds);
+  headerTimer.textContent = formatTime(remaining);
+
+  if (remaining < 0) {
+    headerTimer.classList.add('time-overtime');
+  } else if (remaining / duration <= 0.2) {
+    headerTimer.classList.add('time-warning');
+  }
+}
+
+// Pause the run
 function pauseTimerCountdown() {
   if (timerState !== 'running') return;
 
@@ -1251,30 +1289,20 @@ function pauseTimerCountdown() {
   updateTransport();
 }
 
-// Reset timer countdown to original values
+// Put the run back to its beginning
 function resetTimerCountdown() {
   trackTimerAction('reset');
   stopAllTimers();
   stopAutoScroll();
   timerState = 'stopped';
+  elapsedSeconds = 0;
 
-  // Reset scroll position to top
   const container = getScrollContainer();
   if (container) {
     container.scrollTop = 0;
   }
 
-  // Reset remaining time to total time
-  remainingTimeSeconds = totalTimeSeconds;
-
-  // Update header timer display
-  if (headerTimer) {
-    headerTimer.textContent = formatTime(totalTimeSeconds);
-    headerTimer.classList.remove('time-warning', 'time-overtime');
-    // Use count-up styling (white) when no [time] tags
-    headerTimer.classList.toggle('time-countup', totalTimeSeconds === 0);
-  }
-
+  updateTimerDisplay();
   updateTransport();
 }
 
@@ -1379,12 +1407,6 @@ function setupAutoScrollHoverListeners() {
   });
 }
 
-// Check if text contains [time mm:ss] pattern
-function hasTimePattern(text) {
-  const timePattern = /\[time\s+(\d{1,2}):(\d{2})\]/i;
-  return timePattern.test(text);
-}
-
 // Update header timer visibility based on view (shown in notes views for both countdown and count-up)
 function updateHeaderTimerVisibility() {
   if (!headerTimer) return;
@@ -1439,7 +1461,6 @@ function setupNotesInputHighlighting() {
     const text = notesInput.value;
     if (!text) {
       notesInputHighlight.innerHTML = '';
-      notesHasTimeTags = false;
       updateHeaderTimerVisibility();
       // Update timer button visibility when content changes
       updateTransport();
@@ -1592,89 +1613,22 @@ function highlightCues(escapedText) {
   return result + escapedText.slice(lastEnd);
 }
 
-function trimSpacesPreserveNewlines(text) {
-  return text.replace(/^[ \t]+|[ \t]+$/g, '');
-}
-
-function stripSingleLeadingNewline(text) {
-  return text.replace(/^[ \t]*\n/, '');
-}
-
-// Highlight notes for input preview, wrapping content in sections
-function highlightNotesForInput(text) {
-  notesHasTimeTags = hasTimePattern(text);
-  updateHeaderTimerVisibility();
-
-  // Normalize all line break types to \n first
-  let safe = text
+// Every line-break kind there is — \r\n, \r, U+2028, U+2029, a vertical tab —
+// down to the one the editor works in.
+function normalizeLineBreaks(text) {
+  return text
     .replace(/\\n/g, '\n')
     .replace(/\r\n/g, '\n')
     .replace(/\r/g, '\n')
     .replace(/\u2028/g, '\n')
     .replace(/\u2029/g, '\n')
     .replace(/\v/g, '\n');
+}
 
-  // Escape HTML
-  safe = escapeHtml(safe);
-
-  // Pattern for [time mm:ss] syntax
-  const timePattern = /\[time\s+(\d{1,2}):(\d{2})\]/gi;
-
-  // Split by time markers to create sections
-  const parts = safe.split(timePattern);
-
-  let result = '';
-  let cumulativeTime = 0;
-  let sectionIndex = 0;
-
-  // First part (before any [time]) is the first section (no timer)
-  if (parts.length > 0) {
-    let sectionContent = trimSpacesPreserveNewlines(parts[0]);
-    sectionContent = highlightCues(sectionContent);
-    // Convert newlines to <br>
-    sectionContent = sectionContent.replace(/\n/g, '<br>');
-
-    if (sectionContent.replace(/<br>/g, '').trim()) {
-      result += `<div class="notes-section" data-section="${sectionIndex}">${sectionContent}</div>`;
-      sectionIndex++;
-    }
-  }
-
-  // Process remaining parts (minutes, seconds, content triplets)
-  for (let i = 1; i < parts.length; i += 3) {
-    const minutes = parseInt(parts[i]);
-    const seconds = parseInt(parts[i + 1]);
-    const content = parts[i + 2] || '';
-
-    const timeInSeconds = minutes * 60 + seconds;
-    cumulativeTime += timeInSeconds;
-
-    let sectionContent = trimSpacesPreserveNewlines(content);
-    sectionContent = stripSingleLeadingNewline(sectionContent);
-    sectionContent = highlightCues(sectionContent);
-    // Convert newlines to <br>
-    sectionContent = sectionContent.replace(/\n/g, '<br>');
-
-    // Don't show [time] tags in the view - just add the content
-    if (sectionContent.replace(/<br>/g, '').trim()) {
-      result += `<div class="notes-section" data-section="${sectionIndex}">${sectionContent}</div>`;
-      sectionIndex++;
-    }
-  }
-
-  // Update the global total time and remaining time
-  totalTimeSeconds = cumulativeTime;
-  remainingTimeSeconds = cumulativeTime;
-
-  // Update header timer display
-  if (headerTimer) {
-    headerTimer.textContent = formatTime(cumulativeTime);
-    headerTimer.classList.remove('time-warning', 'time-overtime');
-    // Use count-up styling (white) when no [time] tags
-    headerTimer.classList.toggle('time-countup', cumulativeTime === 0);
-  }
-
-  return result;
+// The script as the editor shows it: cues in colour, everything else as typed.
+function highlightNotesForInput(text) {
+  const safe = highlightCues(escapeHtml(normalizeLineBreaks(text)));
+  return safe.replace(/\n/g, '<br>');
 }
 
 // Check authentication status
@@ -1959,7 +1913,6 @@ async function showView(viewName) {
       viewNotes.classList.remove('hidden');
       const hasNotesContent = notesContent && notesContent.textContent.trim();
       if (!hasNotesContent) {
-        notesHasTimeTags = false;
         updateHeaderTimerVisibility();
         stopAllTimers();
         timerState = 'stopped';
@@ -2041,94 +1994,15 @@ function displayNotes(text, slideData = null) {
   updateTransport();
 }
 
-// Highlight timestamps and action tags in notes, wrapping content in sections
+// The same, for notes arriving from Google Slides, where the extension's name
+// is worth linking.
 function highlightNotes(text) {
-  notesHasTimeTags = hasTimePattern(text);
-  updateHeaderTimerVisibility();
+  let safe = highlightCues(escapeHtml(normalizeLineBreaks(text)));
 
-  // Normalize all line break types to \n first
-  // Handles: \r\n (Windows), \r (old Mac), \n (Unix),
-  // \u2028 (Line Separator), \u2029 (Paragraph Separator), \v (Vertical Tab)
-  let safe = text
-    .replace(/\\n/g, '\n')
-    .replace(/\r\n/g, '\n')
-    .replace(/\r/g, '\n')
-    .replace(/\u2028/g, '\n')
-    .replace(/\u2029/g, '\n')
-    .replace(/\v/g, '\n');
+  safe = safe.replace(/CueCard Extension/gi, (match) =>
+    `<a href="https://cuecard.dev/#download" class="slides-link" target="_blank" rel="noopener noreferrer">${match}</a>`);
 
-  // Escape HTML
-  safe = escapeHtml(safe);
-
-  // Pattern for [time mm:ss] syntax
-  const timePattern = /\[time\s+(\d{1,2}):(\d{2})\]/gi;
-
-  // Pattern for "CueCard Extension" - replace with link
-  const cuecardPattern = /CueCard Extension/gi;
-
-  // Split by time markers to create sections
-  const parts = safe.split(timePattern);
-
-  let result = '';
-  let cumulativeTime = 0;
-  let sectionIndex = 0;
-
-  // First part (before any [time]) is the first section (no timer)
-  if (parts.length > 0) {
-    let sectionContent = trimSpacesPreserveNewlines(parts[0]);
-    // Apply note pattern and CueCard Extension link
-    sectionContent = highlightCues(sectionContent);
-    sectionContent = sectionContent.replace(cuecardPattern, (match) => {
-      return `<a href="https://cuecard.dev/#download" class="slides-link" target="_blank" rel="noopener noreferrer">${match}</a>`;
-    });
-    // Convert newlines to <br>
-    sectionContent = sectionContent.replace(/\n/g, '<br>');
-
-    if (sectionContent.replace(/<br>/g, '').trim()) {
-      result += `<div class="notes-section" data-section="${sectionIndex}">${sectionContent}</div>`;
-      sectionIndex++;
-    }
-  }
-
-  // Process remaining parts (minutes, seconds, content triplets)
-  for (let i = 1; i < parts.length; i += 3) {
-    const minutes = parseInt(parts[i]);
-    const seconds = parseInt(parts[i + 1]);
-    const content = parts[i + 2] || '';
-
-    const timeInSeconds = minutes * 60 + seconds;
-    cumulativeTime += timeInSeconds;
-
-    let sectionContent = trimSpacesPreserveNewlines(content);
-    sectionContent = stripSingleLeadingNewline(sectionContent);
-    // Apply note pattern and CueCard Extension link
-    sectionContent = highlightCues(sectionContent);
-    sectionContent = sectionContent.replace(cuecardPattern, (match) => {
-      return `<a href="https://cuecard.dev/#download" class="slides-link" target="_blank" rel="noopener noreferrer">${match}</a>`;
-    });
-    // Convert newlines to <br>
-    sectionContent = sectionContent.replace(/\n/g, '<br>');
-
-    // Don't show [time] tags in the view - just add the content
-    if (sectionContent.replace(/<br>/g, '').trim()) {
-      result += `<div class="notes-section" data-section="${sectionIndex}">${sectionContent}</div>`;
-      sectionIndex++;
-    }
-  }
-
-  // Update the global total time and remaining time
-  totalTimeSeconds = cumulativeTime;
-  remainingTimeSeconds = cumulativeTime;
-
-  // Update header timer display
-  if (headerTimer) {
-    headerTimer.textContent = formatTime(cumulativeTime);
-    headerTimer.classList.remove('time-warning', 'time-overtime');
-    // Use count-up styling (white) when no [time] tags
-    headerTimer.classList.toggle('time-countup', cumulativeTime === 0);
-  }
-
-  return result;
+  return safe.replace(/\n/g, '<br>');
 }
 
 // Escape HTML to prevent XSS (preserves newlines)
@@ -2439,6 +2313,58 @@ function updateThemeButtons(theme) {
   if (themeDarkBtn) themeDarkBtn.classList.toggle('active', theme === 'dark');
 }
 
+const TIME_TAG_PATTERN = /\[time[ \t]+(\d{1,2}):(\d{2})\][ \t]*\n?/gi;
+
+/**
+ * Timing used to be written into the script as `[time mm:ss]`. It is a duration
+ * set in the app now, so the tags are taken out of every stored script — once —
+ * and, if no duration has been set yet, the run is seeded from their sum.
+ * Nobody opens the app to find their timings silently gone.
+ */
+async function migrateTimeTags(hasStoredDuration) {
+  if (await getStoredValue(STORAGE_KEYS.MIGRATED_TIME_TAGS)) return;
+
+  const sumOf = (text) => {
+    let total = 0;
+    for (const match of text.matchAll(new RegExp(TIME_TAG_PATTERN.source, 'gi'))) {
+      total += parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
+    }
+    return total;
+  };
+  const stripped = (text) => text.replace(new RegExp(TIME_TAG_PATTERN.source, 'gi'), '');
+
+  const currentScript = (await getStoredValue(STORAGE_KEYS.ADD_NOTES_CONTENT)) || '';
+  const savedNotes = await getSavedNotes();
+
+  // Whatever the user was timing to, in the script they were last working on —
+  // falling back to the most recent saved note that carried any tags at all.
+  let seedSeconds = sumOf(currentScript);
+  if (seedSeconds === 0) {
+    const tagged = savedNotes.find(note => sumOf(note.content || '') > 0);
+    if (tagged) seedSeconds = sumOf(tagged.content);
+  }
+
+  if (currentScript) {
+    await setStoredValue(STORAGE_KEYS.ADD_NOTES_CONTENT, stripped(currentScript));
+  }
+  if (savedNotes.some(note => sumOf(note.content || '') > 0)) {
+    await setStoredValue(
+      STORAGE_KEYS.SAVED_NOTES,
+      savedNotes.map(note => ({ ...note, content: stripped(note.content || '') }))
+    );
+  }
+
+  if (seedSeconds > 0 && !hasStoredDuration) {
+    timerMinutes = Math.min(Math.floor(seedSeconds / 60), 59);
+    timerSeconds = seedSeconds % 60;
+    await setStoredValue(STORAGE_KEYS.SETTINGS_TIMER_MINUTES, timerMinutes);
+    await setStoredValue(STORAGE_KEYS.SETTINGS_TIMER_SECONDS, timerSeconds);
+    console.log(`Carried ${seedSeconds}s of [time] tags over into the timer`);
+  }
+
+  await setStoredValue(STORAGE_KEYS.MIGRATED_TIME_TAGS, true);
+}
+
 // Every cue in the app is drawn from this one variable.
 function applyCueColor(name) {
   document.documentElement.style.setProperty('--cue-color', cueColorVariable(name));
@@ -2511,6 +2437,20 @@ async function loadStoredSettings() {
       console.error("Error setting shortcuts enabled:", error);
     }
   }
+
+  // Load the run's length, defaulting to the phone app's 1:00
+  const storedMinutes = await getStoredValue(STORAGE_KEYS.SETTINGS_TIMER_MINUTES);
+  const storedSeconds = await getStoredValue(STORAGE_KEYS.SETTINGS_TIMER_SECONDS);
+  const hasStoredDuration = typeof storedMinutes === 'number' || typeof storedSeconds === 'number';
+  timerMinutes = typeof storedMinutes === 'number' ? storedMinutes : 1;
+  timerSeconds = typeof storedSeconds === 'number' ? storedSeconds : 0;
+  if (!hasStoredDuration) {
+    await setStoredValue(STORAGE_KEYS.SETTINGS_TIMER_MINUTES, timerMinutes);
+    await setStoredValue(STORAGE_KEYS.SETTINGS_TIMER_SECONDS, timerSeconds);
+  }
+
+  await migrateTimeTags(hasStoredDuration);
+  updateTimerDisplay();
 
   // Load the cue colour, which has been pink here since before it was a choice
   const storedCueColor = await getStoredValue(STORAGE_KEYS.SETTINGS_CUE_COLOR);

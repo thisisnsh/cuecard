@@ -527,23 +527,6 @@ body {
 }
 
 /* Apply syntax highlighting styles to input preview */
-.notes-input-highlight .timestamp {
-  display: inline;
-  font-size: 10px;
-  font-weight: 600;
-  font-stretch: expanded;
-  color: var(--color-green);
-  line-height: 1;
-}
-
-.notes-input-highlight .timestamp.time-warning {
-  color: var(--color-yellow);
-}
-
-.notes-input-highlight .timestamp.time-overtime {
-  color: var(--color-red);
-}
-
 .notes-input-highlight .cue-tag {
   font-size: 10px;
   font-weight: 600;
@@ -616,34 +599,7 @@ body {
   mask-repeat: no-repeat;
 }
 
-/* Notes Section Structure */
-.notes-section {
-  position: relative;
-  margin: 0;
-  padding: 0;
-}
-
 /* Syntax Highlighting for Notes */
-.notes-content .timestamp {
-  display: block;
-  font-size: 10px;
-  font-weight: 600;
-  font-stretch: expanded;
-  color: var(--color-green);
-  line-height: 1;
-  transition: color 0.3s ease;
-}
-
-/* Warning state: when time < 00:10 */
-.notes-content .timestamp.time-warning {
-  color: var(--color-yellow);
-}
-
-/* Overtime state: when time < 00:00 (counting up) */
-.notes-content .timestamp.time-overtime {
-  color: var(--color-red);
-}
-
 .notes-content .cue-tag {
   font-size: 10px;
   font-weight: 600;
@@ -1144,10 +1100,33 @@ body {
   color: var(--text-secondary);
 }
 
-.timer-picker-duration {
+/* Two typed fields, which is what desktop has instead of a wheel picker */
+.timer-fields {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.timer-field {
+  width: 32px;
+  padding: 4px 0;
   font: var(--font-headline);
   font-variant-numeric: tabular-nums;
+  text-align: center;
   color: var(--text-primary);
+  background: rgba(var(--text-primary-rgb), 0.1);
+  border: none;
+  border-radius: 8px;
+  outline: none;
+}
+
+.timer-field:focus {
+  background: rgba(var(--text-primary-rgb), 0.18);
+}
+
+.timer-field-separator {
+  font: var(--font-headline);
+  color: var(--text-secondary);
 }
 
 /* Transport */

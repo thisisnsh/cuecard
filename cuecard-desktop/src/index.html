@@ -154,7 +154,13 @@
             </div>
             <div class="timer-picker-row">
               <span class="timer-picker-label">Duration</span>
-              <span class="timer-picker-duration" id="timer-picker-duration">00:00</span>
+              <div class="timer-fields">
+                <input class="timer-field" id="timer-minutes" type="text" inputmode="numeric" maxlength="2"
+                  aria-label="Minutes" value="01">
+                <span class="timer-field-separator">:</span>
+                <input class="timer-field" id="timer-seconds" type="text" inputmode="numeric" maxlength="2"
+                  aria-label="Seconds" value="00">
+              </div>
             </div>
           </div>
         </div>
