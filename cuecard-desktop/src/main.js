@@ -313,6 +313,7 @@ const STORAGE_KEYS = {
   SETTINGS_THEME: 'settings_theme',
   SETTINGS_SHORTCUTS_ENABLED: 'settings_shortcuts_enabled',
   SETTINGS_AUTO_SCROLL_SPEED: 'settings_auto_scroll_speed',
+  SETTINGS_LINES_PER_MINUTE: 'settings_lines_per_minute',
   SETTINGS_CUE_COLOR: 'settings_cue_color',
   SETTINGS_TIMER_MINUTES: 'settings_timer_minutes',
   SETTINGS_TIMER_SECONDS: 'settings_timer_seconds',
@@ -623,7 +624,7 @@ let opacitySlider, opacityValue, ghostModeToggle, shortcutsToggle;
 let cueColorSwatches;
 let countdownField;
 let themeSystemBtn, themeLightBtn, themeDarkBtn;
-let speedSlider, speedValue;
+let speedField;
 let editNoteBtn;
 let notesInputWrapper;
 let ghostModeIndicator;
@@ -641,14 +642,17 @@ let currentOpacity = 100; // Store current opacity value (10-100)
 let ghostMode = true; // Default: true = hidden from screenshots (ghost mode ON)
 let currentTheme = 'system'; // 'system', 'light', 'dark'
 let shortcutsEnabled = true; // Default: true = global shortcuts are enabled
-let autoScrollSpeed = 0; // 0 to 2 (pixels per frame at 60fps), 0 = off
+// Scroll speed, in lines of the script as the editor renders them. Zero is off,
+// which iOS has no equivalent of but an always-on-top window wants.
+let linesPerMinute = 0;
 let cueColor = DEFAULT_CUE_COLOR; // the colour every cue in every script is drawn in
 
 // Timer State
 let timerState = 'stopped'; // 'stopped', 'running', 'paused'
 let timerIntervals = []; // Store all timer interval IDs
 let autoScrollAnimationId = null; // Store auto-scroll animation frame ID
-let autoScrollAccumulator = 0; // Accumulator for sub-pixel scrolling
+let autoScrollHeldSeconds = 0; // Time spent hovering, which the script sits out
+let autoScrollHeldSince = null;
 let autoScrollPausedByHover = false; // Tracks if auto-scroll is paused due to hover
 let timerMinutes = 1; // The run's length, set on the Set Timer pill
 let timerSeconds = 0;
@@ -741,8 +745,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   themeSystemBtn = document.getElementById("theme-system");
   themeLightBtn = document.getElementById("theme-light");
   themeDarkBtn = document.getElementById("theme-dark");
-  speedSlider = document.getElementById("speed-slider");
-  speedValue = document.getElementById("speed-value");
+  speedField = document.getElementById("speed-field");
   editNoteBtn = document.getElementById("edit-note-btn");
   notesInputWrapper = document.querySelector(".notes-input-wrapper");
   ghostModeIndicator = document.getElementById("ghost-mode-indicator");
@@ -1360,6 +1363,7 @@ function resetTimerCountdown() {
   stopAutoScroll();
   timerState = 'stopped';
   elapsedSeconds = 0;
+  autoScrollHeldSeconds = 0;
   hasStarted = false;
 
   const container = getScrollContainer();
@@ -1394,48 +1398,37 @@ function getScrollContainer() {
   return null;
 }
 
+// The speeds a typed lines-a-minute figure is held to, as on iOS.
+const LPM_MIN = 1;
+const LPM_MAX = 300;
+
+// One rendered line of the script, in pixels — what a line a minute is a minute of.
+function renderedLineHeight(container) {
+  const lineHeight = parseFloat(getComputedStyle(container).lineHeight);
+  if (!Number.isNaN(lineHeight) && lineHeight > 0) return lineHeight;
+  return parseFloat(getComputedStyle(container).fontSize) * 1.2;
+}
+
 // Start auto-scroll animation
 function startAutoScroll() {
-  if (autoScrollSpeed <= 0 || autoScrollAnimationId !== null) return;
+  if (linesPerMinute <= 0 || autoScrollAnimationId !== null) return;
+  if (!getScrollContainer()) return;
 
-  const container = getScrollContainer();
-  if (!container) return;
-  const maxScroll = container.scrollHeight - container.clientHeight;
-  if (maxScroll <= 0) {
-    autoScrollAccumulator = 0;
-    return;
-  }
-
-  const speed = autoScrollSpeed;
-
-  // Reset accumulator when starting
-  autoScrollAccumulator = 0;
-
+  // The position is a function of the clock, not a running total, so pausing
+  // and resuming cannot make the script drift out of step with the timer.
   function scrollStep() {
-    if (timerState !== 'running' || autoScrollSpeed <= 0) {
+    if (timerState !== 'running' || linesPerMinute <= 0) {
       stopAutoScroll();
       return;
     }
 
-    // Skip scrolling if paused by hover, but keep the animation loop running
-    if (!autoScrollPausedByHover) {
-      const container = getScrollContainer();
-      if (container) {
-        const maxScroll = container.scrollHeight - container.clientHeight;
-        if (maxScroll <= 0) {
-          stopAutoScroll();
-          return;
-        }
-        if (container.scrollTop < maxScroll) {
-          // Accumulate fractional scroll values
-          autoScrollAccumulator += speed;
-          // Only update scrollTop when we have at least 1 pixel to scroll
-          if (autoScrollAccumulator >= 1) {
-            const pixelsToScroll = Math.floor(autoScrollAccumulator);
-            container.scrollTop += pixelsToScroll;
-            autoScrollAccumulator -= pixelsToScroll;
-          }
-        }
+    const container = getScrollContainer();
+    if (container) {
+      const maxScroll = container.scrollHeight - container.clientHeight;
+      if (maxScroll > 0) {
+        const held = autoScrollHeldSeconds + (autoScrollHeldSince ? (Date.now() - autoScrollHeldSince) / 1000 : 0);
+        const lines = Math.max(elapsedSeconds - held, 0) * linesPerMinute / 60;
+        container.scrollTop = Math.min(lines * renderedLineHeight(container), maxScroll);
       }
     }
 
@@ -1451,8 +1444,8 @@ function stopAutoScroll() {
     cancelAnimationFrame(autoScrollAnimationId);
     autoScrollAnimationId = null;
   }
-  autoScrollAccumulator = 0;
   autoScrollPausedByHover = false;
+  autoScrollHeldSince = null;
 }
 
 // Setup hover listeners to pause auto-scroll
@@ -1463,11 +1456,18 @@ function setupAutoScrollHoverListeners() {
     if (!container) return;
 
     container.addEventListener('mouseenter', () => {
+      if (autoScrollPausedByHover) return;
       autoScrollPausedByHover = true;
+      autoScrollHeldSince = Date.now();
     });
 
     container.addEventListener('mouseleave', () => {
+      if (!autoScrollPausedByHover) return;
       autoScrollPausedByHover = false;
+      if (autoScrollHeldSince) {
+        autoScrollHeldSeconds += (Date.now() - autoScrollHeldSince) / 1000;
+        autoScrollHeldSince = null;
+      }
     });
   });
 }
@@ -1948,7 +1948,7 @@ async function showView(viewName) {
   updateHeaderTimerVisibility();
 
   if (ghostModeIndicator) {
-    const shouldShowGhost = viewName === 'notes' || viewName === 'add-notes';
+    const shouldShowGhost = ghostMode && (viewName === 'notes' || viewName === 'add-notes');
     ghostModeIndicator.classList.toggle('hidden', !shouldShowGhost);
   }
 
@@ -2357,6 +2357,7 @@ function updateMenuItems() {
 const DEFAULT_OPACITY = 100;
 const DEFAULT_GHOST_MODE = true; // true = ghost mode ON = hidden from screenshots
 const DEFAULT_SHORTCUTS_ENABLED = true; // true = global shortcuts are enabled
+const DEFAULT_LINES_PER_MINUTE = 50; // what iOS scrolls at out of the box
 
 // Apply theme based on preference ('system', 'light', 'dark')
 function applyTheme(theme) {
@@ -2537,42 +2538,64 @@ async function loadStoredSettings() {
   }
   applyCueColor(cueColor);
 
-  // Load stored auto-scroll speed setting or use default (0 = off)
-  const storedAutoScrollSpeed = await getStoredValue(STORAGE_KEYS.SETTINGS_AUTO_SCROLL_SPEED);
-  if (storedAutoScrollSpeed !== null && storedAutoScrollSpeed !== undefined) {
-    // Handle migration from old string values to new numeric values
-    if (typeof storedAutoScrollSpeed === 'string') {
-      const migrationMap = { 'off': 0, 'low': 0.5, 'medium': 1, 'high': 2 };
-      autoScrollSpeed = migrationMap[storedAutoScrollSpeed] ?? 0;
-      await setStoredValue(STORAGE_KEYS.SETTINGS_AUTO_SCROLL_SPEED, autoScrollSpeed);
-    } else {
-      autoScrollSpeed = storedAutoScrollSpeed;
-    }
+  // Load the scroll speed. It used to be a 0-2x multiplier applied per animation
+  // frame; anyone who set one carries that figure and no lines-a-minute setting,
+  // so convert it at the speed it actually scrolled — 1x moved a 24px line about
+  // two and a half times a second.
+  const storedLpm = await getStoredValue(STORAGE_KEYS.SETTINGS_LINES_PER_MINUTE);
+  if (typeof storedLpm === 'number') {
+    linesPerMinute = storedLpm === 0 ? 0 : clampLpm(storedLpm);
   } else {
-    autoScrollSpeed = 0;
-    await setStoredValue(STORAGE_KEYS.SETTINGS_AUTO_SCROLL_SPEED, 0);
+    const storedSpeed = await getStoredValue(STORAGE_KEYS.SETTINGS_AUTO_SCROLL_SPEED);
+    const legacySpeed = typeof storedSpeed === 'string'
+      ? ({ off: 0, low: 0.5, medium: 1, high: 2 }[storedSpeed] ?? 0)
+      : (typeof storedSpeed === 'number' ? storedSpeed : null);
+
+    if (legacySpeed === null) {
+      linesPerMinute = DEFAULT_LINES_PER_MINUTE;
+    } else {
+      // Zero stayed off through the change, because people rely on it.
+      linesPerMinute = legacySpeed === 0 ? 0 : clampLpm(Math.round(legacySpeed * 150));
+    }
+    await setStoredValue(STORAGE_KEYS.SETTINGS_LINES_PER_MINUTE, linesPerMinute);
   }
 }
 
-function clampCountdown(value) {
-  return Math.min(Math.max(Math.round(value), COUNTDOWN_MIN), COUNTDOWN_MAX);
+function clampLpm(value) {
+  return Math.min(Math.max(Math.round(value), LPM_MIN), LPM_MAX);
 }
 
-// Take what was typed as a delay, holding it to the range a run can wait for.
-// Anything that isn't a number leaves the setting alone.
-async function commitCountdownField() {
-  if (!countdownField) return;
-  const typed = parseInt(countdownField.value.replace(/\D/g, ''), 10);
+// Take what was typed as a speed, holding it to the range the script can scroll
+// at — except zero, which is Off. Anything that isn't a number leaves it alone.
+async function commitSpeedField() {
+  if (!speedField) return;
+  const typed = parseInt(speedField.value.replace(/\D/g, ''), 10);
   if (!Number.isNaN(typed)) {
-    countdownSeconds = clampCountdown(typed);
-    trackSettingChange('countdown_seconds', countdownSeconds);
-    await setStoredValue(STORAGE_KEYS.SETTINGS_COUNTDOWN_SECONDS, countdownSeconds);
+    linesPerMinute = typed === 0 ? 0 : clampLpm(typed);
+    trackSettingChange('lines_per_minute', linesPerMinute);
+    await setStoredValue(STORAGE_KEYS.SETTINGS_LINES_PER_MINUTE, linesPerMinute);
+
+    // A run already under way picks up the new speed.
+    if (timerState === 'running') {
+      stopAutoScroll();
+      startAutoScroll();
+    }
   }
-  countdownField.value = String(countdownSeconds);
+  speedField.value = String(linesPerMinute);
 }
 
 // Settings Handlers
 function setupSettings() {
+  if (speedField) {
+    speedField.addEventListener("blur", () => commitSpeedField());
+    speedField.addEventListener("keydown", (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        speedField.blur();
+      }
+    });
+  }
+
   if (countdownField) {
     countdownField.addEventListener("blur", () => commitCountdownField());
     countdownField.addEventListener("keydown", (e) => {
@@ -2631,6 +2654,10 @@ function setupSettings() {
     ghostModeToggle.addEventListener("change", async (e) => {
       ghostMode = e.target.checked;
       updateGhostModeIndicator();
+      if (ghostModeIndicator) {
+        const inScript = currentView === 'notes' || currentView === 'add-notes';
+        ghostModeIndicator.classList.toggle('hidden', !(ghostMode && inScript));
+      }
 
       // Track setting change
       trackSettingChange('ghost_mode', ghostMode);
@@ -2691,47 +2718,14 @@ function setupSettings() {
     });
   }
 
-  // Auto-scroll speed slider handler
-  let speedTrackingTimeout = null;
-  if (speedSlider) {
-    speedSlider.addEventListener("input", async (e) => {
-      const value = parseFloat(e.target.value);
-      autoScrollSpeed = value;
-      updateSpeedDisplay(value);
-
-      // Save to persistent storage
-      await setStoredValue(STORAGE_KEYS.SETTINGS_AUTO_SCROLL_SPEED, value);
-
-      // Debounce analytics tracking
-      clearTimeout(speedTrackingTimeout);
-      speedTrackingTimeout = setTimeout(() => {
-        trackSettingChange('auto_scroll_speed', value);
-      }, 500);
-
-      // If timer is running and speed changed, restart or stop auto-scroll
-      if (timerState === 'running') {
-        stopAutoScroll();
-        if (value > 0) {
-          startAutoScroll();
-        }
-      }
-    });
-  }
 }
 
-// Update speed display value
-function updateSpeedDisplay(speed) {
-  if (!speedValue) return;
-  if (speed === 0) {
-    speedValue.textContent = 'Off';
-  } else {
-    speedValue.textContent = `${speed}x`;
-  }
-}
-
+// The badge is only there to say the window is hidden, so it only shows then.
 function updateGhostModeIndicator() {
   if (!ghostModeIndicator) return;
-  ghostModeIndicator.textContent = `Ghost Mode ${ghostMode ? 'Enabled' : 'Disabled'}`;
+  ghostModeIndicator.textContent = 'Ghost';
+  ghostModeIndicator.title = 'Hidden from screenshots and recordings';
+  ghostModeIndicator.classList.toggle('ghost-off', !ghostMode);
 }
 
 // Update shortcuts button visibility based on shortcutsEnabled setting and current view
@@ -2771,11 +2765,7 @@ async function loadCurrentSettings() {
   updateCueColorSwatches(cueColor);
   if (countdownField) countdownField.value = String(countdownSeconds);
 
-  // Update speed slider and display
-  if (speedSlider) {
-    speedSlider.value = autoScrollSpeed;
-  }
-  updateSpeedDisplay(autoScrollSpeed);
+  if (speedField) speedField.value = String(linesPerMinute);
 }
 
 // =============================================================================

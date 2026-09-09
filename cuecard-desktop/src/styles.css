@@ -1415,6 +1415,10 @@ body {
   outline: none;
 }
 
+.number-field-wide {
+  width: 34px;
+}
+
 .number-unit {
   font: var(--font-subheadline);
   color: var(--text-secondary);

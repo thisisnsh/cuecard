@@ -210,14 +210,15 @@
                 </div>
 
                 <div class="setting-item">
-                  <span class="setting-title">Auto-Scroll Speed</span>
-                  <div class="setting-control">
-                    <input type="range" id="speed-slider" class="opacity-slider" min="0" max="2" step="0.25" value="0">
-                    <span class="opacity-value" id="speed-value">Off</span>
-                  </div>
+                  <span class="setting-title">Scroll Speed</span>
+                  <label class="number-row">
+                    <input class="number-field number-field-wide" id="speed-field" type="text" inputmode="numeric"
+                      maxlength="3" aria-label="Scroll speed in lines per minute" value="50">
+                    <span class="number-unit">lines/min</span>
+                  </label>
                 </div>
               </div>
-              <p class="settings-footnote">The delay counts down before the script starts moving. It is skipped when resuming from a pause, and while notes are coming from Google Slides.</p>
+              <p class="settings-footnote">A scroll speed of 0 turns auto-scroll off. The delay counts down before the script starts moving. It is skipped when resuming from a pause, and while notes are coming from Google Slides.</p>
             </section>
 
             <section class="settings-section">
