@@ -75,14 +75,16 @@ layout: layouts/mobile-profession.njk
     {% set deckScript = deck.forMobileRole(mobileProfession.name, mobileProfession.targetAudience, mobileProfession.useCases[0]) %}
     {% include "partials/hero.njk" %}
 
-    {% set guide = mobileProfession.guide %}
-    {% include "partials/setup-guide.njk" %}
-
     {% set featureRows = features.forRole(mobileProfession.name, mobileProfession.targetAudience, "mobile") %}
     {% set rowsMicro = "What you get" %}
     {% set rowsHeading = "Everything you need to stay on script" %}
     {% set rowsId = "features" %}
     {% include "partials/rows.njk" %}
+
+    {% set shotsHeading = "This is the whole app." %}
+    {% set shotsNote = "Read your script from the full screen, or shrink it into a small window that stays on top of whatever else you open." %}
+    {% set shotsFoot = 'Looking for the computer app instead? <a href="/desktop/">CueCard for Mac and Windows</a> keeps your speaker notes on your screen and out of your screen share.' %}
+    {% include "partials/shots.njk" %}
 
     {% set watchHeading = "A minute of it, in use" %}
     {% set watchNote = "Short films of the app doing the one thing it is for. Each opens on YouTube." %}
@@ -114,6 +116,9 @@ layout: layouts/mobile-profession.njk
     {% set getHeading = "On your phone in under a minute" %}
     {% set getBody = "Free, with no subscription and nothing to cancel — and free on your computer too." %}
     {% include "partials/getcuecard.njk" %}
+
+    {% set guide = mobileGuides.forRole(mobileProfession) %}
+    {% include "partials/setup-guide.njk" %}
 
     {% set faqItems = roleFaq %}
     {% set faqHeading = "Questions from " + mobileProfession.name | lower %}

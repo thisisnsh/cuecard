@@ -116,6 +116,13 @@ function initDeck() {
         const h = parseFloat(getComputedStyle(lines[0] || script).lineHeight);
         return Number.isFinite(h) && h > 0 ? h : 28;
     };
+    const startingOffset = () => {
+        const first = lines[0];
+        if (!first) return 0;
+        // Start the first line in the middle of the window, then let it travel
+        // upward exactly as it would in the app.
+        return first.offsetTop + first.offsetHeight / 2 - screen.offsetHeight / 2;
+    };
 
     const setRunning = (on) => {
         running = on;
@@ -151,9 +158,9 @@ function initDeck() {
     };
 
     const reset = () => {
-        offset = 0;
+        offset = startingOffset();
         elapsed = 0;
-        script.style.transform = 'translateY(0)';
+        script.style.transform = `translateY(${-offset.toFixed(1)}px)`;
         paintClock();
         highlight();
     };
@@ -169,7 +176,7 @@ function initDeck() {
             // Run off the bottom and start again, so it is always doing
             // something when someone scrolls back up to it.
             const end = script.scrollHeight - screen.offsetHeight * 0.3;
-            if (offset > end) { offset = 0; elapsed = 0; }
+            if (offset > end) { offset = startingOffset(); elapsed = 0; }
             script.style.transform = `translateY(${-offset.toFixed(1)}px)`;
             paintClock();
             highlight();

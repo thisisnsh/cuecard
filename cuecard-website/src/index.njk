@@ -77,25 +77,11 @@ ogLocale: "en_US"
     {% set deckScript = deck.standard %}
     {% include "partials/hero.njk" %}
 
-    <section class="workflow-section" id="mobile-product" aria-labelledby="mobile-product-h">
-      <div class="wrap">
-        <p class="micro">For iPhone &amp; iPad</p>
-        <h2 class="section-h" id="mobile-product-h">A floating script for the apps you film in.</h2>
-        <p class="body">Keep your words near the lens while recording. Move the window, choose a comfortable scroll speed, and save your script for the next take.</p>
-        <p class="backline"><a href="/mobile/">Explore the free mobile teleprompter</a></p>
-        <ul class="workflow-links">
-          <li><a href="/mobile/ios/#how-to">Set up on iPhone</a></li>
-          <li><a href="/mobile/ipad/#how-to">Read from an iPad</a></li>
-          <li><a href="/mobile/tiktok/#how-to">Record a TikTok</a></li>
-          <li><a href="/mobile/instagram/#how-to">Record an Instagram Reel</a></li>
-          <li><a href="/mobile/snapchat/#how-to">Record a Snap</a></li>
-        </ul>
-        <p class="body">Working on your delivery? Read <a href="/blog/instagram-reels-teleprompter-stop-looking-like-reading/">how to keep a natural eye-line</a> or <a href="/blog/tiktok-teleprompter-one-script-every-app/">reuse one script across recording apps</a>.</p>
-      </div>
-    </section>
-    {% set crossMicro = "For Mac & Windows" %}
-    {% set crossHeading = "Private speaker notes for presentations and meetings." %}
-    {% include "partials/crosspanel.njk" %}
+    {% set featureRows = features.mobile %}
+    {% set rowsMicro = "What you get" %}
+    {% set rowsHeading = "Built to be read out of the corner of your eye" %}
+    {% set rowsId = "features" %}
+    {% include "partials/rows.njk" %}
 
     {% set shotsHeading = 'This is the whole app.' %}
     {% set shotsNote = "Read your script from the full screen, or shrink it into a small window that stays on top of whatever else you open." %}
@@ -117,9 +103,41 @@ ogLocale: "en_US"
     {% set gridSuffix = "teleprompter app" %}
     {% include "partials/rolegrid.njk" %}
 
+    {% set crossMicro = "For Mac & Windows" %}
+    {% set crossHeading = "Private speaker notes for presentations and meetings." %}
+    {% include "partials/crosspanel.njk" %}
+
     {% set getHeading = "Stop memorising. Start talking." %}
     {% set getBody = "Free on every screen you speak from. There is no subscription and nothing to cancel." %}
     {% include "partials/getcuecard.njk" %}
+
+    <section class="workflow-section" id="mobile-product" aria-labelledby="mobile-product-h">
+      <div class="wrap">
+        <p class="micro">For iPhone &amp; iPad</p>
+        <h2 class="section-h" id="mobile-product-h">Set up once. Stay natural on camera.</h2>
+        <p class="body">Start with the device in your hand, then choose the recording app or delivery guide that fits your next take.</p>
+
+        <div class="guide-link-group">
+          <h3 class="guide-group-title">Quick setup</h3>
+          <ul class="guide-link-grid">
+            <li><a href="/mobile/ios/#how-to"><span>Set up on iPhone</span>{{ icon("arrow", 14) }}</a></li>
+            <li><a href="/mobile/ipad/#how-to"><span>Read from an iPad</span>{{ icon("arrow", 14) }}</a></li>
+            <li><a href="/mobile/tiktok/#how-to"><span>Record a TikTok</span>{{ icon("arrow", 14) }}</a></li>
+            <li><a href="/mobile/instagram/#how-to"><span>Record an Instagram Reel</span>{{ icon("arrow", 14) }}</a></li>
+            <li><a href="/mobile/snapchat/#how-to"><span>Record a Snap</span>{{ icon("arrow", 14) }}</a></li>
+            <li><a href="/mobile/"><span>Explore the mobile teleprompter</span>{{ icon("arrow", 14) }}</a></li>
+          </ul>
+        </div>
+
+        <div class="guide-link-group">
+          <h3 class="guide-group-title">Delivery tips</h3>
+          <ul class="guide-link-grid guide-link-grid-short">
+            <li><a href="/blog/instagram-reels-teleprompter-stop-looking-like-reading/"><span>Keep a natural eye-line</span>{{ icon("arrow", 14) }}</a></li>
+            <li><a href="/blog/tiktok-teleprompter-one-script-every-app/"><span>Reuse one script across recording apps</span>{{ icon("arrow", 14) }}</a></li>
+          </ul>
+        </div>
+      </div>
+    </section>
 
     {% set faqItems = faq.home %}
     {% set faqHeading = "Asked before installing" %}

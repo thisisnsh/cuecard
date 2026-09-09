@@ -80,28 +80,21 @@ layout: layouts/mobile-app.njk
     {% set heroStrip = "social" %}
     {% set stripMore = "and every other app you record in" %}
     {% set faqLink = "#faq" %}
-    {% set heroDeck = app.slug != "mobile" %}
+    {% set heroDeck = true %}
     {% set deckScript = deck.forApp(app.subject, "my iPad" if app.slug == "mobile/ipad" else "my phone") %}
     {% include "partials/hero.njk" %}
 
-    {% set guide = app.guide %}
-    {% set tutorial = app.tutorial %}
-    {% include "partials/setup-guide.njk" %}
-    {% if app.slug == "mobile" %}
-    <div class="wrap overview-demo">{% include "partials/deck.njk" %}</div>
-    {% endif %}
+    {% set featureRows = features.forApp(app.subject, "social") if app.subject else features.mobile %}
+    {% set rowsMicro = "What you get" %}
+    {% set rowsHeading = (("Reading a script over " + app.subject) if app.subject else "Free features for your next take") if app.showIos else "Planned for Android" %}
+    {% set rowsId = "features" %}
+    {% include "partials/rows.njk" %}
 
     {% if app.shotId %}{% set shotIds = [app.shotId] %}{% endif %}
     {% set shotsHeading = "This is the whole app." if app.showIos else "Available now on iPhone and iPad" %}
     {% set shotsNote = "Read your script from the full screen, or shrink it into a small window that stays on top of whatever else you open." %}
     {% set shotsFoot = 'Looking for the computer app instead? <a href="/desktop/">CueCard for Mac and Windows</a> keeps your speaker notes on your screen and out of your screen share.' %}
     {% include "partials/shots.njk" %}
-
-    {% set featureRows = app.features %}
-    {% set rowsMicro = "What you get" %}
-    {% set rowsHeading = (("Reading a script over " + app.subject) if app.subject else "Free features for your next take") if app.showIos else "Planned for Android" %}
-    {% set rowsId = "features" %}
-    {% include "partials/rows.njk" %}
 
     {% set watchHeading = "General product demos" %}
     {% if app.demoId %}
@@ -124,11 +117,16 @@ layout: layouts/mobile-app.njk
     {% set gridSuffix = "teleprompter app" %}
     {% include "partials/rolegrid.njk" %}
 
-    <p class="wrap backline"><a href="/desktop/">Presenting on a computer? Get free speaker notes for Mac &amp; Windows.</a></p>
+    {% set crossSubject = app.subject %}
+    {% include "partials/crosspanel.njk" %}
 
     {% set getHeading = "On your phone in under a minute" %}
     {% set getBody = "Free, with no subscription and nothing to cancel — and free on your computer too." %}
     {% include "partials/getcuecard.njk" %}
+
+    {% set guide = mobileGuides.forApp(app) %}
+    {% set tutorial = app.tutorial %}
+    {% include "partials/setup-guide.njk" %}
 
     {% set faqItems = appFaq %}
     {% set faqHeading = "Questions about " + app.name %}

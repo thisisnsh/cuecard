@@ -1,4 +1,5 @@
 {% if guide %}
+{% from "partials/icons.njk" import icon %}
 <section class="setup-guide" id="how-to" aria-labelledby="how-to-h">
   <div class="wrap">
     <p class="micro">Written setup guide</p>
@@ -7,20 +8,26 @@
     {% include "partials/tutorial-link.njk" %}
     <ol class="setup-steps">
       {% for step in guide.steps %}
-      <li><h3>{{ step.title }}</h3><p>{{ step.body }}</p></li>
+      <li class="setup-step reveal">
+        <span class="setup-step-number">{{ "0" + loop.index if loop.index < 10 else loop.index }}</span>
+        <div>
+          <h3>{{ step.title }}</h3>
+          <p>{{ step.body }}</p>
+        </div>
+      </li>
       {% endfor %}
     </ol>
     {% if guide.sample %}
-    <div class="sample-script">
-      <h3>A short script to try</h3>
+    <details class="sample-script">
+      <summary>A short script to try {{ icon("chevron", 15) }}</summary>
       <p>Select and copy this into CueCard. The <code>[cue ...]</code> tags are reminders to yourself; you leave the pause when you speak.</p>
       <pre tabindex="0" aria-label="Example script">{{ guide.sample }}</pre>
-    </div>
+    </details>
     {% endif %}
     {% if guide.sourceUrl %}<p class="backline"><a href="{{ guide.sourceUrl }}" target="_blank" rel="noopener">{{ guide.sourceLabel }}</a></p>{% endif %}
     {% if guide.links %}
     <h3 class="related-heading">Related setup and delivery guides</h3>
-    <ul class="workflow-links">{% for link in guide.links %}<li><a href="{{ link.href }}">{{ link.label }}</a></li>{% endfor %}</ul>
+    <ul class="guide-link-grid">{% for link in guide.links | take(6) %}<li><a href="{{ link.href }}"><span>{{ link.label }}</span>{{ icon("arrow", 14) }}</a></li>{% endfor %}</ul>
     {% endif %}
   </div>
 </section>
