@@ -11,6 +11,17 @@
  * - Settings management (opacity, screenshot protection)
  */
 
+import {
+  CUE_TAG_PREFIX,
+  EMPTY_CUE_TAG,
+  cueMatches,
+  cueTagContaining,
+  emptyCueInsertion,
+  emptyCueSurrounding,
+  formatTime,
+  withoutCues,
+} from './parser.js';
+
 // =============================================================================
 // TAURI API INITIALIZATION
 // =============================================================================
@@ -488,11 +499,8 @@ function getFirstLinePreview(content) {
   for (const line of lines) {
     const trimmed = line.trim();
     if (trimmed) {
-      // Remove any [time] or [note] tags for cleaner preview
-      const cleaned = trimmed
-        .replace(/\[time\s+\d{1,2}:\d{2}\]/gi, '')
-        .replace(/\[note\s+[^\]]+\]/gi, '')
-        .trim();
+      // Strip the timing and the cues, so the preview is what gets said
+      const cleaned = withoutCues(trimmed.replace(/\[time\s+\d{1,2}:\d{2}\]/gi, '')).trim();
       // If line has actual content after stripping tags, use it
       if (cleaned) {
         return cleaned;
@@ -501,10 +509,7 @@ function getFirstLinePreview(content) {
     }
   }
   // Fallback: strip tags from entire content and take first 50 chars
-  const fallback = content
-    .replace(/\[time\s+\d{1,2}:\d{2}\]/gi, '')
-    .replace(/\[note\s+[^\]]+\]/gi, '')
-    .trim();
+  const fallback = withoutCues(content.replace(/\[time\s+\d{1,2}:\d{2}\]/gi, '')).trim();
   return fallback.substring(0, 50) || 'Untitled Note';
 }
 
@@ -819,7 +824,7 @@ window.addEventListener("DOMContentLoaded", async () => {
         if (currentSlideData) {
           showView('notes');
         } else {
-          displayNotes('Open a Google Slides presentation to see notes here.\n[note Install CueCard Extension to sync notes]');
+          displayNotes('Open a Google Slides presentation to see notes here.\n[cue Install CueCard Extension to sync notes]');
           window.title = 'No Slide Open';
           showView('notes');
         }
@@ -1037,7 +1042,7 @@ async function syncSlideNotes() {
   if (currentSlideData) {
     await showView('notes');
   } else {
-    displayNotes('Open a Google Slides presentation to see notes here.\n[note Install CueCard Extension to sync notes]');
+    displayNotes('Open a Google Slides presentation to see notes here.\n[cue Install CueCard Extension to sync notes]');
     window.title = 'No Slide Open';
     await showView('notes');
   }
@@ -1174,14 +1179,6 @@ function updateTimerPickerDuration() {
   timerPickerDuration.textContent = formatTime(totalTimeSeconds);
 }
 
-// mm:ss, negative when the run has gone over.
-function formatTime(seconds) {
-  const negative = seconds < 0;
-  const abs = Math.abs(seconds);
-  const text = `${String(Math.floor(abs / 60)).padStart(2, '0')}:${String(abs % 60).padStart(2, '0')}`;
-  return negative ? `-${text}` : text;
-}
-
 // Start/Resume timer countdown
 function startTimerCountdown() {
   console.log('[Timer] startTimerCountdown called, timerState:', timerState);
@@ -1208,9 +1205,7 @@ function startTimerCountdown() {
       // Count down mode (has [time] tags)
       remainingTimeSeconds--;
 
-      const minutes = Math.floor(Math.abs(remainingTimeSeconds) / 60);
-      const seconds = Math.abs(remainingTimeSeconds) % 60;
-      const displayTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+      const displayTime = formatTime(Math.abs(remainingTimeSeconds));
 
       // Update the header timer display
       headerTimer.classList.remove('time-countup');
@@ -1229,10 +1224,7 @@ function startTimerCountdown() {
     } else {
       // Count up mode (no [time] tags) - white color
       elapsedSeconds++;
-      const minutes = Math.floor(elapsedSeconds / 60);
-      const seconds = elapsedSeconds % 60;
-      const displayTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-      headerTimer.textContent = displayTime;
+      headerTimer.textContent = formatTime(elapsedSeconds);
       headerTimer.classList.remove('time-warning', 'time-overtime');
       headerTimer.classList.add('time-countup');
     }
@@ -1462,8 +1454,43 @@ function setupNotesInputHighlighting() {
   // Listen for input changes
   notesInput.addEventListener('input', updateHighlight);
 
+  // `[` writes both brackets, and the backspace that follows takes them both
+  // back away again, so a `[` meant literally costs one extra keystroke
+  // instead of six.
+  notesInput.addEventListener('keydown', (e) => {
+    if (notesInput.readOnly) return;
+    if (notesInput.selectionStart !== notesInput.selectionEnd) return;
+
+    const caret = notesInput.selectionStart;
+    const text = notesInput.value;
+
+    if (e.key === '[') {
+      e.preventDefault();
+      // Cues don't nest, and in here both brackets are already written.
+      if (cueTagContaining(caret, text)) return;
+
+      const insertion = emptyCueInsertion(text, caret);
+      replaceInEditor(caret, caret, insertion.text, caret + insertion.caretOffset);
+      return;
+    }
+
+    if (e.key === 'Backspace' && caret > 0) {
+      const emptyCue = emptyCueSurrounding(caret - 1, text);
+      if (!emptyCue) return;
+      e.preventDefault();
+      replaceInEditor(emptyCue.index, emptyCue.index + emptyCue.length, '[', emptyCue.index + 1);
+    }
+  });
+
   // Initial update if there's already content
   updateHighlight();
+}
+
+// Edit the textarea ourselves, then run everything an ordinary keystroke would.
+function replaceInEditor(start, end, replacement, caret) {
+  notesInput.setRangeText(replacement, start, end, 'end');
+  notesInput.selectionStart = notesInput.selectionEnd = caret;
+  notesInput.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
 // =============================================================================
@@ -1543,6 +1570,21 @@ function updateEditNoteButtonVisibility() {
 }
 
 
+// Wrap every cue in the span the stylesheet colours. The text has already been
+// HTML-escaped, which leaves the brackets a cue is recognised by untouched.
+function highlightCues(escapedText) {
+  let result = '';
+  let lastEnd = 0;
+
+  for (const match of cueMatches(escapedText)) {
+    result += escapedText.slice(lastEnd, match.index);
+    result += `<span class="cue-tag">[${match.content}]</span>`;
+    lastEnd = match.index + match.length;
+  }
+
+  return result + escapedText.slice(lastEnd);
+}
+
 function trimSpacesPreserveNewlines(text) {
   return text.replace(/^[ \t]+|[ \t]+$/g, '');
 }
@@ -1571,9 +1613,6 @@ function highlightNotesForInput(text) {
   // Pattern for [time mm:ss] syntax
   const timePattern = /\[time\s+(\d{1,2}):(\d{2})\]/gi;
 
-  // Pattern for [note ...] syntax
-  const notePattern = /\[note\s+([^\]]+)\]/gi;
-
   // Split by time markers to create sections
   const parts = safe.split(timePattern);
 
@@ -1584,9 +1623,7 @@ function highlightNotesForInput(text) {
   // First part (before any [time]) is the first section (no timer)
   if (parts.length > 0) {
     let sectionContent = trimSpacesPreserveNewlines(parts[0]);
-    sectionContent = sectionContent.replace(notePattern, (match, note) => {
-      return `<span class="action-tag">[${note}]</span>`;
-    });
+    sectionContent = highlightCues(sectionContent);
     // Convert newlines to <br>
     sectionContent = sectionContent.replace(/\n/g, '<br>');
 
@@ -1607,9 +1644,7 @@ function highlightNotesForInput(text) {
 
     let sectionContent = trimSpacesPreserveNewlines(content);
     sectionContent = stripSingleLeadingNewline(sectionContent);
-    sectionContent = sectionContent.replace(notePattern, (match, note) => {
-      return `<span class="action-tag">[${note}]</span>`;
-    });
+    sectionContent = highlightCues(sectionContent);
     // Convert newlines to <br>
     sectionContent = sectionContent.replace(/\n/g, '<br>');
 
@@ -1626,10 +1661,7 @@ function highlightNotesForInput(text) {
 
   // Update header timer display
   if (headerTimer) {
-    const minutes = Math.floor(cumulativeTime / 60);
-    const seconds = cumulativeTime % 60;
-    const displayTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-    headerTimer.textContent = displayTime;
+    headerTimer.textContent = formatTime(cumulativeTime);
     headerTimer.classList.remove('time-warning', 'time-overtime');
     // Use count-up styling (white) when no [time] tags
     headerTimer.classList.toggle('time-countup', cumulativeTime === 0);
@@ -2024,9 +2056,6 @@ function highlightNotes(text) {
   // Pattern for [time mm:ss] syntax
   const timePattern = /\[time\s+(\d{1,2}):(\d{2})\]/gi;
 
-  // Pattern for [note ...] syntax - matches anything between [note and ]
-  const notePattern = /\[note\s+([^\]]+)\]/gi;
-
   // Pattern for "CueCard Extension" - replace with link
   const cuecardPattern = /CueCard Extension/gi;
 
@@ -2041,9 +2070,7 @@ function highlightNotes(text) {
   if (parts.length > 0) {
     let sectionContent = trimSpacesPreserveNewlines(parts[0]);
     // Apply note pattern and CueCard Extension link
-    sectionContent = sectionContent.replace(notePattern, (match, note) => {
-      return `<span class="action-tag">[${note}]</span>`;
-    });
+    sectionContent = highlightCues(sectionContent);
     sectionContent = sectionContent.replace(cuecardPattern, (match) => {
       return `<a href="https://cuecard.dev/#download" class="slides-link" target="_blank" rel="noopener noreferrer">${match}</a>`;
     });
@@ -2068,9 +2095,7 @@ function highlightNotes(text) {
     let sectionContent = trimSpacesPreserveNewlines(content);
     sectionContent = stripSingleLeadingNewline(sectionContent);
     // Apply note pattern and CueCard Extension link
-    sectionContent = sectionContent.replace(notePattern, (match, note) => {
-      return `<span class="action-tag">[${note}]</span>`;
-    });
+    sectionContent = highlightCues(sectionContent);
     sectionContent = sectionContent.replace(cuecardPattern, (match) => {
       return `<a href="https://cuecard.dev/#download" class="slides-link" target="_blank" rel="noopener noreferrer">${match}</a>`;
     });
@@ -2090,10 +2115,7 @@ function highlightNotes(text) {
 
   // Update header timer display
   if (headerTimer) {
-    const minutes = Math.floor(cumulativeTime / 60);
-    const seconds = cumulativeTime % 60;
-    const displayTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-    headerTimer.textContent = displayTime;
+    headerTimer.textContent = formatTime(cumulativeTime);
     headerTimer.classList.remove('time-warning', 'time-overtime');
     // Use count-up styling (white) when no [time] tags
     headerTimer.classList.toggle('time-countup', cumulativeTime === 0);
