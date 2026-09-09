@@ -14,6 +14,9 @@
 import {
   CUE_TAG_PREFIX,
   EMPTY_CUE_TAG,
+  CUE_COLORS,
+  DEFAULT_CUE_COLOR,
+  cueColorVariable,
   cueMatches,
   cueTagContaining,
   emptyCueInsertion,
@@ -310,6 +313,7 @@ const STORAGE_KEYS = {
   SETTINGS_THEME: 'settings_theme',
   SETTINGS_SHORTCUTS_ENABLED: 'settings_shortcuts_enabled',
   SETTINGS_AUTO_SCROLL_SPEED: 'settings_auto_scroll_speed',
+  SETTINGS_CUE_COLOR: 'settings_cue_color',
   ADD_NOTES_CONTENT: 'add_notes_content',
   SAVED_NOTES: 'saved_notes'
 };
@@ -611,6 +615,7 @@ let notesInputHighlight;
 let btnPlay, btnRestart, iconPlay, iconPause;
 let editorControls, timerControl, btnSetTimer, timerPicker, timerPickerDuration, btnCloseTimerPicker;
 let opacitySlider, opacityValue, ghostModeToggle, shortcutsToggle;
+let cueColorSwatches;
 let themeSystemBtn, themeLightBtn, themeDarkBtn;
 let speedSlider, speedValue;
 let editNoteBtn;
@@ -631,6 +636,7 @@ let ghostMode = true; // Default: true = hidden from screenshots (ghost mode ON)
 let currentTheme = 'system'; // 'system', 'light', 'dark'
 let shortcutsEnabled = true; // Default: true = global shortcuts are enabled
 let autoScrollSpeed = 0; // 0 to 2 (pixels per frame at 60fps), 0 = off
+let cueColor = DEFAULT_CUE_COLOR; // the colour every cue in every script is drawn in
 
 // Timer State
 let timerState = 'stopped'; // 'stopped', 'running', 'paused'
@@ -717,6 +723,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   opacityValue = document.getElementById("opacity-value");
   ghostModeToggle = document.getElementById("ghost-mode-toggle");
   shortcutsToggle = document.getElementById("shortcuts-toggle");
+  cueColorSwatches = document.getElementById("cue-color-swatches");
   themeSystemBtn = document.getElementById("theme-system");
   themeLightBtn = document.getElementById("theme-light");
   themeDarkBtn = document.getElementById("theme-dark");
@@ -2432,6 +2439,20 @@ function updateThemeButtons(theme) {
   if (themeDarkBtn) themeDarkBtn.classList.toggle('active', theme === 'dark');
 }
 
+// Every cue in the app is drawn from this one variable.
+function applyCueColor(name) {
+  document.documentElement.style.setProperty('--cue-color', cueColorVariable(name));
+  updateCueColorSwatches(name);
+}
+
+function updateCueColorSwatches(name) {
+  if (!cueColorSwatches) return;
+  cueColorSwatches.querySelectorAll('.cue-swatch').forEach(swatch => {
+    swatch.classList.toggle('selected', swatch.dataset.cueColor === name);
+    swatch.setAttribute('aria-pressed', String(swatch.dataset.cueColor === name));
+  });
+}
+
 // Load stored settings from persistent storage
 async function loadStoredSettings() {
   // Load stored opacity or use default
@@ -2491,6 +2512,16 @@ async function loadStoredSettings() {
     }
   }
 
+  // Load the cue colour, which has been pink here since before it was a choice
+  const storedCueColor = await getStoredValue(STORAGE_KEYS.SETTINGS_CUE_COLOR);
+  if (CUE_COLORS.includes(storedCueColor)) {
+    cueColor = storedCueColor;
+  } else {
+    cueColor = DEFAULT_CUE_COLOR;
+    await setStoredValue(STORAGE_KEYS.SETTINGS_CUE_COLOR, cueColor);
+  }
+  applyCueColor(cueColor);
+
   // Load stored auto-scroll speed setting or use default (0 = off)
   const storedAutoScrollSpeed = await getStoredValue(STORAGE_KEYS.SETTINGS_AUTO_SCROLL_SPEED);
   if (storedAutoScrollSpeed !== null && storedAutoScrollSpeed !== undefined) {
@@ -2510,6 +2541,27 @@ async function loadStoredSettings() {
 
 // Settings Handlers
 function setupSettings() {
+  // Cue colour swatches
+  if (cueColorSwatches) {
+    cueColorSwatches.innerHTML = CUE_COLORS.map(name => `
+      <button class="cue-swatch" data-cue-color="${name}" style="background: var(--color-${name})"
+        aria-label="${name.charAt(0).toUpperCase() + name.slice(1)}" title="${name.charAt(0).toUpperCase() + name.slice(1)}">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M2.5 6.4l2.4 2.4 4.6-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round" />
+        </svg>
+      </button>`).join('');
+
+    cueColorSwatches.addEventListener('click', async (e) => {
+      const swatch = e.target.closest('.cue-swatch');
+      if (!swatch) return;
+      cueColor = swatch.dataset.cueColor;
+      applyCueColor(cueColor);
+      trackSettingChange('cue_color', cueColor);
+      await setStoredValue(STORAGE_KEYS.SETTINGS_CUE_COLOR, cueColor);
+    });
+  }
+
   // Opacity slider handler
   let opacityTrackingTimeout = null;
   if (opacitySlider) {
@@ -2673,6 +2725,8 @@ async function loadCurrentSettings() {
   if (shortcutsToggle) {
     shortcutsToggle.checked = shortcutsEnabled;
   }
+
+  updateCueColorSwatches(cueColor);
 
   // Update speed slider and display
   if (speedSlider) {

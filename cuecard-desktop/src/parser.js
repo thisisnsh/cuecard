@@ -165,3 +165,21 @@ export function formatTime(seconds) {
   const text = `${String(Math.floor(abs / 60)).padStart(2, '0')}:${String(abs % 60).padStart(2, '0')}`;
   return negative ? `-${text}` : text;
 }
+
+/**
+ * The colour every delivery cue is drawn in.
+ *
+ * One colour covers the whole app — the choice lives in Settings, not in the
+ * script — so changing it recolours every cue in every script at once. The
+ * stored value has to stay stable once shipped: renaming one resets that
+ * user's choice back to the default.
+ */
+export const CUE_COLORS = ['pink', 'yellow', 'green', 'blue', 'purple', 'red'];
+
+/** What cues are drawn in until the user picks something else. */
+export const DEFAULT_CUE_COLOR = 'pink';
+
+/** The palette token a cue colour is drawn from. */
+export function cueColorVariable(name) {
+  return `var(--color-${CUE_COLORS.includes(name) ? name : DEFAULT_CUE_COLOR})`;
+}

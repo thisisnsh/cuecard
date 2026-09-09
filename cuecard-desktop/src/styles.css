@@ -33,6 +33,7 @@
   --font-subheadline: 500 14px/1.35 var(--font-family);
   --font-footnote: 500 12px/1.35 var(--font-family);
   --font-caption: 500 11px/1.35 var(--font-family);
+  --cue-color: var(--color-pink);
   --font-script-size: 20px;
   --font-script: 500 var(--font-script-size)/1.2 var(--font-family);
 
@@ -547,7 +548,7 @@ body {
   font-size: 10px;
   font-weight: 600;
   font-stretch: expanded;
-  color: var(--color-pink);
+  color: var(--cue-color);
   opacity: 1;
 }
 
@@ -647,7 +648,7 @@ body {
   font-size: 10px;
   font-weight: 600;
   font-stretch: expanded;
-  color: var(--color-pink);
+  color: var(--cue-color);
   opacity: 1;
 }
 
@@ -1405,6 +1406,50 @@ body {
   color: var(--text-secondary);
   min-width: 70px;
   text-align: right;
+}
+
+/* Cue Colour swatches */
+.cue-color-swatches {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cue-swatch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--color-bg);
+}
+
+/* The ring sits outside the circle, so the colour keeps its full 28px. */
+.cue-swatch::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+}
+
+.cue-swatch.selected::after {
+  border-color: var(--text-primary);
+}
+
+.cue-swatch svg {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.cue-swatch.selected svg {
+  opacity: 1;
 }
 
 /* Toggle Switch */
