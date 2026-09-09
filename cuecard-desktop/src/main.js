@@ -453,8 +453,8 @@ async function loadNoteFromList(noteId) {
 
   console.log("Note loaded from list");
 
-  // Navigate to add-notes view
-  showView('add-notes');
+  dismissSheet();
+  await showView('add-notes');
 
   // Set to done mode (readonly, highlighted)
   isEditMode = false;
@@ -593,9 +593,9 @@ async function hasScope(scopeType) {
 // DOM Elements
 let btnClose, btnDownloadUpdates;
 let authBtn;
-let appContainer, appToolbar, toolbarTitle, viewInitial, viewAddNotes, viewNotes, viewSettings, viewShortcuts, viewSavedNotes;
+let appContainer, appToolbar, toolbarTitle, viewInitial, viewAddNotes, viewNotes;
+let sheetBackdrop, sheets = {};
 let btnMenu, appMenu, menuBadge, menuSeparatorNote, menuSeparatorAccount, btnSignOut, btnSavedNotes;
-let linkGoBack;
 let notesInput, notesContent;
 let welcomeHeading, welcomeSubtext, welcomeActions;
 let bugLink, websiteLink, supportLink;
@@ -617,8 +617,8 @@ let savedNotesList, savedNotesEmpty;
 // State
 let isAuthenticated = false;
 let userName = '';
-let currentView = 'initial'; // 'initial', 'add-notes', 'notes', 'settings'
-let previousView = null; // 'initial', 'add-notes', 'notes', 'settings'
+let currentView = 'initial'; // 'initial', 'add-notes', 'notes'
+let currentSheet = null; // 'settings', 'shortcuts', 'saved-notes', or nothing
 let manualNotes = ''; // Notes pasted by the user
 let currentSlideData = null; // Store current slide data
 let currentOpacity = 100; // Store current opacity value (10-100)
@@ -680,10 +680,12 @@ window.addEventListener("DOMContentLoaded", async () => {
   viewInitial = document.getElementById("view-initial");
   viewAddNotes = document.getElementById("view-add-notes");
   viewNotes = document.getElementById("view-notes");
-  viewSettings = document.getElementById("view-settings");
-  viewShortcuts = document.getElementById("view-shortcuts");
-  viewSavedNotes = document.getElementById("view-saved-notes");
-  linkGoBack = document.getElementById("link-go-back");
+  sheetBackdrop = document.getElementById("sheet-backdrop");
+  sheets = {
+    settings: document.getElementById("sheet-settings"),
+    shortcuts: document.getElementById("sheet-shortcuts"),
+    'saved-notes': document.getElementById("sheet-saved-notes"),
+  };
   notesInput = document.getElementById("notes-input");
   notesContent = document.getElementById("notes-content");
   welcomeHeading = document.getElementById("welcome-heading");
@@ -831,30 +833,70 @@ window.addEventListener("DOMContentLoaded", async () => {
 // NAVIGATION
 // =============================================================================
 
-// Navigation Handlers
+// A sheet is dismissed with Done, with Escape, or by clicking behind it.
 function setupNavigation() {
-  linkGoBack.addEventListener("click", async (e) => {
-    e.preventDefault();
+  document.querySelectorAll('[data-sheet-done]').forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      dismissSheet();
+    });
+  });
 
-    if (currentView === 'settings') {
-      showView(previousView);
-      return;
-    }
+  if (sheetBackdrop) {
+    sheetBackdrop.addEventListener("click", () => dismissSheet());
+  }
 
-    if (currentView === 'saved-notes') {
-      showView('initial');
-      return;
-    }
-
-    showView('initial');
-
-    // Reset all states
-    resetAllStates();
+  document.addEventListener("keydown", (e) => {
+    if (e.key === 'Escape' && currentSheet) dismissSheet();
   });
 }
 
-// Reset all states and internal storages
-function resetAllStates() {
+// Present one of the three over whatever is underneath it.
+function showSheet(name) {
+  const sheet = sheets[name];
+  if (!sheet) return;
+
+  if (currentSheet && currentSheet !== name) dismissSheet();
+
+  currentSheet = name;
+  trackScreenView(name, `CueCard ${sheet.querySelector('.sheet-title').textContent}`);
+
+  if (sheetBackdrop) sheetBackdrop.classList.remove('hidden');
+  sheet.classList.add('sheet-hiding');
+  sheet.classList.remove('hidden');
+  // One frame on the far side of the transition, so it has somewhere to travel from.
+  requestAnimationFrame(() => sheet.classList.remove('sheet-hiding'));
+
+  switch (name) {
+    case 'settings':
+      loadCurrentSettings();
+      break;
+    case 'shortcuts':
+      populateShortcutKeys();
+      break;
+    case 'saved-notes':
+      renderSavedNotesList();
+      break;
+  }
+}
+
+// A sheet always returns to what is underneath it, so there is nothing to remember.
+function dismissSheet() {
+  const sheet = sheets[currentSheet];
+  currentSheet = null;
+  if (sheetBackdrop) sheetBackdrop.classList.add('hidden');
+  if (!sheet) return;
+
+  sheet.classList.add('sheet-hiding');
+  const done = () => {
+    sheet.classList.add('hidden');
+    sheet.removeEventListener('transitionend', done);
+  };
+  sheet.addEventListener('transitionend', done);
+}
+
+// Clear the editor and everything hanging off it, for a fresh note.
+function startNewNote() {
   // Clear the input and highlight
   notesInput.value = '';
   if (notesInputHighlight) {
@@ -880,8 +922,8 @@ function resetAllStates() {
   stopAllTimers();
   timerState = 'stopped';
 
-  // Update timer button visibility
   updateTransport();
+  updateMenuItems();
 }
 
 // =============================================================================
@@ -955,7 +997,7 @@ function setupWelcomeActions() {
     loadNotesLink.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      showView('saved-notes');
+      showSheet('saved-notes');
     });
   }
 
@@ -1795,25 +1837,23 @@ function handleSlideUpdate(data, autoShow = false) {
 // VIEW MANAGEMENT
 // =============================================================================
 
-// Show a specific view
+// Show a specific view. Settings, Shortcuts and Saved Notes are sheets now,
+// so this switches only the editor, the welcome hero and the Slides notes.
 async function showView(viewName) {
   // Save notes to storage if we're in add-notes view
   if (currentView === 'add-notes') {
     await saveNotesToStorage();
   }
 
-  previousView = currentView;
+  const wasView = currentView;
   currentView = viewName;
 
-  // Track screen view when navigating (settings is tracked separately in footer handler)
-  if (viewName !== 'settings') {
-    const pageTitles = {
-      'initial': 'CueCard Home',
-      'add-notes': 'CueCard Add Notes',
-      'notes': 'CueCard Notes'
-    };
-    trackScreenView(viewName, pageTitles[viewName] || 'CueCard');
-  }
+  const pageTitles = {
+    'initial': 'CueCard Home',
+    'add-notes': 'CueCard Add Notes',
+    'notes': 'CueCard Notes'
+  };
+  trackScreenView(viewName, pageTitles[viewName] || 'CueCard');
 
   if (appContainer) {
     appContainer.classList.remove('stroke-add-notes', 'stroke-slides');
@@ -1824,20 +1864,9 @@ async function showView(viewName) {
     }
   }
 
-  // Hide all views
   viewInitial.classList.add('hidden');
   viewAddNotes.classList.add('hidden');
   viewNotes.classList.add('hidden');
-  viewSettings.classList.add('hidden');
-  viewShortcuts.classList.add('hidden');
-  viewSavedNotes.classList.add('hidden');
-
-  // Show/hide the back button in footer based on view
-  if (viewName === 'add-notes' || viewName === 'notes' || viewName === 'settings' || viewName === 'shortcuts' || viewName === 'saved-notes') {
-    linkGoBack.classList.remove('hidden');
-  } else {
-    linkGoBack.classList.add('hidden');
-  }
 
   // The toolbar carries the same controls everywhere; only the title changes.
   updateToolbarTitle();
@@ -1848,69 +1877,41 @@ async function showView(viewName) {
     ghostModeIndicator.classList.toggle('hidden', !shouldShowGhost);
   }
 
-  // Update shortcuts button visibility (respects both setting and current view)
   updateShortcutsVisibility();
-
-  // Update timer button visibility
   updateTransport();
-
-  // Update edit note button visibility
   updateEditNoteButtonVisibility();
 
-  // Show the requested view
   switch (viewName) {
     case 'initial':
       viewInitial.classList.remove('hidden');
       break;
     case 'add-notes':
       viewAddNotes.classList.remove('hidden');
-      // Load stored notes when entering add-notes view
-      // But skip loading if coming back from settings or saved-notes (content is already there)
-      if (previousView !== 'settings' && previousView !== 'saved-notes') {
+      // The editor's own content is already there when coming back from a sheet.
+      if (wasView !== 'add-notes') {
         await loadStoredNotes();
-        // If notes were loaded from storage, start in done mode (readonly, highlighted)
+        // A script that was already written comes back read-only and highlighted.
         if (notesInput.value.trim()) {
           isEditMode = false;
           notesInputWrapper.classList.remove('edit-mode');
           notesInput.readOnly = true;
-          editNoteBtn.textContent = 'Edit Note';
         }
       }
-      // Update edit note button visibility
       updateEditNoteButtonVisibility();
-      // Update timer button visibility after notes are loaded
       updateTransport();
       break;
     case 'notes':
       viewNotes.classList.remove('hidden');
-      // In notes view, timer starts automatically if slide is present
-      // But don't auto-start if we're coming back from settings (preserve timer state)
       const hasNotesContent = notesContent && notesContent.textContent.trim();
       if (!hasNotesContent) {
         notesHasTimeTags = false;
         updateHeaderTimerVisibility();
         stopAllTimers();
         timerState = 'stopped';
-        updateTransport();
       }
-      if (timerState === 'stopped' && currentSlideData && hasNotesContent && previousView !== 'settings') {
+      if (timerState === 'stopped' && currentSlideData && hasNotesContent) {
         startTimerCountdown();
       }
-      break;
-    case 'settings':
-      viewSettings.classList.remove('hidden');
-      // Load current settings when showing settings view
-      loadCurrentSettings();
-      break;
-    case 'shortcuts':
-      viewShortcuts.classList.remove('hidden');
-      // Populate shortcut key displays
-      populateShortcutKeys();
-      break;
-    case 'saved-notes':
-      viewSavedNotes.classList.remove('hidden');
-      // Render the saved notes list
-      renderSavedNotesList();
       break;
   }
 
@@ -2258,10 +2259,23 @@ function setupMenu() {
     if (e.key === 'Escape' && menuOpen) closeMenu();
   });
 
+  const newNoteItem = document.getElementById('new-note-btn');
+  if (newNoteItem) {
+    newNoteItem.addEventListener("click", async (e) => {
+      e.preventDefault();
+      startNewNote();
+      await showView('add-notes');
+      isEditMode = true;
+      notesInputWrapper.classList.add('edit-mode');
+      notesInput.readOnly = false;
+      notesInput.focus();
+    });
+  }
+
   if (btnSavedNotes) {
     btnSavedNotes.addEventListener("click", (e) => {
       e.preventDefault();
-      showView('saved-notes');
+      showSheet('saved-notes');
     });
   }
 
@@ -2314,16 +2328,14 @@ function setupMenu() {
   settingsLink.addEventListener("click", (e) => {
     e.preventDefault();
     console.log("Settings link clicked");
-    trackScreenView('settings', 'CueCard Settings');
-    showView('settings');
+    showSheet('settings');
   });
 
   // Shortcuts link handler
   shortcutsLink.addEventListener("click", (e) => {
     e.preventDefault();
     console.log("Shortcuts link clicked");
-    trackScreenView('shortcuts', 'CueCard Shortcuts');
-    showView('shortcuts');
+    showSheet('shortcuts');
   });
 }
 
@@ -2339,11 +2351,7 @@ function updateMenuItems() {
     editNoteBtn.classList.toggle('hidden', !(isEditorView && notesInput.value.trim()));
     editNoteBtn.textContent = isEditMode ? 'Done' : 'Edit Note';
   }
-  if (menuSeparatorNote) {
-    const anyNoteItem = (refreshBtn && !refreshBtn.classList.contains('hidden')) ||
-      (editNoteBtn && !editNoteBtn.classList.contains('hidden'));
-    menuSeparatorNote.classList.toggle('hidden', !anyNoteItem);
-  }
+  if (menuSeparatorNote) menuSeparatorNote.classList.remove('hidden');
 }
 
 // =============================================================================
@@ -2587,11 +2595,7 @@ function updateGhostModeIndicator() {
 // Update shortcuts button visibility based on shortcutsEnabled setting and current view
 function updateShortcutsVisibility() {
   if (shortcutsLink) {
-    // Hide shortcuts button if:
-    // 1. Shortcuts are disabled, OR
-    // 2. Current view is settings, shortcuts, or saved-notes
-    const shouldHide = !shortcutsEnabled || currentView === 'settings' || currentView === 'shortcuts' || currentView === 'saved-notes';
-    shortcutsLink.classList.toggle('hidden', shouldHide);
+    shortcutsLink.classList.toggle('hidden', !shortcutsEnabled);
   }
 }
 
