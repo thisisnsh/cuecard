@@ -967,10 +967,6 @@ body {
   background: rgba(var(--text-primary-rgb), 0.1);
 }
 
-.menu-item-destructive {
-  color: var(--color-red);
-}
-
 .menu-item:disabled {
   opacity: 0.4;
   cursor: default;
@@ -1390,6 +1386,36 @@ body {
   color: var(--text-secondary);
   min-width: 70px;
   text-align: right;
+}
+
+/* A row that is a single action, rather than a label and a control */
+.setting-action {
+  font: var(--font-subheadline);
+  color: var(--text-primary);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.setting-action:hover {
+  opacity: 0.75;
+}
+
+.setting-action.is-destructive {
+  color: var(--color-red);
+}
+
+.setting-item-stacked {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.setting-subtitle {
+  font: var(--font-footnote);
+  color: var(--text-secondary);
 }
 
 /* Segmented picker, after iOS's */

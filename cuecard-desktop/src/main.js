@@ -623,7 +623,9 @@ let btnClose, btnDownloadUpdates;
 let authBtn;
 let appContainer, appToolbar, toolbarTitle, viewInitial, viewAddNotes, viewNotes;
 let sheetBackdrop, sheets = {};
-let btnMenu, appMenu, menuBadge, menuSeparatorNote, menuSeparatorAccount, btnSignOut, btnSavedNotes;
+let btnMenu, appMenu, menuBadge, menuSeparatorNote, btnSavedNotes;
+let btnSignOut, settingsAccount, accountName, accountEmail, deleteAccountRow;
+let btnSetSampleText;
 let notesInput, notesContent;
 let welcomeHeading, welcomeSubtext, welcomeActions;
 let bugLink, websiteLink, supportLink;
@@ -649,6 +651,7 @@ let savedNotesList, savedNotesEmpty;
 // State
 let isAuthenticated = false;
 let userName = '';
+let userEmail = '';
 let currentView = 'initial'; // 'initial', 'add-notes', 'notes'
 let currentSheet = null; // 'settings', 'shortcuts', 'saved-notes', or nothing
 let manualNotes = ''; // Notes pasted by the user
@@ -718,8 +721,12 @@ window.addEventListener("DOMContentLoaded", async () => {
   appMenu = document.getElementById("app-menu");
   menuBadge = document.getElementById("menu-badge");
   menuSeparatorNote = document.getElementById("menu-separator-note");
-  menuSeparatorAccount = document.getElementById("menu-separator-account");
   btnSignOut = document.getElementById("btn-signout");
+  settingsAccount = document.getElementById("settings-account");
+  accountName = document.getElementById("account-name");
+  accountEmail = document.getElementById("account-email");
+  deleteAccountRow = document.getElementById("delete-account-row");
+  btnSetSampleText = document.getElementById("btn-sample-text");
   btnSavedNotes = document.getElementById("btn-saved-notes");
   viewInitial = document.getElementById("view-initial");
   viewAddNotes = document.getElementById("view-add-notes");
@@ -857,7 +864,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 
       // Update auth UI (only for profile auth, not slides)
       if (event.payload.requested_scope === 'profile' || !event.payload.slides_authorized) {
-        updateAuthUI(event.payload.authenticated, event.payload.user_name);
+        updateAuthUI(event.payload.authenticated, event.payload.user_name, event.payload.user_email);
       }
 
       // If slides scope was just granted, show the notes view
@@ -999,15 +1006,6 @@ function setupAuth() {
     }
   });
 
-  if (btnSignOut) {
-    btnSignOut.addEventListener("click", async (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (!isAuthenticated) return;
-      trackLogout();
-      await handleLogout();
-    });
-  }
 }
 
 // Welcome Actions (New Note / Load Note / Slides)
@@ -1180,6 +1178,21 @@ function setupTimerControls() {
 // The Set Timer pill expands in place to show the run's duration.
 function setupTimerPill() {
   if (!btnSetTimer || !timerControl) return;
+
+  if (btnSetSampleText) {
+    btnSetSampleText.addEventListener("click", async (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      notesInput.value = DEFAULT_NOTE_TEXT;
+      notesInput.dispatchEvent(new Event('input', { bubbles: true }));
+      await saveNotesToStorage();
+      isEditMode = false;
+      notesInputWrapper.classList.remove('edit-mode');
+      notesInput.readOnly = true;
+      updateTransport();
+      updateMenuItems();
+    });
+  }
 
   btnSetTimer.addEventListener("click", (e) => {
     e.preventDefault();
@@ -1565,7 +1578,13 @@ function updateTransport() {
   }
 
   if (timerControl) {
-    timerControl.classList.toggle('disabled', !hasScript);
+    // Nothing written yet means nothing to time, so the pill offers the one
+    // thing that helps: something to read.
+    const offerSample = isEditorView && !notesInput.value.trim();
+    if (btnSetTimer) btnSetTimer.classList.toggle('hidden', offerSample);
+    if (btnSetSampleText) btnSetSampleText.classList.toggle('hidden', !offerSample);
+
+    timerControl.classList.toggle('disabled', !hasScript && !offerSample);
     if (!hasScript) closeTimerPicker();
   }
   updateTimerPickerDuration();
@@ -1783,7 +1802,7 @@ async function checkAuthStatus() {
         }
       }
     }
-    updateAuthUI(status, name);
+    updateAuthUI(status, name, email);
   } catch (error) {
     console.error("Error checking auth status:", error);
     updateAuthUI(false, '');
@@ -1812,9 +1831,10 @@ function getFirstName(fullName) {
 }
 
 // Update UI based on auth status
-function updateAuthUI(authenticated, name = '') {
+function updateAuthUI(authenticated, name = '', email = '') {
   isAuthenticated = authenticated;
   userName = name;
+  userEmail = authenticated ? email : '';
 
   const buttonText = authBtn.querySelector('.gsi-material-button-contents');
   const buttonIcon = authBtn.querySelector('.gsi-material-button-icon');
@@ -1825,7 +1845,7 @@ function updateAuthUI(authenticated, name = '') {
     if (buttonIcon) buttonIcon.style.display = 'none';
     authBtn.classList.add('is-authenticated');
     authBtn.classList.add('hidden');
-    updateSignOutItem();
+    updateAccountSection();
 
     // Update welcome heading with greeting and first name
     const firstName = getFirstName(name);
@@ -1845,7 +1865,7 @@ function updateAuthUI(authenticated, name = '') {
     if (buttonIcon) buttonIcon.style.display = 'block';
     authBtn.classList.remove('is-authenticated');
     authBtn.classList.remove('hidden');
-    updateSignOutItem();
+    updateAccountSection();
 
     // Reset welcome heading to default
     welcomeHeading.innerHTML = 'CueCard\n<span class="version-text">1.4.1</span>';
@@ -1858,10 +1878,12 @@ function updateAuthUI(authenticated, name = '') {
   }
 }
 
-// Sign out is offered in the menu only while there is an account to sign out of.
-function updateSignOutItem() {
-  if (btnSignOut) btnSignOut.classList.toggle('hidden', !isAuthenticated);
-  if (menuSeparatorAccount) menuSeparatorAccount.classList.toggle('hidden', !isAuthenticated);
+// The account section is there only while there is an account to show.
+function updateAccountSection() {
+  if (settingsAccount) settingsAccount.classList.toggle('hidden', !isAuthenticated);
+  if (deleteAccountRow) deleteAccountRow.classList.toggle('hidden', !isAuthenticated);
+  if (accountName) accountName.textContent = userName || 'Signed in';
+  if (accountEmail) accountEmail.textContent = userEmail;
 }
 
 // Handle login with specific scope
@@ -2641,6 +2663,31 @@ const DEFAULT_GHOST_MODE = true; // true = ghost mode ON = hidden from screensho
 const DEFAULT_SHORTCUTS_ENABLED = true; // true = global shortcuts are enabled
 const DEFAULT_LINES_PER_MINUTE = 50; // what iOS scrolls at out of the box
 
+/** What Add Sample Text writes, word for word as the phone app writes it. */
+const DEFAULT_NOTE_TEXT = `Welcome everyone.
+
+I'm excited to be here today to talk about CueCard.
+
+[cue smile and pause]
+
+It keeps your speaker notes visible above all apps, so you can use your existing camera apps and still read your notes.
+
+[cue pause]
+
+It has a timer so you know if you're being brief… or too passionate.
+
+[cue light chuckle]
+
+And the colored highlights?
+
+[cue emphasize]
+
+Those are your secret cues — reminders to smile, pause, or not panic.
+
+[cue pause]
+
+Try it out. I think you'll love it.`;
+
 /**
  * Script text sizes. iOS offers 20 / 28 / 40, sized for a full-screen prompter;
  * 40px in a 300px-tall window shows about four lines. Medium is today's 20px,
@@ -2900,8 +2947,159 @@ async function commitSpeedField() {
   speedField.value = String(linesPerMinute);
 }
 
+/** Put every setting back to what it ships as. */
+async function resetSettingsToDefaults() {
+  countdownSeconds = 5;
+  linesPerMinute = 0;
+  fontSizePreset = DEFAULT_FONT_SIZE_PRESET;
+  cueColor = DEFAULT_CUE_COLOR;
+  timerMinutes = 1;
+  timerSeconds = 0;
+  currentOpacity = DEFAULT_OPACITY;
+  ghostMode = DEFAULT_GHOST_MODE;
+  currentTheme = 'system';
+  shortcutsEnabled = DEFAULT_SHORTCUTS_ENABLED;
+
+  await setStoredValue(STORAGE_KEYS.SETTINGS_COUNTDOWN_SECONDS, countdownSeconds);
+  await setStoredValue(STORAGE_KEYS.SETTINGS_LINES_PER_MINUTE, linesPerMinute);
+  await setStoredValue(STORAGE_KEYS.SETTINGS_FONT_SIZE_PRESET, fontSizePreset);
+  await setStoredValue(STORAGE_KEYS.SETTINGS_CUE_COLOR, cueColor);
+  await setStoredValue(STORAGE_KEYS.SETTINGS_TIMER_MINUTES, timerMinutes);
+  await setStoredValue(STORAGE_KEYS.SETTINGS_TIMER_SECONDS, timerSeconds);
+  await setStoredValue(STORAGE_KEYS.SETTINGS_OPACITY, currentOpacity);
+  await setStoredValue(STORAGE_KEYS.SETTINGS_GHOST_MODE, ghostMode);
+  await setStoredValue(STORAGE_KEYS.SETTINGS_THEME, currentTheme);
+  await setStoredValue(STORAGE_KEYS.SETTINGS_SHORTCUTS_ENABLED, shortcutsEnabled);
+
+  document.documentElement.style.setProperty('--bg-opacity', currentOpacity / 100);
+  applyTheme(currentTheme);
+  applyCueColor(cueColor);
+  applyFontSizePreset(fontSizePreset);
+  updateGhostModeIndicator();
+  updateShortcutsVisibility();
+
+  if (invoke) {
+    try {
+      await invoke("set_screenshot_protection", { enabled: ghostMode });
+      await invoke("set_shortcuts_enabled", { enabled: shortcutsEnabled });
+    } catch (error) {
+      console.error("Error applying reset settings:", error);
+    }
+  }
+
+  await loadCurrentSettings();
+  updateTimerDisplay();
+  updateTransport();
+}
+
+/**
+ * Delete the account: the Firebase user, the Firestore profile behind it, and
+ * everything this machine was keeping. Nothing about it can be undone, which is
+ * why it is asked twice.
+ */
+async function deleteAccount() {
+  const token = await getFirebaseIdToken();
+  if (!token) {
+    await showFileError('You are not signed in.');
+    return;
+  }
+
+  try {
+    // The profile first: once the user is gone, the token that reaches it is too.
+    if (userEmail && FIRESTORE_BASE_URL) {
+      const url = `${FIRESTORE_BASE_URL}/Profiles/${encodeURIComponent(userEmail)}`;
+      await fetch(url, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+    }
+
+    const apiKey = invoke ? await invoke("get_firebase_api_key") : '';
+    const response = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken: token }),
+      }
+    );
+    if (!response.ok) {
+      throw new Error(`Identity Toolkit returned ${response.status}`);
+    }
+  } catch (error) {
+    console.error('Error deleting account:', error);
+    await showDialog({ title: 'Error', message: String(error), field: false, confirmLabel: 'OK' });
+    return;
+  }
+
+  // Then the local store, so nothing of theirs is left behind on this machine.
+  await setStoredValue(STORAGE_KEYS.SAVED_NOTES, []);
+  await setStoredValue(STORAGE_KEYS.ADD_NOTES_CONTENT, '');
+  currentNoteId = null;
+  startNewNote();
+  await resetSettingsToDefaults();
+
+  clearAnalyticsUserId();
+  await handleLogout();
+  dismissSheet();
+}
+
 // Settings Handlers
 function setupSettings() {
+  if (btnSignOut) {
+    btnSignOut.addEventListener("click", async (e) => {
+      e.preventDefault();
+      if (!isAuthenticated) return;
+      trackLogout();
+      dismissSheet();
+      await handleLogout();
+    });
+  }
+
+  const btnRate = document.getElementById('btn-rate');
+  if (btnRate) {
+    btnRate.addEventListener("click", async (e) => {
+      e.preventDefault();
+      // iOS links to the App Store; desktop has no equivalent, so the repo it is.
+      try {
+        if (openUrl) {
+          await openUrl("https://github.com/ThisIsNSH/CueCard");
+        } else {
+          window.open("https://github.com/ThisIsNSH/CueCard", "_blank", "noopener,noreferrer");
+        }
+      } catch (error) {
+        console.error("Error opening the repository:", error);
+      }
+    });
+  }
+
+  const btnResetDefaults = document.getElementById('btn-reset-defaults');
+  if (btnResetDefaults) {
+    btnResetDefaults.addEventListener("click", async (e) => {
+      e.preventDefault();
+      const confirmed = await showDialog({
+        title: 'Reset to Defaults',
+        message: 'Every setting goes back to what it ships as. Your notes are left alone.',
+        field: false,
+        confirmLabel: 'Reset',
+        destructive: true,
+      });
+      if (confirmed) await resetSettingsToDefaults();
+    });
+  }
+
+  const btnDeleteAccount = document.getElementById('btn-delete-account');
+  if (btnDeleteAccount) {
+    btnDeleteAccount.addEventListener("click", async (e) => {
+      e.preventDefault();
+      const confirmed = await showDialog({
+        title: 'Delete Account',
+        message: 'Are you sure you want to delete your account? This action cannot be undone.',
+        field: false,
+        confirmLabel: 'Delete',
+        destructive: true,
+      });
+      if (confirmed) await deleteAccount();
+    });
+  }
+
   if (speedField) {
     speedField.addEventListener("blur", () => commitSpeedField());
     speedField.addEventListener("keydown", (e) => {
@@ -3065,6 +3263,8 @@ function updateShortcutsVisibility() {
 
 // Load current settings values
 async function loadCurrentSettings() {
+  updateAccountSection();
+
   // Load current opacity from CSS variable
   const opacity = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--bg-opacity')) || 1;
   const opacityPercent = Math.round(opacity * 100);

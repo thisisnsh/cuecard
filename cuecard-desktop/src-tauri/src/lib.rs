@@ -1340,6 +1340,17 @@ fn get_auth_status() -> bool {
     FIREBASE_TOKENS.read().is_some()
 }
 
+/// The Firebase Web API key, which the frontend needs to call Identity Toolkit
+/// directly — deleting an account, for one.
+#[tauri::command]
+fn get_firebase_api_key() -> String {
+    FIREBASE_CONFIG
+        .read()
+        .as_ref()
+        .map(|c| c.api_key.clone())
+        .unwrap_or_default()
+}
+
 #[tauri::command]
 fn get_firestore_project_id() -> String {
     FIREBASE_CONFIG
@@ -1840,6 +1851,7 @@ pub fn run() {
             get_current_notes,
             get_auth_status,
             get_firestore_project_id,
+            get_firebase_api_key,
             init_analytics,
             send_event,
             set_analytics_user_id,

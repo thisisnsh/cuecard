@@ -55,8 +55,6 @@
             <button class="menu-item" id="website-link" role="menuitem">Visit Site</button>
             <button class="menu-item" id="support-link" role="menuitem">Support</button>
             <button class="menu-item" id="bug-link" role="menuitem">Report Bug</button>
-            <div class="menu-separator hidden" id="menu-separator-account"></div>
-            <button class="menu-item menu-item-destructive hidden" id="btn-signout" role="menuitem">Sign out</button>
           </div>
         </div>
 
@@ -148,6 +146,7 @@
       <div class="editor-controls hidden" id="editor-controls">
         <div class="timer-control" id="timer-control">
           <button class="timer-pill" id="btn-set-timer">Set Timer</button>
+          <button class="timer-pill hidden" id="btn-sample-text">Add Sample Text</button>
           <div class="timer-picker hidden" id="timer-picker">
             <div class="timer-picker-head">
               <span class="timer-picker-title">Timer</span>
@@ -200,6 +199,19 @@
         </div>
         <div class="sheet-body script-fade">
           <div class="settings-content">
+            <section class="settings-section hidden" id="settings-account">
+              <h3 class="settings-section-title">Account</h3>
+              <div class="settings-group">
+                <div class="setting-item setting-item-stacked">
+                  <span class="setting-title" id="account-name"></span>
+                  <span class="setting-subtitle" id="account-email"></span>
+                </div>
+                <div class="setting-item">
+                  <button class="setting-action is-destructive" id="btn-signout">Sign Out</button>
+                </div>
+              </div>
+            </section>
+
             <section class="settings-section">
               <h3 class="settings-section-title">Prompter</h3>
               <div class="settings-group">
@@ -283,6 +295,22 @@
                   </div>
                 </div>
               </div>
+            </section>
+
+            <section class="settings-section">
+              <h3 class="settings-section-title">About</h3>
+              <div class="settings-group">
+                <div class="setting-item">
+                  <button class="setting-action" id="btn-rate">Rate CueCard</button>
+                </div>
+                <div class="setting-item">
+                  <button class="setting-action" id="btn-reset-defaults">Reset to Defaults</button>
+                </div>
+                <div class="setting-item hidden" id="delete-account-row">
+                  <button class="setting-action is-destructive" id="btn-delete-account">Delete Account</button>
+                </div>
+              </div>
+              <p class="settings-footnote">Deleting your account permanently removes it and everything stored on this device.</p>
             </section>
 
             <section class="settings-section">
