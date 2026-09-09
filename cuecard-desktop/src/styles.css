@@ -240,6 +240,7 @@ body {
 
 /* Main Content Area */
 .content {
+  position: relative;
   flex: 1;
   overflow: hidden;
   padding: 0 18px 0 18px;
@@ -1054,37 +1055,186 @@ body {
   opacity: 0.8;
 }
 
-/* Timer Control Buttons */
-.timer-controls {
+/* Floating controls — sized for a 300px window, not a phone screen */
+.editor-controls {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 14px;
+  z-index: 5;
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  pointer-events: none;
 }
 
-.timer-btn {
-  font: var(--font-footnote);
+.editor-controls > * {
+  pointer-events: auto;
+}
+
+/* Glass, as Shape.glassed() paints it */
+.glass {
+  background: var(--glass-bg);
+  background-image: var(--glass-sheen);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-stroke);
+  box-shadow: var(--glass-shadow);
+}
+
+.timer-control {
+  min-width: 0;
+  background: var(--glass-bg);
+  background-image: var(--glass-sheen);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-stroke);
+  box-shadow: var(--glass-shadow);
+  border-radius: 26px;
+  transition: border-radius 0.32s cubic-bezier(0.32, 0.9, 0.36, 1);
+}
+
+.timer-control.expanded {
+  border-radius: 16px;
+  padding: 10px 12px;
+}
+
+.timer-pill {
+  font: var(--font-subheadline);
+  font-weight: 600;
+  color: var(--text-primary);
   background: none;
   border: none;
+  height: 36px;
+  padding: 0 16px;
   cursor: pointer;
+  white-space: nowrap;
+}
+
+.timer-control.expanded .timer-pill {
+  display: none;
+}
+
+/* Nothing to run means nothing to time, the way iOS dims its play button. */
+.timer-control.disabled {
+  opacity: 0.6;
+}
+
+.timer-control.disabled .timer-pill {
+  cursor: default;
+}
+
+.timer-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 168px;
+}
+
+.timer-picker-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.timer-picker-title {
+  font: var(--font-headline);
+  color: var(--text-primary);
+}
+
+.timer-picker-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
   padding: 0;
-  transition: opacity 0.15s ease;
-  letter-spacing: 0.25px;
+  border: none;
+  border-radius: 50%;
+  color: var(--text-secondary);
+  background: rgba(var(--color-bg-rgb), 0.85);
+  cursor: pointer;
 }
 
-.timer-btn:hover {
-  opacity: 0.8;
+.timer-picker-close:hover {
+  color: var(--text-primary);
 }
 
-.timer-btn-start {
-  color: var(--color-green);
+.timer-picker-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
-.timer-btn-reset {
-  color: var(--color-pink);
+.timer-picker-label {
+  font: var(--font-subheadline);
+  color: var(--text-secondary);
 }
 
-.timer-btn-pause {
-  color: var(--color-yellow);
+.timer-picker-duration {
+  font: var(--font-headline);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+/* Transport */
+.transport {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-restart {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 50%;
+  color: var(--text-primary);
+  cursor: pointer;
+  background: var(--glass-bg);
+  background-image: var(--glass-sheen);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-stroke);
+  box-shadow: var(--glass-shadow);
+}
+
+.btn-play {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 50%;
+  color: var(--color-bg);
+  cursor: pointer;
+  background: var(--color-green);
+  background-image: var(--glass-sheen);
+  border: var(--glass-stroke);
+  box-shadow: var(--glass-shadow);
+  transition: opacity 0.15s ease, transform 0.1s ease;
+}
+
+.btn-play:active {
+  transform: scale(0.94);
+}
+
+.btn-play:disabled,
+.btn-restart:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.btn-play svg,
+.btn-restart svg {
+  pointer-events: none;
 }
 
 /* Settings View */

@@ -275,15 +275,52 @@
           </div>
         </div>
       </section>
+
+      <!-- Floating controls — the bottom of the phone app's script screen -->
+      <div class="editor-controls hidden" id="editor-controls">
+        <div class="timer-control" id="timer-control">
+          <button class="timer-pill" id="btn-set-timer">Set Timer</button>
+          <div class="timer-picker hidden" id="timer-picker">
+            <div class="timer-picker-head">
+              <span class="timer-picker-title">Timer</span>
+              <button class="timer-picker-close" id="btn-close-timer-picker" aria-label="Close">
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M2 2l6 6M8 2l-6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+                </svg>
+              </button>
+            </div>
+            <div class="timer-picker-row">
+              <span class="timer-picker-label">Duration</span>
+              <span class="timer-picker-duration" id="timer-picker-duration">00:00</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="transport">
+          <button class="btn-restart hidden" id="btn-restart" aria-label="Restart" title="Restart">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M13 8a5 5 0 1 1-1.6-3.67" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+              <path d="M13.2 2.4v2.6h-2.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                stroke-linejoin="round" />
+            </svg>
+          </button>
+          <button class="btn-play" id="btn-play" aria-label="Start" title="Start">
+            <svg class="icon-play" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M5 3.4v9.2l7.2-4.6z" fill="currentColor" />
+            </svg>
+            <svg class="icon-pause hidden" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="4.4" y="3.6" width="2.5" height="8.8" rx="1" fill="currentColor" />
+              <rect x="9.1" y="3.6" width="2.5" height="8.8" rx="1" fill="currentColor" />
+            </svg>
+          </button>
+        </div>
+      </div>
     </main>
 
     <!-- Footer -->
     <footer class="app-footer">
       <div class="footer-left">
         <a href="#" class="footer-link hidden" id="link-go-back">Back</a>
-        <button class="timer-btn timer-btn-start hidden" id="btn-start">Start</button>
-        <button class="timer-btn timer-btn-pause hidden" id="btn-pause">Pause</button>
-        <button class="timer-btn timer-btn-reset hidden" id="btn-reset">Reset</button>
       </div>
     </footer>
   </div>

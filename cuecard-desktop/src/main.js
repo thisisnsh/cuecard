@@ -464,7 +464,7 @@ async function loadNoteFromList(noteId) {
 
   // Update button visibility
   updateEditNoteButtonVisibility();
-  updateTimerButtonVisibility();
+  updateTransport();
 }
 
 // Delete a note from the saved notes list
@@ -603,7 +603,8 @@ let settingsLink;
 let shortcutsLink;
 let refreshBtn;
 let notesInputHighlight;
-let btnStart, btnPause, btnReset;
+let btnPlay, btnRestart, iconPlay, iconPause;
+let editorControls, timerControl, btnSetTimer, timerPicker, timerPickerDuration, btnCloseTimerPicker;
 let opacitySlider, opacityValue, ghostModeToggle, shortcutsToggle;
 let themeSystemBtn, themeLightBtn, themeDarkBtn;
 let speedSlider, speedValue;
@@ -695,9 +696,16 @@ window.addEventListener("DOMContentLoaded", async () => {
   shortcutsLink = document.getElementById("shortcuts-link");
   refreshBtn = document.getElementById("refresh-btn");
   notesInputHighlight = document.getElementById("notes-input-highlight");
-  btnStart = document.getElementById("btn-start");
-  btnPause = document.getElementById("btn-pause");
-  btnReset = document.getElementById("btn-reset");
+  btnPlay = document.getElementById("btn-play");
+  btnRestart = document.getElementById("btn-restart");
+  iconPlay = btnPlay ? btnPlay.querySelector('.icon-play') : null;
+  iconPause = btnPlay ? btnPlay.querySelector('.icon-pause') : null;
+  editorControls = document.getElementById("editor-controls");
+  timerControl = document.getElementById("timer-control");
+  btnSetTimer = document.getElementById("btn-set-timer");
+  timerPicker = document.getElementById("timer-picker");
+  timerPickerDuration = document.getElementById("timer-picker-duration");
+  btnCloseTimerPicker = document.getElementById("btn-close-timer-picker");
   opacitySlider = document.getElementById("opacity-slider");
   opacityValue = document.getElementById("opacity-value");
   ghostModeToggle = document.getElementById("ghost-mode-toggle");
@@ -873,7 +881,7 @@ function resetAllStates() {
   timerState = 'stopped';
 
   // Update timer button visibility
-  updateTimerButtonVisibility();
+  updateTransport();
 }
 
 // =============================================================================
@@ -1018,27 +1026,104 @@ function setupRefreshButton() {
 // TIMER FUNCTIONALITY
 // =============================================================================
 
-// Timer Control Buttons Setup
+// Transport: one button carries play, pause and — held down — restart.
 function setupTimerControls() {
-  if (!btnStart || !btnPause || !btnReset) return;
+  if (!btnPlay) return;
 
-  btnStart.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    startTimerCountdown();
+  // A long press or a right-click restarts, which is iOS's third control.
+  let holdTimeout = null;
+  let didRestartOnHold = false;
+
+  btnPlay.addEventListener("mousedown", (e) => {
+    if (e.button !== 0) return;
+    didRestartOnHold = false;
+    holdTimeout = setTimeout(() => {
+      didRestartOnHold = true;
+      resetTimerCountdown();
+    }, 550);
   });
 
-  btnPause.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    pauseTimerCountdown();
-  });
+  const clearHold = () => {
+    clearTimeout(holdTimeout);
+    holdTimeout = null;
+  };
+  btnPlay.addEventListener("mouseup", clearHold);
+  btnPlay.addEventListener("mouseleave", clearHold);
 
-  btnReset.addEventListener("click", (e) => {
+  btnPlay.addEventListener("contextmenu", (e) => {
     e.preventDefault();
-    e.stopPropagation();
     resetTimerCountdown();
   });
+
+  btnPlay.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (didRestartOnHold) {
+      didRestartOnHold = false;
+      return;
+    }
+    if (timerState === 'running') {
+      pauseTimerCountdown();
+    } else {
+      startTimerCountdown();
+    }
+  });
+
+  if (btnRestart) {
+    btnRestart.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      resetTimerCountdown();
+    });
+  }
+
+  setupTimerPill();
+}
+
+// The Set Timer pill expands in place to show the run's duration.
+function setupTimerPill() {
+  if (!btnSetTimer || !timerControl) return;
+
+  btnSetTimer.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (timerControl.classList.contains('disabled')) return;
+    openTimerPicker();
+  });
+
+  if (btnCloseTimerPicker) {
+    btnCloseTimerPicker.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeTimerPicker();
+    });
+  }
+}
+
+function openTimerPicker() {
+  if (!timerControl || !timerPicker) return;
+  timerControl.classList.add('expanded');
+  timerPicker.classList.remove('hidden');
+  updateTimerPickerDuration();
+}
+
+function closeTimerPicker() {
+  if (!timerControl || !timerPicker) return;
+  timerControl.classList.remove('expanded');
+  timerPicker.classList.add('hidden');
+}
+
+function updateTimerPickerDuration() {
+  if (!timerPickerDuration) return;
+  timerPickerDuration.textContent = formatTime(totalTimeSeconds);
+}
+
+// mm:ss, negative when the run has gone over.
+function formatTime(seconds) {
+  const negative = seconds < 0;
+  const abs = Math.abs(seconds);
+  const text = `${String(Math.floor(abs / 60)).padStart(2, '0')}:${String(abs % 60).padStart(2, '0')}`;
+  return negative ? `-${text}` : text;
 }
 
 // Start/Resume timer countdown
@@ -1048,7 +1133,7 @@ function startTimerCountdown() {
 
   trackTimerAction('start');
   timerState = 'running';
-  updateTimerButtonVisibility();
+  updateTransport();
 
   // Start auto-scroll if enabled
   startAutoScroll();
@@ -1108,7 +1193,7 @@ function pauseTimerCountdown() {
   timerState = 'paused';
   stopAllTimers();
   stopAutoScroll();
-  updateTimerButtonVisibility();
+  updateTransport();
 }
 
 // Reset timer countdown to original values
@@ -1129,16 +1214,13 @@ function resetTimerCountdown() {
 
   // Update header timer display
   if (headerTimer) {
-    const minutes = Math.floor(totalTimeSeconds / 60);
-    const seconds = totalTimeSeconds % 60;
-    const displayTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-    headerTimer.textContent = displayTime;
+    headerTimer.textContent = formatTime(totalTimeSeconds);
     headerTimer.classList.remove('time-warning', 'time-overtime');
     // Use count-up styling (white) when no [time] tags
     headerTimer.classList.toggle('time-countup', totalTimeSeconds === 0);
   }
 
-  updateTimerButtonVisibility();
+  updateTransport();
 }
 
 // Stop all running timer intervals
@@ -1255,51 +1337,38 @@ function updateHeaderTimerVisibility() {
   headerTimer.classList.toggle('hidden', !isNotesView);
 }
 
-// Update timer button visibility based on state
-function updateTimerButtonVisibility() {
-  if (!btnStart || !btnPause || !btnReset) return;
+// The whole transport, read off timerState and whether there is a script to run.
+function updateTransport() {
+  if (!editorControls || !btnPlay) return;
 
-  // Determine if we should show timer controls
-  // Show when there's content, even without [time] tags
-  let shouldShowTimers = false;
+  const isEditorView = currentView === 'add-notes';
+  const isSlidesView = currentView === 'notes';
+  editorControls.classList.toggle('hidden', !(isEditorView || isSlidesView));
 
-  if (currentView === 'add-notes') {
-    // Check if input text has content AND we're not in edit mode
-    shouldShowTimers = notesInput.value.trim() && !isEditMode;
-  } else if (currentView === 'notes') {
-    // Check if notes content exists
-    shouldShowTimers = currentSlideData && notesContent && notesContent.textContent.trim();
+  // Something to run: a written script that is not being typed, or synced notes.
+  let hasScript = false;
+  if (isEditorView) {
+    hasScript = Boolean(notesInput.value.trim()) && !isEditMode;
+  } else if (isSlidesView) {
+    hasScript = Boolean(currentSlideData && notesContent && notesContent.textContent.trim());
   }
 
-  // Show timer controls only when there's content with time pattern
-  if (shouldShowTimers) {
-    // Show appropriate buttons based on timer state
-    switch (timerState) {
-      case 'stopped':
-        // Initial state: show Start only
-        btnStart.classList.remove('hidden');
-        btnPause.classList.add('hidden');
-        btnReset.classList.add('hidden');
-        break;
-      case 'running':
-        // Running: show Pause and Reset
-        btnStart.classList.add('hidden');
-        btnPause.classList.remove('hidden');
-        btnReset.classList.remove('hidden');
-        break;
-      case 'paused':
-        // Paused: show Start and Reset
-        btnStart.classList.remove('hidden');
-        btnPause.classList.add('hidden');
-        btnReset.classList.remove('hidden');
-        break;
-    }
-  } else {
-    // Hide all timer controls
-    btnStart.classList.add('hidden');
-    btnPause.classList.add('hidden');
-    btnReset.classList.add('hidden');
+  btnPlay.disabled = !hasScript;
+  btnPlay.setAttribute('aria-label', timerState === 'running' ? 'Pause' : 'Start');
+  btnPlay.title = timerState === 'running' ? 'Pause' : 'Start';
+  if (iconPlay) iconPlay.classList.toggle('hidden', timerState === 'running');
+  if (iconPause) iconPause.classList.toggle('hidden', timerState !== 'running');
+
+  // Restart only means something once a run is under way.
+  if (btnRestart) {
+    btnRestart.classList.toggle('hidden', !(hasScript && timerState !== 'stopped'));
   }
+
+  if (timerControl) {
+    timerControl.classList.toggle('disabled', !hasScript);
+    if (!hasScript) closeTimerPicker();
+  }
+  updateTimerPickerDuration();
 }
 
 // =============================================================================
@@ -1318,7 +1387,7 @@ function setupNotesInputHighlighting() {
       notesHasTimeTags = false;
       updateHeaderTimerVisibility();
       // Update timer button visibility when content changes
-      updateTimerButtonVisibility();
+      updateTransport();
       // Update edit note button visibility when content changes
       updateEditNoteButtonVisibility();
       return;
@@ -1329,7 +1398,7 @@ function setupNotesInputHighlighting() {
     notesInputHighlight.innerHTML = highlighted;
 
     // Update timer button visibility when content changes
-    updateTimerButtonVisibility();
+    updateTransport();
     // Update edit note button visibility when content changes
     updateEditNoteButtonVisibility();
   }
@@ -1783,7 +1852,7 @@ async function showView(viewName) {
   updateShortcutsVisibility();
 
   // Update timer button visibility
-  updateTimerButtonVisibility();
+  updateTransport();
 
   // Update edit note button visibility
   updateEditNoteButtonVisibility();
@@ -1810,7 +1879,7 @@ async function showView(viewName) {
       // Update edit note button visibility
       updateEditNoteButtonVisibility();
       // Update timer button visibility after notes are loaded
-      updateTimerButtonVisibility();
+      updateTransport();
       break;
     case 'notes':
       viewNotes.classList.remove('hidden');
@@ -1822,7 +1891,7 @@ async function showView(viewName) {
         updateHeaderTimerVisibility();
         stopAllTimers();
         timerState = 'stopped';
-        updateTimerButtonVisibility();
+        updateTransport();
       }
       if (timerState === 'stopped' && currentSlideData && hasNotesContent && previousView !== 'settings') {
         startTimerCountdown();
@@ -1913,7 +1982,7 @@ function displayNotes(text, slideData = null) {
   }
 
   // Update timer button visibility
-  updateTimerButtonVisibility();
+  updateTransport();
 }
 
 // Highlight timestamps and action tags in notes, wrapping content in sections
