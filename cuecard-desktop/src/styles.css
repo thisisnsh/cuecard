@@ -873,6 +873,11 @@ body {
   transition: color 0.3s ease;
 }
 
+/* The start delay, counted down before the run begins */
+.header-timer.time-delay {
+  color: var(--color-pink);
+}
+
 .header-timer.time-countup {
   color: var(--text-primary);
 }
@@ -1385,6 +1390,34 @@ body {
   color: var(--text-secondary);
   min-width: 70px;
   text-align: right;
+}
+
+/* One typed setting: the number and its unit together in a filled box */
+.number-row {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 16px;
+  background: rgba(var(--text-primary-rgb), 0.12);
+  cursor: text;
+}
+
+.number-field {
+  width: 26px;
+  padding: 0;
+  font: var(--font-subheadline);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--text-primary);
+  background: none;
+  border: none;
+  outline: none;
+}
+
+.number-unit {
+  font: var(--font-subheadline);
+  color: var(--text-secondary);
 }
 
 /* Cue Colour swatches */

@@ -199,6 +199,17 @@
               <h3 class="settings-section-title">Prompter</h3>
               <div class="settings-group">
                 <div class="setting-item">
+                  <span class="setting-title">Start Delay</span>
+                  <!-- The unit is part of the target: clicking anywhere in the
+                       box starts editing, not only the digits themselves. -->
+                  <label class="number-row">
+                    <input class="number-field" id="countdown-field" type="text" inputmode="numeric" maxlength="2"
+                      aria-label="Start delay in seconds" value="5">
+                    <span class="number-unit">seconds</span>
+                  </label>
+                </div>
+
+                <div class="setting-item">
                   <span class="setting-title">Auto-Scroll Speed</span>
                   <div class="setting-control">
                     <input type="range" id="speed-slider" class="opacity-slider" min="0" max="2" step="0.25" value="0">
@@ -206,7 +217,7 @@
                   </div>
                 </div>
               </div>
-              <p class="settings-footnote">Scrolls the script while the timer runs.</p>
+              <p class="settings-footnote">The delay counts down before the script starts moving. It is skipped when resuming from a pause, and while notes are coming from Google Slides.</p>
             </section>
 
             <section class="settings-section">

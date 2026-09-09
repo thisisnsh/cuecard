@@ -316,6 +316,7 @@ const STORAGE_KEYS = {
   SETTINGS_CUE_COLOR: 'settings_cue_color',
   SETTINGS_TIMER_MINUTES: 'settings_timer_minutes',
   SETTINGS_TIMER_SECONDS: 'settings_timer_seconds',
+  SETTINGS_COUNTDOWN_SECONDS: 'settings_countdown_seconds',
   MIGRATED_TIME_TAGS: 'migrated_time_tags',
   ADD_NOTES_CONTENT: 'add_notes_content',
   SAVED_NOTES: 'saved_notes'
@@ -620,6 +621,7 @@ let editorControls, timerControl, btnSetTimer, timerPicker, btnCloseTimerPicker;
 let timerMinutesField, timerSecondsField;
 let opacitySlider, opacityValue, ghostModeToggle, shortcutsToggle;
 let cueColorSwatches;
+let countdownField;
 let themeSystemBtn, themeLightBtn, themeDarkBtn;
 let speedSlider, speedValue;
 let editNoteBtn;
@@ -651,6 +653,12 @@ let autoScrollPausedByHover = false; // Tracks if auto-scroll is paused due to h
 let timerMinutes = 1; // The run's length, set on the Set Timer pill
 let timerSeconds = 0;
 let elapsedSeconds = 0; // How far into the run we are; the clock everything reads
+let countdownSeconds = 5; // Delay before the script starts moving
+let countdownValue = 0; // What the delay is showing right now
+let countdownInterval = null;
+// Whether the run has begun since the last restart. The delay runs on the first
+// play only; resuming from a pause starts straight away.
+let hasStarted = false;
 
 // Notes metadata
 
@@ -729,6 +737,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   ghostModeToggle = document.getElementById("ghost-mode-toggle");
   shortcutsToggle = document.getElementById("shortcuts-toggle");
   cueColorSwatches = document.getElementById("cue-color-swatches");
+  countdownField = document.getElementById("countdown-field");
   themeSystemBtn = document.getElementById("theme-system");
   themeLightBtn = document.getElementById("theme-light");
   themeDarkBtn = document.getElementById("theme-dark");
@@ -1220,18 +1229,59 @@ async function commitTimerFields() {
   updateTimerDisplay();
 }
 
+// The delays a typed start delay is held to, as on iOS.
+const COUNTDOWN_MIN = 0;
+const COUNTDOWN_MAX = 60;
+
 // How long the run is, as set on the Set Timer pill. Zero counts up instead.
 function timerDurationSeconds() {
   return timerMinutes * 60 + timerSeconds;
 }
 
-// Start/Resume the run
+// Start/Resume the run. On the first play there is a delay to count down first,
+// so you can get your hands off the machine before the script moves.
 function startTimerCountdown() {
   console.log('[Timer] startTimerCountdown called, timerState:', timerState);
-  if (timerState === 'running') return;
+  if (timerState === 'running' || countdownInterval) return;
 
+  // Notes arriving from Slides are driven by the deck, not by someone stepping
+  // back from the keyboard, so there is nothing to wait for.
+  const skipDelay = hasStarted || countdownSeconds <= 0 || currentView === 'notes';
+  if (!skipDelay) {
+    runStartDelay();
+    return;
+  }
+
+  beginRun();
+}
+
+// Count the delay down in the header, in pink, then start.
+function runStartDelay() {
+  countdownValue = countdownSeconds;
+  updateTimerDisplay();
+  updateTransport();
+
+  countdownInterval = setInterval(() => {
+    countdownValue -= 1;
+    if (countdownValue <= 0) {
+      stopStartDelay();
+      beginRun();
+      return;
+    }
+    updateTimerDisplay();
+  }, 1000);
+}
+
+function stopStartDelay() {
+  clearInterval(countdownInterval);
+  countdownInterval = null;
+  countdownValue = 0;
+}
+
+function beginRun() {
   trackTimerAction('start');
   timerState = 'running';
+  hasStarted = true;
   updateTransport();
 
   startAutoScroll();
@@ -1259,7 +1309,14 @@ function updateTimerDisplay() {
   if (!headerTimer) return;
 
   const duration = timerDurationSeconds();
-  headerTimer.classList.remove('time-countup', 'time-warning', 'time-overtime');
+  headerTimer.classList.remove('time-countup', 'time-warning', 'time-overtime', 'time-delay');
+
+  // The delay before the run, counted down in pink.
+  if (countdownInterval) {
+    headerTimer.textContent = formatTime(countdownValue);
+    headerTimer.classList.add('time-delay');
+    return;
+  }
 
   // Nothing to count down to, so count up instead.
   if (duration <= 0) {
@@ -1278,8 +1335,14 @@ function updateTimerDisplay() {
   }
 }
 
-// Pause the run
+// Pause the run, or call off the delay before it
 function pauseTimerCountdown() {
+  if (countdownInterval) {
+    stopStartDelay();
+    updateTimerDisplay();
+    updateTransport();
+    return;
+  }
   if (timerState !== 'running') return;
 
   trackTimerAction('pause');
@@ -1292,10 +1355,12 @@ function pauseTimerCountdown() {
 // Put the run back to its beginning
 function resetTimerCountdown() {
   trackTimerAction('reset');
+  stopStartDelay();
   stopAllTimers();
   stopAutoScroll();
   timerState = 'stopped';
   elapsedSeconds = 0;
+  hasStarted = false;
 
   const container = getScrollContainer();
   if (container) {
@@ -1430,15 +1495,16 @@ function updateTransport() {
     hasScript = Boolean(currentSlideData && notesContent && notesContent.textContent.trim());
   }
 
+  const isUnderWay = timerState === 'running' || countdownInterval !== null;
   btnPlay.disabled = !hasScript;
-  btnPlay.setAttribute('aria-label', timerState === 'running' ? 'Pause' : 'Start');
-  btnPlay.title = timerState === 'running' ? 'Pause' : 'Start';
-  if (iconPlay) iconPlay.classList.toggle('hidden', timerState === 'running');
-  if (iconPause) iconPause.classList.toggle('hidden', timerState !== 'running');
+  btnPlay.setAttribute('aria-label', isUnderWay ? 'Pause' : 'Start');
+  btnPlay.title = isUnderWay ? 'Pause' : 'Start';
+  if (iconPlay) iconPlay.classList.toggle('hidden', isUnderWay);
+  if (iconPause) iconPause.classList.toggle('hidden', !isUnderWay);
 
   // Restart only means something once a run is under way.
   if (btnRestart) {
-    btnRestart.classList.toggle('hidden', !(hasScript && timerState !== 'stopped'));
+    btnRestart.classList.toggle('hidden', !(hasScript && (isUnderWay || timerState === 'paused')));
   }
 
   if (timerControl) {
@@ -2438,6 +2504,15 @@ async function loadStoredSettings() {
     }
   }
 
+  // Load the start delay, defaulting to the phone app's five seconds
+  const storedCountdown = await getStoredValue(STORAGE_KEYS.SETTINGS_COUNTDOWN_SECONDS);
+  if (typeof storedCountdown === 'number') {
+    countdownSeconds = clampCountdown(storedCountdown);
+  } else {
+    countdownSeconds = 5;
+    await setStoredValue(STORAGE_KEYS.SETTINGS_COUNTDOWN_SECONDS, countdownSeconds);
+  }
+
   // Load the run's length, defaulting to the phone app's 1:00
   const storedMinutes = await getStoredValue(STORAGE_KEYS.SETTINGS_TIMER_MINUTES);
   const storedSeconds = await getStoredValue(STORAGE_KEYS.SETTINGS_TIMER_SECONDS);
@@ -2479,8 +2554,35 @@ async function loadStoredSettings() {
   }
 }
 
+function clampCountdown(value) {
+  return Math.min(Math.max(Math.round(value), COUNTDOWN_MIN), COUNTDOWN_MAX);
+}
+
+// Take what was typed as a delay, holding it to the range a run can wait for.
+// Anything that isn't a number leaves the setting alone.
+async function commitCountdownField() {
+  if (!countdownField) return;
+  const typed = parseInt(countdownField.value.replace(/\D/g, ''), 10);
+  if (!Number.isNaN(typed)) {
+    countdownSeconds = clampCountdown(typed);
+    trackSettingChange('countdown_seconds', countdownSeconds);
+    await setStoredValue(STORAGE_KEYS.SETTINGS_COUNTDOWN_SECONDS, countdownSeconds);
+  }
+  countdownField.value = String(countdownSeconds);
+}
+
 // Settings Handlers
 function setupSettings() {
+  if (countdownField) {
+    countdownField.addEventListener("blur", () => commitCountdownField());
+    countdownField.addEventListener("keydown", (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        countdownField.blur();
+      }
+    });
+  }
+
   // Cue colour swatches
   if (cueColorSwatches) {
     cueColorSwatches.innerHTML = CUE_COLORS.map(name => `
@@ -2667,6 +2769,7 @@ async function loadCurrentSettings() {
   }
 
   updateCueColorSwatches(cueColor);
+  if (countdownField) countdownField.value = String(countdownSeconds);
 
   // Update speed slider and display
   if (speedSlider) {
