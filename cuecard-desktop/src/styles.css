@@ -1676,10 +1676,11 @@ body {
 }
 
 .saved-note-item {
+  position: relative;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 14px;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 12px;
   background: var(--welcome-surface);
   border: 1px solid var(--welcome-border);
   border-radius: 10px;
@@ -1692,20 +1693,22 @@ body {
   border-color: var(--color-green);
 }
 
-.saved-note-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  flex: 1;
-  min-width: 0;
-}
-
-.saved-note-preview {
-  font: var(--font-subheadline);
+.saved-note-title {
+  font: var(--font-headline);
   color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  padding-right: 96px;
+}
+
+.saved-note-preview {
+  font: var(--font-subheadline);
+  color: var(--text-secondary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .saved-note-time {
@@ -1714,37 +1717,142 @@ body {
   opacity: 0.7;
 }
 
-.saved-note-delete {
-  font-size: 11px;
-  font-weight: 500;
+/* Standing in for the swipe actions iOS gives a row */
+.saved-note-actions {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.saved-note-item:hover .saved-note-actions {
+  opacity: 1;
+}
+
+.saved-note-action {
+  font: var(--font-caption);
   color: var(--text-secondary);
   background: none;
   border: none;
   cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
-  opacity: 0;
-  transition: opacity 0.15s ease, color 0.15s ease;
+  padding: 3px 7px;
+  border-radius: 6px;
 }
 
-.saved-note-item:hover .saved-note-delete {
-  opacity: 1;
+.saved-note-action:hover {
+  background: rgba(var(--text-primary-rgb), 0.1);
+  color: var(--text-primary);
 }
 
-.saved-note-delete:hover {
+.saved-note-action.is-delete:hover {
   color: var(--color-red);
 }
 
 .saved-notes-empty {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 10px;
   flex: 1;
-  padding: 40px 20px;
+  padding: 24px 20px;
+  color: var(--text-secondary);
 }
 
-.saved-notes-empty p {
+.saved-notes-empty-title {
+  font: var(--font-headline);
+  color: var(--text-primary);
+}
+
+.saved-notes-empty-hint {
   font: var(--font-subheadline);
   color: var(--text-secondary);
-  opacity: 0.7;
+  text-align: center;
 }
+
+/* Dialog */
+.dialog-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(var(--color-bg-rgb), calc(var(--bg-opacity) * 0.55));
+}
+
+.dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 320px;
+  padding: 16px;
+  border-radius: 14px;
+  background: var(--glass-bg);
+  background-image: var(--glass-sheen);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: var(--glass-stroke);
+  box-shadow: var(--glass-shadow);
+}
+
+.dialog-title {
+  font: var(--font-headline);
+  color: var(--text-primary);
+}
+
+.dialog-message {
+  font: var(--font-footnote);
+  color: var(--text-secondary);
+}
+
+.dialog-field {
+  font: var(--font-subheadline);
+  color: var(--text-primary);
+  background: rgba(var(--text-primary-rgb), 0.12);
+  border: none;
+  border-radius: 8px;
+  padding: 8px 10px;
+  outline: none;
+}
+
+.dialog-field:focus {
+  background: rgba(var(--text-primary-rgb), 0.18);
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.dialog-btn {
+  font: var(--font-subheadline);
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.dialog-btn:hover {
+  background: rgba(var(--text-primary-rgb), 0.1);
+  color: var(--text-primary);
+}
+
+.dialog-btn-primary {
+  color: var(--color-green);
+}
+
+.dialog-btn-primary.is-destructive {
+  color: var(--color-red);
+}
+

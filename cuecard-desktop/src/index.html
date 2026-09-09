@@ -41,6 +41,8 @@
           <div class="menu-popover hidden" id="app-menu" role="menu">
             <button class="menu-item hidden" id="refresh-btn" role="menuitem">Refresh Note</button>
             <button class="menu-item hidden" id="edit-note-btn" role="menuitem">Edit Note</button>
+            <button class="menu-item hidden" id="save-note-btn" role="menuitem">Save</button>
+            <button class="menu-item" id="save-as-new-btn" role="menuitem">Save as New</button>
             <button class="menu-item" id="new-note-btn" role="menuitem">New Note</button>
             <button class="menu-item" id="slides-sync-link" role="menuitem">Sync Google Slide Notes</button>
             <div class="menu-separator hidden" id="menu-separator-note"></div>
@@ -374,12 +376,29 @@
             <!-- Saved notes will be dynamically populated here -->
           </div>
           <div class="saved-notes-empty hidden" id="saved-notes-empty">
-            <p>No saved notes yet. Create a new note and press Done to save it.</p>
+            <svg width="40" height="40" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M1.75 4.25a1 1 0 0 1 1-1h3.1a1 1 0 0 1 .78.37l.74.92a1 1 0 0 0 .78.37h5.1a1 1 0 0 1 1 1v6.34a1 1 0 0 1-1 1H2.75a1 1 0 0 1-1-1V4.25Z"
+                stroke="currentColor" stroke-width="1.1" stroke-linejoin="round" />
+            </svg>
+            <p class="saved-notes-empty-title">No Saved Notes</p>
+            <p class="saved-notes-empty-hint">Save your notes to access them later</p>
           </div>
         </div>
       
         </div>
       </div>
+    <!-- Dialog — this window has no decorations, so it asks for itself -->
+    <div class="dialog-backdrop hidden" id="dialog-backdrop">
+      <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
+        <h2 class="dialog-title" id="dialog-title"></h2>
+        <p class="dialog-message" id="dialog-message"></p>
+        <input class="dialog-field hidden" id="dialog-field" type="text" autocomplete="off">
+        <div class="dialog-actions">
+          <button class="dialog-btn" id="dialog-cancel">Cancel</button>
+          <button class="dialog-btn dialog-btn-primary" id="dialog-confirm">Save</button>
+        </div>
+      </div>
+    </div>
   </div>
 </body>
 

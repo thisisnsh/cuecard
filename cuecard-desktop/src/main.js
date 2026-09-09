@@ -395,97 +395,87 @@ async function getSavedNotes() {
   return savedNotes || [];
 }
 
-// Save current note to the saved notes list
-async function saveNoteToList() {
-  if (!notesInput || !notesInput.value.trim()) return;
+/**
+ * Notes used to be titled by their first line and saved silently when you
+ * pressed Done. They carry a title you chose now, so the ones stored before
+ * that get one taken from their first line — once, on the way past.
+ */
+async function migrateNoteTitles() {
+  const savedNotes = await getSavedNotes();
+  if (!savedNotes.some(note => !note.title)) return;
 
-  const content = notesInput.value;
-  const now = new Date().toISOString();
+  await setStoredValue(STORAGE_KEYS.SAVED_NOTES, savedNotes.map(note => ({
+    ...note,
+    title: note.title || getFirstLinePreview(note.content),
+    createdAt: note.createdAt || note.updatedAt,
+  })));
+  console.log("Gave the stored notes titles");
+}
+
+// The note the editor is showing, if it came from the list.
+async function getCurrentNote() {
+  if (!currentNoteId) return null;
+  const savedNotes = await getSavedNotes();
+  return savedNotes.find(note => note.id === currentNoteId) || null;
+}
+
+// Whether there is anything to save: an edited note, or writing with no note yet.
+async function hasUnsavedChanges() {
+  if (!notesInput) return false;
+  const note = await getCurrentNote();
+  if (!note) return Boolean(notesInput.value.trim());
+  return note.content !== notesInput.value;
+}
+
+// Save over the note that is open.
+async function saveChangesToCurrentNote() {
+  if (!currentNoteId) return;
 
   const savedNotes = await getSavedNotes();
+  const index = savedNotes.findIndex(note => note.id === currentNoteId);
+  if (index === -1) return;
 
-  // Check if we're updating an existing note
-  if (currentNoteId) {
-    const existingIndex = savedNotes.findIndex(n => n.id === currentNoteId);
-    if (existingIndex !== -1) {
-      // Update existing note
-      savedNotes[existingIndex].content = content;
-      savedNotes[existingIndex].updatedAt = now;
+  savedNotes[index].content = notesInput.value;
+  savedNotes[index].updatedAt = new Date().toISOString();
 
-      // Move to beginning of list (most recently updated)
-      const updatedNote = savedNotes.splice(existingIndex, 1)[0];
-      savedNotes.unshift(updatedNote);
+  // Most recently touched, first.
+  savedNotes.unshift(savedNotes.splice(index, 1)[0]);
 
-      await setStoredValue(STORAGE_KEYS.SAVED_NOTES, savedNotes);
-      console.log("Note updated in list");
-      return;
-    }
-  }
+  await setStoredValue(STORAGE_KEYS.SAVED_NOTES, savedNotes);
+  console.log("Note updated in list");
+}
 
-  // Create new note object with unique id
-  const newNote = {
+// Save what is in the editor as a new note under a title of its own.
+async function saveCurrentNoteAs(title) {
+  if (!notesInput || !notesInput.value.trim()) return;
+
+  const now = new Date().toISOString();
+  const note = {
     id: Date.now().toString(),
-    content: content,
-    updatedAt: now
+    title,
+    content: notesInput.value,
+    createdAt: now,
+    updatedAt: now,
   };
 
-  // Set the current note ID to the new note
-  currentNoteId = newNote.id;
+  currentNoteId = note.id;
 
-  // Add to beginning of list (most recent first)
-  savedNotes.unshift(newNote);
-
+  const savedNotes = await getSavedNotes();
+  savedNotes.unshift(note);
   await setStoredValue(STORAGE_KEYS.SAVED_NOTES, savedNotes);
   console.log("Note saved to list");
 }
 
-// Load a note from the saved notes list (updates the time)
-async function loadNoteFromList(noteId) {
+// Give a saved note a different name.
+async function renameNote(noteId, title) {
   const savedNotes = await getSavedNotes();
-  const noteIndex = savedNotes.findIndex(n => n.id === noteId);
+  const index = savedNotes.findIndex(note => note.id === noteId);
+  if (index === -1) return;
 
-  if (noteIndex === -1) return;
-
-  const note = savedNotes[noteIndex];
-
-  // Set current note ID for future updates
-  currentNoteId = note.id;
-
-  // Update the updatedAt time
-  note.updatedAt = new Date().toISOString();
-
-  // Move to beginning of list (most recently used)
-  savedNotes.splice(noteIndex, 1);
-  savedNotes.unshift(note);
-
+  savedNotes[index].title = title;
+  savedNotes[index].updatedAt = new Date().toISOString();
   await setStoredValue(STORAGE_KEYS.SAVED_NOTES, savedNotes);
-
-  // Load the note into the input
-  notesInput.value = note.content;
-
-  // Also update the current notes storage
-  await setStoredValue(STORAGE_KEYS.ADD_NOTES_CONTENT, note.content);
-
-  // Trigger the highlight update
-  if (notesInputHighlight) {
-    const event = new Event('input', { bubbles: true });
-    notesInput.dispatchEvent(event);
-  }
-
-  console.log("Note loaded from list");
-
-  dismissSheet();
-  await showView('add-notes');
-
-  // Set to done mode (readonly, highlighted)
-  isEditMode = false;
-  notesInputWrapper.classList.remove('edit-mode');
-  notesInput.readOnly = true;
-  editNoteBtn.textContent = 'Edit Note';
-
-  // Update button visibility
-  updateEditNoteButtonVisibility();
-  updateTransport();
+  renderSavedNotesList();
 }
 
 // Delete a note from the saved notes list
@@ -500,7 +490,13 @@ async function deleteNoteFromList(noteId) {
   renderSavedNotesList();
 }
 
-// Get first line of note content for preview
+// What the note says, cues and line breaks flattened out, for the row's preview.
+function notePreview(content) {
+  return withoutCues(content || '').replace(/\s+/g, ' ').trim().slice(0, 100);
+}
+
+// The name a note written before titles existed gets, taken from its first line.
+// Only the migration calls this; nothing titles a note by its content any more.
 function getFirstLinePreview(content) {
   if (!content) return '';
 
@@ -557,31 +553,43 @@ async function renderSavedNotesList() {
 
   savedNotesList.innerHTML = savedNotes.map(note => `
     <div class="saved-note-item" data-note-id="${note.id}">
-      <div class="saved-note-info">
-        <span class="saved-note-preview">${escapeHtml(getFirstLinePreview(note.content))}</span>
-        <span class="saved-note-time">${formatNoteDate(note.updatedAt)}</span>
+      <span class="saved-note-title">${escapeHtml(note.title || 'Untitled Note')}</span>
+      <span class="saved-note-preview">${escapeHtml(notePreview(note.content))}</span>
+      <span class="saved-note-time">${formatNoteDate(note.updatedAt)}</span>
+      <div class="saved-note-actions">
+        <button class="saved-note-action is-rename" data-action="rename" data-note-id="${note.id}">Rename</button>
+        <button class="saved-note-action is-delete" data-action="delete" data-note-id="${note.id}">Delete</button>
       </div>
-      <button class="saved-note-delete" data-note-id="${note.id}">Delete</button>
     </div>
   `).join('');
 
-  // Add click handlers
   savedNotesList.querySelectorAll('.saved-note-item').forEach(item => {
     item.addEventListener('click', (e) => {
-      // Don't load if clicking delete button
-      if (e.target.classList.contains('saved-note-delete')) return;
-
-      const noteId = item.dataset.noteId;
-      loadNoteFromList(noteId);
+      if (e.target.closest('.saved-note-action')) return;
+      loadNoteFromList(item.dataset.noteId);
     });
   });
 
-  // Add delete handlers
-  savedNotesList.querySelectorAll('.saved-note-delete').forEach(btn => {
-    btn.addEventListener('click', (e) => {
+  // Rename and delete stand in for iOS's swipe actions.
+  savedNotesList.querySelectorAll('.saved-note-action').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
       e.stopPropagation();
       const noteId = btn.dataset.noteId;
-      deleteNoteFromList(noteId);
+
+      if (btn.dataset.action === 'delete') {
+        deleteNoteFromList(noteId);
+        return;
+      }
+
+      const note = (await getSavedNotes()).find(n => n.id === noteId);
+      const title = await showDialog({
+        title: 'Rename Note',
+        message: 'Enter a new title for your note',
+        value: note ? note.title || '' : '',
+        placeholder: 'Note title',
+        confirmLabel: 'Rename',
+      });
+      if (title) await renameNote(noteId, title);
     });
   });
 }
@@ -1660,11 +1668,6 @@ async function toggleEditMode() {
     notesInputWrapper.classList.remove('edit-mode');
     notesInput.readOnly = true;
     editNoteBtn.textContent = 'Edit Note';
-
-    // Auto-save note when Done is pressed
-    if (notesInput && notesInput.value.trim()) {
-      await saveNoteToList();
-    }
   }
 
   // Reset timer when toggling edit/done
@@ -1953,6 +1956,77 @@ function handleSlideUpdate(data, autoShow = false) {
 }
 
 // =============================================================================
+// DIALOG
+// =============================================================================
+
+/**
+ * Ask the user something, in the app. A window with no decorations should not
+ * be raising native prompts, so this is the alert with a text field that iOS
+ * uses, drawn here.
+ *
+ * Resolves with the typed text when there is a field, `true` when there is not,
+ * and `null` if the user backed out.
+ */
+function showDialog({ title, message = '', value = '', placeholder = '', confirmLabel = 'Save', field = true, destructive = false }) {
+  const backdrop = document.getElementById('dialog-backdrop');
+  const titleEl = document.getElementById('dialog-title');
+  const messageEl = document.getElementById('dialog-message');
+  const fieldEl = document.getElementById('dialog-field');
+  const cancelBtn = document.getElementById('dialog-cancel');
+  const confirmBtn = document.getElementById('dialog-confirm');
+  if (!backdrop) return Promise.resolve(null);
+
+  titleEl.textContent = title;
+  messageEl.textContent = message;
+  messageEl.classList.toggle('hidden', !message);
+  fieldEl.classList.toggle('hidden', !field);
+  fieldEl.value = value;
+  fieldEl.placeholder = placeholder;
+  confirmBtn.textContent = confirmLabel;
+  confirmBtn.classList.toggle('is-destructive', destructive);
+  cancelBtn.classList.toggle('hidden', !field && confirmLabel === 'OK');
+
+  backdrop.classList.remove('hidden');
+  if (field) {
+    fieldEl.focus();
+    fieldEl.select();
+  } else {
+    confirmBtn.focus();
+  }
+
+  return new Promise(resolve => {
+    const close = (result) => {
+      backdrop.classList.add('hidden');
+      cancelBtn.removeEventListener('click', onCancel);
+      confirmBtn.removeEventListener('click', onConfirm);
+      backdrop.removeEventListener('click', onBackdrop);
+      document.removeEventListener('keydown', onKey);
+      resolve(result);
+    };
+
+    const onConfirm = () => {
+      if (!field) return close(true);
+      const typed = fieldEl.value.trim();
+      if (!typed) return;
+      close(typed);
+    };
+    const onCancel = () => close(null);
+    const onBackdrop = (e) => {
+      if (e.target === backdrop) close(null);
+    };
+    const onKey = (e) => {
+      if (e.key === 'Escape') close(null);
+      if (e.key === 'Enter') onConfirm();
+    };
+
+    cancelBtn.addEventListener('click', onCancel);
+    confirmBtn.addEventListener('click', onConfirm);
+    backdrop.addEventListener('click', onBackdrop);
+    document.addEventListener('keydown', onKey);
+  });
+}
+
+// =============================================================================
 // VIEW MANAGEMENT
 // =============================================================================
 
@@ -2057,6 +2131,15 @@ function updateToolbarTitle() {
       break;
     default:
       toolbarTitle.textContent = 'CueCard';
+  }
+
+  // A note that is open puts its own name in the toolbar.
+  if (currentView === 'add-notes' && currentNoteId) {
+    getCurrentNote().then(note => {
+      if (note && currentView === 'add-notes' && currentNoteId === note.id) {
+        toolbarTitle.textContent = truncateText(note.title, 28);
+      }
+    });
   }
 }
 
@@ -2288,6 +2371,33 @@ function setupMenu() {
     if (e.key === 'Escape' && menuOpen) closeMenu();
   });
 
+  const saveNoteItem = document.getElementById('save-note-btn');
+  if (saveNoteItem) {
+    saveNoteItem.addEventListener("click", async (e) => {
+      e.preventDefault();
+      await saveChangesToCurrentNote();
+      updateMenuItems();
+    });
+  }
+
+  const saveAsNewItem = document.getElementById('save-as-new-btn');
+  if (saveAsNewItem) {
+    saveAsNewItem.addEventListener("click", async (e) => {
+      e.preventDefault();
+      const title = await showDialog({
+        title: 'Save Note',
+        message: 'Enter a title for your note',
+        placeholder: 'Note title',
+        confirmLabel: 'Save',
+      });
+      if (title) {
+        await saveCurrentNoteAs(title);
+        updateToolbarTitle();
+        updateMenuItems();
+      }
+    });
+  }
+
   const newNoteItem = document.getElementById('new-note-btn');
   if (newNoteItem) {
     newNoteItem.addEventListener("click", async (e) => {
@@ -2390,6 +2500,17 @@ function updateMenuItems() {
     editNoteBtn.classList.toggle('hidden', !(isEditorView && notesInput.value.trim()));
     editNoteBtn.textContent = isEditMode ? 'Done' : 'Edit Note';
   }
+  // Save appears only when a note is open and has been changed, as on iOS.
+  const saveNoteItem = document.getElementById('save-note-btn');
+  const saveAsNewItem = document.getElementById('save-as-new-btn');
+  const hasScript = Boolean(notesInput && notesInput.value.trim());
+  if (saveAsNewItem) saveAsNewItem.disabled = !hasScript;
+  if (saveNoteItem) {
+    hasUnsavedChanges().then(changed => {
+      saveNoteItem.classList.toggle('hidden', !(currentNoteId && changed));
+    });
+  }
+
   if (menuSeparatorNote) menuSeparatorNote.classList.remove('hidden');
 }
 
@@ -2593,6 +2714,7 @@ async function loadStoredSettings() {
   }
 
   await migrateTimeTags(hasStoredDuration);
+  await migrateNoteTitles();
   updateTimerDisplay();
 
   // Load the cue colour, which has been pink here since before it was a choice
