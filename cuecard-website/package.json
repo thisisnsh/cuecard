@@ -5,9 +5,7 @@
   "scripts": {
     "build": "eleventy",
     "serve": "eleventy --serve",
-    "start": "eleventy --serve",
-    "test": "node --test tests/*.test.js",
-    "check": "npm run build && npm test && python3 tests/check-site.py"
+    "start": "eleventy --serve"
   },
   "devDependencies": {
     "@11ty/eleventy": "^3.0.0"

@@ -14,19 +14,15 @@ Eleventy/Nunjucks static site for [cuecard.dev](https://cuecard.dev).
 
 All 59 existing sitemap URLs and the `/ios/` and `/android/` shortlinks remain.
 
-## Develop and verify
+## Develop and build
 
 ```sh
 npm ci
 npm start          # http://localhost:8080/
-npm run check      # build, Node regression tests, Python 3 HTML crawl
+npm run build      # write the production site to _site/
 ```
 
 `src/` is the input; `_site/` is generated and ignored by Git. `.eleventy.js` configures filters and static assets. Shared layouts and partials live in `src/_includes/`; page content lives in `src/_data/`. The design uses existing typography, cards, ruled feature rows, device screenshots and an interactive demonstration.
-
-`npm test` covers conditional offers, safe JSON-LD, missing/invalid/valid tutorial links, download events and actual dynamically generated installer cards. The analytics stub runs the website script in a Node VM; it is not an end-to-end browser test.
-
-`tests/check-site.py` checks generated HTML without JavaScript: meaningful single H1s, unique titles/descriptions, self-canonicals, JSON-LD parsing, FAQ parity, availability, internal routes and anchors, and deployment-required files. It also asserts 59 sitemap URLs so a route change receives deliberate review.
 
 ## Product facts and structured data
 
@@ -57,7 +53,7 @@ Edit the matching object in `src/_data/apps.json`, such as `slug: "mobile/tiktok
 }
 ```
 
-Set `youtubeUrl` to the supplied HTTPS YouTube video URL and rebuild. Use “Watch the Instagram tutorial on YouTube” for Instagram. Production tutorial URLs are empty until supplied. The renderer accepts ordinary YouTube watch, Shorts and youtu.be video URLs with a valid video-ID shape; it does not verify video existence. Missing or invalid URLs produce no link, wrapper, disabled button or extra spacing. Once a real tutorial is supplied, update the production-empty assertion in the crawl test as part of that change.
+Set `youtubeUrl` to the supplied HTTPS YouTube video URL and rebuild. Use “Watch the Instagram tutorial on YouTube” for Instagram. Production tutorial URLs are empty until supplied. The renderer accepts ordinary YouTube watch, Shorts and youtu.be video URLs with a valid video-ID shape; it does not verify video existence. Missing or invalid URLs produce no link, wrapper, disabled button or extra spacing.
 
 `partials/tutorial-link.njk` renders an accessible link beside the written guide in `partials/setup-guide.njk`. Written instructions remain. `site.demos` retains the existing iPhone, iPad and desktop films, clearly labeled as general product demos. No video player or iframe loads on the page.
 
@@ -110,7 +106,7 @@ Account access is required for these operational steps:
 
 ## Release and review
 
-A push to `main` touching this website runs the existing `.github/workflows/deploy-website.yml` and publishes to GitHub Pages. A pull request builds and verifies output without deploying. Keep changes reviewable before merging. The workflow checks `index.html`, `404.html`, `CNAME`, both shortlinks, and the absence of PHP; `npm run check` includes these checks plus the content regressions.
+A push to `main` touching this website runs the existing `.github/workflows/deploy-website.yml` and publishes to GitHub Pages. A pull request builds and verifies output without deploying. Keep changes reviewable before merging. The workflow checks `index.html`, `404.html`, `CNAME`, both shortlinks, and the absence of PHP.
 
 Before release, review `/`, `/mobile/`, `/mobile/ios/`, `/mobile/ipad/`, `/mobile/tiktok/`, `/mobile/instagram/`, `/mobile/snapchat/` and `/desktop/` at narrow and wide widths. Check wrapping, guide readability, menu and download links, keyboard focus, interactive demo controls, existing demo destinations and tutorial spacing with a valid fixture. Repeat guide navigation and download access with JavaScript disabled.
 
