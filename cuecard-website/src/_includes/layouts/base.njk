@@ -73,60 +73,63 @@
       "@graph": [
         {
           "@type": "Organization",
-          "@id": "{{ site.url }}/#org",
+          "@id": {{ ((site.url) + "/#org") | jsonLd | safe }},
           "name": "CueCard",
           "alternateName": "CueCard Teleprompter",
-          "url": "{{ site.url }}/",
-          "email": "{{ site.email }}",
+          "url": {{ ((site.url) + "/") | jsonLd | safe }},
+          "email": {{ ((site.email)) | jsonLd | safe }},
           {# Identity pages: the places CueCard is published under its own name.
              The Play Store link is deliberately absent - it is an opt-in
              testing URL, not a public listing, and Android is not out. #}
           "sameAs": [
-            "{{ site.github }}",
-            "{{ site.youtube }}",
-            "{{ site.ios }}",
-            "{{ site.extension.items[0].href }}",
-            "{{ site.extension.items[1].href }}"
+            {{ ((site.github)) | jsonLd | safe }},
+            {{ ((site.youtube)) | jsonLd | safe }},
+            {{ ((site.ios)) | jsonLd | safe }},
+            {{ ((site.extension.items[0].href)) | jsonLd | safe }},
+            {{ ((site.extension.items[1].href)) | jsonLd | safe }}
           ],
           "logo": {
             "@type": "ImageObject",
-            "@id": "{{ site.url }}/#logo",
-            "url": "{{ site.url }}/assets/web-app-manifest-512x512.png",
+            "@id": {{ ((site.url) + "/#logo") | jsonLd | safe }},
+            "url": {{ ((site.url) + "/assets/web-app-manifest-512x512.png") | jsonLd | safe }},
             "width": 512,
             "height": 512,
             "caption": "CueCard"
           },
-          "image": { "@id": "{{ site.url }}/#logo" }
+          "image": { "@id": {{ ((site.url) + "/#logo") | jsonLd | safe }} }
         },
         {
           "@type": "WebSite",
-          "@id": "{{ site.url }}/#website",
-          "url": "{{ site.url }}/",
+          "@id": {{ ((site.url) + "/#website") | jsonLd | safe }},
+          "url": {{ ((site.url) + "/") | jsonLd | safe }},
           "name": "CueCard Teleprompter",
           "alternateName": "CueCard",
           "description": "CueCard Teleprompter is a free teleprompter app for iPhone and iPad. Your script floats over the camera, Instagram, TikTok or Snapchat while you film — and on a Mac or PC the same notes stay out of the screen share on Zoom, Google Meet and Teams.",
-          "publisher": { "@id": "{{ site.url }}/#org" },
+          "publisher": { "@id": {{ ((site.url) + "/#org") | jsonLd | safe }} },
           "inLanguage": "en"
         },
         {
           "@type": "WebPage",
-          "@id": "{{ canonical or (site.url + page.url) }}#webpage",
-          "url": "{{ canonical or (site.url + page.url) }}",
-          "name": {{ (pageName or title) | dump | safe }},
-          "description": {{ description | dump | safe }},
-          "isPartOf": { "@id": "{{ site.url }}/#website" },
-          {% if crumbs %}"breadcrumb": { "@id": "{{ canonical or (site.url + page.url) }}#breadcrumb" },{% endif %}
+          "@id": {{ ((canonical or (site.url + page.url)) + "#webpage") | jsonLd | safe }},
+          "url": {{ ((canonical or (site.url + page.url))) | jsonLd | safe }},
+          "name": {{ (pageName or title) | jsonLd | safe }},
+          "description": {{ description | jsonLd | safe }},
+          "isPartOf": { "@id": {{ ((site.url) + "/#website") | jsonLd | safe }} },
+          {% if crumbs %}"breadcrumb": { "@id": {{ ((canonical or (site.url + page.url)) + "#breadcrumb") | jsonLd | safe }} },{% endif %}
+          {% if app or mobileProfession %}"about": { "@id": {{ ((site.products.mobile.id)) | jsonLd | safe }} },
+          {% elif page.url == '/' %}"about": [{ "@id": {{ ((site.products.mobile.id)) | jsonLd | safe }} }, { "@id": {{ ((site.products.desktop.id)) | jsonLd | safe }} }],
+          {% elif page.url == '/desktop/' or platform or profession %}"about": { "@id": {{ ((site.products.desktop.id)) | jsonLd | safe }} },{% endif %}
           "inLanguage": "en"
         }{% if crumbs %},
         {
           "@type": "BreadcrumbList",
-          "@id": "{{ canonical or (site.url + page.url) }}#breadcrumb",
+          "@id": {{ ((canonical or (site.url + page.url)) + "#breadcrumb") | jsonLd | safe }},
           "itemListElement": [
             {% for c in crumbs %}{
               "@type": "ListItem",
               "position": {{ loop.index }},
-              "name": {{ c.name | dump | safe }},
-              "item": "{{ site.url }}{{ c.url }}"
+              "name": {{ c.name | jsonLd | safe }},
+              "item": {{ ((site.url) + (c.url)) | jsonLd | safe }}
             }{% if not loop.last %},{% endif %}{% endfor %}
           ]
         }{% endif %}

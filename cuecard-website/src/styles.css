@@ -417,7 +417,7 @@ section[id] { scroll-margin-top: 96px; }
 /* At headline size every highlight takes the same rule: three colours in one
    <h1> reads as decoration rather than as meaning. */
 .display .highlight, .section-h .highlight { --rule: var(--cue); }
-.body .highlight, .faq-answer .highlight, .row-body .highlight { color: var(--rule); }
+.body .highlight, .faq-answer .highlight, .row-body .highlight { color: var(--hairline); }
 
 /* Headlines that come from a page's own sentence-shaped copy rather than a
    written headline. */
@@ -1310,4 +1310,23 @@ code, .notes-content { font-family: var(--mono); font-size: 0.92em; }
   .reveal { opacity: 1; transform: none; transition: none; }
   .leaguerow a:hover, .crestgrid a:hover { padding-left: 0; }
   .nav-get-panel { animation: none; }
+}
+
+/* Written guides use the same paper, hairlines and typography as feature rows. */
+.workflow-section, .setup-guide { padding: 64px 0; border-top: 1px solid var(--hairline); }
+.setup-steps { padding-left: 1.6rem; max-width: 76ch; margin: 32px 0; }
+.setup-steps li { padding: 20px 0 20px 12px; border-bottom: 1px solid var(--hairline); }
+.setup-steps h3, .sample-script h3, .related-heading { font-size: 1.15rem; margin-bottom: 10px; }
+.setup-steps p, .sample-script p { line-height: 1.75; }
+.sample-script { max-width: 76ch; padding: 24px; border: 1px solid var(--hairline); border-radius: 16px; background: var(--paper); }
+.sample-script pre { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; line-height: 1.8; margin-top: 18px; }
+.workflow-links { display: flex; flex-wrap: wrap; gap: 12px 24px; padding: 0; margin: 24px 0; list-style: none; }
+.workflow-links a, .setup-guide a:not(.btn) { text-decoration: underline; text-underline-offset: 4px; }
+.related-heading { margin-top: 32px; }
+.tutorial-action { margin-top: 20px; }
+.overview-demo { max-width: 760px; padding-bottom: 48px; }
+@media (max-width: 600px) {
+  .workflow-section, .setup-guide { padding: 40px 0; }
+  .setup-steps li { padding-left: 4px; }
+  .sample-script { padding: 18px; }
 }

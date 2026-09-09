@@ -7,42 +7,21 @@
 
 {% block jsonld %}
 <script type="application/ld+json">
-{
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "@id": "{{ platform.canonical }}#app",
-    "name": "{{ platform.jsonLdName }}",
-    "applicationCategory": "BusinessApplication",
-    "applicationSubCategory": "Presentation Teleprompter",
-    "operatingSystem": "macOS, Windows",
-    "description": {{ platform.jsonLdDescription | dump | safe }},
-    "url": "{{ platform.canonical }}",
-    "downloadUrl": "{{ site.releases }}",
-    "installUrl": "{{ site.releases }}",
-    "image": "https://cuecard.dev/assets/og-image.png",
-    "isAccessibleForFree": true,
-    "author": { "@id": "https://cuecard.dev/#org" },
-    "publisher": { "@id": "https://cuecard.dev/#org" },
-    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD", "availability": "https://schema.org/InStock" },
-    "featureList": [
-        {% for feature in platform.jsonLdFeatures %}"{{ feature }}"{% if not loop.last %},{% endif %}
-        {% endfor %}
-    ]
-}
+{{ site.products.desktop | softwareSchema | jsonLd | safe }}
 </script>
 <script type="application/ld+json">
 {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    "@id": "{{ platform.canonical }}#faq",
-    "isPartOf": { "@id": "{{ platform.canonical }}#webpage" },
+    "@id": {{ ((platform.canonical) + "#faq") | jsonLd | safe }},
+    "isPartOf": { "@id": {{ ((platform.canonical) + "#webpage") | jsonLd | safe }} },
     "inLanguage": "en",
     "mainEntity": [
         {% for item in platformFaq %}
         {
             "@type": "Question",
-            "name": {{ item.question | dump | safe }},
-            "acceptedAnswer": { "@type": "Answer", "text": {{ item.answer | striptags | dump | safe }} }
+            "name": {{ item.question | jsonLd | safe }},
+            "acceptedAnswer": { "@type": "Answer", "text": {{ item.answer | striptags | jsonLd | safe }} }
         }{% if not loop.last %},{% endif %}
         {% endfor %}
     ]
@@ -53,7 +32,7 @@
 {% block body %}
 {% set navCtaText = "Filming a video on your phone instead? CueCard Teleprompter floats over every app on iPhone and iPad" %}
 {% set navCtaTextMobile = "Also on iPhone and iPad" %}
-{% set navCtaHref = "/" %}
+{% set navCtaHref = "/mobile/" %}
 {% include "partials/nav.njk" %}
 
 {# The Google Slides page is the odd one out. The others are about a call you

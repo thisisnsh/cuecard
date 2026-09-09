@@ -31,14 +31,14 @@ crumbs:
             {
                 "@type": "ContactPoint",
                 "contactType": "customer support",
-                "email": "{{ site.email }}",
+                "email": {{ ((site.email)) | jsonLd | safe }},
                 "url": "https://cuecard.dev/support/",
                 "availableLanguage": "English"
             },
             {
                 "@type": "ContactPoint",
                 "contactType": "technical support",
-                "url": "{{ site.issues }}",
+                "url": {{ ((site.issues)) | jsonLd | safe }},
                 "availableLanguage": "English"
             }
         ]

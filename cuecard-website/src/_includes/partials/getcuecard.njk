@@ -37,9 +37,9 @@
                             <span class="getrow-meta">{{ d.meta }}</span>
                         </span>
                         {% if d.soon %}
-                        <a class="getrow-soon" href="{{ d.href }}">{{ d.cta }}</a>
+                        <a class="getrow-soon" href="{{ d.href }}"{% if d.productPlatform and not d.soon %} data-product-platform="{{ d.productPlatform }}" data-cta-location="download_section" data-destination-type="{{ d.destinationType }}"{% endif %}>{{ d.cta }}</a>
                         {% else %}
-                        <a class="btn btn-primary getrow-btn" href="{{ d.href }}"{% if d.href[0] != "/" %} target="_blank" rel="noopener"{% endif %}>
+                        <a class="btn btn-primary getrow-btn" href="{{ d.href }}"{% if d.productPlatform and not d.soon %} data-product-platform="{{ d.productPlatform }}" data-cta-location="download_section" data-destination-type="{{ d.destinationType }}"{% endif %}{% if d.href[0] != "/" %} target="_blank" rel="noopener"{% endif %}>
                             {{ d.cta }}{{ icon("arrow", 14) }}
                         </a>
                         {% endif %}

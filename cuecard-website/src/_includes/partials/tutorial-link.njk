@@ -1,0 +1,4 @@
+{%- set videoUrl = tutorial.youtubeUrl | tutorialUrl -%}
+{%- if videoUrl -%}
+<a class="btn btn-ghost tutorial-action" href="{{ videoUrl }}" target="_blank" rel="noopener">{{ tutorial.label or "Watch the tutorial on YouTube" }}</a>
+{%- endif -%}

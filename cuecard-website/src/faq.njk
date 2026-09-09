@@ -27,8 +27,8 @@ crumbs:
         {% for item in faq.items %}
         {
             "@type": "Question",
-            "name": {{ item.question | dump | safe }},
-            "acceptedAnswer": { "@type": "Answer", "text": {{ item.answer | striptags | dump | safe }} }
+            "name": {{ item.question | jsonLd | safe }},
+            "acceptedAnswer": { "@type": "Answer", "text": {{ item.answer | striptags | jsonLd | safe }} }
         }{% if not loop.last %},{% endif %}
         {% endfor %}
     ]

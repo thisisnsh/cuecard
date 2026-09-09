@@ -17,8 +17,8 @@
             <li class="row reveal">
                 <span class="row-n">{{ "0" + loop.index if loop.index < 10 else loop.index }}</span>
                 <div class="row-body">
-                    <h3>{{ f.h }}</h3>
-                    <p>{{ f.p | safe }}</p>
+                    <h3>{{ f.h or f.title }}</h3>
+                    <p>{{ (f.p or f.description) | safe }}</p>
                 </div>
             </li>
             {% endfor %}

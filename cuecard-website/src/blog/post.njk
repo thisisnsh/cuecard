@@ -7,11 +7,11 @@ permalink: "blog/{{ blog.slug }}/index.html"
 layout: layouts/base.njk
 eleventyComputed:
   title: "{{ (blog.seoTitle or blog.title) | safe }} | CueCard"
-  description: "{{ blog.content | metaExcerpt | safe }}"
+  description: "{{ (blog.description or (blog.content | metaExcerpt)) | safe }}"
   keywords: "cuecard blog, speaker notes, teleprompter, presentation tips"
   canonical: "https://cuecard.dev/blog/{{ blog.slug }}/"
   ogTitle: "{{ (blog.seoTitle or blog.title) | safe }}"
-  ogDescription: "{{ blog.content | metaExcerpt | safe }}"
+  ogDescription: "{{ (blog.description or (blog.content | metaExcerpt)) | safe }}"
   ogImageWidth: "1200"
   ogImageHeight: "630"
   ogLocale: "en_US"
@@ -26,24 +26,24 @@ eleventyComputed:
 {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
-    "@id": "https://cuecard.dev/blog/{{ blog.slug }}/#post",
-    "headline": {{ blog.title | dump | safe }},
-    "description": {{ blog.content | metaExcerpt | dump | safe }},
-    "url": "https://cuecard.dev/blog/{{ blog.slug }}/",
-    "datePublished": "{{ blog.datetime }}",
-    "dateModified": "{{ blog.datetime }}",
+    "@id": {{ ("https://cuecard.dev/blog/" + (blog.slug) + "/#post") | jsonLd | safe }},
+    "headline": {{ blog.title | jsonLd | safe }},
+    "description": {{ (blog.description or (blog.content | metaExcerpt)) | jsonLd | safe }},
+    "url": {{ ("https://cuecard.dev/blog/" + (blog.slug) + "/") | jsonLd | safe }},
+    "datePublished": {{ ((blog.datetime)) | jsonLd | safe }},
+    "dateModified": {{ ((blog.modified or blog.datetime)) | jsonLd | safe }},
     "inLanguage": "en",
     "image": "https://cuecard.dev/assets/og-image.png",
     "author": {
         "@type": "Person",
-        "@id": "{{ site.author.id }}",
-        "name": {{ site.author.name | dump | safe }},
-        "url": "{{ site.author.url }}",
-        "sameAs": [{% for profile in site.author.sameAs %}"{{ profile }}"{% if not loop.last %}, {% endif %}{% endfor %}]
+        "@id": {{ ((site.author.id)) | jsonLd | safe }},
+        "name": {{ site.author.name | jsonLd | safe }},
+        "url": {{ ((site.author.url)) | jsonLd | safe }},
+        "sameAs": [{% for profile in site.author.sameAs %}{{ ((profile)) | jsonLd | safe }}{% if not loop.last %}, {% endif %}{% endfor %}]
     },
     "publisher": { "@id": "https://cuecard.dev/#org" },
     "isPartOf": { "@id": "https://cuecard.dev/blog/#blog" },
-    "mainEntityOfPage": { "@id": "https://cuecard.dev/blog/{{ blog.slug }}/#webpage" }
+    "mainEntityOfPage": { "@id": {{ ("https://cuecard.dev/blog/" + (blog.slug) + "/#webpage") | jsonLd | safe }} }
 }
 </script>
 {% endblock %}
@@ -61,6 +61,7 @@ eleventyComputed:
                 <span class="blog-meta-separator">&middot;</span>
                 <time datetime="{{ blog.datetime }}">{{ blog.datetime }}</time>
                 <span class="blog-meta-separator">&middot;</span>
+                {% if blog.modified %}<span>Updated <time datetime="{{ blog.modified }}">{{ blog.modified }}</time></span>{% endif %}
                 <span class="blog-author">{{ blog.author }}</span>
             </p>
             <h1 class="display display-long" id="post-h">{{ blog.title }}</h1>
@@ -71,6 +72,7 @@ eleventyComputed:
         <div class="wrap">
             <article class="blog-entry-content">
                 {{ blog.content | markdownify | safe }}
+                <p><a href="{{ site.ios }}" data-product-platform="ios" data-cta-location="article" data-destination-type="app_store">Get CueCard free on iPhone &amp; iPad</a></p>
             </article>
             <p class="backline">
                 <a href="/blog/">{{ icon("arrow", 15) }} Back to the blog</a>

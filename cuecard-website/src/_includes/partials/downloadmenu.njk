@@ -15,7 +15,7 @@
         <ul class="dlmenu-list">
             {% for d in g.items %}
             <li>
-                <a href="{{ d.href }}"{% if d.href[0] != "/" %} target="_blank" rel="noopener"{% endif %}{% if d.soon %} class="is-soon"{% endif %}>
+                <a href="{{ d.href }}"{% if d.productPlatform and not d.soon %} data-product-platform="{{ d.productPlatform }}" data-cta-location="navigation" data-destination-type="{{ d.destinationType }}"{% endif %}{% if d.href[0] != "/" %} target="_blank" rel="noopener"{% endif %}{% if d.soon %} class="is-soon"{% endif %}>
                     <span class="dlmenu-icon">{{ icon(d.icon, 17) }}</span>
                     <span class="dlmenu-name">{{ d.name }}</span>
                     <span class="dlmenu-cta">{{ d.cta }}{% if not d.soon %}{{ icon("arrow", 13) }}{% endif %}</span>

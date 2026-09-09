@@ -11,6 +11,6 @@
                 {{ icon(ctaSecondaryIcon or "monitor", 17) }}{{ ctaSecondaryText or "Get it for Mac and Windows" }}
             </a>
         </div>
-        <span class="meta-note reveal d2">{{ ctaNote or "Android coming soon · iOS 17+ · macOS and Windows" }}</span>
+        <span class="meta-note reveal d2">{{ ctaNote or ("Android coming soon · " + site.requiresMobileShort + " · macOS and Windows") }}</span>
     </div>
 </section>

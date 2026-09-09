@@ -19,46 +19,21 @@ layout: layouts/mobile-profession.njk
 {% set roleFaq = faq.withGeneral(mobileProfession.faq) %}
 {% block jsonld %}
 <script type="application/ld+json">
-{
-    "@context": "https://schema.org",
-    "@type": "MobileApplication",
-    "@id": "{{ mobileProfession.canonical }}#app",
-    "name": "CueCard for {{ mobileProfession.name }}",
-    "applicationCategory": "UtilitiesApplication",
-    "applicationSubCategory": "Teleprompter",
-    "alternateName": "CueCard Teleprompter",
-    "operatingSystem": "iOS 17.0 or later",
-    "description": {{ mobileProfession.description | dump | safe }},
-    "url": "{{ mobileProfession.canonical }}",
-    "downloadUrl": "{{ site.ios }}",
-    "installUrl": "{{ site.ios }}",
-    "image": "https://cuecard.dev/assets/promo-mobile.jpg",
-    "isAccessibleForFree": true,
-    "author": { "@id": "https://cuecard.dev/#org" },
-    "publisher": { "@id": "https://cuecard.dev/#org" },
-    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD", "availability": "https://schema.org/InStock" },
-    "featureList": [
-        "Floating teleprompter that stays on top of every other app",
-        "Scrolls on its own at a speed you set, and pauses whenever you need it to",
-        "[cue ...] reminders shown in a colour you pick and never meant to be read out",
-        "A floating window you can shape, move and set the text size of",
-        "A countdown before the script starts and a timer while you talk"
-    ]
-}
+{{ site.products.mobile | softwareSchema | jsonLd | safe }}
 </script>
 <script type="application/ld+json">
 {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    "@id": "{{ mobileProfession.canonical }}#faq",
-    "isPartOf": { "@id": "{{ mobileProfession.canonical }}#webpage" },
+    "@id": {{ ((mobileProfession.canonical) + "#faq") | jsonLd | safe }},
+    "isPartOf": { "@id": {{ ((mobileProfession.canonical) + "#webpage") | jsonLd | safe }} },
     "inLanguage": "en",
     "mainEntity": [
         {% for item in roleFaq %}
         {
             "@type": "Question",
-            "name": {{ item.question | dump | safe }},
-            "acceptedAnswer": { "@type": "Answer", "text": {{ item.answer | striptags | dump | safe }} }
+            "name": {{ item.question | jsonLd | safe }},
+            "acceptedAnswer": { "@type": "Answer", "text": {{ item.answer | striptags | jsonLd | safe }} }
         }{% if not loop.last %},{% endif %}
         {% endfor %}
     ]
@@ -91,7 +66,7 @@ layout: layouts/mobile-profession.njk
         },
         { text: "Watch the demo", href: "#demo", icon: "play", style: "ghost" }
     ] %}
-    {% set heroNote = 'Free · iOS 17+ · <a href="/mobile/android/">Android coming soon</a>' %}
+    {% set heroNote = 'Free · ' + site.requiresMobileShort + ' · <a href="/mobile/android/">Android coming soon</a>' %}
     {% set heroTagline = "No more forgetting your lines or switching apps mid-take." %}
     {% set heroStrip = "social" %}
     {% set stripMore = "and every other app you record in" %}
@@ -99,6 +74,9 @@ layout: layouts/mobile-profession.njk
     {% set heroDeck = true %}
     {% set deckScript = deck.forMobileRole(mobileProfession.name, mobileProfession.targetAudience, mobileProfession.useCases[0]) %}
     {% include "partials/hero.njk" %}
+
+    {% set guide = mobileProfession.guide %}
+    {% include "partials/setup-guide.njk" %}
 
     {% set featureRows = features.forRole(mobileProfession.name, mobileProfession.targetAudience, "mobile") %}
     {% set rowsMicro = "What you get" %}

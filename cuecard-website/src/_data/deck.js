@@ -16,18 +16,15 @@
 
 /** The stock script: the home page's, and the fallback for anything unlisted. */
 const standard = [
-  { t: "Welcome everyone." },
-  { t: "I'm excited to be here today to talk about CueCard." },
-  { cue: "smile and pause" },
-  { t: "It keeps your speaker notes visible above all apps, so you can use your existing camera apps and still read your notes." },
+  { t: "Here is one small idea to try today." },
+  { cue: "look up and pause" },
+  { t: "Before your next recording or presentation, write down the one thing you want people to remember." },
+  { cue: "slow down" },
+  { t: "Give it a short example. Leave room for a breath." },
+  { cue: "smile" },
+  { t: "Then finish with a clear next step." },
   { cue: "pause" },
-  { t: "It has a timer so you know if you're being brief… or too passionate." },
-  { cue: "light chuckle" },
-  { t: "And the colored highlights?" },
-  { cue: "emphasize" },
-  { t: "Those are your secret cues — reminders to smile, pause, or not panic." },
-  { cue: "pause" },
-  { t: "Try it out. I think you'll love it." },
+  { t: "A few useful words can be enough." }
 ];
 
 /**

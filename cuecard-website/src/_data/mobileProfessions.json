@@ -3,11 +3,11 @@
     "slug": "content-creators",
     "name": "Content Creators",
     "title": "Teleprompter for Content Creators - Free on iPhone & iPad",
-    "description": "Record videos with a floating teleprompter and keep your script visible over any app on your phone.",
+    "description": "A free iPhone and iPad teleprompter for content creators. Try a practical filming workflow and example script. Android coming soon.",
     "keywords": "content creator teleprompter, video recording notes, floating teleprompter app, script reader for creators, on camera notes, mobile teleprompter for creators",
     "canonical": "https://cuecard.dev/mobile/content-creators/",
-    "ogTitle": "Teleprompter for content creators - free on iPhone and iPad",
-    "ogDescription": "Record videos with your script floating above any app. Stay on script on iOS or Android.",
+    "ogTitle": "Teleprompter for Content Creators - Free on iPhone & iPad",
+    "ogDescription": "A free iPhone and iPad teleprompter for content creators. Try a practical filming workflow and example script. Android coming soon.",
     "heroSubtitle": "Notes <span class=\"highlight highlight-yellow\">float over any app</span>.<br class=\"desktop-br\"> Record <span class=\"highlight highlight-green\">professional content</span> with your <span class=\"highlight highlight-pink\">script</span> at your fingertips.",
     "targetAudience": "content creators",
     "desktopCounterpart": null,
@@ -34,17 +34,46 @@
         "question": "Is CueCard free?",
         "answer": "Yes. CueCard is completely free and open source. It is on the App Store for iOS now, and Android is coming soon."
       }
-    ]
+    ],
+    "guide": {
+      "heading": "A filming workflow for content creators",
+      "intro": "Film one useful tip before adapting it for each channel. Save a clean version of the script, record vertically, and leave space in the frame for the object you demonstrate.",
+      "steps": [
+        {
+          "title": "Prepare a saved note",
+          "body": "Paste the example below into CueCard and adapt it to your own words. Use the ellipsis menu’s Save as New action to keep it for another take."
+        },
+        {
+          "title": "Rehearse before recording",
+          "body": "Set Scroll Speed and Floating Prompter Text Size in Settings. Open the prompter with the green play button, then use Start Overlay to float the script over your camera. Record a short test and adjust the pace."
+        }
+      ],
+      "sample": "Here is the tool I reach for first.\n[cue show the object]\nIt solves one small problem: keeping this part steady.\n[cue pause]\nWhat would you use it for?",
+      "links": [
+        {
+          "href": "/mobile/instagram/#how-to",
+          "label": "Instagram recording setup"
+        },
+        {
+          "href": "/mobile/ios/#how-to",
+          "label": "Full iPhone setup and controls"
+        },
+        {
+          "href": "/mobile/",
+          "label": "Explore the mobile teleprompter"
+        }
+      ]
+    }
   },
   {
     "slug": "vloggers",
     "name": "Vloggers",
     "title": "Teleprompter for Vloggers - Free on iPhone & iPad",
-    "description": "Keep talking points visible while recording vlogs on your phone without breaking eye contact.",
+    "description": "A free iPhone and iPad teleprompter for vloggers. Try a practical filming workflow and example script. Android coming soon.",
     "keywords": "vlogger teleprompter, vlogging script app, video blog notes, on camera teleprompter, mobile vlogging tips, vlog recording helper",
     "canonical": "https://cuecard.dev/mobile/vloggers/",
-    "ogTitle": "Teleprompter for vloggers - free on iPhone and iPad",
-    "ogDescription": "Keep your vlog script visible while recording on your phone without breaking eye contact.",
+    "ogTitle": "Teleprompter for Vloggers - Free on iPhone & iPad",
+    "ogDescription": "A free iPhone and iPad teleprompter for vloggers. Try a practical filming workflow and example script. Android coming soon.",
     "heroSubtitle": "Notes <span class=\"highlight highlight-yellow\">float over your camera</span>.<br class=\"desktop-br\"> Record <span class=\"highlight highlight-green\">vlogs</span> with your <span class=\"highlight highlight-pink\">script</span> at your fingertips.",
     "targetAudience": "vloggers",
     "desktopCounterpart": null,
@@ -71,17 +100,46 @@
         "question": "Can I adjust the text size?",
         "answer": "Yes. Customize the font size and window size to fit your screen and reading preference."
       }
-    ]
+    ],
+    "guide": {
+      "heading": "A filming workflow for vloggers",
+      "intro": "Write the opening and closing before heading out. Save each as a separate note so the middle of your vlog can stay spontaneous. Record the introduction in a quiet spot.",
+      "steps": [
+        {
+          "title": "Prepare a saved note",
+          "body": "Paste the example below into CueCard and adapt it to your own words. Use the ellipsis menu’s Save as New action to keep it for another take."
+        },
+        {
+          "title": "Rehearse before recording",
+          "body": "Set Scroll Speed and Floating Prompter Text Size in Settings. Open the prompter with the green play button, then use Start Overlay to float the script over your camera. Record a short test and adjust the pace."
+        }
+      ],
+      "sample": "Today I am taking you through a normal workday.\n[cue smile]\nFirst stop: the place where I plan the day.\n[cue pause]\nLet’s see how much of that plan survives.",
+      "links": [
+        {
+          "href": "/mobile/youtube/#how-to",
+          "label": "Youtube recording setup"
+        },
+        {
+          "href": "/mobile/ios/#how-to",
+          "label": "Full iPhone setup and controls"
+        },
+        {
+          "href": "/mobile/",
+          "label": "Explore the mobile teleprompter"
+        }
+      ]
+    }
   },
   {
     "slug": "youtubers",
     "name": "YouTubers",
     "title": "Teleprompter for YouTubers - Free on iPhone & iPad",
-    "description": "Record YouTube videos and Shorts with your script floating over your camera.",
+    "description": "A free iPhone and iPad teleprompter for youtubers. Try a practical filming workflow and example script. Android coming soon.",
     "keywords": "youtube teleprompter, youtuber script app, youtube video notes, on camera teleprompter for youtube, mobile youtube recording, youtube creator tools",
     "canonical": "https://cuecard.dev/mobile/youtubers/",
-    "ogTitle": "Teleprompter for youtubers - free on iPhone and iPad",
-    "ogDescription": "Record YouTube videos and Shorts with your script floating over your camera.",
+    "ogTitle": "Teleprompter for YouTubers - Free on iPhone & iPad",
+    "ogDescription": "A free iPhone and iPad teleprompter for youtubers. Try a practical filming workflow and example script. Android coming soon.",
     "heroSubtitle": "Notes <span class=\"highlight highlight-yellow\">float over your camera</span>.<br class=\"desktop-br\"> Record <span class=\"highlight highlight-green\">YouTube videos</span> and <span class=\"highlight highlight-pink\">Shorts</span> like a pro.",
     "targetAudience": "YouTubers",
     "desktopCounterpart": null,
@@ -108,17 +166,46 @@
         "question": "Is CueCard free for YouTubers?",
         "answer": "Yes. CueCard is completely free. Perfect for creators at any subscriber count."
       }
-    ]
+    ],
+    "guide": {
+      "heading": "A filming workflow for youtubers",
+      "intro": "Break the video into sections and save one script per segment. Rehearse the introduction near the lens, then record the explanation and demonstrations separately.",
+      "steps": [
+        {
+          "title": "Prepare a saved note",
+          "body": "Paste the example below into CueCard and adapt it to your own words. Use the ellipsis menu’s Save as New action to keep it for another take."
+        },
+        {
+          "title": "Rehearse before recording",
+          "body": "Set Scroll Speed and Floating Prompter Text Size in Settings. Open the prompter with the green play button, then use Start Overlay to float the script over your camera. Record a short test and adjust the pace."
+        }
+      ],
+      "sample": "Today we are testing a simple idea.\n[cue show the setup]\nCan we make this easier with one fewer step?\nI will show the original, then the change.\n[cue pause]\nYou can decide which works better.",
+      "links": [
+        {
+          "href": "/mobile/youtube/#how-to",
+          "label": "Youtube recording setup"
+        },
+        {
+          "href": "/mobile/ios/#how-to",
+          "label": "Full iPhone setup and controls"
+        },
+        {
+          "href": "/mobile/",
+          "label": "Explore the mobile teleprompter"
+        }
+      ]
+    }
   },
   {
     "slug": "tiktokers",
     "name": "TikTokers",
     "title": "Teleprompter for TikTokers - Free on iPhone & iPad",
-    "description": "Keep your script visible while recording TikTok videos so you can nail every take.",
+    "description": "A free iPhone and iPad teleprompter for tiktokers. Try a practical filming workflow and example script. Android coming soon.",
     "keywords": "tiktok teleprompter, tiktoker script app, tiktok recording tips, on camera teleprompter tiktok, tiktok creator tools, floating notes tiktok",
     "canonical": "https://cuecard.dev/mobile/tiktokers/",
-    "ogTitle": "Teleprompter for tiktokers - free on iPhone and iPad",
-    "ogDescription": "Keep your script visible while recording TikTok videos and nail every take.",
+    "ogTitle": "Teleprompter for TikTokers - Free on iPhone & iPad",
+    "ogDescription": "A free iPhone and iPad teleprompter for tiktokers. Try a practical filming workflow and example script. Android coming soon.",
     "heroSubtitle": "Notes <span class=\"highlight highlight-yellow\">float over TikTok</span>.<br class=\"desktop-br\"> Nail every <span class=\"highlight highlight-green\">take</span> with your <span class=\"highlight highlight-pink\">script</span> at your fingertips.",
     "targetAudience": "TikTokers",
     "desktopCounterpart": null,
@@ -145,17 +232,46 @@
         "question": "Can I resize the teleprompter window?",
         "answer": "Yes. Resize and position the floating window wherever works best for your recording setup."
       }
-    ]
+    ],
+    "guide": {
+      "heading": "A filming workflow for tiktokers",
+      "intro": "Write a hook, one example, and an ending. Rehearse the hook slowly before adding effects, and keep the script clear of TikTok’s recording controls.",
+      "steps": [
+        {
+          "title": "Prepare a saved note",
+          "body": "Paste the example below into CueCard and adapt it to your own words. Use the ellipsis menu’s Save as New action to keep it for another take."
+        },
+        {
+          "title": "Rehearse before recording",
+          "body": "Set Scroll Speed and Floating Prompter Text Size in Settings. Open the prompter with the green play button, then use Start Overlay to float the script over your camera. Record a short test and adjust the pace."
+        }
+      ],
+      "sample": "Try this before filming your next video.\n[cue pause]\nSay your opening line out loud.\nIf you run out of breath, split it in two.\n[cue smile]\nNow try the shorter version.",
+      "links": [
+        {
+          "href": "/mobile/tiktok/#how-to",
+          "label": "Tiktok recording setup"
+        },
+        {
+          "href": "/mobile/ios/#how-to",
+          "label": "Full iPhone setup and controls"
+        },
+        {
+          "href": "/mobile/",
+          "label": "Explore the mobile teleprompter"
+        }
+      ]
+    }
   },
   {
     "slug": "podcasters",
     "name": "Podcasters",
     "title": "Teleprompter for Podcasters - Free on iPhone & iPad",
-    "description": "Keep outlines and talking points visible while recording video podcasts on your phone.",
+    "description": "A free iPhone and iPad teleprompter for podcasters. Try a practical filming workflow and example script. Android coming soon.",
     "keywords": "podcast teleprompter, video podcast notes, podcast recording tips, episode outline app, on camera podcast notes, podcaster tools",
     "canonical": "https://cuecard.dev/mobile/podcasters/",
-    "ogTitle": "Teleprompter for podcasters - free on iPhone and iPad",
-    "ogDescription": "Keep episode outlines visible while recording video podcasts on your phone.",
+    "ogTitle": "Teleprompter for Podcasters - Free on iPhone & iPad",
+    "ogDescription": "A free iPhone and iPad teleprompter for podcasters. Try a practical filming workflow and example script. Android coming soon.",
     "heroSubtitle": "Notes <span class=\"highlight highlight-yellow\">float over any app</span>.<br class=\"desktop-br\"> Record <span class=\"highlight highlight-green\">podcasts</span> with your <span class=\"highlight highlight-pink\">episode outline</span> visible.",
     "targetAudience": "podcasters",
     "desktopCounterpart": null,
@@ -182,17 +298,46 @@
         "question": "Is it good for solo episodes?",
         "answer": "Yes. Keep your talking points visible so you cover everything without rambling or forgetting key segments."
       }
-    ]
+    ],
+    "guide": {
+      "heading": "A filming workflow for podcasters",
+      "intro": "Use a short outline for the episode introduction and exact copy for names or sponsor disclosures. Leave open space in your notes for conversation rather than scrolling through every answer.",
+      "steps": [
+        {
+          "title": "Prepare a saved note",
+          "body": "Paste the example below into CueCard and adapt it to your own words. Use the ellipsis menu’s Save as New action to keep it for another take."
+        },
+        {
+          "title": "Rehearse before recording",
+          "body": "Set Scroll Speed and Floating Prompter Text Size in Settings. Open the prompter with the green play button, then use Start Overlay to float the script over your camera. Record a short test and adjust the pace."
+        }
+      ],
+      "sample": "Welcome back. Today we are talking about starting over.\n[cue turn to guest]\nWhat was the first small step you took?\n[cue pause and listen]\nLet’s start there.",
+      "links": [
+        {
+          "href": "/mobile/youtube/#how-to",
+          "label": "Youtube recording setup"
+        },
+        {
+          "href": "/mobile/ios/#how-to",
+          "label": "Full iPhone setup and controls"
+        },
+        {
+          "href": "/mobile/",
+          "label": "Explore the mobile teleprompter"
+        }
+      ]
+    }
   },
   {
     "slug": "streamers",
     "name": "Streamers",
     "title": "Teleprompter for Streamers - Free on iPhone & iPad",
-    "description": "Keep talking points visible while going live on mobile streaming apps.",
+    "description": "A free iPhone and iPad teleprompter for streamers. Try a practical filming workflow and example script. Android coming soon.",
     "keywords": "streamer teleprompter, live streaming notes, twitch mobile notes, on camera streaming tips, floating notes for streamers, live stream helper",
     "canonical": "https://cuecard.dev/mobile/streamers/",
-    "ogTitle": "Teleprompter for streamers - free on iPhone and iPad",
-    "ogDescription": "Keep talking points visible while going live on mobile streaming apps.",
+    "ogTitle": "Teleprompter for Streamers - Free on iPhone & iPad",
+    "ogDescription": "A free iPhone and iPad teleprompter for streamers. Try a practical filming workflow and example script. Android coming soon.",
     "heroSubtitle": "Notes <span class=\"highlight highlight-yellow\">float over streaming apps</span>.<br class=\"desktop-br\"> Go <span class=\"highlight highlight-green\">live</span> with <span class=\"highlight highlight-pink\">talking points</span> at your fingertips.",
     "targetAudience": "streamers",
     "desktopCounterpart": null,
@@ -219,17 +364,46 @@
         "question": "Can I use it for live Q&A sessions?",
         "answer": "Yes. Keep prepared answers or topic notes visible so you can engage confidently with your chat."
       }
-    ]
+    ],
+    "guide": {
+      "heading": "A filming workflow for streamers",
+      "intro": "Prepare a run of show with a welcome, topic changes, and closing. Rehearse in the camera before going live, and pause the scroll during chat. Use a camera broadcast; screen broadcasts can show the notes.",
+      "steps": [
+        {
+          "title": "Prepare a saved note",
+          "body": "Paste the example below into CueCard and adapt it to your own words. Use the ellipsis menu’s Save as New action to keep it for another take."
+        },
+        {
+          "title": "Rehearse before recording",
+          "body": "Set Scroll Speed and Floating Prompter Text Size in Settings. Open the prompter with the green play button, then use Start Overlay to float the script over your camera. Record a short test and adjust the pace."
+        }
+      ],
+      "sample": "Welcome in, everyone.\n[cue pause for chat]\nToday I am working through the next part of this project.\nI will stop between steps for questions.\n[cue look up]\nLet’s begin with what changed yesterday.",
+      "links": [
+        {
+          "href": "/mobile/twitch/#how-to",
+          "label": "Twitch recording setup"
+        },
+        {
+          "href": "/mobile/ios/#how-to",
+          "label": "Full iPhone setup and controls"
+        },
+        {
+          "href": "/mobile/",
+          "label": "Explore the mobile teleprompter"
+        }
+      ]
+    }
   },
   {
     "slug": "teachers",
     "name": "Teachers",
     "title": "Teleprompter for Teachers - Free on iPhone & iPad",
-    "description": "Record educational videos with lesson outlines visible on your phone.",
+    "description": "A free iPhone and iPad teleprompter for teachers. Try a practical filming workflow and example script. Android coming soon.",
     "keywords": "teacher teleprompter mobile, educational video recording, lesson video notes, teacher content creation, floating notes for educators, mobile teaching tools",
     "canonical": "https://cuecard.dev/mobile/teachers/",
-    "ogTitle": "Teleprompter for teachers - free on iPhone and iPad",
-    "ogDescription": "Record educational videos with lesson outlines visible on your phone.",
+    "ogTitle": "Teleprompter for Teachers - Free on iPhone & iPad",
+    "ogDescription": "A free iPhone and iPad teleprompter for teachers. Try a practical filming workflow and example script. Android coming soon.",
     "heroSubtitle": "Notes <span class=\"highlight highlight-yellow\">float over your camera</span>.<br class=\"desktop-br\"> Record <span class=\"highlight highlight-green\">educational videos</span> with your <span class=\"highlight highlight-pink\">lesson outline</span> visible.",
     "targetAudience": "teachers and educators",
     "desktopCounterpart": "teachers",
@@ -256,17 +430,46 @@
         "question": "Is CueCard free for educators?",
         "answer": "Yes. CueCard is completely free and open source. Perfect for teachers at any level."
       }
-    ]
+    ],
+    "guide": {
+      "heading": "A filming workflow for teachers",
+      "intro": "Record one explanation per clip. Put the question in the script, leave a deliberate thinking pause, and keep any diagram beside the lens so your gestures stay in frame.",
+      "steps": [
+        {
+          "title": "Prepare a saved note",
+          "body": "Paste the example below into CueCard and adapt it to your own words. Use the ellipsis menu’s Save as New action to keep it for another take."
+        },
+        {
+          "title": "Rehearse before recording",
+          "body": "Set Scroll Speed and Floating Prompter Text Size in Settings. Open the prompter with the green play button, then use Start Overlay to float the script over your camera. Record a short test and adjust the pace."
+        }
+      ],
+      "sample": "Look at these two shapes.\n[cue point to the drawing]\nWhat stays the same when we turn one around?\n[cue pause for thinking]\nThe position changes. The shape does not.",
+      "links": [
+        {
+          "href": "/mobile/youtube/#how-to",
+          "label": "Youtube recording setup"
+        },
+        {
+          "href": "/mobile/ios/#how-to",
+          "label": "Full iPhone setup and controls"
+        },
+        {
+          "href": "/mobile/",
+          "label": "Explore the mobile teleprompter"
+        }
+      ]
+    }
   },
   {
     "slug": "coaches",
     "name": "Coaches",
     "title": "Teleprompter for Coaches - Free on iPhone & iPad",
-    "description": "Record coaching videos with your message visible over any app on your phone.",
+    "description": "A free iPhone and iPad teleprompter for coaches. Try a practical filming workflow and example script. Android coming soon.",
     "keywords": "coach teleprompter mobile, coaching video recording, motivational content notes, life coach content creation, floating notes for coaches, mobile coaching tools",
     "canonical": "https://cuecard.dev/mobile/coaches/",
-    "ogTitle": "Teleprompter for coaches - free on iPhone and iPad",
-    "ogDescription": "Record coaching videos with your message visible over any app.",
+    "ogTitle": "Teleprompter for Coaches - Free on iPhone & iPad",
+    "ogDescription": "A free iPhone and iPad teleprompter for coaches. Try a practical filming workflow and example script. Android coming soon.",
     "heroSubtitle": "Notes <span class=\"highlight highlight-yellow\">float over any app</span>.<br class=\"desktop-br\"> Record <span class=\"highlight highlight-green\">motivational content</span> with your <span class=\"highlight highlight-pink\">message</span> visible.",
     "targetAudience": "business and life coaches",
     "desktopCounterpart": "coaches",
@@ -293,17 +496,46 @@
         "question": "Can I use it for Instagram and LinkedIn content?",
         "answer": "Yes. Record professional coaching content directly in any app with your script floating above."
       }
-    ]
+    ],
+    "guide": {
+      "heading": "A filming workflow for coaches",
+      "intro": "Choose one reflection prompt for a short Reel. Slow the scroll enough to leave space after the question, then review whether your delivery feels conversational.",
+      "steps": [
+        {
+          "title": "Prepare a saved note",
+          "body": "Paste the example below into CueCard and adapt it to your own words. Use the ellipsis menu’s Save as New action to keep it for another take."
+        },
+        {
+          "title": "Rehearse before recording",
+          "body": "Set Scroll Speed and Floating Prompter Text Size in Settings. Open the prompter with the green play button, then use Start Overlay to float the script over your camera. Record a short test and adjust the pace."
+        }
+      ],
+      "sample": "Think of one task you keep putting off.\n[cue pause]\nWhat is the smallest part you could start today?\nWrite that down before planning the whole project.\n[cue smile]\nStart with that one part.",
+      "links": [
+        {
+          "href": "/mobile/instagram/#how-to",
+          "label": "Instagram recording setup"
+        },
+        {
+          "href": "/mobile/ios/#how-to",
+          "label": "Full iPhone setup and controls"
+        },
+        {
+          "href": "/mobile/",
+          "label": "Explore the mobile teleprompter"
+        }
+      ]
+    }
   },
   {
     "slug": "course-creators",
     "name": "Course Creators",
     "title": "Teleprompter for Course Creators - Free on iPhone & iPad",
-    "description": "Record course videos with lesson scripts visible on your phone.",
+    "description": "A free iPhone and iPad teleprompter for course creators. Try a practical filming workflow and example script. Android coming soon.",
     "keywords": "course creator teleprompter mobile, online course video recording, lesson recording notes, course content creation, floating notes for educators, mobile course tools",
     "canonical": "https://cuecard.dev/mobile/course-creators/",
-    "ogTitle": "Teleprompter for course creators - free on iPhone and iPad",
-    "ogDescription": "Record course videos with lesson scripts visible on your phone.",
+    "ogTitle": "Teleprompter for Course Creators - Free on iPhone & iPad",
+    "ogDescription": "A free iPhone and iPad teleprompter for course creators. Try a practical filming workflow and example script. Android coming soon.",
     "heroSubtitle": "Notes <span class=\"highlight highlight-yellow\">float over your camera</span>.<br class=\"desktop-br\"> Record <span class=\"highlight highlight-green\">course videos</span> with your <span class=\"highlight highlight-pink\">lesson script</span> visible.",
     "targetAudience": "online course creators",
     "desktopCounterpart": "course-creators",
@@ -330,17 +562,46 @@
         "question": "Is CueCard free for course creators?",
         "answer": "Yes. CueCard is completely free and open source."
       }
-    ]
+    ],
+    "guide": {
+      "heading": "A filming workflow for course creators",
+      "intro": "Name the learning outcome before recording. Divide a lesson into demonstration and explanation clips, with a saved script for each so you can replace one section later.",
+      "steps": [
+        {
+          "title": "Prepare a saved note",
+          "body": "Paste the example below into CueCard and adapt it to your own words. Use the ellipsis menu’s Save as New action to keep it for another take."
+        },
+        {
+          "title": "Rehearse before recording",
+          "body": "Set Scroll Speed and Floating Prompter Text Size in Settings. Open the prompter with the green play button, then use Start Overlay to float the script over your camera. Record a short test and adjust the pace."
+        }
+      ],
+      "sample": "By the end of this lesson, you will have a first outline.\n[cue show the example]\nStart with the question your lesson answers.\nThen add one activity that lets someone try it.\n[cue pause]\nPause the video and write yours.",
+      "links": [
+        {
+          "href": "/mobile/youtube/#how-to",
+          "label": "Youtube recording setup"
+        },
+        {
+          "href": "/mobile/ios/#how-to",
+          "label": "Full iPhone setup and controls"
+        },
+        {
+          "href": "/mobile/",
+          "label": "Explore the mobile teleprompter"
+        }
+      ]
+    }
   },
   {
     "slug": "realtors",
     "name": "Real Estate Agents",
     "title": "Teleprompter for Real Estate Agents - Free on iPhone & iPad",
-    "description": "Record property walkthroughs with details visible while filming on your phone.",
+    "description": "A free iPhone and iPad teleprompter for real estate agents. Try a practical filming workflow and example script. Android coming soon.",
     "keywords": "realtor teleprompter mobile, property video recording, real estate content creation, property walkthrough notes, floating notes for realtors, mobile realtor tools",
     "canonical": "https://cuecard.dev/mobile/realtors/",
-    "ogTitle": "Teleprompter for real estate agents - free on iPhone and iPad",
-    "ogDescription": "Record property walkthroughs with details visible while filming.",
+    "ogTitle": "Teleprompter for Real Estate Agents - Free on iPhone & iPad",
+    "ogDescription": "A free iPhone and iPad teleprompter for real estate agents. Try a practical filming workflow and example script. Android coming soon.",
     "heroSubtitle": "Notes <span class=\"highlight highlight-yellow\">float over your camera</span>.<br class=\"desktop-br\"> Record <span class=\"highlight highlight-green\">property walkthroughs</span> with <span class=\"highlight highlight-pink\">details</span> at your fingertips.",
     "targetAudience": "real estate agents",
     "desktopCounterpart": "realtors",
@@ -367,17 +628,46 @@
         "question": "Can I use it for listing videos on social media?",
         "answer": "Yes. Record professional property videos directly for Instagram, Facebook, or YouTube."
       }
-    ]
+    ],
+    "guide": {
+      "heading": "A filming workflow for real estate agents",
+      "intro": "Prepare a short introduction and verified property details before the walkthrough. Record the introduction facing the camera, then stop and switch cameras for room footage. Keep claims matched to the listing.",
+      "steps": [
+        {
+          "title": "Prepare a saved note",
+          "body": "Paste the example below into CueCard and adapt it to your own words. Use the ellipsis menu’s Save as New action to keep it for another take."
+        },
+        {
+          "title": "Rehearse before recording",
+          "body": "Set Scroll Speed and Floating Prompter Text Size in Settings. Open the prompter with the green play button, then use Start Overlay to float the script over your camera. Record a short test and adjust the pace."
+        }
+      ],
+      "sample": "Let me show you how this room connects to the rest of the home.\n[cue gesture toward doorway]\nWe will start here, then walk through to the kitchen.\n[cue pause]\nSave your questions for the end of the tour.",
+      "links": [
+        {
+          "href": "/mobile/instagram/#how-to",
+          "label": "Instagram recording setup"
+        },
+        {
+          "href": "/mobile/ios/#how-to",
+          "label": "Full iPhone setup and controls"
+        },
+        {
+          "href": "/mobile/",
+          "label": "Explore the mobile teleprompter"
+        }
+      ]
+    }
   },
   {
     "slug": "fitness-instructors",
     "name": "Fitness Instructors",
     "title": "Teleprompter for Fitness Instructors - Free on iPhone & iPad",
-    "description": "Record workout videos with exercise sequences visible while filming on your phone.",
+    "description": "A free iPhone and iPad teleprompter for fitness instructors. Try a practical filming workflow and example script. Android coming soon.",
     "keywords": "fitness instructor teleprompter mobile, workout video recording, exercise sequence notes, fitness content creation, floating notes for trainers, mobile fitness tools",
     "canonical": "https://cuecard.dev/mobile/fitness-instructors/",
-    "ogTitle": "Teleprompter for fitness instructors - free on iPhone and iPad",
-    "ogDescription": "Record workout videos with exercise sequences visible while filming.",
+    "ogTitle": "Teleprompter for Fitness Instructors - Free on iPhone & iPad",
+    "ogDescription": "A free iPhone and iPad teleprompter for fitness instructors. Try a practical filming workflow and example script. Android coming soon.",
     "heroSubtitle": "Notes <span class=\"highlight highlight-yellow\">float over your camera</span>.<br class=\"desktop-br\"> Record <span class=\"highlight highlight-green\">workout videos</span> with your <span class=\"highlight highlight-pink\">exercise sequence</span> visible.",
     "targetAudience": "fitness instructors",
     "desktopCounterpart": "fitness-instructors",
@@ -404,17 +694,46 @@
         "question": "Can I include timing for each exercise?",
         "answer": "Yes. Include timing like '[30 sec squats]' in your notes. CueCard also auto-scrolls at your preferred pace."
       }
-    ]
+    ],
+    "guide": {
+      "heading": "A filming workflow for fitness instructors",
+      "intro": "Script a brief demonstration introduction and your own movement cues. Put the camera far enough back to show the full movement; increase floating text size and test readability from that spot.",
+      "steps": [
+        {
+          "title": "Prepare a saved note",
+          "body": "Paste the example below into CueCard and adapt it to your own words. Use the ellipsis menu’s Save as New action to keep it for another take."
+        },
+        {
+          "title": "Rehearse before recording",
+          "body": "Set Scroll Speed and Floating Prompter Text Size in Settings. Open the prompter with the green play button, then use Start Overlay to float the script over your camera. Record a short test and adjust the pace."
+        }
+      ],
+      "sample": "Here is how I set up for this demonstration.\n[cue show the starting position]\nWatch the movement once before following along.\n[cue pause]\nI will show the same step slowly next.",
+      "links": [
+        {
+          "href": "/mobile/instagram/#how-to",
+          "label": "Instagram recording setup"
+        },
+        {
+          "href": "/mobile/ios/#how-to",
+          "label": "Full iPhone setup and controls"
+        },
+        {
+          "href": "/mobile/",
+          "label": "Explore the mobile teleprompter"
+        }
+      ]
+    }
   },
   {
     "slug": "sales",
     "name": "Sales Professionals",
     "title": "Teleprompter for Sales Professionals - Free on iPhone & iPad",
-    "description": "Record product demos with pitch points visible while filming on your phone.",
+    "description": "A free iPhone and iPad teleprompter for sales professionals. Try a practical filming workflow and example script. Android coming soon.",
     "keywords": "sales teleprompter mobile, product video recording, sales pitch notes, product showcase creation, floating notes for sales, mobile sales tools",
     "canonical": "https://cuecard.dev/mobile/sales/",
-    "ogTitle": "Teleprompter for sales professionals - free on iPhone and iPad",
-    "ogDescription": "Record product demos with pitch points visible while filming.",
+    "ogTitle": "Teleprompter for Sales Professionals - Free on iPhone & iPad",
+    "ogDescription": "A free iPhone and iPad teleprompter for sales professionals. Try a practical filming workflow and example script. Android coming soon.",
     "heroSubtitle": "Notes <span class=\"highlight highlight-yellow\">float over any app</span>.<br class=\"desktop-br\"> Record <span class=\"highlight highlight-green\">product showcases</span> with <span class=\"highlight highlight-pink\">pitch points</span> at your fingertips.",
     "targetAudience": "sales professionals",
     "desktopCounterpart": "sales",
@@ -441,6 +760,35 @@
         "question": "Can I use it for LinkedIn video content?",
         "answer": "Yes. Record professional sales content for LinkedIn, email outreach, or any social platform."
       }
-    ]
+    ],
+    "guide": {
+      "heading": "A filming workflow for sales professionals",
+      "intro": "Record one product use case per clip. Keep feature names accurate, position the object in view, and use a cue to remind yourself to demonstrate before the closing action.",
+      "steps": [
+        {
+          "title": "Prepare a saved note",
+          "body": "Paste the example below into CueCard and adapt it to your own words. Use the ellipsis menu’s Save as New action to keep it for another take."
+        },
+        {
+          "title": "Rehearse before recording",
+          "body": "Set Scroll Speed and Floating Prompter Text Size in Settings. Open the prompter with the green play button, then use Start Overlay to float the script over your camera. Record a short test and adjust the pace."
+        }
+      ],
+      "sample": "Here is the part that saves me a repeated step.\n[cue show the product]\nI set it once, then use the same setup again.\n[cue pause]\nIf this fits your workflow, ask me for a closer walkthrough.",
+      "links": [
+        {
+          "href": "/mobile/linkedin/#how-to",
+          "label": "Linkedin recording setup"
+        },
+        {
+          "href": "/mobile/ios/#how-to",
+          "label": "Full iPhone setup and controls"
+        },
+        {
+          "href": "/mobile/",
+          "label": "Explore the mobile teleprompter"
+        }
+      ]
+    }
   }
 ]

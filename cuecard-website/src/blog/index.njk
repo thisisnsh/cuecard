@@ -23,10 +23,10 @@ crumbs:
     "@graph": [
     {
         "@type": "Person",
-        "@id": "{{ site.author.id }}",
-        "name": {{ site.author.name | dump | safe }},
-        "url": "{{ site.author.url }}",
-        "sameAs": [{% for profile in site.author.sameAs %}"{{ profile }}"{% if not loop.last %}, {% endif %}{% endfor %}]
+        "@id": {{ ((site.author.id)) | jsonLd | safe }},
+        "name": {{ site.author.name | jsonLd | safe }},
+        "url": {{ ((site.author.url)) | jsonLd | safe }},
+        "sameAs": [{% for profile in site.author.sameAs %}{{ ((profile)) | jsonLd | safe }}{% if not loop.last %}, {% endif %}{% endfor %}]
     },
     {
     "@type": "Blog",
@@ -40,11 +40,11 @@ crumbs:
         {% for blog in blogs %}
         {
             "@type": "BlogPosting",
-            "@id": "https://cuecard.dev/blog/{{ blog.slug }}/#post",
-            "headline": {{ blog.title | dump | safe }},
-            "url": "https://cuecard.dev/blog/{{ blog.slug }}/",
-            "datePublished": "{{ blog.datetime }}",
-            "author": { "@id": "{{ site.author.id }}" }
+            "@id": {{ ("https://cuecard.dev/blog/" + (blog.slug) + "/#post") | jsonLd | safe }},
+            "headline": {{ blog.title | jsonLd | safe }},
+            "url": {{ ("https://cuecard.dev/blog/" + (blog.slug) + "/") | jsonLd | safe }},
+            "datePublished": {{ ((blog.datetime)) | jsonLd | safe }},
+            "author": { "@id": {{ ((site.author.id)) | jsonLd | safe }} }
         }{% if not loop.last %},{% endif %}
         {% endfor %}
     ]

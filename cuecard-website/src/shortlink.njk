@@ -17,6 +17,6 @@ eleventyExcludeFromCollections: true
 </head>
 <body>
 <p>Redirecting to <a href="{{ shortlink.url }}">{{ shortlink.title }}</a>&hellip;</p>
-<script>window.location.replace({{ shortlink.url | dump | safe }});</script>
+<script>window.location.replace({{ shortlink.url | jsonLd | safe }});</script>
 </body>
 </html>

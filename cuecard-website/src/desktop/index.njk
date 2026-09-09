@@ -1,11 +1,11 @@
 ---
 layout: layouts/base.njk
-title: "Teleprompter for Zoom, Google Meet & Teams - CueCard"
+title: "Free Teleprompter for Mac & Windows | CueCard"
 description: "A free desktop teleprompter that keeps your speaker notes on your screen and out of your screen share on Zoom, Google Meet and Teams. Free on macOS and Windows."
 keywords: "desktop teleprompter, teleprompter for zoom, teleprompter for google meet, teleprompter for teams, invisible speaker notes, zoom speaker notes, google meet notes, microsoft teams notes, presentation notes, teleprompter, google slides sync, undetectable notes, screen sharing notes, meeting notes app, presenter notes, zoom teleprompter, teams teleprompter, meet teleprompter, mac teleprompter, windows teleprompter"
 canonical: "https://cuecard.dev/desktop/"
 pageName: "CueCard for Mac and Windows - invisible speaker notes"
-ogTitle: "CueCard - Invisible Speaker Notes for Zoom, Google Meet, and Teams"
+ogTitle: "Free Teleprompter for Mac & Windows | CueCard"
 ogDescription: "Keep your speaker notes off the screen you share on Zoom, Google Meet and Teams. Paste notes in for any deck, or sync them from Google Slides."
 ogLocale: "en_US"
 crumbs:
@@ -16,37 +16,7 @@ crumbs:
 ---
 {% block jsonld %}
 <script type="application/ld+json">
-{
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "@id": "https://cuecard.dev/desktop/#app",
-    "name": "CueCard",
-    "applicationCategory": "BusinessApplication",
-    "applicationSubCategory": "Presentation Teleprompter",
-    "operatingSystem": "macOS, Windows",
-    "description": "CueCard keeps your speaker notes hidden from Zoom, Google Meet and Microsoft Teams screen sharing. Paste your notes in to use it with any deck, or add the browser extension so notes from Google Slides follow your slides.",
-    "url": "https://cuecard.dev/desktop/",
-    "downloadUrl": "https://github.com/thisisnsh/cuecard/releases",
-    "installUrl": "https://github.com/thisisnsh/cuecard/releases",
-    "image": "https://cuecard.dev/assets/og-image.png",
-    "isAccessibleForFree": true,
-    "author": { "@id": "https://cuecard.dev/#org" },
-    "publisher": { "@id": "https://cuecard.dev/#org" },
-    "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD",
-        "availability": "https://schema.org/InStock"
-    },
-    "featureList": [
-        "Speaker notes hidden from your screen share",
-        "Works with any deck, or with no deck at all",
-        "[time 05:00] tags that count a section down on screen",
-        "[cue ...] reminders shown in their own colour",
-        "Google Slides notes that follow your slides, with the browser extension",
-        "Keyboard shortcuts for the window, the position and the timer"
-    ]
-}
+{{ site.products.desktop | softwareSchema | jsonLd | safe }}
 </script>
 <script type="application/ld+json">
 {
@@ -59,8 +29,8 @@ crumbs:
         {% for item in faq.desktopShort %}
         {
             "@type": "Question",
-            "name": {{ item.question | dump | safe }},
-            "acceptedAnswer": { "@type": "Answer", "text": {{ item.answer | striptags | dump | safe }} }
+            "name": {{ item.question | jsonLd | safe }},
+            "acceptedAnswer": { "@type": "Answer", "text": {{ item.answer | striptags | jsonLd | safe }} }
         }{% if not loop.last %},{% endif %}
         {% endfor %}
     ]
@@ -71,11 +41,11 @@ crumbs:
 {% block body %}
 {% set navCtaText = "Filming a video on your phone instead? CueCard Teleprompter floats over every app on iPhone and iPad" %}
 {% set navCtaTextMobile = "Also on iPhone and iPad" %}
-{% set navCtaHref = "/" %}
+{% set navCtaHref = "/mobile/" %}
 {% include "partials/nav.njk" %}
 
 <main>
-    {% set heroTitle = 'Speaker notes only <em>you</em> can see, on every call.' %}
+    {% set heroTitle = 'Free speaker notes that stay out of your screen share.' %}
     {% set heroBody = 'Your notes stay on your screen and out of the screen share. On <strong>Zoom</strong>, <strong>Google Meet</strong>, and <strong>Microsoft Teams</strong>, your audience sees the deck — and not your speaker notes.' %}
     {# Two download buttons rather than one that names both machines: script.js
        drops whichever one the reader is not on, so a Mac gets a Mac button.

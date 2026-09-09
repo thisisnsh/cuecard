@@ -1,0 +1,27 @@
+{% if guide %}
+<section class="setup-guide" id="how-to" aria-labelledby="how-to-h">
+  <div class="wrap">
+    <p class="micro">Written setup guide</p>
+    <h2 class="section-h" id="how-to-h">{{ guide.heading }}</h2>
+    <p class="body">{{ guide.intro }}</p>
+    {% include "partials/tutorial-link.njk" %}
+    <ol class="setup-steps">
+      {% for step in guide.steps %}
+      <li><h3>{{ step.title }}</h3><p>{{ step.body }}</p></li>
+      {% endfor %}
+    </ol>
+    {% if guide.sample %}
+    <div class="sample-script">
+      <h3>A short script to try</h3>
+      <p>Select and copy this into CueCard. The <code>[cue ...]</code> tags are reminders to yourself; you leave the pause when you speak.</p>
+      <pre tabindex="0" aria-label="Example script">{{ guide.sample }}</pre>
+    </div>
+    {% endif %}
+    {% if guide.sourceUrl %}<p class="backline"><a href="{{ guide.sourceUrl }}" target="_blank" rel="noopener">{{ guide.sourceLabel }}</a></p>{% endif %}
+    {% if guide.links %}
+    <h3 class="related-heading">Related setup and delivery guides</h3>
+    <ul class="workflow-links">{% for link in guide.links %}<li><a href="{{ link.href }}">{{ link.label }}</a></li>{% endfor %}</ul>
+    {% endif %}
+  </div>
+</section>
+{% endif %}

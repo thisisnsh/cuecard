@@ -57,7 +57,7 @@
 
                 <div class="actions hero-cta reveal d2">
                     {% for b in ctas %}
-                    <a class="btn btn-{{ b.style or 'ghost' }}" href="{{ b.href }}"{% if b.os %} data-os-btn="{{ b.os }}"{% endif %}{% if b.external %} target="_blank" rel="noopener"{% endif %}>
+                    <a class="btn btn-{{ b.style or 'ghost' }}" href="{{ b.href }}"{% if b.href == site.ios %} data-product-platform="ios" data-cta-location="hero" data-destination-type="app_store"{% elif b.productPlatform %} data-product-platform="{{ b.productPlatform }}" data-cta-location="hero" data-destination-type="{{ b.destinationType }}"{% endif %}{% if b.os %} data-os-btn="{{ b.os }}"{% endif %}{% if b.external %} target="_blank" rel="noopener"{% endif %}>
                         {% if b.icon %}{{ icon(b.icon, 17) }}{% endif %}{{ b.text }}
                     </a>
                     {% endfor %}

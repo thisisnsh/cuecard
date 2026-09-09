@@ -2,37 +2,37 @@
   {
     "slug": "mobile",
     "name": "CueCard Teleprompter",
-    "platform": "both",
-    "title": "Free Teleprompter App for iPhone, iPad & Android - CueCard",
-    "description": "A free teleprompter app for iPhone and iPad. Your script floats above the camera, Instagram, TikTok or Snapchat and auto-scrolls while you record.",
+    "platform": "ios",
+    "title": "Free Mobile Teleprompter for iPhone & iPad | CueCard",
+    "description": "Keep your script above TikTok, Instagram, or your camera while you record. Set the scroll speed, position the window, and keep your words in sight.",
     "keywords": "free teleprompter app, teleprompter app iphone, teleprompter app ipad, teleprompter android, floating teleprompter, script reader app, on camera notes, mobile teleprompter, auto scroll teleprompter, open source teleprompter",
     "canonical": "https://cuecard.dev/mobile/",
-    "ogTitle": "Free Teleprompter App for iPhone, iPad and Android",
-    "ogDescription": "A free teleprompter that floats over any app on iPhone and iPad. Record where you always record; the script comes with you.",
-    "heroSubtitle": "A teleprompter that stays <em>on top</em> of every app.",
-    "appDescription": "CueCard Teleprompter keeps your script on top of whatever app you are using, so you never have to switch apps in the middle of a take. Whether you are recording a video, presenting or going live, the words stay with you.",
+    "ogTitle": "Free Mobile Teleprompter for iPhone & iPad | CueCard",
+    "ogDescription": "Keep your script above TikTok, Instagram, or your camera while you record. Set the scroll speed, position the window, and keep your words in sight.",
+    "heroSubtitle": "A free mobile teleprompter that floats over your apps.",
+    "appDescription": "Keep your script above TikTok, Instagram, or your camera while you record. Set the scroll speed, position the window, and keep your words in sight.",
     "showIos": true,
     "showAndroid": true,
     "features": [
       {
-        "title": "Auto-Scroll Teleprompter",
-        "description": "Your script scrolls on its own at a speed you set, and you can pause it or change that speed at any time.",
-        "icon": "scroll"
-      },
-      {
-        "title": "Floats Over All Apps",
-        "description": "Your script stays on screen while you use the camera, Instagram, TikTok or any other app.",
+        "title": "A movable floating window",
+        "description": "Position your script near the lens and choose its dimension ratio.",
         "icon": "layers"
       },
       {
-        "title": "Resizable Window",
-        "description": "Make the floating window wide, square or tall, and drag it wherever it does not cover your face.",
-        "icon": "resize"
+        "title": "Scrolling you control",
+        "description": "Set the pace in lines per minute; play, pause and restart as needed. No voice tracking.",
+        "icon": "scroll"
       },
       {
-        "title": "Adjustable Text",
-        "description": "Set the text size and the scroll speed so the script is easy to read from wherever your phone is set up.",
-        "icon": "type"
+        "title": "Saved scripts and colored cues",
+        "description": "Save named notes and add [cue pause] reminders in your chosen cue color.",
+        "icon": "pen"
+      },
+      {
+        "title": "Time to get ready",
+        "description": "Set a start delay and use the timer to keep an eye on the length of your take.",
+        "icon": "clock"
       }
     ],
     "faq": [
@@ -51,45 +51,149 @@
       {
         "question": "Is there a version for my computer?",
         "answer": "Yes. <a href=\"/desktop/\">CueCard for Mac and Windows</a> keeps your speaker notes on your screen and out of your screen share on Zoom, Google Meet and Teams. It is a different app for a different job, and it is also free."
+      },
+      {
+        "question": "Why is the floating window missing?",
+        "answer": "Return to CueCard and open the prompter with the green play button. Tap the script to reveal controls and look for Start Overlay. The overlay button appears when picture-in-picture is available. Close another active picture-in-picture window and try again. If it still fails, use the full-screen reader on a second device while recording."
+      },
+      {
+        "question": "What if the script moves too fast?",
+        "answer": "Lower Scroll Speed in Settings and rehearse a short passage. Text size and window shape change how many words fit on each line, so check the pace again after resizing. Scrolling does not automatically follow your voice."
+      },
+      {
+        "question": "What if CueCard covers a camera control?",
+        "answer": "Move the floating window to another corner. Adjust Dimension Ratio and Floating Prompter Text Size in CueCard Settings, then return to your recording app. Keep the recording and camera-switch buttons reachable."
+      },
+      {
+        "question": "Will the script appear in my video?",
+        "answer": "Camera recording captures the image through the lens, so the floating script is not part of that footage. Phone screen recording or a screen broadcast can capture the window. Record a short camera test and review it before posting."
       }
     ],
-    "icon": "phone"
+    "icon": "phone",
+    "tutorial": {
+      "youtubeUrl": "",
+      "label": "Watch the CueCard tutorial on YouTube"
+    },
+    "guide": {
+      "heading": "How to set up your mobile teleprompter",
+      "intro": "A saved script, a comfortable reading pace, and a window close to the lens are all you need to begin.",
+      "steps": [
+        {
+          "title": "Write and save your script",
+          "body": "Open CueCard and paste or type into the editor. The ellipsis menu includes New Note and Import from File. Choose Save as New to keep a named copy in your saved notes."
+        },
+        {
+          "title": "Choose a readable size and pace",
+          "body": "Open Settings with the gear button. Set Scroll Speed in lines/min and Text Size under Floating Prompter. Choose a Dimension Ratio that leaves room for your camera controls. Scrolling runs at the speed you set; CueCard does not listen to your voice or track your speech."
+        },
+        {
+          "title": "Start the floating window",
+          "body": "Return to the editor, hide the keyboard, and tap the green play button to open the prompter. Tap the picture-in-picture icon, labeled Start Overlay for accessibility. If the controls have faded, tap the script to show them. CueCard opens the floating window and minimizes. To use Start Delay for a fresh take, start playback in the full-screen prompter before opening the overlay."
+        },
+        {
+          "title": "Open your camera and position the script",
+          "body": "Switch to the recording app and select its video camera. Move CueCard near the front-facing lens while keeping recording controls visible. On iPhone, start with a compact window and short lines to reduce sideways eye movement."
+        },
+        {
+          "title": "Give yourself time to begin",
+          "body": "Set Start Delay in CueCard Settings before the take. Return to the full-screen prompter and restart, then press play to begin the countdown before opening the overlay. Floating-window play/pause controls scrolling; resuming plays immediately. The countdown controls the script, not your camera recording."
+        },
+        {
+          "title": "Record, review, and adjust",
+          "body": "Record a short test take, then watch it back before posting. If your eyes sweep sideways, shorten the lines or narrow the window. If you sound rushed, lower Scroll Speed. Leave a beat at each [cue pause]; cue tags are colored reminders, not automatic pauses."
+        }
+      ],
+      "links": [
+        {
+          "href": "/mobile/ios/#how-to",
+          "label": "iPhone setup"
+        },
+        {
+          "href": "/mobile/ipad/#how-to",
+          "label": "iPad reading setup"
+        },
+        {
+          "href": "/mobile/tiktok/#how-to",
+          "label": "TikTok setup"
+        },
+        {
+          "href": "/mobile/instagram/#how-to",
+          "label": "Instagram Reels setup"
+        },
+        {
+          "href": "/mobile/snapchat/#how-to",
+          "label": "Snapchat setup"
+        },
+        {
+          "href": "/mobile/youtube/#how-to",
+          "label": "YouTube setup"
+        },
+        {
+          "href": "/mobile/linkedin/#how-to",
+          "label": "LinkedIn setup"
+        },
+        {
+          "href": "/mobile/facebook/#how-to",
+          "label": "Facebook setup"
+        },
+        {
+          "href": "/mobile/twitter/#how-to",
+          "label": "X setup"
+        },
+        {
+          "href": "/mobile/twitch/#how-to",
+          "label": "Twitch setup"
+        },
+        {
+          "href": "/blog/teleprompter-for-snapchat-read-your-script-on-camera/",
+          "label": "How to Use a Teleprompter on Snapchat Without It Ending Up in the Snap"
+        },
+        {
+          "href": "/blog/instagram-reels-teleprompter-stop-looking-like-reading/",
+          "label": "Why Your Reels Look Like You’re Reading — and How to Fix the Eye-Line"
+        },
+        {
+          "href": "/blog/tiktok-teleprompter-one-script-every-app/",
+          "label": "A TikTok Teleprompter That Isn’t Trapped Inside TikTok"
+        }
+      ]
+    }
   },
   {
     "slug": "mobile/ios",
     "name": "CueCard Teleprompter for iPhone",
     "platform": "ios",
-    "title": "iPhone Teleprompter App, Free - CueCard Teleprompter",
-    "description": "A free teleprompter for iPhone. Your script floats above the camera, Instagram or TikTok and auto-scrolls while you record. iOS 17 or later.",
+    "title": "Free Teleprompter for iPhone | CueCard",
+    "description": "Set up a floating script on iPhone, keep it near the lens, and control your reading pace while recording in your favorite camera apps.",
     "keywords": "iphone teleprompter, teleprompter app iphone, free teleprompter iphone, ios teleprompter, floating teleprompter iphone, script reader iphone, on camera notes iphone, apple teleprompter app",
     "canonical": "https://cuecard.dev/mobile/ios/",
-    "ogTitle": "iPhone Teleprompter App - free and open source",
-    "ogDescription": "A free teleprompter for iPhone. Your script floats above whatever you are filming in.",
-    "heroSubtitle": "The floating teleprompter, on your <em>iPhone</em>.",
+    "ogTitle": "Free Teleprompter for iPhone | CueCard",
+    "ogDescription": "Set up a floating script on iPhone, keep it near the lens, and control your reading pace while recording in your favorite camera apps.",
+    "heroSubtitle": "A free iPhone teleprompter for the camera apps you use.",
     "promotionalText": "Free on the App Store, and open source on GitHub.",
-    "appDescription": "CueCard Teleprompter keeps your speaker notes visible above any app, so you can stay on script without switching screens. Whether you're recording a video, presenting, or speaking live, your notes flow with you wherever you go.",
+    "appDescription": "Set up a floating script on iPhone, keep it near the lens, and control your reading pace while recording in your favorite camera apps.",
     "showIos": true,
     "showAndroid": false,
     "features": [
       {
-        "title": "Auto-Scroll Teleprompter",
-        "description": "Your script scrolls on its own at a speed you set, and you can pause it or change that speed at any time.",
-        "icon": "scroll"
-      },
-      {
-        "title": "Floats Over All Apps",
-        "description": "Your script stays on screen while you use the camera, Instagram, TikTok or any other app.",
+        "title": "A movable floating window",
+        "description": "Position your script near the lens and choose its dimension ratio.",
         "icon": "layers"
       },
       {
-        "title": "Resizable Window",
-        "description": "Make the floating window wide, square or tall, and drag it wherever it does not cover your face.",
-        "icon": "resize"
+        "title": "Scrolling you control",
+        "description": "Set the pace in lines per minute; play, pause and restart as needed. No voice tracking.",
+        "icon": "scroll"
       },
       {
-        "title": "Adjustable Text",
-        "description": "Set the text size and the scroll speed so the script is easy to read from wherever your phone is set up.",
-        "icon": "type"
+        "title": "Saved scripts and colored cues",
+        "description": "Save named notes and add [cue pause] reminders in your chosen cue color.",
+        "icon": "pen"
+      },
+      {
+        "title": "Time to get ready",
+        "description": "Set a start delay and use the timer to keep an eye on the length of your take.",
+        "icon": "clock"
       }
     ],
     "faq": [
@@ -108,55 +212,163 @@
       {
         "question": "Is there a desktop version for Mac?",
         "answer": "Yes. <a href=\"/desktop/\">CueCard for Mac and Windows</a> keeps your speaker notes on your screen and out of your screen share on Zoom, Google Meet and Teams. Paste your notes in to use it with any deck, or add the browser extension so notes from Google Slides follow your slides."
+      },
+      {
+        "question": "Why is the floating window missing?",
+        "answer": "Return to CueCard and open the prompter with the green play button. Tap the script to reveal controls and look for Start Overlay. The overlay button appears when picture-in-picture is available. Close another active picture-in-picture window and try again. If it still fails, use the full-screen reader on a second device while recording."
+      },
+      {
+        "question": "What if the script moves too fast?",
+        "answer": "Lower Scroll Speed in Settings and rehearse a short passage. Text size and window shape change how many words fit on each line, so check the pace again after resizing. Scrolling does not automatically follow your voice."
+      },
+      {
+        "question": "What if CueCard covers a camera control?",
+        "answer": "Move the floating window to another corner. Adjust Dimension Ratio and Floating Prompter Text Size in CueCard Settings, then return to your recording app. Keep the recording and camera-switch buttons reachable."
+      },
+      {
+        "question": "Will the script appear in my video?",
+        "answer": "Camera recording captures the image through the lens, so the floating script is not part of that footage. Phone screen recording or a screen broadcast can capture the window. Record a short camera test and review it before posting."
+      },
+      {
+        "question": "Which iPhones does CueCard support?",
+        "answer": "CueCard requires iOS 16.6 or later. Check your installed iOS version in iPhone Settings and the current App Store compatibility listing before downloading."
       }
     ],
     "icon": "apple",
     "shotId": "phone",
-    "demoId": "phone"
+    "demoId": "phone",
+    "tutorial": {
+      "youtubeUrl": "",
+      "label": "Watch the CueCard tutorial on YouTube"
+    },
+    "guide": {
+      "heading": "How to set up your iPhone teleprompter",
+      "intro": "A saved script, a comfortable reading pace, and a window close to the lens are all you need to begin.",
+      "steps": [
+        {
+          "title": "Write and save your script",
+          "body": "Open CueCard and paste or type into the editor. The ellipsis menu includes New Note and Import from File. Choose Save as New to keep a named copy in your saved notes."
+        },
+        {
+          "title": "Choose a readable size and pace",
+          "body": "Open Settings with the gear button. Set Scroll Speed in lines/min and Text Size under Floating Prompter. Choose a Dimension Ratio that leaves room for your camera controls. Scrolling runs at the speed you set; CueCard does not listen to your voice or track your speech."
+        },
+        {
+          "title": "Start the floating window",
+          "body": "Return to the editor, hide the keyboard, and tap the green play button to open the prompter. Tap the picture-in-picture icon, labeled Start Overlay for accessibility. If the controls have faded, tap the script to show them. CueCard opens the floating window and minimizes. To use Start Delay for a fresh take, start playback in the full-screen prompter before opening the overlay."
+        },
+        {
+          "title": "Open your camera and position the script",
+          "body": "Switch to the recording app and select its video camera. Move CueCard near the front-facing lens while keeping recording controls visible. On iPhone, start with a compact window and short lines to reduce sideways eye movement."
+        },
+        {
+          "title": "Give yourself time to begin",
+          "body": "Set Start Delay in CueCard Settings before the take. Return to the full-screen prompter and restart, then press play to begin the countdown before opening the overlay. Floating-window play/pause controls scrolling; resuming plays immediately. The countdown controls the script, not your camera recording."
+        },
+        {
+          "title": "Record, review, and adjust",
+          "body": "Record a short test take, then watch it back before posting. If your eyes sweep sideways, shorten the lines or narrow the window. If you sound rushed, lower Scroll Speed. Leave a beat at each [cue pause]; cue tags are colored reminders, not automatic pauses."
+        }
+      ],
+      "links": [
+        {
+          "href": "/mobile/ipad/#how-to",
+          "label": "iPad reading setup"
+        },
+        {
+          "href": "/mobile/tiktok/#how-to",
+          "label": "TikTok setup"
+        },
+        {
+          "href": "/mobile/instagram/#how-to",
+          "label": "Instagram Reels setup"
+        },
+        {
+          "href": "/mobile/snapchat/#how-to",
+          "label": "Snapchat setup"
+        },
+        {
+          "href": "/mobile/youtube/#how-to",
+          "label": "YouTube setup"
+        },
+        {
+          "href": "/mobile/linkedin/#how-to",
+          "label": "LinkedIn setup"
+        },
+        {
+          "href": "/mobile/facebook/#how-to",
+          "label": "Facebook setup"
+        },
+        {
+          "href": "/mobile/twitter/#how-to",
+          "label": "X setup"
+        },
+        {
+          "href": "/mobile/twitch/#how-to",
+          "label": "Twitch setup"
+        },
+        {
+          "href": "/mobile/",
+          "label": "Choose a mobile workflow"
+        },
+        {
+          "href": "/blog/teleprompter-for-snapchat-read-your-script-on-camera/",
+          "label": "How to Use a Teleprompter on Snapchat Without It Ending Up in the Snap"
+        },
+        {
+          "href": "/blog/instagram-reels-teleprompter-stop-looking-like-reading/",
+          "label": "Why Your Reels Look Like You’re Reading — and How to Fix the Eye-Line"
+        },
+        {
+          "href": "/blog/tiktok-teleprompter-one-script-every-app/",
+          "label": "A TikTok Teleprompter That Isn’t Trapped Inside TikTok"
+        }
+      ]
+    }
   },
   {
     "slug": "mobile/ipad",
     "name": "CueCard for iPad",
     "platform": "ios",
-    "title": "iPad Teleprompter App - CueCard Teleprompter for iPad",
-    "description": "A free teleprompter for iPad. Your script fills the big screen, or floats over the camera, Instagram or a video call. iPadOS 17 or later.",
+    "title": "Free Teleprompter for iPad | CueCard",
+    "description": "Read a full-screen script from your iPad beside a separate camera, or float your notes over a recording app. Adjust text size to your viewing distance.",
     "keywords": "ipad teleprompter, teleprompter app for ipad, ipad teleprompter app free, ipad prompter, teleprompter ipad pro, ipados teleprompter, script reader ipad, ipad speaker notes, free teleprompter ipad, tablet teleprompter",
     "canonical": "https://cuecard.dev/mobile/ipad/",
-    "ogTitle": "iPad Teleprompter - CueCard Teleprompter for iPad",
-    "ogDescription": "A free teleprompter for iPad. Read from the whole screen, or float the script over the app you are filming in.",
-    "heroSubtitle": "A teleprompter that finally has <em>room to breathe</em>.",
+    "ogTitle": "Free Teleprompter for iPad | CueCard",
+    "ogDescription": "Read a full-screen script from your iPad beside a separate camera, or float your notes over a recording app. Adjust text size to your viewing distance.",
+    "heroSubtitle": "Turn your iPad into a free teleprompter.",
     "promotionalText": "The same app as the phone, read from across the room.",
-    "appDescription": "CueCard Teleprompter turns an iPad into a studio prompter. Read from the full screen at arm's length, or shrink the script into a floating window that sits above the camera, Instagram or a video call while you record.",
+    "appDescription": "Read a full-screen script from your iPad beside a separate camera, or float your notes over a recording app. Adjust text size to your viewing distance.",
     "showIos": true,
     "showAndroid": false,
     "demoId": "ipad",
     "shotId": "ipad",
     "features": [
       {
-        "title": "The whole screen, or a corner of it",
-        "icon": "resize",
-        "description": "Read the script across the full display, or shrink it into a small window that floats over any other app."
+        "title": "A movable floating window",
+        "description": "Position your script near the lens and choose its dimension ratio.",
+        "icon": "layers"
       },
       {
-        "title": "Scrolls on its own, at your pace",
-        "icon": "scroll",
-        "description": "Set how fast the script moves and it scrolls by itself. Speed it up, slow it down or pause it whenever you need to."
+        "title": "Scrolling you control",
+        "description": "Set the pace in lines per minute; play, pause and restart as needed. No voice tracking.",
+        "icon": "scroll"
       },
       {
-        "title": "Cues in colour",
-        "icon": "type",
-        "description": "Write [cue smile] into your script and it shows up in colour as a reminder for you, never as a line to read out."
+        "title": "Saved scripts and colored cues",
+        "description": "Save named notes and add [cue pause] reminders in your chosen cue color.",
+        "icon": "pen"
       },
       {
-        "title": "A countdown and a timer",
-        "icon": "layers",
-        "description": "A countdown gets you ready before the script starts, and a timer runs while you talk so you know how long you have been going."
+        "title": "Time to get ready",
+        "description": "Set a start delay and use the timer to keep an eye on the length of your take.",
+        "icon": "clock"
       }
     ],
     "faq": [
       {
         "question": "Is there a teleprompter app for iPad?",
-        "answer": "Yes. CueCard Teleprompter runs natively on iPad and is free on the <a href=\"https://apps.apple.com/app/cuecard-teleprompter/id6757321325\">App Store</a>. It needs iPadOS 17 or later."
+        "answer": "Yes. CueCard Teleprompter runs natively on iPad and is free on the <a href=\"https://apps.apple.com/app/cuecard-teleprompter/id6757321325\">App Store</a>. It needs iPadOS 16.6 or later."
       },
       {
         "question": "Can the iPad prompter float over other apps?",
@@ -173,22 +385,114 @@
       {
         "question": "Does it work with an external keyboard or Stage Manager?",
         "answer": "CueCard behaves like any other iPad app: it resizes, it works alongside others, and the floating prompter stays above whatever you switch to."
+      },
+      {
+        "question": "Why is the floating window missing?",
+        "answer": "Return to CueCard and open the prompter with the green play button. Tap the script to reveal controls and look for Start Overlay. The overlay button appears when picture-in-picture is available. Close another active picture-in-picture window and try again. If it still fails, use the full-screen reader on a second device while recording."
+      },
+      {
+        "question": "What if the script moves too fast?",
+        "answer": "Lower Scroll Speed in Settings and rehearse a short passage. Text size and window shape change how many words fit on each line, so check the pace again after resizing. Scrolling does not automatically follow your voice."
+      },
+      {
+        "question": "What if CueCard covers a camera control?",
+        "answer": "Move the floating window to another corner. Adjust Dimension Ratio and Floating Prompter Text Size in CueCard Settings, then return to your recording app. Keep the recording and camera-switch buttons reachable."
+      },
+      {
+        "question": "Will the script appear in my video?",
+        "answer": "Camera recording captures the image through the lens, so the floating script is not part of that footage. Phone screen recording or a screen broadcast can capture the window. Record a short camera test and review it before posting."
       }
     ],
-    "icon": "tablet"
+    "icon": "tablet",
+    "tutorial": {
+      "youtubeUrl": "",
+      "label": "Watch the CueCard tutorial on YouTube"
+    },
+    "guide": {
+      "heading": "Set up your iPad for comfortable reading",
+      "intro": "Choose full-screen reading beside a separate camera, or a floating script when recording on the iPad itself.",
+      "steps": [
+        {
+          "title": "Write and save your script",
+          "body": "Open CueCard and paste or type into the editor. The ellipsis menu includes New Note and Import from File. Choose Save as New to keep a named copy in your saved notes."
+        },
+        {
+          "title": "Set up the full-screen reader",
+          "body": "In Settings, adjust Text Size under In-App Prompter. Place the iPad beside or just below the lens of your separate recording device. Check readability from your actual speaking position before increasing your distance."
+        },
+        {
+          "title": "Rehearse from where you will stand",
+          "body": "Tap the editor’s green play button to open the full-screen prompter, then use play/pause and restart to rehearse. Set Scroll Speed and Start Delay in Settings. Choose larger text if you find yourself leaning forward."
+        },
+        {
+          "title": "Float the script when recording on iPad",
+          "body": "Return to the editor, hide the keyboard, and tap the green play button to open the prompter. Tap the picture-in-picture icon, labeled Start Overlay for accessibility. If the controls have faded, tap the script to show them. CueCard opens the floating window and minimizes. To use Start Delay for a fresh take, start playback in the full-screen prompter before opening the overlay."
+        },
+        {
+          "title": "Check framing and pace",
+          "body": "Open the recording app, move the window clear of its controls, and record a short take. For a separate camera, keep the iPad in full-screen mode and watch the camera’s footage for visible eye movement."
+        },
+        {
+          "title": "Record, review, and adjust",
+          "body": "Record a short test take, then watch it back before posting. If your eyes sweep sideways, shorten the lines or narrow the window. If you sound rushed, lower Scroll Speed. Leave a beat at each [cue pause]; cue tags are colored reminders, not automatic pauses."
+        }
+      ],
+      "links": [
+        {
+          "href": "/mobile/ios/#how-to",
+          "label": "iPhone setup"
+        },
+        {
+          "href": "/mobile/tiktok/#how-to",
+          "label": "TikTok setup"
+        },
+        {
+          "href": "/mobile/instagram/#how-to",
+          "label": "Instagram Reels setup"
+        },
+        {
+          "href": "/mobile/snapchat/#how-to",
+          "label": "Snapchat setup"
+        },
+        {
+          "href": "/mobile/youtube/#how-to",
+          "label": "YouTube setup"
+        },
+        {
+          "href": "/mobile/linkedin/#how-to",
+          "label": "LinkedIn setup"
+        },
+        {
+          "href": "/mobile/facebook/#how-to",
+          "label": "Facebook setup"
+        },
+        {
+          "href": "/mobile/twitter/#how-to",
+          "label": "X setup"
+        },
+        {
+          "href": "/mobile/twitch/#how-to",
+          "label": "Twitch setup"
+        },
+        {
+          "href": "/mobile/",
+          "label": "Choose a mobile workflow"
+        }
+      ]
+    }
   },
   {
     "slug": "mobile/android",
     "name": "CueCard Teleprompter for Android",
     "platform": "android",
-    "title": "Android Teleprompter App - CueCard Teleprompter, Coming Soon",
-    "description": "Keep speaker notes visible over any app on Android. Record, present, or stream without switching screens.",
+    "title": "Android Teleprompter App — Coming Soon | CueCard",
+    "description": "CueCard for Android is coming soon and is still in development. The free teleprompter is available now on iPhone and iPad.",
     "keywords": "teleprompter android, android teleprompter app, speaker notes android, floating notes android, script reader android, on camera notes android, samsung teleprompter",
     "canonical": "https://cuecard.dev/mobile/android/",
-    "ogTitle": "Android Teleprompter App - coming soon",
-    "ogDescription": "Keep speaker notes visible over any app on Android. Stay on script while recording or presenting.",
-    "heroSubtitle": "The floating teleprompter, coming to <em>Android</em>.",
-    "appDescription": "CueCard Teleprompter keeps your speaker notes visible above any app, so you can stay on script without switching screens. Whether you're recording a video, presenting, or speaking live, your notes flow with you wherever you go.",
+    "ogTitle": "Android Teleprompter App — Coming Soon | CueCard",
+    "ogDescription": "CueCard for Android is coming soon and is still in development. The free teleprompter is available now on iPhone and iPad.",
+    "heroSubtitle": "The floating teleprompter, coming to Android.",
+    "appDescription": "CueCard for Android is coming soon and is still in development. The free teleprompter is available now on iPhone and iPad.",
     "showIos": false,
     "showAndroid": true,
     "features": [
@@ -236,38 +540,38 @@
   {
     "slug": "mobile/instagram",
     "name": "CueCard for Instagram",
-    "platform": "both",
-    "title": "Instagram Teleprompter for Reels & Stories - CueCard",
-    "description": "Float your script over Instagram while recording Reels, Stories, or Live. Stay on script without switching apps.",
+    "platform": "ios",
+    "title": "Free Instagram Teleprompter for Reels | CueCard",
+    "description": "Float your script above Instagram on iPhone. Set up CueCard, keep your eye-line near the lens, and record a Reel with room for natural pauses.",
     "keywords": "instagram teleprompter, instagram reels teleprompter, instagram stories script, floating notes instagram, instagram live notes, instagram content creation",
     "canonical": "https://cuecard.dev/mobile/instagram/",
-    "ogTitle": "Instagram Teleprompter for Reels and Stories",
-    "ogDescription": "Float your script over Instagram while recording Reels, Stories, or Live. Stay on script without switching apps.",
-    "heroSubtitle": "Film a Reel with your script <em>on the glass</em>.",
+    "ogTitle": "Free Instagram Teleprompter for Reels | CueCard",
+    "ogDescription": "Float your script above Instagram on iPhone. Set up CueCard, keep your eye-line near the lens, and record a Reel with room for natural pauses.",
+    "heroSubtitle": "Read your script while you record Instagram Reels",
     "promotionalText": "Reels, Stories and Lives — the prompter sits above all of them.",
-    "appDescription": "CueCard Teleprompter floats your script directly over Instagram, so you can record Reels, Stories, or go Live while reading your notes. Perfect for creators who want professional-quality content without memorizing every line.",
+    "appDescription": "Float your script above Instagram on iPhone. Set up CueCard, keep your eye-line near the lens, and record a Reel with room for natural pauses.",
     "showIos": true,
     "showAndroid": true,
     "features": [
       {
-        "title": "Float Over Instagram",
-        "description": "Your script stays on screen while you record a Reel or a Story, or while you go Live.",
+        "title": "A movable floating window",
+        "description": "Position your script near the lens and choose its dimension ratio.",
         "icon": "layers"
       },
       {
-        "title": "Auto-Scroll Teleprompter",
-        "description": "Your script scrolls on its own at a speed you set, and you can pause it or change that speed at any time.",
+        "title": "Scrolling you control",
+        "description": "Set the pace in lines per minute; play, pause and restart as needed. No voice tracking.",
         "icon": "scroll"
       },
       {
-        "title": "Resizable Window",
-        "description": "Make the floating window wide, square or tall, and drag it wherever it does not cover your face.",
-        "icon": "resize"
+        "title": "Saved scripts and colored cues",
+        "description": "Save named notes and add [cue pause] reminders in your chosen cue color.",
+        "icon": "pen"
       },
       {
-        "title": "Adjustable Text",
-        "description": "Set the text size and the scroll speed so the script is easy to read from wherever your phone is set up.",
-        "icon": "type"
+        "title": "Time to get ready",
+        "description": "Set a start delay and use the timer to keep an eye on the length of your take.",
+        "icon": "clock"
       }
     ],
     "faq": [
@@ -284,48 +588,147 @@
         "answer": "Yes. Float your notes over Instagram while going Live. Perfect for Q&A sessions, product launches, or any live content."
       },
       {
-        "question": "Will my followers see the teleprompter?",
-        "answer": "No. CueCard sits on top of the app on your screen, not in front of the lens, so the camera never records it. Your followers see you and nothing else. The one exception is screen recording, which captures your whole screen — close the prompter first if that is how you are recording."
+        "question": "Why is the floating window missing?",
+        "answer": "Return to CueCard and open the prompter with the green play button. Tap the script to reveal controls and look for Start Overlay. The overlay button appears when picture-in-picture is available. Close another active picture-in-picture window and try again. If it still fails, use the full-screen reader on a second device while recording."
+      },
+      {
+        "question": "What if the script moves too fast?",
+        "answer": "Lower Scroll Speed in Settings and rehearse a short passage. Text size and window shape change how many words fit on each line, so check the pace again after resizing. Scrolling does not automatically follow your voice."
+      },
+      {
+        "question": "What if CueCard covers a camera control?",
+        "answer": "Move the floating window to another corner. Adjust Dimension Ratio and Floating Prompter Text Size in CueCard Settings, then return to your recording app. Keep the recording and camera-switch buttons reachable."
+      },
+      {
+        "question": "Will the script appear in my video?",
+        "answer": "Camera recording captures the image through the lens, so the floating script is not part of that footage. Phone screen recording or a screen broadcast can capture the window. Record a short camera test and review it before posting."
       }
     ],
     "subject": "Instagram",
-    "icon": "instagram"
+    "icon": "instagram",
+    "tutorial": {
+      "youtubeUrl": "",
+      "label": "Watch the Instagram tutorial on YouTube"
+    },
+    "guide": {
+      "heading": "Record an Instagram Reel with CueCard",
+      "intro": "Start with a short script on iPhone or iPad. These steps take you from CueCard’s editor to your recording app.",
+      "steps": [
+        {
+          "title": "Write and save your script",
+          "body": "Open CueCard and paste or type into the editor. The ellipsis menu includes New Note and Import from File. Choose Save as New to keep a named copy in your saved notes."
+        },
+        {
+          "title": "Choose a readable size and pace",
+          "body": "Open Settings with the gear button. Set Scroll Speed in lines/min and Text Size under Floating Prompter. Choose a Dimension Ratio that leaves room for your camera controls. Scrolling runs at the speed you set; CueCard does not listen to your voice or track your speech."
+        },
+        {
+          "title": "Start the floating window",
+          "body": "Return to the editor, hide the keyboard, and tap the green play button to open the prompter. Tap the picture-in-picture icon, labeled Start Overlay for accessibility. If the controls have faded, tap the script to show them. CueCard opens the floating window and minimizes. To use Start Delay for a fresh take, start playback in the full-screen prompter before opening the overlay."
+        },
+        {
+          "title": "Open your recording app",
+          "body": "Switch to Instagram and open its Reel recording camera. Select the selfie camera and frame your shot before starting a clip. The location of recording controls can vary by app version."
+        },
+        {
+          "title": "Keep the words near the lens",
+          "body": "Move the floating window close to the front camera without covering the record button or camera-switch control. Use short lines and text large enough to read without leaning toward the screen."
+        },
+        {
+          "title": "Give yourself time to begin",
+          "body": "Set Start Delay in CueCard Settings before the take. Return to the full-screen prompter and restart, then press play to begin the countdown before opening the overlay. Floating-window play/pause controls scrolling; resuming plays immediately. The countdown controls the script, not your camera recording."
+        },
+        {
+          "title": "Record, review, and adjust",
+          "body": "Record a short test take, then watch it back before posting. If your eyes sweep sideways, shorten the lines or narrow the window. If you sound rushed, lower Scroll Speed. Leave a beat at each [cue pause]; cue tags are colored reminders, not automatic pauses."
+        }
+      ],
+      "sample": "[cue smile]\nHere is a small change for your next Reel.\n[cue pause]\nPut one idea in each sentence.\nLeave a breath before the next one.\n[cue look up]\nSave this and try it on your next take.",
+      "sourceUrl": null,
+      "sourceLabel": "Instagram recording help",
+      "links": [
+        {
+          "href": "/mobile/ios/#how-to",
+          "label": "iPhone setup"
+        },
+        {
+          "href": "/mobile/ipad/#how-to",
+          "label": "iPad reading setup"
+        },
+        {
+          "href": "/mobile/tiktok/#how-to",
+          "label": "TikTok setup"
+        },
+        {
+          "href": "/mobile/snapchat/#how-to",
+          "label": "Snapchat setup"
+        },
+        {
+          "href": "/mobile/youtube/#how-to",
+          "label": "YouTube setup"
+        },
+        {
+          "href": "/mobile/linkedin/#how-to",
+          "label": "LinkedIn setup"
+        },
+        {
+          "href": "/mobile/facebook/#how-to",
+          "label": "Facebook setup"
+        },
+        {
+          "href": "/mobile/twitter/#how-to",
+          "label": "X setup"
+        },
+        {
+          "href": "/mobile/twitch/#how-to",
+          "label": "Twitch setup"
+        },
+        {
+          "href": "/mobile/",
+          "label": "Choose a mobile workflow"
+        },
+        {
+          "href": "/blog/instagram-reels-teleprompter-stop-looking-like-reading/",
+          "label": "Why Your Reels Look Like You’re Reading — and How to Fix the Eye-Line"
+        }
+      ]
+    }
   },
   {
     "slug": "mobile/tiktok",
     "name": "CueCard for TikTok",
-    "platform": "both",
-    "title": "TikTok Teleprompter App, Free - CueCard Teleprompter",
-    "description": "Float your script over TikTok while recording videos. Nail every take without switching apps.",
+    "platform": "ios",
+    "title": "Free TikTok Teleprompter for iPhone | CueCard",
+    "description": "Keep your hook and talking points visible while filming in TikTok on iPhone. Follow the setup guide, try a short script, and adjust the pace between takes.",
     "keywords": "tiktok teleprompter, tiktok script app, floating notes tiktok, tiktok creator tools, tiktok recording tips, tiktok content creation",
     "canonical": "https://cuecard.dev/mobile/tiktok/",
-    "ogTitle": "TikTok Teleprompter - your script over the TikTok camera",
-    "ogDescription": "Float your script over TikTok while recording. Nail every take without switching apps.",
-    "heroSubtitle": "Film a TikTok without <em>losing your line</em>.",
+    "ogTitle": "Free TikTok Teleprompter for iPhone | CueCard",
+    "ogDescription": "Keep your hook and talking points visible while filming in TikTok on iPhone. Follow the setup guide, try a short script, and adjust the pace between takes.",
+    "heroSubtitle": "A free teleprompter that floats over TikTok",
     "promotionalText": "It floats over TikTok's own camera, so you film where you always film.",
-    "appDescription": "CueCard Teleprompter floats your script directly over TikTok, so you can record videos while reading your notes. Perfect for creators who want to nail every take without memorizing scripts.",
+    "appDescription": "Keep your hook and talking points visible while filming in TikTok on iPhone. Follow the setup guide, try a short script, and adjust the pace between takes.",
     "showIos": true,
     "showAndroid": true,
     "features": [
       {
-        "title": "Float Over TikTok",
-        "description": "Your script stays on screen while you record straight into the TikTok app.",
+        "title": "A movable floating window",
+        "description": "Position your script near the lens and choose its dimension ratio.",
         "icon": "layers"
       },
       {
-        "title": "Auto-Scroll Teleprompter",
-        "description": "Your script scrolls on its own at a speed you set, and you can pause it or change that speed at any time.",
+        "title": "Scrolling you control",
+        "description": "Set the pace in lines per minute; play, pause and restart as needed. No voice tracking.",
         "icon": "scroll"
       },
       {
-        "title": "Resizable Window",
-        "description": "Make the floating window wide, square or tall, and drag it wherever it does not cover your face.",
-        "icon": "resize"
+        "title": "Saved scripts and colored cues",
+        "description": "Save named notes and add [cue pause] reminders in your chosen cue color.",
+        "icon": "pen"
       },
       {
-        "title": "Adjustable Text",
-        "description": "Set the text size and the scroll speed so the script is easy to read from wherever your phone is set up.",
-        "icon": "type"
+        "title": "Time to get ready",
+        "description": "Set a start delay and use the timer to keep an eye on the length of your take.",
+        "icon": "clock"
       }
     ],
     "faq": [
@@ -338,27 +741,126 @@
         "answer": "Yes. Keep your lip-sync lyrics or talking points visible so you nail the timing on trending sounds."
       },
       {
-        "question": "Will viewers see the teleprompter in my TikToks?",
-        "answer": "No. CueCard sits on top of the app on your screen, not in front of the lens, so the camera never records it. Your followers see you and nothing else. The one exception is screen recording, which captures your whole screen — close the prompter first if that is how you are recording."
-      },
-      {
         "question": "Can I resize the teleprompter window?",
         "answer": "Yes. Resize and position the floating window wherever works best for your recording setup."
+      },
+      {
+        "question": "Why is the floating window missing?",
+        "answer": "Return to CueCard and open the prompter with the green play button. Tap the script to reveal controls and look for Start Overlay. The overlay button appears when picture-in-picture is available. Close another active picture-in-picture window and try again. If it still fails, use the full-screen reader on a second device while recording."
+      },
+      {
+        "question": "What if the script moves too fast?",
+        "answer": "Lower Scroll Speed in Settings and rehearse a short passage. Text size and window shape change how many words fit on each line, so check the pace again after resizing. Scrolling does not automatically follow your voice."
+      },
+      {
+        "question": "What if CueCard covers a camera control?",
+        "answer": "Move the floating window to another corner. Adjust Dimension Ratio and Floating Prompter Text Size in CueCard Settings, then return to your recording app. Keep the recording and camera-switch buttons reachable."
+      },
+      {
+        "question": "Will the script appear in my video?",
+        "answer": "Camera recording captures the image through the lens, so the floating script is not part of that footage. Phone screen recording or a screen broadcast can capture the window. Record a short camera test and review it before posting."
       }
     ],
     "subject": "TikTok",
-    "icon": "tiktok"
+    "icon": "tiktok",
+    "tutorial": {
+      "youtubeUrl": "",
+      "label": "Watch the TikTok tutorial on YouTube"
+    },
+    "guide": {
+      "heading": "Record a TikTok with a floating script",
+      "intro": "Start with a short script on iPhone or iPad. These steps take you from CueCard’s editor to your recording app.",
+      "steps": [
+        {
+          "title": "Write and save your script",
+          "body": "Open CueCard and paste or type into the editor. The ellipsis menu includes New Note and Import from File. Choose Save as New to keep a named copy in your saved notes."
+        },
+        {
+          "title": "Choose a readable size and pace",
+          "body": "Open Settings with the gear button. Set Scroll Speed in lines/min and Text Size under Floating Prompter. Choose a Dimension Ratio that leaves room for your camera controls. Scrolling runs at the speed you set; CueCard does not listen to your voice or track your speech."
+        },
+        {
+          "title": "Start the floating window",
+          "body": "Return to the editor, hide the keyboard, and tap the green play button to open the prompter. Tap the picture-in-picture icon, labeled Start Overlay for accessibility. If the controls have faded, tap the script to show them. CueCard opens the floating window and minimizes. To use Start Delay for a fresh take, start playback in the full-screen prompter before opening the overlay."
+        },
+        {
+          "title": "Open your recording app",
+          "body": "Switch to TikTok and tap Add post (+) to open its camera. Choose video and the selfie camera. Keep the recording control uncovered; start recording when you are ready."
+        },
+        {
+          "title": "Keep the words near the lens",
+          "body": "Move the floating window close to the front camera without covering the record button or camera-switch control. Use short lines and text large enough to read without leaning toward the screen."
+        },
+        {
+          "title": "Give yourself time to begin",
+          "body": "Set Start Delay in CueCard Settings before the take. Return to the full-screen prompter and restart, then press play to begin the countdown before opening the overlay. Floating-window play/pause controls scrolling; resuming plays immediately. The countdown controls the script, not your camera recording."
+        },
+        {
+          "title": "Record, review, and adjust",
+          "body": "Record a short test take, then watch it back before posting. If your eyes sweep sideways, shorten the lines or narrow the window. If you sound rushed, lower Scroll Speed. Leave a beat at each [cue pause]; cue tags are colored reminders, not automatic pauses."
+        }
+      ],
+      "sample": "[cue look at the lens]\nYour first line does not need to explain everything.\n[cue pause]\nSay the one thing your viewer will get.\nThen show a quick example.\n[cue smile]\nTry rewriting your next hook in one sentence.",
+      "sourceUrl": "https://support.tiktok.com/en/using-tiktok/creating-videos/tiktok-stories",
+      "sourceLabel": "TikTok recording help",
+      "links": [
+        {
+          "href": "/mobile/ios/#how-to",
+          "label": "iPhone setup"
+        },
+        {
+          "href": "/mobile/ipad/#how-to",
+          "label": "iPad reading setup"
+        },
+        {
+          "href": "/mobile/instagram/#how-to",
+          "label": "Instagram Reels setup"
+        },
+        {
+          "href": "/mobile/snapchat/#how-to",
+          "label": "Snapchat setup"
+        },
+        {
+          "href": "/mobile/youtube/#how-to",
+          "label": "YouTube setup"
+        },
+        {
+          "href": "/mobile/linkedin/#how-to",
+          "label": "LinkedIn setup"
+        },
+        {
+          "href": "/mobile/facebook/#how-to",
+          "label": "Facebook setup"
+        },
+        {
+          "href": "/mobile/twitter/#how-to",
+          "label": "X setup"
+        },
+        {
+          "href": "/mobile/twitch/#how-to",
+          "label": "Twitch setup"
+        },
+        {
+          "href": "/mobile/",
+          "label": "Choose a mobile workflow"
+        },
+        {
+          "href": "/blog/tiktok-teleprompter-one-script-every-app/",
+          "label": "A TikTok Teleprompter That Isn’t Trapped Inside TikTok"
+        }
+      ]
+    }
   },
   {
     "slug": "mobile/youtube",
     "name": "CueCard for YouTube",
-    "platform": "both",
+    "platform": "ios",
     "title": "YouTube Teleprompter for Videos & Shorts - CueCard",
     "description": "Float your script over your camera while recording YouTube videos and Shorts. Stay on script without switching apps.",
     "keywords": "youtube teleprompter, youtube shorts teleprompter, youtube script app, floating notes youtube, youtube creator tools, youtube recording tips",
     "canonical": "https://cuecard.dev/mobile/youtube/",
-    "ogTitle": "YouTube Teleprompter for videos and Shorts",
-    "ogDescription": "Float your script over your camera for YouTube videos and Shorts. Stay on script without switching apps.",
+    "ogTitle": "YouTube Teleprompter for Videos & Shorts - CueCard",
+    "ogDescription": "Float your script over your camera while recording YouTube videos and Shorts. Stay on script without switching apps.",
     "heroSubtitle": "Shoot a video, or a Short, <em>off the cuff</em>.",
     "promotionalText": "Long form or vertical, the script scrolls at the speed you set.",
     "appDescription": "CueCard Teleprompter floats your script over your camera, so you can record YouTube videos and Shorts while reading your notes. Perfect for creators who want professional-quality content without memorizing every line.",
@@ -366,24 +868,24 @@
     "showAndroid": true,
     "features": [
       {
-        "title": "Float Over Camera",
-        "description": "Your script stays on screen while you record in your phone's own camera app.",
+        "title": "A movable floating window",
+        "description": "Position your script near the lens and choose its dimension ratio.",
         "icon": "layers"
       },
       {
-        "title": "Auto-Scroll Teleprompter",
-        "description": "Your script scrolls on its own at a speed you set, and you can pause it or change that speed at any time.",
+        "title": "Scrolling you control",
+        "description": "Set the pace in lines per minute; play, pause and restart as needed. No voice tracking.",
         "icon": "scroll"
       },
       {
-        "title": "Resizable Window",
-        "description": "Make the floating window wide, square or tall, and drag it wherever it does not cover your face.",
-        "icon": "resize"
+        "title": "Saved scripts and colored cues",
+        "description": "Save named notes and add [cue pause] reminders in your chosen cue color.",
+        "icon": "pen"
       },
       {
-        "title": "Adjustable Text",
-        "description": "Set the text size and the scroll speed so the script is easy to read from wherever your phone is set up.",
-        "icon": "type"
+        "title": "Time to get ready",
+        "description": "Set a start delay and use the timer to keep an eye on the length of your take.",
+        "icon": "clock"
       }
     ],
     "faq": [
@@ -402,21 +904,120 @@
       {
         "question": "Is CueCard free for YouTubers?",
         "answer": "Yes. CueCard is completely free. Perfect for creators at any subscriber count."
+      },
+      {
+        "question": "Why is the floating window missing?",
+        "answer": "Return to CueCard and open the prompter with the green play button. Tap the script to reveal controls and look for Start Overlay. The overlay button appears when picture-in-picture is available. Close another active picture-in-picture window and try again. If it still fails, use the full-screen reader on a second device while recording."
+      },
+      {
+        "question": "What if the script moves too fast?",
+        "answer": "Lower Scroll Speed in Settings and rehearse a short passage. Text size and window shape change how many words fit on each line, so check the pace again after resizing. Scrolling does not automatically follow your voice."
+      },
+      {
+        "question": "What if CueCard covers a camera control?",
+        "answer": "Move the floating window to another corner. Adjust Dimension Ratio and Floating Prompter Text Size in CueCard Settings, then return to your recording app. Keep the recording and camera-switch buttons reachable."
+      },
+      {
+        "question": "Will the script appear in my video?",
+        "answer": "Camera recording captures the image through the lens, so the floating script is not part of that footage. Phone screen recording or a screen broadcast can capture the window. Record a short camera test and review it before posting."
       }
     ],
     "subject": "YouTube",
-    "icon": "youtube"
+    "icon": "youtube",
+    "tutorial": {
+      "youtubeUrl": "",
+      "label": "Watch the YouTube tutorial on YouTube"
+    },
+    "guide": {
+      "heading": "Prepare a YouTube video or Short",
+      "intro": "Start with a short script on iPhone or iPad. These steps take you from CueCard’s editor to your recording app.",
+      "steps": [
+        {
+          "title": "Write and save your script",
+          "body": "Open CueCard and paste or type into the editor. The ellipsis menu includes New Note and Import from File. Choose Save as New to keep a named copy in your saved notes."
+        },
+        {
+          "title": "Choose a readable size and pace",
+          "body": "Open Settings with the gear button. Set Scroll Speed in lines/min and Text Size under Floating Prompter. Choose a Dimension Ratio that leaves room for your camera controls. Scrolling runs at the speed you set; CueCard does not listen to your voice or track your speech."
+        },
+        {
+          "title": "Start the floating window",
+          "body": "Return to the editor, hide the keyboard, and tap the green play button to open the prompter. Tap the picture-in-picture icon, labeled Start Overlay for accessibility. If the controls have faded, tap the script to show them. CueCard opens the floating window and minimizes. To use Start Delay for a fresh take, start playback in the full-screen prompter before opening the overlay."
+        },
+        {
+          "title": "Open your recording app",
+          "body": "Open your phone’s camera in video mode for a reusable recording, or open the Shorts recording camera in YouTube. Choose a vertical frame for a Short and leave space for any demonstration you plan to show."
+        },
+        {
+          "title": "Keep the words near the lens",
+          "body": "Move the floating window close to the front camera without covering the record button or camera-switch control. Use short lines and text large enough to read without leaning toward the screen."
+        },
+        {
+          "title": "Give yourself time to begin",
+          "body": "Set Start Delay in CueCard Settings before the take. Return to the full-screen prompter and restart, then press play to begin the countdown before opening the overlay. Floating-window play/pause controls scrolling; resuming plays immediately. The countdown controls the script, not your camera recording."
+        },
+        {
+          "title": "Record, review, and adjust",
+          "body": "Record a short test take, then watch it back before posting. If your eyes sweep sideways, shorten the lines or narrow the window. If you sound rushed, lower Scroll Speed. Leave a beat at each [cue pause]; cue tags are colored reminders, not automatic pauses."
+        }
+      ],
+      "sample": "[cue look at the lens]\nToday I will show you how I plan a short video.\nFirst, write the question it answers.\n[cue pause]\nThen film one example of the answer.\nTry that before adding a longer introduction.",
+      "sourceUrl": null,
+      "sourceLabel": "YouTube recording help",
+      "links": [
+        {
+          "href": "/mobile/ios/#how-to",
+          "label": "iPhone setup"
+        },
+        {
+          "href": "/mobile/ipad/#how-to",
+          "label": "iPad reading setup"
+        },
+        {
+          "href": "/mobile/tiktok/#how-to",
+          "label": "TikTok setup"
+        },
+        {
+          "href": "/mobile/instagram/#how-to",
+          "label": "Instagram Reels setup"
+        },
+        {
+          "href": "/mobile/snapchat/#how-to",
+          "label": "Snapchat setup"
+        },
+        {
+          "href": "/mobile/linkedin/#how-to",
+          "label": "LinkedIn setup"
+        },
+        {
+          "href": "/mobile/facebook/#how-to",
+          "label": "Facebook setup"
+        },
+        {
+          "href": "/mobile/twitter/#how-to",
+          "label": "X setup"
+        },
+        {
+          "href": "/mobile/twitch/#how-to",
+          "label": "Twitch setup"
+        },
+        {
+          "href": "/mobile/",
+          "label": "Choose a mobile workflow"
+        }
+      ]
+    }
   },
   {
     "slug": "mobile/linkedin",
     "name": "CueCard for LinkedIn",
-    "platform": "both",
+    "platform": "ios",
     "title": "LinkedIn Video Teleprompter, Free - CueCard Teleprompter",
     "description": "Float your script over your camera while recording LinkedIn videos. Create polished professional content without memorizing scripts.",
     "keywords": "linkedin teleprompter, linkedin video script, professional video teleprompter, floating notes linkedin, linkedin content creation, linkedin video tips",
     "canonical": "https://cuecard.dev/mobile/linkedin/",
-    "ogTitle": "LinkedIn Video Teleprompter - free on iPhone and iPad",
-    "ogDescription": "Float your script over your camera for LinkedIn videos. Create polished professional content without memorizing scripts.",
+    "ogTitle": "LinkedIn Video Teleprompter, Free - CueCard Teleprompter",
+    "ogDescription": "Float your script over your camera while recording LinkedIn videos. Create polished professional content without memorizing scripts.",
     "heroSubtitle": "Post to LinkedIn without <em>reading it twice</em>.",
     "promotionalText": "Sound prepared without sounding read to.",
     "appDescription": "CueCard Teleprompter floats your script over your camera, so you can record polished LinkedIn videos while reading your notes. Perfect for professionals who want to share thought leadership content without memorizing scripts.",
@@ -424,24 +1025,24 @@
     "showAndroid": true,
     "features": [
       {
-        "title": "Float Over Camera",
-        "description": "Your script stays on screen while you record in your phone's own camera app.",
+        "title": "A movable floating window",
+        "description": "Position your script near the lens and choose its dimension ratio.",
         "icon": "layers"
       },
       {
-        "title": "Auto-Scroll Teleprompter",
-        "description": "Your script scrolls on its own at a speed you set, and you can pause it or change that speed at any time.",
+        "title": "Scrolling you control",
+        "description": "Set the pace in lines per minute; play, pause and restart as needed. No voice tracking.",
         "icon": "scroll"
       },
       {
-        "title": "Resizable Window",
-        "description": "Make the floating window wide, square or tall, and drag it wherever it does not cover your face.",
-        "icon": "resize"
+        "title": "Saved scripts and colored cues",
+        "description": "Save named notes and add [cue pause] reminders in your chosen cue color.",
+        "icon": "pen"
       },
       {
-        "title": "Adjustable Text",
-        "description": "Set the text size and the scroll speed so the script is easy to read from wherever your phone is set up.",
-        "icon": "type"
+        "title": "Time to get ready",
+        "description": "Set a start delay and use the timer to keep an eye on the length of your take.",
+        "icon": "clock"
       }
     ],
     "faq": [
@@ -454,26 +1055,121 @@
         "answer": "Yes. Float your talking points while recording company announcements, product updates, or team introductions."
       },
       {
-        "question": "Will my audience see the teleprompter?",
-        "answer": "No. CueCard sits on top of the app on your screen, not in front of the lens, so the camera never records it. Your connections see you and nothing else. The one exception is screen recording, which captures your whole screen — close the prompter first if that is how you are recording."
-      },
-      {
         "question": "Is CueCard free for professionals?",
         "answer": "Yes. CueCard is completely free and perfect for business professionals."
+      },
+      {
+        "question": "Why is the floating window missing?",
+        "answer": "Return to CueCard and open the prompter with the green play button. Tap the script to reveal controls and look for Start Overlay. The overlay button appears when picture-in-picture is available. Close another active picture-in-picture window and try again. If it still fails, use the full-screen reader on a second device while recording."
+      },
+      {
+        "question": "What if the script moves too fast?",
+        "answer": "Lower Scroll Speed in Settings and rehearse a short passage. Text size and window shape change how many words fit on each line, so check the pace again after resizing. Scrolling does not automatically follow your voice."
+      },
+      {
+        "question": "What if CueCard covers a camera control?",
+        "answer": "Move the floating window to another corner. Adjust Dimension Ratio and Floating Prompter Text Size in CueCard Settings, then return to your recording app. Keep the recording and camera-switch buttons reachable."
+      },
+      {
+        "question": "Will the script appear in my video?",
+        "answer": "Camera recording captures the image through the lens, so the floating script is not part of that footage. Phone screen recording or a screen broadcast can capture the window. Record a short camera test and review it before posting."
       }
     ],
     "subject": "LinkedIn",
-    "icon": "linkedin"
+    "icon": "linkedin",
+    "tutorial": {
+      "youtubeUrl": "",
+      "label": "Watch the LinkedIn tutorial on YouTube"
+    },
+    "guide": {
+      "heading": "Record a clear LinkedIn video update",
+      "intro": "Start with a short script on iPhone or iPad. These steps take you from CueCard’s editor to your recording app.",
+      "steps": [
+        {
+          "title": "Write and save your script",
+          "body": "Open CueCard and paste or type into the editor. The ellipsis menu includes New Note and Import from File. Choose Save as New to keep a named copy in your saved notes."
+        },
+        {
+          "title": "Choose a readable size and pace",
+          "body": "Open Settings with the gear button. Set Scroll Speed in lines/min and Text Size under Floating Prompter. Choose a Dimension Ratio that leaves room for your camera controls. Scrolling runs at the speed you set; CueCard does not listen to your voice or track your speech."
+        },
+        {
+          "title": "Start the floating window",
+          "body": "Return to the editor, hide the keyboard, and tap the green play button to open the prompter. Tap the picture-in-picture icon, labeled Start Overlay for accessibility. If the controls have faded, tap the script to show them. CueCard opens the floating window and minimizes. To use Start Delay for a fresh take, start playback in the full-screen prompter before opening the overlay."
+        },
+        {
+          "title": "Open your recording app",
+          "body": "Open your phone’s camera in video mode and frame a talking-head shot. Record the update locally, review it, then attach the finished clip to your LinkedIn post."
+        },
+        {
+          "title": "Keep the words near the lens",
+          "body": "Move the floating window close to the front camera without covering the record button or camera-switch control. Use short lines and text large enough to read without leaning toward the screen."
+        },
+        {
+          "title": "Give yourself time to begin",
+          "body": "Set Start Delay in CueCard Settings before the take. Return to the full-screen prompter and restart, then press play to begin the countdown before opening the overlay. Floating-window play/pause controls scrolling; resuming plays immediately. The countdown controls the script, not your camera recording."
+        },
+        {
+          "title": "Record, review, and adjust",
+          "body": "Record a short test take, then watch it back before posting. If your eyes sweep sideways, shorten the lines or narrow the window. If you sound rushed, lower Scroll Speed. Leave a beat at each [cue pause]; cue tags are colored reminders, not automatic pauses."
+        }
+      ],
+      "sample": "[cue steady pace]\nHere is one lesson from our latest project.\nWe wrote down the decision before the meeting.\n[cue pause]\nThat gave everyone something concrete to improve.\nWhat helps your team arrive prepared?",
+      "sourceUrl": null,
+      "sourceLabel": "LinkedIn recording help",
+      "links": [
+        {
+          "href": "/mobile/ios/#how-to",
+          "label": "iPhone setup"
+        },
+        {
+          "href": "/mobile/ipad/#how-to",
+          "label": "iPad reading setup"
+        },
+        {
+          "href": "/mobile/tiktok/#how-to",
+          "label": "TikTok setup"
+        },
+        {
+          "href": "/mobile/instagram/#how-to",
+          "label": "Instagram Reels setup"
+        },
+        {
+          "href": "/mobile/snapchat/#how-to",
+          "label": "Snapchat setup"
+        },
+        {
+          "href": "/mobile/youtube/#how-to",
+          "label": "YouTube setup"
+        },
+        {
+          "href": "/mobile/facebook/#how-to",
+          "label": "Facebook setup"
+        },
+        {
+          "href": "/mobile/twitter/#how-to",
+          "label": "X setup"
+        },
+        {
+          "href": "/mobile/twitch/#how-to",
+          "label": "Twitch setup"
+        },
+        {
+          "href": "/mobile/",
+          "label": "Choose a mobile workflow"
+        }
+      ]
+    }
   },
   {
     "slug": "mobile/facebook",
     "name": "CueCard for Facebook",
-    "platform": "both",
+    "platform": "ios",
     "title": "Facebook Teleprompter for Reels & Live - CueCard",
     "description": "Float your script over Facebook while recording Reels or going Live. Stay on script without switching apps.",
     "keywords": "facebook teleprompter, facebook reels teleprompter, facebook live script, floating notes facebook, facebook content creation, facebook video tips",
     "canonical": "https://cuecard.dev/mobile/facebook/",
-    "ogTitle": "Facebook Teleprompter for Reels and Live",
+    "ogTitle": "Facebook Teleprompter for Reels & Live - CueCard",
     "ogDescription": "Float your script over Facebook while recording Reels or going Live. Stay on script without switching apps.",
     "heroSubtitle": "Go live on Facebook with your <em>notes in front of you</em>.",
     "promotionalText": "Reels and Facebook Live, with the script only you can see.",
@@ -482,24 +1178,24 @@
     "showAndroid": true,
     "features": [
       {
-        "title": "Float Over Facebook",
-        "description": "Your script stays visible while you record Reels or go Live.",
+        "title": "A movable floating window",
+        "description": "Position your script near the lens and choose its dimension ratio.",
         "icon": "layers"
       },
       {
-        "title": "Auto-Scroll Teleprompter",
-        "description": "Your script scrolls on its own at a speed you set, and you can pause it or change that speed at any time.",
+        "title": "Scrolling you control",
+        "description": "Set the pace in lines per minute; play, pause and restart as needed. No voice tracking.",
         "icon": "scroll"
       },
       {
-        "title": "Resizable Window",
-        "description": "Make the floating window wide, square or tall, and drag it wherever it does not cover your face.",
-        "icon": "resize"
+        "title": "Saved scripts and colored cues",
+        "description": "Save named notes and add [cue pause] reminders in your chosen cue color.",
+        "icon": "pen"
       },
       {
-        "title": "Adjustable Text",
-        "description": "Set the text size and the scroll speed so the script is easy to read from wherever your phone is set up.",
-        "icon": "type"
+        "title": "Time to get ready",
+        "description": "Set a start delay and use the timer to keep an eye on the length of your take.",
+        "icon": "clock"
       }
     ],
     "faq": [
@@ -512,26 +1208,121 @@
         "answer": "Yes. Float your notes while going Live. Perfect for Q&A sessions, product demos, or community updates."
       },
       {
-        "question": "Will my followers see the teleprompter?",
-        "answer": "No. CueCard sits on top of the app on your screen, not in front of the lens, so the camera never records it. Your audience see you and nothing else. The one exception is screen recording, which captures your whole screen — close the prompter first if that is how you are recording."
-      },
-      {
         "question": "Is CueCard free?",
         "answer": "Yes. CueCard is completely free and open source. It is free on the App Store for iPhone and iPad now, and the Android app is still being built."
+      },
+      {
+        "question": "Why is the floating window missing?",
+        "answer": "Return to CueCard and open the prompter with the green play button. Tap the script to reveal controls and look for Start Overlay. The overlay button appears when picture-in-picture is available. Close another active picture-in-picture window and try again. If it still fails, use the full-screen reader on a second device while recording."
+      },
+      {
+        "question": "What if the script moves too fast?",
+        "answer": "Lower Scroll Speed in Settings and rehearse a short passage. Text size and window shape change how many words fit on each line, so check the pace again after resizing. Scrolling does not automatically follow your voice."
+      },
+      {
+        "question": "What if CueCard covers a camera control?",
+        "answer": "Move the floating window to another corner. Adjust Dimension Ratio and Floating Prompter Text Size in CueCard Settings, then return to your recording app. Keep the recording and camera-switch buttons reachable."
+      },
+      {
+        "question": "Will the script appear in my video?",
+        "answer": "Camera recording captures the image through the lens, so the floating script is not part of that footage. Phone screen recording or a screen broadcast can capture the window. Record a short camera test and review it before posting."
       }
     ],
     "subject": "Facebook",
-    "icon": "facebook"
+    "icon": "facebook",
+    "tutorial": {
+      "youtubeUrl": "",
+      "label": "Watch the Facebook tutorial on YouTube"
+    },
+    "guide": {
+      "heading": "Film a Facebook Reel or prepare a live update",
+      "intro": "Start with a short script on iPhone or iPad. These steps take you from CueCard’s editor to your recording app.",
+      "steps": [
+        {
+          "title": "Write and save your script",
+          "body": "Open CueCard and paste or type into the editor. The ellipsis menu includes New Note and Import from File. Choose Save as New to keep a named copy in your saved notes."
+        },
+        {
+          "title": "Choose a readable size and pace",
+          "body": "Open Settings with the gear button. Set Scroll Speed in lines/min and Text Size under Floating Prompter. Choose a Dimension Ratio that leaves room for your camera controls. Scrolling runs at the speed you set; CueCard does not listen to your voice or track your speech."
+        },
+        {
+          "title": "Start the floating window",
+          "body": "Return to the editor, hide the keyboard, and tap the green play button to open the prompter. Tap the picture-in-picture icon, labeled Start Overlay for accessibility. If the controls have faded, tap the script to show them. CueCard opens the floating window and minimizes. To use Start Delay for a fresh take, start playback in the full-screen prompter before opening the overlay."
+        },
+        {
+          "title": "Open your recording app",
+          "body": "For a Reel, open Facebook’s Reel recording camera or record in your phone’s camera and upload the clip afterward. For a live camera update, prepare your notes before opening the live broadcast setup and check the framing before broadcasting."
+        },
+        {
+          "title": "Keep the words near the lens",
+          "body": "Move the floating window close to the front camera without covering the record button or camera-switch control. Use short lines and text large enough to read without leaning toward the screen."
+        },
+        {
+          "title": "Give yourself time to begin",
+          "body": "Set Start Delay in CueCard Settings before the take. Return to the full-screen prompter and restart, then press play to begin the countdown before opening the overlay. Floating-window play/pause controls scrolling; resuming plays immediately. The countdown controls the script, not your camera recording."
+        },
+        {
+          "title": "Record, review, and adjust",
+          "body": "Record a short test take, then watch it back before posting. If your eyes sweep sideways, shorten the lines or narrow the window. If you sound rushed, lower Scroll Speed. Leave a beat at each [cue pause]; cue tags are colored reminders, not automatic pauses."
+        }
+      ],
+      "sample": "[cue welcome]\nHere is what we are making this week.\n[cue show the work]\nThis is the first version, before the finishing touches.\n[cue pause]\nLeave a question and I will cover it in the next update.",
+      "sourceUrl": null,
+      "sourceLabel": "Facebook recording help",
+      "links": [
+        {
+          "href": "/mobile/ios/#how-to",
+          "label": "iPhone setup"
+        },
+        {
+          "href": "/mobile/ipad/#how-to",
+          "label": "iPad reading setup"
+        },
+        {
+          "href": "/mobile/tiktok/#how-to",
+          "label": "TikTok setup"
+        },
+        {
+          "href": "/mobile/instagram/#how-to",
+          "label": "Instagram Reels setup"
+        },
+        {
+          "href": "/mobile/snapchat/#how-to",
+          "label": "Snapchat setup"
+        },
+        {
+          "href": "/mobile/youtube/#how-to",
+          "label": "YouTube setup"
+        },
+        {
+          "href": "/mobile/linkedin/#how-to",
+          "label": "LinkedIn setup"
+        },
+        {
+          "href": "/mobile/twitter/#how-to",
+          "label": "X setup"
+        },
+        {
+          "href": "/mobile/twitch/#how-to",
+          "label": "Twitch setup"
+        },
+        {
+          "href": "/mobile/",
+          "label": "Choose a mobile workflow"
+        }
+      ]
+    }
   },
   {
     "slug": "mobile/snapchat",
     "name": "CueCard for Snapchat",
-    "platform": "both",
+    "platform": "ios",
     "title": "Snapchat Teleprompter for Stories & Spotlight - CueCard",
     "description": "Float your script over Snapchat while recording Stories or Spotlight videos. Stay on script without switching apps.",
     "keywords": "snapchat teleprompter, snapchat stories script, snapchat spotlight teleprompter, floating notes snapchat, snapchat content creation, snapchat video tips",
     "canonical": "https://cuecard.dev/mobile/snapchat/",
-    "ogTitle": "Snapchat Teleprompter for Stories and Spotlight",
+    "ogTitle": "Snapchat Teleprompter for Stories & Spotlight - CueCard",
     "ogDescription": "Float your script over Snapchat while recording Stories or Spotlight videos. Stay on script without switching apps.",
     "heroSubtitle": "Shoot a Snap with the words <em>already there</em>.",
     "promotionalText": "Spotlight and Stories, without a single retake for a lost line.",
@@ -540,24 +1331,24 @@
     "showAndroid": true,
     "features": [
       {
-        "title": "Float Over Snapchat",
-        "description": "Your script stays visible while you record Stories or Spotlight videos.",
+        "title": "A movable floating window",
+        "description": "Position your script near the lens and choose its dimension ratio.",
         "icon": "layers"
       },
       {
-        "title": "Auto-Scroll Teleprompter",
-        "description": "Your script scrolls on its own at a speed you set, and you can pause it or change that speed at any time.",
+        "title": "Scrolling you control",
+        "description": "Set the pace in lines per minute; play, pause and restart as needed. No voice tracking.",
         "icon": "scroll"
       },
       {
-        "title": "Resizable Window",
-        "description": "Make the floating window wide, square or tall, and drag it wherever it does not cover your face.",
-        "icon": "resize"
+        "title": "Saved scripts and colored cues",
+        "description": "Save named notes and add [cue pause] reminders in your chosen cue color.",
+        "icon": "pen"
       },
       {
-        "title": "Adjustable Text",
-        "description": "Set the text size and the scroll speed so the script is easy to read from wherever your phone is set up.",
-        "icon": "type"
+        "title": "Time to get ready",
+        "description": "Set a start delay and use the timer to keep an eye on the length of your take.",
+        "icon": "clock"
       }
     ],
     "faq": [
@@ -570,27 +1361,126 @@
         "answer": "Yes. Keep your talking points visible while creating Spotlight content that could go viral."
       },
       {
-        "question": "Will my friends see the teleprompter?",
-        "answer": "No. CueCard sits on top of the app on your screen, not in front of the lens, so the camera never records it. Your audience see you and nothing else. The one exception is screen recording, which captures your whole screen — close the prompter first if that is how you are recording."
-      },
-      {
         "question": "Is CueCard free?",
         "answer": "Yes. CueCard is completely free and open source. It is free on the App Store for iPhone and iPad now, and the Android app is still being built."
+      },
+      {
+        "question": "Why is the floating window missing?",
+        "answer": "Return to CueCard and open the prompter with the green play button. Tap the script to reveal controls and look for Start Overlay. The overlay button appears when picture-in-picture is available. Close another active picture-in-picture window and try again. If it still fails, use the full-screen reader on a second device while recording."
+      },
+      {
+        "question": "What if the script moves too fast?",
+        "answer": "Lower Scroll Speed in Settings and rehearse a short passage. Text size and window shape change how many words fit on each line, so check the pace again after resizing. Scrolling does not automatically follow your voice."
+      },
+      {
+        "question": "What if CueCard covers a camera control?",
+        "answer": "Move the floating window to another corner. Adjust Dimension Ratio and Floating Prompter Text Size in CueCard Settings, then return to your recording app. Keep the recording and camera-switch buttons reachable."
+      },
+      {
+        "question": "Will the script appear in my video?",
+        "answer": "Camera recording captures the image through the lens, so the floating script is not part of that footage. Phone screen recording or a screen broadcast can capture the window. Record a short camera test and review it before posting."
       }
     ],
     "subject": "Snapchat",
-    "icon": "snapchat"
+    "icon": "snapchat",
+    "tutorial": {
+      "youtubeUrl": "",
+      "label": "Watch the Snapchat tutorial on YouTube"
+    },
+    "guide": {
+      "heading": "Record a Snap for Stories or Spotlight",
+      "intro": "Start with a short script on iPhone or iPad. These steps take you from CueCard’s editor to your recording app.",
+      "steps": [
+        {
+          "title": "Write and save your script",
+          "body": "Open CueCard and paste or type into the editor. The ellipsis menu includes New Note and Import from File. Choose Save as New to keep a named copy in your saved notes."
+        },
+        {
+          "title": "Choose a readable size and pace",
+          "body": "Open Settings with the gear button. Set Scroll Speed in lines/min and Text Size under Floating Prompter. Choose a Dimension Ratio that leaves room for your camera controls. Scrolling runs at the speed you set; CueCard does not listen to your voice or track your speech."
+        },
+        {
+          "title": "Start the floating window",
+          "body": "Return to the editor, hide the keyboard, and tap the green play button to open the prompter. Tap the picture-in-picture icon, labeled Start Overlay for accessibility. If the controls have faded, tap the script to show them. CueCard opens the floating window and minimizes. To use Start Delay for a fresh take, start playback in the full-screen prompter before opening the overlay."
+        },
+        {
+          "title": "Open your recording app",
+          "body": "Switch to Snapchat and choose the selfie camera. Press and hold the Camera button to record a video Snap. Keep that button clear of the floating script."
+        },
+        {
+          "title": "Keep the words near the lens",
+          "body": "Move the floating window close to the front camera without covering the record button or camera-switch control. Use short lines and text large enough to read without leaning toward the screen."
+        },
+        {
+          "title": "Give yourself time to begin",
+          "body": "Set Start Delay in CueCard Settings before the take. Return to the full-screen prompter and restart, then press play to begin the countdown before opening the overlay. Floating-window play/pause controls scrolling; resuming plays immediately. The countdown controls the script, not your camera recording."
+        },
+        {
+          "title": "Record, review, and adjust",
+          "body": "Record a short test take, then watch it back before posting. If your eyes sweep sideways, shorten the lines or narrow the window. If you sound rushed, lower Scroll Speed. Leave a beat at each [cue pause]; cue tags are colored reminders, not automatic pauses."
+        }
+      ],
+      "sample": "[cue look up]\nA quick look behind the scenes.\n[cue pause]\nThis is the sketch that started today’s project.\nI changed just one detail: the opening line.\n[cue smile]\nWhich version would you keep?",
+      "sourceUrl": "https://help.snapchat.com/hc/en-us/articles/7012326414612-How-do-I-create-a-Snap",
+      "sourceLabel": "Snapchat recording help",
+      "links": [
+        {
+          "href": "/mobile/ios/#how-to",
+          "label": "iPhone setup"
+        },
+        {
+          "href": "/mobile/ipad/#how-to",
+          "label": "iPad reading setup"
+        },
+        {
+          "href": "/mobile/tiktok/#how-to",
+          "label": "TikTok setup"
+        },
+        {
+          "href": "/mobile/instagram/#how-to",
+          "label": "Instagram Reels setup"
+        },
+        {
+          "href": "/mobile/youtube/#how-to",
+          "label": "YouTube setup"
+        },
+        {
+          "href": "/mobile/linkedin/#how-to",
+          "label": "LinkedIn setup"
+        },
+        {
+          "href": "/mobile/facebook/#how-to",
+          "label": "Facebook setup"
+        },
+        {
+          "href": "/mobile/twitter/#how-to",
+          "label": "X setup"
+        },
+        {
+          "href": "/mobile/twitch/#how-to",
+          "label": "Twitch setup"
+        },
+        {
+          "href": "/mobile/",
+          "label": "Choose a mobile workflow"
+        },
+        {
+          "href": "/blog/teleprompter-for-snapchat-read-your-script-on-camera/",
+          "label": "How to Use a Teleprompter on Snapchat Without It Ending Up in the Snap"
+        }
+      ]
+    }
   },
   {
     "slug": "mobile/twitter",
     "name": "CueCard for Twitter/X",
-    "platform": "both",
+    "platform": "ios",
     "title": "Teleprompter for X (Twitter) Videos - CueCard Teleprompter",
     "description": "Float your script over your camera while recording video tweets. Create engaging Twitter/X content without memorizing scripts.",
     "keywords": "twitter teleprompter, x teleprompter, video tweet script, floating notes twitter, twitter content creation, x video tips",
     "canonical": "https://cuecard.dev/mobile/twitter/",
-    "ogTitle": "Teleprompter for X and Twitter videos",
-    "ogDescription": "Float your script over your camera for video tweets. Create engaging Twitter/X content without memorizing scripts.",
+    "ogTitle": "Teleprompter for X (Twitter) Videos - CueCard Teleprompter",
+    "ogDescription": "Float your script over your camera while recording video tweets. Create engaging Twitter/X content without memorizing scripts.",
     "heroSubtitle": "Post a video to X in <em>one take</em>.",
     "promotionalText": "Say the whole thought, the first time.",
     "appDescription": "CueCard Teleprompter floats your script over your camera, so you can record engaging video tweets while reading your notes. Perfect for creators and professionals who want polished Twitter/X content.",
@@ -598,24 +1488,24 @@
     "showAndroid": true,
     "features": [
       {
-        "title": "Float Over Camera",
-        "description": "Your script stays on screen while you record in your phone's own camera app.",
+        "title": "A movable floating window",
+        "description": "Position your script near the lens and choose its dimension ratio.",
         "icon": "layers"
       },
       {
-        "title": "Auto-Scroll Teleprompter",
-        "description": "Your script scrolls on its own at a speed you set, and you can pause it or change that speed at any time.",
+        "title": "Scrolling you control",
+        "description": "Set the pace in lines per minute; play, pause and restart as needed. No voice tracking.",
         "icon": "scroll"
       },
       {
-        "title": "Resizable Window",
-        "description": "Make the floating window wide, square or tall, and drag it wherever it does not cover your face.",
-        "icon": "resize"
+        "title": "Saved scripts and colored cues",
+        "description": "Save named notes and add [cue pause] reminders in your chosen cue color.",
+        "icon": "pen"
       },
       {
-        "title": "Adjustable Text",
-        "description": "Set the text size and the scroll speed so the script is easy to read from wherever your phone is set up.",
-        "icon": "type"
+        "title": "Time to get ready",
+        "description": "Set a start delay and use the timer to keep an eye on the length of your take.",
+        "icon": "clock"
       }
     ],
     "faq": [
@@ -628,27 +1518,122 @@
         "answer": "Yes. Float your talking points while preparing for or participating in Twitter Spaces discussions."
       },
       {
-        "question": "Will my followers see the teleprompter?",
-        "answer": "No. CueCard sits on top of the app on your screen, not in front of the lens, so the camera never records it. Your followers on X see you and nothing else. The one exception is screen recording, which captures your whole screen — close the prompter first if that is how you are recording."
-      },
-      {
         "question": "Is CueCard free?",
         "answer": "Yes. CueCard is completely free and open source. It is free on the App Store for iPhone and iPad now, and the Android app is still being built."
+      },
+      {
+        "question": "Why is the floating window missing?",
+        "answer": "Return to CueCard and open the prompter with the green play button. Tap the script to reveal controls and look for Start Overlay. The overlay button appears when picture-in-picture is available. Close another active picture-in-picture window and try again. If it still fails, use the full-screen reader on a second device while recording."
+      },
+      {
+        "question": "What if the script moves too fast?",
+        "answer": "Lower Scroll Speed in Settings and rehearse a short passage. Text size and window shape change how many words fit on each line, so check the pace again after resizing. Scrolling does not automatically follow your voice."
+      },
+      {
+        "question": "What if CueCard covers a camera control?",
+        "answer": "Move the floating window to another corner. Adjust Dimension Ratio and Floating Prompter Text Size in CueCard Settings, then return to your recording app. Keep the recording and camera-switch buttons reachable."
+      },
+      {
+        "question": "Will the script appear in my video?",
+        "answer": "Camera recording captures the image through the lens, so the floating script is not part of that footage. Phone screen recording or a screen broadcast can capture the window. Record a short camera test and review it before posting."
       }
     ],
     "subject": "X",
-    "icon": "twitter"
+    "icon": "twitter",
+    "tutorial": {
+      "youtubeUrl": "",
+      "label": "Watch the X tutorial on YouTube"
+    },
+    "guide": {
+      "heading": "Record a focused video for X",
+      "intro": "Start with a short script on iPhone or iPad. These steps take you from CueCard’s editor to your recording app.",
+      "steps": [
+        {
+          "title": "Write and save your script",
+          "body": "Open CueCard and paste or type into the editor. The ellipsis menu includes New Note and Import from File. Choose Save as New to keep a named copy in your saved notes."
+        },
+        {
+          "title": "Choose a readable size and pace",
+          "body": "Open Settings with the gear button. Set Scroll Speed in lines/min and Text Size under Floating Prompter. Choose a Dimension Ratio that leaves room for your camera controls. Scrolling runs at the speed you set; CueCard does not listen to your voice or track your speech."
+        },
+        {
+          "title": "Start the floating window",
+          "body": "Return to the editor, hide the keyboard, and tap the green play button to open the prompter. Tap the picture-in-picture icon, labeled Start Overlay for accessibility. If the controls have faded, tap the script to show them. CueCard opens the floating window and minimizes. To use Start Delay for a fresh take, start playback in the full-screen prompter before opening the overlay."
+        },
+        {
+          "title": "Open your recording app",
+          "body": "Open your phone’s camera in video mode. Film a single point, save the clip, then attach it to your post in X. This keeps a reusable copy available for other platforms."
+        },
+        {
+          "title": "Keep the words near the lens",
+          "body": "Move the floating window close to the front camera without covering the record button or camera-switch control. Use short lines and text large enough to read without leaning toward the screen."
+        },
+        {
+          "title": "Give yourself time to begin",
+          "body": "Set Start Delay in CueCard Settings before the take. Return to the full-screen prompter and restart, then press play to begin the countdown before opening the overlay. Floating-window play/pause controls scrolling; resuming plays immediately. The countdown controls the script, not your camera recording."
+        },
+        {
+          "title": "Record, review, and adjust",
+          "body": "Record a short test take, then watch it back before posting. If your eyes sweep sideways, shorten the lines or narrow the window. If you sound rushed, lower Scroll Speed. Leave a beat at each [cue pause]; cue tags are colored reminders, not automatic pauses."
+        }
+      ],
+      "sample": "[cue look up]\nOne thought I could not fit into a short post.\nA good example makes an abstract idea easier to discuss.\n[cue pause]\nShow the example before explaining the theory.\nWhat example would you add?",
+      "sourceUrl": null,
+      "sourceLabel": "X recording help",
+      "links": [
+        {
+          "href": "/mobile/ios/#how-to",
+          "label": "iPhone setup"
+        },
+        {
+          "href": "/mobile/ipad/#how-to",
+          "label": "iPad reading setup"
+        },
+        {
+          "href": "/mobile/tiktok/#how-to",
+          "label": "TikTok setup"
+        },
+        {
+          "href": "/mobile/instagram/#how-to",
+          "label": "Instagram Reels setup"
+        },
+        {
+          "href": "/mobile/snapchat/#how-to",
+          "label": "Snapchat setup"
+        },
+        {
+          "href": "/mobile/youtube/#how-to",
+          "label": "YouTube setup"
+        },
+        {
+          "href": "/mobile/linkedin/#how-to",
+          "label": "LinkedIn setup"
+        },
+        {
+          "href": "/mobile/facebook/#how-to",
+          "label": "Facebook setup"
+        },
+        {
+          "href": "/mobile/twitch/#how-to",
+          "label": "Twitch setup"
+        },
+        {
+          "href": "/mobile/",
+          "label": "Choose a mobile workflow"
+        }
+      ]
+    }
   },
   {
     "slug": "mobile/twitch",
     "name": "CueCard for Twitch",
-    "platform": "both",
+    "platform": "ios",
     "title": "Twitch Teleprompter - CueCard Teleprompter for Going Live",
     "description": "Keep your talking points floating over Twitch while you stream from your phone. Free teleprompter for iPhone and iPad, with Android coming soon.",
     "keywords": "twitch teleprompter, teleprompter for streaming, streamer script app, twitch live notes, going live teleprompter, mobile streaming notes, twitch stream script",
     "canonical": "https://cuecard.dev/mobile/twitch/",
-    "ogTitle": "CueCard for Twitch - Teleprompter for Going Live",
-    "ogDescription": "Talking points floating over Twitch while you stream from your phone. Free on iPhone and iPad.",
+    "ogTitle": "Twitch Teleprompter - CueCard Teleprompter for Going Live",
+    "ogDescription": "Keep your talking points floating over Twitch while you stream from your phone. Free teleprompter for iPhone and iPad, with Android coming soon.",
     "heroSubtitle": "Go live with your <em>run of show</em> on the glass.",
     "promotionalText": "Segments, sponsor reads and shout-outs, in order, while you stream.",
     "appDescription": "CueCard Teleprompter floats your run of show above Twitch while you stream from your phone, so sponsor reads land word for word and you never lose the thread mid-stream.",
@@ -657,23 +1642,23 @@
     "demoId": "phone",
     "features": [
       {
-        "title": "Floats over the Twitch app",
-        "description": "Your notes sit on top of the stream you are already running.",
+        "title": "A movable floating window",
+        "description": "Position your script near the lens and choose its dimension ratio.",
         "icon": "layers"
       },
       {
-        "title": "Sponsor reads, word for word",
-        "description": "Paste the copy in and read it without the stream noticing you looked away.",
+        "title": "Scrolling you control",
+        "description": "Set the pace in lines per minute; play, pause and restart as needed. No voice tracking.",
         "icon": "scroll"
       },
       {
-        "title": "Cues for the delivery",
-        "description": "[cue hype], [cue slow down] — stage directions to yourself, never spoken.",
+        "title": "Saved scripts and colored cues",
+        "description": "Save named notes and add [cue pause] reminders in your chosen cue color.",
         "icon": "pen"
       },
       {
-        "title": "A timer for the segment",
-        "description": "Keep a ten minute block to ten minutes without checking a clock.",
+        "title": "Time to get ready",
+        "description": "Set a start delay and use the timer to keep an eye on the length of your take.",
         "icon": "clock"
       }
     ],
@@ -683,19 +1668,114 @@
         "answer": "Yes. CueCard floats above the Twitch app on your phone, so your run of show stays readable while you go live. Viewers see the stream, not the prompter."
       },
       {
-        "question": "Will my Twitch viewers see my notes?",
-        "answer": "No. CueCard sits on top of the app on your screen, not in front of the lens, so the camera never records it. Your viewers see you and nothing else. The one exception is screen recording, which captures your whole screen — close the prompter first if that is how you are recording."
-      },
-      {
         "question": "Is it good for sponsor reads?",
         "answer": "That is the case it earns its place in. Paste the copy in, set a slow scroll, and read it exactly as written while still looking at the camera."
       },
       {
         "question": "Does CueCard work for streaming from a computer?",
         "answer": "Yes, differently: <a href=\"/desktop/\">CueCard for Mac and Windows</a> keeps notes out of anything you capture or share, which is what you want when you are streaming a screen rather than a face."
+      },
+      {
+        "question": "Why is the floating window missing?",
+        "answer": "Return to CueCard and open the prompter with the green play button. Tap the script to reveal controls and look for Start Overlay. The overlay button appears when picture-in-picture is available. Close another active picture-in-picture window and try again. If it still fails, use the full-screen reader on a second device while recording."
+      },
+      {
+        "question": "What if the script moves too fast?",
+        "answer": "Lower Scroll Speed in Settings and rehearse a short passage. Text size and window shape change how many words fit on each line, so check the pace again after resizing. Scrolling does not automatically follow your voice."
+      },
+      {
+        "question": "What if CueCard covers a camera control?",
+        "answer": "Move the floating window to another corner. Adjust Dimension Ratio and Floating Prompter Text Size in CueCard Settings, then return to your recording app. Keep the recording and camera-switch buttons reachable."
+      },
+      {
+        "question": "Will the script appear in my video?",
+        "answer": "Camera recording captures the image through the lens, so the floating script is not part of that footage. Phone screen recording or a screen broadcast can capture the window. Record a short camera test and review it before posting."
       }
     ],
     "subject": "Twitch",
-    "icon": "twitch"
+    "icon": "twitch",
+    "tutorial": {
+      "youtubeUrl": "",
+      "label": "Watch the Twitch tutorial on YouTube"
+    },
+    "guide": {
+      "heading": "Prepare your notes for a mobile camera stream",
+      "intro": "Start with a short script on iPhone or iPad. These steps take you from CueCard’s editor to your recording app.",
+      "steps": [
+        {
+          "title": "Write and save your script",
+          "body": "Open CueCard and paste or type into the editor. The ellipsis menu includes New Note and Import from File. Choose Save as New to keep a named copy in your saved notes."
+        },
+        {
+          "title": "Choose a readable size and pace",
+          "body": "Open Settings with the gear button. Set Scroll Speed in lines/min and Text Size under Floating Prompter. Choose a Dimension Ratio that leaves room for your camera controls. Scrolling runs at the speed you set; CueCard does not listen to your voice or track your speech."
+        },
+        {
+          "title": "Start the floating window",
+          "body": "Return to the editor, hide the keyboard, and tap the green play button to open the prompter. Tap the picture-in-picture icon, labeled Start Overlay for accessibility. If the controls have faded, tap the script to show them. CueCard opens the floating window and minimizes. To use Start Delay for a fresh take, start playback in the full-screen prompter before opening the overlay."
+        },
+        {
+          "title": "Open your recording app",
+          "body": "Rehearse the opening in your phone’s camera first. Then open your mobile camera broadcast setup in Twitch and arrange the floating window around the controls and chat. Screen broadcasts can capture the prompter, so use this workflow for a camera stream."
+        },
+        {
+          "title": "Keep the words near the lens",
+          "body": "Move the floating window close to the front camera without covering the record button or camera-switch control. Use short lines and text large enough to read without leaning toward the screen."
+        },
+        {
+          "title": "Give yourself time to begin",
+          "body": "Set Start Delay in CueCard Settings before the take. Return to the full-screen prompter and restart, then press play to begin the countdown before opening the overlay. Floating-window play/pause controls scrolling; resuming plays immediately. The countdown controls the script, not your camera recording."
+        },
+        {
+          "title": "Record, review, and adjust",
+          "body": "Record a short test take, then watch it back before posting. If your eyes sweep sideways, shorten the lines or narrow the window. If you sound rushed, lower Scroll Speed. Leave a beat at each [cue pause]; cue tags are colored reminders, not automatic pauses."
+        }
+      ],
+      "sample": "[cue welcome]\nWelcome in. Here is today’s plan.\nFirst, a quick progress update.\nThen I will show the next step.\n[cue pause for chat]\nLeave your questions and I will pick them up between sections.",
+      "sourceUrl": null,
+      "sourceLabel": "Twitch recording help",
+      "links": [
+        {
+          "href": "/mobile/ios/#how-to",
+          "label": "iPhone setup"
+        },
+        {
+          "href": "/mobile/ipad/#how-to",
+          "label": "iPad reading setup"
+        },
+        {
+          "href": "/mobile/tiktok/#how-to",
+          "label": "TikTok setup"
+        },
+        {
+          "href": "/mobile/instagram/#how-to",
+          "label": "Instagram Reels setup"
+        },
+        {
+          "href": "/mobile/snapchat/#how-to",
+          "label": "Snapchat setup"
+        },
+        {
+          "href": "/mobile/youtube/#how-to",
+          "label": "YouTube setup"
+        },
+        {
+          "href": "/mobile/linkedin/#how-to",
+          "label": "LinkedIn setup"
+        },
+        {
+          "href": "/mobile/facebook/#how-to",
+          "label": "Facebook setup"
+        },
+        {
+          "href": "/mobile/twitter/#how-to",
+          "label": "X setup"
+        },
+        {
+          "href": "/mobile/",
+          "label": "Choose a mobile workflow"
+        }
+      ]
+    }
   }
 ]

@@ -1,13 +1,38 @@
 // Site-wide constants. Anything that appears on more than one page and would
 // be a bug to get out of step lives here, so a change lands everywhere at once.
 //
-// The phone is the product. /  is CueCard Teleprompter on iPhone and iPad;
-// /desktop/ is the Mac and Windows app, kept whole because it ranks, but it
-// is the second half of the story on every page rather than the first.
+// The homepage introduces both products; /mobile/ and /desktop/ own their workflows.
 
 const year = new Date().getFullYear();
 
+const products = {
+  mobile: {
+    id: "https://cuecard.dev/#mobileapp", name: "CueCard Teleprompter",
+    url: "https://cuecard.dev/mobile/", price: "0", currency: "USD",
+    description: "A free mobile teleprompter with a floating script, adjustable scrolling, saved scripts, colored cues and timing controls.",
+    image: "https://cuecard.dev/assets/promo-mobile.jpg",
+    screenshots: ["https://cuecard.dev/assets/promo-mobile.jpg", "https://cuecard.dev/assets/promo-ipad.jpg"],
+    features: ["Movable floating window", "Adjustable scroll speed in lines per minute", "Saved scripts", "Colored [cue ...] reminders", "Start delay and timer", "Separate full-screen and floating text sizes"],
+    platforms: [
+      { key: "ios", shipping: true, os: "iOS 16.6 or later, iPadOS 16.6 or later", short: "iOS / iPadOS 16.6+", storeUrl: "https://apps.apple.com/app/cuecard-teleprompter/id6757321325" },
+      { key: "android", shipping: false, os: "Android", storeUrl: null }
+    ]
+  },
+  desktop: {
+    id: "https://cuecard.dev/#desktopapp", name: "CueCard for Mac and Windows",
+    url: "https://cuecard.dev/desktop/", price: "0", currency: "USD",
+    description: "Free speaker notes that stay out of your screen share, with optional Google Slides note sync.",
+    image: "https://cuecard.dev/assets/og-image.png",
+    features: ["Speaker notes excluded from screen capture", "Paste notes for any deck", "Google Slides note sync with the browser extension", "Colored cues and timing tags", "Keyboard shortcuts"],
+    platforms: [
+      { key: "macos", shipping: true, os: "macOS 13 or later", storeUrl: "https://github.com/thisisnsh/cuecard/releases" },
+      { key: "windows", shipping: true, os: "Windows 10 or later", storeUrl: "https://github.com/thisisnsh/cuecard/releases" }
+    ]
+  }
+};
+const mobilePlatform = products.mobile.platforms[0];
 const site = {
+  products,
   name: "CueCard",
   // The name to rank for. Used wherever a title, a heading or a schema block
   // wants the full product name rather than the short one.
@@ -24,9 +49,9 @@ const site = {
 
   // Stores. Android is not out: it is announced as coming soon everywhere
   // rather than linked as if it were shipping, and never as a beta.
-  ios: "https://apps.apple.com/app/cuecard-teleprompter/id6757321325",
+  ios: mobilePlatform.storeUrl,
   android: "https://play.google.com/apps/testing/com.thisisnsh.cuecard.android",
-  androidComingSoon: true,
+  androidComingSoon: !products.mobile.platforms[1].shipping,
 
   // Who writes the posts. A name on its own is a string; this is an entity
   // Google can resolve and tie to the same person elsewhere, which is what
@@ -38,9 +63,9 @@ const site = {
     sameAs: ["https://github.com/thisisnsh", "https://www.linkedin.com/in/thisisnsh"],
   },
 
-  requiresMobile: "iOS 17.0 or later",
-  requiresMobileShort: "iOS 17+",
-  requiresDesktop: "macOS 13 or later, Windows 10 or later",
+  requiresMobile: mobilePlatform.os,
+  requiresMobileShort: mobilePlatform.short,
+  requiresDesktop: products.desktop.platforms.map(p => p.os).join(", "),
   requiresDesktopShort: "macOS · Windows",
 
   // ── The App Store artwork ───────────────────────────────────────────────
@@ -122,9 +147,10 @@ const site = {
         {
           name: "iPhone and iPad",
           icon: "apple",
-          meta: "iOS 17 or later",
+          meta: mobilePlatform.os,
           cta: "App Store",
-          href: "https://apps.apple.com/app/cuecard-teleprompter/id6757321325",
+          href: mobilePlatform.storeUrl,
+          productPlatform: "ios", destinationType: "app_store",
           more: "/mobile/ios/",
         },
         {
@@ -148,7 +174,7 @@ const site = {
         {
           name: "macOS",
           icon: "apple",
-          meta: "macOS 13 or later",
+          meta: products.desktop.platforms[0].os,
           cta: "Download",
           href: "/desktop/#download",
           more: "/desktop/",
@@ -156,7 +182,7 @@ const site = {
         {
           name: "Windows",
           icon: "windows",
-          meta: "Windows 10 or later",
+          meta: products.desktop.platforms[1].os,
           cta: "Download",
           href: "/desktop/#download",
           more: "/desktop/",

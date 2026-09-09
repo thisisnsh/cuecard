@@ -1,5 +1,28 @@
 // CueCard Website - Interactions & Animations
 
+// One delegated handler also covers installers added after releases load.
+// Never intercept navigation or wait for analytics delivery.
+document.addEventListener('click', trackProductDownload);
+function trackProductDownload(event) {
+    const link = event.target.closest?.('a[data-product-platform]');
+    if (!link) return;
+    const { productPlatform, ctaLocation, destinationType } = link.dataset;
+    if (!['ios', 'macos', 'windows'].includes(productPlatform) ||
+        !['hero', 'navigation', 'download_section', 'article'].includes(ctaLocation) ||
+        !['app_store', 'installer', 'releases'].includes(destinationType)) return;
+    const destination = new URL(link.href, window.location.href);
+    if (destination.protocol !== 'https:' || destination.origin === window.location.origin) return;
+    if (typeof window.gtag !== 'function') return;
+    try {
+        window.gtag('event', 'product_download_click', {
+            product_platform: productPlatform,
+            cta_location: ctaLocation,
+            page_path: window.location.pathname,
+            destination_type: destinationType
+        });
+    } catch { /* Analytics must never affect the download. */ }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // The live prompter in the hero: the app, running, in the page
     initDeck();
@@ -899,10 +922,12 @@ function createPlatformCard(platformKey, platform) {
     card.className = 'platform-card';
 
     const downloadButtons = platform.assets.map(asset => {
+        const productPlatform = platformKey === 'macos' ? 'macos' : platformKey.startsWith('windows_') ? 'windows' : '';
+        const measurement = productPlatform ? `data-product-platform="${productPlatform}" data-cta-location="download_section" data-destination-type="installer"` : '';
         const { label, subtitle } = getDownloadButtonLabel(asset.name, asset.size, platformKey);
         const subtitleHtml = subtitle ? `<span class="btn-subtitle">${subtitle}</span>` : '';
         return `
-            <a href="${asset.browser_download_url}" class="platform-download-btn" download>
+            <a href="${asset.browser_download_url}" class="platform-download-btn" ${measurement} download>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
                     <polyline points="7 10 12 15 17 10"/>

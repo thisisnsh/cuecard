@@ -13,6 +13,10 @@
         <h2 class="section-h section-title" id="download-h">{{ (platform.downloadTitle if platform else downloadTitle) | safe }}</h2>
         <p class="body section-desc">{{ (platform.downloadDesc if platform else downloadDesc) | safe }}</p>
 
+        <p class="backline">
+            <a href="{{ site.releases }}" data-product-platform="macos" data-cta-location="download_section" data-destination-type="releases">Find macOS installers on GitHub</a>
+            <a href="{{ site.releases }}" data-product-platform="windows" data-cta-location="download_section" data-destination-type="releases">Find Windows installers on GitHub</a>
+        </p>
         <div class="download-container">
             <div class="release-selector">
                 <label for="release-select">Release</label>

@@ -1,207 +1,117 @@
 # CueCard Website
 
-Static site that powers [cuecard.dev](https://cuecard.dev).
+Eleventy/Nunjucks static site for [cuecard.dev](https://cuecard.dev).
 
-**The phone is the product.** `/` is CueCard Teleprompter on iPhone and iPad —
-the floating prompter, the App Store artwork, the demos. `/mobile/` and the
-pages beneath it are the same argument per device and per app you film in.
-`/desktop/` is the Mac and Windows app that keeps speaker notes invisible
-during screen sharing; it is kept whole because it ranks, but on every phone
-page it appears as one card rather than half the page. Every URL that existed
-before still exists: `/zoom/`, `/google-meet/`, `/microsoft-teams/`,
-`/google-slides/` and all twenty-four role pages are exactly where they were,
-with `/mobile/ipad/` and `/mobile/twitch/` added.
+## Page responsibilities
 
-## The two section designs
+- `/` introduces the free floating teleprompter and offers equally clear mobile and desktop paths.
+- `/mobile/` explains choosing and setting up a mobile recording workflow.
+- `/mobile/ios/` covers the iPhone overlay, controls, positioning and troubleshooting.
+- `/mobile/ipad/` covers full-screen reading beside a camera and floating notes on iPad.
+- Social-app pages under `/mobile/` provide written setup, a sample script and troubleshooting. TikTok, Instagram, Snapchat, YouTube, LinkedIn, Facebook, X and Twitch have distinct workflows. Camera-roll recording is described where it provides the reusable video workflow.
+- `/desktop/` covers private speaker notes on Mac and Windows. `/zoom/`, `/google-meet/`, `/microsoft-teams/` and `/google-slides/` retain their dedicated meeting and Slides content.
+- Mobile audience pages include a role-specific filming workflow and usable example script. Articles focus on delivery, eye-line and reusing scripts, with links to setup instructions.
 
-Everything on the site is one of two objects, which is what keeps thirty-odd
-pages looking like one site:
+All 59 existing sitemap URLs and the `/ios/` and `/android/` shortlinks remain.
 
-- **Ledger** — an eyebrow label on a hairline, a heading, one short lede, then
-  ruled rows. `partials/rows.njk` (numbered features), `partials/applist.njk`
-  (apps), `partials/rolegrid.njk` (roles), `partials/getcuecard.njk`
-  (downloads) and `partials/faq.njk` are all this.
-- **Card** — a bordered panel on tinted paper, for things that are objects
-  rather than lists. `partials/deck.njk` (the live prompter),
-  `partials/shots.njk` (the App Store artwork), `partials/watch.njk` (the demo
-  links), `partials/crosspanel.njk` and `partials/bigscreen.njk` (the other
-  half of the product, and the iPad) are all this.
+## Develop and verify
 
-Sections alternate between plain paper and a tint — pass `solid` — and that
-alternation is the whole page rhythm. Sections are short on purpose: each says
-one thing, and none of them gets a screen and a half to say it.
-
-## Purpose
-
-- Leads with the phone everywhere, and still sends readers to the desktop app
-  from the nav strip, one card per page and the footer
-- One page per app CueCard is read over (`/mobile/instagram/`, `/mobile/tiktok/`
-  …) and per app it hides from (`/zoom/`, `/microsoft-teams/` …)
-- One page per role, on each side: `/teachers/` and `/mobile/teachers/`
-- A 44-question FAQ at `/faq/`; every other page carries a short curated subset
-  (`faq.home`, `faq.desktopShort`) rather than the whole bank
-- Hosts the privacy policy (`privacy/`) and terms of service (`terms/`)
-- A download section at the foot of every page, generated from
-  `site.downloadGroups`, which is also what the header's download menu prints
-
-## Structure
-
-```
-cuecard-website/
-├── .eleventy.js       # 11ty config (input src/, output _site/)
-├── src/
-│   ├── index.njk      # The landing page: what CueCard is, and where to get it
-│   ├── desktop/       # The Mac and Windows app
-│   ├── faq.njk        # The whole FAQ bank, grouped
-│   ├── styles.css     # Editorial, on paper: hairlines, micro-labels, two
-│   │                  #   section designs, one accent (the cue colour)
-│   ├── script.js      # Prompter backdrop, corner clock, the live prompter,
-│   │                  #   nav, download menu, FAQ search, releases
-│   ├── shortlink.njk  # Generates /ios and /android redirect pages
-│   ├── sitemap.xml.njk# Generated from the data files, so it cannot drift
-│   ├── CNAME          # Custom domain for GitHub Pages
-│   ├── _data/
-│   │   ├── site.js            # Every shared constant: URLs, downloads, the
-│   │   │                      #   Slides extension, the three demo links, the
-│   │   │                      #   App Store artwork, app lists, and the
-│   │   │                      #   hand-written download total
-│   │   ├── features.js        # Feature rows, mobile and desktop
-│   │   ├── faq.js             # The FAQ bank and the helpers that slice it
-│   │   └── *.json             # Page content: apps, platforms, roles, blogs
-│   ├── _includes/
-│   │   ├── layouts/           # base.njk carries the head and the JSON-LD graph
-│   │   └── partials/          # prompter-bg, hero, deck, shots, watch, rows,
-│   │   │                      #   applist, crosspanel, bigscreen, rolegrid,
-│   │   │                      #   faq, getcuecard, extension, footer
-│   ├── assets/        # Favicons, manifest, and the two App Store strips
-│   │                  #   (promo-mobile.jpg, promo-ipad.jpg) the site shows
-│   ├── privacy.njk    # Privacy policy
-│   └── terms.njk      # Terms of service
-└── _site/             # Build output (gitignored)
-```
-
-The site is fully static — no PHP, no server-side anything — so it can be served
-by any static host.
-
-## The backdrop, the clock and the live prompter
-
-There is no video anywhere on this site — no player, no poster, no reel. What
-sits behind the page instead is the app:
-
-- **`partials/prompter-bg.njk`** is a fixed page of prompter script that drifts
-  upward as you scroll, with one line lit at a time. The lines are written by
-  `initPrompterBackdrop()` in `script.js`, not by the template, and that is
-  deliberate: copy set at three per cent contrast has no business being in the
-  HTML, where a crawler reads it as hidden text. With no JavaScript the page is
-  simply white, which is what it should be anyway.
-- **The clock** in the same partial is the one the app puts above the script.
-  It counts how long you have been on the page and stops when you press it.
-- **`partials/deck.njk`** is the live prompter in the hero: the same script the
-  App Store film uses, scrolling at real lines per minute, cues in the cue
-  colour, clock counting. Pause, restart and the speed slider all work. Set
-  `heroDeck = true` on a page to get it.
-
-`prefers-reduced-motion` removes the backdrop and leaves the prompter still.
-
-## The screenshots and the demos
-
-`site.shots` holds the two App Store strips (iPhone and iPad) and
-`partials/shots.njk` prints them full width, directly under the hero — "what
-does it actually look like" is the second question everybody has.
-
-`site.demos` holds three YouTube links, one per device, and
-`partials/watch.njk` draws each as the device it was filmed on with a play mark
-over it. **Nothing is embedded**: an iframe would drag a third-party player
-onto every page it appeared on, and a link costs nothing. Pass `demoIds` to
-show a subset, in order.
-
-`partials/bigscreen.njk` is the "it's on iPad too" card that every phone page
-carries, with the iPad film beside it.
-
-## The downloads
-
-`site.downloadGroups` in `src/_data/site.js` is the one list of everywhere
-CueCard can be had, grouped by the machine you are on. It is printed in three
-places and edited in one:
-
-- the header's **Download** menu (`partials/downloadmenu.njk`)
-- the `#download` section that closes every page (`partials/getcuecard.njk`);
-  the desktop pages close with `partials/download.njk` instead, which lists the
-  actual installers for a release
-- the `ItemList` in the landing page's structured data
-
-Adding a platform means adding an entry there and nothing else. An entry with
-`soon: true` prints as a flat "Coming soon" row rather than a button, which is
-what Android is until it ships — it is never described as a beta anywhere.
-
-**The browser extension is not in that list.** It is not a version of CueCard;
-it is the piece that makes Google Slides work. It lives in `site.extension` and
-is printed by `partials/extension.njk` on `/google-slides/` and nowhere else,
-with a link to that page from the download menu and the download section.
-
-## The download total
-
-`site.downloadTotal` (currently `"1,100+"`) is a hand-written string, and
-deliberately so: the GitHub API only counts desktop release assets, so any
-computed figure would leave out the App Store entirely. Edit the string and
-every page follows. The GitHub star count next to it *is* live, fetched through
-the Cloudflare proxy in `api/`.
-
-## Local Preview
-
-```bash
+```sh
 npm ci
-npm start
+npm start          # http://localhost:8080/
+npm run check      # build, Node regression tests, Python 3 HTML crawl
 ```
 
-Then open the URL 11ty prints (`http://localhost:8080/` by default). The dev
-server rebuilds on save.
+`src/` is the input; `_site/` is generated and ignored by Git. `.eleventy.js` configures filters and static assets. Shared layouts and partials live in `src/_includes/`; page content lives in `src/_data/`. The design uses existing typography, cards, ruled feature rows, device screenshots and an interactive demonstration.
 
-## Build & Deploy
+`npm test` covers conditional offers, safe JSON-LD, missing/invalid/valid tutorial links, download events and actual dynamically generated installer cards. The analytics stub runs the website script in a Node VM; it is not an end-to-end browser test.
 
-**Pushing publishes.** A push to `main` that touches `cuecard-website/**` (or
-the workflow file itself) runs `.github/workflows/deploy-website.yml`, which
-installs, builds, verifies the output and then deploys `_site/` to GitHub Pages
-at cuecard.dev. There is no confirmation step: merged to `main` means live,
-usually within a couple of minutes.
+`tests/check-site.py` checks generated HTML without JavaScript: meaningful single H1s, unique titles/descriptions, self-canonicals, JSON-LD parsing, FAQ parity, availability, internal routes and anchors, and deployment-required files. It also asserts 59 sitemap URLs so a route change receives deliberate review.
 
-A **pull request** runs the same build and verification as CI and stops there —
-the deploy job is skipped, so a broken site is caught before it can be merged.
-Open one for anything you want checked without shipping it.
+## Product facts and structured data
 
-**Actions → Deploy Website → Run workflow** publishes on demand — for a rebuild
-that no commit triggered, such as picking up a change made outside this
-directory. Unticking its `publish` input turns that run into a build-only check.
+`src/_data/site.js` owns `products.mobile` and `products.desktop`: stable entity IDs, names, price, currency, platform shipping flags, supported OS versions and store/release URLs. Download groups and requirements derive from these facts. The Android display flag in app data only controls coming-soon copy; it does not make Android available.
 
-The build refuses to publish an empty site: the verification step fails the run
-if `index.html`, `404.html`, `CNAME` or either shortlink page is missing or
-empty, or if any `.php` file reaches `_site/`, since Pages cannot serve one.
+`lib/content.js` builds software entities from shipping platforms and serializes JSON-LD safely, including feature strings containing quotes or HTML delimiters. Mobile device, social and audience pages describe the same `https://cuecard.dev/#mobileapp` entity. Desktop pages use `https://cuecard.dev/#desktopapp`. Android has no shipping OS, install URL or InStock offer. Breadcrumbs and page-specific FAQs remain separate.
 
-To build locally:
+The released iOS/iPadOS minimum was checked on 2026-09-08: the [App Store listing](https://apps.apple.com/us/app/cuecard-teleprompter/id6757321325) and the iOS app target's Debug/Release settings both say 16.6. Project-level settings say 17.0; the app target overrides them. Desktop requirements refer to the separate desktop app, not the iOS app's compatibility on Apple Silicon Macs.
 
-```bash
-npm ci
-npm run build   # writes _site/
+Current CueCard guide labels were checked against sibling app source:
+
+- `cuecard-mobile/ios/CueCard/CueCard/Views/HomeView.swift`: New Note, Import from File, Save as New, green play button.
+- `Views/SettingsView.swift`: Start Delay, Scroll Speed (lines/min), Text Size under In-App Prompter and Floating Prompter, Dimension Ratio.
+- `Views/TeleprompterView.swift` and `Services/TeleprompterPiPManager.swift`: Start Overlay, play/pause, restart and floating-window behavior. Start Delay begins from fresh full-screen playback; floating play/pause resumes directly.
+
+These are source-verified instructions, not a claim of device testing. Cue tags are visual reminders; they do not pause playback. Scrolling uses a set speed, not speech recognition. A camera recording excludes the screen overlay; a screen recording or screen broadcast can include it.
+
+Third-party controls were checked against [TikTok recording help](https://support.tiktok.com/en/using-tiktok/creating-videos/tiktok-stories) and [Snapchat's camera instructions](https://help.snapchat.com/hc/en-us/articles/7012326414612-How-do-I-create-a-Snap). Instagram's current Help Center page was access-blocked; the guide deliberately describes the Reel camera without asserting a specific button location. Other workflows avoid version-specific control labels. Recheck these flows on devices before release.
+
+## Optional tutorial videos
+
+Edit the matching object in `src/_data/apps.json`, such as `slug: "mobile/tiktok"` or `slug: "mobile/instagram"`:
+
+```json
+"tutorial": {
+  "youtubeUrl": "",
+  "label": "Watch the TikTok tutorial on YouTube"
+}
 ```
 
-## Notes
+Set `youtubeUrl` to the supplied HTTPS YouTube video URL and rebuild. Use “Watch the Instagram tutorial on YouTube” for Instagram. Production tutorial URLs are empty until supplied. The renderer accepts ordinary YouTube watch, Shorts and youtu.be video URLs with a valid video-ID shape; it does not verify video existence. Missing or invalid URLs produce no link, wrapper, disabled button or extra spacing. Once a real tutorial is supplied, update the production-empty assertion in the crawl test as part of that change.
 
-- `src/_data/site.js` is the single source of truth for URLs, store links, the
-  app lists, the artwork, the demo links and the year. Change it there, not in
-  a template
-- Page titles in the `_data/*.json` files lead with the phrase people search
-  for and end with the brand, never the other way round. The front-matter
-  fields that read them are piped through `| safe`, because without it a `&`
-  in a title is escaped twice and ships as `&amp;amp;`
-- Icons live in `src/_includes/partials/icon-sprite.njk` as `<symbol>`s and are
-  used through the `icon()` macro in `partials/icons.njk`. Every section label
-  carries one; add the symbol first, then name it
-- The header's action button is identical on every page on purpose. It used to
-  be per-page, and the masthead visibly reflowed on every navigation
-- Update `assets/site.webmanifest` and the favicons when branding changes
-- Keep privacy/terms copies in sync with the legal docs used inside the apps
-- `src/CNAME` pins the custom domain. Removing it reverts the site to the
-  `github.io` host on the next deploy
-- GitHub Pages serves `404.html` natively and handles apex/www plus HTTPS, so
-  the site carries no `.htaccess` or `_redirects` file. Add new shortlinks
-  (like `/ios` and `/android`) to `src/_data/shortlinks.json` instead
+`partials/tutorial-link.njk` renders an accessible link beside the written guide in `partials/setup-guide.njk`. Written instructions remain. `site.demos` retains the existing iPhone, iPad and desktop films, clearly labeled as general product demos. No video player or iframe loads on the page.
+
+## Articles
+
+`src/_data/blogs.json` supports `description` and `modified`. Description falls back to the existing first-paragraph excerpt when omitted. Keep the original `datetime` (publication date); set `modified` only for substantive changes. The post's visible updated date, BlogPosting `dateModified`, and sitemap `lastmod` use it consistently. Article metadata and social descriptions use the explicit description when provided.
+
+## Download measurement
+
+The existing GA4 property receives one `product_download_click` per tagged store, installer or installer-release destination click. A delegated handler in `src/script.js` covers nested icons and installer links created after releases load. It never prevents navigation, waits for delivery, or requires analytics to be available.
+
+Static templates and generated installer links use explicit attributes:
+
+```html
+<a href="https://apps.apple.com/app/cuecard-teleprompter/id6757321325"
+   data-product-platform="ios"
+   data-cta-location="hero"
+   data-destination-type="app_store">Get CueCard</a>
+```
+
+| Event field | Values |
+| --- | --- |
+| `product_platform` | `ios`, `macos`, `windows` |
+| `cta_location` | `hero`, `navigation`, `download_section`, `article` |
+| `page_path` | Current pathname, excluding query and fragment |
+| `destination_type` | `app_store`, `installer`, `releases` |
+
+Internal `#download` navigation, Android information pages, extension downloads, source links and release-note links are excluded. The desktop download section includes explicit Mac and Windows installer-release links that work without JavaScript. A click measures download intent; it is not an observed installation. The custom event does not include script text or user-entered content.
+
+With GA4 access:
+
+1. Enable debug mode for a test session using your usual Google Analytics debugger. Inspect DebugView for `product_download_click`; verify exactly one event and the four fields for a tagged App Store link, a desktop installer, and a fallback release link. Verify internal and Android navigation produces none.
+2. Register event-scoped custom dimensions for `product_platform`, `cta_location` and `destination_type`; use the existing page path dimension where possible. Inspect the explicit `page_path` parameter in DebugView or exports. [GA4 custom dimension guidance](https://support.google.com/analytics/answer/14240153).
+3. Optionally mark `product_download_click` as a key event. Allow normal reporting processing time after configuration.
+4. Enhanced-measurement outbound `click` events may also describe the same action. Filter reports to `product_download_click`; do not add outbound clicks to it.
+5. Compare date, landing page, page path, device category, country, session source/medium, product platform, CTA location and destination type. Show sessions, users, download-click events and sessions with download intent. Use sessions with intent / sessions for a session conversion rate; raw clicks can include repeat clicks.
+
+For App Store acquisition reporting, create a campaign link in App Store Connect and use its generated URL as the mobile platform's `storeUrl` in `site.js`. Keep its campaign name in the reporting notes. Compare campaign acquisition aggregates with website intent over the same dates; the site cannot match an individual click to an installation. Apple's [campaign-link guidance](https://developer.apple.com/help/app-store-connect-analytics/acquisition/campaign-links) explains its attribution rules and reporting requirements.
+
+## Search baseline and follow-up
+
+Account access is required for these operational steps:
+
+- Export Search Console performance by query, page, device and country before launch.
+- Record indexing status and Google-selected canonical for the homepage, product overviews, device pages and social guides.
+- Group branded, mobile, iPhone, iPad, social-app and desktop queries.
+- Record mobile Core Web Vitals when field data is available.
+- Compare the first 28 days after launch with a suitable prior period, accounting for seasonality and launch timing.
+- Review impressions, clicks, CTR and download intent together. Page overlap alone does not establish ranking cannibalization.
+
+## Release and review
+
+A push to `main` touching this website runs the existing `.github/workflows/deploy-website.yml` and publishes to GitHub Pages. A pull request builds and verifies output without deploying. Keep changes reviewable before merging. The workflow checks `index.html`, `404.html`, `CNAME`, both shortlinks, and the absence of PHP; `npm run check` includes these checks plus the content regressions.
+
+Before release, review `/`, `/mobile/`, `/mobile/ios/`, `/mobile/ipad/`, `/mobile/tiktok/`, `/mobile/instagram/`, `/mobile/snapchat/` and `/desktop/` at narrow and wide widths. Check wrapping, guide readability, menu and download links, keyboard focus, interactive demo controls, existing demo destinations and tutorial spacing with a valid fixture. Repeat guide navigation and download access with JavaScript disabled.
+
+The implementation session had no connected browser, so viewport screenshots and interactive browser checks remain outstanding. GA4, Search Console and App Store Connect reporting setup also remains account-dependent. No device-tested or live-analytics validation is claimed.

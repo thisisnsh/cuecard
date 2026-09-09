@@ -4,46 +4,21 @@
 
 {% block jsonld %}
 <script type="application/ld+json">
-{
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    "@id": "{{ profession.canonical }}#app",
-    "name": "CueCard for {{ profession.name }}",
-    "applicationCategory": "BusinessApplication",
-    "applicationSubCategory": "Presentation Teleprompter",
-    "operatingSystem": "macOS, Windows",
-    "description": {{ profession.description | dump | safe }},
-    "url": "{{ profession.canonical }}",
-    "downloadUrl": "{{ site.releases }}",
-    "installUrl": "{{ site.releases }}",
-    "image": "https://cuecard.dev/assets/og-image.png",
-    "isAccessibleForFree": true,
-    "author": { "@id": "https://cuecard.dev/#org" },
-    "publisher": { "@id": "https://cuecard.dev/#org" },
-    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD", "availability": "https://schema.org/InStock" },
-    "featureList": [
-        "Speaker notes hidden from your screen share",
-        "Works with any deck, or with no deck at all",
-        "[time 05:00] tags that count a section down on screen",
-        "[cue ...] reminders shown in their own colour",
-        "Google Slides notes that follow your slides, with the browser extension",
-        "Keyboard shortcuts for the window, the position and the timer"
-    ]
-}
+{{ site.products.desktop | softwareSchema | jsonLd | safe }}
 </script>
 <script type="application/ld+json">
 {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    "@id": "{{ profession.canonical }}#faq",
-    "isPartOf": { "@id": "{{ profession.canonical }}#webpage" },
+    "@id": {{ ((profession.canonical) + "#faq") | jsonLd | safe }},
+    "isPartOf": { "@id": {{ ((profession.canonical) + "#webpage") | jsonLd | safe }} },
     "inLanguage": "en",
     "mainEntity": [
         {% for item in roleFaq %}
         {
             "@type": "Question",
-            "name": {{ item.question | dump | safe }},
-            "acceptedAnswer": { "@type": "Answer", "text": {{ item.answer | striptags | dump | safe }} }
+            "name": {{ item.question | jsonLd | safe }},
+            "acceptedAnswer": { "@type": "Answer", "text": {{ item.answer | striptags | jsonLd | safe }} }
         }{% if not loop.last %},{% endif %}
         {% endfor %}
     ]
@@ -55,7 +30,7 @@
 {% if profession.mobileCounterpart %}
 {% set navCtaHref = "/mobile/" + profession.mobileCounterpart + "/" %}
 {% else %}
-{% set navCtaHref = "/" %}
+{% set navCtaHref = "/mobile/" %}
 {% endif %}
 {% set navCtaText = "Filming a video on your phone instead? CueCard Teleprompter floats over every app on iPhone and iPad" %}
 {% set navCtaTextMobile = "Also on iPhone and iPad" %}

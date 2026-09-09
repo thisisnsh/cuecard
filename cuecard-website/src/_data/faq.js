@@ -9,7 +9,8 @@
 // Answers are plain sentences with a little inline HTML. Nothing here promises
 // a capability the apps do not have.
 
-const store = "https://apps.apple.com/app/cuecard-teleprompter/id6757321325";
+const site = require("./site");
+const store = site.ios;
 const gh = "https://github.com/thisisnsh/cuecard";
 
 /** Questions about the phone app — the product cuecard.dev now leads with. */
@@ -46,7 +47,7 @@ const mobile = [
   {
     question: "Which iPhones and iPads does CueCard support?",
     answer:
-      "Any iPhone or iPad running iOS 17 or later."
+      "An iPhone or iPad running " + site.requiresMobile + "."
   },
   {
     question: "Is there a teleprompter for iPad?",
