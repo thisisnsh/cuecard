@@ -183,3 +183,28 @@ export const DEFAULT_CUE_COLOR = 'pink';
 export function cueColorVariable(name) {
   return `var(--color-${CUE_COLORS.includes(name) ? name : DEFAULT_CUE_COLOR})`;
 }
+
+/**
+ * The name to suggest when a script is written out: the note's title, falling
+ * back to the script's first line, falling back to something plain.
+ */
+export function suggestedFileName(title, content) {
+  const sanitized = (name) => (name || '')
+    .split(/[/\\:?%*|"<>]/)
+    .join(' ')
+    .trim();
+
+  const candidates = [title, (content || '').split('\n')[0]];
+  for (const candidate of candidates) {
+    const name = sanitized(candidate);
+    if (name) return name.slice(0, 60);
+  }
+
+  return 'Speech';
+}
+
+/** The title an imported script takes, which is the name the file already has. */
+export function titleForFileName(fileName) {
+  const base = (fileName || '').split(/[\\/]/).pop().replace(/\.[^.]+$/, '').trim();
+  return base || 'Imported Script';
+}

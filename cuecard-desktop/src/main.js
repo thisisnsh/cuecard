@@ -22,6 +22,9 @@ import {
   emptyCueInsertion,
   emptyCueSurrounding,
   formatTime,
+  normalizingTags,
+  suggestedFileName,
+  titleForFileName,
   withoutCues,
 } from './parser.js';
 
@@ -40,6 +43,8 @@ const { openUrl } = window.__TAURI__?.opener || {};
 const { getCurrentWindow } = window.__TAURI__?.window || {};
 const { check } = window.__TAURI__?.updater || {};
 const { relaunch } = window.__TAURI__?.process || {};
+const { open: openFileDialog, save: saveFileDialog } = window.__TAURI__?.dialog || {};
+const { readTextFile, writeTextFile } = window.__TAURI__?.fs || {};
 
 // =============================================================================
 // ANALYTICS (BACKEND)
@@ -1956,6 +1961,100 @@ function handleSlideUpdate(data, autoShow = false) {
 }
 
 // =============================================================================
+// FILES
+// =============================================================================
+
+// Anything that goes wrong with a file says so the way iOS says it.
+function showFileError(message) {
+  return showDialog({
+    title: 'Something Went Wrong',
+    message,
+    field: false,
+    confirmLabel: 'OK',
+  });
+}
+
+/**
+ * Read a .txt or .md in and keep it as a note titled from the filename. The
+ * file already has a name, so there is nothing to ask the user for.
+ */
+async function importScriptFromFile() {
+  if (!openFileDialog || !readTextFile) {
+    await showFileError('File access is not available in this build.');
+    return;
+  }
+
+  let path;
+  try {
+    path = await openFileDialog({
+      multiple: false,
+      directory: false,
+      filters: [{ name: 'Script', extensions: ['txt', 'md', 'markdown', 'text'] }],
+    });
+  } catch (error) {
+    console.error('Error choosing a file to import:', error);
+    await showFileError(String(error));
+    return;
+  }
+  if (!path) return;
+
+  let text;
+  try {
+    text = await readTextFile(path);
+  } catch (error) {
+    console.error('Error reading the file:', error);
+    await showFileError("This file couldn't be read as text.");
+    return;
+  }
+
+  if (!text.trim()) {
+    await showFileError('That file is empty.');
+    return;
+  }
+
+  // Whatever spelling the file was written in, it arrives as [cue ...].
+  notesInput.value = normalizingTags(text);
+  currentNoteId = null;
+  notesInput.dispatchEvent(new Event('input', { bubbles: true }));
+  await setStoredValue(STORAGE_KEYS.ADD_NOTES_CONTENT, notesInput.value);
+
+  await saveCurrentNoteAs(titleForFileName(path));
+
+  dismissSheet();
+  await showView('add-notes');
+  isEditMode = false;
+  notesInputWrapper.classList.remove('edit-mode');
+  notesInput.readOnly = true;
+  updateToolbarTitle();
+  updateMenuItems();
+}
+
+/** Write the script out, named after the note it came from. */
+async function exportScriptToFile() {
+  if (!saveFileDialog || !writeTextFile) {
+    await showFileError('File access is not available in this build.');
+    return;
+  }
+  if (!notesInput || !notesInput.value.trim()) return;
+
+  const note = await getCurrentNote();
+  const defaultPath = `${suggestedFileName(note ? note.title : null, notesInput.value)}.txt`;
+
+  try {
+    const path = await saveFileDialog({
+      defaultPath,
+      filters: [{ name: 'Script', extensions: ['txt'] }],
+    });
+    if (!path) return;
+
+    await writeTextFile(path, normalizingTags(notesInput.value));
+  } catch (error) {
+    console.error('Error exporting the script:', error);
+    await showFileError(String(error));
+  }
+}
+
+// =============================================================================
 // DIALOG
 // =============================================================================
 
@@ -2398,6 +2497,22 @@ function setupMenu() {
     });
   }
 
+  const importItem = document.getElementById('import-file-btn');
+  if (importItem) {
+    importItem.addEventListener("click", (e) => {
+      e.preventDefault();
+      importScriptFromFile();
+    });
+  }
+
+  const exportItem = document.getElementById('export-file-btn');
+  if (exportItem) {
+    exportItem.addEventListener("click", (e) => {
+      e.preventDefault();
+      exportScriptToFile();
+    });
+  }
+
   const newNoteItem = document.getElementById('new-note-btn');
   if (newNoteItem) {
     newNoteItem.addEventListener("click", async (e) => {
@@ -2505,6 +2620,8 @@ function updateMenuItems() {
   const saveAsNewItem = document.getElementById('save-as-new-btn');
   const hasScript = Boolean(notesInput && notesInput.value.trim());
   if (saveAsNewItem) saveAsNewItem.disabled = !hasScript;
+  const exportItem = document.getElementById('export-file-btn');
+  if (exportItem) exportItem.disabled = !hasScript;
   if (saveNoteItem) {
     hasUnsavedChanges().then(changed => {
       saveNoteItem.classList.toggle('hidden', !(currentNoteId && changed));
