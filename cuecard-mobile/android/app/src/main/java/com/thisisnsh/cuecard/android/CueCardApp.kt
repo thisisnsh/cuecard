@@ -101,7 +101,7 @@ object AnalyticsEvents {
 
 object AppLinks {
     const val SOURCE_CODE = "https://github.com/thisisnsh/cuecard"
-    const val PLAY_STORE = "https://play.google.com/apps/testing/com.thisisnsh.cuecard.android"
+    val PLAY_STORE = "https://play.google.com/store/apps/details?id=${BuildConfig.APPLICATION_ID}"
 }
 
 // MARK: - Theme
