@@ -179,7 +179,7 @@ Show and hide the window, move it, resize it, fade it back over your slides with
 
 ## 👨‍💻 For Developers
 
-If you're interested in contributing to CueCard or building it from source, check out these guides:
+To build CueCard from source, see the guide for each part:
 
 | Component | Description | Documentation |
 |-----------|-------------|---------------|
@@ -190,13 +190,12 @@ If you're interested in contributing to CueCard or building it from source, chec
 
 <br>
 
-## 🤝 Contributing
+## 💡 Feature Requests
 
-We welcome contributions! CueCard is open source and built by the community.
+CueCard is open source, but it is not open to code contributions, so pull requests are not accepted. Ideas are welcome, though.
 
-- Read our [Contributing Guide](CONTRIBUTING.md) to get started
-- Check out [open issues](https://github.com/thisisnsh/cuecard/issues) for ways to contribute
-- Submit bug reports and feature requests
+- [Request a feature](https://github.com/thisisnsh/cuecard/issues/new?template=feature-request.yml)
+- Look through [open requests](https://github.com/thisisnsh/cuecard/issues) first. A 👍 on one that already exists counts too.
 
 <br>
 
