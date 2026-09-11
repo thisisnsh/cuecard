@@ -1,3493 +1,1144 @@
 /**
- * CueCard - Main Frontend Application
+ * CueCard for desktop.
  *
- * This file contains the main frontend logic for the CueCard application:
- * - Analytics tracking for usage insights
- * - Firestore integration for user profiles
- * - Persistent storage management
- * - Google OAuth authentication UI
- * - Notes display and syntax highlighting
- * - Timer functionality for presentations
- * - Settings management (opacity, screenshot protection)
+ * The phone app has two screens — the one you write on and the one you present
+ * from — and this has the same two, with the room a window gives used for the
+ * things a phone has nowhere to put: your saved scripts and a live Google
+ * Slides deck, side by side in a sidebar.
  */
 
+import { icon, hydrateIcons } from './icons.js';
+import * as T from './tauri.js';
 import {
-  CUE_TAG_PREFIX,
-  EMPTY_CUE_TAG,
-  CUE_COLORS,
-  DEFAULT_CUE_COLOR,
-  cueColorVariable,
-  cueMatches,
-  cueTagContaining,
-  emptyCueInsertion,
-  emptyCueSurrounding,
-  formatTime,
-  normalizingTags,
-  suggestedFileName,
-  titleForFileName,
-  withoutCues,
-} from './parser.js';
+  COUNTDOWN_RANGE,
+  LPM_RANGE,
+  clamp,
+  hadStoredTimer,
+  loadSettings,
+  onSettingsChange,
+  resetSettings,
+  setSetting,
+  settings,
+  timerDuration,
+  watchSystemTheme,
+} from './settings.js';
+import * as notes from './notes.js';
+import { createEditor } from './editor.js';
+import { createPrompter } from './prompter.js';
+import * as ui from './ui.js';
+import { CUE_COLORS, normalizingTags, suggestedFileName, titleForFileName } from './parser.js';
 
-// =============================================================================
-// TAURI API INITIALIZATION
-// =============================================================================
+const $ = (id) => document.getElementById(id);
 
-// Check if Tauri is available
-if (!window.__TAURI__) {
-  console.error("Tauri runtime not available! Make sure you're running the app with 'npm run tauri dev' or as a built Tauri app.");
-}
-
-const { invoke } = window.__TAURI__?.core || {};
-const { listen } = window.__TAURI__?.event || {};
-const { openUrl } = window.__TAURI__?.opener || {};
-const { getCurrentWindow } = window.__TAURI__?.window || {};
-const { check } = window.__TAURI__?.updater || {};
-const { relaunch } = window.__TAURI__?.process || {};
-const { open: openFileDialog, save: saveFileDialog } = window.__TAURI__?.dialog || {};
-const { readTextFile, writeTextFile } = window.__TAURI__?.fs || {};
-
-// =============================================================================
-// ANALYTICS (BACKEND)
-// =============================================================================
-
-async function initAnalytics() {
-  if (!invoke) return;
-  try {
-    const { platform, operatingSystem } = getPlatformInfo();
-    await invoke('init_analytics', {
-      platform,
-      operatingSystem,
-    });
-  } catch (error) {
-    console.debug('Analytics init error:', error);
-  }
-}
-
-async function sendAnalyticsEvent(eventName, params) {
-  if (!invoke) return;
-  try {
-    const payload = { eventName };
-    if (params && Object.keys(params).length > 0) {
-      payload.params = params;
-    }
-    await invoke('send_event', payload);
-  } catch (error) {
-    console.debug('Analytics error:', error);
-  }
-}
-
-async function setAnalyticsUserId(email) {
-  if (!invoke || !email) return;
-  try {
-    await invoke('set_analytics_user_id', { email });
-    console.log('Analytics: User ID set');
-  } catch (error) {
-    console.debug('Analytics setUserId error:', error);
-  }
-}
-
-async function clearAnalyticsUserId() {
-  if (!invoke) return;
-  try {
-    await invoke('clear_analytics_user_id');
-  } catch (error) {
-    console.debug('Analytics clearUserId error:', error);
-  }
-}
-
-function trackAppOpen() {
-  void sendAnalyticsEvent('app_open');
-}
-
-function trackSessionStart() {
-  void sendAnalyticsEvent('start_session');
-}
-
-function trackLogin(method = 'google') {
-  void sendAnalyticsEvent('login', { method });
-}
-
-function trackLogout() {
-  void sendAnalyticsEvent('logout');
-  void clearAnalyticsUserId();
-}
-
-function trackScreenView(screenName, pageTitle = null) {
-  void sendAnalyticsEvent('screen_view', {
-    screen_name: screenName,
-    page_title: pageTitle || screenName,
-    screen_class: 'CueCard'
-  });
-}
-
-async function trackFirstOpen() {
-  if (!invoke) return;
-  try {
-    const isFirstOpen = await invoke('check_and_mark_first_open');
-    if (isFirstOpen) {
-      // Using 'app_first_launch' instead of 'first_open' as first_open is a restricted GA4 event
-      await sendAnalyticsEvent('app_first_launch');
-      console.log('Analytics: First launch tracked');
-    }
-  } catch (error) {
-    console.debug('Analytics first_launch error:', error);
-  }
-}
-
-function trackNotesPaste() {
-  void sendAnalyticsEvent('notes_paste');
-}
-
-function trackSlidesSync() {
-  void sendAnalyticsEvent('slides_sync');
-}
-
-function trackTimerAction(action) {
-  void sendAnalyticsEvent('timer_action', { action });
-}
-
-function trackSettingChange(setting, value) {
-  void sendAnalyticsEvent('setting_change', {
-    setting_name: setting,
-    setting_value: String(value)
-  });
-}
-
-function trackSlideUpdate() {
-  void sendAnalyticsEvent('slide_update');
-}
-
-function trackEditAction(action) {
-  void sendAnalyticsEvent('edit_action', { action });
-}
-
-// =============================================================================
-// PLATFORM-SPECIFIC STYLES
-// =============================================================================
-
-function getPlatformInfo() {
-  const platformSource = (navigator.userAgentData && navigator.userAgentData.platform)
-    || navigator.platform
-    || navigator.userAgent
-    || '';
-
-  if (/win/i.test(platformSource)) {
-    return { platform: 'windows', operatingSystem: 'windows' };
-  }
-  if (/mac/i.test(platformSource)) {
-    return { platform: 'macos', operatingSystem: 'mac' };
-  }
-  if (/linux/i.test(platformSource)) {
-    return { platform: 'linux', operatingSystem: 'linux' };
-  }
-  return { platform: 'unknown', operatingSystem: 'unknown' };
-}
-
-function setPlatformClass() {
-  const root = document.documentElement;
-  const { platform } = getPlatformInfo();
-
-  if (platform === 'windows') {
-    root.classList.add('platform-windows');
-  } else if (platform === 'macos') {
-    root.classList.add('platform-mac');
-  }
-}
-
-setPlatformClass();
-
-// =============================================================================
-// FIRESTORE INTEGRATION
-// =============================================================================
-
-// Firestore REST API Configuration
-let FIRESTORE_PROJECT_ID = null;
-let FIRESTORE_BASE_URL = null;
-
-// Initialize Firestore configuration
-async function initFirestoreConfig() {
-  if (!invoke) {
-    console.error("Tauri invoke API not available");
-    return;
-  }
-  try {
-    FIRESTORE_PROJECT_ID = await invoke("get_firestore_project_id");
-    FIRESTORE_BASE_URL = `https://firestore.googleapis.com/v1/projects/${FIRESTORE_PROJECT_ID}/databases/(default)/documents`;
-    console.log("Firestore configuration initialized");
-  } catch (error) {
-    console.error("Error getting Firestore project ID:", error);
-  }
-}
-
-// Get Firebase ID token for authenticated Firestore requests
-async function getFirebaseIdToken() {
-  if (!invoke) return null;
-  try {
-    return await invoke("get_firebase_id_token");
-  } catch (error) {
-    console.log("Could not get Firebase ID token:", error);
-    return null;
-  }
-}
-
-// Get or create user profile in Firestore
-async function saveUserProfile(email, name) {
-  if (!email || !FIRESTORE_BASE_URL) return;
-
-  // Get Firebase ID token for authenticated request
-  const token = await getFirebaseIdToken();
-  if (!token) {
-    console.log("No Firebase token available, skipping Firestore save");
-    return;
-  }
-
-  const documentPath = `Profiles/${encodeURIComponent(email)}`;
-  const url = `${FIRESTORE_BASE_URL}/${documentPath}`;
-
-  try {
-    // First, try to get the existing document
-    const getResponse = await fetch(url, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
-    });
-
-    if (getResponse.ok) {
-      // Document exists, just update name and email (don't touch creationDate)
-      const updateUrl = `${url}?updateMask.fieldPaths=name&updateMask.fieldPaths=email`;
-
-      await fetch(updateUrl, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          fields: {
-            name: { stringValue: name },
-            email: { stringValue: email }
-          }
-        })
-      });
-      console.log("User profile updated in Firestore");
-    } else if (getResponse.status === 404) {
-      // Document doesn't exist, create new one with all fields
-      const now = new Date().toISOString();
-
-      await fetch(url, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          fields: {
-            name: { stringValue: name },
-            email: { stringValue: email },
-            creationDate: { timestampValue: now },
-            usage: {
-              mapValue: {
-                fields: {
-                  paste: { integerValue: '0' },
-                  slide: { integerValue: '0' }
-                }
-              }
-            }
-          }
-        })
-      });
-      console.log("New user profile created in Firestore");
-    }
-  } catch (error) {
-    console.error("Error saving user profile to Firestore:", error);
-  }
-}
-
-
-// =============================================================================
-// PERSISTENT STORAGE
-// =============================================================================
-
-// Store for persistent storage
-let appStore = null;
-
-// Storage keys
-const STORAGE_KEYS = {
-  SETTINGS_OPACITY: 'settings_opacity',
-  SETTINGS_GHOST_MODE: 'settings_ghost_mode',
-  SETTINGS_THEME: 'settings_theme',
-  SETTINGS_SHORTCUTS_ENABLED: 'settings_shortcuts_enabled',
-  SETTINGS_AUTO_SCROLL_SPEED: 'settings_auto_scroll_speed',
-  SETTINGS_LINES_PER_MINUTE: 'settings_lines_per_minute',
-  SETTINGS_FONT_SIZE_PRESET: 'settings_font_size_preset',
-  SETTINGS_CUE_COLOR: 'settings_cue_color',
-  SETTINGS_TIMER_MINUTES: 'settings_timer_minutes',
-  SETTINGS_TIMER_SECONDS: 'settings_timer_seconds',
-  SETTINGS_COUNTDOWN_SECONDS: 'settings_countdown_seconds',
-  MIGRATED_TIME_TAGS: 'migrated_time_tags',
-  ADD_NOTES_CONTENT: 'add_notes_content',
-  SAVED_NOTES: 'saved_notes'
+const LINKS = {
+  site: 'https://cuecard.dev',
+  extension: 'https://cuecard.dev/#download',
+  source: 'https://github.com/ThisIsNSH/CueCard',
+  issues: 'https://github.com/ThisIsNSH/CueCard/issues/new/choose',
+  support: 'mailto:hello@thisisnsh.com',
 };
 
-// Initialize the store
-async function initStore() {
-  try {
-    // Import store dynamically for Tauri 2
-    const Store = window.__TAURI__?.store?.Store;
-    if (Store) {
-      appStore = await Store.load('cuecard-store.json');
-      console.log("Store initialized successfully");
-    } else {
-      console.warn("Store plugin not available");
-    }
-  } catch (error) {
-    console.error("Error initializing store:", error);
-  }
-}
+const PLACEHOLDER =
+  'Write your script here…\n\nType [ to add a cue — a note to yourself like “[cue smile and pause]” that you read but never say out loud.';
 
-// Get value from store
-async function getStoredValue(key) {
-  if (!appStore) return null;
-  try {
-    return await appStore.get(key);
-  } catch (error) {
-    console.error(`Error getting stored value for ${key}:`, error);
-    return null;
-  }
-}
+const app = {
+  authenticated: false,
+  user: { name: '', email: '' },
+  /** Which script the detail pane is showing: your own, or the live deck. */
+  source: 'script',
+  slides: { connected: false, slide: null, notes: '' },
+  update: null,
+  sidebarOpen: true,
+  overlay: false,
+  sessionTracked: false,
+};
 
-// Set value in store
-async function setStoredValue(key, value) {
-  if (!appStore) return;
-  try {
-    await appStore.set(key, value);
-    await appStore.save();
-  } catch (error) {
-    console.error(`Error setting stored value for ${key}:`, error);
-  }
-}
-
-// Load stored notes into the add-notes textarea
-async function loadStoredNotes() {
-  const storedNotes = await getStoredValue(STORAGE_KEYS.ADD_NOTES_CONTENT);
-  if (storedNotes && notesInput) {
-    notesInput.value = storedNotes;
-    // Trigger the highlight update
-    if (notesInputHighlight) {
-      const event = new Event('input', { bubbles: true });
-      notesInput.dispatchEvent(event);
-    }
-    console.log("Loaded stored notes");
-  }
-}
-
-// Save notes from add-notes textarea to storage
-async function saveNotesToStorage() {
-  if (notesInput) {
-    const notes = notesInput.value;
-    await setStoredValue(STORAGE_KEYS.ADD_NOTES_CONTENT, notes);
-    console.log("Saved notes to storage");
-  }
-}
+let editor;
+let prompter;
 
 // =============================================================================
-// SAVED NOTES LIST MANAGEMENT
+// START-UP
 // =============================================================================
 
-// Get all saved notes from storage
-async function getSavedNotes() {
-  const savedNotes = await getStoredValue(STORAGE_KEYS.SAVED_NOTES);
-  return savedNotes || [];
-}
+async function boot() {
+  document.documentElement.classList.add(`platform-${T.platformInfo().platform}`);
+  hydrateIcons();
 
-/**
- * Notes used to be titled by their first line and saved silently when you
- * pressed Done. They carry a title you chose now, so the ones stored before
- * that get one taken from their first line — once, on the way past.
- */
-async function migrateNoteTitles() {
-  const savedNotes = await getSavedNotes();
-  if (!savedNotes.some(note => !note.title)) return;
+  await T.initStore();
+  await T.initAnalytics();
+  await T.initFirestore();
 
-  await setStoredValue(STORAGE_KEYS.SAVED_NOTES, savedNotes.map(note => ({
-    ...note,
-    title: note.title || getFirstLinePreview(note.content),
-    createdAt: note.createdAt || note.updatedAt,
-  })));
-  console.log("Gave the stored notes titles");
-}
+  await loadSettings();
+  watchSystemTheme();
+  await notes.loadNotes({ seedTimer: seedTimerFromTimeTags });
 
-// The note the editor is showing, if it came from the list.
-async function getCurrentNote() {
-  if (!currentNoteId) return null;
-  const savedNotes = await getSavedNotes();
-  return savedNotes.find(note => note.id === currentNoteId) || null;
-}
+  editor = createEditor($('editor'), { onChange: onScriptEdited });
+  editor.setPlaceholder(PLACEHOLDER);
+  editor.setText(notes.state.draft);
 
-// Whether there is anything to save: an edited note, or writing with no note yet.
-async function hasUnsavedChanges() {
-  if (!notesInput) return false;
-  const note = await getCurrentNote();
-  if (!note) return Boolean(notesInput.value.trim());
-  return note.content !== notesInput.value;
-}
-
-// Save over the note that is open.
-async function saveChangesToCurrentNote() {
-  if (!currentNoteId) return;
-
-  const savedNotes = await getSavedNotes();
-  const index = savedNotes.findIndex(note => note.id === currentNoteId);
-  if (index === -1) return;
-
-  savedNotes[index].content = notesInput.value;
-  savedNotes[index].updatedAt = new Date().toISOString();
-
-  // Most recently touched, first.
-  savedNotes.unshift(savedNotes.splice(index, 1)[0]);
-
-  await setStoredValue(STORAGE_KEYS.SAVED_NOTES, savedNotes);
-  console.log("Note updated in list");
-}
-
-// Save what is in the editor as a new note under a title of its own.
-async function saveCurrentNoteAs(title) {
-  if (!notesInput || !notesInput.value.trim()) return;
-
-  const now = new Date().toISOString();
-  const note = {
-    id: Date.now().toString(),
-    title,
-    content: notesInput.value,
-    createdAt: now,
-    updatedAt: now,
-  };
-
-  currentNoteId = note.id;
-
-  const savedNotes = await getSavedNotes();
-  savedNotes.unshift(note);
-  await setStoredValue(STORAGE_KEYS.SAVED_NOTES, savedNotes);
-  console.log("Note saved to list");
-}
-
-// Give a saved note a different name.
-async function renameNote(noteId, title) {
-  const savedNotes = await getSavedNotes();
-  const index = savedNotes.findIndex(note => note.id === noteId);
-  if (index === -1) return;
-
-  savedNotes[index].title = title;
-  savedNotes[index].updatedAt = new Date().toISOString();
-  await setStoredValue(STORAGE_KEYS.SAVED_NOTES, savedNotes);
-  renderSavedNotesList();
-}
-
-// Open a saved note in the editor, and mark it as the most recently used.
-async function loadNoteFromList(noteId) {
-  const savedNotes = await getSavedNotes();
-  const index = savedNotes.findIndex(note => note.id === noteId);
-  if (index === -1) return;
-
-  const note = savedNotes[index];
-  currentNoteId = note.id;
-  note.updatedAt = new Date().toISOString();
-
-  savedNotes.unshift(savedNotes.splice(index, 1)[0]);
-  await setStoredValue(STORAGE_KEYS.SAVED_NOTES, savedNotes);
-
-  notesInput.value = note.content;
-  await setStoredValue(STORAGE_KEYS.ADD_NOTES_CONTENT, note.content);
-  notesInput.dispatchEvent(new Event('input', { bubbles: true }));
-
-  console.log("Note loaded from list");
-
-  dismissSheet();
-  await showView('add-notes');
-
-  // A note that was saved comes back read-only and highlighted.
-  isEditMode = false;
-  notesInputWrapper.classList.remove('edit-mode');
-  notesInput.readOnly = true;
-
-  updateToolbarTitle();
-  updateTransport();
-  updateMenuItems();
-}
-
-// Delete a note from the saved notes list
-async function deleteNoteFromList(noteId) {
-  const savedNotes = await getSavedNotes();
-  const filteredNotes = savedNotes.filter(n => n.id !== noteId);
-
-  await setStoredValue(STORAGE_KEYS.SAVED_NOTES, filteredNotes);
-  console.log("Note deleted from list");
-
-  // Re-render the list
-  renderSavedNotesList();
-}
-
-// What the note says, cues and line breaks flattened out, for the row's preview.
-function notePreview(content) {
-  return withoutCues(content || '').replace(/\s+/g, ' ').trim().slice(0, 100);
-}
-
-// The name a note written before titles existed gets, taken from its first line.
-// Only the migration calls this; nothing titles a note by its content any more.
-function getFirstLinePreview(content) {
-  if (!content) return '';
-
-  // Split by newlines and find first non-empty line after stripping tags
-  const lines = content.split(/\r?\n/);
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (trimmed) {
-      // Strip the timing and the cues, so the preview is what gets said
-      const cleaned = withoutCues(trimmed.replace(/\[time\s+\d{1,2}:\d{2}\]/gi, '')).trim();
-      // If line has actual content after stripping tags, use it
-      if (cleaned) {
-        return cleaned;
-      }
-      // Otherwise continue to next line
-    }
-  }
-  // Fallback: strip tags from entire content and take first 50 chars
-  const fallback = withoutCues(content.replace(/\[time\s+\d{1,2}:\d{2}\]/gi, '')).trim();
-  return fallback.substring(0, 50) || 'Untitled Note';
-}
-
-// Format date for display
-function formatNoteDate(isoString) {
-  const date = new Date(isoString);
-  const now = new Date();
-  const diffMs = now - date;
-  const diffMins = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
-
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
-
-  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-}
-
-// Render the saved notes list in the view
-async function renderSavedNotesList() {
-  if (!savedNotesList || !savedNotesEmpty) return;
-
-  const savedNotes = await getSavedNotes();
-
-  if (savedNotes.length === 0) {
-    savedNotesList.classList.add('hidden');
-    savedNotesEmpty.classList.remove('hidden');
-    return;
-  }
-
-  savedNotesList.classList.remove('hidden');
-  savedNotesEmpty.classList.add('hidden');
-
-  savedNotesList.innerHTML = savedNotes.map(note => `
-    <div class="saved-note-item" data-note-id="${note.id}">
-      <span class="saved-note-title">${escapeHtml(note.title || 'Untitled Note')}</span>
-      <span class="saved-note-preview">${escapeHtml(notePreview(note.content))}</span>
-      <span class="saved-note-time">${formatNoteDate(note.updatedAt)}</span>
-      <div class="saved-note-actions">
-        <button class="saved-note-action is-rename" data-action="rename" data-note-id="${note.id}">Rename</button>
-        <button class="saved-note-action is-delete" data-action="delete" data-note-id="${note.id}">Delete</button>
-      </div>
-    </div>
-  `).join('');
-
-  savedNotesList.querySelectorAll('.saved-note-item').forEach(item => {
-    item.addEventListener('click', (e) => {
-      if (e.target instanceof Element && e.target.closest('.saved-note-action')) return;
-      loadNoteFromList(item.dataset.noteId);
-    });
+  prompter = createPrompter($('screen-prompter'), {
+    onClose: onPrompterClosed,
+    onToggleInvisible: () => toggleInvisible(),
+    isInvisible: () => settings.invisible,
+    onPlayStateChange: () => {},
   });
 
-  // Rename and delete stand in for iOS's swipe actions.
-  savedNotesList.querySelectorAll('.saved-note-action').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      e.stopPropagation();
-      const noteId = btn.dataset.noteId;
+  buildSwatches();
+  wireHome();
+  wireSettingsSheet();
+  wireKeyboard();
 
-      if (btn.dataset.action === 'delete') {
-        deleteNoteFromList(noteId);
-        return;
-      }
+  app.sidebarOpen = (await T.getStored('ui_sidebar_open')) ?? true;
+  updateLayout();
+  window.addEventListener('resize', updateLayout);
 
-      const note = (await getSavedNotes()).find(n => n.id === noteId);
-      const title = await showDialog({
-        title: 'Rename Note',
-        message: 'Enter a new title for your note',
-        value: note ? note.title || '' : '',
-        placeholder: 'Note title',
-        confirmLabel: 'Rename',
-      });
-      if (title) await renameNote(noteId, title);
-    });
-  });
+  onSettingsChange(onSettingChanged);
+  notes.onNotesChange(renderAll);
+
+  await T.trackFirstLaunch();
+  T.track('app_open');
+
+  applyAuth(await T.authStatus());
+  await initSlides();
+  listenToBackend();
+  void startUpdateChecks();
 }
 
-// Check if a specific scope is granted (backend handles scope tracking)
-async function hasScope(scopeType) {
-  if (!invoke) return false;
-  try {
-    if (scopeType === 'slides') {
-      return await invoke("has_slides_scope");
-    }
-    // Profile scope is implied by being authenticated
-    return await invoke("get_auth_status");
-  } catch (error) {
-    console.error("Error checking scope:", error);
-    return false;
-  }
-}
-
-// =============================================================================
-// DOM ELEMENTS AND STATE
-// =============================================================================
-
-// DOM Elements
-let btnClose, btnDownloadUpdates;
-let authBtn;
-let appContainer, appToolbar, toolbarTitle, viewInitial, viewAddNotes, viewNotes;
-let sheetBackdrop, sheets = {};
-let btnMenu, appMenu, menuBadge, menuSeparatorNote, btnSavedNotes;
-let btnSignOut, settingsAccount, accountName, accountEmail, deleteAccountRow;
-let btnSetSampleText;
-let notesInput, notesContent;
-let welcomeHeading, welcomeSubtext, welcomeActions;
-let bugLink, websiteLink, supportLink;
-let settingsLink;
-let shortcutsLink;
-let refreshBtn;
-let notesInputHighlight;
-let btnPlay, btnRestart, iconPlay, iconPause;
-let editorControls, timerControl, btnSetTimer, timerPicker, btnCloseTimerPicker;
-let timerMinutesField, timerSecondsField;
-let opacitySlider, opacityValue, ghostModeToggle, shortcutsToggle;
-let cueColorSwatches;
-let countdownField;
-let fontSizeSegmented;
-let themeSystemBtn, themeLightBtn, themeDarkBtn;
-let speedField;
-let editNoteBtn;
-let notesInputWrapper;
-let ghostModeIndicator;
-let headerTimer;
-let savedNotesList, savedNotesEmpty;
-
-// State
-let isAuthenticated = false;
-let userName = '';
-let userEmail = '';
-let currentView = 'initial'; // 'initial', 'add-notes', 'notes'
-let currentSheet = null; // 'settings', 'shortcuts', 'saved-notes', or nothing
-let manualNotes = ''; // Notes pasted by the user
-let currentSlideData = null; // Store current slide data
-let currentOpacity = 100; // Store current opacity value (10-100)
-let ghostMode = true; // Default: true = hidden from screenshots (ghost mode ON)
-let currentTheme = 'system'; // 'system', 'light', 'dark'
-let shortcutsEnabled = true; // Default: true = global shortcuts are enabled
-// Scroll speed, in lines of the script as the editor renders them. Zero is off,
-// which iOS has no equivalent of but an always-on-top window wants.
-let linesPerMinute = 0;
-let cueColor = DEFAULT_CUE_COLOR; // the colour every cue in every script is drawn in
-let fontSizePreset = 'medium'; // how big the script is set
-
-// Timer State
-let timerState = 'stopped'; // 'stopped', 'running', 'paused'
-let timerIntervals = []; // Store all timer interval IDs
-let autoScrollAnimationId = null; // Store auto-scroll animation frame ID
-let autoScrollHeldSeconds = 0; // Time spent hovering, which the script sits out
-let autoScrollHeldSince = null;
-let programmaticScrollTop = null; // The last scrollTop we set ourselves
-let autoScrollPausedByHover = false; // Tracks if auto-scroll is paused due to hover
-let timerMinutes = 1; // The run's length, set on the Set Timer pill
-let timerSeconds = 0;
-let elapsedSeconds = 0; // How far into the run we are; the clock everything reads
-let countdownSeconds = 5; // Delay before the script starts moving
-let countdownValue = 0; // What the delay is showing right now
-let countdownInterval = null;
-// Whether the run has begun since the last restart. The delay runs on the first
-// play only; resuming from a pause starts straight away.
-let hasStarted = false;
-
-// Notes metadata
-
-// Edit Mode State
-let isEditMode = false; // false = done mode (readonly, highlighted), true = edit mode (editable, not highlighted)
-let currentNoteId = null; // Track the ID of the currently loaded note for updates
-
-// Analytics State
-let sessionTracked = false; // Prevent duplicate session tracking
-
-// =============================================================================
-// APPLICATION INITIALIZATION
-// =============================================================================
-
-// Initialize the app
-window.addEventListener("DOMContentLoaded", async () => {
-  console.log("App initializing...");
-
-  // Initialize analytics
-  await initAnalytics();
-
-  // Initialize Firestore configuration from environment variables
-  await initFirestoreConfig();
-
-  // Initialize the store for persistent storage
-  await initStore();
-
-  // Get DOM elements
-  btnClose = document.getElementById("btn-close");
-  btnDownloadUpdates = document.getElementById("btn-download-updates");
-  authBtn = document.getElementById("auth-btn");
-  appContainer = document.querySelector(".app-container");
-  appToolbar = document.querySelector(".app-toolbar");
-  toolbarTitle = document.getElementById("toolbar-title");
-  btnMenu = document.getElementById("btn-menu");
-  appMenu = document.getElementById("app-menu");
-  menuBadge = document.getElementById("menu-badge");
-  menuSeparatorNote = document.getElementById("menu-separator-note");
-  btnSignOut = document.getElementById("btn-signout");
-  settingsAccount = document.getElementById("settings-account");
-  accountName = document.getElementById("account-name");
-  accountEmail = document.getElementById("account-email");
-  deleteAccountRow = document.getElementById("delete-account-row");
-  btnSetSampleText = document.getElementById("btn-sample-text");
-  btnSavedNotes = document.getElementById("btn-saved-notes");
-  viewInitial = document.getElementById("view-initial");
-  viewAddNotes = document.getElementById("view-add-notes");
-  viewNotes = document.getElementById("view-notes");
-  sheetBackdrop = document.getElementById("sheet-backdrop");
-  sheets = {
-    settings: document.getElementById("sheet-settings"),
-    shortcuts: document.getElementById("sheet-shortcuts"),
-    'saved-notes': document.getElementById("sheet-saved-notes"),
-  };
-  notesInput = document.getElementById("notes-input");
-  notesContent = document.getElementById("notes-content");
-  welcomeHeading = document.getElementById("welcome-heading");
-  welcomeSubtext = document.getElementById("welcome-subtext");
-  welcomeActions = document.getElementById("welcome-actions");
-  bugLink = document.getElementById("bug-link");
-  websiteLink = document.getElementById("website-link");
-  supportLink = document.getElementById("support-link");
-  settingsLink = document.getElementById("settings-link");
-  shortcutsLink = document.getElementById("shortcuts-link");
-  refreshBtn = document.getElementById("refresh-btn");
-  notesInputHighlight = document.getElementById("notes-input-highlight");
-  btnPlay = document.getElementById("btn-play");
-  btnRestart = document.getElementById("btn-restart");
-  iconPlay = btnPlay ? btnPlay.querySelector('.icon-play') : null;
-  iconPause = btnPlay ? btnPlay.querySelector('.icon-pause') : null;
-  editorControls = document.getElementById("editor-controls");
-  timerControl = document.getElementById("timer-control");
-  btnSetTimer = document.getElementById("btn-set-timer");
-  timerPicker = document.getElementById("timer-picker");
-  timerMinutesField = document.getElementById("timer-minutes");
-  timerSecondsField = document.getElementById("timer-seconds");
-  btnCloseTimerPicker = document.getElementById("btn-close-timer-picker");
-  opacitySlider = document.getElementById("opacity-slider");
-  opacityValue = document.getElementById("opacity-value");
-  ghostModeToggle = document.getElementById("ghost-mode-toggle");
-  shortcutsToggle = document.getElementById("shortcuts-toggle");
-  cueColorSwatches = document.getElementById("cue-color-swatches");
-  countdownField = document.getElementById("countdown-field");
-  fontSizeSegmented = document.getElementById("font-size-segmented");
-  themeSystemBtn = document.getElementById("theme-system");
-  themeLightBtn = document.getElementById("theme-light");
-  themeDarkBtn = document.getElementById("theme-dark");
-  speedField = document.getElementById("speed-field");
-  editNoteBtn = document.getElementById("edit-note-btn");
-  notesInputWrapper = document.querySelector(".notes-input-wrapper");
-  ghostModeIndicator = document.getElementById("ghost-mode-indicator");
-  headerTimer = document.getElementById("header-timer");
-  savedNotesList = document.getElementById("saved-notes-list");
-  savedNotesEmpty = document.getElementById("saved-notes-empty");
-
-  // Set up navigation handlers
-  setupNavigation();
-
-  // Set up auth handlers
-  setupAuth();
-
-  // Set up welcome action handlers
-  setupWelcomeActions();
-
-  // Set up header handlers
-  setupHeader();
-
-  // Set up the ellipsis menu and the links inside it
-  setupMenu();
-
-  // Set up update checker
-  setupUpdateChecker();
-
-  // Set up refresh button handler
-  setupRefreshButton();
-
-  // Set up timer control buttons
-  setupTimerControls();
-
-  // Set up syntax highlighting for notes input
-  setupNotesInputHighlighting();
-
-  // Set up edit note button
-  setupEditNoteButton();
-
-  // Set up auto-scroll hover listeners
-  setupAutoScrollHoverListeners();
-
-  // Set up settings handlers
-  setupSettings();
-
-  // Set up global shortcut listener
-  await setupShortcutListener();
-
-  // Load stored settings
-  await loadStoredSettings();
-
-  // Check auth status on load
-  await checkAuthStatus();
-
-  // Track first_open for new users (must be before app_open)
-  await trackFirstOpen();
-
-  // Track app open event (after auth check so we have user info if available)
-  trackAppOpen();
-
-  // Check for existing slide data
-  await checkCurrentSlide();
-
-  // Open on the script, the way the phone app does. The welcome hero is for a
-  // first run only: nobody signed in, and nothing ever written.
-  await showView(await shouldShowWelcome() ? 'initial' : 'add-notes');
-
-  // Listen for slide updates from the backend
-  if (listen) {
-    await listen("slide-update", (event) => {
-      handleSlideUpdate(event.payload);
-    });
-  }
-
-  // Listen for auth status changes
-  if (listen) {
-    await listen("auth-status", async (event) => {
-      // Auth status changed
-      console.log("Auth status event:", event.payload);
-
-      // Save user profile to Firestore when authenticated
-      if (event.payload.authenticated && event.payload.user_email) {
-        saveUserProfile(event.payload.user_email, event.payload.user_name || '');
-        // Set analytics user ID and track login (new login from OAuth)
-        setAnalyticsUserId(event.payload.user_email);
-        trackLogin('google');
-        // Only track session if not already tracked (prevents duplicate counting)
-        if (!sessionTracked) {
-          trackSessionStart();
-          sessionTracked = true;
-        }
-      }
-
-      // Update auth UI (only for profile auth, not slides)
-      if (event.payload.requested_scope === 'profile' || !event.payload.slides_authorized) {
-        updateAuthUI(event.payload.authenticated, event.payload.user_name, event.payload.user_email);
-      }
-
-      // If slides scope was just granted, show the notes view
-      if (event.payload.slides_authorized) {
-        // Show notes view with slide data or default message
-        if (currentSlideData) {
-          showView('notes');
-        } else {
-          displayNotes('Open a Google Slides presentation to see notes here.\n[cue Install CueCard Extension to sync notes]');
-          window.title = 'No Slide Open';
-          showView('notes');
-        }
-      }
-    });
-  }
-
-  console.log("App initialization complete!");
-});
-
-// Whether this is a first run — the only time the welcome hero is what someone
-// wants to see. Anyone who has signed in or written a script gets the editor.
-async function shouldShowWelcome() {
-  if (isAuthenticated) return false;
-  const storedNotes = await getStoredValue(STORAGE_KEYS.ADD_NOTES_CONTENT);
-  if (storedNotes && storedNotes.trim()) return false;
-  const savedNotes = await getSavedNotes();
-  return savedNotes.length === 0;
-}
-
-// =============================================================================
-// NAVIGATION
-// =============================================================================
-
-// A sheet is dismissed with Done, with Escape, or by clicking behind it.
-function setupNavigation() {
-  document.querySelectorAll('[data-sheet-done]').forEach(btn => {
-    btn.addEventListener("click", (e) => {
-      e.preventDefault();
-      dismissSheet();
-    });
-  });
-
-  if (sheetBackdrop) {
-    sheetBackdrop.addEventListener("click", () => dismissSheet());
-  }
-
-  document.addEventListener("keydown", (e) => {
-    if (e.key === 'Escape' && currentSheet) dismissSheet();
-  });
-}
-
-// Present one of the three over whatever is underneath it.
-function showSheet(name) {
-  const sheet = sheets[name];
-  if (!sheet) return;
-
-  if (currentSheet && currentSheet !== name) dismissSheet();
-
-  currentSheet = name;
-  trackScreenView(name, `CueCard ${sheet.querySelector('.sheet-title').textContent}`);
-
-  if (sheetBackdrop) sheetBackdrop.classList.remove('hidden');
-  sheet.classList.add('sheet-hiding');
-  sheet.classList.remove('hidden');
-  // One frame on the far side of the transition, so it has somewhere to travel from.
-  requestAnimationFrame(() => sheet.classList.remove('sheet-hiding'));
-
-  switch (name) {
-    case 'settings':
-      loadCurrentSettings();
-      break;
-    case 'shortcuts':
-      populateShortcutKeys();
-      break;
-    case 'saved-notes':
-      renderSavedNotesList();
-      break;
-  }
-}
-
-// A sheet always returns to what is underneath it, so there is nothing to remember.
-function dismissSheet() {
-  const sheet = sheets[currentSheet];
-  currentSheet = null;
-  if (sheetBackdrop) sheetBackdrop.classList.add('hidden');
-  if (!sheet) return;
-
-  sheet.classList.add('sheet-hiding');
-
-  let settled = false;
-  const done = () => {
-    if (settled) return;
-    settled = true;
-    clearTimeout(fallback);
-    sheet.removeEventListener('transitionend', done);
-    sheet.classList.add('hidden');
-  };
-  // Reduced motion, or a window that is not compositing, means no transitionend
-  // and a sheet that never goes away. Put it away on the clock instead.
-  const fallback = setTimeout(done, 400);
-  sheet.addEventListener('transitionend', done);
-}
-
-// Clear the editor and everything hanging off it, for a fresh note.
-function startNewNote() {
-  // Clear the input and highlight
-  notesInput.value = '';
-  if (notesInputHighlight) {
-    notesInputHighlight.innerHTML = '';
-  }
-
-  // Clear notes content
-  notesContent.innerHTML = '';
-  updateHeaderTimerVisibility();
-
-  // Clear slide info
-  window.title = '';
-
-  // Reset slide data
-  currentSlideData = null;
-  manualNotes = '';
-
-  // Reset current note ID
-  currentNoteId = null;
-
-  // Stop and reset all timers
-  stopAllTimers();
-  timerState = 'stopped';
-
-  updateTransport();
-  updateMenuItems();
+/** Scripts that carried `[time]` tags set the timer, once, on the way past. */
+function seedTimerFromTimeTags(seconds) {
+  if (hadStoredTimer) return;
+  void setSetting('timerMinutes', Math.min(Math.floor(seconds / 60), 59), { track: false, force: true });
+  void setSetting('timerSeconds', seconds % 60, { track: false, force: true });
 }
 
 // =============================================================================
 // AUTHENTICATION
 // =============================================================================
 
-// Auth Handlers
-function setupAuth() {
-  authBtn.addEventListener("click", async (e) => {
-    e.stopPropagation(); // Prevent event from bubbling to viewInitial
-    if (isAuthenticated) {
-      trackLogout();
-      await handleLogout();
-    } else {
-      await handleLogin();
-    }
-  });
-
-}
-
-// Welcome Actions (New Note / Load Note / Slides)
-function setupWelcomeActions() {
-  const pasteNotesLink = document.getElementById('paste-notes-link');
-  if (pasteNotesLink) {
-    pasteNotesLink.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      trackNotesPaste();
-      // Clear current note ID for new note
-      currentNoteId = null;
-      // Clear any existing notes for a fresh start
-      if (notesInput) {
-        notesInput.value = '';
-        if (notesInputHighlight) {
-          notesInputHighlight.innerHTML = '';
-        }
-      }
-      // Clear stored notes
-      setStoredValue(STORAGE_KEYS.ADD_NOTES_CONTENT, '');
-      // Reset timer state for new note
-      stopAllTimers();
-      timerState = 'stopped';
-      elapsedSeconds = 0;
-      updateTimerDisplay();
-      showView('add-notes');
-      // Start in edit mode for new note
-      isEditMode = true;
-      notesInputWrapper.classList.add('edit-mode');
-      notesInput.readOnly = false;
-      editNoteBtn.textContent = 'Done';
-      notesInput.focus();
-    });
-  }
-
-  const loadNotesLink = document.getElementById('load-notes-link');
-  if (loadNotesLink) {
-    loadNotesLink.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      showSheet('saved-notes');
-    });
-  }
-
-  const slidesLink = document.getElementById('slides-link');
-  if (slidesLink) {
-    slidesLink.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      syncSlideNotes();
-    });
-  }
-}
-
-// Show the notes for the slide that is open, asking for the scope if we have
-// not been given it yet.
-async function syncSlideNotes() {
-  trackSlidesSync();
-
-  const hasSlidesScope = await hasScope('slides');
-  if (!hasSlidesScope) {
-    console.log("Slides scope not granted, requesting...");
-    await handleLogin('slides');
-    return;
-  }
-
-  if (currentSlideData) {
-    await showView('notes');
-  } else {
-    displayNotes('Open a Google Slides presentation to see notes here.\n[cue Install CueCard Extension to sync notes]');
-    window.title = 'No Slide Open';
-    await showView('notes');
-  }
-}
-
-// Refresh Button Handler
-function setupRefreshButton() {
-  if (!refreshBtn) return;
-
-  refreshBtn.addEventListener("click", async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (!invoke) {
-      console.error("Tauri invoke API not available");
-      return;
-    }
-
-    // Store original text
-    const originalText = refreshBtn.textContent;
-    refreshBtn.textContent = 'Refreshing...';
-    refreshBtn.disabled = true;
-
-    try {
-      console.log("Refreshing notes...");
-      await invoke("refresh_notes");
-      console.log("Notes refreshed successfully");
-
-      // Reset timer and show start button
-      resetTimerCountdown();
-    } catch (error) {
-      console.error("Error refreshing notes:", error);
-    } finally {
-      // Restore original text
-      refreshBtn.textContent = originalText;
-      refreshBtn.disabled = false;
-    }
-  });
-}
-
-// =============================================================================
-// TIMER FUNCTIONALITY
-// =============================================================================
-
-// Transport: one button carries play, pause and — held down — restart.
-function setupTimerControls() {
-  if (!btnPlay) return;
-
-  // A long press or a right-click restarts, which is iOS's third control.
-  let holdTimeout = null;
-  let didRestartOnHold = false;
-
-  btnPlay.addEventListener("mousedown", (e) => {
-    if (e.button !== 0) return;
-    didRestartOnHold = false;
-    holdTimeout = setTimeout(() => {
-      didRestartOnHold = true;
-      resetTimerCountdown();
-    }, 550);
-  });
-
-  const clearHold = () => {
-    clearTimeout(holdTimeout);
-    holdTimeout = null;
-  };
-  btnPlay.addEventListener("mouseup", clearHold);
-  btnPlay.addEventListener("mouseleave", clearHold);
-
-  btnPlay.addEventListener("contextmenu", (e) => {
-    e.preventDefault();
-    resetTimerCountdown();
-  });
-
-  btnPlay.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (didRestartOnHold) {
-      didRestartOnHold = false;
-      return;
-    }
-    if (timerState === 'running') {
-      pauseTimerCountdown();
-    } else {
-      startTimerCountdown();
-    }
-  });
-
-  if (btnRestart) {
-    btnRestart.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      resetTimerCountdown();
-    });
-  }
-
-  setupTimerPill();
-}
-
-// The Set Timer pill expands in place to show the run's duration.
-function setupTimerPill() {
-  if (!btnSetTimer || !timerControl) return;
-
-  if (btnSetSampleText) {
-    btnSetSampleText.addEventListener("click", async (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      notesInput.value = DEFAULT_NOTE_TEXT;
-      notesInput.dispatchEvent(new Event('input', { bubbles: true }));
-      await saveNotesToStorage();
-      isEditMode = false;
-      notesInputWrapper.classList.remove('edit-mode');
-      notesInput.readOnly = true;
-      updateTransport();
-      updateMenuItems();
-    });
-  }
-
-  btnSetTimer.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (timerControl.classList.contains('disabled')) return;
-    openTimerPicker();
-  });
-
-  if (btnCloseTimerPicker) {
-    btnCloseTimerPicker.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      closeTimerPicker();
-    });
-  }
-
-  // A field holds text while it is being edited, and becomes the setting on
-  // the way out of it.
-  [timerMinutesField, timerSecondsField].forEach(field => {
-    if (!field) return;
-    field.addEventListener("blur", () => commitTimerFields());
-    field.addEventListener("keydown", (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        field.blur();
-      }
-    });
-  });
-}
-
-function openTimerPicker() {
-  if (!timerControl || !timerPicker) return;
-  timerControl.classList.add('expanded');
-  timerPicker.classList.remove('hidden');
-  updateTimerPickerDuration();
-}
-
-function closeTimerPicker() {
-  if (!timerControl || !timerPicker) return;
-  if (timerControl.classList.contains('expanded')) commitTimerFields();
-  timerControl.classList.remove('expanded');
-  timerPicker.classList.add('hidden');
-}
-
-// Show the stored duration in the two fields, unless one is being typed in.
-function updateTimerPickerDuration() {
-  if (!timerMinutesField || !timerSecondsField) return;
-  if (document.activeElement === timerMinutesField || document.activeElement === timerSecondsField) return;
-  timerMinutesField.value = String(timerMinutes).padStart(2, '0');
-  timerSecondsField.value = String(timerSeconds).padStart(2, '0');
-}
-
-// Take what was typed, holding minutes and seconds to what a clock can show.
-// Anything that isn't a number leaves the setting alone.
-async function commitTimerFields() {
-  const typedMinutes = parseInt(timerMinutesField.value.replace(/\D/g, ''), 10);
-  const typedSeconds = parseInt(timerSecondsField.value.replace(/\D/g, ''), 10);
-
-  if (!Number.isNaN(typedMinutes)) timerMinutes = Math.min(Math.max(typedMinutes, 0), 59);
-  if (!Number.isNaN(typedSeconds)) timerSeconds = Math.min(Math.max(typedSeconds, 0), 59);
-
-  await setStoredValue(STORAGE_KEYS.SETTINGS_TIMER_MINUTES, timerMinutes);
-  await setStoredValue(STORAGE_KEYS.SETTINGS_TIMER_SECONDS, timerSeconds);
-  trackSettingChange('timer_duration', timerDurationSeconds());
-
-  updateTimerPickerDuration();
-  // A run already under way is re-timed against the new duration.
-  updateTimerDisplay();
-}
-
-// The delays a typed start delay is held to, as on iOS.
-const COUNTDOWN_MIN = 0;
-const COUNTDOWN_MAX = 60;
-
-// How long the run is, as set on the Set Timer pill. Zero counts up instead.
-function timerDurationSeconds() {
-  return timerMinutes * 60 + timerSeconds;
-}
-
-// Start/Resume the run. On the first play there is a delay to count down first,
-// so you can get your hands off the machine before the script moves.
-function startTimerCountdown() {
-  console.log('[Timer] startTimerCountdown called, timerState:', timerState);
-  if (timerState === 'running' || countdownInterval) return;
-
-  // Notes arriving from Slides are driven by the deck, not by someone stepping
-  // back from the keyboard, so there is nothing to wait for.
-  const skipDelay = hasStarted || countdownSeconds <= 0 || currentView === 'notes';
-  if (!skipDelay) {
-    runStartDelay();
-    return;
-  }
-
-  beginRun();
-}
-
-// Count the delay down in the header, in pink, then start.
-function runStartDelay() {
-  countdownValue = countdownSeconds;
-
-  countdownInterval = setInterval(() => {
-    countdownValue -= 1;
-    if (countdownValue <= 0) {
-      stopStartDelay();
-      beginRun();
-      return;
-    }
-    updateTimerDisplay();
-  }, 1000);
-
-  updateTimerDisplay();
-  updateTransport();
-}
-
-function stopStartDelay() {
-  clearInterval(countdownInterval);
-  countdownInterval = null;
-  countdownValue = 0;
-}
-
-function beginRun() {
-  trackTimerAction('start');
-  timerState = 'running';
-  hasStarted = true;
-  updateTransport();
-
-  startAutoScroll();
-
-  // The clock is read from wall time rather than counted in ticks, so pausing
-  // and resuming cannot make it drift.
-  const startedAt = Date.now();
-  const elapsedAtStart = elapsedSeconds;
-
-  const interval = setInterval(() => {
-    if (timerState !== 'running') {
-      clearInterval(interval);
-      return;
-    }
-    elapsedSeconds = elapsedAtStart + (Date.now() - startedAt) / 1000;
-    updateTimerDisplay();
-  }, 200);
-
-  timerIntervals.push(interval);
-}
-
-// The header clock, and the colour iOS gives it: green while there is room,
-// yellow inside the last fifth, red once the run has gone over.
-function updateTimerDisplay() {
-  if (!headerTimer) return;
-
-  const duration = timerDurationSeconds();
-  headerTimer.classList.remove('time-countup', 'time-warning', 'time-overtime', 'time-delay');
-
-  // The delay before the run, counted down in pink.
-  if (countdownInterval) {
-    headerTimer.textContent = formatTime(countdownValue);
-    headerTimer.classList.add('time-delay');
-    return;
-  }
-
-  // Nothing to count down to, so count up instead.
-  if (duration <= 0) {
-    headerTimer.textContent = formatTime(Math.floor(elapsedSeconds));
-    headerTimer.classList.add('time-countup');
-    return;
-  }
-
-  const remaining = duration - Math.floor(elapsedSeconds);
-  headerTimer.textContent = formatTime(remaining);
-
-  if (remaining < 0) {
-    headerTimer.classList.add('time-overtime');
-  } else if (remaining / duration <= 0.2) {
-    headerTimer.classList.add('time-warning');
-  }
-}
-
-// Pause the run, or call off the delay before it
-function pauseTimerCountdown() {
-  if (countdownInterval) {
-    stopStartDelay();
-    updateTimerDisplay();
-    updateTransport();
-    return;
-  }
-  if (timerState !== 'running') return;
-
-  trackTimerAction('pause');
-  timerState = 'paused';
-  stopAllTimers();
-  stopAutoScroll();
-  updateTransport();
-}
-
-// Put the run back to its beginning
-function resetTimerCountdown() {
-  trackTimerAction('reset');
-  stopStartDelay();
-  stopAllTimers();
-  stopAutoScroll();
-  timerState = 'stopped';
-  elapsedSeconds = 0;
-  autoScrollHeldSeconds = 0;
-  hasStarted = false;
-
-  const container = getScrollContainer();
-  if (container) {
-    container.scrollTop = 0;
-    programmaticScrollTop = 0;
-  }
-
-  updateTimerDisplay();
-  updateTransport();
-}
-
-// Stop all running timer intervals
-function stopAllTimers() {
-  timerIntervals.forEach(interval => clearInterval(interval));
-  timerIntervals = [];
-}
-
-// =============================================================================
-// SCROLL HELPERS
-// =============================================================================
-
-function getScrollContainer() {
-  if (currentView === 'add-notes') {
-    if (isEditMode) {
-      return notesInput;
-    }
-    return notesInputHighlight || notesInput;
-  }
-  if (currentView === 'notes') {
-    return notesContent;
-  }
-  return null;
-}
-
-// The speeds a typed lines-a-minute figure is held to, as on iOS.
-const LPM_MIN = 1;
-const LPM_MAX = 300;
-
-/**
- * Where on screen the line being read sits, as a fraction of the view height.
- * Just above centre: high enough to leave the next few lines in view, low
- * enough to read as the middle of the screen rather than the top of it.
- */
-const READING_LINE_FRACTION = 0.45;
-
-// One rendered line of the script, in pixels — what a line a minute is a minute of.
-function renderedLineHeight(container) {
-  const lineHeight = parseFloat(getComputedStyle(container).lineHeight);
-  if (!Number.isNaN(lineHeight) && lineHeight > 0) return lineHeight;
-  return parseFloat(getComputedStyle(container).fontSize) * 1.2;
-}
-
-// Start auto-scroll animation
-function startAutoScroll() {
-  if (linesPerMinute <= 0 || autoScrollAnimationId !== null) return;
-  if (!getScrollContainer()) return;
-
-  // The position is a function of the clock, not a running total, so pausing
-  // and resuming cannot make the script drift out of step with the timer.
-  function scrollStep() {
-    if (timerState !== 'running' || linesPerMinute <= 0) {
-      stopAutoScroll();
-      return;
-    }
-
-    const container = getScrollContainer();
-    if (container) {
-      const maxScroll = container.scrollHeight - container.clientHeight;
-      if (maxScroll > 0) {
-        const held = autoScrollHeldSeconds + (autoScrollHeldSince ? (Date.now() - autoScrollHeldSince) / 1000 : 0);
-        const lines = Math.max(elapsedSeconds - held, 0) * linesPerMinute / 60;
-        const target = lines * renderedLineHeight(container) - readingLineOffset(container);
-        container.scrollTop = Math.min(Math.max(target, 0), maxScroll);
-        // Remember what we wrote, so the scroll it fires is not read as a scrub.
-        programmaticScrollTop = container.scrollTop;
-      }
-    }
-
-    autoScrollAnimationId = requestAnimationFrame(scrollStep);
-  }
-
-  autoScrollAnimationId = requestAnimationFrame(scrollStep);
-}
-
-// Stop auto-scroll animation
-function stopAutoScroll() {
-  if (autoScrollAnimationId !== null) {
-    cancelAnimationFrame(autoScrollAnimationId);
-    autoScrollAnimationId = null;
-  }
-  autoScrollPausedByHover = false;
-  autoScrollHeldSince = null;
-}
-
-// How far the reading line sits down the view.
-function readingLineOffset(container) {
-  return container.clientHeight * READING_LINE_FRACTION;
-}
-
-// Dragging the script moves the clock, not just the view, so pausing and
-// dragging back re-times the run instead of desynchronising it.
-function scrubToScrollTop(container) {
-  if (linesPerMinute <= 0) return;
-
-  const lineHeight = renderedLineHeight(container);
-  if (!lineHeight) return;
-
-  const lines = (container.scrollTop + readingLineOffset(container)) / lineHeight;
-  elapsedSeconds = Math.max(lines * 60 / linesPerMinute, 0);
-  autoScrollHeldSeconds = 0;
-  autoScrollHeldSince = autoScrollPausedByHover ? Date.now() : null;
-  updateTimerDisplay();
-}
-
-// Setup hover listeners to pause auto-scroll, and scrubbing by dragging
-function setupAutoScrollHoverListeners() {
-  const containers = [notesInputHighlight, notesContent];
-
-  containers.forEach(container => {
-    if (!container) return;
-
-    container.addEventListener('scroll', () => {
-      // Ours, not the reader's.
-      if (programmaticScrollTop !== null && Math.abs(container.scrollTop - programmaticScrollTop) < 1) return;
-      programmaticScrollTop = null;
-      if (!hasStarted) return;
-      scrubToScrollTop(container);
-    });
-
-    container.addEventListener('mouseenter', () => {
-      if (autoScrollPausedByHover) return;
-      autoScrollPausedByHover = true;
-      autoScrollHeldSince = Date.now();
-    });
-
-    container.addEventListener('mouseleave', () => {
-      if (!autoScrollPausedByHover) return;
-      autoScrollPausedByHover = false;
-      if (autoScrollHeldSince) {
-        autoScrollHeldSeconds += (Date.now() - autoScrollHeldSince) / 1000;
-        autoScrollHeldSince = null;
-      }
-    });
-  });
-}
-
-// Update header timer visibility based on view (shown in notes views for both countdown and count-up)
-function updateHeaderTimerVisibility() {
-  if (!headerTimer) return;
-  const isNotesView = currentView === 'add-notes' || currentView === 'notes';
-  headerTimer.classList.toggle('hidden', !isNotesView);
-}
-
-// The whole transport, read off timerState and whether there is a script to run.
-function updateTransport() {
-  if (!editorControls || !btnPlay) return;
-
-  const isEditorView = currentView === 'add-notes';
-  const isSlidesView = currentView === 'notes';
-  editorControls.classList.toggle('hidden', !(isEditorView || isSlidesView));
-
-  // Something to run: a written script that is not being typed, or synced notes.
-  let hasScript = false;
-  if (isEditorView) {
-    hasScript = Boolean(notesInput.value.trim()) && !isEditMode;
-  } else if (isSlidesView) {
-    hasScript = Boolean(currentSlideData && notesContent && notesContent.textContent.trim());
-  }
-
-  const isUnderWay = timerState === 'running' || countdownInterval !== null;
-  btnPlay.disabled = !hasScript;
-  btnPlay.setAttribute('aria-label', isUnderWay ? 'Pause' : 'Start');
-  btnPlay.title = isUnderWay ? 'Pause' : 'Start';
-  if (iconPlay) iconPlay.classList.toggle('hidden', isUnderWay);
-  if (iconPause) iconPause.classList.toggle('hidden', !isUnderWay);
-
-  // Restart only means something once a run is under way.
-  if (btnRestart) {
-    btnRestart.classList.toggle('hidden', !(hasScript && (isUnderWay || timerState === 'paused')));
-  }
-
-  if (timerControl) {
-    // Nothing written yet means nothing to time, so the pill offers the one
-    // thing that helps: something to read.
-    const offerSample = isEditorView && !notesInput.value.trim();
-    if (btnSetTimer) btnSetTimer.classList.toggle('hidden', offerSample);
-    if (btnSetSampleText) btnSetSampleText.classList.toggle('hidden', !offerSample);
-
-    timerControl.classList.toggle('disabled', !hasScript && !offerSample);
-    if (!hasScript) closeTimerPicker();
-  }
-  updateTimerPickerDuration();
-}
-
-// =============================================================================
-// NOTES INPUT AND SYNTAX HIGHLIGHTING
-// =============================================================================
-
-// Setup syntax highlighting for notes input
-function setupNotesInputHighlighting() {
-  if (!notesInput || !notesInputHighlight) return;
-
-  // Function to update the highlighted preview
-  function updateHighlight() {
-    const text = notesInput.value;
-    if (!text) {
-      notesInputHighlight.innerHTML = '';
-      updateHeaderTimerVisibility();
-      // Update timer button visibility when content changes
-      updateTransport();
-      // Update edit note button visibility when content changes
-      updateEditNoteButtonVisibility();
-      return;
-    }
-
-    // Apply the same highlighting as in displayNotes
-    const highlighted = highlightNotesForInput(text);
-    notesInputHighlight.innerHTML = highlighted;
-
-    // Update timer button visibility when content changes
-    updateTransport();
-    // Update edit note button visibility when content changes
-    updateEditNoteButtonVisibility();
-  }
-
-  // Listen for input changes
-  notesInput.addEventListener('input', updateHighlight);
-
-  // `[` writes both brackets, and the backspace that follows takes them both
-  // back away again, so a `[` meant literally costs one extra keystroke
-  // instead of six.
-  notesInput.addEventListener('keydown', (e) => {
-    if (notesInput.readOnly) return;
-    if (notesInput.selectionStart !== notesInput.selectionEnd) return;
-
-    const caret = notesInput.selectionStart;
-    const text = notesInput.value;
-
-    if (e.key === '[') {
-      e.preventDefault();
-      // Cues don't nest, and in here both brackets are already written.
-      if (cueTagContaining(caret, text)) return;
-
-      const insertion = emptyCueInsertion(text, caret);
-      replaceInEditor(caret, caret, insertion.text, caret + insertion.caretOffset);
-      return;
-    }
-
-    if (e.key === 'Backspace' && caret > 0) {
-      const emptyCue = emptyCueSurrounding(caret - 1, text);
-      if (!emptyCue) return;
-      e.preventDefault();
-      replaceInEditor(emptyCue.index, emptyCue.index + emptyCue.length, '[', emptyCue.index + 1);
-    }
-  });
-
-  // Initial update if there's already content
-  updateHighlight();
-}
-
-// Edit the textarea ourselves, then run everything an ordinary keystroke would.
-function replaceInEditor(start, end, replacement, caret) {
-  notesInput.setRangeText(replacement, start, end, 'end');
-  notesInput.selectionStart = notesInput.selectionEnd = caret;
-  notesInput.dispatchEvent(new Event('input', { bubbles: true }));
-}
-
-// =============================================================================
-// EDIT NOTE BUTTON
-// =============================================================================
-
-// Setup edit note button
-function setupEditNoteButton() {
-  if (!editNoteBtn || !notesInputWrapper) return;
-
-  // Add click handler
-  editNoteBtn.addEventListener("click", toggleEditMode);
-}
-
-// Toggle between edit and done modes
-async function toggleEditMode() {
-  isEditMode = !isEditMode;
-
-  if (isEditMode) {
-    // Edit mode: input is editable, not highlighted
-    trackEditAction('edit');
-    notesInputWrapper.classList.add('edit-mode');
-    notesInput.readOnly = false;
-    editNoteBtn.textContent = 'Done';
-    notesInput.focus();
-  } else {
-    // Done mode: input is readonly, highlighted
-    trackEditAction('save');
-    notesInputWrapper.classList.remove('edit-mode');
-    notesInput.readOnly = true;
-    editNoteBtn.textContent = 'Edit Note';
-  }
-
-  // Reset timer when toggling edit/done
-  resetTimerCountdown();
-}
-
-// Update edit note button visibility
-function updateEditNoteButtonVisibility() {
-  if (!editNoteBtn) return;
-
-  const hasContent = notesInput.value.trim();
-
-  // Only show button in add-notes view when there's content
-  if (currentView === 'add-notes' && hasContent) {
-    editNoteBtn.classList.remove('hidden');
-
-    // If content was just added (transitioning from empty to non-empty),
-    // start in edit mode (editable, not highlighted)
-    if (!notesInputWrapper.classList.contains('edit-mode') && !notesInput.readOnly) {
-      // User is actively typing/pasting - keep in edit mode
-      isEditMode = true;
-      notesInputWrapper.classList.add('edit-mode');
-      notesInput.readOnly = false;
-      editNoteBtn.textContent = 'Done';
-    } else {
-      // Update button text based on current mode
-      editNoteBtn.textContent = isEditMode ? 'Done' : 'Edit Note';
-    }
-  } else {
-    editNoteBtn.classList.add('hidden');
-
-    // Reset to edit mode when content is cleared
-    if (!hasContent) {
-      isEditMode = true;
-      notesInputWrapper.classList.add('edit-mode');
-      notesInput.readOnly = false;
-    }
-  }
-
-  updateMenuItems();
-}
-
-
-// Wrap every cue in the span the stylesheet colours. The text has already been
-// HTML-escaped, which leaves the brackets a cue is recognised by untouched.
-function highlightCues(escapedText) {
-  let result = '';
-  let lastEnd = 0;
-
-  for (const match of cueMatches(escapedText)) {
-    result += escapedText.slice(lastEnd, match.index);
-    result += `<span class="cue-tag">[${match.content}]</span>`;
-    lastEnd = match.index + match.length;
-  }
-
-  return result + escapedText.slice(lastEnd);
-}
-
-// Every line-break kind there is — \r\n, \r, U+2028, U+2029, a vertical tab —
-// down to the one the editor works in.
-function normalizeLineBreaks(text) {
-  return text
-    .replace(/\\n/g, '\n')
-    .replace(/\r\n/g, '\n')
-    .replace(/\r/g, '\n')
-    .replace(/\u2028/g, '\n')
-    .replace(/\u2029/g, '\n')
-    .replace(/\v/g, '\n');
-}
-
-// The script as the editor shows it: cues in colour, everything else as typed.
-function highlightNotesForInput(text) {
-  const safe = highlightCues(escapeHtml(normalizeLineBreaks(text)));
-  return safe.replace(/\n/g, '<br>');
-}
-
-// Check authentication status
-async function checkAuthStatus() {
-  if (!invoke) {
-    console.log("Tauri not available, skipping auth check");
-    return;
-  }
-  try {
-    const status = await invoke("get_auth_status");
-    // Try to get user info if authenticated
-    let name = '';
-    let email = '';
-    if (status) {
-      try {
-        const userInfo = await invoke("get_user_info");
-        name = userInfo?.name || '';
-        email = userInfo?.email || '';
-      } catch (e) {
-        console.log("Could not get user info:", e);
-      }
-
-      // Save user profile to Firestore
-      if (email && name) {
-        saveUserProfile(email, name);
-      }
-      // Set analytics user ID for returning users
-      if (email) {
-        setAnalyticsUserId(email);
-        // Only track session if not already tracked (prevents duplicate counting)
-        if (!sessionTracked) {
-          trackSessionStart();
-          sessionTracked = true;
-        }
-      }
-    }
-    updateAuthUI(status, name, email);
-  } catch (error) {
-    console.error("Error checking auth status:", error);
-    updateAuthUI(false, '');
-  }
-}
-
-// Get time-based greeting
-function getGreeting() {
-  const hour = new Date().getHours();
-
-  if (hour >= 5 && hour < 12) {
-    return 'Morning';
-  } else if (hour >= 12 && hour < 17) {
-    return 'Afternoon';
-  } else if (hour >= 17 && hour < 21) {
-    return 'Evening';
-  } else {
-    return 'Hello';
-  }
-}
-
-// Extract first name from full name
-function getFirstName(fullName) {
-  if (!fullName) return '';
-  return fullName.trim().split(' ')[0];
-}
-
-// Update UI based on auth status
-function updateAuthUI(authenticated, name = '', email = '') {
-  isAuthenticated = authenticated;
-  userName = name;
-  userEmail = authenticated ? email : '';
-
-  const buttonText = authBtn.querySelector('.gsi-material-button-contents');
-  const buttonIcon = authBtn.querySelector('.gsi-material-button-icon');
+function applyAuth({ authenticated, name = '', email = '' }) {
+  app.authenticated = authenticated;
+  app.user = { name, email };
+
+  $('screen-login').hidden = authenticated;
+  $('screen-home').hidden = !authenticated;
+  if (!authenticated) prompter.close();
 
   if (authenticated) {
-    // Update button to show "Sign out"
-    if (buttonText) buttonText.textContent = 'Sign out';
-    if (buttonIcon) buttonIcon.style.display = 'none';
-    authBtn.classList.add('is-authenticated');
-    authBtn.classList.add('hidden');
-    updateAccountSection();
-
-    // Update welcome heading with greeting and first name
-    const firstName = getFirstName(name);
-    const greeting = getGreeting();
-    const versionSpan = welcomeHeading.querySelector('.version-text');
-    const versionHTML = versionSpan ? versionSpan.outerHTML : '';
-    welcomeHeading.innerHTML = `${greeting}, ${firstName}!${versionHTML ? '\n' + versionHTML : ''}`;
-
-    // Update subtext and show quick actions
-    welcomeSubtext.innerHTML = 'Create or open notes and speak with confidence.';
-    if (welcomeActions) {
-      welcomeActions.classList.remove('hidden');
+    T.setAnalyticsUser(email);
+    if (email) void T.saveProfile(email, name);
+    if (!app.sessionTracked) {
+      T.track('start_session');
+      app.sessionTracked = true;
     }
+    T.trackScreen('home');
+    renderAll();
+    editor.reset();
   } else {
-    // Update button to show "Sign in"
-    if (buttonText) buttonText.textContent = 'Sign in with Google';
-    if (buttonIcon) buttonIcon.style.display = 'block';
-    authBtn.classList.remove('is-authenticated');
-    authBtn.classList.remove('hidden');
-    updateAccountSection();
-
-    // Reset welcome heading to default
-    welcomeHeading.innerHTML = 'CueCard\n<span class="version-text">1.4.1</span>';
-
-    // Reset subtext
-    welcomeSubtext.innerHTML = 'Speaker notes visible only to you during screen sharing — for <span class="highlight-presentations">presentations</span>, <span class="highlight-meetings">meetings</span>, or <span class="highlight-demos">live demos</span>.';
-    if (welcomeActions) {
-      welcomeActions.classList.add('hidden');
-    }
+    T.trackScreen('login');
   }
 }
 
-// The account section is there only while there is an account to show.
-function updateAccountSection() {
-  if (settingsAccount) settingsAccount.classList.toggle('hidden', !isAuthenticated);
-  if (deleteAccountRow) deleteAccountRow.classList.toggle('hidden', !isAuthenticated);
-  if (accountName) accountName.textContent = userName || 'Signed in';
-  if (accountEmail) accountEmail.textContent = userEmail;
+async function signOut() {
+  T.track('logout');
+  T.clearAnalyticsUser();
+  ui.closeSheet();
+  await T.logout();
+  applyAuth({ authenticated: false });
 }
 
-// Handle login with specific scope
-// scope: 'profile' for basic auth, 'slides' for Google Slides access
-async function handleLogin(scope = 'profile') {
+async function deleteAccount() {
+  const sure = await ui.confirmAction({
+    title: 'Delete Account',
+    message: 'Are you sure you want to delete your account? This action cannot be undone.',
+    confirmLabel: 'Delete',
+    destructive: true,
+  });
+  if (!sure) return;
+
   try {
-    if (!invoke) {
-      console.error("Tauri invoke API not available");
-      alert("Please run the app in Tauri mode");
-      return;
-    }
-    await invoke("start_login", { scope });
+    await T.deleteAccount(app.user.email);
   } catch (error) {
-    console.error("Error starting login:", error);
-  }
-}
-
-// Handle logout
-async function handleLogout() {
-  if (!invoke) {
-    console.error("Tauri invoke API not available");
-    return;
-  }
-  try {
-    await invoke("logout");
-    updateAuthUI(false, '');
-    dismissSheet();
-    if (await shouldShowWelcome()) {
-      await showView('initial');
-    } else if (currentView === 'notes') {
-      await showView('add-notes');
-    }
-  } catch (error) {
-    console.error("Error logging out:", error);
-  }
-}
-
-// Check if there's already slide data
-async function checkCurrentSlide() {
-  if (!invoke) {
-    console.log("Tauri not available, skipping slide check");
-    return;
-  }
-  try {
-    const slide = await invoke("get_current_slide");
-    if (slide) {
-      const notes = await invoke("get_current_notes");
-      handleSlideUpdate({ slide_data: slide, notes }, false); // Don't auto-show
-    }
-  } catch (error) {
-    console.error("Error checking current slide:", error);
-  }
-}
-
-// Handle slide update from Google Slides
-function handleSlideUpdate(data, autoShow = false) {
-  const { slide_data, notes } = data;
-
-  if (!slide_data) {
+    await ui.showError(String(error.message || error), 'Error');
     return;
   }
 
-  // Check if this is a different slide (slide changed)
-  const isNewSlide = !currentSlideData ||
-    currentSlideData.slideId !== slide_data.slideId ||
-    currentSlideData.presentationId !== slide_data.presentationId;
+  await notes.clearAll();
+  await resetSettings();
+  editor.setText('');
+  await signOut();
+}
 
-  // Track slide update from extension
-  if (isNewSlide) {
-    trackSlideUpdate();
+// =============================================================================
+// THE SCRIPT BEING WRITTEN
+// =============================================================================
+
+function onScriptEdited(text) {
+  notes.setDraft(text);
+  renderToolbar();
+  renderControls();
+  renderSidebar();
+}
+
+async function saveScript() {
+  if (!notes.hasScript()) return;
+  if (!notes.currentNote()) return saveScriptAsNew();
+  await notes.saveCurrent();
+  ui.showToast('Saved');
+  T.trackClick('save_script', 'home');
+}
+
+async function saveScriptAsNew() {
+  if (!notes.hasScript()) return;
+  const title = await ui.promptForText({
+    title: 'Save Script',
+    message: 'Give this script a name.',
+    value: suggestedFileName(null, notes.state.draft),
+    placeholder: 'Script name',
+    confirmLabel: 'Save',
+  });
+  if (!title) return;
+  await notes.saveAsNew(title);
+  ui.showToast('Saved');
+  T.trackClick('save_as_new', 'home');
+}
+
+/**
+ * Before leaving a script with changes in it, ask — a window makes switching
+ * scripts easy enough that losing one to a stray click would be too easy too.
+ * Returns false if the reader decided to stay.
+ */
+async function confirmLeavingScript() {
+  if (app.source !== 'script' || !notes.hasUnsavedChanges()) return true;
+
+  const note = notes.currentNote();
+  const result = await ui.showAlert({
+    title: note ? `Save changes to “${note.title}”?` : 'Save this script?',
+    message: 'Your changes are lost if you do not save them.',
+    actions: [
+      { id: 'discard', label: "Don't Save", style: 'destructive' },
+      { id: 'cancel', label: 'Cancel', style: 'cancel' },
+      { id: 'save', label: 'Save', style: 'preferred' },
+    ],
+  });
+
+  if (!result) return false;
+  if (result.action === 'save') {
+    if (note) await notes.saveCurrent();
+    else {
+      await saveScriptAsNew();
+      if (notes.hasUnsavedChanges()) return false;
+    }
   }
+  return true;
+}
 
-  // Store current slide data
-  currentSlideData = slide_data;
+async function newScript() {
+  if (!(await confirmLeavingScript())) return;
+  await notes.newScript();
+  editor.setText('');
+  selectSource('script');
+  editor.focus();
+  T.trackClick('new_script', 'home');
+}
 
-  // Display the notes
-  if (notes && notes.trim()) {
-    // If viewing notes and slide changed, reset timer and start fresh
-    if (currentView === 'notes' && isNewSlide) {
-      stopAllTimers();
-      stopAutoScroll();
-      timerState = 'stopped';
-    }
+async function openScript(id) {
+  if (!(await confirmLeavingScript())) return;
+  await notes.openNote(id);
+  editor.setText(notes.state.draft);
+  editor.reset();
+  selectSource('script');
+}
 
-    displayNotes(notes, slide_data);
+async function renameScript(id) {
+  const note = notes.state.saved.find((n) => n.id === id);
+  if (!note) return;
+  const title = await ui.promptForText({
+    title: 'Rename Script',
+    message: 'Give this script a new name.',
+    value: note.title,
+    placeholder: 'Script name',
+    confirmLabel: 'Rename',
+  });
+  if (title) await notes.renameNote(id, title);
+}
 
-    // If viewing notes and slide changed, start timer automatically
-    if (currentView === 'notes' && isNewSlide) {
-      startTimerCountdown();
-    }
-
-    // Only auto-show if explicitly requested
-    if (autoShow) {
-      showView('notes');
-    }
-  }
+async function deleteScript(id) {
+  const note = notes.state.saved.find((n) => n.id === id);
+  if (!note) return;
+  const sure = await ui.confirmAction({
+    title: `Delete “${note.title}”?`,
+    message: 'This cannot be undone.',
+    confirmLabel: 'Delete',
+    destructive: true,
+  });
+  if (!sure) return;
+  const wasOpen = notes.state.currentId === id;
+  await notes.deleteNote(id);
+  if (wasOpen) editor.setText('');
 }
 
 // =============================================================================
 // FILES
 // =============================================================================
 
-// Anything that goes wrong with a file says so the way iOS says it.
-function showFileError(message) {
-  return showDialog({
-    title: 'Something Went Wrong',
-    message,
-    field: false,
-    confirmLabel: 'OK',
-  });
+async function importScript() {
+  if (!T.filesAvailable()) return ui.showError('File access is not available in this build.');
+  if (!(await confirmLeavingScript())) return;
+
+  try {
+    const picked = await T.pickTextFile();
+    if (!picked) return;
+    if (!picked.text.trim()) return ui.showError('That file is empty.');
+
+    // Whatever spelling the file was written in, it arrives as [cue ...].
+    await notes.importScript(titleForFileName(picked.path), normalizingTags(picked.text));
+    editor.setText(notes.state.draft);
+    editor.reset();
+    selectSource('script');
+    ui.showToast('Imported');
+    T.trackClick('import_file', 'home');
+  } catch (error) {
+    await ui.showError("This file couldn't be read as text.");
+    console.error(error);
+  }
 }
 
-/**
- * Read a .txt or .md in and keep it as a note titled from the filename. The
- * file already has a name, so there is nothing to ask the user for.
- */
-async function importScriptFromFile() {
-  if (!openFileDialog || !readTextFile) {
-    await showFileError('File access is not available in this build.');
-    return;
-  }
+async function exportScript() {
+  if (!T.filesAvailable()) return ui.showError('File access is not available in this build.');
+  if (!notes.hasScript()) return;
 
-  let path;
   try {
-    path = await openFileDialog({
-      multiple: false,
-      directory: false,
-      filters: [{ name: 'Script', extensions: ['txt', 'md', 'markdown', 'text'] }],
+    const name = `${suggestedFileName(notes.currentNote()?.title, notes.state.draft)}.txt`;
+    if (await T.saveTextFile(name, normalizingTags(notes.state.draft))) {
+      ui.showToast('Exported');
+      T.trackClick('export_file', 'home');
+    }
+  } catch (error) {
+    await ui.showError(String(error));
+  }
+}
+
+// =============================================================================
+// GOOGLE SLIDES
+// =============================================================================
+
+async function initSlides() {
+  app.slides.connected = await T.hasSlidesScope();
+  const current = await T.currentSlide();
+  if (current) {
+    app.slides.slide = current.slide;
+    app.slides.notes = current.notes;
+  }
+  renderSlides();
+  renderSidebar();
+}
+
+function connectSlides() {
+  T.trackClick('connect_slides', 'home');
+  T.track('slides_sync');
+  void T.startLogin('slides');
+}
+
+async function refreshSlides() {
+  const button = $('btn-refresh-slides');
+  button.disabled = true;
+  try {
+    await T.refreshSlideNotes();
+  } catch (error) {
+    console.error('Error refreshing notes:', error);
+  } finally {
+    button.disabled = false;
+  }
+}
+
+function onSlideUpdate(payload) {
+  const slide = payload?.slide_data;
+  if (!slide) return;
+
+  const isNew =
+    !app.slides.slide ||
+    app.slides.slide.slideId !== slide.slideId ||
+    app.slides.slide.presentationId !== slide.presentationId;
+
+  app.slides.slide = slide;
+  app.slides.notes = payload.notes || '';
+  app.slides.connected = true;
+  if (isNew) T.track('slide_update');
+
+  renderSlides();
+  renderSidebar();
+
+  // A deck that is already being presented from carries straight on: the new
+  // slide starts at its first line, and the talk's clock keeps running.
+  if (prompter.isOpen() && prompter.source() === 'slides') {
+    prompter.setText(app.slides.notes, {
+      fromSlide: isNew,
+      title: slide.title || 'Google Slides',
+      subtitle: slideLabel(),
     });
-  } catch (error) {
-    console.error('Error choosing a file to import:', error);
-    await showFileError(String(error));
-    return;
-  }
-  if (!path) return;
-
-  let text;
-  try {
-    text = await readTextFile(path);
-  } catch (error) {
-    console.error('Error reading the file:', error);
-    await showFileError("This file couldn't be read as text.");
-    return;
-  }
-
-  if (!text.trim()) {
-    await showFileError('That file is empty.');
-    return;
-  }
-
-  // Whatever spelling the file was written in, it arrives as [cue ...].
-  notesInput.value = normalizingTags(text);
-  currentNoteId = null;
-  notesInput.dispatchEvent(new Event('input', { bubbles: true }));
-  await setStoredValue(STORAGE_KEYS.ADD_NOTES_CONTENT, notesInput.value);
-
-  await saveCurrentNoteAs(titleForFileName(path));
-
-  dismissSheet();
-  await showView('add-notes');
-  isEditMode = false;
-  notesInputWrapper.classList.remove('edit-mode');
-  notesInput.readOnly = true;
-  updateToolbarTitle();
-  updateMenuItems();
-}
-
-/** Write the script out, named after the note it came from. */
-async function exportScriptToFile() {
-  if (!saveFileDialog || !writeTextFile) {
-    await showFileError('File access is not available in this build.');
-    return;
-  }
-  if (!notesInput || !notesInput.value.trim()) return;
-
-  const note = await getCurrentNote();
-  const defaultPath = `${suggestedFileName(note ? note.title : null, notesInput.value)}.txt`;
-
-  try {
-    const path = await saveFileDialog({
-      defaultPath,
-      filters: [{ name: 'Script', extensions: ['txt'] }],
-    });
-    if (!path) return;
-
-    await writeTextFile(path, normalizingTags(notesInput.value));
-  } catch (error) {
-    console.error('Error exporting the script:', error);
-    await showFileError(String(error));
   }
 }
 
+const slideLabel = () => (app.slides.slide ? `Slide ${app.slides.slide.slideNumber}` : '');
+
 // =============================================================================
-// DIALOG
+// THE PROMPTER
 // =============================================================================
 
-/**
- * Ask the user something, in the app. A window with no decorations should not
- * be raising native prompts, so this is the alert with a text field that iOS
- * uses, drawn here.
- *
- * Resolves with the typed text when there is a field, `true` when there is not,
- * and `null` if the user backed out.
- */
-function showDialog({ title, message = '', value = '', placeholder = '', confirmLabel = 'Save', field = true, destructive = false }) {
-  const backdrop = document.getElementById('dialog-backdrop');
-  const titleEl = document.getElementById('dialog-title');
-  const messageEl = document.getElementById('dialog-message');
-  const fieldEl = document.getElementById('dialog-field');
-  const cancelBtn = document.getElementById('dialog-cancel');
-  const confirmBtn = document.getElementById('dialog-confirm');
-  if (!backdrop) return Promise.resolve(null);
-
-  titleEl.textContent = title;
-  messageEl.textContent = message;
-  messageEl.classList.toggle('hidden', !message);
-  fieldEl.classList.toggle('hidden', !field);
-  fieldEl.value = value;
-  fieldEl.placeholder = placeholder;
-  confirmBtn.textContent = confirmLabel;
-  confirmBtn.classList.toggle('is-destructive', destructive);
-  cancelBtn.classList.toggle('hidden', !field && confirmLabel === 'OK');
-
-  backdrop.classList.remove('hidden');
-  if (field) {
-    fieldEl.focus();
-    fieldEl.select();
-  } else {
-    confirmBtn.focus();
+function scriptForPrompter() {
+  if (app.source === 'slides') {
+    return {
+      source: 'slides',
+      text: app.slides.notes,
+      title: app.slides.slide?.title || 'Google Slides',
+      subtitle: slideLabel(),
+    };
   }
-
-  return new Promise(resolve => {
-    const close = (result) => {
-      backdrop.classList.add('hidden');
-      cancelBtn.removeEventListener('click', onCancel);
-      confirmBtn.removeEventListener('click', onConfirm);
-      backdrop.removeEventListener('click', onBackdrop);
-      document.removeEventListener('keydown', onKey);
-      resolve(result);
-    };
-
-    const onConfirm = () => {
-      if (!field) return close(true);
-      const typed = fieldEl.value.trim();
-      if (!typed) return;
-      close(typed);
-    };
-    const onCancel = () => close(null);
-    const onBackdrop = (e) => {
-      if (e.target === backdrop) close(null);
-    };
-    const onKey = (e) => {
-      if (e.key === 'Escape') close(null);
-      if (e.key === 'Enter') onConfirm();
-    };
-
-    cancelBtn.addEventListener('click', onCancel);
-    confirmBtn.addEventListener('click', onConfirm);
-    backdrop.addEventListener('click', onBackdrop);
-    document.addEventListener('keydown', onKey);
-  });
-}
-
-// =============================================================================
-// VIEW MANAGEMENT
-// =============================================================================
-
-// Show a specific view. Settings, Shortcuts and Saved Notes are sheets now,
-// so this switches only the editor, the welcome hero and the Slides notes.
-async function showView(viewName) {
-  // Save notes to storage if we're in add-notes view
-  if (currentView === 'add-notes') {
-    await saveNotesToStorage();
-  }
-
-  const wasView = currentView;
-  currentView = viewName;
-
-  const pageTitles = {
-    'initial': 'CueCard Home',
-    'add-notes': 'CueCard Add Notes',
-    'notes': 'CueCard Notes'
+  return {
+    source: 'script',
+    text: notes.state.draft,
+    title: notes.currentNote()?.title || 'Untitled Script',
+    subtitle: '',
   };
-  trackScreenView(viewName, pageTitles[viewName] || 'CueCard');
-
-  if (appContainer) {
-    appContainer.classList.remove('stroke-add-notes', 'stroke-slides');
-    if (viewName === 'add-notes') {
-      appContainer.classList.add('stroke-add-notes');
-    } else if (viewName === 'notes') {
-      appContainer.classList.add('stroke-slides');
-    }
-  }
-
-  viewInitial.classList.add('hidden');
-  viewAddNotes.classList.add('hidden');
-  viewNotes.classList.add('hidden');
-
-  // The toolbar carries the same controls everywhere; only the title changes.
-  updateToolbarTitle();
-  updateHeaderTimerVisibility();
-
-  if (ghostModeIndicator) {
-    const shouldShowGhost = ghostMode && (viewName === 'notes' || viewName === 'add-notes');
-    ghostModeIndicator.classList.toggle('hidden', !shouldShowGhost);
-  }
-
-  updateShortcutsVisibility();
-  updateTransport();
-  updateEditNoteButtonVisibility();
-
-  switch (viewName) {
-    case 'initial':
-      viewInitial.classList.remove('hidden');
-      break;
-    case 'add-notes':
-      viewAddNotes.classList.remove('hidden');
-      // The editor's own content is already there when coming back from a sheet.
-      if (wasView !== 'add-notes') {
-        await loadStoredNotes();
-        // A script that was already written comes back read-only and highlighted.
-        if (notesInput.value.trim()) {
-          isEditMode = false;
-          notesInputWrapper.classList.remove('edit-mode');
-          notesInput.readOnly = true;
-        }
-      }
-      updateEditNoteButtonVisibility();
-      updateTransport();
-      break;
-    case 'notes':
-      viewNotes.classList.remove('hidden');
-      const hasNotesContent = notesContent && notesContent.textContent.trim();
-      if (!hasNotesContent) {
-        updateHeaderTimerVisibility();
-        stopAllTimers();
-        timerState = 'stopped';
-      }
-      if (timerState === 'stopped' && currentSlideData && hasNotesContent) {
-        startTimerCountdown();
-      }
-      break;
-  }
-
-  updateMenuItems();
 }
 
-// The toolbar title: the app, or whatever is open in front of it.
-function updateToolbarTitle() {
-  if (!toolbarTitle) return;
+function startPrompter({ play = false } = {}) {
+  const script = scriptForPrompter();
+  if (!script.text.trim()) return;
 
-  switch (currentView) {
-    case 'settings':
-      toolbarTitle.textContent = 'Settings';
-      break;
-    case 'shortcuts':
-      toolbarTitle.textContent = 'Shortcuts';
-      break;
-    case 'saved-notes':
-      toolbarTitle.textContent = 'Saved Notes';
-      break;
-    case 'notes':
-      toolbarTitle.textContent = currentSlideData
-        ? truncateText(currentSlideData.title || 'Untitled Presentation', 28)
-        : 'CueCard';
-      break;
-    default:
-      toolbarTitle.textContent = 'CueCard';
+  $('screen-home').hidden = true;
+  prompter.open(script);
+  T.trackScreen('prompter');
+  T.track('timer_action', { action: 'open' });
+  if (play) prompter.togglePlay();
+}
+
+function onPrompterClosed() {
+  $('screen-home').hidden = !app.authenticated;
+  T.trackScreen('home');
+  renderAll();
+}
+
+// =============================================================================
+// RENDERING
+// =============================================================================
+
+function renderAll() {
+  renderToolbar();
+  renderSidebar();
+  renderSlides();
+  renderControls();
+}
+
+function renderToolbar() {
+  const title = $('title-main');
+  const sub = $('title-sub');
+
+  if (app.source === 'slides') {
+    title.textContent = 'Google Slides';
+    sub.textContent = app.slides.slide?.title || (app.slides.connected ? 'Waiting for a deck' : 'Not connected');
+    sub.hidden = false;
+    return;
   }
 
-  // A note that is open puts its own name in the toolbar.
-  if (currentView === 'add-notes' && currentNoteId) {
-    getCurrentNote().then(note => {
-      if (note && currentView === 'add-notes' && currentNoteId === note.id) {
-        toolbarTitle.textContent = truncateText(note.title, 28);
-      }
+  const note = notes.currentNote();
+  title.textContent = note ? note.title : notes.hasScript() ? 'Untitled Script' : 'CueCard';
+
+  if (note && notes.hasUnsavedChanges()) sub.textContent = 'Edited';
+  else if (!note && notes.hasScript()) sub.textContent = 'Not saved';
+  else sub.textContent = '';
+  sub.hidden = !sub.textContent;
+}
+
+function renderSidebar() {
+  // Slides
+  const slidesRow = $('row-slides');
+  slidesRow.classList.toggle('is-selected', app.source === 'slides');
+  slidesRow.classList.toggle('is-live', Boolean(app.slides.slide));
+  $('slides-dot').hidden = !app.slides.slide;
+  $('slides-status').textContent = !app.slides.connected
+    ? 'Not connected'
+    : app.slides.slide
+      ? `${app.slides.slide.title || 'Presentation'} · ${slideLabel()}`
+      : 'Waiting for a deck';
+
+  // Scripts
+  const list = $('sidebar-notes');
+  const rows = [];
+
+  // A script that has been written but not yet named belongs at the top, so it
+  // is somewhere rather than nowhere.
+  if (!notes.state.currentId && notes.hasScript()) {
+    rows.push(row({ id: '', title: 'Untitled Script', meta: 'Not saved', selected: app.source === 'script', draft: true }));
+  }
+
+  for (const note of notes.state.saved) {
+    const selected = app.source === 'script' && notes.state.currentId === note.id;
+    const edited = selected && notes.hasUnsavedChanges();
+    rows.push(
+      row({
+        id: note.id,
+        title: note.title,
+        meta: `${notes.noteDate(note.updatedAt)}${notes.preview(note.content) ? ` · ${notes.preview(note.content)}` : ''}`,
+        selected,
+        edited,
+      })
+    );
+  }
+
+  list.innerHTML = rows.join('');
+  $('sidebar-empty').hidden = rows.length > 0;
+
+  list.querySelectorAll('.note-row').forEach((el) => {
+    const { id } = el.dataset;
+    el.addEventListener('click', (event) => {
+      if (event.target.closest('[data-act]')) return;
+      if (id) void openScript(id);
     });
+    el.querySelector('[data-act="rename"]')?.addEventListener('click', () => renameScript(id));
+    el.querySelector('[data-act="delete"]')?.addEventListener('click', () => deleteScript(id));
+  });
+
+  function row({ id, title, meta, selected, edited = false, draft = false }) {
+    return `
+      <div class="note-row${selected ? ' is-selected' : ''}" data-id="${ui.escapeAttribute(id)}" role="button" tabindex="0">
+        <span class="note-text">
+          <span class="note-title">${ui.escapeHtml(title)}</span>
+          <span class="note-meta">${ui.escapeHtml(meta)}</span>
+        </span>
+        ${edited ? '<span class="note-dot" title="Unsaved changes"></span>' : ''}
+        ${draft ? '' : `
+          <span class="note-actions">
+            <button class="icon-btn is-small" data-act="rename" aria-label="Rename" title="Rename">${icon('pencil', 13)}</button>
+            <button class="icon-btn is-small" data-act="delete" aria-label="Delete" title="Delete">${icon('trash', 13)}</button>
+          </span>`}
+      </div>`;
   }
 }
 
-// Truncate text to max length with ellipsis
-function truncateText(text, maxLength = 35) {
-  if (!text) return text;
-  if (text.length <= maxLength) return text;
-  return text.substring(0, maxLength) + '...';
+function renderSlides() {
+  const isSlides = app.source === 'slides';
+  $('pane-script').hidden = isSlides;
+  $('pane-slides').hidden = !isSlides;
+  if (!isSlides) return;
+
+  const { connected, slide, notes: slideNotes } = app.slides;
+  const empty = $('slides-empty');
+
+  if (!connected || !slide) {
+    $('slides-head').hidden = true;
+    $('slides-notes').innerHTML = '';
+    empty.hidden = false;
+    $('slides-empty-title').textContent = connected ? 'Waiting for your deck' : 'Connect Google Slides';
+    $('slides-empty-text').textContent = connected
+      ? 'Open a presentation in Google Slides with the CueCard extension installed. The notes for the slide you are on show up here.'
+      : 'See the speaker notes for the slide you are on, as you present.';
+    $('btn-connect-slides').hidden = connected;
+    return;
+  }
+
+  empty.hidden = true;
+  $('slides-head').hidden = false;
+  $('slides-chip').textContent = slideLabel();
+  $('slides-title').textContent = slide.title || 'Presentation';
+  $('slides-notes').innerHTML = slideNotes.trim()
+    ? ui.scriptHtml(slideNotes)
+    : '<p class="empty-text">This slide has no speaker notes.</p>';
+}
+
+function renderControls() {
+  const hasContent = app.source === 'slides' ? Boolean(app.slides.notes.trim()) : notes.hasScript();
+  $('btn-play').disabled = !hasContent;
+
+  // Nothing written yet means nothing to time, so the pill offers the one thing
+  // that helps: something to read.
+  const offerSample = app.source === 'script' && !notes.hasScript();
+  $('btn-sample').hidden = !offerSample;
+  $('btn-set-timer').hidden = offerSample || timerPickerOpen;
+  if (offerSample) closeTimerPicker();
+
+  $('btn-invisible').setAttribute('aria-pressed', String(settings.invisible));
+  $('btn-invisible').querySelector('.invisible-label').textContent = settings.invisible ? 'Invisible' : 'Visible';
+  const iconSlot = $('btn-invisible').querySelector('.invisible-icon');
+  iconSlot.innerHTML = icon(settings.invisible ? 'eyeOff' : 'eye', 16);
+  $('btn-invisible').title = settings.invisible
+    ? 'Hidden from screen sharing, screenshots and recordings'
+    : 'Visible to screen sharing';
+}
+
+function selectSource(source) {
+  app.source = source;
+  if (source === 'slides') T.trackScreen('slides');
+  renderAll();
+  if (source === 'script') editor.focus();
 }
 
 // =============================================================================
-// NOTES DISPLAY
+// LAYOUT
 // =============================================================================
 
-// Display notes with syntax highlighting
-function displayNotes(text, slideData = null) {
-  const highlighted = highlightNotes(text);
-  notesContent.innerHTML = highlighted;
-  if (notesContent) {
-    notesContent.scrollTop = 0;
+function updateLayout() {
+  const home = $('screen-home');
+  app.overlay = window.innerWidth < 680;
+  home.classList.toggle('is-overlay', app.overlay);
+
+  const open = app.overlay ? app.sidebarOpen && app.overlaySidebar : app.sidebarOpen;
+  home.classList.toggle('is-sidebar-collapsed', !open);
+  $('sidebar-scrim').hidden = !(app.overlay && open);
+}
+
+function toggleSidebar() {
+  if (app.overlay) app.overlaySidebar = !app.overlaySidebar;
+  else {
+    app.sidebarOpen = !app.sidebarOpen;
+    void T.setStored('ui_sidebar_open', app.sidebarOpen);
   }
-  if (currentView === 'notes' && timerState === 'running') {
-    stopAutoScroll();
-    startAutoScroll();
+  if (app.overlay) app.sidebarOpen = true;
+  updateLayout();
+}
+
+// =============================================================================
+// THE TIMER PILL
+// =============================================================================
+
+let timerPickerOpen = false;
+
+function openTimerPicker() {
+  timerPickerOpen = true;
+  $('timer-control').classList.add('is-open');
+  $('timer-picker').hidden = false;
+  $('btn-set-timer').hidden = true;
+  document.addEventListener('mousedown', onClickAwayFromPicker, true);
+  T.trackClick('set_timer', 'home');
+}
+
+function closeTimerPicker() {
+  if (!timerPickerOpen) return;
+  timerPickerOpen = false;
+  $('timer-control').classList.remove('is-open');
+  $('timer-picker').hidden = true;
+  $('btn-set-timer').hidden = app.source === 'script' && !notes.hasScript();
+  document.removeEventListener('mousedown', onClickAwayFromPicker, true);
+}
+
+function onClickAwayFromPicker(event) {
+  if (!$('timer-control').contains(event.target)) closeTimerPicker();
+}
+
+/** A wheel picker, as near as a window gets to one: scroll it, click it, or type. */
+function createWheel(el, { max, get, set }) {
+  let typed = '';
+  let typedAt = 0;
+  let wheelDelta = 0;
+
+  function render() {
+    const value = get();
+    const at = (n) => String((n + max + 1) % (max + 1)).padStart(2, '0');
+    el.innerHTML = `
+      <div class="wheel-row">${at(value - 1)}</div>
+      <div class="wheel-row is-current">${at(value)}</div>
+      <div class="wheel-row">${at(value + 1)}</div>
+      <div class="wheel-band"></div>`;
+    el.setAttribute('aria-valuenow', String(value));
+    el.setAttribute('aria-valuemin', '0');
+    el.setAttribute('aria-valuemax', String(max));
   }
 
-  // Update slide info if available
-  if (slideData) {
-    // Use camelCase property names (as sent by backend with serde rename_all = "camelCase")
-    const presentationTitle = slideData.title || 'Untitled Presentation';
-    window.title = truncateText(presentationTitle);
+  const step = (by) => {
+    set(Math.min(Math.max(get() + by, 0), max));
+    render();
+  };
 
-    // Show slide info and refresh button in footer when there's slide data
-    if (currentView === 'notes') {
-      refreshBtn.classList.remove('hidden');
+  el.addEventListener('wheel', (event) => {
+    event.preventDefault();
+    wheelDelta += event.deltaY;
+    while (Math.abs(wheelDelta) >= 24) {
+      step(wheelDelta > 0 ? 1 : -1);
+      wheelDelta -= Math.sign(wheelDelta) * 24;
     }
-  } else {
-    window.title = 'No Slide Open';
+  }, { passive: false });
 
-    // Hide slide info and refresh button when no slide
-    refreshBtn.classList.add('hidden');
-  }
+  el.addEventListener('click', (event) => {
+    const rows = [...el.querySelectorAll('.wheel-row')];
+    const index = rows.indexOf(event.target.closest('.wheel-row'));
+    if (index === 0) step(-1);
+    if (index === 2) step(1);
+    el.focus();
+  });
 
-  // Update timer button visibility
-  updateTransport();
-}
-
-// The same, for notes arriving from Google Slides, where the extension's name
-// is worth linking.
-function highlightNotes(text) {
-  let safe = highlightCues(escapeHtml(normalizeLineBreaks(text)));
-
-  safe = safe.replace(/CueCard Extension/gi, (match) =>
-    `<a href="https://cuecard.dev/#download" class="slides-link" target="_blank" rel="noopener noreferrer">${match}</a>`);
-
-  return safe.replace(/\n/g, '<br>');
-}
-
-// Escape HTML to prevent XSS (preserves newlines)
-function escapeHtml(text) {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
-
-// =============================================================================
-// HEADER, FOOTER AND EXTERNAL LINKS
-// =============================================================================
-
-// Header Handlers
-function setupHeader() {
-  // Close button handler
-  btnClose.addEventListener("click", async (e) => {
-    e.preventDefault();
-    console.log("Close button clicked");
-    if (getCurrentWindow) {
-      await getCurrentWindow().close();
-    } else {
-      console.error("Tauri window API not available");
+  el.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      step(-1);
+    } else if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      step(1);
+    } else if (/^\d$/.test(event.key)) {
+      // Two digits typed together are one number, as on a keypad.
+      const now = Date.now();
+      typed = now - typedAt < 900 ? (typed + event.key).slice(-2) : event.key;
+      typedAt = now;
+      set(Math.min(Number(typed), max));
+      render();
     }
   });
 
-  // Download updates button handler
-  btnDownloadUpdates.addEventListener("click", async (e) => {
-    e.preventDefault();
-    console.log("Download updates button clicked");
-
-    // Disable the button during download
-    btnDownloadUpdates.disabled = true;
-
-    try {
-      const update = await check();
-
-      if (update?.available) {
-        console.log(`Update available: ${update.version}`);
-
-        // Show download progress in button text
-        btnDownloadUpdates.textContent = 'Downloading...';
-
-        // Download and install with progress tracking
-        let contentLength = 0;
-        let downloaded = 0;
-
-        await update.downloadAndInstall((event) => {
-          switch (event.event) {
-            case 'Started':
-              contentLength = event.data.contentLength || 0;
-              downloaded = 0;
-              btnDownloadUpdates.textContent = 'Downloading...';
-              console.log(`Started downloading ${contentLength} bytes`);
-              break;
-            case 'Progress':
-              downloaded += event.data.chunkLength;
-              if (contentLength > 0) {
-                const percent = Math.round((downloaded / contentLength) * 100);
-                btnDownloadUpdates.textContent = `Downloading ${percent}%`;
-              }
-              console.log(`Downloaded ${downloaded} of ${contentLength}`);
-              break;
-            case 'Finished':
-              btnDownloadUpdates.textContent = 'Installing...';
-              console.log('Download finished');
-              break;
-          }
-        });
-
-        console.log('Update installed, preparing to relaunch');
-
-        // Hide the item before relaunch
-        btnDownloadUpdates.classList.add('hidden');
-        if (menuBadge) menuBadge.classList.add('hidden');
-
-        // Relaunch the app
-        await relaunch();
-      }
-    } catch (error) {
-      console.error('Update failed:', error);
-      btnDownloadUpdates.textContent = 'Update Failed';
-      btnDownloadUpdates.disabled = false;
-
-      // Reset button text after 3 seconds
-      setTimeout(() => {
-        btnDownloadUpdates.textContent = 'Download Updates';
-      }, 3000);
-    }
-  });
+  render();
+  return { render };
 }
 
 // =============================================================================
-// UPDATE CHECKER
+// MENU
 // =============================================================================
-
-// Set up automatic update checking
-function setupUpdateChecker() {
-  // Check for updates immediately on startup
-  checkForUpdates();
-
-  // Check for updates every minute (60000 ms)
-  setInterval(checkForUpdates, 60000);
-}
-
-// Check for updates and show button if available
-async function checkForUpdates() {
-  try {
-    console.log('Checking for updates...');
-    const update = await check();
-
-    if (update?.available) {
-      console.log(`Update available: ${update.version}`);
-      // Offer the update in the menu, and badge the menu so it is noticed
-      btnDownloadUpdates.classList.remove('hidden');
-      if (menuBadge) menuBadge.classList.remove('hidden');
-    } else {
-      console.log('No updates available');
-      btnDownloadUpdates.classList.add('hidden');
-      if (menuBadge) menuBadge.classList.add('hidden');
-    }
-  } catch (error) {
-    console.error('Error checking for updates:', error);
-    btnDownloadUpdates.classList.add('hidden');
-    if (menuBadge) menuBadge.classList.add('hidden');
-  }
-}
-
-// The ellipsis menu is open when this is true; a click anywhere else closes it.
-let menuOpen = false;
 
 function openMenu() {
-  if (!appMenu) return;
-  menuOpen = true;
-  appMenu.classList.remove('hidden');
-}
+  const note = notes.currentNote();
+  const items = [];
 
-function closeMenu() {
-  if (!appMenu) return;
-  menuOpen = false;
-  appMenu.classList.add('hidden');
-}
-
-// Menu Handlers
-function setupMenu() {
-  if (btnMenu) {
-    btnMenu.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (menuOpen) {
-        closeMenu();
-      } else {
-        openMenu();
-      }
-    });
-  }
-
-  // Clicking a menu item, or anything outside the menu, puts it away.
-  if (appMenu) {
-    appMenu.addEventListener("click", (e) => {
-      if (e.target instanceof Element && e.target.closest('.menu-item')) closeMenu();
-    });
-  }
-  document.addEventListener("click", (e) => {
-    if (!menuOpen) return;
-    if (e.target instanceof Element && e.target.closest('.menu-wrap')) return;
-    closeMenu();
-  });
-  document.addEventListener("keydown", (e) => {
-    if (e.key === 'Escape' && menuOpen) closeMenu();
-  });
-
-  const saveNoteItem = document.getElementById('save-note-btn');
-  if (saveNoteItem) {
-    saveNoteItem.addEventListener("click", async (e) => {
-      e.preventDefault();
-      await saveChangesToCurrentNote();
-      updateMenuItems();
-    });
-  }
-
-  const saveAsNewItem = document.getElementById('save-as-new-btn');
-  if (saveAsNewItem) {
-    saveAsNewItem.addEventListener("click", async (e) => {
-      e.preventDefault();
-      const title = await showDialog({
-        title: 'Save Note',
-        message: 'Enter a title for your note',
-        placeholder: 'Note title',
-        confirmLabel: 'Save',
-      });
-      if (title) {
-        await saveCurrentNoteAs(title);
-        updateToolbarTitle();
-        updateMenuItems();
-      }
-    });
-  }
-
-  const importItem = document.getElementById('import-file-btn');
-  if (importItem) {
-    importItem.addEventListener("click", (e) => {
-      e.preventDefault();
-      importScriptFromFile();
-    });
-  }
-
-  const exportItem = document.getElementById('export-file-btn');
-  if (exportItem) {
-    exportItem.addEventListener("click", (e) => {
-      e.preventDefault();
-      exportScriptToFile();
-    });
-  }
-
-  const newNoteItem = document.getElementById('new-note-btn');
-  if (newNoteItem) {
-    newNoteItem.addEventListener("click", async (e) => {
-      e.preventDefault();
-      startNewNote();
-      await showView('add-notes');
-      isEditMode = true;
-      notesInputWrapper.classList.add('edit-mode');
-      notesInput.readOnly = false;
-      notesInput.focus();
-    });
-  }
-
-  const slidesSyncLink = document.getElementById('slides-sync-link');
-  if (slidesSyncLink) {
-    slidesSyncLink.addEventListener("click", (e) => {
-      e.preventDefault();
-      syncSlideNotes();
-    });
-  }
-
-  if (btnSavedNotes) {
-    btnSavedNotes.addEventListener("click", (e) => {
-      e.preventDefault();
-      showSheet('saved-notes');
-    });
-  }
-
-  bugLink.addEventListener("click", async (e) => {
-    e.preventDefault();
-    console.log("Bug link clicked");
-    try {
-      if (!openUrl) {
-        console.error("Tauri opener API not available");
-        window.open("https://github.com/ThisIsNSH/CueCard/issues/new/choose", "_blank", "noopener,noreferrer");
-        return;
-      }
-      await openUrl("https://github.com/ThisIsNSH/CueCard/issues/new/choose");
-    } catch (error) {
-      console.error("Error opening bug report:", error);
-    }
-  });
-
-  supportLink.addEventListener("click", async (e) => {
-    e.preventDefault();
-    console.log("Support link clicked");
-    try {
-      if (!openUrl) {
-        console.error("Tauri opener API not available");
-        window.open("mailto:hello@thisisnsh.com", "_blank", "noopener,noreferrer");
-        return;
-      }
-      await openUrl("mailto:hello@thisisnsh.com");
-    } catch (error) {
-      console.error("Error opening support email:", error);
-    }
-  });
-
-  websiteLink.addEventListener("click", async (e) => {
-    e.preventDefault();
-    console.log("Website link clicked");
-    try {
-      if (!openUrl) {
-        console.error("Tauri opener API not available");
-        window.open("https://cuecard.dev", "_blank", "noopener,noreferrer");
-        return;
-      }
-      await openUrl("https://cuecard.dev");
-    } catch (error) {
-      console.error("Error opening website:", error);
-    }
-  });
-
-  // Settings link handler
-  settingsLink.addEventListener("click", (e) => {
-    e.preventDefault();
-    console.log("Settings link clicked");
-    showSheet('settings');
-  });
-
-  // Shortcuts link handler
-  shortcutsLink.addEventListener("click", (e) => {
-    e.preventDefault();
-    console.log("Shortcuts link clicked");
-    showSheet('shortcuts');
-  });
-}
-
-// The menu shows only the items that mean something in the current view.
-function updateMenuItems() {
-  const isSlidesView = currentView === 'notes';
-  const isEditorView = currentView === 'add-notes';
-  const slidesSyncLink = document.getElementById('slides-sync-link');
-  if (slidesSyncLink) slidesSyncLink.classList.toggle('hidden', isSlidesView);
-
-  if (refreshBtn) {
-    refreshBtn.classList.toggle('hidden', !(isSlidesView && currentSlideData));
-  }
-  if (editNoteBtn) {
-    editNoteBtn.classList.toggle('hidden', !(isEditorView && notesInput.value.trim()));
-    editNoteBtn.textContent = isEditMode ? 'Done' : 'Edit Note';
-  }
-  // Save appears only when a note is open and has been changed, as on iOS.
-  const saveNoteItem = document.getElementById('save-note-btn');
-  const saveAsNewItem = document.getElementById('save-as-new-btn');
-  const hasScript = Boolean(notesInput && notesInput.value.trim());
-  if (saveAsNewItem) saveAsNewItem.disabled = !hasScript;
-  const exportItem = document.getElementById('export-file-btn');
-  if (exportItem) exportItem.disabled = !hasScript;
-  if (saveNoteItem) {
-    hasUnsavedChanges().then(changed => {
-      saveNoteItem.classList.toggle('hidden', !(currentNoteId && changed));
-    });
-  }
-
-  if (menuSeparatorNote) menuSeparatorNote.classList.remove('hidden');
-}
-
-// =============================================================================
-// SETTINGS MANAGEMENT
-// =============================================================================
-
-// Default settings values
-const DEFAULT_OPACITY = 100;
-const DEFAULT_GHOST_MODE = true; // true = ghost mode ON = hidden from screenshots
-const DEFAULT_SHORTCUTS_ENABLED = true; // true = global shortcuts are enabled
-const DEFAULT_LINES_PER_MINUTE = 50; // what iOS scrolls at out of the box
-
-/** What Add Sample Text writes, word for word as the phone app writes it. */
-const DEFAULT_NOTE_TEXT = `Welcome everyone.
-
-I'm excited to be here today to talk about CueCard.
-
-[cue smile and pause]
-
-It keeps your speaker notes visible above all apps, so you can use your existing camera apps and still read your notes.
-
-[cue pause]
-
-It has a timer so you know if you're being brief… or too passionate.
-
-[cue light chuckle]
-
-And the colored highlights?
-
-[cue emphasize]
-
-Those are your secret cues — reminders to smile, pause, or not panic.
-
-[cue pause]
-
-Try it out. I think you'll love it.`;
-
-/**
- * Script text sizes. iOS offers 20 / 28 / 40, sized for a full-screen prompter;
- * 40px in a 300px-tall window shows about four lines. Medium is today's 20px,
- * so nobody's script changes size on update.
- */
-const FONT_SIZE_PRESETS = { small: 16, medium: 20, large: 28 };
-const DEFAULT_FONT_SIZE_PRESET = 'medium';
-
-// Apply theme based on preference ('system', 'light', 'dark')
-function applyTheme(theme) {
-  let isLight = false;
-  if (theme === 'light') {
-    isLight = true;
-  } else if (theme === 'dark') {
-    isLight = false;
+  if (app.source === 'script') {
+    items.push(
+      { label: 'Save', icon: 'save', shortcut: 'mod+s', disabled: !(note && notes.hasUnsavedChanges()), onSelect: saveScript },
+      { label: 'Save as New…', icon: 'docPlus', shortcut: 'mod+shift+s', disabled: !notes.hasScript(), onSelect: saveScriptAsNew },
+      { divider: true },
+      { label: 'New Script', icon: 'compose', shortcut: 'mod+n', onSelect: newScript },
+      { label: 'Insert Cue', icon: 'cue', shortcut: 'mod+k', onSelect: () => editor.insertCue() },
+      { divider: true },
+      { label: 'Import from File…', icon: 'docDown', shortcut: 'mod+o', onSelect: importScript },
+      { label: 'Export to File…', icon: 'docUp', shortcut: 'mod+e', disabled: !notes.hasScript(), onSelect: exportScript }
+    );
   } else {
-    // System preference
-    isLight = window.matchMedia('(prefers-color-scheme: light)').matches;
-  }
-  document.documentElement.classList.toggle('theme-light', isLight);
-}
-
-// Update theme button states
-function updateThemeButtons(theme) {
-  if (themeSystemBtn) themeSystemBtn.classList.toggle('active', theme === 'system');
-  if (themeLightBtn) themeLightBtn.classList.toggle('active', theme === 'light');
-  if (themeDarkBtn) themeDarkBtn.classList.toggle('active', theme === 'dark');
-}
-
-const TIME_TAG_PATTERN = /\[time[ \t]+(\d{1,2}):(\d{2})\][ \t]*\n?/gi;
-
-/**
- * Timing used to be written into the script as `[time mm:ss]`. It is a duration
- * set in the app now, so the tags are taken out of every stored script — once —
- * and, if no duration has been set yet, the run is seeded from their sum.
- * Nobody opens the app to find their timings silently gone.
- */
-async function migrateTimeTags(hasStoredDuration) {
-  if (await getStoredValue(STORAGE_KEYS.MIGRATED_TIME_TAGS)) return;
-
-  const sumOf = (text) => {
-    let total = 0;
-    for (const match of text.matchAll(new RegExp(TIME_TAG_PATTERN.source, 'gi'))) {
-      total += parseInt(match[1], 10) * 60 + parseInt(match[2], 10);
-    }
-    return total;
-  };
-  const stripped = (text) => text.replace(new RegExp(TIME_TAG_PATTERN.source, 'gi'), '');
-
-  const currentScript = (await getStoredValue(STORAGE_KEYS.ADD_NOTES_CONTENT)) || '';
-  const savedNotes = await getSavedNotes();
-
-  // Whatever the user was timing to, in the script they were last working on —
-  // falling back to the most recent saved note that carried any tags at all.
-  let seedSeconds = sumOf(currentScript);
-  if (seedSeconds === 0) {
-    const tagged = savedNotes.find(note => sumOf(note.content || '') > 0);
-    if (tagged) seedSeconds = sumOf(tagged.content);
-  }
-
-  if (currentScript) {
-    await setStoredValue(STORAGE_KEYS.ADD_NOTES_CONTENT, stripped(currentScript));
-  }
-  if (savedNotes.some(note => sumOf(note.content || '') > 0)) {
-    await setStoredValue(
-      STORAGE_KEYS.SAVED_NOTES,
-      savedNotes.map(note => ({ ...note, content: stripped(note.content || '') }))
+    items.push(
+      { label: 'Refresh Notes', icon: 'refresh', shortcut: 'mod+r', disabled: !app.slides.slide, onSelect: refreshSlides },
+      { label: 'Get the Extension', icon: 'puzzle', onSelect: () => T.openUrl(LINKS.extension) }
     );
   }
 
-  if (seedSeconds > 0 && !hasStoredDuration) {
-    timerMinutes = Math.min(Math.floor(seedSeconds / 60), 59);
-    timerSeconds = seedSeconds % 60;
-    await setStoredValue(STORAGE_KEYS.SETTINGS_TIMER_MINUTES, timerMinutes);
-    await setStoredValue(STORAGE_KEYS.SETTINGS_TIMER_SECONDS, timerSeconds);
-    console.log(`Carried ${seedSeconds}s of [time] tags over into the timer`);
+  items.push({ divider: true });
+  if (app.update) {
+    items.push({ label: `Update to ${app.update.version}`, icon: 'update', onSelect: runUpdate });
   }
+  items.push(
+    { label: 'Keyboard Shortcuts', icon: 'keyboard', onSelect: () => openSettings('shortcuts') },
+    { divider: true },
+    { label: 'Visit Website', icon: 'globe', onSelect: () => T.openUrl(LINKS.site) },
+    { label: 'Report a Bug', icon: 'bug', onSelect: () => T.openUrl(LINKS.issues) },
+    { label: 'Contact Support', icon: 'mail', onSelect: () => T.openUrl(LINKS.support) }
+  );
 
-  await setStoredValue(STORAGE_KEYS.MIGRATED_TIME_TAGS, true);
+  ui.showMenu($('btn-menu'), items);
 }
 
-// The script's size comes from one variable, which every surface reads.
-function applyFontSizePreset(preset) {
-  const size = FONT_SIZE_PRESETS[preset] || FONT_SIZE_PRESETS[DEFAULT_FONT_SIZE_PRESET];
-  document.documentElement.style.setProperty('--font-script-size', `${size}px`);
-  updateFontSizeSegments(preset);
+// =============================================================================
+// SETTINGS
+// =============================================================================
+
+let closeSettingsSheet = null;
+
+function openSettings(page = 'settings') {
+  syncSettings();
+  showSettingsPage(page);
+  closeSettingsSheet = ui.openSheet($('sheet-settings'), { onClose: () => { closeSettingsSheet = null; } });
+  T.trackScreen('settings');
 }
 
-function updateFontSizeSegments(preset) {
-  if (!fontSizeSegmented) return;
-  fontSizeSegmented.querySelectorAll('.segment').forEach(segment => {
-    segment.classList.toggle('selected', segment.dataset.fontSize === preset);
-    segment.setAttribute('aria-pressed', String(segment.dataset.fontSize === preset));
+function showSettingsPage(page) {
+  const isShortcuts = page === 'shortcuts';
+  $('page-settings').hidden = isShortcuts;
+  $('page-shortcuts').hidden = !isShortcuts;
+  $('sheet-title').textContent = isShortcuts ? 'Keyboard Shortcuts' : 'Settings';
+  $('btn-sheet-back').hidden = !isShortcuts;
+  document.querySelector('.sheet-body')?.scrollTo(0, 0);
+}
+
+function buildSwatches() {
+  $('cue-swatches').innerHTML = CUE_COLORS.map(
+    (name) => `
+      <button class="swatch" data-color="${name}" style="background: var(--color-${name})"
+        aria-label="${name[0].toUpperCase()}${name.slice(1)}" title="${name[0].toUpperCase()}${name.slice(1)}">
+        ${icon('check', 13, 2.4)}
+      </button>`
+  ).join('');
+}
+
+function syncSettings() {
+  $('set-account-section').hidden = !app.authenticated;
+  $('set-account-name').textContent = app.user.name || 'Signed in';
+  $('set-account-email').textContent = app.user.email;
+
+  $('field-delay').value = String(settings.countdownSeconds);
+  $('field-speed').value = String(settings.linesPerMinute);
+  $('slider-opacity').value = String(settings.opacity);
+  $('opacity-value').textContent = `${settings.opacity}%`;
+  $('toggle-invisible').checked = settings.invisible;
+  $('toggle-shortcuts').checked = settings.shortcutsEnabled;
+
+  $('cue-swatches').querySelectorAll('.swatch').forEach((el) => {
+    el.classList.toggle('is-selected', el.dataset.color === settings.cueColor);
+  });
+  selectSegment('seg-textsize', settings.fontSizePreset);
+  selectSegment('seg-theme', settings.theme);
+
+  $('slides-settings-status').textContent = app.slides.connected ? 'Connected' : 'Not connected';
+  $('btn-slides-connect').hidden = app.slides.connected;
+
+  void T.appVersion().then((version) => {
+    $('settings-version').textContent = `CueCard ${version}`;
+  });
+  syncUpdateRow();
+}
+
+function selectSegment(id, value) {
+  $(id).querySelectorAll('.segment').forEach((el) => {
+    el.classList.toggle('is-selected', el.dataset.value === value);
   });
 }
 
-// Every cue in the app is drawn from this one variable.
-function applyCueColor(name) {
-  document.documentElement.style.setProperty('--cue-color', cueColorVariable(name));
-  updateCueColorSwatches(name);
+function onSettingChanged(key) {
+  if (key === 'cueColor' || key === 'fontSizePreset') prompter.restyle();
+  if (key === 'invisible') {
+    renderControls();
+    prompter.refreshInvisible();
+  }
+  if (!$('sheet-settings').hidden) syncSettings();
 }
 
-function updateCueColorSwatches(name) {
-  if (!cueColorSwatches) return;
-  cueColorSwatches.querySelectorAll('.cue-swatch').forEach(swatch => {
-    swatch.classList.toggle('selected', swatch.dataset.cueColor === name);
-    swatch.setAttribute('aria-pressed', String(swatch.dataset.cueColor === name));
-  });
+function toggleInvisible() {
+  void setSetting('invisible', !settings.invisible);
+  ui.showToast(settings.invisible ? 'Hidden from screen sharing' : 'Visible to screen sharing');
 }
 
-// Load stored settings from persistent storage
-async function loadStoredSettings() {
-  // Load stored opacity or use default
-  const storedOpacity = await getStoredValue(STORAGE_KEYS.SETTINGS_OPACITY);
-  if (storedOpacity !== null && storedOpacity !== undefined) {
-    currentOpacity = storedOpacity;
-  } else {
-    currentOpacity = DEFAULT_OPACITY;
-    await setStoredValue(STORAGE_KEYS.SETTINGS_OPACITY, DEFAULT_OPACITY);
-  }
-  // Apply opacity via CSS variable
-  document.documentElement.style.setProperty('--bg-opacity', currentOpacity / 100);
-
-  // Load stored ghost mode setting or use default
-  const storedGhostMode = await getStoredValue(STORAGE_KEYS.SETTINGS_GHOST_MODE);
-  if (storedGhostMode !== null && storedGhostMode !== undefined) {
-    ghostMode = storedGhostMode;
-  } else {
-    ghostMode = DEFAULT_GHOST_MODE;
-    await setStoredValue(STORAGE_KEYS.SETTINGS_GHOST_MODE, DEFAULT_GHOST_MODE);
-  }
-  updateGhostModeIndicator();
-  // Apply screenshot protection via Rust (protection = ghostMode)
-  if (invoke) {
-    try {
-      await invoke("set_screenshot_protection", { enabled: ghostMode });
-    } catch (error) {
-      console.error("Error applying screenshot protection:", error);
-    }
-  }
-
-  // Load stored theme setting or use default (system)
-  const storedTheme = await getStoredValue(STORAGE_KEYS.SETTINGS_THEME);
-  if (storedTheme !== null && storedTheme !== undefined) {
-    currentTheme = storedTheme;
-  } else {
-    currentTheme = 'system';
-    await setStoredValue(STORAGE_KEYS.SETTINGS_THEME, 'system');
-  }
-  applyTheme(currentTheme);
-
-  // Load stored shortcuts enabled setting or use default
-  const storedShortcutsEnabled = await getStoredValue(STORAGE_KEYS.SETTINGS_SHORTCUTS_ENABLED);
-  if (storedShortcutsEnabled !== null && storedShortcutsEnabled !== undefined) {
-    shortcutsEnabled = storedShortcutsEnabled;
-  } else {
-    shortcutsEnabled = DEFAULT_SHORTCUTS_ENABLED;
-    await setStoredValue(STORAGE_KEYS.SETTINGS_SHORTCUTS_ENABLED, DEFAULT_SHORTCUTS_ENABLED);
-  }
-  // Update shortcuts button visibility and register/unregister shortcuts
-  updateShortcutsVisibility();
-  if (invoke) {
-    try {
-      await invoke("set_shortcuts_enabled", { enabled: shortcutsEnabled });
-    } catch (error) {
-      console.error("Error setting shortcuts enabled:", error);
-    }
-  }
-
-  // Load the start delay, defaulting to the phone app's five seconds
-  const storedCountdown = await getStoredValue(STORAGE_KEYS.SETTINGS_COUNTDOWN_SECONDS);
-  if (typeof storedCountdown === 'number') {
-    countdownSeconds = clampCountdown(storedCountdown);
-  } else {
-    countdownSeconds = 5;
-    await setStoredValue(STORAGE_KEYS.SETTINGS_COUNTDOWN_SECONDS, countdownSeconds);
-  }
-
-  // Load the run's length, defaulting to the phone app's 1:00
-  const storedMinutes = await getStoredValue(STORAGE_KEYS.SETTINGS_TIMER_MINUTES);
-  const storedSeconds = await getStoredValue(STORAGE_KEYS.SETTINGS_TIMER_SECONDS);
-  const hasStoredDuration = typeof storedMinutes === 'number' || typeof storedSeconds === 'number';
-  timerMinutes = typeof storedMinutes === 'number' ? storedMinutes : 1;
-  timerSeconds = typeof storedSeconds === 'number' ? storedSeconds : 0;
-  if (!hasStoredDuration) {
-    await setStoredValue(STORAGE_KEYS.SETTINGS_TIMER_MINUTES, timerMinutes);
-    await setStoredValue(STORAGE_KEYS.SETTINGS_TIMER_SECONDS, timerSeconds);
-  }
-
-  await migrateTimeTags(hasStoredDuration);
-  await migrateNoteTitles();
-  updateTimerDisplay();
-
-  // Load the cue colour, which has been pink here since before it was a choice
-  const storedCueColor = await getStoredValue(STORAGE_KEYS.SETTINGS_CUE_COLOR);
-  if (CUE_COLORS.includes(storedCueColor)) {
-    cueColor = storedCueColor;
-  } else {
-    cueColor = DEFAULT_CUE_COLOR;
-    await setStoredValue(STORAGE_KEYS.SETTINGS_CUE_COLOR, cueColor);
-  }
-  applyCueColor(cueColor);
-
-  // Load the script's text size
-  const storedPreset = await getStoredValue(STORAGE_KEYS.SETTINGS_FONT_SIZE_PRESET);
-  if (storedPreset in FONT_SIZE_PRESETS) {
-    fontSizePreset = storedPreset;
-  } else {
-    fontSizePreset = DEFAULT_FONT_SIZE_PRESET;
-    await setStoredValue(STORAGE_KEYS.SETTINGS_FONT_SIZE_PRESET, fontSizePreset);
-  }
-  applyFontSizePreset(fontSizePreset);
-
-  // Load the scroll speed. It used to be a 0-2x multiplier applied per animation
-  // frame; anyone who set one carries that figure and no lines-a-minute setting,
-  // so convert it at the speed it actually scrolled — 1x moved a 24px line about
-  // two and a half times a second.
-  const storedLpm = await getStoredValue(STORAGE_KEYS.SETTINGS_LINES_PER_MINUTE);
-  if (typeof storedLpm === 'number') {
-    linesPerMinute = storedLpm === 0 ? 0 : clampLpm(storedLpm);
-  } else {
-    const storedSpeed = await getStoredValue(STORAGE_KEYS.SETTINGS_AUTO_SCROLL_SPEED);
-    const legacySpeed = typeof storedSpeed === 'string'
-      ? ({ off: 0, low: 0.5, medium: 1, high: 2 }[storedSpeed] ?? 0)
-      : (typeof storedSpeed === 'number' ? storedSpeed : null);
-
-    if (legacySpeed === null) {
-      linesPerMinute = DEFAULT_LINES_PER_MINUTE;
-    } else {
-      // Zero stayed off through the change, because people rely on it.
-      linesPerMinute = legacySpeed === 0 ? 0 : clampLpm(Math.round(legacySpeed * 150));
-    }
-    await setStoredValue(STORAGE_KEYS.SETTINGS_LINES_PER_MINUTE, linesPerMinute);
-  }
+/** Take what was typed, holding it to what the setting allows. */
+function commitNumberField(input, key, range) {
+  const typed = parseInt(input.value.replace(/\D/g, ''), 10);
+  if (!Number.isNaN(typed)) void setSetting(key, clamp(typed, range));
+  input.value = String(settings[key]);
 }
 
-function clampCountdown(value) {
-  return Math.min(Math.max(Math.round(value), COUNTDOWN_MIN), COUNTDOWN_MAX);
+const SHORTCUTS_LOCAL = [
+  ['Start the prompter', 'mod+enter'],
+  ['Save', 'mod+s'],
+  ['Save as new', 'mod+shift+s'],
+  ['New script', 'mod+n'],
+  ['Insert a cue', 'mod+k'],
+  ['Import a file', 'mod+o'],
+  ['Export to a file', 'mod+e'],
+  ['Settings', 'mod+comma'],
+  ['Show or hide the sidebar', 'mod+\\'],
+  ['Invisible to screen sharing', 'mod+shift+i'],
+];
+
+const SHORTCUTS_PROMPTER = [
+  ['Play or pause', ['Space']],
+  ['Restart', ['R']],
+  ['Move a line', ['↑', '↓']],
+  ['Close the prompter', ['Esc']],
+];
+
+const SHORTCUTS_GLOBAL = [
+  ['Show or hide CueCard', ['C']],
+  ['Play or pause', ['Space']],
+  ['Restart', ['0']],
+  ['Less or more opacity', ['-', '=']],
+  ['Move the window', ['←', '→', '↑', '↓']],
+];
+
+function buildShortcutLists() {
+  const keys = (list) => `<span class="shortcut-keys">${list.map((k) => `<kbd>${ui.escapeHtml(k)}</kbd>`).join('')}</span>`;
+  const cell = (label, inner) => `<div class="cell"><span class="cell-title">${label}</span>${inner}</div>`;
+  const base = T.isMac ? ['⌃', '⌥'] : ['Ctrl', 'Alt'];
+
+  $('shortcut-list-local').innerHTML = [
+    ...SHORTCUTS_LOCAL.map(([label, spec]) => cell(label, keys([ui.formatShortcut(spec)]))),
+    ...SHORTCUTS_PROMPTER.map(([label, list]) => cell(`${label} <span class="cell-sub">in the prompter</span>`, keys(list))),
+  ].join('');
+
+  $('shortcut-list-global').innerHTML = SHORTCUTS_GLOBAL.map(([label, list]) =>
+    cell(label, keys([...base, ...list]))
+  ).join('');
 }
 
-// Take what was typed as a delay, holding it to the range a run can wait for.
-// Anything that isn't a number leaves the setting alone.
-async function commitCountdownField() {
-  if (!countdownField) return;
-  const typed = parseInt(countdownField.value.replace(/\D/g, ''), 10);
-  if (!Number.isNaN(typed)) {
-    countdownSeconds = clampCountdown(typed);
-    trackSettingChange('countdown_seconds', countdownSeconds);
-    await setStoredValue(STORAGE_KEYS.SETTINGS_COUNTDOWN_SECONDS, countdownSeconds);
-  }
-  countdownField.value = String(countdownSeconds);
+// =============================================================================
+// UPDATES
+// =============================================================================
+
+async function startUpdateChecks() {
+  await checkForUpdate();
+  setInterval(checkForUpdate, 30 * 60 * 1000);
 }
 
-function clampLpm(value) {
-  return Math.min(Math.max(Math.round(value), LPM_MIN), LPM_MAX);
+async function checkForUpdate() {
+  app.update = await T.findUpdate();
+  $('menu-badge').hidden = !app.update;
+  syncUpdateRow();
 }
 
-// Take what was typed as a speed, holding it to the range the script can scroll
-// at — except zero, which is Off. Anything that isn't a number leaves it alone.
-async function commitSpeedField() {
-  if (!speedField) return;
-  const typed = parseInt(speedField.value.replace(/\D/g, ''), 10);
-  if (!Number.isNaN(typed)) {
-    linesPerMinute = typed === 0 ? 0 : clampLpm(typed);
-    trackSettingChange('lines_per_minute', linesPerMinute);
-    await setStoredValue(STORAGE_KEYS.SETTINGS_LINES_PER_MINUTE, linesPerMinute);
-
-    // A run already under way picks up the new speed.
-    if (timerState === 'running') {
-      stopAutoScroll();
-      startAutoScroll();
-    }
-  }
-  speedField.value = String(linesPerMinute);
+function syncUpdateRow() {
+  $('row-update').hidden = !app.update;
+  if (app.update) $('update-version').textContent = `Version ${app.update.version}`;
 }
 
-/** Put every setting back to what it ships as. */
-async function resetSettingsToDefaults() {
-  countdownSeconds = 5;
-  linesPerMinute = DEFAULT_LINES_PER_MINUTE;
-  fontSizePreset = DEFAULT_FONT_SIZE_PRESET;
-  cueColor = DEFAULT_CUE_COLOR;
-  timerMinutes = 1;
-  timerSeconds = 0;
-  currentOpacity = DEFAULT_OPACITY;
-  ghostMode = DEFAULT_GHOST_MODE;
-  currentTheme = 'system';
-  shortcutsEnabled = DEFAULT_SHORTCUTS_ENABLED;
-
-  await setStoredValue(STORAGE_KEYS.SETTINGS_COUNTDOWN_SECONDS, countdownSeconds);
-  await setStoredValue(STORAGE_KEYS.SETTINGS_LINES_PER_MINUTE, linesPerMinute);
-  await setStoredValue(STORAGE_KEYS.SETTINGS_FONT_SIZE_PRESET, fontSizePreset);
-  await setStoredValue(STORAGE_KEYS.SETTINGS_CUE_COLOR, cueColor);
-  await setStoredValue(STORAGE_KEYS.SETTINGS_TIMER_MINUTES, timerMinutes);
-  await setStoredValue(STORAGE_KEYS.SETTINGS_TIMER_SECONDS, timerSeconds);
-  await setStoredValue(STORAGE_KEYS.SETTINGS_OPACITY, currentOpacity);
-  await setStoredValue(STORAGE_KEYS.SETTINGS_GHOST_MODE, ghostMode);
-  await setStoredValue(STORAGE_KEYS.SETTINGS_THEME, currentTheme);
-  await setStoredValue(STORAGE_KEYS.SETTINGS_SHORTCUTS_ENABLED, shortcutsEnabled);
-
-  document.documentElement.style.setProperty('--bg-opacity', currentOpacity / 100);
-  applyTheme(currentTheme);
-  applyCueColor(cueColor);
-  applyFontSizePreset(fontSizePreset);
-  updateGhostModeIndicator();
-  updateShortcutsVisibility();
-
-  if (invoke) {
-    try {
-      await invoke("set_screenshot_protection", { enabled: ghostMode });
-      await invoke("set_shortcuts_enabled", { enabled: shortcutsEnabled });
-    } catch (error) {
-      console.error("Error applying reset settings:", error);
-    }
-  }
-
-  await loadCurrentSettings();
-  updateTimerDisplay();
-  updateTransport();
-}
-
-/**
- * Delete the account: the Firebase user, the Firestore profile behind it, and
- * everything this machine was keeping. Nothing about it can be undone, which is
- * why it is asked twice.
- */
-async function deleteAccount() {
-  const token = await getFirebaseIdToken();
-  if (!token) {
-    await showFileError('You are not signed in.');
-    return;
-  }
-
+async function runUpdate() {
+  if (!app.update) return;
+  const button = $('btn-update');
+  button.disabled = true;
+  button.textContent = 'Downloading…';
+  ui.showToast('Downloading update…');
   try {
-    // The profile first: once the user is gone, the token that reaches it is too.
-    if (userEmail && FIRESTORE_BASE_URL) {
-      const url = `${FIRESTORE_BASE_URL}/Profiles/${encodeURIComponent(userEmail)}`;
-      await fetch(url, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
-    }
-
-    const apiKey = invoke ? await invoke("get_firebase_api_key") : '';
-    const response = await fetch(
-      `https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ idToken: token }),
-      }
-    );
-    if (!response.ok) {
-      throw new Error(`Identity Toolkit returned ${response.status}`);
-    }
+    await T.installUpdate(app.update, (progress) => {
+      button.textContent = `${Math.round(progress * 100)}%`;
+    });
   } catch (error) {
-    console.error('Error deleting account:', error);
-    await showDialog({ title: 'Error', message: String(error), field: false, confirmLabel: 'OK' });
-    return;
+    button.disabled = false;
+    button.textContent = 'Update';
+    await ui.showError('The update could not be installed.');
+    console.error(error);
   }
-
-  // Then the local store, so nothing of theirs is left behind on this machine.
-  await setStoredValue(STORAGE_KEYS.SAVED_NOTES, []);
-  await setStoredValue(STORAGE_KEYS.ADD_NOTES_CONTENT, '');
-  currentNoteId = null;
-  startNewNote();
-  await resetSettingsToDefaults();
-
-  clearAnalyticsUserId();
-  await handleLogout();
-  dismissSheet();
 }
 
-// Settings Handlers
-function setupSettings() {
-  if (btnSignOut) {
-    btnSignOut.addEventListener("click", async (e) => {
-      e.preventDefault();
-      if (!isAuthenticated) return;
-      trackLogout();
-      dismissSheet();
-      await handleLogout();
-    });
-  }
+// =============================================================================
+// WIRING
+// =============================================================================
 
-  const btnRate = document.getElementById('btn-rate');
-  if (btnRate) {
-    btnRate.addEventListener("click", async (e) => {
-      e.preventDefault();
-      // iOS links to the App Store; desktop has no equivalent, so the repo it is.
-      try {
-        if (openUrl) {
-          await openUrl("https://github.com/ThisIsNSH/CueCard");
-        } else {
-          window.open("https://github.com/ThisIsNSH/CueCard", "_blank", "noopener,noreferrer");
-        }
-      } catch (error) {
-        console.error("Error opening the repository:", error);
-      }
-    });
-  }
+function wireHome() {
+  $('btn-sidebar').addEventListener('click', toggleSidebar);
+  $('sidebar-scrim').addEventListener('click', toggleSidebar);
+  $('btn-new-script').addEventListener('click', newScript);
+  $('row-slides').addEventListener('click', () => selectSource('slides'));
+  $('btn-connect-slides').addEventListener('click', connectSlides);
+  $('btn-slides-connect').addEventListener('click', connectSlides);
+  $('btn-refresh-slides').addEventListener('click', refreshSlides);
+  $('link-extension').addEventListener('click', (e) => {
+    e.preventDefault();
+    void T.openUrl(LINKS.extension);
+  });
+  $('link-extension-2').addEventListener('click', () => T.openUrl(LINKS.extension));
 
-  const btnResetDefaults = document.getElementById('btn-reset-defaults');
-  if (btnResetDefaults) {
-    btnResetDefaults.addEventListener("click", async (e) => {
-      e.preventDefault();
-      const confirmed = await showDialog({
-        title: 'Reset to Defaults',
-        message: 'Every setting goes back to what it ships as. Your notes are left alone.',
-        field: false,
-        confirmLabel: 'Reset',
-        destructive: true,
-      });
-      if (confirmed) await resetSettingsToDefaults();
-    });
-  }
+  $('btn-invisible').addEventListener('click', toggleInvisible);
+  $('btn-menu').addEventListener('click', openMenu);
+  $('btn-settings').addEventListener('click', () => openSettings('settings'));
+  $('btn-close').addEventListener('click', () => T.closeWindow());
 
-  const btnDeleteAccount = document.getElementById('btn-delete-account');
-  if (btnDeleteAccount) {
-    btnDeleteAccount.addEventListener("click", async (e) => {
-      e.preventDefault();
-      const confirmed = await showDialog({
-        title: 'Delete Account',
-        message: 'Are you sure you want to delete your account? This action cannot be undone.',
-        field: false,
-        confirmLabel: 'Delete',
-        destructive: true,
-      });
-      if (confirmed) await deleteAccount();
-    });
-  }
-
-  if (speedField) {
-    speedField.addEventListener("blur", () => commitSpeedField());
-    speedField.addEventListener("keydown", (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        speedField.blur();
-      }
-    });
-  }
-
-  if (countdownField) {
-    countdownField.addEventListener("blur", () => commitCountdownField());
-    countdownField.addEventListener("keydown", (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        countdownField.blur();
-      }
-    });
-  }
-
-  // Text size
-  if (fontSizeSegmented) {
-    fontSizeSegmented.addEventListener('click', async (e) => {
-      const segment = e.target instanceof Element ? e.target.closest('.segment') : null;
-      if (!segment) return;
-      fontSizePreset = segment.dataset.fontSize;
-      applyFontSizePreset(fontSizePreset);
-      trackSettingChange('font_size_preset', fontSizePreset);
-      await setStoredValue(STORAGE_KEYS.SETTINGS_FONT_SIZE_PRESET, fontSizePreset);
-    });
-  }
-
-  // Cue colour swatches
-  if (cueColorSwatches) {
-    cueColorSwatches.innerHTML = CUE_COLORS.map(name => `
-      <button class="cue-swatch" data-cue-color="${name}" style="background: var(--color-${name})"
-        aria-label="${name.charAt(0).toUpperCase() + name.slice(1)}" title="${name.charAt(0).toUpperCase() + name.slice(1)}">
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M2.5 6.4l2.4 2.4 4.6-5" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-            stroke-linejoin="round" />
-        </svg>
-      </button>`).join('');
-
-    cueColorSwatches.addEventListener('click', async (e) => {
-      const swatch = e.target instanceof Element ? e.target.closest('.cue-swatch') : null;
-      if (!swatch) return;
-      cueColor = swatch.dataset.cueColor;
-      applyCueColor(cueColor);
-      trackSettingChange('cue_color', cueColor);
-      await setStoredValue(STORAGE_KEYS.SETTINGS_CUE_COLOR, cueColor);
-    });
-  }
-
-  // Opacity slider handler
-  let opacityTrackingTimeout = null;
-  if (opacitySlider) {
-    opacitySlider.addEventListener("input", async (e) => {
-      const value = parseInt(e.target.value);
-      currentOpacity = value;
-      opacityValue.textContent = `${value}%`;
-
-      // Update window opacity via CSS variable
-      document.documentElement.style.setProperty('--bg-opacity', value / 100);
-
-      // Save to persistent storage
-      await setStoredValue(STORAGE_KEYS.SETTINGS_OPACITY, value);
-
-      // Debounce analytics tracking (only track final value after user stops dragging)
-      clearTimeout(opacityTrackingTimeout);
-      opacityTrackingTimeout = setTimeout(() => {
-        trackSettingChange('opacity', value);
-      }, 500);
-    });
-  }
-
-  // Ghost mode toggle handler
-  if (ghostModeToggle) {
-    ghostModeToggle.addEventListener("change", async (e) => {
-      ghostMode = e.target.checked;
-      updateGhostModeIndicator();
-      if (ghostModeIndicator) {
-        const inScript = currentView === 'notes' || currentView === 'add-notes';
-        ghostModeIndicator.classList.toggle('hidden', !(ghostMode && inScript));
-      }
-
-      // Track setting change
-      trackSettingChange('ghost_mode', ghostMode);
-
-      // Update screenshot protection via Tauri (protection = ghostMode)
-      if (invoke) {
-        try {
-          await invoke("set_screenshot_protection", { enabled: ghostMode });
-        } catch (error) {
-          console.error("Error setting screenshot protection:", error);
-        }
-      }
-
-      // Save to persistent storage
-      await setStoredValue(STORAGE_KEYS.SETTINGS_GHOST_MODE, ghostMode);
-    });
-  }
-
-  // Theme button handlers
-  const themeButtons = [themeSystemBtn, themeLightBtn, themeDarkBtn];
-  themeButtons.forEach(btn => {
-    if (btn) {
-      btn.addEventListener("click", async (e) => {
-        const theme = btn.dataset.theme;
-        currentTheme = theme;
-        applyTheme(theme);
-        updateThemeButtons(theme);
-
-        // Track setting change
-        trackSettingChange('theme', theme);
-
-        // Save to persistent storage
-        await setStoredValue(STORAGE_KEYS.SETTINGS_THEME, theme);
-      });
-    }
+  $('btn-play').addEventListener('click', () => startPrompter());
+  $('btn-sample').addEventListener('click', () => {
+    notes.addSampleText();
+    editor.setText(notes.state.draft);
+    editor.reset();
+    T.trackClick('add_sample_text', 'home');
   });
 
-  // Shortcuts toggle handler
-  if (shortcutsToggle) {
-    shortcutsToggle.addEventListener("change", async (e) => {
-      shortcutsEnabled = e.target.checked;
-      updateShortcutsVisibility();
+  $('btn-set-timer').addEventListener('click', openTimerPicker);
+  $('btn-close-timer').addEventListener('click', closeTimerPicker);
 
-      // Track setting change
-      trackSettingChange('shortcuts_enabled', shortcutsEnabled);
+  const wheels = {
+    minutes: createWheel($('wheel-minutes'), {
+      max: 59,
+      get: () => settings.timerMinutes,
+      set: (v) => setSetting('timerMinutes', v),
+    }),
+    seconds: createWheel($('wheel-seconds'), {
+      max: 59,
+      get: () => settings.timerSeconds,
+      set: (v) => setSetting('timerSeconds', v),
+    }),
+  };
+  onSettingsChange((key) => {
+    if (key === 'timerMinutes' || key === '*') wheels.minutes.render();
+    if (key === 'timerSeconds' || key === '*') wheels.seconds.render();
+  });
 
-      // Enable/disable shortcuts via Tauri
-      if (invoke) {
-        try {
-          await invoke("set_shortcuts_enabled", { enabled: shortcutsEnabled });
-        } catch (error) {
-          console.error("Error setting shortcuts enabled:", error);
-        }
-      }
+  // Sign in
+  $('btn-google').addEventListener('click', async () => {
+    const button = $('btn-google');
+    button.disabled = true;
+    button.querySelector('.google-label').textContent = 'Waiting for your browser…';
+    T.trackClick('sign_in_with_google', 'login');
+    await T.startLogin('profile');
+    setTimeout(() => {
+      button.disabled = false;
+      button.querySelector('.google-label').textContent = 'Continue with Google';
+    }, 30000);
+  });
+  $('login-close').addEventListener('click', () => T.closeWindow());
+  $('link-source').addEventListener('click', (e) => {
+    e.preventDefault();
+    void T.openUrl(LINKS.source);
+  });
+}
 
-      // Save to persistent storage
-      await setStoredValue(STORAGE_KEYS.SETTINGS_SHORTCUTS_ENABLED, shortcutsEnabled);
+function wireSettingsSheet() {
+  buildShortcutLists();
+
+  $('btn-sheet-done').addEventListener('click', () => closeSettingsSheet?.());
+  $('btn-sheet-back').addEventListener('click', () => showSettingsPage('settings'));
+  $('row-shortcuts').addEventListener('click', () => showSettingsPage('shortcuts'));
+
+  const delay = $('field-delay');
+  delay.addEventListener('blur', () => commitNumberField(delay, 'countdownSeconds', COUNTDOWN_RANGE));
+  delay.addEventListener('keydown', (e) => e.key === 'Enter' && delay.blur());
+
+  const speed = $('field-speed');
+  speed.addEventListener('blur', () => commitNumberField(speed, 'linesPerMinute', LPM_RANGE));
+  speed.addEventListener('keydown', (e) => e.key === 'Enter' && speed.blur());
+
+  $('cue-swatches').addEventListener('click', (event) => {
+    const swatch = event.target.closest('.swatch');
+    if (swatch) void setSetting('cueColor', swatch.dataset.color);
+  });
+  $('seg-textsize').addEventListener('click', (event) => {
+    const segment = event.target.closest('.segment');
+    if (segment) void setSetting('fontSizePreset', segment.dataset.value);
+  });
+  $('seg-theme').addEventListener('click', (event) => {
+    const segment = event.target.closest('.segment');
+    if (segment) void setSetting('theme', segment.dataset.value);
+  });
+
+  $('toggle-invisible').addEventListener('change', (e) => setSetting('invisible', e.target.checked));
+  $('toggle-shortcuts').addEventListener('change', (e) => setSetting('shortcutsEnabled', e.target.checked));
+
+  const opacity = $('slider-opacity');
+  opacity.addEventListener('input', () => {
+    $('opacity-value').textContent = `${opacity.value}%`;
+    void setSetting('opacity', Number(opacity.value), { track: false });
+  });
+  opacity.addEventListener('change', () => T.trackSetting('opacity', opacity.value));
+
+  $('btn-update').addEventListener('click', runUpdate);
+  $('btn-rate').addEventListener('click', () => T.openUrl(LINKS.source));
+  $('btn-reset').addEventListener('click', async () => {
+    const sure = await ui.confirmAction({
+      title: 'Reset to Defaults',
+      message: 'Every setting goes back to what it ships as. Your scripts are left alone.',
+      confirmLabel: 'Reset',
+      destructive: true,
     });
-  }
-
+    if (!sure) return;
+    await resetSettings();
+    syncSettings();
+    renderControls();
+    prompter.restyle();
+  });
+  $('btn-signout').addEventListener('click', signOut);
+  $('btn-delete-account').addEventListener('click', deleteAccount);
 }
 
-// The badge is only there to say the window is hidden, so it only shows then.
-function updateGhostModeIndicator() {
-  if (!ghostModeIndicator) return;
-  ghostModeIndicator.textContent = 'Ghost';
-  ghostModeIndicator.title = 'Hidden from screenshots and recordings';
-}
+function wireKeyboard() {
+  window.addEventListener('keydown', (event) => {
+    if (prompter.isOpen()) return;
+    if (document.querySelector('.alert-layer')) return;
 
-// Update shortcuts button visibility based on shortcutsEnabled setting and current view
-function updateShortcutsVisibility() {
-  if (shortcutsLink) {
-    shortcutsLink.classList.toggle('hidden', !shortcutsEnabled);
-  }
-}
+    const on = (spec) => ui.matchesShortcut(event, spec);
+    const sheetOpen = ui.isSheetOpen();
 
-// Load current settings values
-async function loadCurrentSettings() {
-  updateAccountSection();
+    if (on('mod+comma')) {
+      event.preventDefault();
+      if (!sheetOpen) openSettings('settings');
+      return;
+    }
+    if (sheetOpen) return;
 
-  // Load current opacity from CSS variable
-  const opacity = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--bg-opacity')) || 1;
-  const opacityPercent = Math.round(opacity * 100);
-  currentOpacity = opacityPercent;
-  if (opacitySlider) {
-    opacitySlider.value = opacityPercent;
-  }
-  if (opacityValue) {
-    opacityValue.textContent = `${opacityPercent}%`;
-  }
-
-  // Ghost mode toggle: checkbox reflects ghostMode directly
-  if (ghostModeToggle) {
-    ghostModeToggle.checked = ghostMode;
-  }
-  updateGhostModeIndicator();
-
-  // Update theme buttons
-  updateThemeButtons(currentTheme);
-
-  // Shortcuts toggle
-  if (shortcutsToggle) {
-    shortcutsToggle.checked = shortcutsEnabled;
-  }
-
-  updateCueColorSwatches(cueColor);
-  updateFontSizeSegments(fontSizePreset);
-  if (countdownField) countdownField.value = String(countdownSeconds);
-
-  if (speedField) speedField.value = String(linesPerMinute);
-}
-
-// =============================================================================
-// GLOBAL SHORTCUTS
-// =============================================================================
-
-// Shortcut definitions with platform-specific display
-// All shortcuts use Control+Option (Mac) / Control+Alt (Windows)
-// Height adjustments add Shift modifier
-const SHORTCUTS = {
-  'toggle-visibility': { mac: ['Ctrl', 'Option', 'C'], win: ['Ctrl', 'Alt', 'C'] },
-  'opacity-down': { mac: ['Ctrl', 'Option', '-'], win: ['Ctrl', 'Alt', '-'] },
-  'opacity-up': { mac: ['Ctrl', 'Option', '='], win: ['Ctrl', 'Alt', '='] },
-  'height-down': { mac: ['Shift', 'Ctrl', 'Option', '↑'], win: ['Shift', 'Ctrl', 'Alt', '↑'] },
-  'height-up': { mac: ['Shift', 'Ctrl', 'Option', '↓'], win: ['Shift', 'Ctrl', 'Alt', '↓'] },
-  'move-left': { mac: ['Ctrl', 'Option', '←'], win: ['Ctrl', 'Alt', '←'] },
-  'move-right': { mac: ['Ctrl', 'Option', '→'], win: ['Ctrl', 'Alt', '→'] },
-  'move-up': { mac: ['Ctrl', 'Option', '↑'], win: ['Ctrl', 'Alt', '↑'] },
-  'move-down': { mac: ['Ctrl', 'Option', '↓'], win: ['Ctrl', 'Alt', '↓'] },
-  'timer-toggle': { mac: ['Ctrl', 'Option', 'Space'], win: ['Ctrl', 'Alt', 'Space'] },
-  'timer-reset': { mac: ['Ctrl', 'Option', '0'], win: ['Ctrl', 'Alt', '0'] },
-};
-
-// Check if running on macOS
-function isMac() {
-  return navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-}
-
-// Populate shortcut key displays in the shortcuts view
-function populateShortcutKeys() {
-  const platform = isMac() ? 'mac' : 'win';
-
-  Object.entries(SHORTCUTS).forEach(([action, keys]) => {
-    const element = document.getElementById(`shortcut-${action}`);
-    if (element) {
-      const keyList = keys[platform];
-      element.innerHTML = keyList.map(key => `<kbd>${key}</kbd>`).join(' ');
+    if (on('mod+enter')) {
+      event.preventDefault();
+      startPrompter();
+    } else if (on('mod+shift+s')) {
+      event.preventDefault();
+      void saveScriptAsNew();
+    } else if (on('mod+s')) {
+      event.preventDefault();
+      void saveScript();
+    } else if (on('mod+n')) {
+      event.preventDefault();
+      void newScript();
+    } else if (on('mod+k')) {
+      event.preventDefault();
+      if (app.source === 'script') editor.insertCue();
+    } else if (on('mod+o')) {
+      event.preventDefault();
+      void importScript();
+    } else if (on('mod+e')) {
+      event.preventDefault();
+      void exportScript();
+    } else if (on('mod+r')) {
+      event.preventDefault();
+      if (app.source === 'slides') void refreshSlides();
+    } else if (on('mod+\\')) {
+      event.preventDefault();
+      toggleSidebar();
+    } else if (on('mod+shift+i')) {
+      event.preventDefault();
+      toggleInvisible();
     }
   });
 }
 
-// Handle shortcut actions
-async function handleShortcutAction(action) {
-  const window = getCurrentWindow ? getCurrentWindow() : null;
-  if (!window) return;
+function listenToBackend() {
+  if (!T.listen) return;
+
+  void T.listen('slide-update', (event) => onSlideUpdate(event.payload));
+
+  void T.listen('auth-status', (event) => {
+    const payload = event.payload || {};
+    if (payload.slides_authorized) {
+      app.slides.connected = true;
+      selectSource('slides');
+      if (!$('sheet-settings').hidden) syncSettings();
+      return;
+    }
+    applyAuth({
+      authenticated: Boolean(payload.authenticated),
+      name: payload.user_name || '',
+      email: payload.user_email || '',
+    });
+    if (payload.authenticated) T.track('login', { method: 'google' });
+  });
+
+  void T.listen('shortcut-triggered', (event) => onGlobalShortcut(event.payload));
+}
+
+async function onGlobalShortcut(action) {
+  const win = T.currentWindow();
+  if (!win) return;
 
   switch (action) {
     case 'toggle-visibility':
-      const isVisible = await window.isVisible();
-      if (isVisible) {
-        await window.hide();
-      } else {
-        await window.show();
-      }
+      (await win.isVisible()) ? await win.hide() : await win.show();
       break;
-
     case 'opacity-down':
-      currentOpacity = Math.max(10, currentOpacity - 10);
-      await applyOpacity(currentOpacity);
+      void setSetting('opacity', clamp(settings.opacity - 10, [10, 100]));
       break;
-
     case 'opacity-up':
-      currentOpacity = Math.min(100, currentOpacity + 10);
-      await applyOpacity(currentOpacity);
+      void setSetting('opacity', clamp(settings.opacity + 10, [10, 100]));
       break;
-
-    case 'height-down':
-      const sizeDown = await window.innerSize();
-      const scaleDown = await window.scaleFactor();
-      const logicalWidthDown = Math.round(sizeDown.width / scaleDown);
-      const logicalHeightDown = Math.round(sizeDown.height / scaleDown);
-      const minHeight = 300; // Match minHeight from tauri.conf.json
-      if (logicalHeightDown > minHeight) {
-        const newHeightDown = Math.max(minHeight, logicalHeightDown - 50);
-        await window.setSize({ width: logicalWidthDown, height: newHeightDown, type: 'Logical' });
-      }
-      break;
-
-    case 'height-up':
-      const sizeUp = await window.innerSize();
-      const scaleUp = await window.scaleFactor();
-      const logicalWidthUp = Math.round(sizeUp.width / scaleUp);
-      const logicalHeightUp = Math.round(sizeUp.height / scaleUp);
-      const newHeightUp = logicalHeightUp + 50;
-      await window.setSize({ width: logicalWidthUp, height: newHeightUp, type: 'Logical' });
-      break;
-
-    case 'move-left':
-      const posLeft = await window.outerPosition();
-      await window.setPosition({ x: posLeft.x - 50, y: posLeft.y, type: 'Physical' });
-      break;
-
-    case 'move-right':
-      const posRight = await window.outerPosition();
-      await window.setPosition({ x: posRight.x + 50, y: posRight.y, type: 'Physical' });
-      break;
-
-    case 'move-up':
-      const posUp = await window.outerPosition();
-      await window.setPosition({ x: posUp.x, y: posUp.y - 50, type: 'Physical' });
-      break;
-
-    case 'move-down':
-      const posDown = await window.outerPosition();
-      await window.setPosition({ x: posDown.x, y: posDown.y + 50, type: 'Physical' });
-      break;
-
     case 'timer-toggle':
-      if (timerState === 'running') {
-        pauseTimerCountdown();
-      } else {
-        startTimerCountdown();
-      }
+      if (prompter.isOpen()) prompter.togglePlay();
+      else startPrompter({ play: true });
       break;
-
     case 'timer-reset':
-      resetTimerCountdown();
+      if (prompter.isOpen()) prompter.restart();
+      break;
+    case 'height-down':
+    case 'height-up': {
+      const size = await win.innerSize();
+      const scale = await win.scaleFactor();
+      const width = Math.round(size.width / scale);
+      const height = Math.round(size.height / scale);
+      const next = action === 'height-up' ? height + 50 : Math.max(height - 50, 300);
+      await win.setSize({ width, height: next, type: 'Logical' });
+      break;
+    }
+    case 'move-left':
+    case 'move-right':
+    case 'move-up':
+    case 'move-down': {
+      const position = await win.outerPosition();
+      const dx = action === 'move-left' ? -50 : action === 'move-right' ? 50 : 0;
+      const dy = action === 'move-up' ? -50 : action === 'move-down' ? 50 : 0;
+      await win.setPosition({ x: position.x + dx, y: position.y + dy, type: 'Physical' });
+      break;
+    }
+    default:
       break;
   }
 }
 
-// Apply opacity change from shortcut
-async function applyOpacity(value) {
-  document.documentElement.style.setProperty('--bg-opacity', value / 100);
-  if (opacitySlider) opacitySlider.value = value;
-  if (opacityValue) opacityValue.textContent = `${value}%`;
-  await setStoredValue(STORAGE_KEYS.SETTINGS_OPACITY, value);
-}
-
-// Setup shortcut event listener
-async function setupShortcutListener() {
-  if (!listen) return;
-
-  await listen("shortcut-triggered", (event) => {
-    const action = event.payload;
-    console.log("Shortcut triggered:", action);
-    handleShortcutAction(action);
-  });
-}
+window.addEventListener('DOMContentLoaded', boot);

@@ -25,10 +25,10 @@
         "transparent": true,
         "visibleOnAllWorkspaces": true,
         "contentProtected": true,
-        "height": 300,
-        "width": 600,
+        "height": 480,
+        "width": 760,
         "minHeight": 300,
-        "minWidth": 600
+        "minWidth": 440
       }
     ],
     "security": {

@@ -179,11 +179,6 @@ export const CUE_COLORS = ['pink', 'yellow', 'green', 'blue', 'purple', 'red'];
 /** What cues are drawn in until the user picks something else. */
 export const DEFAULT_CUE_COLOR = 'pink';
 
-/** The palette token a cue colour is drawn from. */
-export function cueColorVariable(name) {
-  return `var(--color-${CUE_COLORS.includes(name) ? name : DEFAULT_CUE_COLOR})`;
-}
-
 /**
  * The name to suggest when a script is written out: the note's title, falling
  * back to the script's first line, falling back to something plain.
