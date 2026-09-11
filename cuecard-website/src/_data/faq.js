@@ -33,6 +33,11 @@ const mobile = [
       "Not when you are filming with the camera. The prompter is a window on your screen rather than something in front of the lens, so the camera records you and your background and nothing else. Screen recording is the one exception: a screen recording captures your whole screen, prompter included, so close the prompter first if that is how you are recording. On a Mac or PC it works differently — <a href=\"/desktop/\">the desktop app</a> really is left out of screen capture."
   },
   {
+    question: "Can I use CueCard while recording an Instagram Reel or a TikTok?",
+    answer:
+      "Yes. The prompter floats above Instagram, TikTok, YouTube, Snapchat, LinkedIn, Facebook, X and your phone's own camera app. Record where you normally record; the script comes with you."
+  },
+  {
     question: "Is CueCard a free teleprompter app?",
     answer:
       'Yes. CueCard is free on iPhone and iPad, with no subscription, no trial and no paid tier, and the project is open source under the MIT licence on <a href="' +
@@ -45,24 +50,24 @@ const mobile = [
       "Not yet. The Android app is still being built. The iPhone and iPad app is free and out now, and so is the app for Mac and Windows."
   },
   {
-    question: "Which iPhones and iPads does CueCard support?",
-    answer:
-      "An iPhone or iPad running " + site.requiresMobile + "."
-  },
-  {
     question: "Is there a teleprompter for iPad?",
     answer:
       'Yes, and the iPad is the best screen CueCard runs on. Read the script full width at arm\'s length like a studio prompter, or shrink it into a floating window over the app you are filming in. <a href="/mobile/ipad/">See CueCard Teleprompter on iPad</a>.'
   },
   {
-    question: "Can I use CueCard while recording an Instagram Reel or a TikTok?",
+    question: "Which iPhones and iPads does CueCard support?",
     answer:
-      "Yes. The prompter floats above Instagram, TikTok, YouTube, Snapchat, LinkedIn, Facebook, X and your phone's own camera app. Record where you normally record; the script comes with you."
+      "An iPhone or iPad running " + site.requiresMobile + "."
   },
   {
-    question: "Can I use it while live streaming?",
+    question: "Can I use it while live streaming or on a video call?",
     answer:
-      "Yes. The prompter behaves the same whether you are recording, going live or on a video call — it stays above the app you are in for as long as you want it there."
+      "Yes. The prompter behaves the same whether you are recording, going live or on a call, and it stays above whatever is in front of it — the camera, social apps, streaming tools, meeting apps, a browser — for as long as you want it there."
+  },
+  {
+    question: "What are cue tags?",
+    answer:
+      "A cue is a note to yourself in the middle of the script — <code>[cue smile]</code>, <code>[cue slow down]</code>, <code>[cue hold for two]</code>. CueCard draws it in its own colour so you take it in as a direction rather than reading it aloud. Tap Add Cue, or just type <code>[</code>, and the tag is written for you. Pick the colour every cue is drawn in from Settings."
   },
   {
     question: "How fast should the teleprompter scroll?",
@@ -70,29 +75,9 @@ const mobile = [
       "Most people speak somewhere between 120 and 160 words a minute, and read comfortably a little under that. CueCard sets the pace in lines per minute so you can nudge it up or down between takes until it matches how you actually talk, rather than making you speed up to catch it."
   },
   {
-    question: "How do I keep my eyes on the camera while reading?",
+    question: "Can I pause the script or change its speed part-way through?",
     answer:
-      "Move the floating window as close to the front camera as you can and make it small. The smaller the window and the nearer it sits to the lens, the shorter the glance away — on camera it reads as someone thinking, not someone reading."
-  },
-  {
-    question: "Can I change the size of the floating window?",
-    answer:
-      "Yes. You can make it wide, square or tall, set its own text size, and drag it anywhere on screen. Make it big enough to read at arm's length and small enough to leave your face and the rest of your shot clear."
-  },
-  {
-    question: "Can I change the text size on mobile?",
-    answer:
-      "Yes. Small, medium and large presets are available for both the in-app prompter and the floating one, so you can read comfortably at whatever distance you have set your phone up at."
-  },
-  {
-    question: "What are cue tags?",
-    answer:
-      "A cue is a note to yourself in the middle of the script — <code>[cue smile]</code>, <code>[cue slow down]</code>, <code>[cue hold for two]</code>. CueCard draws it in its own colour so you take it in as a direction rather than reading it aloud. Tap Add Cue, or just type <code>[</code>, and the tag is written for you."
-  },
-  {
-    question: "Can I change the cue colour?",
-    answer:
-      "Yes. Pick the colour every cue is drawn in from Settings, so cues stand as far away from the script as you want them to."
+      "Yes. Pause it, start it again, or move the speed up and down while it is running. If a sentence needs more room than you gave it, you do not have to start the take over."
   },
   {
     question: "Is there a countdown before the script starts moving?",
@@ -105,9 +90,19 @@ const mobile = [
       "Yes. Set a length in minutes and seconds and the timer runs while you speak, so you find out a take is running long while you can still do something about it, rather than in the edit."
   },
   {
-    question: "Can I pause the script or change its speed part-way through?",
+    question: "Can I change the size of the floating window?",
     answer:
-      "Yes. Pause it, start it again, or move the speed up and down while it is running. If a sentence needs more room than you gave it, you do not have to start the take over."
+      "Yes. You can make it wide, square or tall, set its own text size, and drag it anywhere on screen. Make it big enough to read at arm's length and small enough to leave your face and the rest of your shot clear."
+  },
+  {
+    question: "Can I change the text size on mobile?",
+    answer:
+      "Yes. Small, medium and large presets are available for both the in-app prompter and the floating one, so you can read comfortably at whatever distance you have set your phone up at."
+  },
+  {
+    question: "How do I keep my eyes on the camera while reading?",
+    answer:
+      "Move the floating window as close to the front camera as you can and make it small. The smaller the window and the nearer it sits to the lens, the shorter the glance away — on camera it reads as someone thinking, not someone reading."
   },
   {
     question: "Can I save scripts and come back to them?",
@@ -123,11 +118,6 @@ const mobile = [
     question: "Do I need an account to use the phone app?",
     answer:
       'You sign in with Google to use the app. Your scripts and settings live on your device, and you can delete your account from Settings whenever you like. See the <a href="/privacy/">privacy policy</a> for the details.'
-  },
-  {
-    question: "Can I use the phone app with any other app?",
-    answer:
-      "Yes. The camera, social apps, streaming tools, meeting apps, a browser — the prompter stays on top of whatever is in front of it."
   },
   {
     question: "How is this different from a hardware teleprompter?",
@@ -161,14 +151,19 @@ const desktop = [
       "Zoom, Google Meet, Microsoft Teams, Webex, Slack huddles, Discord — anything that shares a screen or a window. The notes are hidden at the operating-system level, not per app, so it is not a list you have to be on."
   },
   {
-    question: "Can I show CueCard during a meeting on purpose?",
+    question: "Which operating systems does the desktop app run on?",
     answer:
-      "Yes. Turn Ghost Mode off in Settings and CueCard appears in the share like any other window, for when you want to walk people through the notes themselves."
+      "macOS and Windows. Both builds are on the downloads section and on the GitHub releases page."
   },
   {
     question: "Do I need Google Slides to use CueCard?",
     answer:
       "No. Type or paste your notes straight into CueCard and present from anything you like — PowerPoint, Keynote, a PDF, a browser, or nothing at all. Google Slides sync is one extra way to use CueCard, not something it needs to work."
+  },
+  {
+    question: "Does CueCard work with PowerPoint, Keynote or a PDF?",
+    answer:
+      "Yes. CueCard runs alongside whatever you present from — it does not need to know what your deck is. Paste your notes in and present as usual."
   },
   {
     question: "How do I sync speaker notes from Google Slides?",
@@ -180,28 +175,24 @@ const desktop = [
     answer: "Chrome, Firefox and Safari."
   },
   {
-    question: "Does CueCard work with PowerPoint, Keynote or a PDF?",
+    question: "How do cue tags work?",
     answer:
-      "Yes. CueCard runs alongside whatever you present from. Paste your notes in and present as usual."
+      "A cue is a reminder to yourself about how to say the next part, rather than another line to read. Write <code>[cue slow down]</code> or <code>[cue pause here]</code> in the middle of your notes and CueCard draws it in colour, so you take it in as a direction instead of reading it out. Cues are optional."
   },
   {
-    question: "How do the timer and cue tags work?",
+    question: "Is there a timer for my slot?",
     answer:
-      "Set how long you have on the Set Timer pill and CueCard counts it down on screen. Write <code>[cue something]</code> in your notes where you want to remind yourself how to say the next part; the older <code>[note something]</code> spelling still works. Cues are shown in colour, so you catch them without reading them out. Both are optional."
+      "Yes. Set how long you have on the Set Timer pill and CueCard counts it down on screen while you talk, so you find out a slot is running long while there is still time to do something about it."
+  },
+  {
+    question: "Can I show CueCard during a meeting on purpose?",
+    answer:
+      "Yes. Turn Ghost Mode off in Settings and CueCard appears in the share like any other window, for when you want to walk people through the notes themselves."
   },
   {
     question: "Can I change the window transparency?",
     answer:
-      "Yes. There is a slider in Settings that fades the CueCard window back over your deck, so it can be as faint or as solid as you want it. There are keyboard shortcuts for it too."
-  },
-  {
-    question: "Does CueCard have a light mode?",
-    answer: "Yes. Switch between light and dark in Settings."
-  },
-  {
-    question: "Which operating systems does the desktop app run on?",
-    answer:
-      "macOS and Windows. Both builds are on the downloads section and on the GitHub releases page."
+      "Yes. There is a slider in Settings that fades the CueCard window back over your deck, so it can be as faint or as solid as you want it, and there are keyboard shortcuts for it too. Settings is also where you switch between light and dark."
   },
   {
     question: "Does it work with two monitors?",
@@ -311,8 +302,9 @@ const home = pick(
 const desktopShort = pick(
   "Is CueCard invisible on Zoom, Google Meet and Microsoft Teams?",
   "Can other people see my notes during screen sharing or a recording?",
+  "Do I need Google Slides to use CueCard?",
   "How do I sync speaker notes from Google Slides?",
-  "Does CueCard work with PowerPoint, Keynote or a PDF?",
+  "How do cue tags work?",
   "Which operating systems does the desktop app run on?",
   "Is CueCard free?"
 );
