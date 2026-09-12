@@ -12,7 +12,7 @@ import com.google.firebase.ktx.Firebase
  * The Play In-App Review API is a request, not a command: Play shows the prompt
  * on its own quota and silently ignores the rest, so there's no harm in asking
  * more often than that. All this tracks is a local session count — we ask on the
- * 1st session and every 10th one after (1, 11, 21, …) and let the system decide
+ * 6th session and every 20th one after (6, 26, 46, …) and let the system decide
  * what actually reaches the user.
  */
 class ReviewPromptService private constructor(context: Context) {
@@ -31,7 +31,7 @@ class ReviewPromptService private constructor(context: Context) {
 
     /** Whether the next natural moment should carry a review request. */
     val shouldRequestReview: Boolean
-        get() = sessionCount % PROMPT_INTERVAL == 1
+        get() = sessionCount % PROMPT_INTERVAL == 6
 
     /**
      * Call right after handing the request to Play. There's no callback telling us
@@ -54,7 +54,7 @@ class ReviewPromptService private constructor(context: Context) {
     companion object {
         private const val PREFS_NAME = "cuecard_review_prompt"
         private const val SESSION_COUNT_KEY = "cuecard_review_session_count"
-        private const val PROMPT_INTERVAL = 10
+        private const val PROMPT_INTERVAL = 20
 
         @Volatile
         private var instance: ReviewPromptService? = null

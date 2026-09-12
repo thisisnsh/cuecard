@@ -6,7 +6,7 @@ import FirebaseAnalytics
 /// StoreKit's `requestReview` is a request, not a command: iOS shows the prompt at
 /// most three times a year per user and silently ignores the rest, so there's no
 /// harm in asking more often than that. All this tracks is a local session count —
-/// we ask on the 1st session and every 10th one after (1, 11, 21, …) and let the
+/// we ask on the 6th session and every 20th one after (6, 26, 46, …) and let the
 /// system decide what actually reaches the user.
 @MainActor
 final class ReviewPromptService: ObservableObject {
@@ -16,7 +16,7 @@ final class ReviewPromptService: ObservableObject {
     /// Settings. Unlike `requestReview` this always works, so it stays user-initiated.
     static let writeReviewURL = URL(string: "https://apps.apple.com/app/id6757321325?action=write-review")!
 
-    private static let promptInterval = 10
+    private static let promptInterval = 20
 
     private let userDefaults = UserDefaults.standard
     private let sessionCountKey = "cuecard_review_session_count"
@@ -35,7 +35,7 @@ final class ReviewPromptService: ObservableObject {
 
     /// Whether the next natural moment should carry a review request.
     var shouldRequestReview: Bool {
-        sessionCount % Self.promptInterval == 1
+        sessionCount % Self.promptInterval == 6
     }
 
     /// Call right after handing the request to StoreKit. There's no callback telling
