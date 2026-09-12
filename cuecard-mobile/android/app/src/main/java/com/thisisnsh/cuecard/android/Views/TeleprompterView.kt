@@ -204,6 +204,13 @@ fun TeleprompterView(
     var contentHeightPx by remember { mutableFloatStateOf(0f) }
     var viewportHeightPx by remember { mutableFloatStateOf(0f) }
     var isUserScrolling by remember { mutableStateOf(false) }
+    /**
+     * How far the reader has dragged the script away from where the clock says it
+     * should be. Playback carries on from there — a drag moves the script, never
+     * the time — so a line they went back for stays on screen instead of sliding
+     * away again.
+     */
+    var readerOffsetPx by remember { mutableFloatStateOf(0f) }
     /** Set when the script should arrive at its target without easing. */
     var settleNext by remember { mutableStateOf(true) }
 
@@ -297,6 +304,7 @@ fun TeleprompterView(
         countdownValue = 0
         clock.doubleValue = 0.0
         elapsedSeconds = 0
+        readerOffsetPx = 0f
         isPlaying = false
         hasStarted = false
         updatePiP()
@@ -352,18 +360,23 @@ fun TeleprompterView(
 
     fun maxScroll(): Float = (contentHeightPx - viewportHeightPx).coerceAtLeast(0f)
 
-    /** Where the script should be, in pixels, for the time on the clock. */
-    fun targetOffset(): Float {
+    /** Where the script would be, in pixels, for the time on the clock alone. */
+    fun clockOffset(): Float {
         if (lineOffsets.size < 2) return 0f
 
         val position = (clock.doubleValue * settings.linesPerMinute / 60.0)
             .coerceIn(0.0, (lineOffsets.size - 1).toDouble())
         val line = position.toInt().coerceAtMost(lineOffsets.size - 2)
         val fraction = (position - line).toFloat()
-        val target = lineOffsets[line] + (lineOffsets[line + 1] - lineOffsets[line]) * fraction
 
-        return target.coerceIn(0f, maxScroll())
+        return lineOffsets[line] + (lineOffsets[line + 1] - lineOffsets[line]) * fraction
     }
+
+    /**
+     * Where the script should be: the clock's position, kept at whatever distance
+     * the reader last dragged the script to. See `readerOffsetPx`.
+     */
+    fun targetOffset(): Float = (clockOffset() + readerOffsetPx).coerceIn(0f, maxScroll())
 
     val scrollableState = rememberScrollableState { delta ->
         isUserScrolling = true
@@ -372,12 +385,13 @@ fun TeleprompterView(
         previous - scrollPx
     }
 
-    // Letting go hands the scroll back to playback. The clock is not touched —
-    // a drag moves the script, never the time — so it eases back to where the
-    // clock says the reader should be.
+    // Letting go hands the scroll back to playback, which picks up from where the
+    // script was left. The clock is not touched — a drag moves the script, never
+    // the time — so scrolling back for a line costs nothing on the timer.
     LaunchedEffect(scrollableState.isScrollInProgress) {
         if (!scrollableState.isScrollInProgress && isUserScrolling) {
             isUserScrolling = false
+            readerOffsetPx = scrollPx - clockOffset()
         }
     }
 
@@ -420,11 +434,14 @@ fun TeleprompterView(
 
                 // The script closes on its target unless the reader has hold of it.
                 if (!isUserScrolling) {
-                    val target = targetOffset()
                     if (settleNext) {
-                        scrollPx = target
+                        // A settle follows a fresh layout, where the distance the
+                        // reader had dragged the script to means nothing any more.
+                        readerOffsetPx = 0f
                         settleNext = false
+                        scrollPx = targetOffset()
                     } else {
+                        val target = targetOffset()
                         val distance = target - scrollPx
                         if (abs(distance) > 0.05f) {
                             scrollPx += (distance * (1 - exp(-delta / EASE_TIME_CONSTANT))).toFloat()

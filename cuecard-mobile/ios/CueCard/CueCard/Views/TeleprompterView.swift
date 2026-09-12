@@ -30,6 +30,9 @@ struct TeleprompterView: View {
     /// than from this view's own clock. The script jumps straight to it instead
     /// of easing, so the app is already where the overlay was when it expands.
     @State private var scriptSnapToken = 0
+    /// Bumped when the script should go back to following the clock exactly,
+    /// dropping however far the reader had dragged it away — a restart.
+    @State private var scriptResetToken = 0
     /// How far the script has arrived. One at all times except across a return
     /// from the overlay, where it is taken away as the overlay starts closing
     /// and brought back once the overlay has gone — so the reader is handed a
@@ -119,6 +122,7 @@ struct TeleprompterView: View {
                         topPadding: geometry.size.height * Self.readingLineFraction,
                         bottomPadding: geometry.size.height * (1 - Self.readingLineFraction),
                         snapToken: scriptSnapToken,
+                        resetToken: scriptResetToken,
                         onLineCountChange: { lines in
                             lineCount = lines
                             pipManager.scriptDuration = duration(forLines: lines)
@@ -421,6 +425,7 @@ struct TeleprompterView: View {
         stopCountdownTimer()
         isCountingDown = false
         elapsedTime = 0
+        scriptResetToken += 1
         isPlaying = false
         hasStarted = false
         pipManager.updateState(elapsedTime: 0, isPlaying: false)
@@ -504,6 +509,9 @@ struct AttributedTextView: UIViewRepresentable {
     /// coming back from the overlay. The script settles at the new position
     /// instead of easing there.
     let snapToken: Int
+    /// Changes when the script should go back to following the clock exactly,
+    /// dropping however far the reader had dragged it away.
+    let resetToken: Int
     /// Reports how many lines the script laid out into, which is what turns the
     /// lines-per-minute setting into a duration.
     let onLineCountChange: (Int) -> Void
@@ -524,6 +532,15 @@ struct AttributedTextView: UIViewRepresentable {
         var lastReportedLineCount = -1
         var lastTarget: CGFloat = -1
         var lastSnapToken = 0
+        var lastResetToken = 0
+        /// Where the clock alone asks the script to be, as of the last update. A
+        /// drag measures itself against this.
+        var clockTarget: CGFloat = 0
+        /// How far the reader has dragged the script away from where the clock says
+        /// it should be. Playback carries on from there — a drag moves the script,
+        /// never the time — so a line they went back for stays on screen instead of
+        /// sliding away again.
+        var readerOffset: CGFloat = 0
         /// True from the moment a drag starts until the script comes to rest, so
         /// playback leaves the scroll alone while the reader has hold of it.
         var isUserScrolling = false
@@ -586,13 +603,15 @@ struct AttributedTextView: UIViewRepresentable {
             handOffScroll(scrollView)
         }
 
-        /// Take the resting position as the current target. The clock is not
-        /// touched — a drag moves the script, never the time — so playback eases
-        /// back to where the clock says from here.
+        /// Hand the scroll back to playback, which picks up from where the script
+        /// was left: the distance from the clock's own position is kept. The clock
+        /// is not touched — a drag moves the script, never the time — so scrolling
+        /// back for a line costs nothing on the timer.
         private func handOffScroll(_ scrollView: UIScrollView) {
             guard isUserScrolling else { return }
             isUserScrolling = false
             lastTarget = scrollView.contentOffset.y
+            readerOffset = lastTarget - clockTarget
         }
 
         @objc private func step(_ link: CADisplayLink) {
@@ -645,6 +664,9 @@ struct AttributedTextView: UIViewRepresentable {
         let needsSnap = coordinator.lastSnapToken != snapToken
         coordinator.lastSnapToken = snapToken
 
+        let needsReset = coordinator.lastResetToken != resetToken
+        coordinator.lastResetToken = resetToken
+
         let contentId = content.fullText
         let needsFullRebuild = coordinator.lastContentId != contentId
             || coordinator.lastFontSize != fontSize
@@ -688,18 +710,25 @@ struct AttributedTextView: UIViewRepresentable {
         let position = min(max(linePosition, 0), Double(offsets.count - 1))
         let line = min(Int(position), offsets.count - 2)
         let fraction = CGFloat(position - Double(line))
-        let target = offsets[line] + (offsets[line + 1] - offsets[line]) * fraction
+        coordinator.clockTarget = offsets[line] + (offsets[line + 1] - offsets[line]) * fraction
+
+        // A rebuild or a settle lays the script out afresh, where the distance the
+        // reader had dragged to means nothing any more.
+        let needsSettle = isFirstLayout || needsFullRebuild || needsSnap
+        if needsSettle || needsReset {
+            coordinator.readerOffset = 0
+        }
 
         let maxY = max(0, textView.contentSize.height - textView.bounds.height)
-        let scrollY = min(max(target, 0), maxY)
+        let scrollY = min(max(coordinator.clockTarget + coordinator.readerOffset, 0), maxY)
 
-        if isFirstLayout || needsFullRebuild || needsSnap {
+        if needsSettle {
             coordinator.settle(at: scrollY, in: textView)
             return
         }
 
         // A drag in progress owns the scroll; once it is let go of, playback
-        // eases back to where the clock says the reader should be.
+        // carries on from wherever the script was left.
         guard !coordinator.isUserScrolling else { return }
 
         // Only move when the target itself moved, so a script the reader has
