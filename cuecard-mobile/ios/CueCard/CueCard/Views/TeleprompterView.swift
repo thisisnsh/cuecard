@@ -144,20 +144,23 @@ struct TeleprompterView: View {
                             Spacer()
 
                             HStack(spacing: 24) {
-                                // PiP toggle button
-                                if pipManager.isPiPPossible {
-                                    Button(action: {
-                                        AnalyticsEvents.logButtonClick(pipManager.isPiPActive ? "pip_exit" : "pip_enter", screen: "teleprompter")
-                                        togglePiP()
-                                    }) {
-                                        Image(systemName: pipManager.isPiPActive ? "pip.exit" : "pip.enter")
-                                            .font(.system(size: 20, weight: .semibold))
-                                            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                                            .frame(width: 52, height: 52)
-                                            .glassedEffect(in: Circle())
-                                    }
-                                    .accessibilityLabel(pipManager.isPiPActive ? "Close Overlay" : "Start Overlay")
+                                // PiP toggle button. Kept in the stack even when
+                                // PiP is unavailable — taking it out shifts the
+                                // play button off centre — and only made invisible.
+                                Button(action: {
+                                    AnalyticsEvents.logButtonClick(pipManager.isPiPActive ? "pip_exit" : "pip_enter", screen: "teleprompter")
+                                    togglePiP()
+                                }) {
+                                    Image(systemName: pipManager.isPiPActive ? "pip.exit" : "pip.enter")
+                                        .font(.system(size: 20, weight: .semibold))
+                                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                                        .frame(width: 52, height: 52)
+                                        .glassedEffect(in: Circle())
                                 }
+                                .accessibilityLabel(pipManager.isPiPActive ? "Close Overlay" : "Start Overlay")
+                                .opacity(pipManager.isPiPPossible ? 1 : 0)
+                                .disabled(!pipManager.isPiPPossible)
+                                .accessibilityHidden(!pipManager.isPiPPossible)
 
                                 // Play/Pause button
                                 Button(action: {

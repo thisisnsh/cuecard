@@ -53,6 +53,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -576,40 +577,43 @@ fun TeleprompterView(
                     horizontalArrangement = Arrangement.spacedBy(24.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    if (pipManager.isPiPPossible) {
-                        Box(
-                            modifier = Modifier
-                                .size(52.dp)
-                                .glassed(CircleShape, isDark)
-                                .clickableWithoutRipple {
-                                    AnalyticsEvents.logButtonClick(
-                                        if (pipManager.isPiPActive) "pip_exit" else "pip_enter",
-                                        "teleprompter"
-                                    )
-                                    if (pipManager.isPiPActive) {
-                                        pipManager.stopPiP()
-                                        AnalyticsEvents.logEvent("teleprompter_pip_stopped")
-                                    } else if (pipManager.enterPiP()) {
-                                        AnalyticsEvents.logEvent("teleprompter_pip_started")
-                                    }
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = if (pipManager.isPiPActive) {
-                                    Icons.Filled.PictureInPictureAlt
-                                } else {
-                                    Icons.Filled.PictureInPicture
-                                },
-                                contentDescription = if (pipManager.isPiPActive) {
-                                    "Close Overlay"
-                                } else {
-                                    "Start Overlay"
-                                },
-                                tint = AppColors.textPrimary(isDark),
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
+                    // Kept in the row even when PiP is unavailable — taking it
+                    // out shifts the play button off centre — and only made
+                    // invisible and untouchable.
+                    Box(
+                        modifier = Modifier
+                            .size(52.dp)
+                            .alpha(if (pipManager.isPiPPossible) 1f else 0f)
+                            .glassed(CircleShape, isDark)
+                            .clickableWithoutRipple {
+                                if (!pipManager.isPiPPossible) return@clickableWithoutRipple
+                                AnalyticsEvents.logButtonClick(
+                                    if (pipManager.isPiPActive) "pip_exit" else "pip_enter",
+                                    "teleprompter"
+                                )
+                                if (pipManager.isPiPActive) {
+                                    pipManager.stopPiP()
+                                    AnalyticsEvents.logEvent("teleprompter_pip_stopped")
+                                } else if (pipManager.enterPiP()) {
+                                    AnalyticsEvents.logEvent("teleprompter_pip_started")
+                                }
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = if (pipManager.isPiPActive) {
+                                Icons.Filled.PictureInPictureAlt
+                            } else {
+                                Icons.Filled.PictureInPicture
+                            },
+                            contentDescription = if (pipManager.isPiPActive) {
+                                "Close Overlay"
+                            } else {
+                                "Start Overlay"
+                            },
+                            tint = AppColors.textPrimary(isDark),
+                            modifier = Modifier.size(20.dp)
+                        )
                     }
 
                     Box(
