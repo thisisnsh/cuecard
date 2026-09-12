@@ -344,11 +344,6 @@ a {
   margin-left: calc(var(--sidebar-width) * -1);
 }
 
-.sidebar-head {
-  height: var(--toolbar-height);
-  flex: none;
-}
-
 .sidebar-scroll {
   flex: 1;
   min-height: 0;
