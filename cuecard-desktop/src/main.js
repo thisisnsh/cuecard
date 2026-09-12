@@ -27,7 +27,7 @@ import { createEditor } from './editor.js';
 import { createPrompter } from './prompter.js';
 import * as ui from './ui.js';
 import * as notices from './notifications.js';
-import { CUE_COLORS, normalizingTags, suggestedFileName, titleForFileName } from './parser.js';
+import { CUE_COLORS, normalizingTags, suggestedFileName, titleForFileName, withoutTags } from './parser.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -293,8 +293,7 @@ async function initSlides() {
     app.slides.slide = current.slide;
     app.slides.notes = current.notes;
   }
-  renderSlides();
-  renderSidebar();
+  renderAll();
 }
 
 function connectSlides() {
@@ -329,8 +328,10 @@ function onSlideUpdate(payload) {
   app.slides.connected = true;
   if (isNew) T.track('slide_update');
 
-  renderSlides();
-  renderSidebar();
+  // Everything the deck touches, not just the notes: the title bar, the sidebar
+  // row, and the play button, which has something to play the moment a slide
+  // with notes on it arrives.
+  renderAll();
 
   // A deck that is already being presented from carries straight on: the new
   // slide starts at its first line, and the talk's clock keeps running.
@@ -343,7 +344,15 @@ function onSlideUpdate(payload) {
   }
 }
 
-const slideLabel = () => (app.slides.slide ? `Slide ${app.slides.slide.slideNumber}` : '');
+/** Which slide of the deck this is, empty until something knows. */
+const slideLabel = () => {
+  const number = app.slides.slide?.slideNumber ?? 0;
+  return number > 0 ? `Slide ${number}` : '';
+};
+
+/** The deck and the place in it, as one line: "Introducing CueCard · Slide 1". */
+const deckLabel = () =>
+  [app.slides.slide?.title || 'Presentation', slideLabel()].filter(Boolean).join(' · ');
 
 // =============================================================================
 // THE PROMPTER
@@ -476,7 +485,7 @@ function renderSidebar() {
   $('slides-status').textContent = !app.slides.connected
     ? 'Not connected'
     : app.slides.slide
-      ? `${app.slides.slide.title || 'Presentation'} · ${slideLabel()}`
+      ? deckLabel()
       : 'Waiting for a deck';
 
   // Scripts
@@ -556,15 +565,16 @@ function renderSlides() {
 
   empty.hidden = true;
   $('slides-head').hidden = false;
-  $('slides-chip').textContent = slideLabel();
-  $('slides-title').textContent = slide.title || 'Presentation';
-  $('slides-notes').innerHTML = slideNotes.trim()
-    ? ui.scriptHtml(slideNotes)
-    : '<p class="empty-text">This slide has no speaker notes.</p>';
+  $('slides-title').textContent = deckLabel();
+  // Notes that are nothing but tags this version doesn't show leave an empty
+  // script, which is the same as having none.
+  $('slides-notes').innerHTML =
+    ui.scriptHtml(slideNotes) || '<p class="empty-text">This slide has no speaker notes.</p>';
 }
 
 function renderControls() {
-  const hasContent = app.source === 'slides' ? Boolean(app.slides.notes.trim()) : notes.hasScript();
+  const hasContent =
+    app.source === 'slides' ? Boolean(withoutTags(app.slides.notes).trim()) : notes.hasScript();
   $('btn-play').disabled = !hasContent;
 
   // Nothing written yet means nothing to time, so the pill offers the one thing

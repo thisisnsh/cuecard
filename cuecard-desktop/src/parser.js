@@ -13,10 +13,18 @@
  * Every cue is drawn in the one colour from Settings. An older `[cue:green …]`
  * still parses, but the colour name is ignored and dropped on the next import
  * or export.
+ *
+ * A tag whose keyword isn't one of ours belongs to something else — a newer
+ * CueCard, or the `[time 00:30]` the phone app used to write into a script.
+ * Those are read past and never shown: a script written for a version this one
+ * doesn't know about still reads as the words it is made of.
  */
 
-/** `[cue]` / `[note]`, an optional legacy `:color`, then the cue text. */
-export const CUE_PATTERN = /\[(?:cue|note)(?::[A-Za-z]+)?(?:[ \t]+([^\]\n]*))?\]/g;
+/** A keyword, an optional legacy `:color`, then the tag's text. */
+const TAG_PATTERN = /\[([A-Za-z]+)(?::[A-Za-z]+)?(?:[ \t]+([^\]\n]*))?\]/g;
+
+/** The keywords that mean a cue. `note` is the older spelling of `cue`. */
+const CUE_KEYWORDS = ['cue', 'note'];
 
 /**
  * What an empty cue opens with, and closes with. Typing `[` writes both at
@@ -34,28 +42,40 @@ export function cueTag(text) {
 }
 
 /**
- * Find every cue tag in the text, in order.
+ * Find every tag in the text, in order, each one saying whether it is a cue.
+ *
+ * A foreign tag has to carry something after its keyword to count as a tag at
+ * all, so bracketed prose — "[sic]", "[1]" — stays the text it was written as.
  *
  * `[cue]` carries no text group at all; treat it as an empty cue sitting just
  * inside the closing bracket.
  */
-export function cueMatches(text) {
-  const pattern = new RegExp(CUE_PATTERN.source, 'g');
+function tagMatches(text) {
+  const pattern = new RegExp(TAG_PATTERN.source, 'g');
   const matches = [];
 
   for (const match of text.matchAll(pattern)) {
-    const hasContent = match[1] !== undefined;
+    const isCue = CUE_KEYWORDS.includes(match[1].toLowerCase());
+    const hasContent = match[2] !== undefined;
+    if (!isCue && !hasContent) continue;
+
     matches.push({
+      isCue,
       index: match.index,
       length: match[0].length,
       contentIndex: hasContent
-        ? match.index + match[0].lastIndexOf(match[1])
+        ? match.index + match[0].lastIndexOf(match[2])
         : match.index + match[0].length - 1,
-      content: hasContent ? match[1] : '',
+      content: hasContent ? match[2] : '',
     });
   }
 
   return matches;
+}
+
+/** Find every cue tag in the text, in order — the tags the editor colours. */
+export function cueMatches(text) {
+  return tagMatches(text).filter((match) => match.isCue);
 }
 
 /**
@@ -89,22 +109,22 @@ export function normalizingTags(text) {
   return result;
 }
 
-/** Strip every cue tag out, for somewhere a cue would only be noise. */
-export function withoutCues(text) {
+/** Strip every tag out, leaving the words that are actually said. */
+export function withoutTags(text) {
   let result = text;
-  for (const match of cueMatches(text).reverse()) {
+  for (const match of tagMatches(text).reverse()) {
     result = result.slice(0, match.index) + result.slice(match.index + match.length);
   }
   return result;
 }
 
 /**
- * Split a single line into spoken text and cue runs.
+ * Split a single line into spoken text and cue runs, foreign tags dropped.
  *
  * Shared by the editor and the display so both render cues identically.
  */
 export function segments(line) {
-  const matches = cueMatches(line);
+  const matches = tagMatches(line);
   if (matches.length === 0) return [{ type: 'text', value: line }];
 
   const result = [];
@@ -115,7 +135,7 @@ export function segments(line) {
       const before = line.slice(lastEnd, match.index);
       if (before.trim()) result.push({ type: 'text', value: before });
     }
-    result.push({ type: 'cue', value: match.content });
+    if (match.isCue) result.push({ type: 'cue', value: match.content });
     lastEnd = match.index + match.length;
   }
 

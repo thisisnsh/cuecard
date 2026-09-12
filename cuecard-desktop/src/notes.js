@@ -6,7 +6,7 @@
  */
 
 import { getStored, setStored } from './tauri.js';
-import { withoutCues } from './parser.js';
+import { withoutTags } from './parser.js';
 
 const KEY_DRAFT = 'add_notes_content';
 const KEY_SAVED = 'saved_notes';
@@ -61,8 +61,8 @@ export function hasUnsavedChanges() {
   return note.content !== state.draft;
 }
 
-/** What a script says, cues and line breaks flattened, for a list row. */
-export const preview = (content) => withoutCues(content || '').replace(/\s+/g, ' ').trim();
+/** What a script says, tags and line breaks flattened, for a list row. */
+export const preview = (content) => withoutTags(content || '').replace(/\s+/g, ' ').trim();
 
 export function noteDate(isoString) {
   const date = new Date(isoString);
@@ -148,7 +148,7 @@ async function migrateTimeTags(seedTimer) {
 
 function firstLine(content) {
   for (const line of (content || '').split(/\r?\n/)) {
-    const cleaned = withoutCues(line).trim();
+    const cleaned = withoutTags(line).trim();
     if (cleaned) return cleaned.slice(0, 60);
   }
   return '';

@@ -191,6 +191,11 @@ static CURRENT_SLIDE: Lazy<Arc<RwLock<Option<SlideData>>>> =
     Lazy::new(|| Arc::new(RwLock::new(None)));
 static SLIDE_NOTES: Lazy<Arc<RwLock<HashMap<String, String>>>> =
     Lazy::new(|| Arc::new(RwLock::new(HashMap::new())));
+/// Where each slide sits in its deck, keyed as the notes are. Google tells the
+/// extension which slide is on screen but never which number it is, so the deck
+/// is what the number gets counted from.
+static SLIDE_NUMBERS: Lazy<Arc<RwLock<HashMap<String, i32>>>> =
+    Lazy::new(|| Arc::new(RwLock::new(HashMap::new())));
 static CURRENT_PRESENTATION_ID: Lazy<Arc<RwLock<Option<String>>>> =
     Lazy::new(|| Arc::new(RwLock::new(None)));
 static APP_HANDLE: Lazy<Arc<RwLock<Option<AppHandle>>>> = Lazy::new(|| Arc::new(RwLock::new(None)));
@@ -616,7 +621,7 @@ async fn health_handler() -> Json<serde_json::Value> {
 }
 
 async fn slides_handler(
-    Json(slide_data): Json<SlideData>,
+    Json(mut slide_data): Json<SlideData>,
 ) -> Result<Json<ApiResponse>, StatusCode> {
     let force_refresh = slide_data.force_refresh.unwrap_or(false);
 
@@ -634,16 +639,12 @@ async fn slides_handler(
         {
             let mut notes_cache = SLIDE_NOTES.write();
             notes_cache.clear();
+            SLIDE_NUMBERS.write().clear();
         }
         let presentation_id = slide_data.presentation_id.clone();
         tokio::spawn(async move {
             let _ = prefetch_all_notes(&presentation_id).await;
         });
-    }
-
-    {
-        let mut current = CURRENT_SLIDE.write();
-        *current = Some(slide_data.clone());
     }
 
     let notes = if force_refresh {
@@ -675,6 +676,21 @@ async fn slides_handler(
             }
         }
     };
+
+    // The extension can only guess the slide's number off Google's own markup;
+    // the deck, once it has been read, is what settles it.
+    {
+        let numbers = SLIDE_NUMBERS.read();
+        let key = format!("{}:{}", slide_data.presentation_id, slide_data.slide_id);
+        if let Some(number) = numbers.get(&key) {
+            slide_data.slide_number = *number;
+        }
+    }
+
+    {
+        let mut current = CURRENT_SLIDE.write();
+        *current = Some(slide_data.clone());
+    }
 
     if let Some(app) = APP_HANDLE.read().as_ref() {
         let event = SlideUpdateEvent {
@@ -829,11 +845,13 @@ async fn prefetch_all_notes(presentation_id: &str) -> Result<(), String> {
     };
 
     let mut notes_cache = SLIDE_NOTES.write();
+    let mut numbers = SLIDE_NUMBERS.write();
 
-    for slide in slides {
+    for (index, slide) in slides.iter().enumerate() {
         if let Some(obj_id) = slide.get("objectId").and_then(|o| o.as_str()) {
+            let key = format!("{}:{}", presentation_id, obj_id);
+            numbers.insert(key.clone(), index as i32 + 1);
             if let Some(notes_text) = extract_notes_from_slide(slide) {
-                let key = format!("{}:{}", presentation_id, obj_id);
                 notes_cache.insert(key, notes_text);
             }
         }
@@ -902,31 +920,27 @@ async fn fetch_slide_notes(presentation_id: &str, slide_id: &str) -> Option<Stri
         }
     };
 
+    // The whole deck came back, so every slide's number is here to be had, not
+    // just the one being asked about.
     let slides = json.get("slides")?.as_array()?;
-    for slide in slides {
-        let obj_id = slide.get("objectId")?.as_str()?;
-        if obj_id == slide_id {
-            let notes = slide
-                .get("slideProperties")?
-                .get("notesPage")?
-                .get("pageElements")?
-                .as_array()?;
+    let mut numbers = SLIDE_NUMBERS.write();
+    let mut wanted = None;
 
-            for element in notes {
-                if let Some(shape) = element.get("shape") {
-                    if let Some(placeholder) = shape.get("placeholder") {
-                        if placeholder.get("type")?.as_str()? == "BODY" {
-                            if let Some(text) = shape.get("text") {
-                                return extract_text_from_text_elements(text);
-                            }
-                        }
-                    }
-                }
-            }
+    for (index, slide) in slides.iter().enumerate() {
+        let obj_id = match slide.get("objectId").and_then(|o| o.as_str()) {
+            Some(id) => id,
+            None => continue,
+        };
+        numbers.insert(
+            format!("{}:{}", presentation_id, obj_id),
+            index as i32 + 1,
+        );
+        if obj_id == slide_id {
+            wanted = extract_notes_from_slide(slide);
         }
     }
 
-    None
+    wanted
 }
 
 fn extract_text_from_text_elements(text: &serde_json::Value) -> Option<String> {
@@ -941,11 +955,33 @@ fn extract_text_from_text_elements(text: &serde_json::Value) -> Option<String> {
         }
     }
 
+    let result = clean_notes_text(&result);
     if result.is_empty() {
         None
     } else {
-        Some(result.trim().to_string())
+        Some(result)
     }
+}
+
+/// Speaker notes as a script can read them.
+///
+/// Google writes a line break inside a paragraph as a vertical tab, and the odd
+/// zero-width or formatting character finds its way into notes besides. None of
+/// them have a glyph, so left in they reach the prompter as empty boxes: the
+/// breaks become the line breaks they stand for, the rest go.
+fn clean_notes_text(text: &str) -> String {
+    text.replace("\r\n", "\n")
+        .chars()
+        .filter_map(|c| match c {
+            '\n' | '\t' => Some(c),
+            '\u{000B}' | '\u{000C}' | '\r' | '\u{2028}' | '\u{2029}' => Some('\n'),
+            '\u{200B}'..='\u{200F}' | '\u{FEFF}' => None,
+            c if c.is_control() => None,
+            c => Some(c),
+        })
+        .collect::<String>()
+        .trim()
+        .to_string()
 }
 
 // =============================================================================

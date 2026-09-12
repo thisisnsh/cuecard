@@ -7,7 +7,7 @@
  * scrolls from and nothing else: the timer is the talk's, not the script's.
  */
 
-import { formatTime, withoutCues } from './parser.js';
+import { formatTime, withoutTags } from './parser.js';
 import { scriptFontSize, settings, timerDuration } from './settings.js';
 import { scriptHtml } from './ui.js';
 import { icon } from './icons.js';
@@ -23,8 +23,8 @@ const READING_LINE = 0.45;
 /** How long the controls stay up after the pointer stops moving, while playing. */
 const CONTROLS_LINGER = 2600;
 
-/** What the phone apps count: the words that are said, cues left out. */
-const wordCount = (text) => withoutCues(text).split(/\s+/).filter(Boolean).length;
+/** What the phone apps count: the words that are said, tags left out. */
+const wordCount = (text) => withoutTags(text).split(/\s+/).filter(Boolean).length;
 
 export function createPrompter(root, { onClose, onPlayStateChange } = {}) {
   root.innerHTML = `

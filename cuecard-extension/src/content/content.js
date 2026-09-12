@@ -68,13 +68,54 @@
     return docTitle || 'Untitled Presentation';
   }
 
+  // Which slide of the deck this is.
+  //
+  // Google puts the slide's id in the URL but never its number, so the number
+  // has to be read off the page: the filmstrip while editing, the counter in
+  // the toolbar while presenting. Both are Google's own markup and both get
+  // renamed from time to time, so each way is tried in turn and a miss just
+  // means 0 — the app numbers the slide from the deck itself when it can.
+  const FILMSTRIP_SELECTORS = [
+    '.punch-filmstrip-thumbnail',
+    '.punch-filmstrip-scroll [role="option"]',
+    '[id^="filmstrip-slide"]'
+  ];
+
+  function isCurrentThumbnail(el) {
+    return el.getAttribute('aria-selected') === 'true' ||
+           Array.from(el.classList).some(name => name.includes('selected'));
+  }
+
+  function getSlideNumberFromFilmstrip() {
+    for (const selector of FILMSTRIP_SELECTORS) {
+      const thumbnails = Array.from(document.querySelectorAll(selector));
+      if (thumbnails.length === 0) continue;
+      const index = thumbnails.findIndex(isCurrentThumbnail);
+      if (index >= 0) return index + 1;
+    }
+    return 0;
+  }
+
+  // Presenting: the navigation bar counts the deck off as "3 / 12".
+  function getSlideNumberFromCounter() {
+    const counter = document.querySelector(
+      '[class*="slidecount"], [class*="slide-count"], [class*="page-number"]'
+    );
+    const match = counter && counter.textContent.match(/(\d+)\s*\/\s*\d+/);
+    return match ? Number(match[1]) : 0;
+  }
+
+  function getSlideNumber() {
+    return getSlideNumberFromFilmstrip() || getSlideNumberFromCounter();
+  }
+
   // Build slide info object
   function buildSlideInfo() {
     const slideId = getSlideFromHash() || getSlideFromQuery();
     return {
       presentationId: getPresentationId(),
       slideId: slideId,
-      slideNumber: 0,
+      slideNumber: getSlideNumber(),
       title: getPresentationTitle(),
       mode: detectMode(),
       timestamp: Date.now(),

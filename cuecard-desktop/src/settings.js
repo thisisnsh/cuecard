@@ -20,7 +20,9 @@ export const DEFAULTS = {
   invisible: true,
   theme: 'system',
   cueColor: DEFAULT_CUE_COLOR,
-  timerMinutes: 1,
+  // No timer until Set Timer says otherwise: a run nobody has given a length
+  // counts up from zero rather than down from a length it was never asked for.
+  timerMinutes: 0,
   timerSeconds: 0,
   countdownSeconds: 5,
   linesPerMinute: 50,

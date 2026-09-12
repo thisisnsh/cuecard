@@ -716,18 +716,6 @@ a {
   z-index: 3;
 }
 
-.slide-chip {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--tint);
-  background: color-mix(in srgb, var(--tint) 16%, transparent);
-  padding: 3px 7px;
-  border-radius: 5px;
-  flex: none;
-}
-
 .slides-deck {
   flex: 1;
   min-width: 0;
