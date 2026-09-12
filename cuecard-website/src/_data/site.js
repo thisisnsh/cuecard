@@ -40,7 +40,7 @@ const site = {
   shortName: "CueCard",
   tagline: "The teleprompter that floats over every app you film in",
   url: "https://cuecard.dev",
-  email: "hello@thisisnsh.com",
+  email: "support@cuecard.dev",
   github: "https://github.com/thisisnsh/cuecard",
   youtube: "https://www.youtube.com/@thisisnsh",
   issues: "https://github.com/ThisIsNSH/CueCard/issues",

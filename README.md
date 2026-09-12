@@ -204,7 +204,7 @@ CueCard is open source, but it is not open to code contributions, so pull reques
 
 **Need help?**
 - [Frequently asked questions](https://cuecard.dev/faq/)
-- Email: [hello@thisisnsh.com](mailto:hello@thisisnsh.com)
+- Email: [support@cuecard.dev](mailto:support@cuecard.dev)
 - Issues: [GitHub Issues](https://github.com/thisisnsh/cuecard/issues)
 
 **Legal & Resources:**

@@ -35,7 +35,7 @@ const LINKS = {
   site: 'https://cuecard.dev',
   extension: 'https://cuecard.dev/#download',
   source: 'https://github.com/ThisIsNSH/CueCard',
-  support: 'mailto:hello@thisisnsh.com',
+  support: 'mailto:support@cuecard.dev',
 };
 
 const PLACEHOLDER =
