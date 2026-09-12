@@ -1,6 +1,6 @@
 {
   "name": "cuecard-extension",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Browser extension for CueCard - syncs speaker notes from Google Slides",
   "scripts": {
     "build": "node scripts/build.js",
