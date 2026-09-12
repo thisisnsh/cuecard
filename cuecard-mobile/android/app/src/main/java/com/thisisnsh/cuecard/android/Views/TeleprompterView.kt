@@ -364,43 +364,6 @@ fun TeleprompterView(
         return target.coerceIn(0f, maxScroll())
     }
 
-    /**
-     * The inverse of the line-to-offset map: which line, fractionally, sits on
-     * the reading line at this scroll offset.
-     */
-    fun linePosition(offset: Float): Double {
-        val offsets = lineOffsets
-        if (offsets.size < 2) return 0.0
-        if (offset <= offsets[0]) return 0.0
-        if (offset >= offsets[offsets.size - 1]) return (offsets.size - 1).toDouble()
-
-        var low = 0
-        var high = offsets.size - 1
-        while (low + 1 < high) {
-            val mid = (low + high) / 2
-            if (offsets[mid] <= offset) low = mid else high = mid
-        }
-
-        val span = offsets[low + 1] - offsets[low]
-        if (span <= 0f) return low.toDouble()
-        return low + ((offset - offsets[low]) / span).toDouble()
-    }
-
-    /**
-     * Pick up from wherever the reader dragged the script to. The line they left
-     * on the reading line is the line the clock now reads from, so playback
-     * carries on from there instead of snapping back.
-     */
-    fun handOffScroll() {
-        val duration = scriptDuration()
-        val end = if (duration > 0) duration else Double.MAX_VALUE
-        val target = (linePosition(scrollPx) * 60.0 / settings.linesPerMinute).coerceIn(0.0, end)
-        if (abs(target - clock.doubleValue) <= 0.001) return
-        clock.doubleValue = target
-        elapsedSeconds = target.toInt()
-        updatePiP()
-    }
-
     val scrollableState = rememberScrollableState { delta ->
         isUserScrolling = true
         val previous = scrollPx
@@ -408,10 +371,12 @@ fun TeleprompterView(
         previous - scrollPx
     }
 
+    // Letting go hands the scroll back to playback. The clock is not touched —
+    // a drag moves the script, never the time — so it eases back to where the
+    // clock says the reader should be.
     LaunchedEffect(scrollableState.isScrollInProgress) {
         if (!scrollableState.isScrollInProgress && isUserScrolling) {
             isUserScrolling = false
-            handOffScroll()
         }
     }
 

@@ -123,9 +123,6 @@ struct TeleprompterView: View {
                             lineCount = lines
                             pipManager.scriptDuration = duration(forLines: lines)
                         },
-                        onScrub: { line in
-                            scrub(toLine: line)
-                        },
                         onTap: {
                             withAnimation(.easeInOut(duration: 0.2)) {
                                 showControls.toggle()
@@ -427,23 +424,6 @@ struct TeleprompterView: View {
         Analytics.logEvent("teleprompter_restart", parameters: nil)
     }
 
-    /// Pick up from wherever the reader dragged the script to. The line they
-    /// left on the reading line is the line the clock now reads from, so playback
-    /// carries on from there instead of snapping back.
-    private func scrub(toLine line: Double) {
-        let end = scriptDuration > 0 ? scriptDuration : .greatestFiniteMagnitude
-        let target = min(max(line * 60.0 / Double(settings.linesPerMinute), 0), end)
-        guard abs(target - elapsedTime) > 0.001 else { return }
-
-        elapsedTime = target
-        // Reset wall-clock anchor so the timer continues from the new position
-        if timerStartDate != nil {
-            timerStartDate = Date()
-            elapsedTimeAtTimerStart = elapsedTime
-        }
-        pipManager.updateState(elapsedTime: elapsedTime, isPlaying: isPlaying)
-    }
-
     private func stopAndDismiss() {
         stopTimer()
         stopCountdownTimer()
@@ -524,13 +504,10 @@ struct AttributedTextView: UIViewRepresentable {
     /// Reports how many lines the script laid out into, which is what turns the
     /// lines-per-minute setting into a duration.
     let onLineCountChange: (Int) -> Void
-    /// Reports where the reader dragged the script to, in rendered lines, so
-    /// playback can carry on from there.
-    let onScrub: (Double) -> Void
     let onTap: (() -> Void)?
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(onTap: onTap, onScrub: onScrub)
+        Coordinator(onTap: onTap)
     }
 
     class Coordinator: NSObject, UITextViewDelegate {
@@ -548,7 +525,6 @@ struct AttributedTextView: UIViewRepresentable {
         /// playback leaves the scroll alone while the reader has hold of it.
         var isUserScrolling = false
         var onTap: (() -> Void)?
-        var onScrub: ((Double) -> Void)?
 
         /// The scroll eases toward the target on its own display link rather than
         /// being written straight to the text view. Playback moves the target in
@@ -559,9 +535,8 @@ struct AttributedTextView: UIViewRepresentable {
         private var displayLink: CADisplayLink?
         private var lastTimestamp: CFTimeInterval = 0
 
-        init(onTap: (() -> Void)?, onScrub: ((Double) -> Void)?) {
+        init(onTap: (() -> Void)?) {
             self.onTap = onTap
-            self.onScrub = onScrub
         }
 
         @objc func handleTap() {
@@ -608,38 +583,13 @@ struct AttributedTextView: UIViewRepresentable {
             handOffScroll(scrollView)
         }
 
-        /// Hand the resting position back as a line number and take it as the new
-        /// target, so the next update has nothing to correct.
+        /// Take the resting position as the current target. The clock is not
+        /// touched — a drag moves the script, never the time — so playback eases
+        /// back to where the clock says from here.
         private func handOffScroll(_ scrollView: UIScrollView) {
             guard isUserScrolling else { return }
             isUserScrolling = false
-
-            let offset = scrollView.contentOffset.y
-            lastTarget = offset
-            onScrub?(linePosition(forOffset: offset))
-        }
-
-        /// The inverse of the line-to-offset map: which line, fractionally, sits on
-        /// the reading line at this scroll offset.
-        private func linePosition(forOffset offset: CGFloat) -> Double {
-            guard lineOffsets.count > 1 else { return 0 }
-            guard offset > lineOffsets[0] else { return 0 }
-            guard offset < lineOffsets[lineOffsets.count - 1] else { return Double(lineOffsets.count - 1) }
-
-            var low = 0
-            var high = lineOffsets.count - 1
-            while low + 1 < high {
-                let mid = (low + high) / 2
-                if lineOffsets[mid] <= offset {
-                    low = mid
-                } else {
-                    high = mid
-                }
-            }
-
-            let span = lineOffsets[low + 1] - lineOffsets[low]
-            guard span > 0 else { return Double(low) }
-            return Double(low) + Double((offset - lineOffsets[low]) / span)
+            lastTarget = scrollView.contentOffset.y
         }
 
         @objc private func step(_ link: CADisplayLink) {
@@ -687,7 +637,6 @@ struct AttributedTextView: UIViewRepresentable {
     func updateUIView(_ textView: UITextView, context: Context) {
         let coordinator = context.coordinator
         coordinator.onTap = onTap
-        coordinator.onScrub = onScrub
         textView.textContainerInset = UIEdgeInsets(top: topPadding, left: 24, bottom: bottomPadding, right: 24)
 
         let needsSnap = coordinator.lastSnapToken != snapToken
@@ -746,8 +695,8 @@ struct AttributedTextView: UIViewRepresentable {
             return
         }
 
-        // A drag in progress owns the scroll; playback picks up from wherever it
-        // is let go of.
+        // A drag in progress owns the scroll; once it is let go of, playback
+        // eases back to where the clock says the reader should be.
         guard !coordinator.isUserScrolling else { return }
 
         // Only move when the target itself moved, so a script the reader has
