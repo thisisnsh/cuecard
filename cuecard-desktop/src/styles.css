@@ -648,34 +648,15 @@ a {
   flex: none;
 }
 
-/* The one place made for moving the window. */
+/* The empty stretch of bar between the title and the buttons: drag it to move. */
 .toolbar-drag {
   flex: 1;
   align-self: stretch;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   cursor: grab;
 }
 
 .toolbar-drag:active {
   cursor: grabbing;
-}
-
-.toolbar-grip {
-  width: 26px;
-  height: 18px;
-  border-radius: 5px;
-  background-image: radial-gradient(circle, currentColor 1.1px, transparent 1.2px);
-  background-size: 6px 6px;
-  color: var(--text-secondary);
-  opacity: 0.45;
-  transition: opacity 0.15s ease, background-color 0.15s ease;
-}
-
-.toolbar-drag:hover .toolbar-grip {
-  opacity: 0.9;
-  background-color: var(--hover);
 }
 
 .invisible-btn {
@@ -1717,15 +1698,15 @@ a {
 .alert {
   width: 272px;
   border-radius: 14px;
-  background: var(--surface-2);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+  background: var(--glass-bg);
+  background-image: var(--glass-sheen);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 0.7px solid var(--glass-stroke);
+  box-shadow: var(--glass-shadow);
   overflow: hidden;
   transform: scale(0.96);
   transition: transform 0.18s ease;
-}
-
-:root.theme-light .alert {
-  background: #fbfaf8;
 }
 
 .alert-layer.is-in .alert {
@@ -1765,7 +1746,7 @@ a {
 }
 
 .alert-field:focus {
-  border-color: var(--tint);
+  border-color: rgba(var(--text-primary-rgb), 0.55);
 }
 
 .alert-actions {
@@ -1779,7 +1760,9 @@ a {
 
 .alert-action {
   flex: 1;
-  height: 42px;
+  /* Stacked, the row is a column flex item: only min-height survives a 0 basis. */
+  min-height: 42px;
+  padding: 11px 14px;
   font-size: 13px;
   color: var(--tint);
 }

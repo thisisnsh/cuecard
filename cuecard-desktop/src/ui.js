@@ -128,12 +128,12 @@ export async function promptForText({ title, message, value = '', placeholder = 
 }
 
 /** Ask a yes-or-no question. Resolves true only for the confirming answer. */
-export async function confirmAction({ title, message, confirmLabel = 'OK', destructive = false }) {
+export async function confirmAction({ title, message, confirmLabel = 'OK', cancelLabel = 'Cancel', destructive = false }) {
   const result = await showAlert({
     title,
     message,
     actions: [
-      { id: 'cancel', label: 'Cancel', style: 'cancel' },
+      { id: 'cancel', label: cancelLabel, style: 'cancel' },
       { id: 'confirm', label: confirmLabel, style: destructive ? 'destructive' : 'preferred' },
     ],
   });

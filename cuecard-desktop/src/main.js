@@ -35,7 +35,6 @@ const LINKS = {
   site: 'https://cuecard.dev',
   extension: 'https://cuecard.dev/#download',
   source: 'https://github.com/ThisIsNSH/CueCard',
-  issues: 'https://github.com/ThisIsNSH/CueCard/issues/new/choose',
   support: 'mailto:hello@thisisnsh.com',
 };
 
@@ -233,6 +232,20 @@ async function confirmLeavingScript() {
     }
   }
   return true;
+}
+
+/** Leaving is always worth asking about, and an unsaved draft is worth asking twice. */
+async function closeApp() {
+  const leaving = await ui.confirmAction({
+    title: 'Exit CueCard?',
+    message: 'The window closes and the prompter stops.',
+    confirmLabel: 'Yes',
+    cancelLabel: 'No',
+    destructive: true,
+  });
+  if (!leaving) return;
+  if (!(await confirmLeavingScript())) return;
+  await T.closeWindow();
 }
 
 async function newScript() {
@@ -813,7 +826,6 @@ function openMenu() {
     { label: 'Keyboard Shortcuts', icon: 'keyboard', onSelect: () => openSettings('shortcuts') },
     { divider: true },
     { label: 'Visit Website', icon: 'globe', onSelect: () => T.openUrl(LINKS.site) },
-    { label: 'Report a Bug', icon: 'bug', onSelect: () => T.openUrl(LINKS.issues) },
     { label: 'Contact Support', icon: 'mail', onSelect: () => T.openUrl(LINKS.support) }
   );
 
@@ -1006,7 +1018,7 @@ function wireHome() {
   $('btn-invisible').addEventListener('click', toggleInvisible);
   $('btn-menu').addEventListener('click', openMenu);
   $('btn-settings').addEventListener('click', () => openSettings('settings'));
-  $('btn-close').addEventListener('click', () => T.closeWindow());
+  $('btn-close').addEventListener('click', closeApp);
 
   $('btn-play').addEventListener('click', () => startPrompter());
   $('btn-sample').addEventListener('click', () => {
