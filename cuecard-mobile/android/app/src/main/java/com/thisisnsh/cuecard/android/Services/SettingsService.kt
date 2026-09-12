@@ -357,6 +357,14 @@ Try it out. I think you'll love it.
         saveNotes(DEFAULT_NOTE_TEXT)
     }
 
+    /**
+     * Start the first script off with the sample, so the editor is never opened
+     * empty. Anything already written is left alone.
+     */
+    suspend fun addSampleTextIfEmpty() {
+        if (_notes.value.isBlank()) addSampleText()
+    }
+
     // ==================== Saved Notes Methods ====================
 
     /**

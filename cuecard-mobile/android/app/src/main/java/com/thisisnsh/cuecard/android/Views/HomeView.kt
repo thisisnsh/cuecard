@@ -567,7 +567,7 @@ fun NotesEditorView(
             // Set on the editor's own font and insets, so the first line sits
             // exactly where the caret waiting in front of it does.
             Text(
-                text = "Add your script here...\n\nTap Add Cue below the script — or just type [ — to drop in a delivery reminder like \"Welcome everyone [cue smile and pause]\"",
+                text = "Add your script here...\n\nTap Add Cue to drop in a delivery reminder, or type [ to write one yourself.\n\nFor example: Welcome everyone [cue smile and pause]",
                 fontSize = CUE_EDITOR_FONT_SIZE,
                 fontWeight = FontWeight.Medium,
                 color = AppColors.textSecondary(isDark).copy(alpha = 0.6f),

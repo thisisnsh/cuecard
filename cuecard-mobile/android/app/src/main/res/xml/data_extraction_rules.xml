@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android 12 and up. Everything is carried over except the record of the welcome
+  screen having been seen, so a reinstall opens on it the way a first install
+  does.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="file" path="datastore/cuecard_onboarding.preferences_pb" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="file" path="datastore/cuecard_onboarding.preferences_pb" />
+    </device-transfer>
+</data-extraction-rules>

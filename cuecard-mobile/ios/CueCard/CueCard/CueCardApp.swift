@@ -60,5 +60,6 @@ struct AnalyticsEvents {
 // MARK: - External Links
 enum AppLinks {
     static let sourceCode = URL(string: "https://github.com/thisisnsh/cuecard")!
+    static let privacyPolicy = URL(string: "https://cuecard.dev/privacy/")!
     static let appStore = URL(string: "https://apps.apple.com/app/id6757321325")!
 }

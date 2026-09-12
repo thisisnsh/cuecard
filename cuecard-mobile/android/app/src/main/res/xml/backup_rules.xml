@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 11 and below. The same exclusion as data_extraction_rules.xml. -->
+<full-backup-content>
+    <exclude domain="file" path="datastore/cuecard_onboarding.preferences_pb" />
+</full-backup-content>

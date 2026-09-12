@@ -4,7 +4,13 @@ struct ContentView: View {
     @EnvironmentObject var settingsService: SettingsService
 
     var body: some View {
-        HomeView()
+        Group {
+            if settingsService.hasSeenWelcome {
+                HomeView()
+            } else {
+                WelcomeView()
+            }
+        }
     }
 }
 

@@ -211,6 +211,7 @@ class SettingsService: ObservableObject {
     private let notesKey = "cuecard_notes"
     private let savedNotesKey = "cuecard_saved_notes"
     private let currentNoteIdKey = "cuecard_current_note_id"
+    private let hasSeenWelcomeKey = "cuecard_has_seen_welcome"
     /// Cues used to be saved in a library. They're written straight into the
     /// script now, so the stored library is cleared out on the way past.
     private let retiredCuesKey = "cuecard_cues"
@@ -246,6 +247,10 @@ class SettingsService: ObservableObject {
         }
     }
 
+    /// Whether the welcome screen has been through. Kept on the device and
+    /// nowhere else, so a fresh install opens on it again.
+    @Published private(set) var hasSeenWelcome: Bool
+
     /// Default text for new notes
     static let defaultNoteText = """
 Welcome everyone.
@@ -274,6 +279,8 @@ Try it out. I think you'll love it.
 """
 
     private init() {
+        self.hasSeenWelcome = userDefaults.bool(forKey: hasSeenWelcomeKey)
+
         // Load settings from UserDefaults
         var needsSave = false
         if let data = userDefaults.data(forKey: settingsKey),
@@ -329,6 +336,17 @@ Try it out. I think you'll love it.
             userDefaults.set(id.uuidString, forKey: currentNoteIdKey)
         } else {
             userDefaults.removeObject(forKey: currentNoteIdKey)
+        }
+    }
+
+    /// Leave the welcome screen behind: remember it was seen, and start the
+    /// first script off with the sample so the editor is never opened empty.
+    func completeWelcome() {
+        hasSeenWelcome = true
+        userDefaults.set(true, forKey: hasSeenWelcomeKey)
+
+        if notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            addSampleText()
         }
     }
 

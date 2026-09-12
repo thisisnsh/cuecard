@@ -15,6 +15,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.thisisnsh.cuecard.android.models.AppColors
+import com.thisisnsh.cuecard.android.services.OnboardingService
 import com.thisisnsh.cuecard.android.services.RemoteNotificationService
 import com.thisisnsh.cuecard.android.services.SettingsService
 import com.thisisnsh.cuecard.android.services.TeleprompterPiPManager
@@ -35,10 +36,12 @@ class MainActivity : ComponentActivity() {
             val context = LocalContext.current
             val settingsService = remember { SettingsService.getInstance(context) }
             val notifications = remember { RemoteNotificationService.getInstance(context) }
+            val onboarding = remember { OnboardingService.getInstance(context) }
             val settings by settingsService.settings.collectAsState()
 
             LaunchedEffect(Unit) {
                 settingsService.loadSettings()
+                onboarding.load()
             }
 
             CueCardTheme(themePreference = settings.themePreference) {
@@ -48,7 +51,8 @@ class MainActivity : ComponentActivity() {
                 ) {
                     ContentView(
                         settingsService = settingsService,
-                        notifications = notifications
+                        notifications = notifications,
+                        onboarding = onboarding
                     )
                 }
             }

@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		001 /* CueCardApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101 /* CueCardApp.swift */; };
 		002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 102 /* ContentView.swift */; };
+		003 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 103 /* WelcomeView.swift */; };
 		004 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 104 /* HomeView.swift */; };
 		007 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 201 /* Assets.xcassets */; };
 		008 /* SettingsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 108 /* SettingsService.swift */; };
@@ -33,6 +34,7 @@
 /* Begin PBXFileReference section */
 		101 /* CueCardApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardApp.swift; sourceTree = "<group>"; };
 		102 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		103 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
 		104 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		107 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		108 /* SettingsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsService.swift; sourceTree = "<group>"; };
@@ -96,6 +98,7 @@
 			isa = PBXGroup;
 			children = (
 				102 /* ContentView.swift */,
+				103 /* WelcomeView.swift */,
 				104 /* HomeView.swift */,
 				117 /* CueEditor.swift */,
 				109 /* SettingsView.swift */,
@@ -248,6 +251,7 @@
 				001 /* CueCardApp.swift in Sources */,
 				017 /* AppColors.swift in Sources */,
 				002 /* ContentView.swift in Sources */,
+				003 /* WelcomeView.swift in Sources */,
 				004 /* HomeView.swift in Sources */,
 				008 /* SettingsService.swift in Sources */,
 				019 /* ReviewPromptService.swift in Sources */,

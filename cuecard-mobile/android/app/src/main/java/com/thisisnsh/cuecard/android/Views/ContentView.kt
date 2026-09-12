@@ -3,20 +3,25 @@ package com.thisisnsh.cuecard.android.views
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.thisisnsh.cuecard.android.services.OnboardingService
 import com.thisisnsh.cuecard.android.services.RemoteNotificationService
 import com.thisisnsh.cuecard.android.services.SettingsService
 import kotlinx.coroutines.launch
 
-/** The screen the app opens on. */
+/** The screen the app opens on: the welcome, on a fresh install, or the script. */
 @Composable
 fun ContentView(
     settingsService: SettingsService,
-    notifications: RemoteNotificationService
+    notifications: RemoteNotificationService,
+    onboarding: OnboardingService
 ) {
+    val hasSeenWelcome by onboarding.hasSeenWelcome.collectAsState()
     val scope = rememberCoroutineScope()
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -36,8 +41,23 @@ fun ContentView(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    HomeView(
-        settingsService = settingsService,
-        notifications = notifications
-    )
+    when (hasSeenWelcome) {
+        // Still reading the flag. The window is already painted in the app's
+        // background, so waiting shows nothing rather than the wrong screen.
+        null -> Unit
+
+        false -> WelcomeView(
+            onGetStarted = {
+                scope.launch {
+                    onboarding.markWelcomeSeen()
+                    settingsService.addSampleTextIfEmpty()
+                }
+            }
+        )
+
+        true -> HomeView(
+            settingsService = settingsService,
+            notifications = notifications
+        )
+    }
 }
