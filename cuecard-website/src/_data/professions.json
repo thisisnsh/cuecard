@@ -8,7 +8,7 @@
     "canonical": "https://cuecard.dev/teachers/",
     "ogTitle": "Invisible speaker notes for teachers",
     "ogDescription": "Keep lesson plans and talking points visible during online classes while students see only your slides.",
-    "heroSubtitle": "<span class=\"highlight highlight-yellow\">Invisible notes</span> for online classes.<br class=\"desktop-br\"> Keep <span class=\"highlight highlight-green\">lesson plans</span> and <span class=\"highlight highlight-pink\">talking points</span> at your fingertips.",
+    "heroSubtitle": "<em>Invisible notes</em> for online classes.<br class=\"desktop-br\"> Keep lesson plans and talking points at your fingertips.",
     "targetAudience": "teachers and educators",
     "mobileCounterpart": "teachers",
     "useCases": [
@@ -45,7 +45,7 @@
     "canonical": "https://cuecard.dev/students/",
     "ogTitle": "Invisible speaker notes for students",
     "ogDescription": "Present confidently with speaker notes visible only to you during class presentations.",
-    "heroSubtitle": "<span class=\"highlight highlight-yellow\">Invisible notes</span> for class presentations.<br class=\"desktop-br\"> Keep <span class=\"highlight highlight-green\">talking points</span> and <span class=\"highlight highlight-pink\">key facts</span> at your fingertips.",
+    "heroSubtitle": "<em>Invisible notes</em> for class presentations.<br class=\"desktop-br\"> Keep talking points and key facts at your fingertips.",
     "targetAudience": "students",
     "mobileCounterpart": null,
     "useCases": [
@@ -82,7 +82,7 @@
     "canonical": "https://cuecard.dev/sales/",
     "ogTitle": "Invisible speaker notes for sales professionals",
     "ogDescription": "Keep pricing and talking points visible during sales demos while prospects see only your presentation.",
-    "heroSubtitle": "<span class=\"highlight highlight-yellow\">Invisible notes</span> for product demos.<br class=\"desktop-br\"> Keep <span class=\"highlight highlight-green\">pricing</span> and <span class=\"highlight highlight-pink\">objection handlers</span> at your fingertips.",
+    "heroSubtitle": "<em>Invisible notes</em> for product demos.<br class=\"desktop-br\"> Keep pricing and objection handlers at your fingertips.",
     "targetAudience": "sales professionals",
     "mobileCounterpart": "sales",
     "useCases": [
@@ -119,7 +119,7 @@
     "canonical": "https://cuecard.dev/trainers/",
     "ogTitle": "Invisible speaker notes for corporate trainers",
     "ogDescription": "Keep curriculum and timing cues visible during virtual training sessions.",
-    "heroSubtitle": "<span class=\"highlight highlight-yellow\">Invisible notes</span> for training sessions.<br class=\"desktop-br\"> Keep <span class=\"highlight highlight-green\">curriculum</span> and <span class=\"highlight highlight-pink\">timing cues</span> at your fingertips.",
+    "heroSubtitle": "<em>Invisible notes</em> for training sessions.<br class=\"desktop-br\"> Keep curriculum and timing cues at your fingertips.",
     "targetAudience": "corporate trainers",
     "mobileCounterpart": null,
     "useCases": [
@@ -156,7 +156,7 @@
     "canonical": "https://cuecard.dev/coaches/",
     "ogTitle": "Invisible speaker notes for coaches",
     "ogDescription": "Keep client context and frameworks visible during coaching calls without breaking eye contact.",
-    "heroSubtitle": "<span class=\"highlight highlight-yellow\">Invisible notes</span> for coaching sessions.<br class=\"desktop-br\"> Keep <span class=\"highlight highlight-green\">client context</span> and <span class=\"highlight highlight-pink\">frameworks</span> at your fingertips.",
+    "heroSubtitle": "<em>Invisible notes</em> for coaching sessions.<br class=\"desktop-br\"> Keep client context and frameworks at your fingertips.",
     "targetAudience": "business and life coaches",
     "mobileCounterpart": "coaches",
     "useCases": [
@@ -193,7 +193,7 @@
     "canonical": "https://cuecard.dev/executives/",
     "ogTitle": "Invisible speaker notes for executives",
     "ogDescription": "Keep key metrics and announcements visible during board meetings and all-hands.",
-    "heroSubtitle": "<span class=\"highlight highlight-yellow\">Invisible notes</span> for board meetings.<br class=\"desktop-br\"> Keep <span class=\"highlight highlight-green\">key metrics</span> and <span class=\"highlight highlight-pink\">announcements</span> at your fingertips.",
+    "heroSubtitle": "<em>Invisible notes</em> for board meetings.<br class=\"desktop-br\"> Keep key metrics and announcements at your fingertips.",
     "targetAudience": "executives and leadership",
     "mobileCounterpart": null,
     "useCases": [
@@ -230,7 +230,7 @@
     "canonical": "https://cuecard.dev/consultants/",
     "ogTitle": "Invisible speaker notes for consultants",
     "ogDescription": "Present recommendations and data with notes visible only to you during client sessions.",
-    "heroSubtitle": "<span class=\"highlight highlight-yellow\">Invisible notes</span> for client presentations.<br class=\"desktop-br\"> Keep <span class=\"highlight highlight-green\">recommendations</span> and <span class=\"highlight highlight-pink\">data points</span> at your fingertips.",
+    "heroSubtitle": "<em>Invisible notes</em> for client presentations.<br class=\"desktop-br\"> Keep recommendations and data points at your fingertips.",
     "targetAudience": "consultants",
     "mobileCounterpart": null,
     "useCases": [
@@ -267,7 +267,7 @@
     "canonical": "https://cuecard.dev/lawyers/",
     "ogTitle": "Invisible speaker notes for lawyers",
     "ogDescription": "Keep case facts and citations visible during virtual hearings and client meetings.",
-    "heroSubtitle": "<span class=\"highlight highlight-yellow\">Invisible notes</span> for virtual hearings.<br class=\"desktop-br\"> Keep <span class=\"highlight highlight-green\">citations</span> and <span class=\"highlight highlight-pink\">case facts</span> at your fingertips.",
+    "heroSubtitle": "<em>Invisible notes</em> for virtual hearings.<br class=\"desktop-br\"> Keep citations and case facts at your fingertips.",
     "targetAudience": "lawyers and attorneys",
     "mobileCounterpart": null,
     "useCases": [
@@ -304,7 +304,7 @@
     "canonical": "https://cuecard.dev/webinar-hosts/",
     "ogTitle": "Invisible speaker notes for webinar hosts",
     "ogDescription": "Host webinars with scripts and timing cues visible only to you while presenting.",
-    "heroSubtitle": "<span class=\"highlight highlight-yellow\">Invisible notes</span> for live webinars.<br class=\"desktop-br\"> Keep your <span class=\"highlight highlight-green\">script</span> and <span class=\"highlight highlight-pink\">timing cues</span> at your fingertips.",
+    "heroSubtitle": "<em>Invisible notes</em> for live webinars.<br class=\"desktop-br\"> Keep your script and timing cues at your fingertips.",
     "targetAudience": "webinar hosts",
     "mobileCounterpart": null,
     "useCases": [
@@ -341,7 +341,7 @@
     "canonical": "https://cuecard.dev/course-creators/",
     "ogTitle": "Invisible speaker notes for course creators",
     "ogDescription": "Record courses with lesson outlines visible during screen recordings and live sessions.",
-    "heroSubtitle": "<span class=\"highlight highlight-yellow\">Invisible notes</span> for course recordings.<br class=\"desktop-br\"> Keep <span class=\"highlight highlight-green\">lesson outlines</span> and <span class=\"highlight highlight-pink\">talking points</span> at your fingertips.",
+    "heroSubtitle": "<em>Invisible notes</em> for course recordings.<br class=\"desktop-br\"> Keep lesson outlines and talking points at your fingertips.",
     "targetAudience": "online course creators",
     "mobileCounterpart": "course-creators",
     "useCases": [
@@ -378,7 +378,7 @@
     "canonical": "https://cuecard.dev/realtors/",
     "ogTitle": "Invisible speaker notes for real estate agents",
     "ogDescription": "Deliver virtual property tours with details visible only to you during Zoom walkthroughs.",
-    "heroSubtitle": "<span class=\"highlight highlight-yellow\">Invisible notes</span> for virtual property tours.<br class=\"desktop-br\"> Keep <span class=\"highlight highlight-green\">property details</span> and <span class=\"highlight highlight-pink\">pricing</span> at your fingertips.",
+    "heroSubtitle": "<em>Invisible notes</em> for virtual property tours.<br class=\"desktop-br\"> Keep property details and pricing at your fingertips.",
     "targetAudience": "real estate agents",
     "mobileCounterpart": "realtors",
     "useCases": [
@@ -415,7 +415,7 @@
     "canonical": "https://cuecard.dev/fitness-instructors/",
     "ogTitle": "Invisible speaker notes for fitness instructors",
     "ogDescription": "Lead virtual classes with workout sequences and timing visible only to you.",
-    "heroSubtitle": "<span class=\"highlight highlight-yellow\">Invisible notes</span> for virtual fitness classes.<br class=\"desktop-br\"> Keep <span class=\"highlight highlight-green\">workout sequences</span> and <span class=\"highlight highlight-pink\">timing</span> at your fingertips.",
+    "heroSubtitle": "<em>Invisible notes</em> for virtual fitness classes.<br class=\"desktop-br\"> Keep workout sequences and timing at your fingertips.",
     "targetAudience": "fitness instructors",
     "mobileCounterpart": "fitness-instructors",
     "useCases": [

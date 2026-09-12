@@ -8,7 +8,7 @@
     "canonical": "https://cuecard.dev/mobile/content-creators/",
     "ogTitle": "Teleprompter for Content Creators - Free on iPhone & iPad",
     "ogDescription": "A free iPhone and iPad teleprompter for content creators. Try a practical filming workflow and example script. Android coming soon.",
-    "heroSubtitle": "Notes <span class=\"highlight highlight-yellow\">float over any app</span>.<br class=\"desktop-br\"> Record <span class=\"highlight highlight-green\">professional content</span> with your <span class=\"highlight highlight-pink\">script</span> at your fingertips.",
+    "heroSubtitle": "Notes <em>float over any app</em>.<br class=\"desktop-br\"> Record professional content with your script at your fingertips.",
     "targetAudience": "content creators",
     "desktopCounterpart": null,
     "useCases": [
@@ -74,7 +74,7 @@
     "canonical": "https://cuecard.dev/mobile/vloggers/",
     "ogTitle": "Teleprompter for Vloggers - Free on iPhone & iPad",
     "ogDescription": "A free iPhone and iPad teleprompter for vloggers. Try a practical filming workflow and example script. Android coming soon.",
-    "heroSubtitle": "Notes <span class=\"highlight highlight-yellow\">float over your camera</span>.<br class=\"desktop-br\"> Record <span class=\"highlight highlight-green\">vlogs</span> with your <span class=\"highlight highlight-pink\">script</span> at your fingertips.",
+    "heroSubtitle": "Notes <em>float over your camera</em>.<br class=\"desktop-br\"> Record vlogs with your script at your fingertips.",
     "targetAudience": "vloggers",
     "desktopCounterpart": null,
     "useCases": [
@@ -140,7 +140,7 @@
     "canonical": "https://cuecard.dev/mobile/youtubers/",
     "ogTitle": "Teleprompter for YouTubers - Free on iPhone & iPad",
     "ogDescription": "A free iPhone and iPad teleprompter for youtubers. Try a practical filming workflow and example script. Android coming soon.",
-    "heroSubtitle": "Notes <span class=\"highlight highlight-yellow\">float over your camera</span>.<br class=\"desktop-br\"> Record <span class=\"highlight highlight-green\">YouTube videos</span> and <span class=\"highlight highlight-pink\">Shorts</span> like a pro.",
+    "heroSubtitle": "Notes <em>float over your camera</em>.<br class=\"desktop-br\"> Record YouTube videos and Shorts like a pro.",
     "targetAudience": "YouTubers",
     "desktopCounterpart": null,
     "useCases": [
@@ -206,7 +206,7 @@
     "canonical": "https://cuecard.dev/mobile/tiktokers/",
     "ogTitle": "Teleprompter for TikTokers - Free on iPhone & iPad",
     "ogDescription": "A free iPhone and iPad teleprompter for tiktokers. Try a practical filming workflow and example script. Android coming soon.",
-    "heroSubtitle": "Notes <span class=\"highlight highlight-yellow\">float over TikTok</span>.<br class=\"desktop-br\"> Nail every <span class=\"highlight highlight-green\">take</span> with your <span class=\"highlight highlight-pink\">script</span> at your fingertips.",
+    "heroSubtitle": "Notes <em>float over TikTok</em>.<br class=\"desktop-br\"> Nail every take with your script at your fingertips.",
     "targetAudience": "TikTokers",
     "desktopCounterpart": null,
     "useCases": [
@@ -272,7 +272,7 @@
     "canonical": "https://cuecard.dev/mobile/podcasters/",
     "ogTitle": "Teleprompter for Podcasters - Free on iPhone & iPad",
     "ogDescription": "A free iPhone and iPad teleprompter for podcasters. Try a practical filming workflow and example script. Android coming soon.",
-    "heroSubtitle": "Notes <span class=\"highlight highlight-yellow\">float over any app</span>.<br class=\"desktop-br\"> Record <span class=\"highlight highlight-green\">podcasts</span> with your <span class=\"highlight highlight-pink\">episode outline</span> visible.",
+    "heroSubtitle": "Notes <em>float over any app</em>.<br class=\"desktop-br\"> Record podcasts with your episode outline visible.",
     "targetAudience": "podcasters",
     "desktopCounterpart": null,
     "useCases": [
@@ -338,7 +338,7 @@
     "canonical": "https://cuecard.dev/mobile/streamers/",
     "ogTitle": "Teleprompter for Streamers - Free on iPhone & iPad",
     "ogDescription": "A free iPhone and iPad teleprompter for streamers. Try a practical filming workflow and example script. Android coming soon.",
-    "heroSubtitle": "Notes <span class=\"highlight highlight-yellow\">float over streaming apps</span>.<br class=\"desktop-br\"> Go <span class=\"highlight highlight-green\">live</span> with <span class=\"highlight highlight-pink\">talking points</span> at your fingertips.",
+    "heroSubtitle": "Notes <em>float over streaming apps</em>.<br class=\"desktop-br\"> Go live with talking points at your fingertips.",
     "targetAudience": "streamers",
     "desktopCounterpart": null,
     "useCases": [
@@ -404,7 +404,7 @@
     "canonical": "https://cuecard.dev/mobile/teachers/",
     "ogTitle": "Teleprompter for Teachers - Free on iPhone & iPad",
     "ogDescription": "A free iPhone and iPad teleprompter for teachers. Try a practical filming workflow and example script. Android coming soon.",
-    "heroSubtitle": "Notes <span class=\"highlight highlight-yellow\">float over your camera</span>.<br class=\"desktop-br\"> Record <span class=\"highlight highlight-green\">educational videos</span> with your <span class=\"highlight highlight-pink\">lesson outline</span> visible.",
+    "heroSubtitle": "Notes <em>float over your camera</em>.<br class=\"desktop-br\"> Record educational videos with your lesson outline visible.",
     "targetAudience": "teachers and educators",
     "desktopCounterpart": "teachers",
     "useCases": [
@@ -470,7 +470,7 @@
     "canonical": "https://cuecard.dev/mobile/coaches/",
     "ogTitle": "Teleprompter for Coaches - Free on iPhone & iPad",
     "ogDescription": "A free iPhone and iPad teleprompter for coaches. Try a practical filming workflow and example script. Android coming soon.",
-    "heroSubtitle": "Notes <span class=\"highlight highlight-yellow\">float over any app</span>.<br class=\"desktop-br\"> Record <span class=\"highlight highlight-green\">motivational content</span> with your <span class=\"highlight highlight-pink\">message</span> visible.",
+    "heroSubtitle": "Notes <em>float over any app</em>.<br class=\"desktop-br\"> Record motivational content with your message visible.",
     "targetAudience": "business and life coaches",
     "desktopCounterpart": "coaches",
     "useCases": [
@@ -536,7 +536,7 @@
     "canonical": "https://cuecard.dev/mobile/course-creators/",
     "ogTitle": "Teleprompter for Course Creators - Free on iPhone & iPad",
     "ogDescription": "A free iPhone and iPad teleprompter for course creators. Try a practical filming workflow and example script. Android coming soon.",
-    "heroSubtitle": "Notes <span class=\"highlight highlight-yellow\">float over your camera</span>.<br class=\"desktop-br\"> Record <span class=\"highlight highlight-green\">course videos</span> with your <span class=\"highlight highlight-pink\">lesson script</span> visible.",
+    "heroSubtitle": "Notes <em>float over your camera</em>.<br class=\"desktop-br\"> Record course videos with your lesson script visible.",
     "targetAudience": "online course creators",
     "desktopCounterpart": "course-creators",
     "useCases": [
@@ -602,7 +602,7 @@
     "canonical": "https://cuecard.dev/mobile/realtors/",
     "ogTitle": "Teleprompter for Real Estate Agents - Free on iPhone & iPad",
     "ogDescription": "A free iPhone and iPad teleprompter for real estate agents. Try a practical filming workflow and example script. Android coming soon.",
-    "heroSubtitle": "Notes <span class=\"highlight highlight-yellow\">float over your camera</span>.<br class=\"desktop-br\"> Record <span class=\"highlight highlight-green\">property walkthroughs</span> with <span class=\"highlight highlight-pink\">details</span> at your fingertips.",
+    "heroSubtitle": "Notes <em>float over your camera</em>.<br class=\"desktop-br\"> Record property walkthroughs with details at your fingertips.",
     "targetAudience": "real estate agents",
     "desktopCounterpart": "realtors",
     "useCases": [
@@ -668,7 +668,7 @@
     "canonical": "https://cuecard.dev/mobile/fitness-instructors/",
     "ogTitle": "Teleprompter for Fitness Instructors - Free on iPhone & iPad",
     "ogDescription": "A free iPhone and iPad teleprompter for fitness instructors. Try a practical filming workflow and example script. Android coming soon.",
-    "heroSubtitle": "Notes <span class=\"highlight highlight-yellow\">float over your camera</span>.<br class=\"desktop-br\"> Record <span class=\"highlight highlight-green\">workout videos</span> with your <span class=\"highlight highlight-pink\">exercise sequence</span> visible.",
+    "heroSubtitle": "Notes <em>float over your camera</em>.<br class=\"desktop-br\"> Record workout videos with your exercise sequence visible.",
     "targetAudience": "fitness instructors",
     "desktopCounterpart": "fitness-instructors",
     "useCases": [
@@ -734,7 +734,7 @@
     "canonical": "https://cuecard.dev/mobile/sales/",
     "ogTitle": "Teleprompter for Sales Professionals - Free on iPhone & iPad",
     "ogDescription": "A free iPhone and iPad teleprompter for sales professionals. Try a practical filming workflow and example script. Android coming soon.",
-    "heroSubtitle": "Notes <span class=\"highlight highlight-yellow\">float over any app</span>.<br class=\"desktop-br\"> Record <span class=\"highlight highlight-green\">product showcases</span> with <span class=\"highlight highlight-pink\">pitch points</span> at your fingertips.",
+    "heroSubtitle": "Notes <em>float over any app</em>.<br class=\"desktop-br\"> Record product showcases with pitch points at your fingertips.",
     "targetAudience": "sales professionals",
     "desktopCounterpart": "sales",
     "useCases": [

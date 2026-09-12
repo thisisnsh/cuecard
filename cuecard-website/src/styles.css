@@ -401,24 +401,6 @@ section[id] { scroll-margin-top: 96px; }
 .statline a:hover .icon { color: var(--cue); }
 .statline li[hidden] { display: none; }
 
-/* Inline highlights, inherited from the role pages' hero copy. The word stays
-   in ink and the colour goes under it as a rule. */
-.highlight {
-  color: var(--ink);
-  background-image: linear-gradient(var(--rule, var(--hair-hi)), var(--rule, var(--hair-hi)));
-  background-repeat: no-repeat;
-  background-position: 0 96%;
-  background-size: 100% 0.07em;
-  padding-bottom: 0.08em;
-}
-.highlight-yellow { --rule: var(--cue); }
-.highlight-green  { --rule: var(--live); }
-.highlight-pink   { --rule: var(--hot); }
-/* At headline size every highlight takes the same rule: three colours in one
-   <h1> reads as decoration rather than as meaning. */
-.display .highlight, .section-h .highlight { --rule: var(--cue); }
-.body .highlight, .faq-answer .highlight, .row-body .highlight { color: var(--hairline); }
-
 /* Headlines that come from a page's own sentence-shaped copy rather than a
    written headline. */
 .display-long {
