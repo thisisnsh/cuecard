@@ -1,7 +1,7 @@
 name: Build App - iOS
 
-# Compile check only. The signed, App Store-ready IPA is built by
-# release-ios.yml on an ios-v* tag.
+# Compile check only. Releases are built and submitted through App Store
+# Connect.
 
 on:
   push:
