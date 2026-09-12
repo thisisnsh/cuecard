@@ -24,10 +24,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowOutward
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -36,7 +32,6 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -74,7 +69,6 @@ import com.thisisnsh.cuecard.android.LocalIsDarkTheme
 import com.thisisnsh.cuecard.android.models.AppColors
 import com.thisisnsh.cuecard.android.models.CueColor
 import com.thisisnsh.cuecard.android.models.RemoteNotification
-import com.thisisnsh.cuecard.android.services.AuthenticationService
 import com.thisisnsh.cuecard.android.services.FontSizePreset
 import com.thisisnsh.cuecard.android.services.OverlayAspectRatio
 import com.thisisnsh.cuecard.android.services.RemoteNotificationService
@@ -86,7 +80,6 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsView(
-    authService: AuthenticationService,
     settingsService: SettingsService,
     notifications: RemoteNotificationService,
     onDismiss: () -> Unit
@@ -97,13 +90,8 @@ fun SettingsView(
     val screenFocusManager = LocalFocusManager.current
 
     val settings by settingsService.settings.collectAsState()
-    val user by authService.currentUser.collectAsState()
     val payload by notifications.payload.collectAsState()
     val dismissedIds by notifications.dismissedIds.collectAsState()
-
-    var showingDeleteConfirmation by remember { mutableStateOf(false) }
-    var isDeletingAccount by remember { mutableStateOf(false) }
-    var deleteErrorMessage by remember { mutableStateOf<String?>(null) }
 
     val settingsNotification = remember(payload, dismissedIds) {
         notifications.notification(RemoteNotification.Surface.SETTINGS_ROW)
@@ -163,33 +151,6 @@ fun SettingsView(
                         notifications = notifications,
                         modifier = Modifier.padding(horizontal = 20.dp)
                     )
-                }
-            }
-
-            user?.let { firebaseUser ->
-                SettingsSection(isDark = isDark) {
-                    Column(
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Text(
-                            text = displayNameForUser(
-                                firebaseUser.displayName,
-                                firebaseUser.email
-                            ),
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = AppColors.textPrimary(isDark)
-                        )
-
-                        firebaseUser.email?.let { email ->
-                            Text(
-                                text = email,
-                                fontSize = 15.sp,
-                                color = AppColors.textSecondary(isDark)
-                            )
-                        }
-                    }
                 }
             }
 
@@ -397,124 +358,9 @@ fun SettingsView(
                 }
             }
 
-            SettingsSection(isDark = isDark) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickableWithoutRipple {
-                            AnalyticsEvents.logButtonClick("sign_out", "settings")
-                            authService.signOut()
-                            onDismiss()
-                        }
-                        .padding(horizontal = 20.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Logout,
-                        contentDescription = null,
-                        tint = AppColors.red(isDark),
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Text(
-                        text = "Sign Out",
-                        fontSize = 17.sp,
-                        color = AppColors.red(isDark)
-                    )
-                }
-            }
-
-            SettingsSection(
-                isDark = isDark,
-                footer = "This will permanently delete your account and all data stored on this device."
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickableWithoutRipple {
-                            if (isDeletingAccount) return@clickableWithoutRipple
-                            AnalyticsEvents.logButtonClick("delete_account", "settings")
-                            showingDeleteConfirmation = true
-                        }
-                        .padding(horizontal = 20.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    if (isDeletingAccount) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            color = AppColors.red(isDark),
-                            strokeWidth = 2.dp
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Filled.Delete,
-                            contentDescription = null,
-                            tint = AppColors.red(isDark),
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                    Text(
-                        text = "Delete Account",
-                        fontSize = 17.sp,
-                        color = AppColors.red(isDark)
-                    )
-                }
-            }
-
             Spacer(modifier = Modifier.height(32.dp))
         }
     }
-
-    if (showingDeleteConfirmation) {
-        AlertDialog(
-            onDismissRequest = { showingDeleteConfirmation = false },
-            title = { Text("Delete Account") },
-            text = { Text("Are you sure you want to delete your account? This action cannot be undone.") },
-            confirmButton = {
-                TextButton(onClick = {
-                    showingDeleteConfirmation = false
-                    isDeletingAccount = true
-                    scope.launch {
-                        val result = authService.deleteAccount()
-                        isDeletingAccount = false
-                        result.fold(
-                            onSuccess = { onDismiss() },
-                            onFailure = { deleteErrorMessage = it.message ?: "An error occurred" }
-                        )
-                    }
-                }) {
-                    Text("Delete", color = AppColors.red(isDark))
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showingDeleteConfirmation = false }) {
-                    Text("Cancel", color = AppColors.blue(isDark))
-                }
-            },
-            containerColor = AppColors.background(isDark)
-        )
-    }
-
-    deleteErrorMessage?.let { message ->
-        AlertDialog(
-            onDismissRequest = { deleteErrorMessage = null },
-            title = { Text("Error") },
-            text = { Text(message) },
-            confirmButton = {
-                TextButton(onClick = { deleteErrorMessage = null }) {
-                    Text("OK", color = AppColors.blue(isDark))
-                }
-            },
-            containerColor = AppColors.background(isDark)
-        )
-    }
-}
-
-private fun displayNameForUser(displayName: String?, email: String?): String {
-    if (!displayName.isNullOrEmpty()) return displayName
-    if (email != null && email.contains("privaterelay.appleid.com")) return "Private User"
-    return "User"
 }
 
 /** One grouped section of the settings list, with its heading and footnote. */

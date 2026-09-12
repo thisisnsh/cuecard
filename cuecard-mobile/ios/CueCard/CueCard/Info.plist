@@ -6,17 +6,6 @@
 	<array>
 		<string>com.thisisnsh.cuecard.ios.teleprompter</string>
 	</array>
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>com.googleusercontent.apps.829544425796-078qfb55oulclu6j796c1ba81u96hr61</string>
-			</array>
-		</dict>
-	</array>
 	<key>FirebaseAutomaticScreenReportingEnabled</key>
 	<false/>
 	<key>UIApplicationSceneManifest</key>

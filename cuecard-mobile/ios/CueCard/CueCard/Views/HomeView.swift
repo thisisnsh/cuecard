@@ -5,7 +5,6 @@ import FirebaseAnalytics
 import FirebaseCrashlytics
 
 struct HomeView: View {
-    @EnvironmentObject var authService: AuthenticationService
     @EnvironmentObject var settingsService: SettingsService
     @EnvironmentObject var notifications: RemoteNotificationService
     @Environment(\.colorScheme) var colorScheme
@@ -594,7 +593,6 @@ struct SavedNotesView: View {
 
 #Preview {
     HomeView()
-        .environmentObject(AuthenticationService.shared)
         .environmentObject(SettingsService.shared)
         .environmentObject(RemoteNotificationService.shared)
 }

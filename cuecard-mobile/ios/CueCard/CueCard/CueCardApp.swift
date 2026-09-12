@@ -6,7 +6,6 @@ import FirebaseCrashlytics
 @main
 struct CueCardApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var delegate
-    @StateObject private var authService = AuthenticationService.shared
     @StateObject private var settingsService = SettingsService.shared
     @StateObject private var notifications = RemoteNotificationService.shared
     @Environment(\.scenePhase) private var scenePhase
@@ -14,7 +13,6 @@ struct CueCardApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environmentObject(authService)
                 .environmentObject(settingsService)
                 .environmentObject(notifications)
                 .preferredColorScheme(settingsService.settings.themePreference.colorScheme)

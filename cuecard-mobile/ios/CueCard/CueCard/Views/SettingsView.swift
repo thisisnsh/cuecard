@@ -1,18 +1,12 @@
 import SwiftUI
 import FirebaseAnalytics
-import FirebaseAuth
 import FirebaseCrashlytics
 
 struct SettingsView: View {
-    @EnvironmentObject var authService: AuthenticationService
     @EnvironmentObject var settingsService: SettingsService
     @EnvironmentObject var notifications: RemoteNotificationService
     @Environment(\.dismiss) var dismiss
     @Environment(\.colorScheme) var colorScheme
-
-    @State private var showingDeleteConfirmation = false
-    @State private var isDeletingAccount = false
-    @State private var deleteErrorMessage: String?
 
     /// The delay and the speed are typed rather than dragged, so each field
     /// holds text while it is being edited and only becomes a setting once
@@ -40,22 +34,6 @@ struct SettingsView: View {
                         }
                     }
                 }
-                .alert("Delete Account", isPresented: $showingDeleteConfirmation) {
-                    Button("Cancel", role: .cancel) { }
-                    Button("Delete", role: .destructive) {
-                        deleteAccount()
-                    }
-                } message: {
-                    Text("Are you sure you want to delete your account? This action cannot be undone.")
-                }
-                .alert("Error", isPresented: Binding(
-                    get: { deleteErrorMessage != nil },
-                    set: { if !$0 { deleteErrorMessage = nil } }
-                )) {
-                    Button("OK", role: .cancel) { }
-                } message: {
-                    Text(deleteErrorMessage ?? "An error occurred")
-                }
         }
         .onAppear {
             countdownSecondsText = String(settingsService.settings.countdownSeconds)
@@ -79,7 +57,6 @@ struct SettingsView: View {
     private var settingsList: some View {
         List {
             remoteMessageSection
-            userInfoSection
             rateSection
             teleprompterSection
             inAppPrompterSection
@@ -87,8 +64,6 @@ struct SettingsView: View {
             appearanceSection
             resetSection
             diagnosticsSection
-            signOutSection
-            deleteAccountSection
         }
         // The number pad has no return key, so the way out of a field is a
         // scroll, or a tap on the other field.
@@ -102,25 +77,6 @@ struct SettingsView: View {
         if let notification = notifications.notification(for: .settingsRow) {
             Section {
                 NotificationRow(notification: notification)
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var userInfoSection: some View {
-        if let user = authService.user {
-            Section {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(displayNameForUser(user))
-                        .font(.headline)
-
-                    if let email = user.email {
-                        Text(email)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-                .padding(.vertical, 8)
             }
         }
     }
@@ -145,16 +101,6 @@ struct SettingsView: View {
             settingsService.settings.linesPerMinute = clamped
         }
         linesPerMinuteText = String(settingsService.settings.linesPerMinute)
-    }
-
-    private func displayNameForUser(_ user: FirebaseAuth.User) -> String {
-        if let displayName = user.displayName, !displayName.isEmpty {
-            return displayName
-        }
-        if let email = user.email, email.contains("privaterelay.appleid.com") {
-            return "Private User"
-        }
-        return "User"
     }
 
     /// One typed setting: the label, then the number and its unit together in
@@ -333,70 +279,10 @@ struct SettingsView: View {
             }
         }
     }
-
-    private var signOutSection: some View {
-        Section {
-            Button(role: .destructive) {
-                AnalyticsEvents.logButtonClick("sign_out", screen: "settings")
-                authService.signOut()
-                dismiss()
-            } label: {
-                HStack {
-                    Image(systemName: "rectangle.portrait.and.arrow.right")
-                    Text("Sign Out")
-                }
-            }
-            .foregroundStyle(AppColors.red(for: colorScheme))
-        }
-    }
-
-    private var deleteAccountSection: some View {
-        Section {
-            Button(role: .destructive) {
-                AnalyticsEvents.logButtonClick("delete_account", screen: "settings")
-                showingDeleteConfirmation = true
-            } label: {
-                HStack {
-                    if isDeletingAccount {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle())
-                            .frame(width: 20, height: 20)
-                    } else {
-                        Image(systemName: "trash")
-                    }
-                    Text("Delete Account")
-                }
-            }
-            .disabled(isDeletingAccount)
-            .foregroundStyle(AppColors.red(for: colorScheme))
-        } footer: {
-            Text("This will permanently delete your account and all data stored on this device.")
-                .font(.caption)
-        }
-    }
-
-    private func deleteAccount() {
-        isDeletingAccount = true
-        Task {
-            do {
-                try await authService.deleteAccount()
-                await MainActor.run {
-                    isDeletingAccount = false
-                    dismiss()
-                }
-            } catch {
-                await MainActor.run {
-                    isDeletingAccount = false
-                    deleteErrorMessage = error.localizedDescription
-                }
-            }
-        }
-    }
 }
 
 #Preview {
     SettingsView()
-        .environmentObject(AuthenticationService.shared)
         .environmentObject(SettingsService.shared)
         .environmentObject(RemoteNotificationService.shared)
 }

@@ -11,7 +11,9 @@ CueCard Teleprompter keeps your speaker notes visible above any app, so you can 
 
 ## Firebase Setup
 
-Both apps require Firebase configuration files. Download these from the [Firebase Console](https://console.firebase.google.com):
+Both apps require Firebase configuration files — Analytics and Crashlytics only,
+there is no sign-in and no account. Download these from the
+[Firebase Console](https://console.firebase.google.com):
 
 ### iOS Setup
 
@@ -19,9 +21,6 @@ Both apps require Firebase configuration files. Download these from the [Firebas
 2. Add an iOS app with bundle ID: `com.thisisnsh.cuecard.ios`
 3. Download `GoogleService-Info.plist`
 4. Replace `ios/CueCard/CueCard/GoogleService-Info.plist` with the downloaded file
-5. Add URL scheme for Google Sign-In:
-   - Copy `REVERSED_CLIENT_ID` from `GoogleService-Info.plist`
-   - It's already configured in `Info.plist` via `$(REVERSED_CLIENT_ID)`
 
 ### Android Setup
 
@@ -29,9 +28,6 @@ Both apps require Firebase configuration files. Download these from the [Firebas
 2. Add an Android app with package name: `com.thisisnsh.cuecard.android`
 3. Download `google-services.json`
 4. Replace `android/app/google-services.json` with the downloaded file
-5. Update Web Client ID in `LoginScreen.kt`:
-   - Find your Web Client ID in Firebase Console → Authentication → Sign-in method → Google
-   - Replace `YOUR_WEB_CLIENT_ID` in the code
 
 ## Prerequisites
 

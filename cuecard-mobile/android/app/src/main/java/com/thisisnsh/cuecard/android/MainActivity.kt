@@ -15,7 +15,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.thisisnsh.cuecard.android.models.AppColors
-import com.thisisnsh.cuecard.android.services.AuthenticationService
 import com.thisisnsh.cuecard.android.services.RemoteNotificationService
 import com.thisisnsh.cuecard.android.services.SettingsService
 import com.thisisnsh.cuecard.android.services.TeleprompterPiPManager
@@ -34,7 +33,6 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val context = LocalContext.current
-            val authService = remember { AuthenticationService(context) }
             val settingsService = remember { SettingsService.getInstance(context) }
             val notifications = remember { RemoteNotificationService.getInstance(context) }
             val settings by settingsService.settings.collectAsState()
@@ -49,7 +47,6 @@ class MainActivity : ComponentActivity() {
                     color = AppColors.background(LocalIsDarkTheme.current)
                 ) {
                     ContentView(
-                        authService = authService,
                         settingsService = settingsService,
                         notifications = notifications
                     )

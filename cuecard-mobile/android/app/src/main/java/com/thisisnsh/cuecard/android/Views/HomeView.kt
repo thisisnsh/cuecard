@@ -79,7 +79,6 @@ import com.thisisnsh.cuecard.android.models.TeleprompterParser
 import com.thisisnsh.cuecard.android.modifiers.Capsule
 import com.thisisnsh.cuecard.android.modifiers.glassed
 import com.thisisnsh.cuecard.android.modifiers.scriptEdgeFade
-import com.thisisnsh.cuecard.android.services.AuthenticationService
 import com.thisisnsh.cuecard.android.services.RemoteNotificationService
 import com.thisisnsh.cuecard.android.services.ReviewPromptService
 import com.thisisnsh.cuecard.android.services.SettingsService
@@ -118,7 +117,6 @@ private val EDITOR_BOTTOM_FADE = 72.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeView(
-    authService: AuthenticationService,
     settingsService: SettingsService,
     notifications: RemoteNotificationService
 ) {
@@ -487,7 +485,6 @@ fun HomeView(
             exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
         ) {
             SettingsView(
-                authService = authService,
                 settingsService = settingsService,
                 notifications = notifications,
                 onDismiss = { showingSettings = false }

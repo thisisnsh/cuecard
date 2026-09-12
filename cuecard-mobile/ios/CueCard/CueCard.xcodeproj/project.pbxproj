@@ -9,15 +9,10 @@
 /* Begin PBXBuildFile section */
 		001 /* CueCardApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101 /* CueCardApp.swift */; };
 		002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 102 /* ContentView.swift */; };
-		003 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 103 /* LoginView.swift */; };
 		004 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 104 /* HomeView.swift */; };
-		006 /* AuthenticationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 106 /* AuthenticationService.swift */; };
 		007 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 201 /* Assets.xcassets */; };
 		008 /* SettingsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 108 /* SettingsService.swift */; };
 		009 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 301 /* FirebaseAnalytics */; };
-		010 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 302 /* FirebaseAuth */; };
-		011 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 303 /* GoogleSignIn */; };
-		012 /* GoogleSignInSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 304 /* GoogleSignInSwift */; };
 		013 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 109 /* SettingsView.swift */; };
 		014 /* TeleprompterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110 /* TeleprompterView.swift */; };
 		015 /* TeleprompterParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 111 /* TeleprompterParser.swift */; };
@@ -38,9 +33,7 @@
 /* Begin PBXFileReference section */
 		101 /* CueCardApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardApp.swift; sourceTree = "<group>"; };
 		102 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		103 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		104 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
-		106 /* AuthenticationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationService.swift; sourceTree = "<group>"; };
 		107 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		108 /* SettingsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsService.swift; sourceTree = "<group>"; };
 		109 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -68,10 +61,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				009 /* FirebaseAnalytics in Frameworks */,
-				010 /* FirebaseAuth in Frameworks */,
 				018 /* FirebaseCrashlytics in Frameworks */,
-				011 /* GoogleSignIn in Frameworks */,
-				012 /* GoogleSignInSwift in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -106,7 +96,6 @@
 			isa = PBXGroup;
 			children = (
 				102 /* ContentView.swift */,
-				103 /* LoginView.swift */,
 				104 /* HomeView.swift */,
 				117 /* CueEditor.swift */,
 				109 /* SettingsView.swift */,
@@ -119,7 +108,6 @@
 		712 /* Services */ = {
 			isa = PBXGroup;
 			children = (
-				106 /* AuthenticationService.swift */,
 				108 /* SettingsService.swift */,
 				114 /* ReviewPromptService.swift */,
 				112 /* TeleprompterPiPManager.swift */,
@@ -175,10 +163,7 @@
 			name = CueCard;
 			packageProductDependencies = (
 				301 /* FirebaseAnalytics */,
-				302 /* FirebaseAuth */,
 				305 /* FirebaseCrashlytics */,
-				303 /* GoogleSignIn */,
-				304 /* GoogleSignInSwift */,
 			);
 			productName = CueCard;
 			productReference = 501 /* CueCard.app */;
@@ -210,7 +195,6 @@
 			mainGroup = 700;
 			packageReferences = (
 				1100 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
-				1101 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 			);
 			productRefGroup = 720 /* Products */;
 			projectDirPath = "";
@@ -264,9 +248,7 @@
 				001 /* CueCardApp.swift in Sources */,
 				017 /* AppColors.swift in Sources */,
 				002 /* ContentView.swift in Sources */,
-				003 /* LoginView.swift in Sources */,
 				004 /* HomeView.swift in Sources */,
-				006 /* AuthenticationService.swift in Sources */,
 				008 /* SettingsService.swift in Sources */,
 				019 /* ReviewPromptService.swift in Sources */,
 				013 /* SettingsView.swift in Sources */,
@@ -507,14 +489,6 @@
 				minimumVersion = 10.0.0;
 			};
 		};
-		1101 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 7.0.0;
-			};
-		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -522,21 +496,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1100 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseAnalytics;
-		};
-		302 /* FirebaseAuth */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 1100 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseAuth;
-		};
-		303 /* GoogleSignIn */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 1101 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
-			productName = GoogleSignIn;
-		};
-		304 /* GoogleSignInSwift */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 1101 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
-			productName = GoogleSignInSwift;
 		};
 		305 /* FirebaseCrashlytics */ = {
 			isa = XCSwiftPackageProductDependency;
