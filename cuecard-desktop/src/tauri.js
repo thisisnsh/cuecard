@@ -41,9 +41,9 @@ export const isMac = platformInfo().platform === 'macos';
 
 export async function appVersion() {
   try {
-    return (await T.app?.getVersion?.()) || '1.4.1';
+    return (await T.app?.getVersion?.()) || '1.5.0';
   } catch {
-    return '1.4.1';
+    return '1.5.0';
   }
 }
 
