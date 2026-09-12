@@ -73,9 +73,14 @@
             <button class="icon-btn" id="btn-sidebar" data-icon="sidebar" aria-label="Toggle sidebar"></button>
           </div>
 
-          <div class="toolbar-heading" data-tauri-drag-region>
-            <span class="toolbar-title" id="title-main" data-tauri-drag-region>CueCard</span>
-            <span class="toolbar-subtitle" id="title-sub" data-tauri-drag-region hidden></span>
+          <div class="toolbar-heading">
+            <span class="toolbar-title" id="title-main">CueCard</span>
+            <span class="toolbar-subtitle" id="title-sub" hidden></span>
+          </div>
+
+          <div class="toolbar-drag" data-tauri-drag-region>
+            <span class="toolbar-grip" id="toolbar-grip" data-tauri-drag-region
+              title="Drag to move the window" aria-label="Drag to move the window"></span>
           </div>
 
           <div class="toolbar-side is-trailing">
@@ -91,6 +96,8 @@
             <button class="icon-btn is-close" id="btn-close" data-icon="xmark" aria-label="Close"></button>
           </div>
         </header>
+
+        <div class="notice-slot" id="home-notice" hidden></div>
 
         <div class="detail-body">
           <!-- The script you are writing -->
@@ -172,6 +179,10 @@
       <div class="sheet-body">
         <!-- Settings -->
         <div class="sheet-page" id="page-settings">
+          <section class="group" id="settings-notice" hidden>
+            <div class="cells" id="settings-notice-cell"></div>
+          </section>
+
           <section class="group" id="row-update" hidden>
             <div class="cells">
               <div class="cell">

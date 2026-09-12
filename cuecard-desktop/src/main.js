@@ -26,6 +26,7 @@ import * as notes from './notes.js';
 import { createEditor } from './editor.js';
 import { createPrompter } from './prompter.js';
 import * as ui from './ui.js';
+import * as notices from './notifications.js';
 import { CUE_COLORS, normalizingTags, suggestedFileName, titleForFileName } from './parser.js';
 
 const $ = (id) => document.getElementById(id);
@@ -76,12 +77,7 @@ async function boot() {
   editor.setPlaceholder(PLACEHOLDER);
   editor.setText(notes.state.draft);
 
-  prompter = createPrompter($('screen-prompter'), {
-    onClose: onPrompterClosed,
-    onToggleInvisible: () => toggleInvisible(),
-    isInvisible: () => settings.invisible,
-    onPlayStateChange: () => {},
-  });
+  prompter = createPrompter($('screen-prompter'), { onClose: onPrompterClosed });
 
   buildSwatches();
   wireHome();
@@ -94,6 +90,8 @@ async function boot() {
 
   onSettingsChange(onSettingChanged);
   notes.onNotesChange(renderAll);
+  notices.onNotificationsChange(renderNotices);
+  await notices.loadNotifications();
 
   await T.trackFirstLaunch();
   T.track('app_open');
@@ -102,6 +100,11 @@ async function boot() {
   await initSlides();
   listenToBackend();
   void startUpdateChecks();
+
+  // Anything the worker wants people to see. It throttles itself, so asking on
+  // every launch and every few minutes costs nothing.
+  void notices.refreshNotifications();
+  setInterval(() => notices.refreshNotifications(), 5 * 60 * 1000);
 }
 
 /** Scripts that carried `[time]` tags set the timer, once, on the way past. */
@@ -423,7 +426,60 @@ function onPrompterClosed() {
 // RENDERING
 // =============================================================================
 
+/**
+ * A notice from the worker, drawn where it asked to be drawn: a card over the
+ * script, or a quiet row at the top of Settings.
+ */
+function renderNotices() {
+  renderNotice('homeBanner', $('home-notice'), { row: false });
+  const group = $('settings-notice');
+  renderNotice('settingsRow', $('settings-notice-cell'), { row: true, group });
+}
+
+function renderNotice(surface, host, { row, group }) {
+  if (!host) return;
+  const notice = notices.notificationFor(surface);
+
+  if (!notice) {
+    host.innerHTML = '';
+    (group || host).hidden = true;
+    return;
+  }
+
+  // A settings row has space for one thing to do, and dismissal has its own
+  // control, so the X is the action skipped there.
+  const actions = row ? notice.actions.filter((a) => a.kind !== 'dismiss').slice(0, 1) : notice.actions;
+
+  host.innerHTML = `
+    <div class="notice is-${notice.severity}${row ? ' is-row' : ''}">
+      <span class="notice-text">
+        <span class="notice-title">${ui.escapeHtml(notice.title)}</span>
+        ${notice.body ? `<span class="notice-body">${ui.escapeHtml(notice.body)}</span>` : ''}
+        ${actions.length ? `<span class="notice-actions">${actions
+          .map((action, index) => `<button class="notice-action" data-action="${index}">${ui.escapeHtml(action.label)}</button>`)
+          .join('')}</span>` : ''}
+      </span>
+      ${notice.dismissible ? `<button class="icon-btn is-small" data-dismiss aria-label="Dismiss">${icon('xmark', 13)}</button>` : ''}
+    </div>`;
+  (group || host).hidden = false;
+
+  host.querySelector('[data-dismiss]')?.addEventListener('click', () => notices.dismissNotification(notice));
+  host.querySelectorAll('.notice-action').forEach((button) => {
+    button.addEventListener('click', () => {
+      const action = actions[Number(button.dataset.action)];
+      notices.logAction(action, notice);
+      if (action.kind === 'dismiss') void notices.dismissNotification(notice);
+      // Desktop has no store listing, so the download page is the nearest thing.
+      else if (action.kind === 'appStore') void T.openUrl(LINKS.site);
+      else void T.openUrl(action.url);
+    });
+  });
+
+  notices.logImpression(notice);
+}
+
 function renderAll() {
+  renderNotices();
   renderToolbar();
   renderSidebar();
   renderSlides();
@@ -603,22 +659,56 @@ function toggleSidebar() {
 
 let timerPickerOpen = false;
 
+/**
+ * Swap the pill for the picker, or back, and let the box travel between the two
+ * sizes rather than jumping. The end state is applied first and measured, so the
+ * animation always runs between the real sizes.
+ */
+function flipTimerControl(open) {
+  const control = $('timer-control');
+  const picker = $('timer-picker');
+  const from = control.getBoundingClientRect();
+
+  timerPickerOpen = open;
+  control.classList.toggle('is-open', open);
+  picker.hidden = !open;
+  renderControls();
+
+  const to = control.getBoundingClientRect();
+  control.animate(
+    [
+      { width: `${from.width}px`, height: `${from.height}px` },
+      { width: `${to.width}px`, height: `${to.height}px` },
+    ],
+    { duration: 320, easing: 'cubic-bezier(0.32, 0.9, 0.36, 1)' }
+  );
+
+  // The contents arrive once the box has somewhere to put them.
+  if (open) {
+    picker.animate(
+      [{ opacity: 0 }, { opacity: 1 }],
+      { duration: 200, delay: 90, easing: 'ease-out', fill: 'backwards' }
+    );
+  }
+}
+
 function openTimerPicker() {
-  timerPickerOpen = true;
-  $('timer-control').classList.add('is-open');
-  $('timer-picker').hidden = false;
-  $('btn-set-timer').hidden = true;
+  if (timerPickerOpen) return;
+  flipTimerControl(true);
   document.addEventListener('mousedown', onClickAwayFromPicker, true);
   T.trackClick('set_timer', 'home');
 }
 
 function closeTimerPicker() {
   if (!timerPickerOpen) return;
-  timerPickerOpen = false;
-  $('timer-control').classList.remove('is-open');
-  $('timer-picker').hidden = true;
-  $('btn-set-timer').hidden = app.source === 'script' && !notes.hasScript();
   document.removeEventListener('mousedown', onClickAwayFromPicker, true);
+
+  // The contents leave before the box closes over them.
+  const fade = $('timer-picker').animate([{ opacity: 1 }, { opacity: 0 }], {
+    duration: 120,
+    easing: 'ease-in',
+  });
+  fade.finished.catch(() => {}).then(() => flipTimerControl(false));
 }
 
 function onClickAwayFromPicker(event) {
@@ -644,18 +734,20 @@ function createWheel(el, { max, get, set }) {
     el.setAttribute('aria-valuemax', String(max));
   }
 
+  // Wraps, because the faded rows above and below say it will: 59 sits above 0.
   const step = (by) => {
-    set(Math.min(Math.max(get() + by, 0), max));
+    const span = max + 1;
+    set((((get() + by) % span) + span) % span);
     render();
   };
 
+  // One number per notch of a mouse wheel, rather than five.
   el.addEventListener('wheel', (event) => {
     event.preventDefault();
     wheelDelta += event.deltaY;
-    while (Math.abs(wheelDelta) >= 24) {
-      step(wheelDelta > 0 ? 1 : -1);
-      wheelDelta -= Math.sign(wheelDelta) * 24;
-    }
+    if (Math.abs(wheelDelta) < 50) return;
+    step(wheelDelta > 0 ? 1 : -1);
+    wheelDelta = 0;
   }, { passive: false });
 
   el.addEventListener('click', (event) => {
@@ -736,6 +828,7 @@ let closeSettingsSheet = null;
 
 function openSettings(page = 'settings') {
   syncSettings();
+  renderNotices();
   showSettingsPage(page);
   closeSettingsSheet = ui.openSheet($('sheet-settings'), { onClose: () => { closeSettingsSheet = null; } });
   T.trackScreen('settings');
@@ -795,10 +888,7 @@ function selectSegment(id, value) {
 
 function onSettingChanged(key) {
   if (key === 'cueColor' || key === 'fontSizePreset') prompter.restyle();
-  if (key === 'invisible') {
-    renderControls();
-    prompter.refreshInvisible();
-  }
+  if (key === 'invisible') renderControls();
   if (!$('sheet-settings').hidden) syncSettings();
 }
 

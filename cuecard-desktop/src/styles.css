@@ -102,6 +102,8 @@ body {
 
 body {
   font-family: var(--font-family);
+  user-select: none;
+  -webkit-user-select: none;
   font-size: 13px;
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
@@ -110,6 +112,12 @@ body {
 
 [hidden] {
   display: none !important;
+}
+
+input,
+textarea {
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 button {
@@ -130,8 +138,9 @@ a {
   flex: none;
 }
 
+/* The ordinary selection colour, not the app's accent. */
 ::selection {
-  background: color-mix(in srgb, var(--tint) 35%, transparent);
+  background: color-mix(in srgb, var(--color-blue) 32%, transparent);
 }
 
 /* The window itself */
@@ -285,7 +294,6 @@ a {
   background-image: var(--glass-sheen);
   border: 0.7px solid var(--glass-stroke);
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.18);
-  padding-left: 3px;
   transition: transform 0.1s ease, opacity 0.15s ease;
 }
 
@@ -296,7 +304,6 @@ a {
 .play-btn.is-large {
   width: 68px;
   height: 68px;
-  padding-left: 4px;
 }
 
 .play-btn:active {
@@ -596,6 +603,7 @@ a {
 }
 
 .toolbar {
+  position: relative;
   height: var(--toolbar-height);
   flex: none;
   display: flex;
@@ -617,19 +625,17 @@ a {
 }
 
 .toolbar-heading {
-  flex: 1;
   min-width: 0;
+  max-width: 55%;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  line-height: 1.25;
+  align-items: baseline;
+  gap: 7px;
+  padding-left: 2px;
 }
 
 .toolbar-title {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  max-width: 100%;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -638,6 +644,38 @@ a {
 .toolbar-subtitle {
   font-size: 11px;
   color: var(--text-secondary);
+  white-space: nowrap;
+  flex: none;
+}
+
+/* The one place made for moving the window. */
+.toolbar-drag {
+  flex: 1;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+}
+
+.toolbar-drag:active {
+  cursor: grabbing;
+}
+
+.toolbar-grip {
+  width: 26px;
+  height: 18px;
+  border-radius: 5px;
+  background-image: radial-gradient(circle, currentColor 1.1px, transparent 1.2px);
+  background-size: 6px 6px;
+  color: var(--text-secondary);
+  opacity: 0.45;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+
+.toolbar-drag:hover .toolbar-grip {
+  opacity: 0.9;
+  background-color: var(--hover);
 }
 
 .invisible-btn {
@@ -715,6 +753,8 @@ a {
 }
 
 .editor-input {
+  user-select: text;
+  -webkit-user-select: text;
   resize: none;
   border: none;
   outline: none;
@@ -730,7 +770,7 @@ a {
 }
 
 .editor-input::selection {
-  background: color-mix(in srgb, var(--tint) 32%, transparent);
+  background: color-mix(in srgb, var(--color-blue) 32%, transparent);
   color: transparent;
 }
 
@@ -881,6 +921,100 @@ a {
   text-decoration: underline;
 }
 
+/* A notice from the worker ------------------------------------------------- */
+
+.notice-slot {
+  flex: none;
+  padding: 6px 16px 0;
+}
+
+.notice {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 11px 10px 11px 20px;
+  border-radius: 12px;
+  background: var(--glass-bg);
+  background-image: var(--glass-sheen);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 0.7px solid var(--glass-stroke);
+  box-shadow: var(--glass-shadow);
+  --notice-accent: var(--color-blue);
+}
+
+/* The severity stripe */
+.notice::before {
+  content: '';
+  position: absolute;
+  left: 9px;
+  top: 11px;
+  bottom: 11px;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--notice-accent);
+}
+
+.notice.is-warning {
+  --notice-accent: var(--color-yellow);
+}
+
+.notice.is-critical {
+  --notice-accent: var(--color-red);
+}
+
+.notice-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.notice-title {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.notice-body {
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.notice-actions {
+  display: flex;
+  gap: 18px;
+  margin-top: 3px;
+}
+
+.notice-action {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--notice-accent);
+}
+
+.notice-action:hover {
+  opacity: 0.8;
+}
+
+/* The same notice, in the quieter place */
+.notice.is-row {
+  background: none;
+  background-image: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  padding: 11px 12px 11px 22px;
+}
+
+.notice.is-row::before {
+  left: 12px;
+}
+
 /* Floating controls ------------------------------------------------------- */
 
 .home-controls {
@@ -901,6 +1035,7 @@ a {
 }
 
 .timer-control {
+  overflow: hidden;
   background: var(--glass-bg);
   background-image: var(--glass-sheen);
   backdrop-filter: blur(20px) saturate(180%);
@@ -1142,11 +1277,10 @@ a {
 
 .prompter-fade.is-bottom {
   bottom: 0;
-  height: clamp(110px, 34%, 180px);
+  height: clamp(56px, 20%, 96px);
   background: linear-gradient(to top,
       rgba(var(--color-bg-rgb), var(--bg-opacity)) 0%,
-      rgba(var(--color-bg-rgb), var(--bg-opacity)) 58%,
-      rgba(var(--color-bg-rgb), calc(var(--bg-opacity) * 0.55)) 80%,
+      rgba(var(--color-bg-rgb), calc(var(--bg-opacity) * 0.9)) 45%,
       rgba(var(--color-bg-rgb), 0) 100%);
 }
 
@@ -1680,8 +1814,8 @@ a {
 
 .menu {
   position: absolute;
-  min-width: 214px;
-  padding: 5px;
+  min-width: 232px;
+  padding: 7px;
   border-radius: 11px;
   background: var(--surface-2);
   border: 0.7px solid var(--separator);
@@ -1704,10 +1838,10 @@ a {
 .menu-item {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 14px;
   width: 100%;
-  padding: 6px 9px;
-  border-radius: 7px;
+  padding: 9px 12px;
+  border-radius: 8px;
   font-size: 13px;
   text-align: left;
   outline: none;
@@ -1745,7 +1879,7 @@ a {
 
 .menu-divider {
   height: 1px;
-  margin: 4px 6px;
+  margin: 6px 8px;
   background: var(--separator);
 }
 

@@ -42,6 +42,9 @@ const REDIRECT_URI: &str = "http://127.0.0.1:3642/oauth/callback";
 
 // Firebase REST API endpoints
 const FIREBASE_SIGNUP_URL: &str = "https://identitytoolkit.googleapis.com/v1/accounts:signUp";
+/// The worker the phone apps read their notices from. Shared with them on
+/// purpose: one list, filtered on each device.
+const NOTIFICATIONS_URL: &str = "https://cuecard-mobile.thisisnsh.workers.dev/v2/notifications";
 const FIREBASE_SIGNIN_IDP_URL: &str =
     "https://identitytoolkit.googleapis.com/v1/accounts:signInWithIdp";
 const FIREBASE_TOKEN_URL: &str = "https://securetoken.googleapis.com/v1/token";
@@ -1541,6 +1544,34 @@ async fn get_firebase_id_token() -> Result<String, String> {
         .ok_or_else(|| "Not authenticated".to_string())
 }
 
+/// Fetch the notifications payload and hand back the raw JSON.
+///
+/// The web view cannot do this itself: the worker serves the phone apps over
+/// native HTTP and sends no `Access-Control-Allow-Origin`, so a `fetch` from the
+/// window is blocked before the body can be read. Asking for it here sidesteps
+/// the browser's rules and leaves the mobile worker as it is.
+#[tauri::command]
+async fn fetch_notifications() -> Result<String, String> {
+    let client = reqwest::Client::new();
+
+    let response = client
+        .get(NOTIFICATIONS_URL)
+        .header("Accept", "application/json")
+        .timeout(std::time::Duration::from_secs(5))
+        .send()
+        .await
+        .map_err(|e| format!("Could not reach the notifications worker: {}", e))?;
+
+    if !response.status().is_success() {
+        return Err(format!("Notifications worker returned {}", response.status()));
+    }
+
+    response
+        .text()
+        .await
+        .map_err(|e| format!("Could not read the notifications response: {}", e))
+}
+
 #[tauri::command]
 fn has_slides_scope() -> bool {
     SLIDES_TOKENS.read().is_some()
@@ -1852,6 +1883,7 @@ pub fn run() {
             get_auth_status,
             get_firestore_project_id,
             get_firebase_api_key,
+            fetch_notifications,
             init_analytics,
             send_event,
             set_analytics_user_id,

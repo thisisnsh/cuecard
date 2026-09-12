@@ -288,6 +288,29 @@ export async function saveTextFile(defaultName, text) {
 }
 
 // =============================================================================
+// NOTIFICATIONS
+// =============================================================================
+
+/**
+ * The notifications worker, fetched through the backend rather than the window.
+ *
+ * The worker serves the phone apps, which use native HTTP and are not subject
+ * to CORS. A web view is, and the worker sends no `Access-Control-Allow-Origin`
+ * — so a fetch from here is blocked before it can be read. Going through Rust
+ * sidesteps the browser's rules instead of asking the mobile worker to change.
+ *
+ * Returns the raw JSON body, or null if it could not be had.
+ */
+export async function fetchNotificationsPayload() {
+  try {
+    return (await call('fetch_notifications')) || null;
+  } catch (error) {
+    console.debug('Notifications fetch failed:', error);
+    return null;
+  }
+}
+
+// =============================================================================
 // UPDATES
 // =============================================================================
 

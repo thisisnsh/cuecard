@@ -22,12 +22,10 @@ const READING_LINE = 0.45;
 /** How long the controls stay up after the pointer stops moving, while playing. */
 const CONTROLS_LINGER = 2600;
 
-export function createPrompter(root, { onClose, onToggleInvisible, isInvisible, onPlayStateChange } = {}) {
+export function createPrompter(root, { onClose, onPlayStateChange } = {}) {
   root.innerHTML = `
     <div class="prompter-bar" data-tauri-drag-region>
-      <div class="prompter-bar-side">
-        <button class="glass-btn" data-role="close" aria-label="Close prompter" title="Close (Esc)">${icon('xmark', 17)}</button>
-      </div>
+      <div class="prompter-bar-side"></div>
       <div class="prompter-heading" data-tauri-drag-region>
         <span class="prompter-title" data-tauri-drag-region></span>
         <span class="prompter-subtitle" data-tauri-drag-region></span>
@@ -42,12 +40,12 @@ export function createPrompter(root, { onClose, onToggleInvisible, isInvisible, 
     <div class="prompter-fade is-bottom"></div>
 
     <div class="prompter-controls">
-      <button class="glass-btn is-round" data-role="restart" aria-label="Restart" title="Restart (R)">${icon('restart', 20)}</button>
+      <button class="glass-btn is-round" data-role="back" aria-label="Back" title="Back (Esc)">${icon('chevronLeft', 21)}</button>
       <button class="play-btn is-large" data-role="play" aria-label="Play" title="Play (Space)">
         <span class="play-icon">${icon('play', 26)}</span>
         <span class="pause-icon" hidden>${icon('pause', 26)}</span>
       </button>
-      <button class="glass-btn is-round" data-role="invisible" aria-label="Invisibility"></button>
+      <button class="glass-btn is-round" data-role="restart" aria-label="Restart" title="Restart (R)">${icon('restart', 20)}</button>
     </div>`;
 
   const el = {
@@ -62,7 +60,7 @@ export function createPrompter(root, { onClose, onToggleInvisible, isInvisible, 
     playIcon: root.querySelector('.play-icon'),
     pauseIcon: root.querySelector('.pause-icon'),
     restart: root.querySelector('[data-role="restart"]'),
-    invisible: root.querySelector('[data-role="invisible"]'),
+    back: root.querySelector('[data-role="back"]'),
   };
 
   const run = {
@@ -314,15 +312,6 @@ export function createPrompter(root, { onClose, onToggleInvisible, isInvisible, 
     el.pauseIcon.hidden = !running;
     el.play.setAttribute('aria-label', running ? 'Pause' : 'Play');
     el.play.title = running ? 'Pause (Space)' : 'Play (Space)';
-    updateInvisibleButton();
-  }
-
-  function updateInvisibleButton() {
-    const on = isInvisible?.() ?? true;
-    el.invisible.classList.toggle('is-on', on);
-    el.invisible.innerHTML = icon(on ? 'eyeOff' : 'eye', 20);
-    el.invisible.setAttribute('aria-pressed', String(on));
-    el.invisible.title = on ? 'Invisible to screen sharing' : 'Visible to screen sharing';
   }
 
   // =============================================================================
@@ -368,11 +357,7 @@ export function createPrompter(root, { onClose, onToggleInvisible, isInvisible, 
   root.addEventListener('mousemove', showControls);
   el.play.addEventListener('click', togglePlay);
   el.restart.addEventListener('click', restart);
-  el.invisible.addEventListener('click', () => {
-    onToggleInvisible?.();
-    updateInvisibleButton();
-  });
-  root.querySelector('[data-role="close"]').addEventListener('click', () => close());
+  el.back.addEventListener('click', () => close());
 
   function onKeyDown(event) {
     if (!run.open) return;
@@ -485,6 +470,5 @@ export function createPrompter(root, { onClose, onToggleInvisible, isInvisible, 
 
     /** The script's size or colour changed under it. */
     restyle: render,
-    refreshInvisible: updateInvisibleButton,
   };
 }
