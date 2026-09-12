@@ -205,8 +205,9 @@ async function saveScriptAsNew() {
 }
 
 /**
- * Before leaving a script with changes in it, ask — a window makes switching
+ * Before dropping a script with changes in it, ask — a window makes switching
  * scripts easy enough that losing one to a stray click would be too easy too.
+ * Closing the window is not one of these: the draft is kept on the way out.
  * Returns false if the reader decided to stay.
  */
 async function confirmLeavingScript() {
@@ -234,7 +235,8 @@ async function confirmLeavingScript() {
   return true;
 }
 
-/** Leaving is always worth asking about, and an unsaved draft is worth asking twice. */
+/** Leaving is worth asking about. What you were writing is not: it is waiting
+ *  here, exactly as you left it, the next time the window opens. */
 async function closeApp() {
   const leaving = await ui.confirmAction({
     title: 'Exit CueCard?',
@@ -244,7 +246,7 @@ async function closeApp() {
     destructive: true,
   });
   if (!leaving) return;
-  if (!(await confirmLeavingScript())) return;
+  await notes.flushDraft();
   await T.closeWindow();
 }
 

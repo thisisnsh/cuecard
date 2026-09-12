@@ -41,6 +41,12 @@
   --toolbar-height: 44px;
   --sidebar-width: 232px;
 
+  /* Everything at the window's edges lines up on this: the script, the pill and
+     the play button by their own edge, the toolbar icons by the edge of their
+     glyph rather than of the box the hover fills. */
+  --gutter: 20px;
+  --icon-inset: 5px;
+
   /* Glass, as Shape.glassed() paints it on the phone */
   --glass-bg: rgba(var(--text-primary-rgb), 0.1);
   --glass-sheen: linear-gradient(to bottom right,
@@ -270,6 +276,10 @@ a {
   width: 46px;
   height: 46px;
   border-radius: 50%;
+}
+
+.glass-btn .icon-chevronLeft {
+  transform: translateX(-1.5px);
 }
 
 .glass-btn:active {
@@ -609,7 +619,7 @@ a {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 0 8px;
+  padding: 0 calc(var(--gutter) - var(--icon-inset));
   cursor: grab;
 }
 
@@ -702,7 +712,7 @@ a {
   position: relative;
   flex: 1;
   min-height: 0;
-  --editor-pad-x: 26px;
+  --editor-pad-x: var(--gutter);
   --editor-pad-top: 10px;
   --editor-pad-bottom: 96px;
   font-size: 16px;
@@ -805,7 +815,7 @@ a {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 2px 26px 8px;
+  padding: 2px var(--gutter) 8px;
   flex: none;
   z-index: 3;
 }
@@ -836,7 +846,7 @@ a {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 0 26px 96px;
+  padding: 0 var(--gutter) 96px;
   font-size: 16px;
   line-height: 1.55;
   font-weight: 500;
@@ -1000,8 +1010,8 @@ a {
 
 .home-controls {
   position: absolute;
-  left: 20px;
-  right: 20px;
+  left: var(--gutter);
+  right: var(--gutter);
   bottom: 18px;
   z-index: 6;
   display: flex;

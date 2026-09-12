@@ -172,6 +172,12 @@ export function setDraft(text, { immediate = false } = {}) {
   changed();
 }
 
+/** Write the draft out now, without waiting for the pause in the typing. */
+export async function flushDraft() {
+  clearTimeout(saveTimer);
+  await setStored(KEY_DRAFT, state.draft);
+}
+
 async function persistSaved() {
   await setStored(KEY_SAVED, state.saved);
   await setStored(KEY_CURRENT, state.currentId);

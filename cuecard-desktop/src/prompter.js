@@ -3,8 +3,8 @@
  *
  * The script scrolls at a stated number of rendered lines a minute, counted
  * from the clock rather than the frame rate, and the line being read is held
- * just above the middle of the window. Dragging the script moves the clock with
- * it, so letting go never leaves the two out of step.
+ * just above the middle of the window. Dragging the script moves where it
+ * scrolls from and nothing else: the timer is the talk's, not the script's.
  */
 
 import { formatTime } from './parser.js';
@@ -72,8 +72,8 @@ export function createPrompter(root, { onClose, onPlayStateChange } = {}) {
     elapsed: 0,
     elapsedAtStart: 0,
     startedAt: 0,
-    /** The clock reading the current script started from. Slides move this on
-     *  instead of the talk timer, so a deck's timer runs across every slide. */
+    /** The clock reading the script's first line sits at. Scrolling, nudging
+     *  and a new slide move this; the talk's timer never budges for them. */
     scrollOrigin: 0,
     /** Whether the run has begun since the last restart. The delay runs on the
      *  first play only; resuming from a pause starts straight away. */
@@ -338,19 +338,12 @@ export function createPrompter(root, { onClose, onPlayStateChange } = {}) {
     // Ours, not the reader's.
     if (Math.abs(el.scroll.scrollTop - run.programmaticTop) < 1) return;
 
+    // Reading carries on from the line left on the reading line: the script's
+    // own position moves, and the talk's clock keeps its own count.
     const line = lineForOffset(el.scroll.scrollTop);
     const target = settings.linesPerMinute > 0 ? (line * 60) / settings.linesPerMinute : 0;
-
-    if (run.source === 'slides') {
-      // The talk's clock belongs to the talk; move where this slide started from.
-      run.scrollOrigin = run.elapsed - target;
-    } else {
-      run.elapsed = target;
-    }
-    run.elapsedAtStart = run.elapsed;
-    run.startedAt = performance.now();
+    run.scrollOrigin = run.elapsed - target;
     run.programmaticTop = el.scroll.scrollTop;
-    updateTimer();
     showControls();
   });
 
@@ -373,14 +366,10 @@ export function createPrompter(root, { onClose, onPlayStateChange } = {}) {
     showControls();
   }
 
-  /** Move the script by whole lines, and the clock with it. */
+  /** Move the script by whole lines, leaving the clock where it is. */
   function nudge(lines) {
     const seconds = settings.linesPerMinute > 0 ? (lines * 60) / settings.linesPerMinute : 0;
-    if (run.source === 'slides') run.scrollOrigin = Math.max(run.scrollOrigin - seconds, run.elapsed - 1e6);
-    else run.elapsed = Math.max(run.elapsed + seconds, 0);
-    run.elapsedAtStart = run.elapsed;
-    run.startedAt = performance.now();
-    updateTimer();
+    run.scrollOrigin = Math.min(run.scrollOrigin - seconds, run.elapsed);
   }
 
   const onResize = () => {
