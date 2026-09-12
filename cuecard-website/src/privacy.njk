@@ -14,7 +14,7 @@ crumbs:
 ---
 <header class="policy-header">
     <h1 class="policy-title">Privacy Policy</h1>
-    <p class="policy-date">Last updated: September 11, 2026</p>
+    <p class="policy-date">Last updated: September 12, 2026</p>
 </header>
 
 <div class="policy-content">
@@ -25,32 +25,36 @@ crumbs:
     <p>There is no sign-up required to use the app, on mobile or on desktop.</p>
 
     <h2>Information We Collect</h2>
-    <p>We collect minimal information necessary to provide our service:</p>
+    <p>We collect limited technical information to understand and improve CueCard:</p>
     <ul>
-        <li><strong>Analytics Data:</strong> We use Firebase Analytics to collect anonymous usage data. This includes:
+        <li><strong>Product Analytics:</strong> We use Google Analytics and Firebase Analytics to collect
+            pseudonymous usage data. This includes:
             <ul>
                 <li>App opens and session duration</li>
                 <li>Feature usage (e.g., timer, settings changes)</li>
                 <li>Navigation patterns within the app</li>
                 <li>Platform information (iOS, iPadOS, Android, Windows, macOS)</li>
-            </ul>            
+                <li>Generated installation or client identifiers</li>
+            </ul>
+        </li>
+        <li><strong>Crash Diagnostics:</strong> The mobile apps use Firebase Crashlytics to collect crash reports,
+            device and app state, and diagnostic identifiers that help us find and fix failures.
         </li>
     </ul>
     <p>
-    This data helps us understand how CueCard is used and prioritize improvements. It is reported
-    against an identifier generated on your device.
+    This data helps us understand how CueCard is used and prioritize improvements. Analytics events and crash
+    reports do not include your personal data or scripts.
     </p>
-    <p>That's it. We don't collect anything else.</p>
 
     <h2>Information We Don't Collect</h2>
     <p>We want to be crystal clear about what stays on your device:</p>
     <ul>
         <li><strong>Your Notes:</strong> All speaker notes you create or paste are stored locally on your
-            device. They never leave your computer.</li>
+            device. They never leave your computer to come on our servers.</li>
         <li><strong>Google Slides Tokens:</strong> Your authentication tokens are stored locally on your device.
-            We don't have access to them.</li>
-        <li><strong>Presentation Content:</strong> Any content synced from Google Slides remains on your device
-            and is never transmitted to our servers.</li>
+            They are sent to Google's authentication and Slides services only when you use that optional feature.</li>
+        <li><strong>Presentation Content:</strong> Notes read from Google Slides are displayed and stored locally
+            in the app.</li>
     </ul>
 
     <h2>Third-Party Services</h2>
@@ -60,9 +64,8 @@ crumbs:
             sync on the desktop app. When you use that feature, you're also subject to
             <a href="https://policies.google.com/privacy" target="_blank">Google's Privacy Policy</a>.
             We only request the minimum permissions necessary to provide the functionality you need.</li>
-        <li><strong>Firebase Analytics:</strong> We use Firebase Analytics (a Google service) to collect
-            anonymous usage statistics. This service helps us understand app usage patterns and improve
-            CueCard. Firebase Analytics data is processed according to
+        <li><strong>Google Analytics, Firebase Analytics &amp; Crashlytics:</strong> We use these Google services
+            for pseudonymous product analytics and mobile crash diagnostics. This information is processed according to
             <a href="https://firebase.google.com/support/privacy" target="_blank">Firebase's Privacy Policy</a>.</li>
     </ul>
 
@@ -73,17 +76,14 @@ crumbs:
         <li><strong>Limited Scope Access:</strong> We only request the <code>presentations.readonly</code> scope
             to read the notes from your Google Slides presentations. This is the minimum permission needed to
             provide the sync functionality.</li>
-        <li><strong>Local Token Storage:</strong> Your Google authentication token is never persisted or
-            transferred to any server. It remains stored locally on your system and never leaves your device.</li>
-        <li><strong>Authentication Data:</strong> Your email address gets stored in Google Firebase as part of the
-            Google Slides authentication process. If you wish to have this information removed, please email us at <a
-                href="mailto:support@cuecard.dev">support@cuecard.dev</a>.</li>
+        <li><strong>Local Token Storage:</strong> Your Google authentication token is stored locally and sent to
+            Google only when needed for authentication or Slides access.</li>
     </ul>
 
     <h2>Data Retention</h2>
-    <p>With no account, there is no account information to retain. Anonymous analytics data is retained according to 
-        Firebase Analytics' default retention period. If wish to request and have any information deleted,
-        please contact us at <ahref="mailto:support@cuecard.dev">support@cuecard.dev</a>.</p>
+    <p>With no CueCard account, there is no account information to retain. Analytics and diagnostic data is retained
+        according to our Google Analytics and Firebase settings. If you wish to request deletion of information,
+        please contact us at <a href="mailto:support@cuecard.dev">support@cuecard.dev</a>.</p>
 
     <h2>Your Rights</h2>
     <p>You have the right to:</p>
@@ -96,8 +96,7 @@ crumbs:
 
     <h2>Security</h2>
     <p>We take security seriously. Your local data is protected by your operating system's security features.
-        The information stored in our cloud infrastructure is protected using industry-standard encryption and
-        security practices.</p>
+        Analytics and diagnostics are handled by Google under its published security and privacy practices.</p>
 
     <h2>Contact Us</h2>
     <p>If you have any questions about this Privacy Policy, please contact us at <a

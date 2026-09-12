@@ -283,7 +283,7 @@
       },
       {
         "question": "Is it secure for confidential case information?",
-        "answer": "CueCard runs entirely locally on your computer. Your notes never leave your device or get uploaded to any server."
+        "answer": "CueCard stores your notes locally on your computer, where they stay on your device."
       },
       {
         "question": "Can I use it during depositions?",
