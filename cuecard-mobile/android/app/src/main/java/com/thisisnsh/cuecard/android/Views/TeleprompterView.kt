@@ -716,8 +716,10 @@ private fun TeleprompterOverlay(
     timerColor: Color,
     isDark: Boolean
 ) {
-    var contentHeightPx by remember { mutableFloatStateOf(0f) }
+    val density = LocalDensity.current
     var viewportHeightPx by remember { mutableFloatStateOf(0f) }
+    /** How far the script scrolls: the last line's own position in the text. */
+    var scrollRangePx by remember { mutableFloatStateOf(0f) }
     var scrollPx by remember { mutableFloatStateOf(0f) }
 
     LaunchedEffect(Unit) {
@@ -729,14 +731,13 @@ private fun TeleprompterOverlay(
 
                 // A resize keeps the reader at the same fraction of the script,
                 // because the fraction is all the overlay ever tracks.
-                val maxScroll = (contentHeightPx - viewportHeightPx).coerceAtLeast(0f)
                 val duration = scriptDuration()
                 val fraction = if (duration > 0) {
                     (scriptTime() / duration).coerceIn(0.0, 1.0).toFloat()
                 } else {
                     0f
                 }
-                val target = fraction * maxScroll
+                val target = fraction * scrollRangePx
 
                 val distance = target - scrollPx
                 if (abs(distance) > 0.05f) {
@@ -788,15 +789,32 @@ private fun TeleprompterOverlay(
                 .onSizeChanged { viewportHeightPx = it.height.toFloat() }
                 .scriptEdgeFade(isDark = isDark, top = 40.dp, bottom = 40.dp)
         ) {
+            // The reading line sits where it does on the full screen, and the
+            // script is inset from the top by exactly that — so the first line
+            // starts on the reading line rather than at the top of the window.
+            val topPadding = with(density) { (viewportHeightPx * READING_LINE_FRACTION).toDp() }
+            val bottomPadding =
+                with(density) { (viewportHeightPx * (1 - READING_LINE_FRACTION)).toDp() }
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .wrapContentHeight(align = Alignment.Top, unbounded = true)
                     .graphicsLayer { translationY = -scrollPx }
-                    .onSizeChanged { contentHeightPx = it.height.toFloat() }
-                    .padding(start = 12.dp, top = 40.dp, end = 12.dp, bottom = 40.dp)
+                    .padding(start = 12.dp, end = 12.dp)
             ) {
-                Text(text = script, modifier = Modifier.fillMaxWidth())
+                Spacer(modifier = Modifier.height(topPadding))
+
+                Text(
+                    text = script,
+                    modifier = Modifier.fillMaxWidth(),
+                    onTextLayout = { layout ->
+                        val lines = layout.lineCount
+                        scrollRangePx = if (lines > 1) layout.getLineTop(lines - 1) else 0f
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(bottomPadding))
             }
         }
     }

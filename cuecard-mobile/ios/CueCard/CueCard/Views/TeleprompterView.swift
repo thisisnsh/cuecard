@@ -331,11 +331,8 @@ struct TeleprompterView: View {
     /// the overlay expands back into the app.
     private func syncFromPiP() {
         elapsedTime = pipManager.elapsedTime
+        scriptLag = pipManager.elapsedTime - pipManager.scriptTime
         isPlaying = pipManager.isPlaying
-        // The overlay scrolls the script off the timer, so the app takes the
-        // script back the same way rather than reapplying a lag the reader never
-        // saw in the overlay.
-        scriptLag = 0
         scriptSnapToken += 1
     }
 
@@ -343,6 +340,7 @@ struct TeleprompterView: View {
         pipManager.scriptDuration = scriptDuration
         pipManager.updateState(
             elapsedTime: elapsedTime,
+            scriptTime: scriptTime,
             isPlaying: isPlaying,
             countdownValue: countdownValue,
             isCountingDown: isCountingDown
@@ -385,14 +383,14 @@ struct TeleprompterView: View {
         // Start countdown
         countdownValue = settings.countdownSeconds
         isCountingDown = true
-        pipManager.updateState(elapsedTime: elapsedTime, isPlaying: isPlaying, countdownValue: countdownValue, isCountingDown: true)
+        pipManager.updateState(elapsedTime: elapsedTime, scriptTime: scriptTime, isPlaying: isPlaying, countdownValue: countdownValue, isCountingDown: true)
 
         countdownTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
             Task { @MainActor in
                 withAnimation(.snappy) {
                     countdownValue -= 1
                 }
-                pipManager.updateState(elapsedTime: elapsedTime, isPlaying: isPlaying, countdownValue: countdownValue, isCountingDown: countdownValue > 0)
+                pipManager.updateState(elapsedTime: elapsedTime, scriptTime: scriptTime, isPlaying: isPlaying, countdownValue: countdownValue, isCountingDown: countdownValue > 0)
 
                 if countdownValue <= 0 {
                     stopCountdownTimer()
@@ -412,7 +410,7 @@ struct TeleprompterView: View {
         isPlaying = true
         hasStarted = true
         startTimer()
-        pipManager.updateState(elapsedTime: elapsedTime, isPlaying: true)
+        pipManager.updateState(elapsedTime: elapsedTime, scriptTime: scriptTime, isPlaying: true)
         Analytics.logEvent("teleprompter_play", parameters: nil)
         resetControlsTimer()
     }
@@ -422,12 +420,12 @@ struct TeleprompterView: View {
         if isCountingDown {
             stopCountdownTimer()
             isCountingDown = false
-            pipManager.updateState(elapsedTime: elapsedTime, isPlaying: false, countdownValue: 0, isCountingDown: false)
+            pipManager.updateState(elapsedTime: elapsedTime, scriptTime: scriptTime, isPlaying: false, countdownValue: 0, isCountingDown: false)
             return
         }
         isPlaying = false
         stopTimer()
-        pipManager.updateState(elapsedTime: elapsedTime, isPlaying: false)
+        pipManager.updateState(elapsedTime: elapsedTime, scriptTime: scriptTime, isPlaying: false)
         Analytics.logEvent("teleprompter_pause", parameters: nil)
     }
 
@@ -440,7 +438,7 @@ struct TeleprompterView: View {
         scriptLag = 0
         isPlaying = false
         hasStarted = false
-        pipManager.updateState(elapsedTime: 0, isPlaying: false)
+        pipManager.updateState(elapsedTime: 0, scriptTime: 0, isPlaying: false)
         Analytics.logEvent("teleprompter_restart", parameters: nil)
     }
 
@@ -449,6 +447,13 @@ struct TeleprompterView: View {
     private func handOff(toLine line: Double) {
         guard settings.linesPerMinute > 0 else { return }
         scriptLag = elapsedTime - line * 60.0 / Double(settings.linesPerMinute)
+        pipManager.updateState(
+            elapsedTime: elapsedTime,
+            scriptTime: scriptTime,
+            isPlaying: isPlaying,
+            countdownValue: countdownValue,
+            isCountingDown: isCountingDown
+        )
     }
 
     private func stopAndDismiss() {
@@ -478,7 +483,7 @@ struct TeleprompterView: View {
             Task { @MainActor in
                 guard let startDate = timerStartDate else { return }
                 elapsedTime = elapsedTimeAtTimerStart + Date().timeIntervalSince(startDate)
-                pipManager.updateState(elapsedTime: elapsedTime, isPlaying: isPlaying)
+                pipManager.updateState(elapsedTime: elapsedTime, scriptTime: scriptTime, isPlaying: isPlaying)
             }
         }
     }

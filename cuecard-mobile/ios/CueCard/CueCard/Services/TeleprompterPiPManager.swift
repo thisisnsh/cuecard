@@ -19,6 +19,11 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
     private(set) var settings: TeleprompterSettings = .default
     private(set) var timerDuration: Int = 0
     private(set) var elapsedTime: Double = 0
+    /// Where the script has got to, in seconds of reading. It runs with
+    /// `elapsedTime` and parts from it when the reader drags the script, which
+    /// moves the script without touching the time — so the overlay scrolls by
+    /// this and reads the clock off `elapsedTime`.
+    private(set) var scriptTime: Double = 0
     private(set) var isDarkMode: Bool = true
     /// How long the script runs for, set by the teleprompter from the lines it
     /// rendered and the speed. The overlay wraps the same script into more lines
@@ -46,6 +51,7 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
     private var playbackTimer: Timer?
     private var playbackTimerStartDate: Date?
     private var elapsedTimeAtPlaybackStart: Double = 0
+    private var scriptTimeAtPlaybackStart: Double = 0
     private var needsContentViewUpdate = false
     private var lastRenderTimestamp: CFTimeInterval = 0
     private var lastSourceRenderTimestamp: CFTimeInterval = 0
@@ -74,14 +80,16 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
         self.settings = settings
         self.timerDuration = timerDuration
         self.elapsedTime = 0
+        self.scriptTime = 0
         self.isDarkMode = colorScheme == .dark
 
         setupPiP()
     }
 
     /// Update current state from TeleprompterView
-    func updateState(elapsedTime: Double, isPlaying: Bool, countdownValue: Int = 0, isCountingDown: Bool = false) {
+    func updateState(elapsedTime: Double, scriptTime: Double, isPlaying: Bool, countdownValue: Int = 0, isCountingDown: Bool = false) {
         self.elapsedTime = elapsedTime
+        self.scriptTime = scriptTime
         self.isPlaying = isPlaying
         self.countdownValue = countdownValue
         self.isCountingDown = isCountingDown
@@ -95,6 +103,7 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
             if playbackTimer != nil {
                 playbackTimerStartDate = Date()
                 elapsedTimeAtPlaybackStart = elapsedTime
+                scriptTimeAtPlaybackStart = scriptTime
             } else if isRenderingToPiP {
                 startPlaybackTimer()
             }
@@ -149,6 +158,7 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
     func restartFromPiP() {
         stopPlaybackTimer()
         elapsedTime = 0
+        scriptTime = 0
         isPlaying = false
         onRestartFromPiP?()
         updateContentView()
@@ -172,6 +182,7 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
         stopPlaybackTimer()
         playbackTimerStartDate = Date()
         elapsedTimeAtPlaybackStart = elapsedTime
+        scriptTimeAtPlaybackStart = scriptTime
         let interval = 1.0 / 30.0
         let timer = Timer(timeInterval: interval, target: self, selector: #selector(handlePlaybackTimerTick), userInfo: nil, repeats: true)
         RunLoop.main.add(timer, forMode: .common)
@@ -400,7 +411,9 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
 
     private func render() {
         if isPlaying, let startDate = playbackTimerStartDate {
-            elapsedTime = elapsedTimeAtPlaybackStart + Date().timeIntervalSince(startDate)
+            let playing = Date().timeIntervalSince(startDate)
+            elapsedTime = elapsedTimeAtPlaybackStart + playing
+            scriptTime = scriptTimeAtPlaybackStart + playing
         }
         needsContentViewUpdate = false
         lastRenderTimestamp = CACurrentMediaTime()
@@ -429,7 +442,7 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
                 timerText: timerText,
                 timerDuration: timerDuration,
                 remainingTime: remainingTime,
-                elapsedTime: elapsedTime,
+                scriptTime: scriptTime,
                 scriptDuration: scriptDuration,
                 isCountingDown: isCountingDown
             )
@@ -442,7 +455,7 @@ class TeleprompterPiPManager: NSObject, ObservableObject {
             timerText: timerText,
             timerDuration: timerDuration,
             remainingTime: remainingTime,
-            elapsedTime: elapsedTime,
+            scriptTime: scriptTime,
             scriptDuration: scriptDuration,
             isCountingDown: isCountingDown
         )
@@ -547,13 +560,21 @@ private class TeleprompterPiPContentView: UIView {
     private var lastTimerText: String?
     private var lastTimerColor: UIColor?
 
+    /// Where on screen the line being read sits, as a fraction of the script's
+    /// height — the same place the full screen reads from. It doubles as the
+    /// script's top inset, so the first line starts on the reading line and a
+    /// line's scroll offset is its own position in the text.
+    private static let readingLineFraction: CGFloat = 0.45
+
     /// How far the script scrolls over its whole run, and the text view size it
     /// was measured at. Measured from the laid-out text rather than read back
     /// from the text view every frame — see `refreshScrollRange()`.
     private var scrollRange: CGFloat = 0
     private var scrollRangeSize: CGSize = .zero
-    private var textHeight: CGFloat = 0
-    private var textHeightWidth: CGFloat = -1
+    /// The last line's own position in the laid-out text, which is as far as the
+    /// script scrolls: at that offset the last line is on the reading line.
+    private var lastLineTop: CGFloat = 0
+    private var lastLineTopWidth: CGFloat = -1
     private var needsScrollRange = true
     /// How far into the script the last update put the reader. Kept so a resize
     /// can put the script back at the same place in the text at the new size.
@@ -617,7 +638,6 @@ private class TeleprompterPiPContentView: UIView {
         textView.isScrollEnabled = true
         textView.showsVerticalScrollIndicator = false
         textView.backgroundColor = .clear
-        textView.textContainerInset = UIEdgeInsets(top: 40, left: 12, bottom: 40, right: 12)
         textView.textContainer.lineFragmentPadding = 0
         textView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(textView)
@@ -683,20 +703,46 @@ private class TeleprompterPiPContentView: UIView {
         needsScrollRange = false
         scrollRangeSize = size
 
-        if textHeightWidth != size.width {
-            textHeightWidth = size.width
-            // On TextKit 1 this lays the whole script out to answer, which is the
-            // point: the height comes back exact and stays put, instead of being
-            // an estimate that gets revised as the script scrolls.
-            textHeight = textView.sizeThatFits(
-                CGSize(width: size.width, height: .greatestFiniteMagnitude)
-            ).height
+        // The script is inset from the top by exactly where the reading line is,
+        // so the first line starts on it and every line's scroll offset is its own
+        // position in the text.
+        textView.textContainerInset = UIEdgeInsets(
+            top: size.height * Self.readingLineFraction,
+            left: 12,
+            bottom: size.height * (1 - Self.readingLineFraction),
+            right: 12
+        )
+
+        if lastLineTopWidth != size.width {
+            lastLineTopWidth = size.width
+            lastLineTop = measureLastLineTop()
         }
 
-        scrollRange = max(0, textHeight - size.height)
+        scrollRange = max(0, lastLineTop)
         // A resize keeps the reader on the same part of the script rather than
         // easing across to it from where the old size had them.
         settleScroll(at: lastScrollFraction * scrollRange)
+    }
+
+    /// Where the last line sits in the laid-out text. On TextKit 1 the whole
+    /// script is laid out to answer, which is the point: the position comes back
+    /// exact and stays put, instead of being an estimate that gets revised as the
+    /// script scrolls.
+    private func measureLastLineTop() -> CGFloat {
+        let layoutManager = textView.layoutManager
+        let container = textView.textContainer
+        layoutManager.ensureLayout(for: container)
+
+        let glyphRange = layoutManager.glyphRange(for: container)
+        guard glyphRange.length > 0 else { return 0 }
+
+        // Line fragments are measured inside the text container, which is already
+        // the offset that line should be scrolled to.
+        let lastLine = layoutManager.lineFragmentRect(
+            forGlyphAt: NSMaxRange(glyphRange) - 1,
+            effectiveRange: nil
+        )
+        return lastLine.origin.y
     }
 
     private func updateColors() {
@@ -734,7 +780,7 @@ private class TeleprompterPiPContentView: UIView {
         timerText: String,
         timerDuration: Int,
         remainingTime: Int,
-        elapsedTime: Double,
+        scriptTime: Double,
         scriptDuration: Double,
         isCountingDown: Bool = false
     ) {
@@ -746,14 +792,14 @@ private class TeleprompterPiPContentView: UIView {
             lastContentId = text
             lastTimerText = nil
             lastTimerColor = nil
-            textHeightWidth = -1
+            lastLineTopWidth = -1
             needsScrollRange = true
             needsSettle = true
         }
 
         // Continuous time-based scroll
         refreshScrollRange()
-        updateContinuousScroll(elapsedTime: elapsedTime, scriptDuration: scriptDuration)
+        updateContinuousScroll(scriptTime: scriptTime, scriptDuration: scriptDuration)
 
         if lastTimerText != timerText {
             lastTimerText = timerText
@@ -777,10 +823,10 @@ private class TeleprompterPiPContentView: UIView {
         }
     }
 
-    private func updateContinuousScroll(elapsedTime: Double, scriptDuration: Double) {
+    private func updateContinuousScroll(scriptTime: Double, scriptDuration: Double) {
         guard scriptDuration > 0 else { return }
 
-        lastScrollFraction = CGFloat(min(max(elapsedTime / scriptDuration, 0), 1))
+        lastScrollFraction = CGFloat(min(max(scriptTime / scriptDuration, 0), 1))
         let targetY = lastScrollFraction * scrollRange
 
         if needsSettle || !isLive {
