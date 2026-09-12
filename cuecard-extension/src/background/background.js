@@ -42,9 +42,12 @@ function updateBadge() {
 
   const config = badgeConfig[connectionStatus] || badgeConfig.unknown;
 
+  // Firefox MV2 exposes browserAction instead of action
+  const actionAPI = browserAPI.action || browserAPI.browserAction;
+
   try {
-    browserAPI.action.setBadgeText({ text: config.text });
-    browserAPI.action.setBadgeBackgroundColor({ color: config.color });
+    actionAPI.setBadgeText({ text: config.text });
+    actionAPI.setBadgeBackgroundColor({ color: config.color });
   } catch (error) {
     console.warn('[CueCard] Failed to update badge:', error);
   }
