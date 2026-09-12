@@ -806,14 +806,14 @@ function openMenu() {
       { label: 'Save as New…', icon: 'docPlus', shortcut: 'mod+shift+s', disabled: !notes.hasScript(), onSelect: saveScriptAsNew },
       { divider: true },
       { label: 'New Script', icon: 'compose', shortcut: 'mod+n', onSelect: newScript },
-      { label: 'Insert Cue', icon: 'cue', shortcut: 'mod+k', onSelect: () => editor.insertCue() },
+      { label: 'Insert Cue', icon: 'cue', onSelect: () => editor.insertCue() },
       { divider: true },
-      { label: 'Import from File…', icon: 'docDown', shortcut: 'mod+o', onSelect: importScript },
-      { label: 'Export to File…', icon: 'docUp', shortcut: 'mod+e', disabled: !notes.hasScript(), onSelect: exportScript }
+      { label: 'Import from File…', icon: 'docDown', onSelect: importScript },
+      { label: 'Export to File…', icon: 'docUp', disabled: !notes.hasScript(), onSelect: exportScript }
     );
   } else {
     items.push(
-      { label: 'Refresh Notes', icon: 'refresh', shortcut: 'mod+r', disabled: !app.slides.slide, onSelect: refreshSlides },
+      { label: 'Refresh Notes', icon: 'refresh', disabled: !app.slides.slide, onSelect: refreshSlides },
       { label: 'Get the Extension', icon: 'puzzle', onSelect: () => T.openUrl(LINKS.extension) }
     );
   }
@@ -875,7 +875,6 @@ function syncSettings() {
   $('slider-opacity').value = String(settings.opacity);
   $('opacity-value').textContent = `${settings.opacity}%`;
   $('toggle-invisible').checked = settings.invisible;
-  $('toggle-shortcuts').checked = settings.shortcutsEnabled;
 
   $('cue-swatches').querySelectorAll('.swatch').forEach((el) => {
     el.classList.toggle('is-selected', el.dataset.color === settings.cueColor);
@@ -917,21 +916,13 @@ function commitNumberField(input, key, range) {
 }
 
 const SHORTCUTS_LOCAL = [
-  ['Start the prompter', 'mod+enter'],
   ['Save', 'mod+s'],
   ['Save as new', 'mod+shift+s'],
   ['New script', 'mod+n'],
-  ['Insert a cue', 'mod+k'],
-  ['Import a file', 'mod+o'],
-  ['Export to a file', 'mod+e'],
   ['Settings', 'mod+comma'],
-  ['Show or hide the sidebar', 'mod+\\'],
-  ['Invisible to screen sharing', 'mod+shift+i'],
 ];
 
 const SHORTCUTS_PROMPTER = [
-  ['Play or pause', ['Space']],
-  ['Restart', ['R']],
   ['Move a line', ['↑', '↓']],
   ['Close the prompter', ['Esc']],
 ];
@@ -1096,7 +1087,6 @@ function wireSettingsSheet() {
   });
 
   $('toggle-invisible').addEventListener('change', (e) => setSetting('invisible', e.target.checked));
-  $('toggle-shortcuts').addEventListener('change', (e) => setSetting('shortcutsEnabled', e.target.checked));
 
   const opacity = $('slider-opacity');
   opacity.addEventListener('input', () => {
@@ -1139,10 +1129,7 @@ function wireKeyboard() {
     }
     if (sheetOpen) return;
 
-    if (on('mod+enter')) {
-      event.preventDefault();
-      startPrompter();
-    } else if (on('mod+shift+s')) {
+    if (on('mod+shift+s')) {
       event.preventDefault();
       void saveScriptAsNew();
     } else if (on('mod+s')) {
@@ -1151,24 +1138,6 @@ function wireKeyboard() {
     } else if (on('mod+n')) {
       event.preventDefault();
       void newScript();
-    } else if (on('mod+k')) {
-      event.preventDefault();
-      if (app.source === 'script') editor.insertCue();
-    } else if (on('mod+o')) {
-      event.preventDefault();
-      void importScript();
-    } else if (on('mod+e')) {
-      event.preventDefault();
-      void exportScript();
-    } else if (on('mod+r')) {
-      event.preventDefault();
-      if (app.source === 'slides') void refreshSlides();
-    } else if (on('mod+\\')) {
-      event.preventDefault();
-      toggleSidebar();
-    } else if (on('mod+shift+i')) {
-      event.preventDefault();
-      toggleInvisible();
     }
   });
 }
@@ -1218,16 +1187,6 @@ async function onGlobalShortcut(action) {
     case 'timer-reset':
       if (prompter.isOpen()) prompter.restart();
       break;
-    case 'height-down':
-    case 'height-up': {
-      const size = await win.innerSize();
-      const scale = await win.scaleFactor();
-      const width = Math.round(size.width / scale);
-      const height = Math.round(size.height / scale);
-      const next = action === 'height-up' ? height + 50 : Math.max(height - 50, 300);
-      await win.setSize({ width, height: next, type: 'Logical' });
-      break;
-    }
     case 'move-left':
     case 'move-right':
     case 'move-up':

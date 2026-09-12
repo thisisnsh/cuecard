@@ -4,7 +4,7 @@
  * changes, and read back by whoever needs it.
  */
 
-import { getStored, setStored, setInvisible, setGlobalShortcuts, trackSetting } from './tauri.js';
+import { getStored, setStored, setInvisible, trackSetting } from './tauri.js';
 import { CUE_COLORS, DEFAULT_CUE_COLOR } from './parser.js';
 
 /** Script sizes, as the phone app offers them. */
@@ -19,7 +19,6 @@ export const DEFAULTS = {
   opacity: 100,
   invisible: true,
   theme: 'system',
-  shortcutsEnabled: true,
   cueColor: DEFAULT_CUE_COLOR,
   timerMinutes: 1,
   timerSeconds: 0,
@@ -32,7 +31,6 @@ const KEYS = {
   opacity: 'settings_opacity',
   invisible: 'settings_ghost_mode',
   theme: 'settings_theme',
-  shortcutsEnabled: 'settings_shortcuts_enabled',
   cueColor: 'settings_cue_color',
   timerMinutes: 'settings_timer_minutes',
   timerSeconds: 'settings_timer_seconds',
@@ -64,8 +62,6 @@ export async function loadSettings() {
   settings.opacity = typeof stored.opacity === 'number' ? clamp(stored.opacity, [10, 100]) : DEFAULTS.opacity;
   settings.invisible = typeof stored.invisible === 'boolean' ? stored.invisible : DEFAULTS.invisible;
   settings.theme = ['system', 'light', 'dark'].includes(stored.theme) ? stored.theme : DEFAULTS.theme;
-  settings.shortcutsEnabled =
-    typeof stored.shortcutsEnabled === 'boolean' ? stored.shortcutsEnabled : DEFAULTS.shortcutsEnabled;
   settings.cueColor = CUE_COLORS.includes(stored.cueColor) ? stored.cueColor : DEFAULTS.cueColor;
   settings.countdownSeconds =
     typeof stored.countdownSeconds === 'number' ? clamp(stored.countdownSeconds, COUNTDOWN_RANGE) : DEFAULTS.countdownSeconds;
@@ -140,16 +136,13 @@ function apply(key) {
     case 'invisible':
       setInvisible(settings.invisible);
       break;
-    case 'shortcutsEnabled':
-      setGlobalShortcuts(settings.shortcutsEnabled);
-      break;
     default:
       break;
   }
 }
 
 function applyAll() {
-  ['theme', 'opacity', 'cueColor', 'invisible', 'shortcutsEnabled'].forEach(apply);
+  ['theme', 'opacity', 'cueColor', 'invisible'].forEach(apply);
 }
 
 function applyTheme() {

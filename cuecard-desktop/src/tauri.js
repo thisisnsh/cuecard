@@ -244,8 +244,6 @@ export const refreshSlideNotes = () => call('refresh_notes');
 
 export const setInvisible = (enabled) =>
   call('set_screenshot_protection', { enabled }).catch((e) => console.error('Invisibility:', e));
-export const setGlobalShortcuts = (enabled) =>
-  call('set_shortcuts_enabled', { enabled }).catch((e) => console.error('Shortcuts:', e));
 
 export function currentWindow() {
   return getCurrentWindow ? getCurrentWindow() : null;

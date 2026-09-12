@@ -366,12 +366,6 @@ export function createPrompter(root, { onClose, onPlayStateChange } = {}) {
     if (event.key === 'Escape') {
       event.preventDefault();
       close();
-    } else if (event.key === ' ') {
-      event.preventDefault();
-      togglePlay();
-    } else if (event.key.toLowerCase() === 'r') {
-      event.preventDefault();
-      restart();
     } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault();
       nudge(event.key === 'ArrowDown' ? 1 : -1);

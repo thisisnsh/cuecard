@@ -1700,37 +1700,6 @@ fn set_screenshot_protection(app: AppHandle, enabled: bool) -> Result<(), String
     Ok(())
 }
 
-#[tauri::command]
-fn set_shortcuts_enabled(app: AppHandle, enabled: bool) -> Result<(), String> {
-    let shortcuts = [
-        // General controls: Control+Option (Mac) / Control+Alt (Windows)
-        Shortcut::new(Some(Modifiers::ALT | Modifiers::CONTROL), Code::KeyC),
-        Shortcut::new(Some(Modifiers::ALT | Modifiers::CONTROL), Code::Minus),
-        Shortcut::new(Some(Modifiers::ALT | Modifiers::CONTROL), Code::Equal),
-        Shortcut::new(Some(Modifiers::ALT | Modifiers::CONTROL), Code::Space),
-        Shortcut::new(Some(Modifiers::ALT | Modifiers::CONTROL), Code::Digit0),
-        // Movement: Control+Option+Arrow (Mac) / Control+Alt+Arrow (Windows)
-        Shortcut::new(Some(Modifiers::ALT | Modifiers::CONTROL), Code::ArrowLeft),
-        Shortcut::new(Some(Modifiers::ALT | Modifiers::CONTROL), Code::ArrowRight),
-        Shortcut::new(Some(Modifiers::ALT | Modifiers::CONTROL), Code::ArrowUp),
-        Shortcut::new(Some(Modifiers::ALT | Modifiers::CONTROL), Code::ArrowDown),
-        // Height: Shift+Control+Option+Arrow (Mac) / Shift+Control+Alt+Arrow (Windows)
-        Shortcut::new(Some(Modifiers::SHIFT | Modifiers::ALT | Modifiers::CONTROL), Code::ArrowUp),
-        Shortcut::new(Some(Modifiers::SHIFT | Modifiers::ALT | Modifiers::CONTROL), Code::ArrowDown),
-    ];
-
-    if enabled {
-        app.global_shortcut()
-            .register_multiple(shortcuts)
-            .map_err(|e| format!("Failed to register shortcuts: {}", e))?;
-    } else {
-        for shortcut in shortcuts {
-            let _ = app.global_shortcut().unregister(shortcut);
-        }
-    }
-    Ok(())
-}
-
 // =============================================================================
 // MACOS SCREENSHOT PROTECTION
 // =============================================================================
@@ -1799,9 +1768,6 @@ pub fn run() {
                             id if id == Shortcut::new(Some(Modifiers::ALT | Modifiers::CONTROL), Code::ArrowRight).id() => "move-right",
                             id if id == Shortcut::new(Some(Modifiers::ALT | Modifiers::CONTROL), Code::ArrowUp).id() => "move-up",
                             id if id == Shortcut::new(Some(Modifiers::ALT | Modifiers::CONTROL), Code::ArrowDown).id() => "move-down",
-                            // Height: Shift+Control+Option+Arrow (Mac) / Shift+Control+Alt+Arrow (Windows)
-                            id if id == Shortcut::new(Some(Modifiers::SHIFT | Modifiers::ALT | Modifiers::CONTROL), Code::ArrowUp).id() => "height-down",
-                            id if id == Shortcut::new(Some(Modifiers::SHIFT | Modifiers::ALT | Modifiers::CONTROL), Code::ArrowDown).id() => "height-up",
                             _ => return,
                         };
                         let _ = app.emit("shortcut-triggered", action);
@@ -1847,7 +1813,6 @@ pub fn run() {
 
             // Register global shortcuts
             // All shortcuts use Control+Option (Mac) / Control+Alt (Windows)
-            // Height adjustments add Shift modifier
             let shortcuts = [
                 // General controls: Control+Option (Mac) / Control+Alt (Windows)
                 Shortcut::new(Some(Modifiers::ALT | Modifiers::CONTROL), Code::KeyC),       // Toggle visibility
@@ -1860,9 +1825,6 @@ pub fn run() {
                 Shortcut::new(Some(Modifiers::ALT | Modifiers::CONTROL), Code::ArrowRight), // Move right
                 Shortcut::new(Some(Modifiers::ALT | Modifiers::CONTROL), Code::ArrowUp),    // Move up
                 Shortcut::new(Some(Modifiers::ALT | Modifiers::CONTROL), Code::ArrowDown),  // Move down
-                // Height: Shift+Control+Option+Arrow (Mac) / Shift+Control+Alt+Arrow (Windows)
-                Shortcut::new(Some(Modifiers::SHIFT | Modifiers::ALT | Modifiers::CONTROL), Code::ArrowUp),   // Height down
-                Shortcut::new(Some(Modifiers::SHIFT | Modifiers::ALT | Modifiers::CONTROL), Code::ArrowDown), // Height up
             ];
 
             if let Err(e) = app.global_shortcut().register_multiple(shortcuts) {
@@ -1895,8 +1857,7 @@ pub fn run() {
             start_login,
             logout,
             refresh_notes,
-            set_screenshot_protection,
-            set_shortcuts_enabled
+            set_screenshot_protection
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
