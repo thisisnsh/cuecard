@@ -1,6 +1,6 @@
 /**
  * Everything that crosses into the Tauri backend: commands, events, the
- * persistent store, analytics, the Firestore profile and the window itself.
+ * persistent store, analytics, Google Slides and the window itself.
  * Nothing in here knows what the interface looks like.
  */
 
@@ -103,17 +103,9 @@ export function track(eventName, params) {
 
 export const trackScreen = (name) =>
   track('screen_view', { screen_name: name, page_title: `CueCard ${name}`, screen_class: 'CueCard' });
-export const trackClick = (button, screen) => track('button_click', { button_name: button, screen_name: screen });
+export const trackClick = (button, screen, params) =>
+  track('button_click', { button_name: button, screen_name: screen, ...params });
 export const trackSetting = (setting, value) => track('setting_change', { setting_name: setting, setting_value: String(value) });
-
-export async function setAnalyticsUser(email) {
-  if (!email) return;
-  call('set_analytics_user_id', { email }).catch(() => {});
-}
-
-export function clearAnalyticsUser() {
-  call('clear_analytics_user_id').catch(() => {});
-}
 
 export async function trackFirstLaunch() {
   try {
@@ -124,105 +116,14 @@ export async function trackFirstLaunch() {
 }
 
 // =============================================================================
-// AUTH AND ACCOUNT
-// =============================================================================
-
-export async function authStatus() {
-  try {
-    const authenticated = Boolean(await call('get_auth_status'));
-    if (!authenticated) return { authenticated: false, name: '', email: '' };
-    const info = (await call('get_user_info').catch(() => null)) || {};
-    return { authenticated: true, name: info.name || '', email: info.email || '' };
-  } catch (error) {
-    console.error('Error checking auth status:', error);
-    return { authenticated: false, name: '', email: '' };
-  }
-}
-
-/** Opens the browser for Google sign-in. The result arrives as an `auth-status` event. */
-export const startLogin = (scope = 'profile') => call('start_login', { scope });
-export const logout = () => call('logout');
-export const hasSlidesScope = async () => Boolean(await call('has_slides_scope').catch(() => false));
-
-async function idToken() {
-  try {
-    return await call('get_firebase_id_token');
-  } catch {
-    return null;
-  }
-}
-
-let firestoreBase = null;
-
-export async function initFirestore() {
-  try {
-    const projectId = await call('get_firestore_project_id');
-    if (projectId) firestoreBase = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents`;
-  } catch (error) {
-    console.error('Error getting Firestore project:', error);
-  }
-}
-
-/** Create the user's profile document, or refresh its name and email. */
-export async function saveProfile(email, name) {
-  if (!email || !firestoreBase) return;
-  const token = await idToken();
-  if (!token) return;
-
-  const url = `${firestoreBase}/Profiles/${encodeURIComponent(email)}`;
-  const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
-  try {
-    const existing = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
-    if (existing.ok) {
-      await fetch(`${url}?updateMask.fieldPaths=name&updateMask.fieldPaths=email`, {
-        method: 'PATCH',
-        headers,
-        body: JSON.stringify({ fields: { name: { stringValue: name }, email: { stringValue: email } } }),
-      });
-    } else if (existing.status === 404) {
-      await fetch(url, {
-        method: 'PATCH',
-        headers,
-        body: JSON.stringify({
-          fields: {
-            name: { stringValue: name },
-            email: { stringValue: email },
-            creationDate: { timestampValue: new Date().toISOString() },
-            usage: { mapValue: { fields: { paste: { integerValue: '0' }, slide: { integerValue: '0' } } } },
-          },
-        }),
-      });
-    }
-  } catch (error) {
-    console.error('Error saving profile:', error);
-  }
-}
-
-/** Delete the Firestore profile, then the Firebase user itself. Throws on failure. */
-export async function deleteAccount(email) {
-  const token = await idToken();
-  if (!token) throw new Error('You are not signed in.');
-
-  // The profile first: once the user is gone, so is the token that reaches it.
-  if (email && firestoreBase) {
-    await fetch(`${firestoreBase}/Profiles/${encodeURIComponent(email)}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` },
-    });
-  }
-
-  const apiKey = await call('get_firebase_api_key');
-  const response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${apiKey}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ idToken: token }),
-  });
-  if (!response.ok) throw new Error(`The account could not be deleted (${response.status}).`);
-}
-
-// =============================================================================
 // GOOGLE SLIDES
 // =============================================================================
+
+/** Opens the browser to ask for read access to the deck. The result arrives as
+ *  a `slides-authorized` event. */
+export const connectSlides = () => call('connect_slides');
+
+export const hasSlidesScope = async () => Boolean(await call('has_slides_scope').catch(() => false));
 
 export async function currentSlide() {
   try {

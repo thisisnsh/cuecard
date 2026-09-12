@@ -1,7 +1,7 @@
 //! CueCard - Speaker notes visible only to you
 //!
 //! This module contains the main backend logic for the CueCard application:
-//! - Firebase Authentication with Google provider
+//! - Google Slides sign-in, the one thing an account is ever asked for
 //! - Google Slides API integration
 //! - Local web server for browser extension communication
 //! - Tauri commands for frontend interaction
@@ -10,7 +10,7 @@
 use axum::{
     extract::Query,
     http::StatusCode,
-    response::{Html, Json, Redirect},
+    response::{Html, Json},
     routing::{get, post},
     Router,
 };
@@ -45,17 +45,13 @@ const FIREBASE_SIGNUP_URL: &str = "https://identitytoolkit.googleapis.com/v1/acc
 /// The worker the phone apps read their notices from. Shared with them on
 /// purpose: one list, filtered on each device.
 const NOTIFICATIONS_URL: &str = "https://cuecard-mobile.thisisnsh.workers.dev/v2/notifications";
-const FIREBASE_SIGNIN_IDP_URL: &str =
-    "https://identitytoolkit.googleapis.com/v1/accounts:signInWithIdp";
-const FIREBASE_TOKEN_URL: &str = "https://securetoken.googleapis.com/v1/token";
 
 // Analytics
 const GA_COLLECT_URL: &str = "https://www.google-analytics.com/mp/collect";
 const ANALYTICS_CLIENT_ID_KEY: &str = "analytics_client_id";
 const ANALYTICS_FIRST_OPEN_KEY: &str = "analytics_first_open_sent";
 
-// Scopes
-const SCOPE_PROFILE: &str = "openid profile email";
+// The only thing the app ever asks Google for: the deck being presented.
 const SCOPE_SLIDES: &str = "https://www.googleapis.com/auth/presentations.readonly";
 
 // =============================================================================
@@ -85,7 +81,6 @@ struct AnalyticsState {
     measurement_id: String,
     api_secret: String,
     client_id: String,
-    user_id: Option<String>,
     platform: Option<String>,
     operating_system: Option<String>,
     ip_override: Option<String>,
@@ -116,17 +111,6 @@ struct FirebaseConfigInner {
 struct AnalyticsConfigInner {
     measurement_id: String,
     api_secret: String,
-}
-
-/// Firebase authentication tokens
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct FirebaseTokens {
-    pub id_token: String,
-    pub refresh_token: String,
-    pub expires_at: i64,
-    pub email: Option<String>,
-    pub local_id: String,
-    pub display_name: Option<String>,
 }
 
 /// OAuth credentials fetched from Firestore
@@ -199,28 +183,6 @@ struct FirebaseSignUpResponse {
     local_id: String,
 }
 
-#[derive(Debug, Deserialize)]
-struct FirebaseSignInIdpResponse {
-    #[serde(rename = "idToken")]
-    id_token: String,
-    #[serde(rename = "refreshToken")]
-    refresh_token: String,
-    #[serde(rename = "expiresIn")]
-    expires_in: String,
-    #[serde(rename = "localId")]
-    local_id: String,
-    email: Option<String>,
-    #[serde(rename = "displayName")]
-    display_name: Option<String>,
-}
-
-#[derive(Debug, Deserialize)]
-struct FirebaseRefreshResponse {
-    id_token: String,
-    refresh_token: String,
-    expires_in: String,
-}
-
 // =============================================================================
 // GLOBAL STATE
 // =============================================================================
@@ -240,13 +202,9 @@ static ANALYTICS_CONFIG: Lazy<Arc<RwLock<Option<AnalyticsConfig>>>> =
     Lazy::new(|| Arc::new(RwLock::new(None)));
 static ANALYTICS_STATE: Lazy<Arc<RwLock<Option<AnalyticsState>>>> =
     Lazy::new(|| Arc::new(RwLock::new(None)));
-static FIREBASE_TOKENS: Lazy<Arc<RwLock<Option<FirebaseTokens>>>> =
-    Lazy::new(|| Arc::new(RwLock::new(None)));
 static OAUTH_CREDENTIALS: Lazy<Arc<RwLock<Option<OAuthCredentials>>>> =
     Lazy::new(|| Arc::new(RwLock::new(None)));
 static SLIDES_TOKENS: Lazy<Arc<RwLock<Option<SlidesTokens>>>> =
-    Lazy::new(|| Arc::new(RwLock::new(None)));
-static PENDING_OAUTH_SCOPE: Lazy<Arc<RwLock<Option<String>>>> =
     Lazy::new(|| Arc::new(RwLock::new(None)));
 
 // =============================================================================
@@ -304,10 +262,11 @@ fn load_firebase_config(app: &AppHandle) -> Result<FirebaseConfig, String> {
 }
 
 // =============================================================================
-// FIREBASE AUTHENTICATION
+// FIREBASE BOOTSTRAP
 // =============================================================================
 
-/// Sign in anonymously to Firebase (for bootstrap)
+/// Sign in anonymously to Firebase, which is only ever a way in to the OAuth
+/// credentials below. Nobody is asked for an account.
 async fn sign_in_anonymously() -> Result<String, String> {
     let config = FIREBASE_CONFIG
         .read()
@@ -394,142 +353,6 @@ async fn fetch_oauth_credentials(firebase_token: &str) -> Result<OAuthCredential
         client_id,
         client_secret,
     })
-}
-
-/// Exchange Google ID token for Firebase ID token
-async fn exchange_google_token_for_firebase(
-    google_id_token: &str,
-) -> Result<FirebaseTokens, String> {
-    let config = FIREBASE_CONFIG
-        .read()
-        .clone()
-        .ok_or("Firebase config not loaded")?;
-
-    let url = format!("{}?key={}", FIREBASE_SIGNIN_IDP_URL, config.api_key);
-
-    let post_body = format!("id_token={}&providerId=google.com", google_id_token);
-
-    let client = reqwest::Client::new();
-    let response = client
-        .post(&url)
-        .json(&serde_json::json!({
-            "postBody": post_body,
-            "requestUri": "http://localhost",
-            "returnSecureToken": true,
-            "returnIdpCredential": true
-        }))
-        .send()
-        .await
-        .map_err(|e| format!("Firebase signInWithIdp request failed: {}", e))?;
-
-    if !response.status().is_success() {
-        let error_text = response.text().await.unwrap_or_default();
-        return Err(format!("Firebase signInWithIdp failed: {}", error_text));
-    }
-
-    let idp_response: FirebaseSignInIdpResponse = response
-        .json()
-        .await
-        .map_err(|e| format!("Failed to parse signInWithIdp response: {}", e))?;
-
-    let expires_in: i64 = idp_response.expires_in.parse().unwrap_or(3600);
-    let expires_at = chrono::Utc::now().timestamp() + expires_in;
-
-    Ok(FirebaseTokens {
-        id_token: idp_response.id_token,
-        refresh_token: idp_response.refresh_token,
-        expires_at,
-        email: idp_response.email,
-        local_id: idp_response.local_id,
-        display_name: idp_response.display_name,
-    })
-}
-
-/// Refresh Firebase ID token
-async fn refresh_firebase_token() -> Result<(), String> {
-    let config = FIREBASE_CONFIG
-        .read()
-        .clone()
-        .ok_or("Firebase config not loaded")?;
-
-    let refresh_token = {
-        let tokens = FIREBASE_TOKENS.read();
-        tokens
-            .as_ref()
-            .map(|t| t.refresh_token.clone())
-            .ok_or("No Firebase refresh token available")?
-    };
-
-    let url = format!("{}?key={}", FIREBASE_TOKEN_URL, config.api_key);
-
-    let client = reqwest::Client::new();
-    let response = client
-        .post(&url)
-        .header("Content-Type", "application/x-www-form-urlencoded")
-        .body(format!(
-            "grant_type=refresh_token&refresh_token={}",
-            refresh_token
-        ))
-        .send()
-        .await
-        .map_err(|e| format!("Firebase token refresh failed: {}", e))?;
-
-    if !response.status().is_success() {
-        let error_text = response.text().await.unwrap_or_default();
-        return Err(format!("Firebase token refresh failed: {}", error_text));
-    }
-
-    let refresh_response: FirebaseRefreshResponse = response
-        .json()
-        .await
-        .map_err(|e| format!("Failed to parse refresh response: {}", e))?;
-
-    let expires_in: i64 = refresh_response.expires_in.parse().unwrap_or(3600);
-    let expires_at = chrono::Utc::now().timestamp() + expires_in;
-
-    // Update tokens
-    {
-        let mut tokens = FIREBASE_TOKENS.write();
-        if let Some(ref mut t) = *tokens {
-            t.id_token = refresh_response.id_token;
-            t.refresh_token = refresh_response.refresh_token;
-            t.expires_at = expires_at;
-        }
-    }
-
-    // Save to persistent storage
-    if let Some(app) = APP_HANDLE.read().as_ref() {
-        save_firebase_tokens_to_store(app);
-    }
-
-    Ok(())
-}
-
-/// Get valid Firebase ID token (refreshes if needed)
-async fn get_valid_firebase_token() -> Option<String> {
-    let (id_token, expires_at) = {
-        let tokens = FIREBASE_TOKENS.read();
-        match tokens.as_ref() {
-            Some(t) => (t.id_token.clone(), t.expires_at),
-            None => return None,
-        }
-    };
-
-    // Check if token is expired or about to expire (within 5 minutes)
-    let now = chrono::Utc::now().timestamp();
-    let is_expired = now >= expires_at - 300;
-
-    if is_expired {
-        if let Err(e) = refresh_firebase_token().await {
-            eprintln!("Failed to refresh Firebase token: {}", e);
-            return None;
-        }
-        // Return the new token
-        let tokens = FIREBASE_TOKENS.read();
-        return tokens.as_ref().map(|t| t.id_token.clone());
-    }
-
-    Some(id_token)
 }
 
 // =============================================================================
@@ -667,18 +490,6 @@ async fn get_valid_slides_token() -> Option<String> {
 // TOKEN STORAGE
 // =============================================================================
 
-fn save_firebase_tokens_to_store(app: &AppHandle) {
-    if let Ok(store) = app.store("cuecard-store.json") {
-        let tokens = FIREBASE_TOKENS.read();
-        if let Some(ref t) = *tokens {
-            if let Ok(json) = serde_json::to_value(t) {
-                store.set("firebase_tokens", json);
-                let _ = store.save();
-            }
-        }
-    }
-}
-
 fn save_slides_tokens_to_store(app: &AppHandle) {
     if let Ok(store) = app.store("cuecard-store.json") {
         let tokens = SLIDES_TOKENS.read();
@@ -703,23 +514,13 @@ fn save_oauth_credentials_to_store(app: &AppHandle) {
     }
 }
 
-fn clear_all_tokens_from_store(app: &AppHandle) {
-    if let Ok(store) = app.store("cuecard-store.json") {
-        let _ = store.delete("firebase_tokens");
-        let _ = store.delete("slides_tokens");
-        let _ = store.delete("oauth_credentials");
-        let _ = store.save();
-    }
-}
-
 fn load_tokens_from_store(app: &AppHandle) {
     if let Ok(store) = app.store("cuecard-store.json") {
-        // Load Firebase tokens
-        if let Some(tokens_json) = store.get("firebase_tokens") {
-            if let Ok(tokens) = serde_json::from_value::<FirebaseTokens>(tokens_json.clone()) {
-                let mut firebase = FIREBASE_TOKENS.write();
-                *firebase = Some(tokens);
-            }
+        // A sign-in from an older version leaves its tokens behind. Nothing
+        // reads them any more, so they go on the way past.
+        if store.get("firebase_tokens").is_some() {
+            let _ = store.delete("firebase_tokens");
+            let _ = store.save();
         }
 
         // Load Slides tokens
@@ -755,6 +556,8 @@ fn get_or_init_analytics_state(app: &AppHandle) -> Option<AnalyticsState> {
     }
 
     let config = ANALYTICS_CONFIG.read().clone()?;
+    // The device is the identity: this id is made once and kept in the store,
+    // so every launch reports as the same client without anyone signing in.
     let client_id = load_or_create_client_id(app);
 
     // Generate session_id from current timestamp (GA4 uses timestamp as session identifier)
@@ -767,7 +570,6 @@ fn get_or_init_analytics_state(app: &AppHandle) -> Option<AnalyticsState> {
         measurement_id: config.measurement_id,
         api_secret: config.api_secret,
         client_id,
-        user_id: None,
         platform: None,
         operating_system: None,
         ip_override: None,
@@ -802,27 +604,14 @@ fn generate_client_id() -> String {
     Uuid::new_v4().to_string()
 }
 
-fn hash_string(value: &str) -> String {
-    let mut hash: i32 = 0;
-    for byte in value.bytes() {
-        hash = hash
-            .wrapping_shl(5)
-            .wrapping_sub(hash)
-            .wrapping_add(byte as i32);
-    }
-    format!("user_{:x}", hash.wrapping_abs() as u32)
-}
-
 // =============================================================================
 // WEB SERVER HANDLERS
 // =============================================================================
 
 async fn health_handler() -> Json<serde_json::Value> {
-    let is_authenticated = FIREBASE_TOKENS.read().is_some();
     Json(serde_json::json!({
         "status": "ok",
-        "server": "cuecard-desktop",
-        "authenticated": is_authenticated
+        "server": "cuecard-desktop"
     }))
 }
 
@@ -901,226 +690,71 @@ async fn slides_handler(
     }))
 }
 
-// OAuth login handler - redirects to Google
-async fn oauth_login_handler() -> Result<Redirect, StatusCode> {
-    let credentials = match OAUTH_CREDENTIALS.read().clone() {
-        Some(c) => c,
-        None => return Err(StatusCode::INTERNAL_SERVER_ERROR),
-    };
-
-    let scope_url = {
-        let pending = PENDING_OAUTH_SCOPE.read();
-        match pending.as_deref() {
-            Some("profile") => SCOPE_PROFILE.to_string(),
-            Some("slides") => SCOPE_SLIDES.to_string(),
-            _ => format!("{} {}", SCOPE_PROFILE, SCOPE_SLIDES),
-        }
-    };
-
-    let auth_url = format!(
-        "{}?client_id={}&redirect_uri={}&response_type=code&scope={}&access_type=offline&prompt=consent&include_granted_scopes=true",
-        GOOGLE_AUTH_URL,
-        urlencoding::encode(&credentials.client_id),
-        urlencoding::encode(REDIRECT_URI),
-        urlencoding::encode(&scope_url)
-    );
-
-    Ok(Redirect::temporary(&auth_url))
+/// The page Google sends the browser back to, either way it went.
+fn browser_page(heading: &str, message: &str) -> Html<String> {
+    Html(format!(
+        r#"<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CueCard</title><style>:root{{--bg0:#0b0b0c;--bg1:#121214;--text-strong:rgba(255,255,255,.7);--text-soft:rgba(255,255,255,.55)}}html,body{{height:100%;margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji"}}body{{background:radial-gradient(1200px 600px at 50% 45%,#1a1a1f 0%,#0f0f12 55%,#0a0a0b 100%),linear-gradient(180deg,var(--bg1),var(--bg0));display:grid;place-items:center;color:#fff}}.wrap{{text-align:center;padding:48px 24px;max-width:900px}}h1{{margin:0 0 26px;font-weight:600;letter-spacing:-.02em;color:var(--text-strong);font-size:clamp(44px,6vw,78px);line-height:1.08}}p{{margin:0;font-size:clamp(16px,2vw,26px);line-height:1.5;color:var(--text-soft)}}</style></head><body><main class="wrap" role="main">
+        <h1>{}</h1><p>{}</p></main></body></html>"#,
+        heading, message
+    ))
 }
 
-// OAuth callback handler
+/// Google comes back here with the code for the Slides scope, and nothing else:
+/// this is the one thing the app ever signs in for.
 async fn oauth_callback_handler(Query(params): Query<OAuthCallback>) -> Html<String> {
     if let Some(error) = params.error {
-        return Html(format!(
-            r#"<!DOCTYPE html>
-            <html><head><title>Authentication Failed</title>
-            <style>body {{ font-family: system-ui; padding: 40px; text-align: center; }}</style>
-            </head><body>
-            <h1>Authentication Failed</h1>
-            <p>Error: {}</p>
-            <p>You can close this window.</p>
-            </body></html>"#,
-            error
-        ));
+        return browser_page(
+            "Something went wrong",
+            &format!("{}. You can close this window.", error),
+        );
     }
 
     let code = match params.code {
         Some(c) => c,
         None => {
-            return Html(
-                r#"<!DOCTYPE html>
-                <html><head><title>Authentication Failed</title>
-                <style>body { font-family: system-ui; padding: 40px; text-align: center; }</style>
-                </head><body>
-                <h1>Authentication Failed</h1>
-                <p>No authorization code received.</p>
-                <p>You can close this window.</p>
-                </body></html>"#
-                    .to_string(),
+            return browser_page(
+                "Something went wrong",
+                "Google sent no authorization code. You can close this window.",
             )
         }
     };
 
-    // Get pending scope
-    let pending_scope = {
-        let mut pending = PENDING_OAUTH_SCOPE.write();
-        pending.take()
+    let google_tokens = match exchange_code_for_google_tokens(&code).await {
+        Ok(tokens) => tokens,
+        Err(e) => {
+            return browser_page(
+                "Something went wrong",
+                &format!("{}. You can close this window.", e),
+            )
+        }
     };
 
-    // Exchange code for Google tokens
-    match exchange_code_for_google_tokens(&code).await {
-        Ok(google_tokens) => {
-            let is_profile_scope = pending_scope.as_deref() == Some("profile");
+    let expires_at = google_tokens
+        .expires_in
+        .map(|secs| chrono::Utc::now().timestamp() + secs);
 
-            if is_profile_scope {
-                // For profile scope, exchange Google ID token for Firebase token
-                if let Some(google_id_token) = &google_tokens.id_token {
-                    match exchange_google_token_for_firebase(google_id_token).await {
-                        Ok(firebase_tokens) => {
-                            let user_name = firebase_tokens.display_name.clone();
-                            let user_email = firebase_tokens.email.clone();
-
-                            // Store Firebase tokens
-                            {
-                                let mut tokens = FIREBASE_TOKENS.write();
-                                *tokens = Some(firebase_tokens);
-                            }
-
-                            // Save to persistent storage
-                            if let Some(app) = APP_HANDLE.read().as_ref() {
-                                save_firebase_tokens_to_store(app);
-                                save_oauth_credentials_to_store(app);
-                            }
-
-                            // Notify frontend
-                            if let Some(app) = APP_HANDLE.read().as_ref() {
-                                let _ = app.emit(
-                                    "auth-status",
-                                    serde_json::json!({
-                                        "authenticated": true,
-                                        "user_name": user_name,
-                                        "user_email": user_email,
-                                        "requested_scope": pending_scope
-                                    }),
-                                );
-                            }
-
-                            Html(
-                                r#"<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CueCard Authentication</title><style>:root{--bg0:#0b0b0c;--bg1:#121214;--text-strong:rgba(255,255,255,.7);--text-soft:rgba(255,255,255,.55)}html,body{height:100%;margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji"}body{background:radial-gradient(1200px 600px at 50% 45%,#1a1a1f 0%,#0f0f12 55%,#0a0a0b 100%),linear-gradient(180deg,var(--bg1),var(--bg0));display:grid;place-items:center;color:#fff}.wrap{text-align:center;padding:48px 24px;max-width:900px}h1{margin:0 0 26px;font-weight:600;letter-spacing:-.02em;color:var(--text-strong);font-size:clamp(44px,6vw,78px);line-height:1.08}p{margin:0;font-size:clamp(16px,2vw,26px);line-height:1.5;color:var(--text-soft)}</style></head><body><main class="wrap" role="main">
-                                <h1>Speak Confidently</h1><p>You're all set up for CueCard. You can now close this window.</p></main></body></html>"#
-                                    .to_string(),
-                            )
-                        }
-                        Err(e) => Html(format!(
-                            r#"<!DOCTYPE html>
-                            <html><head><title>Authentication Failed</title>
-                            <style>body {{ font-family: system-ui; padding: 40px; text-align: center; }}</style>
-                            </head><body>
-                            <h1>Firebase Authentication Failed</h1>
-                            <p>Error: {}</p>
-                            <p>You can close this window.</p>
-                            </body></html>"#,
-                            e
-                        )),
-                    }
-                } else {
-                    Html(
-                        r#"<!DOCTYPE html>
-                        <html><head><title>Authentication Failed</title>
-                        <style>body { font-family: system-ui; padding: 40px; text-align: center; }</style>
-                        </head><body>
-                        <h1>Authentication Failed</h1>
-                        <p>No ID token received from Google.</p>
-                        <p>You can close this window.</p>
-                        </body></html>"#
-                            .to_string(),
-                    )
-                }
-            } else {
-                // For slides scope, store the access token for Slides API
-                let expires_at = google_tokens
-                    .expires_in
-                    .map(|secs| chrono::Utc::now().timestamp() + secs);
-
-                {
-                    let mut tokens = SLIDES_TOKENS.write();
-                    *tokens = Some(SlidesTokens {
-                        access_token: google_tokens.access_token,
-                        refresh_token: google_tokens.refresh_token,
-                        expires_at,
-                    });
-                }
-
-                // Save to persistent storage
-                if let Some(app) = APP_HANDLE.read().as_ref() {
-                    save_slides_tokens_to_store(app);
-                }
-
-                // Notify frontend
-                if let Some(app) = APP_HANDLE.read().as_ref() {
-                    let _ = app.emit(
-                        "auth-status",
-                        serde_json::json!({
-                            "authenticated": true,
-                            "slides_authorized": true,
-                            "requested_scope": pending_scope
-                        }),
-                    );
-                }
-
-                Html(
-                    r#"<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CueCard Authentication</title><style>:root{--bg0:#0b0b0c;--bg1:#121214;--text-strong:rgba(255,255,255,.7);--text-soft:rgba(255,255,255,.55)}html,body{height:100%;margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji"}body{background:radial-gradient(1200px 600px at 50% 45%,#1a1a1f 0%,#0f0f12 55%,#0a0a0b 100%),linear-gradient(180deg,var(--bg1),var(--bg0));display:grid;place-items:center;color:#fff}.wrap{text-align:center;padding:48px 24px;max-width:900px}h1{margin:0 0 26px;font-weight:600;letter-spacing:-.02em;color:var(--text-strong);font-size:clamp(44px,6vw,78px);line-height:1.08}p{margin:0;font-size:clamp(16px,2vw,26px);line-height:1.5;color:var(--text-soft)}</style></head><body><main class="wrap" role="main">
-                    <h1>Speak Confidently</h1><p>You're all set up for Slides Access. You can now close this window.</p></main></body></html>"#
-                        .to_string(),
-                )
-            }
-        }
-        Err(e) => Html(format!(
-            r#"<!DOCTYPE html>
-            <html><head><title>Authentication Failed</title>
-            <style>body {{ font-family: system-ui; padding: 40px; text-align: center; }}</style>
-            </head><body>
-            <h1>Authentication Failed</h1>
-            <p>Error: {}</p>
-            <p>You can close this window.</p>
-            </body></html>"#,
-            e
-        )),
-    }
-}
-
-async fn auth_status_handler() -> Json<serde_json::Value> {
-    let is_authenticated = FIREBASE_TOKENS.read().is_some();
-    Json(serde_json::json!({
-        "authenticated": is_authenticated
-    }))
-}
-
-async fn logout_handler() -> Json<serde_json::Value> {
-    {
-        let mut tokens = FIREBASE_TOKENS.write();
-        *tokens = None;
-    }
     {
         let mut tokens = SLIDES_TOKENS.write();
-        *tokens = None;
+        *tokens = Some(SlidesTokens {
+            access_token: google_tokens.access_token,
+            refresh_token: google_tokens.refresh_token,
+            expires_at,
+        });
     }
 
     if let Some(app) = APP_HANDLE.read().as_ref() {
-        clear_all_tokens_from_store(app);
-
+        save_slides_tokens_to_store(app);
+        save_oauth_credentials_to_store(app);
         let _ = app.emit(
-            "auth-status",
-            serde_json::json!({
-                "authenticated": false,
-                "user_name": null
-            }),
+            "slides-authorized",
+            serde_json::json!({ "authorized": true }),
         );
     }
 
-    Json(serde_json::json!({
-        "success": true
-    }))
+    browser_page(
+        "Speak Confidently",
+        "You're all set up for Slides Access. You can now close this window.",
+    )
 }
 
 async fn start_server() {
@@ -1132,10 +766,7 @@ async fn start_server() {
     let app = Router::new()
         .route("/health", get(health_handler))
         .route("/slides", post(slides_handler))
-        .route("/oauth/login", get(oauth_login_handler))
         .route("/oauth/callback", get(oauth_callback_handler))
-        .route("/oauth/status", get(auth_status_handler))
-        .route("/oauth/logout", post(logout_handler))
         .layer(cors);
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3642")
@@ -1339,31 +970,6 @@ fn get_current_notes() -> Option<String> {
 }
 
 #[tauri::command]
-fn get_auth_status() -> bool {
-    FIREBASE_TOKENS.read().is_some()
-}
-
-/// The Firebase Web API key, which the frontend needs to call Identity Toolkit
-/// directly — deleting an account, for one.
-#[tauri::command]
-fn get_firebase_api_key() -> String {
-    FIREBASE_CONFIG
-        .read()
-        .as_ref()
-        .map(|c| c.api_key.clone())
-        .unwrap_or_default()
-}
-
-#[tauri::command]
-fn get_firestore_project_id() -> String {
-    FIREBASE_CONFIG
-        .read()
-        .as_ref()
-        .map(|c| c.project_id.clone())
-        .unwrap_or_default()
-}
-
-#[tauri::command]
 async fn init_analytics(
     app: AppHandle,
     platform: Option<String>,
@@ -1408,7 +1014,6 @@ async fn send_event(
         measurement_id,
         api_secret,
         client_id,
-        user_id,
         platform,
         operating_system,
         ip_override,
@@ -1440,11 +1045,6 @@ async fn send_event(
             "params": event_params
         }]
     });
-
-    // Add user_id if available
-    if let Some(user_id) = user_id {
-        payload["user_id"] = serde_json::Value::String(user_id);
-    }
 
     // Add ip_override for geo location
     if let Some(ip) = ip_override {
@@ -1497,29 +1097,6 @@ async fn send_event(
 }
 
 #[tauri::command]
-fn set_analytics_user_id(app: AppHandle, email: String) -> Result<(), String> {
-    if get_or_init_analytics_state(&app).is_none() {
-        return Ok(());
-    }
-
-    let hashed = hash_string(&email);
-    let mut analytics_state = ANALYTICS_STATE.write();
-    if let Some(ref mut state) = *analytics_state {
-        state.user_id = Some(hashed);
-    }
-    Ok(())
-}
-
-#[tauri::command]
-fn clear_analytics_user_id() -> Result<(), String> {
-    let mut analytics_state = ANALYTICS_STATE.write();
-    if let Some(ref mut state) = *analytics_state {
-        state.user_id = None;
-    }
-    Ok(())
-}
-
-#[tauri::command]
 fn check_and_mark_first_open(app: AppHandle) -> bool {
     if let Ok(store) = app.store("cuecard-store.json") {
         // Check if first_open was already sent
@@ -1535,13 +1112,6 @@ fn check_and_mark_first_open(app: AppHandle) -> bool {
         return true; // This is the first open
     }
     false
-}
-
-#[tauri::command]
-async fn get_firebase_id_token() -> Result<String, String> {
-    get_valid_firebase_token()
-        .await
-        .ok_or_else(|| "Not authenticated".to_string())
 }
 
 /// Fetch the notifications payload and hand back the raw JSON.
@@ -1577,27 +1147,10 @@ fn has_slides_scope() -> bool {
     SLIDES_TOKENS.read().is_some()
 }
 
+/// Open the browser for the one sign-in the app has: read access to the deck
+/// being presented. Everything else works without it.
 #[tauri::command]
-async fn get_user_info() -> Result<serde_json::Value, String> {
-    let tokens = FIREBASE_TOKENS.read();
-    match tokens.as_ref() {
-        Some(t) => Ok(serde_json::json!({
-            "email": t.email,
-            "name": t.display_name,
-            "local_id": t.local_id
-        })),
-        None => Err("Not authenticated".to_string()),
-    }
-}
-
-#[tauri::command]
-async fn start_login(app: AppHandle, scope: String) -> Result<(), String> {
-    // Set pending scope
-    {
-        let mut pending = PENDING_OAUTH_SCOPE.write();
-        *pending = Some(scope.clone());
-    }
-
+async fn connect_slides(app: AppHandle) -> Result<(), String> {
     // Check if we have OAuth credentials
     let has_credentials = OAUTH_CREDENTIALS.read().is_some();
 
@@ -1619,18 +1172,12 @@ async fn start_login(app: AppHandle, scope: String) -> Result<(), String> {
         .clone()
         .ok_or("OAuth credentials not available")?;
 
-    let scope_url = match scope.as_str() {
-        "profile" => SCOPE_PROFILE.to_string(),
-        "slides" => SCOPE_SLIDES.to_string(),
-        _ => format!("{} {}", SCOPE_PROFILE, SCOPE_SLIDES),
-    };
-
     let auth_url = format!(
         "{}?client_id={}&redirect_uri={}&response_type=code&scope={}&access_type=offline&prompt=consent&include_granted_scopes=true",
         GOOGLE_AUTH_URL,
         urlencoding::encode(&credentials.client_id),
         urlencoding::encode(REDIRECT_URI),
-        urlencoding::encode(&scope_url)
+        urlencoding::encode(SCOPE_SLIDES)
     );
 
     app.opener()
@@ -1638,20 +1185,6 @@ async fn start_login(app: AppHandle, scope: String) -> Result<(), String> {
         .map_err(|e| format!("Failed to open browser: {}", e))?;
 
     Ok(())
-}
-
-#[tauri::command]
-fn logout(app: AppHandle) {
-    {
-        let mut tokens = FIREBASE_TOKENS.write();
-        *tokens = None;
-    }
-    {
-        let mut tokens = SLIDES_TOKENS.write();
-        *tokens = None;
-    }
-
-    clear_all_tokens_from_store(&app);
 }
 
 #[tauri::command]
@@ -1842,20 +1375,12 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             get_current_slide,
             get_current_notes,
-            get_auth_status,
-            get_firestore_project_id,
-            get_firebase_api_key,
             fetch_notifications,
             init_analytics,
             send_event,
-            set_analytics_user_id,
-            clear_analytics_user_id,
             check_and_mark_first_open,
-            get_firebase_id_token,
             has_slides_scope,
-            get_user_info,
-            start_login,
-            logout,
+            connect_slides,
             refresh_notes,
             set_screenshot_protection
         ])

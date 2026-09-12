@@ -7,15 +7,15 @@ Desktop client built with Tauri that keeps your speaker notes on top of every ot
 - **Cross-platform:** macOS and Windows support
 - Always-on-top window visible across all workspaces
 - Screenshot protection (notes won't appear in screen shares)
-- Google OAuth for syncing notes
+- No sign-in: scripts and settings live on the device. Google sign-in is asked for only to read the notes of a Google Slides deck
 - Auto-update support
 
 ### Architecture
 
 - **Frontend:** vanilla HTML/JS in `src/`
-- **Tauri shell:** `src-tauri/` Rust crate exposes commands for auth, timers, notes, and window control
-- **Local store:** `tauri-plugin-store` caches Google and Firebase tokens, timers, and preferences
-- **Firebase REST bridge:** Rust code exchanges Google OAuth tokens for Firebase custom tokens and fetches notes from Firestore
+- **Tauri shell:** `src-tauri/` Rust crate exposes commands for Slides, timers, notes, and window control
+- **Local store:** `tauri-plugin-store` caches the Google Slides tokens, timers, and preferences
+- **Firebase REST bridge:** an anonymous Firebase sign-in reads the OAuth client credentials from Firestore; nobody is asked for an account
 
 ### Platform-Specific Features
 
@@ -29,7 +29,7 @@ Desktop client built with Tauri that keeps your speaker notes on top of every ot
 
 ### Firebase Configuration
 
-The desktop app requires a `firebase-config.json` file in the `src-tauri/` directory. This file is bundled into the app and used by the Rust backend for Firebase authentication.
+The desktop app requires a `firebase-config.json` file in the `src-tauri/` directory. This file is bundled into the app and used by the Rust backend to reach Firebase and to report analytics.
 
 1. Copy the example file:
    ```bash

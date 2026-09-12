@@ -284,7 +284,6 @@ export function openSheet(sheet, { onClose } = {}) {
   return close;
 }
 
-export const closeSheet = () => sheetCloser?.();
 export const isSheetOpen = () => Boolean(sheetCloser);
 
 // =============================================================================

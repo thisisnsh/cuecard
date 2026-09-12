@@ -42,15 +42,12 @@ const PLACEHOLDER =
   'Write your script here…\n\nType [ to add a cue — a note to yourself like “[cue smile and pause]” that you read but never say out loud.';
 
 const app = {
-  authenticated: false,
-  user: { name: '', email: '' },
   /** Which script the detail pane is showing: your own, or the live deck. */
   source: 'script',
   slides: { connected: false, slide: null, notes: '' },
   update: null,
   sidebarOpen: true,
   overlay: false,
-  sessionTracked: false,
 };
 
 let editor;
@@ -66,7 +63,6 @@ async function boot() {
 
   await T.initStore();
   await T.initAnalytics();
-  await T.initFirestore();
 
   await loadSettings();
   watchSystemTheme();
@@ -94,8 +90,12 @@ async function boot() {
 
   await T.trackFirstLaunch();
   T.track('app_open');
+  T.track('start_session');
+  T.trackScreen('home');
 
-  applyAuth(await T.authStatus());
+  renderAll();
+  editor.reset();
+
   await initSlides();
   listenToBackend();
   void startUpdateChecks();
@@ -114,63 +114,6 @@ function seedTimerFromTimeTags(seconds) {
 }
 
 // =============================================================================
-// AUTHENTICATION
-// =============================================================================
-
-function applyAuth({ authenticated, name = '', email = '' }) {
-  app.authenticated = authenticated;
-  app.user = { name, email };
-
-  $('screen-login').hidden = authenticated;
-  $('screen-home').hidden = !authenticated;
-  if (!authenticated) prompter.close();
-
-  if (authenticated) {
-    T.setAnalyticsUser(email);
-    if (email) void T.saveProfile(email, name);
-    if (!app.sessionTracked) {
-      T.track('start_session');
-      app.sessionTracked = true;
-    }
-    T.trackScreen('home');
-    renderAll();
-    editor.reset();
-  } else {
-    T.trackScreen('login');
-  }
-}
-
-async function signOut() {
-  T.track('logout');
-  T.clearAnalyticsUser();
-  ui.closeSheet();
-  await T.logout();
-  applyAuth({ authenticated: false });
-}
-
-async function deleteAccount() {
-  const sure = await ui.confirmAction({
-    title: 'Delete Account',
-    message: 'Are you sure you want to delete your account? This action cannot be undone.',
-    confirmLabel: 'Delete',
-    destructive: true,
-  });
-  if (!sure) return;
-
-  try {
-    await T.deleteAccount(app.user.email);
-  } catch (error) {
-    await ui.showError(String(error.message || error), 'Error');
-    return;
-  }
-
-  await notes.clearAll();
-  await resetSettings();
-  editor.setText('');
-  await signOut();
-}
-
-// =============================================================================
 // THE SCRIPT BEING WRITTEN
 // =============================================================================
 
@@ -186,7 +129,7 @@ async function saveScript() {
   if (!notes.currentNote()) return saveScriptAsNew();
   await notes.saveCurrent();
   ui.showToast('Saved');
-  T.trackClick('save_script', 'home');
+  T.trackClick('save_note', 'home');
 }
 
 async function saveScriptAsNew() {
@@ -256,10 +199,11 @@ async function newScript() {
   editor.setText('');
   selectSource('script');
   editor.focus();
-  T.trackClick('new_script', 'home');
+  T.trackClick('new_note', 'home');
 }
 
 async function openScript(id) {
+  T.trackClick('load_note', 'saved_notes', { note_id: id });
   if (!(await confirmLeavingScript())) return;
   await notes.openNote(id);
   editor.setText(notes.state.draft);
@@ -270,6 +214,7 @@ async function openScript(id) {
 async function renameScript(id) {
   const note = notes.state.saved.find((n) => n.id === id);
   if (!note) return;
+  T.trackClick('rename_note', 'saved_notes', { note_id: id });
   const title = await ui.promptForText({
     title: 'Rename Script',
     message: 'Give this script a new name.',
@@ -283,6 +228,7 @@ async function renameScript(id) {
 async function deleteScript(id) {
   const note = notes.state.saved.find((n) => n.id === id);
   if (!note) return;
+  T.trackClick('delete_note', 'saved_notes', { note_id: id });
   const sure = await ui.confirmAction({
     title: `Delete “${note.title}”?`,
     message: 'This cannot be undone.',
@@ -354,7 +300,7 @@ async function initSlides() {
 function connectSlides() {
   T.trackClick('connect_slides', 'home');
   T.track('slides_sync');
-  void T.startLogin('slides');
+  void T.connectSlides();
 }
 
 async function refreshSlides() {
@@ -426,13 +372,13 @@ function startPrompter({ play = false } = {}) {
 
   $('screen-home').hidden = true;
   prompter.open(script);
-  T.trackScreen('prompter');
+  T.trackScreen('teleprompter');
   T.track('timer_action', { action: 'open' });
   if (play) prompter.togglePlay();
 }
 
 function onPrompterClosed() {
-  $('screen-home').hidden = !app.authenticated;
+  $('screen-home').hidden = false;
   T.trackScreen('home');
   renderAll();
 }
@@ -659,6 +605,8 @@ function updateLayout() {
 }
 
 function toggleSidebar() {
+  const opening = app.overlay ? !app.overlaySidebar : !app.sidebarOpen;
+  if (opening) T.trackClick('saved_notes', 'home');
   if (app.overlay) app.overlaySidebar = !app.overlaySidebar;
   else {
     app.sidebarOpen = !app.sidebarOpen;
@@ -808,7 +756,14 @@ function openMenu() {
       { label: 'Save as New…', icon: 'docPlus', shortcut: 'mod+shift+s', disabled: !notes.hasScript(), onSelect: saveScriptAsNew },
       { divider: true },
       { label: 'New Script', icon: 'compose', shortcut: 'mod+n', onSelect: newScript },
-      { label: 'Insert Cue', icon: 'cue', onSelect: () => editor.insertCue() },
+      {
+        label: 'Insert Cue',
+        icon: 'cue',
+        onSelect: () => {
+          T.trackClick('insert_cue', 'home');
+          editor.insertCue();
+        },
+      },
       { divider: true },
       { label: 'Import from File…', icon: 'docDown', onSelect: importScript },
       { label: 'Export to File…', icon: 'docUp', disabled: !notes.hasScript(), onSelect: exportScript }
@@ -868,10 +823,6 @@ function buildSwatches() {
 }
 
 function syncSettings() {
-  $('set-account-section').hidden = !app.authenticated;
-  $('set-account-name').textContent = app.user.name || 'Signed in';
-  $('set-account-email').textContent = app.user.email;
-
   $('field-delay').value = String(settings.countdownSeconds);
   $('field-speed').value = String(settings.linesPerMinute);
   $('slider-opacity').value = String(settings.opacity);
@@ -1010,10 +961,16 @@ function wireHome() {
 
   $('btn-invisible').addEventListener('click', toggleInvisible);
   $('btn-menu').addEventListener('click', openMenu);
-  $('btn-settings').addEventListener('click', () => openSettings('settings'));
+  $('btn-settings').addEventListener('click', () => {
+    T.trackClick('settings', 'home');
+    openSettings('settings');
+  });
   $('btn-close').addEventListener('click', closeApp);
 
-  $('btn-play').addEventListener('click', () => startPrompter());
+  $('btn-play').addEventListener('click', () => {
+    T.trackClick('start_teleprompter', 'home');
+    startPrompter();
+  });
   $('btn-sample').addEventListener('click', () => {
     notes.addSampleText();
     editor.setText(notes.state.draft);
@@ -1022,7 +979,10 @@ function wireHome() {
   });
 
   $('btn-set-timer').addEventListener('click', openTimerPicker);
-  $('btn-close-timer').addEventListener('click', closeTimerPicker);
+  $('btn-close-timer').addEventListener('click', () => {
+    T.trackClick('close_timer_picker', 'home');
+    closeTimerPicker();
+  });
 
   const wheels = {
     minutes: createWheel($('wheel-minutes'), {
@@ -1040,30 +1000,15 @@ function wireHome() {
     if (key === 'timerMinutes' || key === '*') wheels.minutes.render();
     if (key === 'timerSeconds' || key === '*') wheels.seconds.render();
   });
-
-  // Sign in
-  $('btn-google').addEventListener('click', async () => {
-    const button = $('btn-google');
-    button.disabled = true;
-    button.querySelector('.google-label').textContent = 'Waiting for your browser…';
-    T.trackClick('sign_in_with_google', 'login');
-    await T.startLogin('profile');
-    setTimeout(() => {
-      button.disabled = false;
-      button.querySelector('.google-label').textContent = 'Continue with Google';
-    }, 30000);
-  });
-  $('login-close').addEventListener('click', () => T.closeWindow());
-  $('link-source').addEventListener('click', (e) => {
-    e.preventDefault();
-    void T.openUrl(LINKS.source);
-  });
 }
 
 function wireSettingsSheet() {
   buildShortcutLists();
 
-  $('btn-sheet-done').addEventListener('click', () => closeSettingsSheet?.());
+  $('btn-sheet-done').addEventListener('click', () => {
+    T.trackClick('done', 'settings');
+    closeSettingsSheet?.();
+  });
   $('btn-sheet-back').addEventListener('click', () => showSettingsPage('settings'));
   $('row-shortcuts').addEventListener('click', () => showSettingsPage('shortcuts'));
 
@@ -1098,8 +1043,12 @@ function wireSettingsSheet() {
   opacity.addEventListener('change', () => T.trackSetting('opacity', opacity.value));
 
   $('btn-update').addEventListener('click', runUpdate);
-  $('btn-rate').addEventListener('click', () => T.openUrl(LINKS.source));
+  $('btn-rate').addEventListener('click', () => {
+    T.trackClick('rate_app', 'settings');
+    void T.openUrl(LINKS.source);
+  });
   $('btn-reset').addEventListener('click', async () => {
+    T.trackClick('reset_to_defaults', 'settings');
     const sure = await ui.confirmAction({
       title: 'Reset to Defaults',
       message: 'Every setting goes back to what it ships as. Your scripts are left alone.',
@@ -1112,8 +1061,6 @@ function wireSettingsSheet() {
     renderControls();
     prompter.restyle();
   });
-  $('btn-signout').addEventListener('click', signOut);
-  $('btn-delete-account').addEventListener('click', deleteAccount);
 }
 
 function wireKeyboard() {
@@ -1149,20 +1096,11 @@ function listenToBackend() {
 
   void T.listen('slide-update', (event) => onSlideUpdate(event.payload));
 
-  void T.listen('auth-status', (event) => {
-    const payload = event.payload || {};
-    if (payload.slides_authorized) {
-      app.slides.connected = true;
-      selectSource('slides');
-      if (!$('sheet-settings').hidden) syncSettings();
-      return;
-    }
-    applyAuth({
-      authenticated: Boolean(payload.authenticated),
-      name: payload.user_name || '',
-      email: payload.user_email || '',
-    });
-    if (payload.authenticated) T.track('login', { method: 'google' });
+  // The one sign-in the app has: read access to the deck.
+  void T.listen('slides-authorized', () => {
+    app.slides.connected = true;
+    selectSource('slides');
+    if (!$('sheet-settings').hidden) syncSettings();
   });
 
   void T.listen('shortcut-triggered', (event) => onGlobalShortcut(event.payload));

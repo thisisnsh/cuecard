@@ -7,10 +7,11 @@
  * scrolls from and nothing else: the timer is the talk's, not the script's.
  */
 
-import { formatTime } from './parser.js';
+import { formatTime, withoutCues } from './parser.js';
 import { scriptFontSize, settings, timerDuration } from './settings.js';
 import { scriptHtml } from './ui.js';
 import { icon } from './icons.js';
+import { track, trackClick } from './tauri.js';
 
 /**
  * Where on screen the line being read sits, as a fraction of the window height.
@@ -21,6 +22,9 @@ const READING_LINE = 0.45;
 
 /** How long the controls stay up after the pointer stops moving, while playing. */
 const CONTROLS_LINGER = 2600;
+
+/** What the phone apps count: the words that are said, cues left out. */
+const wordCount = (text) => withoutCues(text).split(/\s+/).filter(Boolean).length;
 
 export function createPrompter(root, { onClose, onPlayStateChange } = {}) {
   root.innerHTML = `
@@ -231,6 +235,7 @@ export function createPrompter(root, { onClose, onPlayStateChange } = {}) {
   // =============================================================================
 
   function beginPlaying() {
+    track('teleprompter_play');
     run.playing = true;
     run.hasStarted = true;
     run.elapsedAtStart = run.elapsed;
@@ -281,6 +286,7 @@ export function createPrompter(root, { onClose, onPlayStateChange } = {}) {
       return;
     }
     if (!run.playing) return;
+    track('teleprompter_pause');
     run.playing = false;
     updateTransport();
     showControls();
@@ -293,6 +299,7 @@ export function createPrompter(root, { onClose, onPlayStateChange } = {}) {
   }
 
   function restart() {
+    track('teleprompter_restart');
     stopCountdown();
     run.playing = false;
     run.hasStarted = false;
@@ -348,9 +355,18 @@ export function createPrompter(root, { onClose, onPlayStateChange } = {}) {
   });
 
   root.addEventListener('mousemove', showControls);
-  el.play.addEventListener('click', togglePlay);
-  el.restart.addEventListener('click', restart);
-  el.back.addEventListener('click', () => close());
+  el.play.addEventListener('click', () => {
+    trackClick(run.playing || run.countingDown ? 'pause' : 'play', 'teleprompter');
+    togglePlay();
+  });
+  el.restart.addEventListener('click', () => {
+    trackClick('restart', 'teleprompter');
+    restart();
+  });
+  el.back.addEventListener('click', () => {
+    trackClick('close', 'teleprompter');
+    close();
+  });
 
   function onKeyDown(event) {
     if (!run.open) return;
@@ -397,6 +413,8 @@ export function createPrompter(root, { onClose, onPlayStateChange } = {}) {
     root.classList.remove('is-idle');
     document.addEventListener('keydown', onKeyDown, true);
 
+    track('teleprompter_started', { word_count: wordCount(text), timer_duration: timerDuration() });
+
     // The window has to have laid out before lines can be measured.
     requestAnimationFrame(() => {
       render();
@@ -412,6 +430,7 @@ export function createPrompter(root, { onClose, onPlayStateChange } = {}) {
 
   function close() {
     if (!run.open) return;
+    track('teleprompter_closed', { elapsed_time: Math.floor(run.elapsed) });
     run.open = false;
     run.playing = false;
     stopCountdown();
