@@ -96,6 +96,61 @@ const site = {
     },
   ],
 
+  // ── The desktop app, a screen at a time ─────────────────────────────────
+  // The desktop counterpart of the shots above. Its pages show one screen in a
+  // pinned card and swap to the next as the reader scrolls (partials/reel.njk).
+  // The Slides reel ends on the same settings screen as the desktop one.
+  reels: {
+    desktop: {
+      label: "On Mac and Windows",
+      icon: "monitor",
+      frames: [
+        {
+          src: "/assets/desktop-script.webp",
+          small: "/assets/desktop-script-820.webp",
+          alt: "CueCard for Mac and Windows with a script open, its [cue] directions in pink and a Set Timer button in the corner.",
+          caption: "Write the script, with your cues in brackets.",
+        },
+        {
+          src: "/assets/desktop-prompter.webp",
+          small: "/assets/desktop-prompter-820.webp",
+          alt: "The script scrolling in CueCard's prompter view, cues in pink, a countdown in the corner and pause, back and restart controls.",
+          caption: "Press play and it scrolls, with the clock running.",
+        },
+        {
+          src: "/assets/desktop-settings.webp",
+          small: "/assets/desktop-settings-820.webp",
+          alt: "CueCard's settings: start delay, scroll speed, cue colour, text size, invisible to screen sharing and window opacity.",
+          caption: "Set the speed, the cue colour and what screen share can see.",
+        },
+      ],
+    },
+    slides: {
+      label: "With Google Slides",
+      icon: "slides",
+      frames: [
+        {
+          src: "/assets/slides-live.webp",
+          small: "/assets/slides-live-820.webp",
+          alt: "CueCard with a live Google Slides deck in its sidebar, showing the speaker notes for slide 1.",
+          caption: "Present your deck and the slide's speaker notes arrive.",
+        },
+        {
+          src: "/assets/slides-prompter.webp",
+          small: "/assets/slides-prompter-820.webp",
+          alt: "CueCard's prompter view on slide 3 of a Google Slides deck, the notes scrolling with cues in pink and a timer running.",
+          caption: "Change slides and the next slide's notes take over.",
+        },
+        {
+          src: "/assets/desktop-settings.webp",
+          small: "/assets/desktop-settings-820.webp",
+          alt: "CueCard's settings: start delay, scroll speed, cue colour, text size, invisible to screen sharing and window opacity.",
+          caption: "Set the speed, the cue colour and what screen share can see.",
+        },
+      ],
+    },
+  },
+
   // ── The demos ───────────────────────────────────────────────────────────
   // Nothing is embedded anywhere on this site. Every demo is a link out to
   // YouTube, so no third-party player script loads on any page.
@@ -107,7 +162,7 @@ const site = {
       id: "phone",
       device: "iPhone",
       icon: "phone",
-      url: "https://youtube.com/shorts/zSSABBm7K1Q",
+      url: "https://youtube.com/shorts/_mXAfHBMtA8",
       title: "The floating teleprompter on iPhone",
       shape: "portrait",
       primary: true,
@@ -116,7 +171,7 @@ const site = {
       id: "ipad",
       device: "iPad",
       icon: "tablet",
-      url: "https://youtube.com/shorts/cHfZ-XLuz1E",
+      url: "https://youtube.com/shorts/xgY0BW_E_aQ",
       title: "CueCard Teleprompter on iPad",
       shape: "portrait",
     },
@@ -124,9 +179,20 @@ const site = {
       id: "desktop",
       device: "Mac and Windows",
       icon: "monitor",
-      url: "https://youtu.be/lNKghjFrdTE",
+      url: "https://youtu.be/aXWEITjVD2Q",
       title: "Speaker notes only you can see",
       shape: "landscape",
+    },
+    // Only the pages that ask for it by id show this one. It is about the
+    // Slides sync, so it stays out of the everything grid on the phone pages.
+    {
+      id: "slides",
+      device: "Google Slides",
+      icon: "slides",
+      url: "https://youtu.be/YWTgq4Yh8us",
+      title: "Speaker notes that follow your deck",
+      shape: "landscape",
+      byIdOnly: true,
     },
   ],
 

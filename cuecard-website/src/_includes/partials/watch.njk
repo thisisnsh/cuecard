@@ -7,8 +7,8 @@
   demo is a card drawn as the device it was filmed on, with a play mark over
   it, and pressing it opens YouTube.
 
-  Pass `demoIds` (a list of "phone", "ipad", "desktop") to show a subset, in
-  the order given.
+  Pass `demoIds` (a list of "phone", "ipad", "desktop", "slides") to show a
+  subset, in the order given. Without it, every demo not marked byIdOnly.
 #}
 {% macro card(d) %}
 <li>
@@ -39,7 +39,7 @@
 
         <ul class="watchgrid">
             {% if demoIds %}{% for id in demoIds %}{{ card(site.demo[id]) }}{% endfor %}
-            {% else %}{% for d in site.demos %}{{ card(d) }}{% endfor %}{% endif %}
+            {% else %}{% for d in site.demos %}{% if not d.byIdOnly %}{{ card(d) }}{% endif %}{% endfor %}{% endif %}
         </ul>
     </div>
 </section>
