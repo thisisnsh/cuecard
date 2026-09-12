@@ -73,7 +73,8 @@ jobs:
             CODE_SIGN_STYLE=Manual \
             CODE_SIGN_IDENTITY="Developer ID Application" \
             DEVELOPMENT_TEAM="${APPLE_TEAM_ID}" \
-            CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO
+            CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO \
+            CODE_SIGN_ENTITLEMENTS="$GITHUB_WORKSPACE/cuecard-extension/scripts/Safari.entitlements"
 
           # Export the app
           xcodebuild -exportArchive \
