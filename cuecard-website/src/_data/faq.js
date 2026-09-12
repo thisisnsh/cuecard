@@ -115,11 +115,6 @@ const mobile = [
       "Yes. You can set the app to light, set it to dark, or let it follow whatever your phone is already set to."
   },
   {
-    question: "Do I need an account to use the phone app?",
-    answer:
-      'You sign in with Google to use the app. Your scripts and settings live on your device, and you can delete your account from Settings whenever you like. See the <a href="/privacy/">privacy policy</a> for the details.'
-  },
-  {
     question: "How is this different from a hardware teleprompter?",
     answer:
       "A hardware rig puts a mirror in front of your lens and costs real money to buy and carry. CueCard puts the script on the screen you are already holding. It is not identical — a beam-splitter rig puts your eyes dead centre on the lens — but for a phone shot filmed anywhere, at no cost, it gets you most of the way there."
@@ -207,7 +202,7 @@ const desktop = [
   {
     question: "Is my data safe?",
     answer:
-      'Your notes and Google tokens stay on your device and are not uploaded. See the <a href="/privacy/">privacy policy</a> for the full details.'
+      'Yes. Your notes, scripts and any Google token (used for Google Slides sync) stay on your device and are not uploaded. See the <a href="/privacy/">privacy policy</a> for the full details.'
   },
   {
     question: "Is there a mobile version?",
@@ -220,6 +215,11 @@ const desktop = [
 
 /** The handful worth repeating on every page, whichever product it is about. */
 const everywhere = [
+  {
+    question: "Do I need an account to use CueCard?",
+    answer:
+      'No. There is nothing to sign up for on either app, and your scripts and settings live on your device. The one exception is Google Slides sync on the desktop app, which asks you to sign in with Google so it can read the notes out of your deck. See the <a href="/privacy/">privacy policy</a> for the details.'
+  },
   {
     question: "Is CueCard free?",
     answer:
@@ -280,18 +280,20 @@ function pick(...questions) {
 }
 
 /**
- * The home page's bank - eight questions, not forty.
+ * The home page's bank - nine questions, not forty.
  *
  * The landing page used to print the phone bank, the desktop bank and the
  * general one end to end, which ran to a screen and a half of accordion
- * nobody opened. These are the eight people actually ask before installing,
- * in the order they ask them, and /faq/ still carries every one of the rest.
+ * nobody opened. These are the nine questions people actually ask before
+ * installing, in the order they ask them, and /faq/ still carries every one of
+ * the rest.
  */
 const home = pick(
   "What is CueCard Teleprompter?",
   "Does the teleprompter show up in my recorded video?",
   "Can I use CueCard while recording an Instagram Reel or a TikTok?",
   "Is CueCard a free teleprompter app?",
+  "Do I need an account to use CueCard?",
   "Is there a teleprompter for iPad?",
   "Is CueCard available on Android?",
   "Is CueCard invisible on Zoom, Google Meet and Microsoft Teams?",
@@ -306,6 +308,7 @@ const desktopShort = pick(
   "How do I sync speaker notes from Google Slides?",
   "How do cue tags work?",
   "Which operating systems does the desktop app run on?",
+  "Do I need an account to use CueCard?",
   "Is CueCard free?"
 );
 

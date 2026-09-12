@@ -23,7 +23,7 @@ Read your script over the apps you film in on iPhone and iPad. On Mac and Window
 
 ## 📖 About CueCard
 
-CueCard is two apps that do the same job on different screens, both free and both open source.
+CueCard is two apps that do the same job on different screens, both free, and open source.
 
 **On iPhone and iPad**, it is a teleprompter that floats on top of every other app. Your script sits in a small window above the camera, Instagram, TikTok, a live stream or anything else, scrolling while you talk, so you never switch away from what you are recording in. The camera never sees it, because it is a window on your screen and not something in front of the lens.
 
@@ -73,6 +73,7 @@ CueCard is two apps that do the same job on different screens, both free and bot
 ## ✨ Why CueCard?
 
 - **Free on every screen you speak from.** No subscription, no trial, no paid tier, nothing to cancel.
+- **No account required.** There is nothing to sign up for. Open the app and start writing. Google sign-in is only needed for Google Slides sync on desktop.
 - **Open source.** MIT licensed, and the code is right here. An app that can see your script is one worth being able to read the source of.
 - **Your scripts stay on your device.** They are not uploaded to us. See the [privacy policy](https://cuecard.dev/privacy/) for the details.
 

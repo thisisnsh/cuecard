@@ -74,7 +74,7 @@ layout: layouts/mobile-app.njk
     {% if not app.showIos %}
     {% set heroNote = "Android is still being built. The iPhone and iPad app is free and out now." %}
     {% else %}
-    {% set heroNote = "Free · No subscription · " + site.requiresMobileShort + (' · <a href="/mobile/android/">Android coming soon</a>' if app.showAndroid else "") %}
+    {% set heroNote = "Free · No account required · " + site.requiresMobileShort + (' · <a href="/mobile/android/">Android coming soon</a>' if app.showAndroid else "") %}
     {% endif %}
     {% set heroTagline = app.promotionalText %}
     {% set heroStrip = "social" %}
@@ -121,7 +121,7 @@ layout: layouts/mobile-app.njk
     {% include "partials/crosspanel.njk" %}
 
     {% set getHeading = "On your phone in under a minute" %}
-    {% set getBody = "Free, with no subscription and nothing to cancel — and free on your computer too." %}
+    {% set getBody = "Free, with no account required, no subscription and nothing to cancel — and free on your computer too." %}
     {% include "partials/getcuecard.njk" %}
 
     {% set guide = mobileGuides.forApp(app) %}

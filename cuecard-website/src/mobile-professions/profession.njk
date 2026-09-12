@@ -66,7 +66,7 @@ layout: layouts/mobile-profession.njk
         },
         { text: "Watch the demo", href: "#demo", icon: "play", style: "ghost" }
     ] %}
-    {% set heroNote = 'Free · ' + site.requiresMobileShort + ' · <a href="/mobile/android/">Android coming soon</a>' %}
+    {% set heroNote = 'Free · No account required · ' + site.requiresMobileShort + ' · <a href="/mobile/android/">Android coming soon</a>' %}
     {% set heroTagline = "No more forgetting your lines or switching apps mid-take." %}
     {% set heroStrip = "social" %}
     {% set stripMore = "and every other app you record in" %}
@@ -114,7 +114,7 @@ layout: layouts/mobile-profession.njk
     {% include "partials/crosspanel.njk" %}
 
     {% set getHeading = "On your phone in under a minute" %}
-    {% set getBody = "Free, with no subscription and nothing to cancel — and free on your computer too." %}
+    {% set getBody = "Free, with no account required, no subscription and nothing to cancel — and free on your computer too." %}
     {% include "partials/getcuecard.njk" %}
 
     {% set guide = mobileGuides.forRole(mobileProfession) %}
