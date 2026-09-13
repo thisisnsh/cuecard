@@ -47,7 +47,7 @@ function forApp(subject, device) {
     { cue: "smile" },
     { t: `They are never lines to read out — which is why you have not heard me say one.` },
     { cue: "pause, then land it" },
-    { t: `That is the whole app. It is free.` },
+    { t: `No account needed, and it is free.` },
   ];
 }
 

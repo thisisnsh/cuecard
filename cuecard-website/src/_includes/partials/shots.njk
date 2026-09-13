@@ -11,7 +11,7 @@
 <section class="shots" id="{{ shotsId or 'shots' }}" aria-labelledby="{{ shotsId or 'shots' }}-h">
     <div class="wrap">
         <p class="micro">{{ icon("sparkle", 13) }}{{ shotsMicro or "The app itself" }}</p>
-        <h2 class="section-h" id="{{ shotsId or 'shots' }}-h">{{ (shotsHeading or "This is the whole thing.") | safe }}</h2>
+        <h2 class="section-h" id="{{ shotsId or 'shots' }}-h">{{ (shotsHeading or "What it looks like.") | safe }}</h2>
         {% if shotsNote %}<p class="body">{{ shotsNote | safe }}</p>{% endif %}
 
         <div class="shots-grid">

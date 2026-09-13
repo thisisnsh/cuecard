@@ -1,47 +1,50 @@
 {% from "partials/icons.njk" import icon %}
 {#
-  The desktop app, a screen at a time: the desktop pages' answer to the App
-  Store strips on the phone pages (partials/shots.njk).
-
-  One card, pinned while the reader scrolls through the section. How far they
-  have scrolled picks the screen, and the change is a transition, so the next
-  screen rises from below and snaps into place while the last one leaves
-  upward. script.js drives it; without JS the screens simply stack.
+  The desktop app's screens: the desktop pages' answer to the App Store strips
+  on the phone pages (partials/shots.njk). One card, the screens side by side
+  on a wide screen and one after another on a narrow one, each with its own
+  caption. Pressing a screen opens it full size in a dialog (script.js); with
+  no JS the link opens the image itself.
 
   Set `reelId` to "desktop" (the default) or "slides".
 #}
 {% set reel = site.reels[reelId or "desktop"] %}
-<section class="reel" id="{{ shotsId or 'shots' }}" aria-labelledby="{{ shotsId or 'shots' }}-h" data-reel>
+<section class="reel" id="{{ shotsId or 'shots' }}" aria-labelledby="{{ shotsId or 'shots' }}-h">
     <div class="wrap">
         <p class="micro">{{ icon("sparkle", 13) }}{{ shotsMicro or "The app itself" }}</p>
-        <h2 class="section-h" id="{{ shotsId or 'shots' }}-h">{{ (shotsHeading or "This is the whole app.") | safe }}</h2>
+        <h2 class="section-h" id="{{ shotsId or 'shots' }}-h">{{ (shotsHeading or "What it looks like.") | safe }}</h2>
         {% if shotsNote %}<p class="body">{{ shotsNote | safe }}</p>{% endif %}
 
-        <div class="reel-track" style="--frames: {{ reel.frames | length }}">
-            <div class="reel-pin">
-                <figure class="reel-card reveal">
-                    <div class="reel-stage">
-                        {% for f in reel.frames %}
-                        <img class="reel-frame{% if loop.first %} is-on{% endif %}" src="{{ f.src }}"
-                             srcset="{{ f.small }} 820w, {{ f.src }} 1612w"
-                             sizes="(min-width: 1240px) 1140px, 94vw"
-                             width="1612" height="1054"
-                             alt="{{ f.alt }}" loading="lazy" decoding="async">
-                        {% endfor %}
-                    </div>
-                    <figcaption class="shot-foot">
-                        <span class="shot-label">{{ icon(reel.icon, 15) }}{{ reel.label }}</span>
-                        <span class="reel-caps">
-                            {% for f in reel.frames %}
-                            <span class="shot-cap reel-cap{% if loop.first %} is-on{% endif %}">{{ f.caption }}</span>
-                            {% endfor %}
-                        </span>
-                        <span class="reel-dots" aria-hidden="true">
-                            {% for f in reel.frames %}<i class="reel-dot{% if loop.first %} is-on{% endif %}"></i>{% endfor %}
-                        </span>
-                    </figcaption>
-                </figure>
-            </div>
+        <div class="reel-card reveal">
+            <ul class="reel-grid">
+                {% for f in reel.frames %}
+                <li>
+                    <figure class="reel-frame">
+                        <a class="reel-zoom" href="{{ f.src }}" data-reel-zoom aria-label="Expand: {{ f.caption }}">
+                            <img src="{{ f.src }}"
+                                 srcset="{{ f.small }} 820w, {{ f.src }} 1612w"
+                                 sizes="(min-width: 761px) 380px, 94vw"
+                                 width="1612" height="1054"
+                                 alt="{{ f.alt }}" loading="lazy" decoding="async">
+                        </a>
+                        <figcaption class="shot-cap">{{ f.caption }}</figcaption>
+                    </figure>
+                </li>
+                {% endfor %}
+            </ul>
+            <p class="shot-foot">
+                <span class="shot-label">{{ icon(reel.icon, 15) }}{{ reel.label }}</span>
+            </p>
         </div>
     </div>
+
+    <dialog class="reel-dialog" aria-label="Screenshot">
+        <button class="reel-close" type="button" aria-label="Close">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+        <figure>
+            <img class="reel-dialog-img" src="" alt="" width="1612" height="1054">
+            <figcaption class="reel-dialog-cap"></figcaption>
+        </figure>
+    </dialog>
 </section>

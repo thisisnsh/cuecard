@@ -36,8 +36,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initSmoothScroll();
     initNavbarScroll();
 
-    // The desktop app's screens, one at a time as the reader scrolls
-    initReels();
+    // The desktop screenshots, expanded on click
+    initReelZoom();
 
     // The FAQ accordion and the search box on /faq/
     initFAQAccordion();
@@ -278,59 +278,30 @@ function initScrollReveal() {
     items.forEach(el => observer.observe(el));
 }
 
-/* The desktop reel (partials/reel.njk).
+/* The desktop screenshots (partials/reel.njk): pressing one opens it full
+   size in the section's dialog. The dialog closes on Escape, the close
+   button, or a click anywhere on it. Without <dialog> support the link just
+   opens the image. */
+function initReelZoom() {
+    document.querySelectorAll('.reel').forEach(reel => {
+        const dialog = reel.querySelector('.reel-dialog');
+        if (!dialog || typeof dialog.showModal !== 'function') return;
+        const img = dialog.querySelector('.reel-dialog-img');
+        const cap = dialog.querySelector('.reel-dialog-cap');
 
-   The card is pinned inside a tall track. How far the reader has scrolled
-   through the track picks the screen; the swap itself is a CSS transition, so
-   each screen snaps into place instead of being dragged by the scroll. The
-   pin sits under the sticky header, whose height changes with the page's
-   secondary strip, so it is measured rather than assumed. */
-function initReels() {
-    const reels = document.querySelectorAll('[data-reel]');
-    if (!reels.length) return;
-    const topbar = document.getElementById('topbar');
-
-    reels.forEach(reel => {
-        const track = reel.querySelector('.reel-track');
-        const pin = reel.querySelector('.reel-pin');
-        const frames = [...reel.querySelectorAll('.reel-frame')];
-        const caps = [...reel.querySelectorAll('.reel-cap')];
-        const dots = [...reel.querySelectorAll('.reel-dot')];
-        if (!track || !pin || frames.length < 2) return;
-
-        reel.classList.add('is-live');
-        let current = 0;
-        let queued = false;
-
-        const show = i => {
-            if (i === current) return;
-            current = i;
-            frames.forEach((f, n) => {
-                f.classList.toggle('is-on', n === i);
-                f.classList.toggle('is-past', n < i);
+        reel.querySelectorAll('[data-reel-zoom]').forEach(link => {
+            link.addEventListener('click', e => {
+                e.preventDefault();
+                const thumb = link.querySelector('img');
+                img.src = link.getAttribute('href');
+                img.alt = thumb ? thumb.alt : '';
+                const caption = link.closest('figure')?.querySelector('figcaption');
+                cap.textContent = caption ? caption.textContent : '';
+                dialog.showModal();
             });
-            caps.forEach((c, n) => c.classList.toggle('is-on', n === i));
-            dots.forEach((d, n) => d.classList.toggle('is-on', n === i));
-        };
+        });
 
-        const update = () => {
-            queued = false;
-            const top = topbar ? topbar.offsetHeight : 0;
-            reel.style.setProperty('--reel-top', top + 'px');
-            const box = track.getBoundingClientRect();
-            const run = box.height - pin.offsetHeight;
-            const progress = run > 0 ? Math.min(Math.max((top - box.top) / run, 0), 0.999) : 0;
-            show(Math.floor(progress * frames.length));
-        };
-
-        const queue = () => {
-            if (queued) return;
-            queued = true;
-            requestAnimationFrame(update);
-        };
-        window.addEventListener('scroll', queue, { passive: true });
-        window.addEventListener('resize', queue);
-        update();
+        dialog.addEventListener('click', () => dialog.close());
     });
 }
 

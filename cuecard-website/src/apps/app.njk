@@ -91,7 +91,7 @@ layout: layouts/mobile-app.njk
     {% include "partials/rows.njk" %}
 
     {% if app.shotId %}{% set shotIds = [app.shotId] %}{% endif %}
-    {% set shotsHeading = "This is the whole app." if app.showIos else "Available now on iPhone and iPad" %}
+    {% set shotsHeading = "What it looks like." if app.showIos else "Available now on iPhone and iPad" %}
     {% set shotsNote = "Read your script from the full screen, or shrink it into a small window that stays on top of whatever else you open." %}
     {% set shotsFoot = 'Looking for the computer app instead? <a href="/desktop/">CueCard for Mac and Windows</a> keeps your speaker notes on your screen and out of your screen share.' %}
     {% include "partials/shots.njk" %}

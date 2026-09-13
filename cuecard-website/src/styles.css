@@ -642,65 +642,57 @@ code, .notes-content { font-family: var(--mono); font-size: 0.92em; }
   .shot-cap { text-align: left; }
 }
 
-/* ════════════════════════ THE DESKTOP REEL ══════════════════════════════ */
-/* The same card as the screenshots, holding the desktop app's screens one at
-   a time. Without JS the screens stack inside it. With JS (.is-live) the
-   track grows tall, the card pins in the middle of the viewport, and each
-   screen rises into place from below as the reader scrolls through. */
-.reel-track { margin-top: clamp(20px, 2.8vw, 32px); }
+/* ════════════════════════ THE DESKTOP SCREENS ═══════════════════════════ */
+/* The same card as the screenshots, holding the desktop app's screens: side
+   by side on a wide screen, one after another on a narrow one. */
 .reel-card {
-  width: 100%; margin: 0 auto;
+  margin-top: clamp(20px, 2.8vw, 32px);
   border: 1px solid var(--hairline); border-radius: 18px;
   background: var(--paper);
   overflow: hidden;
 }
-.reel-stage { position: relative; }
-.reel-frame { display: block; width: 100%; height: auto; }
-.reel-caps { display: grid; }
-.reel-dots { display: none; }
+.reel-grid {
+  list-style: none;
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: clamp(8px, 1.4vw, 18px);
+  padding: clamp(12px, 1.8vw, 22px) clamp(12px, 1.8vw, 22px) 6px;
+}
+.reel-frame img { display: block; width: 100%; height: auto; }
+.reel-zoom { display: block; border-radius: 10px; cursor: zoom-in; transition: transform .3s var(--ease); }
+.reel-zoom:hover { transform: translateY(-3px); }
+.reel-zoom:focus-visible { outline: 2px solid var(--cue); outline-offset: 2px; }
 
-.reel.is-live .reel-track {
-  /* The card's own height, plus half a screen of scrolling per frame. */
-  height: calc(100vh + var(--frames) * 50vh);
-  height: calc(100svh + var(--frames) * 50svh);
+/* The expanded screen: the image at up to its own size, on dimmed page. */
+.reel-dialog {
+  margin: auto; padding: 0; border: 0;
+  width: min(1612px, 94vw); max-height: 94vh;
+  background: transparent; overflow: visible;
 }
-.reel.is-live .reel-pin {
-  position: sticky; top: var(--reel-top, 64px);
-  height: calc(100vh - var(--reel-top, 64px));
-  height: calc(100svh - var(--reel-top, 64px));
-  display: flex; align-items: center;
+.reel-dialog::backdrop { background: rgba(16, 16, 20, 0.72); }
+.reel-dialog figure {
+  border-radius: 18px; background: var(--paper);
+  overflow: hidden; cursor: zoom-out;
 }
-.reel.is-live .reel-card {
-  /* Never taller than the space under the header, foot included. */
-  width: min(100%, calc((100vh - var(--reel-top, 64px) - 120px) * 1.53));
-  width: min(100%, calc((100svh - var(--reel-top, 64px) - 120px) * 1.53));
+.reel-dialog-img {
+  display: block; width: 100%; height: auto;
+  max-height: calc(94vh - 52px); object-fit: contain;
 }
-.reel.is-live .reel-stage { aspect-ratio: 1612 / 1054; overflow: hidden; }
-.reel.is-live .reel-frame {
-  position: absolute; inset: 0; height: 100%;
-  transform: translateY(100%);
-  transition: transform .7s var(--ease);
+.reel-dialog-cap {
+  padding: 12px 18px 16px; text-align: center;
+  font-size: 13.5px; color: var(--ash);
+  border-top: 1px solid var(--hairline);
 }
-.reel.is-live .reel-frame.is-past { transform: translateY(-100%); }
-.reel.is-live .reel-frame.is-on { transform: none; }
-.reel.is-live .reel-cap {
-  grid-area: 1 / 1;
-  opacity: 0; transition: opacity .35s var(--ease);
+.reel-close {
+  position: absolute; top: 10px; right: 10px; z-index: 1;
+  display: grid; place-items: center;
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 1px solid var(--hairline); background: var(--paper); color: var(--ink);
+  cursor: pointer;
 }
-.reel.is-live .reel-cap.is-on { opacity: 1; }
-.reel.is-live .reel-dots { display: inline-flex; gap: 5px; align-self: center; flex: none; }
-.reel-dot {
-  width: 6px; height: 6px; border-radius: 3px;
-  background: var(--hair-hi);
-  transition: width .35s var(--ease), background .35s var(--ease);
-}
-.reel-dot.is-on { width: 16px; background: var(--ink); }
-.reel .shot-foot { align-items: center; }
-.reel .reel-caps { flex: 1; }
-.reel:not(.is-live) .reel-frame + .reel-frame { border-top: 1px solid var(--hairline); }
-@media (max-width: 560px) {
-  .reel .shot-foot { align-items: flex-start; }
-  .reel.is-live .reel-dots { align-self: flex-start; }
+.reel-close:hover { border-color: var(--hair-hi); }
+.reel-frame .shot-cap { text-align: center; padding: 4px 8px 10px; }
+@media (max-width: 760px) {
+  .reel-grid { grid-template-columns: 1fr; gap: 4px; }
 }
 
 /* ════════════════════════ THE DEMOS ═════════════════════════════════════ */
@@ -1356,7 +1348,7 @@ code, .notes-content { font-family: var(--mono); font-size: 0.92em; }
   .reveal { opacity: 1; transform: none; transition: none; }
   .leaguerow a:hover, .crestgrid a:hover { padding-left: 0; }
   .nav-get-panel { animation: none; }
-  .reel.is-live .reel-frame, .reel.is-live .reel-cap, .reel-dot { transition: none; }
+  .reel-zoom, .reel-zoom:hover { transition: none; transform: none; }
 }
 
 /* Written guides use the same two-column ledger as the feature section. */

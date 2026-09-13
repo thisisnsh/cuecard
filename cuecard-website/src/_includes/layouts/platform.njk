@@ -64,8 +64,8 @@
     {% include "partials/rows.njk" %}
 
     {% set reelId = "slides" if isSlides else "desktop" %}
-    {% set shotsHeading = "Your speaker notes, <em>straight from the deck.</em>" if isSlides else "This is the whole app." %}
-    {% set shotsNote = ("Present from Google Slides and each slide's notes arrive in CueCard as you go. Keep scrolling to see each screen." if isSlides else "Write the script, press play and it scrolls, then set it up the way you read. Keep scrolling to see each screen.") %}
+    {% set shotsHeading = "Your speaker notes, <em>straight from the deck.</em>" if isSlides else "What it looks like." %}
+    {% set shotsNote = ("Present from Google Slides and each slide's notes arrive in CueCard as you go." if isSlides else "Write the script, press play and it scrolls, then set it up the way you read.") %}
     {% include "partials/reel.njk" %}
 
     {% set watchHeading = "A minute of it, on a shared screen" %}
