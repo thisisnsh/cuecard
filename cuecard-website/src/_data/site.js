@@ -294,7 +294,7 @@ const site = {
   // a live figure: the GitHub API only knows about desktop release assets, so
   // anything computed from it undercounts the App Store badly. Edit the
   // string and every page follows. The star count beside it *is* live.
-  downloadTotal: "2,000+",
+  downloadTotal: "2,100+",
 
   // ── The apps CueCard is read over, on a phone ───────────────────────────
   // Each has a page of its own; `icon` names a symbol in partials/icons.njk.
