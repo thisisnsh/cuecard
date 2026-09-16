@@ -489,7 +489,7 @@ fun HomeView(
             enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
             exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
         ) {
-            SettingsView(
+            EditorSettingsView(
                 settingsService = settingsService,
                 notifications = notifications,
                 onDismiss = { showingSettings = false }
@@ -505,6 +505,7 @@ fun HomeView(
             TeleprompterView(
                 content = content,
                 settings = settings,
+                settingsService = settingsService,
                 onDismiss = {
                     showingTeleprompter = false
                     requestReviewIfEarned()

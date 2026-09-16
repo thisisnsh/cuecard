@@ -122,6 +122,13 @@ class TeleprompterPiPManager private constructor() {
         applyParams()
     }
 
+    /** Take settings changed mid-run, so a new layout reaches the overlay window. */
+    fun update(settings: TeleprompterSettings) {
+        if (this.settings == settings) return
+        this.settings = settings
+        if (isConfigured) applyParams()
+    }
+
     /**
      * Update current state from the teleprompter
      */

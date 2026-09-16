@@ -83,17 +83,20 @@ import com.thisisnsh.cuecard.android.services.TeleprompterSettings
 import com.thisisnsh.cuecard.android.services.ThemePreference
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+// MARK: - Editor Settings
+
+/**
+ * Settings opened from the editor: how the script is set while writing it, plus
+ * everything the two Settings screens share.
+ */
 @Composable
-fun SettingsView(
+fun EditorSettingsView(
     settingsService: SettingsService,
     notifications: RemoteNotificationService,
     onDismiss: () -> Unit
 ) {
     val isDark = LocalIsDarkTheme.current
-    val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val screenFocusManager = LocalFocusManager.current
 
     val settings by settingsService.settings.collectAsState()
     val payload by notifications.payload.collectAsState()
@@ -103,8 +106,187 @@ fun SettingsView(
         notifications.notification(RemoteNotification.Surface.SETTINGS_ROW)
     }
 
+    SettingsScreen(screen = "settings", onDismiss = onDismiss) {
+        // A notice from the worker, if there's one meant for Settings.
+        settingsNotification?.let { notification ->
+            SettingsSection(isDark = isDark) {
+                NotificationRow(
+                    notification = notification,
+                    notifications = notifications,
+                    modifier = Modifier.padding(horizontal = 20.dp)
+                )
+            }
+        }
+
+        SettingsSection(title = "Editor", isDark = isDark) {
+            SizePresetPicker(
+                label = "Text Size",
+                value = settings.editorFontSize,
+                presets = TeleprompterSettings.EDITOR_FONT_SIZE_PRESETS,
+                isDark = isDark,
+                onSelect = { scope.launch { settingsService.updateEditorFontSize(it) } }
+            )
+        }
+
+        AppearanceSection(settingsService = settingsService, isDark = isDark)
+
+        val range = TeleprompterSettings.EDITOR_FONT_SIZE_RANGE
+        AdvancedSection(
+            screen = "settings",
+            footer = "Text size can be set from ${range.first} to ${range.last} pt.",
+            isDark = isDark
+        ) {
+            NumberRow(
+                label = "Text Size",
+                unit = "pt",
+                value = settings.editorFontSize,
+                range = range,
+                isDark = isDark,
+                onCommit = { scope.launch { settingsService.updateEditorFontSize(it) } }
+            )
+        }
+
+        AboutSection(settingsService = settingsService, screen = "settings", isDark = isDark)
+
+        if (BuildConfig.DIAGNOSTICS) {
+            SettingsSection(
+                isDark = isDark,
+                footer = "This intentionally crashes the app to verify Crashlytics reporting."
+            ) {
+                Text(
+                    text = "Trigger Test Crash",
+                    fontSize = 17.sp,
+                    color = AppColors.red(isDark),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickableWithoutRipple {
+                            AnalyticsEvents.logButtonClick("test_crash", "settings")
+                            Firebase.crashlytics.log("Manually triggered test crash")
+                            throw RuntimeException("Crashlytics test crash")
+                        }
+                        .padding(horizontal = 20.dp, vertical = 12.dp)
+                )
+            }
+        }
+    }
+}
+
+// MARK: - Teleprompter Settings
+
+private const val TELEPROMPTER_SETTINGS_SCREEN = "teleprompter_settings"
+
+/**
+ * Settings opened from the teleprompter: everything that shapes a run, plus
+ * everything the two Settings screens share.
+ */
+@Composable
+fun TeleprompterSettingsView(
+    settingsService: SettingsService,
+    onDismiss: () -> Unit
+) {
+    val isDark = LocalIsDarkTheme.current
+    val scope = rememberCoroutineScope()
+    val settings by settingsService.settings.collectAsState()
+
+    SettingsScreen(screen = TELEPROMPTER_SETTINGS_SCREEN, onDismiss = onDismiss) {
+        SettingsSection(title = "Teleprompter", isDark = isDark) {
+            NumberRow(
+                label = "Start Delay",
+                unit = "seconds",
+                value = settings.countdownSeconds,
+                range = TeleprompterSettings.COUNTDOWN_RANGE,
+                isDark = isDark,
+                onCommit = { scope.launch { settingsService.updateCountdownSeconds(it) } }
+            )
+
+            NumberRow(
+                label = "Scroll Speed",
+                unit = "lines/min",
+                value = settings.linesPerMinute,
+                range = TeleprompterSettings.LPM_RANGE,
+                isDark = isDark,
+                onCommit = { scope.launch { settingsService.updateLinesPerMinute(it) } }
+            )
+
+            SizePresetPicker(
+                label = "Text Size",
+                value = settings.fontSize,
+                presets = TeleprompterSettings.FONT_SIZE_PRESETS,
+                isDark = isDark,
+                onSelect = { scope.launch { settingsService.updateFontSize(it) } }
+            )
+        }
+
+        SettingsSection(title = "Floating Window", isDark = isDark) {
+            SizePresetPicker(
+                label = "Text Size",
+                value = settings.pipFontSize,
+                presets = TeleprompterSettings.PIP_FONT_SIZE_PRESETS,
+                isDark = isDark,
+                onSelect = { scope.launch { settingsService.updatePipFontSize(it) } }
+            )
+
+            MenuPickerRow(
+                label = "Layout",
+                options = OverlayAspectRatio.entries,
+                selected = settings.overlayAspectRatio,
+                optionLabel = { it.label },
+                isDark = isDark,
+                onSelect = { scope.launch { settingsService.updateOverlayAspectRatio(it) } }
+            )
+        }
+
+        AppearanceSection(settingsService = settingsService, isDark = isDark)
+
+        AdvancedSection(
+            screen = TELEPROMPTER_SETTINGS_SCREEN,
+            footer = teleprompterAdvancedFooter(),
+            isDark = isDark
+        ) {
+            NumberRow(
+                label = "Teleprompter Text Size",
+                unit = "pt",
+                value = settings.fontSize,
+                range = TeleprompterSettings.FONT_SIZE_RANGE,
+                isDark = isDark,
+                onCommit = { scope.launch { settingsService.updateFontSize(it) } }
+            )
+            NumberRow(
+                label = "Floating Window Text Size",
+                unit = "pt",
+                value = settings.pipFontSize,
+                range = TeleprompterSettings.PIP_FONT_SIZE_RANGE,
+                isDark = isDark,
+                onCommit = { scope.launch { settingsService.updatePipFontSize(it) } }
+            )
+        }
+
+        AboutSection(settingsService = settingsService, screen = TELEPROMPTER_SETTINGS_SCREEN, isDark = isDark)
+    }
+}
+
+private fun teleprompterAdvancedFooter(): String {
+    val prompter = TeleprompterSettings.FONT_SIZE_RANGE
+    val pip = TeleprompterSettings.PIP_FONT_SIZE_RANGE
+    return "Teleprompter text can be set from ${prompter.first} to ${prompter.last} pt, " +
+        "and floating window text from ${pip.first} to ${pip.last} pt."
+}
+
+// MARK: - Shared Sections
+
+/** The list both Settings screens are built on, with a Done button. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SettingsScreen(
+    screen: String,
+    onDismiss: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    val isDark = LocalIsDarkTheme.current
+    val screenFocusManager = LocalFocusManager.current
+
     LaunchedEffect(Unit) {
-        AnalyticsEvents.logScreenView("settings")
+        AnalyticsEvents.logScreenView(screen)
     }
 
     Scaffold(
@@ -127,7 +309,7 @@ fun SettingsView(
                         modifier = Modifier
                             .padding(horizontal = 16.dp)
                             .clickableWithoutRipple {
-                                AnalyticsEvents.logButtonClick("done", "settings")
+                                AnalyticsEvents.logButtonClick("done", screen)
                                 onDismiss()
                             }
                     )
@@ -149,176 +331,75 @@ fun SettingsView(
                     detectTapGestures { screenFocusManager.clearFocus() }
                 }
         ) {
-            // A notice from the worker, if there's one meant for Settings.
-            settingsNotification?.let { notification ->
-                SettingsSection(isDark = isDark) {
-                    NotificationRow(
-                        notification = notification,
-                        notifications = notifications,
-                        modifier = Modifier.padding(horizontal = 20.dp)
-                    )
-                }
-            }
-
-            SettingsSection(isDark = isDark) {
-                LinkRow(title = "Share CueCard", icon = Icons.Filled.Share, isDark = isDark) {
-                    AnalyticsEvents.logButtonClick("share_app", "settings")
-                    shareApp(context)
-                }
-
-                LinkRow(title = "Review on Google Play", icon = Icons.Filled.ArrowOutward, isDark = isDark) {
-                    AnalyticsEvents.logButtonClick("rate_app", "settings")
-                    openLink(context, AppLinks.PLAY_STORE)
-                }
-            }
-
-            SettingsSection(title = "Editor", isDark = isDark) {
-                SizePresetPicker(
-                    label = "Text Size",
-                    value = settings.editorFontSize,
-                    presets = TeleprompterSettings.EDITOR_FONT_SIZE_PRESETS,
-                    isDark = isDark,
-                    onSelect = { scope.launch { settingsService.updateEditorFontSize(it) } }
-                )
-            }
-
-            SettingsSection(title = "Teleprompter", isDark = isDark) {
-                NumberRow(
-                    label = "Start Delay",
-                    unit = "seconds",
-                    value = settings.countdownSeconds,
-                    range = TeleprompterSettings.COUNTDOWN_RANGE,
-                    isDark = isDark,
-                    onCommit = { scope.launch { settingsService.updateCountdownSeconds(it) } }
-                )
-
-                NumberRow(
-                    label = "Scroll Speed",
-                    unit = "lines/min",
-                    value = settings.linesPerMinute,
-                    range = TeleprompterSettings.LPM_RANGE,
-                    isDark = isDark,
-                    onCommit = { scope.launch { settingsService.updateLinesPerMinute(it) } }
-                )
-
-                SizePresetPicker(
-                    label = "Text Size",
-                    value = settings.fontSize,
-                    presets = TeleprompterSettings.FONT_SIZE_PRESETS,
-                    isDark = isDark,
-                    onSelect = { scope.launch { settingsService.updateFontSize(it) } }
-                )
-            }
-
-            SettingsSection(title = "Floating Window", isDark = isDark) {
-                SizePresetPicker(
-                    label = "Text Size",
-                    value = settings.pipFontSize,
-                    presets = TeleprompterSettings.PIP_FONT_SIZE_PRESETS,
-                    isDark = isDark,
-                    onSelect = { scope.launch { settingsService.updatePipFontSize(it) } }
-                )
-
-                MenuPickerRow(
-                    label = "Layout",
-                    options = OverlayAspectRatio.entries,
-                    selected = settings.overlayAspectRatio,
-                    optionLabel = { it.label },
-                    isDark = isDark,
-                    onSelect = { scope.launch { settingsService.updateOverlayAspectRatio(it) } }
-                )
-            }
-
-            SettingsSection(title = "Appearance", isDark = isDark) {
-                MenuPickerRow(
-                    label = "Theme",
-                    options = ThemePreference.entries,
-                    selected = settings.themePreference,
-                    optionLabel = { it.displayName },
-                    isDark = isDark,
-                    onSelect = { scope.launch { settingsService.updateThemePreference(it) } }
-                )
-
-                CueColorRow(
-                    selected = settings.cueColor,
-                    isDark = isDark,
-                    onSelect = { scope.launch { settingsService.updateCueColor(it) } }
-                )
-            }
-
-            AdvancedSection(
-                screen = "settings",
-                footer = advancedFooter(),
-                isDark = isDark
-            ) {
-                NumberRow(
-                    label = "Editor Text Size",
-                    unit = "pt",
-                    value = settings.editorFontSize,
-                    range = TeleprompterSettings.EDITOR_FONT_SIZE_RANGE,
-                    isDark = isDark,
-                    onCommit = { scope.launch { settingsService.updateEditorFontSize(it) } }
-                )
-                NumberRow(
-                    label = "Teleprompter Text Size",
-                    unit = "pt",
-                    value = settings.fontSize,
-                    range = TeleprompterSettings.FONT_SIZE_RANGE,
-                    isDark = isDark,
-                    onCommit = { scope.launch { settingsService.updateFontSize(it) } }
-                )
-                NumberRow(
-                    label = "Floating Window Text Size",
-                    unit = "pt",
-                    value = settings.pipFontSize,
-                    range = TeleprompterSettings.PIP_FONT_SIZE_RANGE,
-                    isDark = isDark,
-                    onCommit = { scope.launch { settingsService.updatePipFontSize(it) } }
-                )
-            }
-
-            SettingsSection(isDark = isDark) {
-                // Greyed out once there's nothing left to reset, so a tap that
-                // changes nothing never looks like one that didn't register.
-                val canReset = settingsService.canResetSettings(settings)
-                Text(
-                    text = "Reset to Defaults",
-                    fontSize = 17.sp,
-                    color = if (canReset) AppColors.blue(isDark) else AppColors.textSecondary(isDark).copy(alpha = 0.5f),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickableWithoutRipple {
-                            if (!canReset) return@clickableWithoutRipple
-                            AnalyticsEvents.logButtonClick("reset_to_defaults", "settings")
-                            scope.launch { settingsService.resetSettings() }
-                        }
-                        .padding(horizontal = 20.dp, vertical = 12.dp)
-                )
-            }
-
-            if (BuildConfig.DIAGNOSTICS) {
-                SettingsSection(
-                    isDark = isDark,
-                    footer = "This intentionally crashes the app to verify Crashlytics reporting."
-                ) {
-                    Text(
-                        text = "Trigger Test Crash",
-                        fontSize = 17.sp,
-                        color = AppColors.red(isDark),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickableWithoutRipple {
-                                AnalyticsEvents.logButtonClick("test_crash", "settings")
-                                Firebase.crashlytics.log("Manually triggered test crash")
-                                throw RuntimeException("Crashlytics test crash")
-                            }
-                            .padding(horizontal = 20.dp, vertical = 12.dp)
-                    )
-                }
-            }
-
+            content()
             Spacer(modifier = Modifier.height(32.dp))
         }
+    }
+}
+
+/**
+ * Theme and cue color. Both are one setting for the whole app, so either
+ * Settings screen changes them everywhere.
+ */
+@Composable
+private fun AppearanceSection(settingsService: SettingsService, isDark: Boolean) {
+    val scope = rememberCoroutineScope()
+    val settings by settingsService.settings.collectAsState()
+
+    SettingsSection(title = "Appearance", isDark = isDark) {
+        MenuPickerRow(
+            label = "Theme",
+            options = ThemePreference.entries,
+            selected = settings.themePreference,
+            optionLabel = { it.displayName },
+            isDark = isDark,
+            onSelect = { scope.launch { settingsService.updateThemePreference(it) } }
+        )
+
+        CueColorRow(
+            selected = settings.cueColor,
+            isDark = isDark,
+            onSelect = { scope.launch { settingsService.updateCueColor(it) } }
+        )
+    }
+}
+
+/** Share, review and reset, the same on both Settings screens. */
+@Composable
+private fun AboutSection(settingsService: SettingsService, screen: String, isDark: Boolean) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val settings by settingsService.settings.collectAsState()
+
+    SettingsSection(isDark = isDark) {
+        LinkRow(title = "Share CueCard", icon = Icons.Filled.Share, isDark = isDark) {
+            AnalyticsEvents.logButtonClick("share_app", screen)
+            shareApp(context)
+        }
+
+        LinkRow(title = "Review on Google Play", icon = Icons.Filled.ArrowOutward, isDark = isDark) {
+            AnalyticsEvents.logButtonClick("rate_app", screen)
+            openLink(context, AppLinks.PLAY_STORE)
+        }
+    }
+
+    SettingsSection(isDark = isDark) {
+        // Greyed out once there's nothing left to reset, so a tap that
+        // changes nothing never looks like one that didn't register.
+        val canReset = settingsService.canResetSettings(settings)
+        Text(
+            text = "Reset to Defaults",
+            fontSize = 17.sp,
+            color = if (canReset) AppColors.blue(isDark) else AppColors.textSecondary(isDark).copy(alpha = 0.5f),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickableWithoutRipple {
+                    if (!canReset) return@clickableWithoutRipple
+                    AnalyticsEvents.logButtonClick("reset_to_defaults", screen)
+                    scope.launch { settingsService.resetSettings() }
+                }
+                .padding(horizontal = 20.dp, vertical = 12.dp)
+        )
     }
 }
 
@@ -480,15 +561,6 @@ private fun NumberRow(
             )
         }
     }
-}
-
-private fun advancedFooter(): String {
-    val editor = TeleprompterSettings.EDITOR_FONT_SIZE_RANGE
-    val prompter = TeleprompterSettings.FONT_SIZE_RANGE
-    val pip = TeleprompterSettings.PIP_FONT_SIZE_RANGE
-    return "Editor text can be set from ${editor.first} to ${editor.last} pt, " +
-        "teleprompter text from ${prompter.first} to ${prompter.last} pt, " +
-        "and floating window text from ${pip.first} to ${pip.last} pt."
 }
 
 /** The color every cue is drawn in, picked from a row of swatches. */
@@ -659,7 +731,7 @@ private fun SizePresetPicker(
 
 /**
  * Typed sizes for anyone who wants one the presets don't offer. Hidden until
- * asked for, and the choice to show it is remembered.
+ * asked for, and the choice to show it is remembered across both screens.
  */
 @Composable
 private fun AdvancedSection(

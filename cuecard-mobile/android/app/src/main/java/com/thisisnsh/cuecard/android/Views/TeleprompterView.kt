@@ -2,6 +2,7 @@ package com.thisisnsh.cuecard.android.views
 
 import android.app.Activity
 import android.view.WindowManager
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.LinearOutSlowInEasing
@@ -9,6 +10,8 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -35,11 +38,12 @@ import androidx.compose.material.icons.filled.PictureInPicture
 import androidx.compose.material.icons.filled.PictureInPictureAlt
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -85,6 +89,7 @@ import com.thisisnsh.cuecard.android.models.TeleprompterParser
 import com.thisisnsh.cuecard.android.modifiers.scriptEdgeFade
 import com.thisisnsh.cuecard.android.modifiers.glassed
 import com.thisisnsh.cuecard.android.services.ReviewPromptService
+import com.thisisnsh.cuecard.android.services.SettingsService
 import com.thisisnsh.cuecard.android.services.TeleprompterPiPManager
 import com.thisisnsh.cuecard.android.services.TeleprompterSettings
 import androidx.compose.ui.platform.LocalContext
@@ -139,6 +144,7 @@ private const val CONTROLS_FADE_MILLIS = 200
 fun TeleprompterView(
     content: TeleprompterContent,
     settings: TeleprompterSettings,
+    settingsService: SettingsService,
     onDismiss: () -> Unit
 ) {
     val isDark = LocalIsDarkTheme.current
@@ -162,6 +168,7 @@ fun TeleprompterView(
      */
     val scriptClock = remember { mutableDoubleStateOf(0.0) }
     var showControls by remember { mutableStateOf(true) }
+    var showingSettings by remember { mutableStateOf(false) }
     var countdownValue by remember { mutableIntStateOf(0) }
     var isCountingDown by remember { mutableStateOf(false) }
     /**
@@ -238,8 +245,13 @@ fun TeleprompterView(
         }
     }
 
-    LaunchedEffect(lineOffsets.size) {
+    LaunchedEffect(lineOffsets.size, settings.linesPerMinute) {
         pipManager.scriptDuration = scriptDuration()
+    }
+
+    // Settings are read live, so a size, speed or layout changed mid-run shows at once.
+    LaunchedEffect(settings) {
+        pipManager.update(settings)
     }
 
     // MARK: - Timer readout
@@ -511,220 +523,247 @@ fun TeleprompterView(
         return
     }
 
-    Scaffold(
-        containerColor = AppColors.background(isDark),
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "Teleprompter",
-                        fontSize = 17.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = AppColors.textPrimary(isDark)
+    BackHandler(enabled = showingSettings) { showingSettings = false }
+
+    /** Playing or counting down to it. Settings is only offered while neither. */
+    val isRunning = isPlaying || isCountingDown
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Scaffold(
+            containerColor = AppColors.background(isDark),
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = {
+                        Text(
+                            text = timeDisplay,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace,
+                            color = timerColor
+                        )
+                    },
+                    navigationIcon = {
+                        Icon(
+                            imageVector = Icons.Filled.Close,
+                            contentDescription = "Close",
+                            tint = AppColors.textPrimary(isDark),
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp)
+                                .size(14.dp)
+                                .clickableWithoutRipple {
+                                    AnalyticsEvents.logButtonClick("close", "teleprompter")
+                                    stopAndDismiss()
+                                }
+                        )
+                    },
+                    actions = {
+                        // Only offered while paused, even when a tap has brought the
+                        // other controls back mid-run.
+                        if (!isRunning) {
+                            Icon(
+                                imageVector = Icons.Outlined.Settings,
+                                contentDescription = "Settings",
+                                tint = AppColors.textPrimary(isDark),
+                                modifier = Modifier
+                                    .padding(horizontal = 16.dp)
+                                    .size(20.dp)
+                                    .clickableWithoutRipple {
+                                        AnalyticsEvents.logButtonClick("settings", "teleprompter")
+                                        showingSettings = true
+                                    }
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = AppColors.background(isDark)
                     )
-                },
-                navigationIcon = {
-                    Icon(
-                        imageVector = Icons.Filled.Close,
-                        contentDescription = "Close",
-                        tint = AppColors.textPrimary(isDark),
-                        modifier = Modifier
-                            .padding(horizontal = 16.dp)
-                            .size(14.dp)
-                            .clickableWithoutRipple {
-                                AnalyticsEvents.logButtonClick("close", "teleprompter")
-                                stopAndDismiss()
-                            }
-                    )
-                },
-                actions = {
-                    Text(
-                        text = timeDisplay,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily.Monospace,
-                        color = timerColor,
-                        modifier = Modifier.padding(end = 16.dp)
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = AppColors.background(isDark)
                 )
-            )
-        }
-    ) { padding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .background(AppColors.background(isDark))
-        ) {
+            }
+        ) { padding ->
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .clipToBounds()
-                    .onSizeChanged { size ->
-                        if (size.height.toFloat() != viewportHeightPx) {
-                            viewportHeightPx = size.height.toFloat()
-                            settleNext = true
-                        }
-                    }
-                    .scrollable(state = scrollableState, orientation = Orientation.Vertical)
-                    .pointerInput(Unit) {
-                        detectTapGestures { showControls = !showControls }
-                    }
-                    .scriptEdgeFade(isDark = isDark, top = TOP_FADE, bottom = BOTTOM_FADE)
-                    // Held back while the overlay is closing, so the script
-                    // arrives on the blank page rather than being there waiting
-                    // behind it. See `scriptVisible`.
-                    .graphicsLayer { alpha = scriptAlpha }
+                    .padding(padding)
+                    .background(AppColors.background(isDark))
             ) {
-                val topPadding = with(density) { (viewportHeightPx * READING_LINE_FRACTION).toDp() }
-                val bottomPadding =
-                    with(density) { (viewportHeightPx * (1 - READING_LINE_FRACTION)).toDp() }
-
-                Column(
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .wrapContentHeight(align = Alignment.Top, unbounded = true)
-                        .graphicsLayer { translationY = -scrollPx }
-                        .onSizeChanged { contentHeightPx = it.height.toFloat() }
-                ) {
-                    Spacer(modifier = Modifier.height(topPadding))
-
-                    Text(
-                        text = script,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 24.dp),
-                        onTextLayout = { layout ->
-                            val offsets = FloatArray(layout.lineCount) { layout.getLineTop(it) }
-                            if (!offsets.contentEquals(lineOffsets)) {
-                                lineOffsets = offsets
+                        .fillMaxSize()
+                        .clipToBounds()
+                        .onSizeChanged { size ->
+                            if (size.height.toFloat() != viewportHeightPx) {
+                                viewportHeightPx = size.height.toFloat()
                                 settleNext = true
                             }
                         }
-                    )
-
-                    Spacer(modifier = Modifier.height(bottomPadding))
-                }
-            }
-
-            AnimatedVisibility(
-                visible = showControls,
-                modifier = Modifier.align(Alignment.BottomCenter),
-                enter = fadeIn(tween(CONTROLS_FADE_MILLIS)),
-                exit = fadeOut(tween(CONTROLS_FADE_MILLIS))
-            ) {
-                Row(
-                    modifier = Modifier.padding(bottom = 48.dp),
-                    horizontalArrangement = Arrangement.spacedBy(24.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .scrollable(state = scrollableState, orientation = Orientation.Vertical)
+                        .pointerInput(Unit) {
+                            detectTapGestures { showControls = !showControls }
+                        }
+                        .scriptEdgeFade(isDark = isDark, top = TOP_FADE, bottom = BOTTOM_FADE)
+                        // Held back while the overlay is closing, so the script
+                        // arrives on the blank page rather than being there waiting
+                        // behind it. See `scriptVisible`.
+                        .graphicsLayer { alpha = scriptAlpha }
                 ) {
-                    // Kept in the row even when PiP is unavailable — taking it
-                    // out shifts the play button off centre — and only made
-                    // invisible and untouchable.
-                    Box(
-                        modifier = Modifier
-                            .size(52.dp)
-                            .alpha(if (pipManager.isPiPPossible) 1f else 0f)
-                            .glassed(CircleShape, isDark)
-                            .clickableWithoutRipple {
-                                if (!pipManager.isPiPPossible) return@clickableWithoutRipple
-                                AnalyticsEvents.logButtonClick(
-                                    if (pipManager.isPiPActive) "pip_exit" else "pip_enter",
-                                    "teleprompter"
-                                )
-                                if (pipManager.isPiPActive) {
-                                    pipManager.stopPiP()
-                                    AnalyticsEvents.logEvent("teleprompter_pip_stopped")
-                                } else if (pipManager.enterPiP()) {
-                                    AnalyticsEvents.logEvent("teleprompter_pip_started")
-                                }
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = if (pipManager.isPiPActive) {
-                                Icons.Filled.PictureInPictureAlt
-                            } else {
-                                Icons.Filled.PictureInPicture
-                            },
-                            contentDescription = if (pipManager.isPiPActive) {
-                                "Close Overlay"
-                            } else {
-                                "Start Overlay"
-                            },
-                            tint = AppColors.textPrimary(isDark),
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
+                    val topPadding = with(density) { (viewportHeightPx * READING_LINE_FRACTION).toDp() }
+                    val bottomPadding =
+                        with(density) { (viewportHeightPx * (1 - READING_LINE_FRACTION)).toDp() }
 
-                    // During the countdown the button shows the seconds left, on
-                    // the cue color, and switches to the pause icon once playback
-                    // starts. It still pauses while showing a number.
-                    Box(
+                    Column(
                         modifier = Modifier
-                            .size(72.dp)
-                            .glassed(
-                                CircleShape,
-                                isDark,
-                                tint = if (isCountingDown) settings.cueColor.color(isDark) else AppColors.green(isDark)
-                            )
-                            .clickableWithoutRipple {
-                                AnalyticsEvents.logButtonClick(
-                                    if (isPlaying || isCountingDown) "pause" else "play",
-                                    "teleprompter"
-                                )
-                                togglePlayPause()
-                            },
-                        contentAlignment = Alignment.Center
+                            .fillMaxWidth()
+                            .wrapContentHeight(align = Alignment.Top, unbounded = true)
+                            .graphicsLayer { translationY = -scrollPx }
+                            .onSizeChanged { contentHeightPx = it.height.toFloat() }
                     ) {
-                        Crossfade(
-                            targetState = isCountingDown,
-                            animationSpec = tween(120),
-                            label = "playButton"
-                        ) { showsNumber ->
-                            if (showsNumber) {
-                                Text(
-                                    text = "$countdownValue",
-                                    fontSize = 30.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (isDark) Color.Black else Color.White,
-                                    modifier = Modifier.semantics {
-                                        contentDescription = "Pause, starting in $countdownValue"
+                        Spacer(modifier = Modifier.height(topPadding))
+
+                        Text(
+                            text = script,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 24.dp),
+                            onTextLayout = { layout ->
+                                val offsets = FloatArray(layout.lineCount) { layout.getLineTop(it) }
+                                if (!offsets.contentEquals(lineOffsets)) {
+                                    lineOffsets = offsets
+                                    settleNext = true
+                                }
+                            }
+                        )
+
+                        Spacer(modifier = Modifier.height(bottomPadding))
+                    }
+                }
+
+                AnimatedVisibility(
+                    visible = showControls,
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                    enter = fadeIn(tween(CONTROLS_FADE_MILLIS)),
+                    exit = fadeOut(tween(CONTROLS_FADE_MILLIS))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(bottom = 48.dp),
+                        horizontalArrangement = Arrangement.spacedBy(24.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Kept in the row even when PiP is unavailable — taking it
+                        // out shifts the play button off centre — and only made
+                        // invisible and untouchable.
+                        Box(
+                            modifier = Modifier
+                                .size(52.dp)
+                                .alpha(if (pipManager.isPiPPossible) 1f else 0f)
+                                .glassed(CircleShape, isDark)
+                                .clickableWithoutRipple {
+                                    if (!pipManager.isPiPPossible) return@clickableWithoutRipple
+                                    AnalyticsEvents.logButtonClick(
+                                        if (pipManager.isPiPActive) "pip_exit" else "pip_enter",
+                                        "teleprompter"
+                                    )
+                                    if (pipManager.isPiPActive) {
+                                        pipManager.stopPiP()
+                                        AnalyticsEvents.logEvent("teleprompter_pip_stopped")
+                                    } else if (pipManager.enterPiP()) {
+                                        AnalyticsEvents.logEvent("teleprompter_pip_started")
                                     }
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = if (pipManager.isPiPActive) {
+                                    Icons.Filled.PictureInPictureAlt
+                                } else {
+                                    Icons.Filled.PictureInPicture
+                                },
+                                contentDescription = if (pipManager.isPiPActive) {
+                                    "Close Overlay"
+                                } else {
+                                    "Start Overlay"
+                                },
+                                tint = AppColors.textPrimary(isDark),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+
+                        // During the countdown the button shows the seconds left, on
+                        // the cue color, and switches to the pause icon once playback
+                        // starts. It still pauses while showing a number.
+                        Box(
+                            modifier = Modifier
+                                .size(72.dp)
+                                .glassed(
+                                    CircleShape,
+                                    isDark,
+                                    tint = if (isCountingDown) settings.cueColor.color(isDark) else AppColors.green(isDark)
                                 )
-                            } else {
-                                Icon(
-                                    imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                                    contentDescription = if (isPlaying) "Pause" else "Play",
-                                    tint = if (isDark) Color.Black else Color.White,
-                                    modifier = Modifier.size(28.dp)
-                                )
+                                .clickableWithoutRipple {
+                                    AnalyticsEvents.logButtonClick(
+                                        if (isPlaying || isCountingDown) "pause" else "play",
+                                        "teleprompter"
+                                    )
+                                    togglePlayPause()
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Crossfade(
+                                targetState = isCountingDown,
+                                animationSpec = tween(120),
+                                label = "playButton"
+                            ) { showsNumber ->
+                                if (showsNumber) {
+                                    Text(
+                                        text = "$countdownValue",
+                                        fontSize = 30.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isDark) Color.Black else Color.White,
+                                        modifier = Modifier.semantics {
+                                            contentDescription = "Pause, starting in $countdownValue"
+                                        }
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                                        contentDescription = if (isPlaying) "Pause" else "Play",
+                                        tint = if (isDark) Color.Black else Color.White,
+                                        modifier = Modifier.size(28.dp)
+                                    )
+                                }
                             }
                         }
-                    }
 
-                    Box(
-                        modifier = Modifier
-                            .size(52.dp)
-                            .glassed(CircleShape, isDark)
-                            .clickableWithoutRipple {
-                                AnalyticsEvents.logButtonClick("restart", "teleprompter")
-                                restart()
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Refresh,
-                            contentDescription = "Restart",
-                            tint = AppColors.textPrimary(isDark),
-                            modifier = Modifier.size(20.dp)
-                        )
+                        Box(
+                            modifier = Modifier
+                                .size(52.dp)
+                                .glassed(CircleShape, isDark)
+                                .clickableWithoutRipple {
+                                    AnalyticsEvents.logButtonClick("restart", "teleprompter")
+                                    restart()
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Refresh,
+                                contentDescription = "Restart",
+                                tint = AppColors.textPrimary(isDark),
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     }
                 }
             }
+        }
+
+        AnimatedVisibility(
+            visible = showingSettings,
+            enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+            exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
+        ) {
+            TeleprompterSettingsView(
+                settingsService = settingsService,
+                onDismiss = { showingSettings = false }
+            )
         }
     }
 }
