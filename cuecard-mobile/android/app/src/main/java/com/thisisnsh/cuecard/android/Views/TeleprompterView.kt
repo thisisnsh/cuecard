@@ -3,6 +3,7 @@ package com.thisisnsh.cuecard.android.views
 import android.app.Activity
 import android.view.WindowManager
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -61,6 +62,8 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.SpanStyle
@@ -650,10 +653,17 @@ fun TeleprompterView(
                         )
                     }
 
+                    // During the countdown the button shows the seconds left, on
+                    // the cue color, and switches to the pause icon once playback
+                    // starts. It still pauses while showing a number.
                     Box(
                         modifier = Modifier
                             .size(72.dp)
-                            .glassed(CircleShape, isDark, tint = AppColors.green(isDark))
+                            .glassed(
+                                CircleShape,
+                                isDark,
+                                tint = if (isCountingDown) settings.cueColor.color(isDark) else AppColors.green(isDark)
+                            )
                             .clickableWithoutRipple {
                                 AnalyticsEvents.logButtonClick(
                                     if (isPlaying || isCountingDown) "pause" else "play",
@@ -663,16 +673,30 @@ fun TeleprompterView(
                             },
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = if (isPlaying || isCountingDown) {
-                                Icons.Filled.Pause
+                        Crossfade(
+                            targetState = isCountingDown,
+                            animationSpec = tween(120),
+                            label = "playButton"
+                        ) { showsNumber ->
+                            if (showsNumber) {
+                                Text(
+                                    text = "$countdownValue",
+                                    fontSize = 30.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isDark) Color.Black else Color.White,
+                                    modifier = Modifier.semantics {
+                                        contentDescription = "Pause, starting in $countdownValue"
+                                    }
+                                )
                             } else {
-                                Icons.Filled.PlayArrow
-                            },
-                            contentDescription = if (isPlaying || isCountingDown) "Pause" else "Play",
-                            tint = if (isDark) Color.Black else Color.White,
-                            modifier = Modifier.size(28.dp)
-                        )
+                                Icon(
+                                    imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                                    contentDescription = if (isPlaying) "Pause" else "Play",
+                                    tint = if (isDark) Color.Black else Color.White,
+                                    modifier = Modifier.size(28.dp)
+                                )
+                            }
+                        }
                     }
 
                     Box(
