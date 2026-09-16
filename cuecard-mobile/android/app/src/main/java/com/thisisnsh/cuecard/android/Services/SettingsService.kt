@@ -408,11 +408,22 @@ Try it out. I think you'll love it.
     }
 
     /**
-     * Reset settings to defaults
+     * Put everything Settings shows back to its default. The timer is set on the
+     * home screen, not in Settings, so it is left as it is.
      */
     suspend fun resetSettings() {
-        saveSettings(TeleprompterSettings.DEFAULT)
+        saveSettings(defaultsKeepingTimer(_settings.value))
     }
+
+    /** Whether Reset to Defaults has anything to reset. */
+    fun canResetSettings(settings: TeleprompterSettings): Boolean =
+        settings != defaultsKeepingTimer(settings)
+
+    private fun defaultsKeepingTimer(settings: TeleprompterSettings): TeleprompterSettings =
+        TeleprompterSettings.DEFAULT.copy(
+            timerMinutes = settings.timerMinutes,
+            timerSeconds = settings.timerSeconds
+        )
 
     /**
      * Clear all stored data

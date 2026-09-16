@@ -278,13 +278,17 @@ fun SettingsView(
             }
 
             SettingsSection(isDark = isDark) {
+                // Greyed out once there's nothing left to reset, so a tap that
+                // changes nothing never looks like one that didn't register.
+                val canReset = settingsService.canResetSettings(settings)
                 Text(
                     text = "Reset to Defaults",
                     fontSize = 17.sp,
-                    color = AppColors.blue(isDark),
+                    color = if (canReset) AppColors.blue(isDark) else AppColors.textSecondary(isDark).copy(alpha = 0.5f),
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickableWithoutRipple {
+                            if (!canReset) return@clickableWithoutRipple
                             AnalyticsEvents.logButtonClick("reset_to_defaults", "settings")
                             scope.launch { settingsService.resetSettings() }
                         }
