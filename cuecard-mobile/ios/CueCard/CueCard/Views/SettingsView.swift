@@ -8,13 +8,15 @@ struct SettingsView: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.colorScheme) var colorScheme
 
-    /// The delay and the speed are typed rather than dragged, so each field
-    /// holds text while it is being edited and only becomes a setting once
-    /// editing stops.
-    private enum NumberField { case delay, speed }
+    /// The delay, the speed and the text sizes are typed rather than dragged, so
+    /// each field holds text while it is being edited and only becomes a setting
+    /// once editing stops.
+    private enum NumberField { case delay, speed, fontSize, pipFontSize }
 
     @State private var countdownSecondsText = ""
     @State private var linesPerMinuteText = ""
+    @State private var fontSizeText = ""
+    @State private var pipFontSizeText = ""
     @FocusState private var focusedField: NumberField?
 
     private var isCrashlyticsTestEnabled: Bool {
@@ -38,6 +40,8 @@ struct SettingsView: View {
         .onAppear {
             countdownSecondsText = String(settingsService.settings.countdownSeconds)
             linesPerMinuteText = String(settingsService.settings.linesPerMinute)
+            fontSizeText = String(settingsService.settings.fontSize)
+            pipFontSizeText = String(settingsService.settings.pipFontSize)
             Analytics.logEvent(AnalyticsEventScreenView, parameters: [
                 AnalyticsParameterScreenName: "settings"
             ])
@@ -45,12 +49,20 @@ struct SettingsView: View {
         .onChange(of: focusedField) { field in
             if field != .delay { commitCountdownSeconds() }
             if field != .speed { commitLinesPerMinute() }
+            if field != .fontSize { commitFontSize() }
+            if field != .pipFontSize { commitPipFontSize() }
         }
         .onChange(of: settingsService.settings.countdownSeconds) { seconds in
             if focusedField != .delay { countdownSecondsText = String(seconds) }
         }
         .onChange(of: settingsService.settings.linesPerMinute) { lines in
             if focusedField != .speed { linesPerMinuteText = String(lines) }
+        }
+        .onChange(of: settingsService.settings.fontSize) { size in
+            if focusedField != .fontSize { fontSizeText = String(size) }
+        }
+        .onChange(of: settingsService.settings.pipFontSize) { size in
+            if focusedField != .pipFontSize { pipFontSizeText = String(size) }
         }
     }
 
@@ -101,6 +113,24 @@ struct SettingsView: View {
             settingsService.settings.linesPerMinute = clamped
         }
         linesPerMinuteText = String(settingsService.settings.linesPerMinute)
+    }
+
+    /// Take what was typed as the in-app text size, held to the sizes the
+    /// prompter can draw legibly. Anything that isn't a number leaves it alone.
+    private func commitFontSize() {
+        if let typed = Int(fontSizeText.filter(\.isNumber)) {
+            settingsService.settings.fontSize = TeleprompterSettings.clamp(typed, to: TeleprompterSettings.fontSizeRange)
+        }
+        fontSizeText = String(settingsService.settings.fontSize)
+    }
+
+    /// Take what was typed as the floating prompter's text size, held to the
+    /// sizes that still fit its window. Anything that isn't a number leaves it alone.
+    private func commitPipFontSize() {
+        if let typed = Int(pipFontSizeText.filter(\.isNumber)) {
+            settingsService.settings.pipFontSize = TeleprompterSettings.clamp(typed, to: TeleprompterSettings.pipFontSizeRange)
+        }
+        pipFontSizeText = String(settingsService.settings.pipFontSize)
     }
 
     /// One typed setting: the label, then the number and its unit together in
@@ -183,32 +213,18 @@ struct SettingsView: View {
     }
 
     private var inAppPrompterSection: some View {
-        Section("In-App Prompter") {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Text Size")
-                Picker("Text Size", selection: $settingsService.settings.fontSizePreset) {
-                    ForEach(FontSizePreset.allCases, id: \.self) { preset in
-                        Text(preset.rawValue).tag(preset)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-            }
+        Section {
+            numberRow(label: "Text Size", text: $fontSizeText, field: .fontSize, unit: "pt")
+        } header: {
+            Text("In-App Prompter")
+        } footer: {
+            Text(sizeRangeFooter(TeleprompterSettings.fontSizeRange))
         }
     }
 
     private var floatingPrompterSection: some View {
-        Section("Floating Prompter") {
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Text Size")
-                Picker("Text Size", selection: $settingsService.settings.pipFontSizePreset) {
-                    ForEach(FontSizePreset.allCases, id: \.self) { preset in
-                        Text(preset.rawValue).tag(preset)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
-            }
+        Section {
+            numberRow(label: "Text Size", text: $pipFontSizeText, field: .pipFontSize, unit: "pt")
 
             VStack(alignment: .leading, spacing: 8) {
                 Text("Dimension Ratio")
@@ -220,7 +236,15 @@ struct SettingsView: View {
                 .pickerStyle(.segmented)
                 .labelsHidden()
             }
+        } header: {
+            Text("Floating Prompter")
+        } footer: {
+            Text(sizeRangeFooter(TeleprompterSettings.pipFontSizeRange))
         }
+    }
+
+    private func sizeRangeFooter(_ range: ClosedRange<Int>) -> String {
+        "Text size can be \(range.lowerBound) to \(range.upperBound) pt."
     }
 
     private var appearanceSection: some View {

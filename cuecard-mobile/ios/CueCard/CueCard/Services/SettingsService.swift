@@ -16,8 +16,9 @@ enum ThemePreference: String, Codable, CaseIterable {
     }
 }
 
-/// Font size presets for teleprompter
-enum FontSizePreset: String, Codable, CaseIterable {
+/// The Small / Medium / Large text sizes settings used to be saved as. Only
+/// read, to carry an older choice over to the point size it stood for.
+private enum LegacyFontSizePreset: String, Codable {
     case small = "Small"
     case medium = "Medium"
     case large = "Large"
@@ -59,8 +60,10 @@ enum OverlayAspectRatio: String, Codable, CaseIterable {
 
 /// Settings for the teleprompter
 struct TeleprompterSettings: Codable, Equatable {
-    var fontSizePreset: FontSizePreset
-    var pipFontSizePreset: FontSizePreset
+    /// Text size in the in-app prompter, in points.
+    var fontSize: Int
+    /// Text size in the floating prompter, in points of its 320-point-wide page.
+    var pipFontSize: Int
     var overlayAspectRatio: OverlayAspectRatio
     var scrollSpeed: Double
     /// Scroll speed, in lines of the script as the teleprompter renders them.
@@ -72,19 +75,9 @@ struct TeleprompterSettings: Codable, Equatable {
     /// The color every `[cue …]` in every script is drawn in.
     var cueColor: CueColor
 
-    /// Computed font size from preset
-    var fontSize: Int {
-        fontSizePreset.fontSize
-    }
-
-    /// Computed PiP font size from preset
-    var pipFontSize: Int {
-        pipFontSizePreset.pipFontSize
-    }
-
     static let `default` = TeleprompterSettings(
-        fontSizePreset: .medium,
-        pipFontSizePreset: .medium,
+        fontSize: 28,
+        pipFontSize: 16,
         overlayAspectRatio: .ratio16x9,
         scrollSpeed: 1.0,
         linesPerMinute: 50,
@@ -104,14 +97,23 @@ struct TeleprompterSettings: Codable, Equatable {
     /// The countdowns a typed start delay is held to.
     static let countdownRange = 0...60
 
+    /// The in-app text sizes, in points, a typed size is held to.
+    static let fontSizeRange = 16...72
+
+    /// The floating prompter's text sizes, in points, a typed size is held to.
+    static let pipFontSizeRange = 10...32
+
     /// Get timer duration in seconds
     var timerDurationSeconds: Int {
         timerMinutes * 60 + timerSeconds
     }
 
     enum CodingKeys: String, CodingKey {
+        /// Only read, and only to carry an older size setting over. See `init(from:)`.
         case fontSizePreset
         case pipFontSizePreset
+        case fontSize
+        case pipFontSize
         case overlayAspectRatio
         case scrollSpeed
         /// Only read, and only to carry an older speed setting over. See `init(from:)`.
@@ -125,8 +127,8 @@ struct TeleprompterSettings: Codable, Equatable {
     }
 
     init(
-        fontSizePreset: FontSizePreset,
-        pipFontSizePreset: FontSizePreset,
+        fontSize: Int,
+        pipFontSize: Int,
         overlayAspectRatio: OverlayAspectRatio,
         scrollSpeed: Double,
         linesPerMinute: Int,
@@ -136,8 +138,8 @@ struct TeleprompterSettings: Codable, Equatable {
         countdownSeconds: Int,
         cueColor: CueColor
     ) {
-        self.fontSizePreset = fontSizePreset
-        self.pipFontSizePreset = pipFontSizePreset
+        self.fontSize = fontSize
+        self.pipFontSize = pipFontSize
         self.overlayAspectRatio = overlayAspectRatio
         self.scrollSpeed = scrollSpeed
         self.linesPerMinute = linesPerMinute
@@ -150,8 +152,20 @@ struct TeleprompterSettings: Codable, Equatable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        fontSizePreset = try container.decode(FontSizePreset.self, forKey: .fontSizePreset)
-        pipFontSizePreset = try container.decode(FontSizePreset.self, forKey: .pipFontSizePreset)
+        // Text size used to be one of three presets. Settings saved then carry the
+        // preset and no size, so start them on the size that preset drew at.
+        if let size = try container.decodeIfPresent(Int.self, forKey: .fontSize) {
+            fontSize = TeleprompterSettings.clamp(size, to: TeleprompterSettings.fontSizeRange)
+        } else {
+            fontSize = try container.decodeIfPresent(LegacyFontSizePreset.self, forKey: .fontSizePreset)?.fontSize
+                ?? TeleprompterSettings.default.fontSize
+        }
+        if let size = try container.decodeIfPresent(Int.self, forKey: .pipFontSize) {
+            pipFontSize = TeleprompterSettings.clamp(size, to: TeleprompterSettings.pipFontSizeRange)
+        } else {
+            pipFontSize = try container.decodeIfPresent(LegacyFontSizePreset.self, forKey: .pipFontSizePreset)?.pipFontSize
+                ?? TeleprompterSettings.default.pipFontSize
+        }
         overlayAspectRatio = try container.decodeIfPresent(OverlayAspectRatio.self, forKey: .overlayAspectRatio) ?? .ratio16x9
         scrollSpeed = try container.decode(Double.self, forKey: .scrollSpeed)
         // Speed used to be set in words a minute, back when a highlight ran along
@@ -169,10 +183,14 @@ struct TeleprompterSettings: Codable, Equatable {
         cueColor = try container.decodeIfPresent(CueColor.self, forKey: .cueColor) ?? .default
     }
 
+    static func clamp(_ value: Int, to range: ClosedRange<Int>) -> Int {
+        min(max(value, range.lowerBound), range.upperBound)
+    }
+
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(fontSizePreset, forKey: .fontSizePreset)
-        try container.encode(pipFontSizePreset, forKey: .pipFontSizePreset)
+        try container.encode(fontSize, forKey: .fontSize)
+        try container.encode(pipFontSize, forKey: .pipFontSize)
         try container.encode(overlayAspectRatio, forKey: .overlayAspectRatio)
         try container.encode(scrollSpeed, forKey: .scrollSpeed)
         try container.encode(linesPerMinute, forKey: .linesPerMinute)
