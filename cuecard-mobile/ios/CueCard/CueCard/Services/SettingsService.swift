@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import UIKit
 
 /// Theme preference for the app
 enum ThemePreference: String, Codable, CaseIterable {
@@ -74,6 +75,36 @@ struct SettingPreset {
     let value: Int
 }
 
+/// How much bigger text needs to be on this device to look the size it does
+/// on a phone. Sizes are designed on a 393-point-wide iPhone, and every other
+/// screen is measured by its short side, so turning the device doesn't change them.
+enum ScreenTextScale {
+    private static let referenceWidth: Double = 393
+
+    /// Grows with the screen, so a line holds about as many words on an iPad as
+    /// on a phone. What the teleprompter needs, since it's read from a distance.
+    static let teleprompter: Double = {
+        let bounds = UIScreen.main.bounds
+        return Double(min(bounds.width, bounds.height)) / referenceWidth
+    }()
+
+    /// Grows half as fast: the editor is read up close, where a phone's size
+    /// times two is more than anyone writes in.
+    static let editor: Double = 1 + (teleprompter - 1) / 2
+
+    static func scaled(_ size: Int, by scale: Double) -> Int {
+        Int((Double(size) * scale).rounded())
+    }
+
+    static func scaled(_ range: ClosedRange<Int>, by scale: Double) -> ClosedRange<Int> {
+        scaled(range.lowerBound, by: scale)...scaled(range.upperBound, by: scale)
+    }
+
+    static func scaled(_ presets: [SettingPreset], by scale: Double) -> [SettingPreset] {
+        presets.map { SettingPreset(label: $0.label, value: scaled($0.value, by: scale)) }
+    }
+}
+
 /// Settings for the teleprompter
 struct TeleprompterSettings: Codable, Equatable {
     /// Text size in the script editor, in points.
@@ -94,8 +125,8 @@ struct TeleprompterSettings: Codable, Equatable {
     var cueColor: CueColor
 
     static let `default` = TeleprompterSettings(
-        editorFontSize: 16,
-        fontSize: 28,
+        editorFontSize: ScreenTextScale.scaled(16, by: ScreenTextScale.editor),
+        fontSize: ScreenTextScale.scaled(28, by: ScreenTextScale.teleprompter),
         pipFontSize: 16,
         overlayAspectRatio: .ratio1x1,
         scrollSpeed: 1.0,
@@ -116,37 +147,41 @@ struct TeleprompterSettings: Codable, Equatable {
     /// The countdowns a typed start delay is held to.
     static let countdownRange = 0...60
 
-    /// The editor's text sizes, in points, a typed size is held to.
-    static let editorFontSizeRange = 12...40
+    /// The editor's text sizes, in points, a typed size is held to. Sized for
+    /// this screen, like its presets.
+    static let editorFontSizeRange = ScreenTextScale.scaled(12...40, by: ScreenTextScale.editor)
 
-    /// The in-app text sizes, in points, a typed size is held to.
-    static let fontSizeRange = 16...72
+    /// The in-app text sizes, in points, a typed size is held to. Sized for
+    /// this screen, like its presets.
+    static let fontSizeRange = ScreenTextScale.scaled(16...72, by: ScreenTextScale.teleprompter)
 
     /// The floating prompter's text sizes, in points, a typed size is held to.
+    /// Its page is 320 points wide on every device, so these aren't scaled.
     static let pipFontSizeRange = 10...32
 
-    /// The editor's text sizes offered as presets, around the
-    /// 16 pt it has always been set in.
-    static let editorFontSizePresets = [
+    /// The editor's text sizes offered as presets, around the 16 pt it has
+    /// always been set in on a phone, and scaled up for bigger screens.
+    static let editorFontSizePresets = ScreenTextScale.scaled([
         SettingPreset(label: "XS", value: 12),
         SettingPreset(label: "S", value: 14),
         SettingPreset(label: "M", value: 16),
         SettingPreset(label: "L", value: 20),
         SettingPreset(label: "XL", value: 24),
-    ]
+    ], by: ScreenTextScale.editor)
 
-    /// The in-app text sizes offered as presets. Past 40 pt a phone line holds
-    /// fewer than three words, so the larger sizes are left to Advanced.
-    static let fontSizePresets = [
+    /// The in-app text sizes offered as presets, as a phone sees them and scaled
+    /// to this screen. Past 40 pt a phone line holds fewer than three words, so
+    /// the larger sizes are left to Advanced.
+    static let fontSizePresets = ScreenTextScale.scaled([
         SettingPreset(label: "XS", value: 20),
         SettingPreset(label: "S", value: 24),
         SettingPreset(label: "M", value: 28),
         SettingPreset(label: "L", value: 34),
         SettingPreset(label: "XL", value: 40),
-    ]
+    ], by: ScreenTextScale.teleprompter)
 
-    /// The floating prompter's text sizes offered as presets, spaced
-    /// like the in-app ones around its own default.
+    /// The floating prompter's text sizes offered as presets, spaced like the
+    /// in-app ones around its own default. Not scaled: see `pipFontSizeRange`.
     static let pipFontSizePresets = [
         SettingPreset(label: "XS", value: 12),
         SettingPreset(label: "S", value: 14),
