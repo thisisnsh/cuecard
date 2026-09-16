@@ -56,14 +56,21 @@ enum OverlayAspectRatio: String, Codable, CaseIterable {
             return 1.0
         }
     }
+
+    /// The shape Settings shows for this ratio in place of its figures.
+    var symbolName: String {
+        switch self {
+        case .ratio16x9: return "rectangle.ratio.16.to.9"
+        case .ratio4x3: return "rectangle.ratio.4.to.3"
+        case .ratio1x1: return "square"
+        }
+    }
 }
 
-/// One of the named values a number setting offers beside its typed field.
-struct SettingPreset: Identifiable {
+/// One of the named sizes a text size setting offers as a segment.
+struct SettingPreset {
     let label: String
     let value: Int
-
-    var id: String { label }
 }
 
 /// Settings for the teleprompter
@@ -117,7 +124,7 @@ struct TeleprompterSettings: Codable, Equatable {
     /// The floating prompter's text sizes, in points, a typed size is held to.
     static let pipFontSizeRange = 10...32
 
-    /// The editor's text sizes offered beside its typed field, around the
+    /// The editor's text sizes offered as presets, around the
     /// 16 pt it has always been set in.
     static let editorFontSizePresets = [
         SettingPreset(label: "XS", value: 12),
@@ -127,8 +134,8 @@ struct TeleprompterSettings: Codable, Equatable {
         SettingPreset(label: "XL", value: 24),
     ]
 
-    /// The in-app text sizes offered beside the typed field. Past 40 pt a phone
-    /// line holds fewer than three words, so the larger sizes are left to typing.
+    /// The in-app text sizes offered as presets. Past 40 pt a phone line holds
+    /// fewer than three words, so the larger sizes are left to Advanced.
     static let fontSizePresets = [
         SettingPreset(label: "XS", value: 20),
         SettingPreset(label: "S", value: 24),
@@ -137,7 +144,7 @@ struct TeleprompterSettings: Codable, Equatable {
         SettingPreset(label: "XL", value: 40),
     ]
 
-    /// The floating prompter's text sizes offered beside the typed field, spaced
+    /// The floating prompter's text sizes offered as presets, spaced
     /// like the in-app ones around its own default.
     static let pipFontSizePresets = [
         SettingPreset(label: "XS", value: 12),
@@ -146,44 +153,6 @@ struct TeleprompterSettings: Codable, Equatable {
         SettingPreset(label: "L", value: 19),
         SettingPreset(label: "XL", value: 22),
     ]
-
-    /// The reading paces offered beside the typed speed, in words a minute.
-    /// Most people present at 130–150, so Normal sits there with room either
-    /// side for a careful read or a quick one.
-    private static let wordsPerMinutePresets = [
-        ("Slowest", 100),
-        ("Slow", 120),
-        ("Normal", 140),
-        ("Fast", 160),
-        ("Fastest", 180),
-    ]
-
-    /// Roughly how many words the in-app prompter fits on a line at a text size,
-    /// measured on a 393-point-wide phone. Speed is set in lines, so this is
-    /// what turns a reading pace into a speed.
-    private static func wordsPerLine(fontSize: Int) -> Double {
-        115 / Double(fontSize)
-    }
-
-    /// The speed, in lines a minute, that each reading pace comes to at a text
-    /// size. Bigger text puts fewer words on a line, so the same pace needs more lines.
-    static func speedPresets(fontSize: Int) -> [SettingPreset] {
-        wordsPerMinutePresets.map { label, wordsPerMinute in
-            let lines = (Double(wordsPerMinute) / wordsPerLine(fontSize: fontSize)).rounded()
-            return SettingPreset(label: label, value: clamp(Int(lines), to: lpmRange))
-        }
-    }
-
-    /// Change the in-app text size. A speed picked from the paces keeps its
-    /// pace at the new size; a typed speed is left as typed.
-    mutating func setFontSize(_ size: Int) {
-        let size = TeleprompterSettings.clamp(size, to: TeleprompterSettings.fontSizeRange)
-        let pace = TeleprompterSettings.speedPresets(fontSize: fontSize).firstIndex { $0.value == linesPerMinute }
-        fontSize = size
-        if let pace {
-            linesPerMinute = TeleprompterSettings.speedPresets(fontSize: size)[pace].value
-        }
-    }
 
     /// Get timer duration in seconds
     var timerDurationSeconds: Int {

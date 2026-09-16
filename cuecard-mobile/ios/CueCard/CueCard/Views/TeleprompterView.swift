@@ -25,9 +25,6 @@ struct TeleprompterView: View {
     @State private var showControls = true
     @State private var controlsTimer: Timer?
     @State private var showingSettings = false
-    /// The size panel Settings asked for, opened once Settings has finished closing.
-    @State private var requestedPanel: TeleprompterSizePanel?
-    @State private var activePanel: TeleprompterSizePanel?
     @Environment(\.scenePhase) private var scenePhase
 
     /// Settings are read live, so a size or speed changed mid-run shows at once.
@@ -123,8 +120,8 @@ struct TeleprompterView: View {
                     // off flat against the toolbar and the controls.
                     .scriptEdgeFade(for: colorScheme, top: Self.topFade, bottom: Self.bottomFade)
 
-                    // Controls overlay. A size panel takes their place while it's open.
-                    if showControls && activePanel == nil {
+                    // Controls overlay
+                    if showControls {
                         VStack {
                             Spacer()
 
@@ -195,25 +192,6 @@ struct TeleprompterView: View {
                         }
                         .transition(.opacity)
                     }
-
-                    if activePanel == .floatingWindow {
-                        VStack {
-                            FloatingWindowPreview(pipManager: pipManager)
-                                .padding(.top, 16)
-                            Spacer()
-                        }
-                        .transition(.opacity.combined(with: .scale(scale: 0.9)))
-                    }
-
-                    if let panel = activePanel {
-                        VStack {
-                            Spacer()
-                            TeleprompterSizePanelView(panel: panel) {
-                                withAnimation(.easeInOut(duration: 0.2)) { activePanel = nil }
-                            }
-                        }
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
-                    }
                 }
                 .onAppear {
                     setupPiP()
@@ -260,11 +238,8 @@ struct TeleprompterView: View {
             }
             .numberPadDoneButton()
         }
-        .sheet(isPresented: $showingSettings, onDismiss: openRequestedPanel) {
-            TeleprompterSettingsView(onAdjust: { panel in
-                requestedPanel = panel
-                showingSettings = false
-            })
+        .sheet(isPresented: $showingSettings) {
+            TeleprompterSettingsView()
         }
         .persistentSystemOverlays(.hidden)
         .onDisappear {
@@ -294,14 +269,6 @@ struct TeleprompterView: View {
         .onChange(of: isPlaying) { playing in
             if playing { resetControlsTimer() } else { stopControlsTimer() }
         }
-    }
-
-    /// The whole Settings sheet is out of the way before a size panel opens,
-    /// so the script it changes can be seen behind the panel.
-    private func openRequestedPanel() {
-        guard let panel = requestedPanel else { return }
-        requestedPanel = nil
-        withAnimation(.easeInOut(duration: 0.25)) { activePanel = panel }
     }
 
     // MARK: - Shared Playback Session

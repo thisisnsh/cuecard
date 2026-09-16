@@ -20,16 +20,27 @@ struct EditorSettingsView: View {
             remoteMessageSection
 
             Section("Editor") {
-                PresetNumberRow(
+                SizePresetPicker(
                     title: "Text Size",
                     value: $settingsService.settings.editorFontSize,
-                    presets: TeleprompterSettings.editorFontSizePresets,
+                    presets: TeleprompterSettings.editorFontSizePresets
+                )
+            }
+
+            AppearanceSection()
+
+            AdvancedSection(
+                screen: "settings",
+                footer: "Text size can be set from \(TeleprompterSettings.editorFontSizeRange.lowerBound) to \(TeleprompterSettings.editorFontSizeRange.upperBound) pt."
+            ) {
+                AdvancedNumberRow(
+                    title: "Text Size",
+                    value: $settingsService.settings.editorFontSize,
                     range: TeleprompterSettings.editorFontSizeRange,
                     unit: "pt"
                 )
             }
 
-            AppearanceSection()
             AboutSection(screen: "settings")
             diagnosticsSection
         }
@@ -67,174 +78,73 @@ struct EditorSettingsView: View {
 
 // MARK: - Teleprompter Settings
 
-/// The sizes that are picked over the running script rather than in the list,
-/// so the change can be seen as it's made.
-enum TeleprompterSizePanel: Identifiable {
-    case teleprompter
-    case floatingWindow
-
-    var id: Self { self }
-}
-
 /// Settings opened from the teleprompter: everything that shapes a run, plus
 /// everything the two Settings screens share.
 struct TeleprompterSettingsView: View {
     @EnvironmentObject var settingsService: SettingsService
-    @Environment(\.colorScheme) var colorScheme
-
-    /// Asks the teleprompter to close Settings and open a size panel over the script.
-    let onAdjust: (TeleprompterSizePanel) -> Void
 
     private static let screen = "teleprompter_settings"
 
     var body: some View {
         SettingsScreen(screen: Self.screen) {
             Section("Teleprompter") {
-                HStack {
-                    Text("Start Delay")
-                    Spacer()
-                    SettingNumberField(
-                        value: $settingsService.settings.countdownSeconds,
-                        range: TeleprompterSettings.countdownRange,
-                        unit: "seconds"
-                    )
-                }
-                .padding(.vertical, 4)
+                AdvancedNumberRow(
+                    title: "Start Delay",
+                    value: $settingsService.settings.countdownSeconds,
+                    range: TeleprompterSettings.countdownRange,
+                    unit: "seconds"
+                )
 
-                PresetNumberRow(
+                AdvancedNumberRow(
                     title: "Scroll Speed",
                     value: $settingsService.settings.linesPerMinute,
-                    presets: TeleprompterSettings.speedPresets(fontSize: settingsService.settings.fontSize),
                     range: TeleprompterSettings.lpmRange,
                     unit: "lines/min"
                 )
 
-                adjustRow(title: "Text Size", value: "\(settingsService.settings.fontSize) pt", panel: .teleprompter)
+                SizePresetPicker(
+                    title: "Text Size",
+                    value: $settingsService.settings.fontSize,
+                    presets: TeleprompterSettings.fontSizePresets
+                )
             }
 
-            Section {
-                adjustRow(title: "Text Size", value: "\(settingsService.settings.pipFontSize) pt", panel: .floatingWindow)
-                adjustRow(title: "Dimensions", value: settingsService.settings.overlayAspectRatio.rawValue, panel: .floatingWindow)
-            } header: {
-                Text("Floating Window")
-            } footer: {
-                Text("Sizes are picked over your script, so you can see them change.")
+            Section("Floating Window") {
+                SizePresetPicker(
+                    title: "Text Size",
+                    value: $settingsService.settings.pipFontSize,
+                    presets: TeleprompterSettings.pipFontSizePresets
+                )
+
+                AspectRatioPicker(selection: $settingsService.settings.overlayAspectRatio)
             }
 
             AppearanceSection()
+
+            AdvancedSection(screen: Self.screen, footer: advancedFooter) {
+                AdvancedNumberRow(
+                    title: "Teleprompter Text Size",
+                    value: $settingsService.settings.fontSize,
+                    range: TeleprompterSettings.fontSizeRange,
+                    unit: "pt"
+                )
+                AdvancedNumberRow(
+                    title: "Floating Window Text Size",
+                    value: $settingsService.settings.pipFontSize,
+                    range: TeleprompterSettings.pipFontSizeRange,
+                    unit: "pt"
+                )
+            }
+
             AboutSection(screen: Self.screen)
         }
     }
 
-    private func adjustRow(title: String, value: String, panel: TeleprompterSizePanel) -> some View {
-        Button {
-            AnalyticsEvents.logButtonClick(
-                panel == .teleprompter ? "adjust_text_size" : "adjust_floating_window",
-                screen: Self.screen
-            )
-            onAdjust(panel)
-        } label: {
-            HStack {
-                Text(title)
-                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                Spacer()
-                Text(value)
-                    .monospacedDigit()
-                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(AppColors.textSecondary(for: colorScheme).opacity(0.6))
-            }
-            .contentShape(Rectangle())
-        }
-    }
-}
-
-/// The small panel over the teleprompter for one size. Every change lands in
-/// the script behind it — or the floating window preview above it — at once.
-struct TeleprompterSizePanelView: View {
-    @EnvironmentObject var settingsService: SettingsService
-    @Environment(\.colorScheme) var colorScheme
-
-    let panel: TeleprompterSizePanel
-    let onDone: () -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text(panel == .teleprompter ? "Text Size" : "Floating Window")
-                    .font(.headline)
-                Spacer()
-                Button("Done") {
-                    AnalyticsEvents.logButtonClick("close_size_panel", screen: "teleprompter")
-                    onDone()
-                }
-                .font(.body.weight(.semibold))
-            }
-
-            switch panel {
-            case .teleprompter:
-                PresetNumberRow(
-                    title: "Text Size",
-                    value: Binding(
-                        get: { settingsService.settings.fontSize },
-                        set: { settingsService.settings.setFontSize($0) }
-                    ),
-                    presets: TeleprompterSettings.fontSizePresets,
-                    range: TeleprompterSettings.fontSizeRange,
-                    unit: "pt"
-                )
-
-            case .floatingWindow:
-                PresetNumberRow(
-                    title: "Text Size",
-                    value: $settingsService.settings.pipFontSize,
-                    presets: TeleprompterSettings.pipFontSizePresets,
-                    range: TeleprompterSettings.pipFontSizeRange,
-                    unit: "pt"
-                )
-
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Dimensions")
-                    Picker("Dimensions", selection: $settingsService.settings.overlayAspectRatio) {
-                        ForEach(OverlayAspectRatio.allCases, id: \.self) { ratio in
-                            Text(ratio.rawValue).tag(ratio)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .labelsHidden()
-                }
-            }
-        }
-        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-        .padding(20)
-        .background(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(AppColors.background(for: colorScheme))
-                .shadow(color: .black.opacity(0.2), radius: 20, y: 4)
-        )
-        .padding(.horizontal, 12)
-        .padding(.bottom, 12)
-    }
-}
-
-/// The floating window as it will look, drawn by the same renderer, and
-/// redrawn as its size and shape are picked.
-struct FloatingWindowPreview: View {
-    @ObservedObject var pipManager: TeleprompterPiPManager
-
-    var body: some View {
-        // Read so a redraw with new settings refreshes the preview even while
-        // playback is still.
-        let _ = pipManager.appearanceRevision
-        if let image = pipManager.floatingWindowPreview() {
-            Image(uiImage: image)
-                .resizable()
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 240)
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .shadow(color: .black.opacity(0.25), radius: 16, y: 4)
-        }
+    private var advancedFooter: String {
+        let prompter = TeleprompterSettings.fontSizeRange
+        let pip = TeleprompterSettings.pipFontSizeRange
+        return "Teleprompter text can be set from \(prompter.lowerBound) to \(prompter.upperBound) pt, "
+            + "and floating window text from \(pip.lowerBound) to \(pip.upperBound) pt."
     }
 }
 
@@ -329,6 +239,40 @@ private struct AppearanceSection: View {
     }
 }
 
+/// Typed sizes for anyone who wants one the presets don't offer. Hidden until
+/// asked for, and the choice to show it is remembered across both screens.
+private struct AdvancedSection<Fields: View>: View {
+    @AppStorage("settings.showAdvancedSettings") private var showAdvanced = false
+
+    let screen: String
+    let footer: String
+    @ViewBuilder let fields: Fields
+
+    var body: some View {
+        Section {
+            if showAdvanced {
+                fields
+            }
+
+            Button(showAdvanced ? "Hide Advanced Settings" : "Show Advanced Settings") {
+                AnalyticsEvents.logButtonClick(showAdvanced ? "hide_advanced" : "show_advanced", screen: screen)
+                // Leave the field being typed in first, so its figure is
+                // committed before hiding takes the field away.
+                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                DispatchQueue.main.async {
+                    withAnimation { showAdvanced.toggle() }
+                }
+            }
+        } header: {
+            Text("Advanced")
+        } footer: {
+            if showAdvanced {
+                Text(footer)
+            }
+        }
+    }
+}
+
 /// Share, review and reset, the same on both Settings screens.
 ///
 /// Each row is a plain button whose action does the work. A Link or ShareLink
@@ -403,52 +347,61 @@ private struct AboutSection: View {
 
 // MARK: - Number Controls
 
-/// A number setting picked from a row of presets, or typed as any figure in
-/// the field beside its title. A typed figure that matches no preset leaves
-/// none of them selected.
-struct PresetNumberRow: View {
-    @Environment(\.colorScheme) var colorScheme
-
+/// A text size picked from the presets, with its title above. A size typed in
+/// Advanced that matches no preset leaves no segment selected.
+struct SizePresetPicker: View {
     let title: String
     @Binding var value: Int
     let presets: [SettingPreset]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+            Picker(title, selection: $value) {
+                ForEach(presets, id: \.value) { preset in
+                    Text(preset.label).tag(preset.value)
+                }
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+/// The floating window's shape, shown as a shape rather than a ratio.
+struct AspectRatioPicker: View {
+    @Binding var selection: OverlayAspectRatio
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Dimensions")
+            Picker("Dimensions", selection: $selection) {
+                ForEach(OverlayAspectRatio.allCases, id: \.self) { ratio in
+                    Image(systemName: ratio.symbolName)
+                        .accessibilityLabel(ratio.rawValue)
+                        .tag(ratio)
+                }
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+/// A title with its typed number field at the trailing edge.
+struct AdvancedNumberRow: View {
+    let title: String
+    @Binding var value: Int
     let range: ClosedRange<Int>
     let unit: String
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Text(title)
-                Spacer()
-                SettingNumberField(value: $value, range: range, unit: unit)
-            }
-
-            HStack(spacing: 6) {
-                ForEach(presets) { preset in
-                    let isSelected = preset.value == value
-                    Button {
-                        value = preset.value
-                    } label: {
-                        Text(preset.label)
-                            .font(.footnote.weight(.semibold))
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 32)
-                            .foregroundStyle(isSelected
-                                             ? AppColors.background(for: colorScheme)
-                                             : AppColors.textPrimary(for: colorScheme))
-                            .background(
-                                Capsule().fill(isSelected
-                                               ? AppColors.textPrimary(for: colorScheme)
-                                               : AppColors.textSecondary(for: colorScheme).opacity(0.12))
-                            )
-                            .contentShape(Capsule())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityValue(isSelected ? "Selected" : "")
-                }
-            }
+        HStack {
+            Text(title)
+            Spacer()
+            SettingNumberField(value: $value, range: range, unit: unit)
         }
         .padding(.vertical, 4)
     }
@@ -535,6 +488,6 @@ extension View {
 }
 
 #Preview("Teleprompter") {
-    TeleprompterSettingsView(onAdjust: { _ in })
+    TeleprompterSettingsView()
         .environmentObject(SettingsService.shared)
 }

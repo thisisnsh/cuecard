@@ -28,9 +28,6 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
     /// A restoration request belongs to the full-screen presentation only. The
     /// still-visible PiP video keeps playing its queued frames through it.
     @Published private(set) var restorationRequest: UUID?
-    /// Bumped whenever the floating window is redrawn with new settings, so a
-    /// preview of it knows to draw again even while playback is still.
-    @Published private(set) var appearanceRevision = 0
     private var restorationCompletion: ((Bool) -> Void)?
     private var restorationTimeout: DispatchWorkItem?
 
@@ -144,7 +141,6 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
                                                     timerDuration: settings.timerDurationSeconds, isDarkMode: isDarkMode)
             renderer = redrawn
             videoView?.backgroundColor = redrawn.backgroundColor
-            appearanceRevision += 1
         }
         if speedChanged || needsRedraw {
             // A new overlay layout changes its line count and pace as well.
@@ -152,12 +148,6 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
             refreshVideoTimeline()
             renderFrame(force: true)
         }
-    }
-
-    /// The floating window as it looks right now, for showing in the app while
-    /// its size or shape is being picked.
-    func floatingWindowPreview() -> UIImage? {
-        renderer?.previewImage(linePosition: overlayLine(for: playback), state: playback)
     }
 
     /// Full-screen line starts are the definition of the lines/minute setting.
@@ -856,13 +846,6 @@ private final class TeleprompterVideoRenderer {
                                  Unmanaged.passUnretained(kCFBooleanTrue).toOpaque())
         }
         return sample
-    }
-
-    /// One frame drawn as an image instead of a video buffer.
-    func previewImage(linePosition: Double, state: TeleprompterPlaybackState) -> UIImage {
-        UIGraphicsImageRenderer(size: logicalSize).image { context in
-            draw(in: context.cgContext, linePosition: linePosition, state: state)
-        }
     }
 
     private func draw(in context: CGContext, linePosition: Double, state: TeleprompterPlaybackState) {
