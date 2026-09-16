@@ -1,5 +1,7 @@
 package com.thisisnsh.cuecard.android.views
 
+import android.content.Context
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -24,6 +26,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowOutward
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -49,6 +52,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
@@ -155,28 +159,14 @@ fun SettingsView(
             }
 
             SettingsSection(isDark = isDark) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickableWithoutRipple {
-                            AnalyticsEvents.logButtonClick("rate_app", "settings")
-                            openLink(context, AppLinks.PLAY_STORE)
-                        }
-                        .padding(horizontal = 20.dp, vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Review on Google Play",
-                        fontSize = 17.sp,
-                        color = AppColors.textPrimary(isDark)
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    Icon(
-                        imageVector = Icons.Filled.ArrowOutward,
-                        contentDescription = null,
-                        tint = AppColors.textSecondary(isDark),
-                        modifier = Modifier.size(12.dp)
-                    )
+                LinkRow(title = "Share CueCard", icon = Icons.Filled.Share, isDark = isDark) {
+                    AnalyticsEvents.logButtonClick("share_app", "settings")
+                    shareApp(context)
+                }
+
+                LinkRow(title = "Review on Google Play", icon = Icons.Filled.ArrowOutward, isDark = isDark) {
+                    AnalyticsEvents.logButtonClick("rate_app", "settings")
+                    openLink(context, AppLinks.PLAY_STORE)
                 }
             }
 
@@ -361,6 +351,39 @@ fun SettingsView(
             Spacer(modifier = Modifier.height(32.dp))
         }
     }
+}
+
+/** A row that leaves Settings for something else, with an icon saying where. */
+@Composable
+private fun LinkRow(title: String, icon: ImageVector, isDark: Boolean, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickableWithoutRipple(onClick)
+            .padding(horizontal = 20.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = title,
+            fontSize = 17.sp,
+            color = AppColors.textPrimary(isDark)
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = AppColors.textSecondary(isDark),
+            modifier = Modifier.size(14.dp)
+        )
+    }
+}
+
+/** Hand the app's link to the system share sheet. */
+private fun shareApp(context: Context) {
+    val send = Intent(Intent.ACTION_SEND)
+        .setType("text/plain")
+        .putExtra(Intent.EXTRA_TEXT, AppLinks.SHARE_MESSAGE)
+    context.startActivity(Intent.createChooser(send, null))
 }
 
 /** One grouped section of the settings list, with its heading and footnote. */

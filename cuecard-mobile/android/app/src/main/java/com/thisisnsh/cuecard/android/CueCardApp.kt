@@ -103,6 +103,9 @@ object AppLinks {
     const val SOURCE_CODE = "https://github.com/thisisnsh/cuecard"
     const val PRIVACY_POLICY = "https://cuecard.dev/privacy/"
     val PLAY_STORE = "https://play.google.com/store/apps/details?id=${BuildConfig.APPLICATION_ID}"
+
+    /** What goes out when someone shares the app. */
+    val SHARE_MESSAGE = "Check out $PLAY_STORE"
 }
 
 // MARK: - Theme
