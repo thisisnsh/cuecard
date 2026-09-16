@@ -212,37 +212,39 @@ struct TeleprompterView: View {
             .toolbarBackground(AppColors.background(for: colorScheme), for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button(action: {
-                        AnalyticsEvents.logButtonClick("close", screen: "teleprompter")
-                        stopAndDismiss()
-                    }) {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                // Comes and goes with the play, restart and floating window buttons.
+                if showControls {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button(action: {
+                            AnalyticsEvents.logButtonClick("close", screen: "teleprompter")
+                            stopAndDismiss()
+                        }) {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                        }
+                        .accessibilityLabel("Close")
                     }
-                    .accessibilityLabel("Close")
-                    // Comes and goes with the play, restart and floating window buttons.
-                    .fadedOut(!showControls)
                 }
                 ToolbarItem(placement: .principal) {
                     Text(timeDisplay)
                         .font(.system(size: 16, weight: .bold, design: .monospaced))
                         .foregroundStyle(timerColor)
                 }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button(action: {
-                        AnalyticsEvents.logButtonClick("settings", screen: "teleprompter")
-                        showingSettings = true
-                    }) {
-                        Image(systemName: "gearshape")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                // Only offered while paused, even when a tap has brought the
+                // other controls back mid-run.
+                if !isRunning {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button(action: {
+                            AnalyticsEvents.logButtonClick("settings", screen: "teleprompter")
+                            showingSettings = true
+                        }) {
+                            Image(systemName: "gearshape")
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                        }
+                        .accessibilityLabel("Settings")
                     }
-                    .accessibilityLabel("Settings")
-                    // Only offered while paused, even when a tap has brought
-                    // the other controls back mid-run.
-                    .fadedOut(isRunning)
                 }
             }
             .numberPadDoneButton()
@@ -311,13 +313,14 @@ struct TeleprompterView: View {
 
     private func togglePlayPause() {
         let wasRunning = isPlaying || isCountingDown
-        pipManager.togglePlayPause()
+        // Animated so the gear leaves the toolbar, and comes back, with the same fade.
+        withAnimation(controlsFade) { pipManager.togglePlayPause() }
         Analytics.logEvent(wasRunning ? "teleprompter_pause" : "teleprompter_play", parameters: nil)
         resetControlsTimer()
     }
 
     private func restart() {
-        pipManager.restart()
+        withAnimation(controlsFade) { pipManager.restart() }
         Analytics.logEvent("teleprompter_restart", parameters: nil)
     }
 
