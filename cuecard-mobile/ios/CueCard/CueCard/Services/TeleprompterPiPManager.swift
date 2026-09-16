@@ -14,9 +14,6 @@ struct TeleprompterPlaybackState: Equatable {
     var isPlaying = false
     var isCountingDown = false
     var countdownValue = 0
-    /// The first half of each countdown second, when the play button shows the
-    /// number instead of the pause icon.
-    var isCountdownNumberShowing = false
     var hasStarted = false
     var snapToken = 0
 }
@@ -193,7 +190,6 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         if !state.hasStarted && settings.countdownSeconds > 0 {
             state.isCountingDown = true
             state.countdownValue = settings.countdownSeconds
-            state.isCountdownNumberShowing = true
             countdownDeadline = CACurrentMediaTime() + Double(settings.countdownSeconds)
         } else {
             state.isPlaying = true
@@ -212,7 +208,6 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         state.isPlaying = false
         state.isCountingDown = false
         state.countdownValue = 0
-        state.isCountdownNumberShowing = false
         playback = state
         countdownDeadline = nil
         playbackAnchor = nil
@@ -282,12 +277,10 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
             if hostTime < deadline {
                 let remaining = deadline - hostTime
                 state.countdownValue = Int(ceil(remaining))
-                state.isCountdownNumberShowing = ceil(remaining) - remaining < 0.5
                 return Projection(state: state, overlayLine: overlayLine(for: state))
             }
             state.isCountingDown = false
             state.countdownValue = 0
-            state.isCountdownNumberShowing = false
             state.isPlaying = true
             state.hasStarted = true
             anchor = deadline

@@ -16,11 +16,10 @@ struct TeleprompterView: View {
     private var scriptTime: Double { pipManager.playback.scriptTime }
     private var isCountingDown: Bool { pipManager.playback.isCountingDown }
     private var countdownValue: Int { pipManager.playback.countdownValue }
-    /// During the countdown the play button alternates each second between the
-    /// number, in the cue color, and the pause icon on its usual green.
-    private var showsCountdownNumber: Bool {
-        isCountingDown && pipManager.playback.isCountdownNumberShowing
-    }
+    /// During the countdown the play button shows the seconds left, in the cue
+    /// color, and switches to the pause icon once playback starts. It still
+    /// pauses while showing a number.
+    private var showsCountdownNumber: Bool { isCountingDown }
     @State private var referenceLineStarts: [Int] = []
     @State private var hasConfiguredSession = false
     @State private var showControls = true
