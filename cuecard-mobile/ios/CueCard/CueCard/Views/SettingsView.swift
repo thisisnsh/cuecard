@@ -31,13 +31,12 @@ struct EditorSettingsView: View {
 
             AdvancedSection(
                 screen: "settings",
-                footer: "Text size can be set from \(TeleprompterSettings.editorFontSizeRange.lowerBound) to \(TeleprompterSettings.editorFontSizeRange.upperBound) pt."
+                footer: "Text size can be set from \(TeleprompterSettings.editorFontSizeRange.lowerBound) to \(TeleprompterSettings.editorFontSizeRange.upperBound)."
             ) {
                 AdvancedNumberRow(
                     title: "Text Size",
                     value: $settingsService.settings.editorFontSize,
-                    range: TeleprompterSettings.editorFontSizeRange,
-                    unit: "pt"
+                    range: TeleprompterSettings.editorFontSizeRange
                 )
             }
 
@@ -125,14 +124,12 @@ struct TeleprompterSettingsView: View {
                 AdvancedNumberRow(
                     title: "Teleprompter Text Size",
                     value: $settingsService.settings.fontSize,
-                    range: TeleprompterSettings.fontSizeRange,
-                    unit: "pt"
+                    range: TeleprompterSettings.fontSizeRange
                 )
                 AdvancedNumberRow(
                     title: "Floating Window Text Size",
                     value: $settingsService.settings.pipFontSize,
-                    range: TeleprompterSettings.pipFontSizeRange,
-                    unit: "pt"
+                    range: TeleprompterSettings.pipFontSizeRange
                 )
             }
 
@@ -143,8 +140,8 @@ struct TeleprompterSettingsView: View {
     private var advancedFooter: String {
         let prompter = TeleprompterSettings.fontSizeRange
         let pip = TeleprompterSettings.pipFontSizeRange
-        return "Teleprompter text can be set from \(prompter.lowerBound) to \(prompter.upperBound) pt, "
-            + "and floating window text from \(pip.lowerBound) to \(pip.upperBound) pt."
+        return "Teleprompter text can be set from \(prompter.lowerBound) to \(prompter.upperBound), "
+            + "and floating window text from \(pip.lowerBound) to \(pip.upperBound)."
     }
 }
 
@@ -359,7 +356,7 @@ struct SizePresetPicker: View {
                 Text(preset.label).tag(preset.value)
             }
             if !presets.contains(where: { $0.value == value }) {
-                Text("Custom (\(value) pt)").tag(value)
+                Text("Custom (\(value))").tag(value)
             }
         }
     }
@@ -383,7 +380,8 @@ struct AdvancedNumberRow: View {
     let title: String
     @Binding var value: Int
     let range: ClosedRange<Int>
-    let unit: String
+    /// Left out for text sizes, which read as bare numbers.
+    var unit: String? = nil
 
     var body: some View {
         HStack {
@@ -407,7 +405,7 @@ struct SettingNumberField: View {
 
     @Binding var value: Int
     let range: ClosedRange<Int>
-    let unit: String
+    var unit: String? = nil
 
     @State private var text = ""
     @FocusState private var isFocused: Bool
@@ -420,8 +418,10 @@ struct SettingNumberField: View {
                 .monospacedDigit()
                 .focused($isFocused)
                 .frame(width: 34, alignment: .trailing)
-            Text(unit)
-                .foregroundStyle(.secondary)
+            if let unit {
+                Text(unit)
+                    .foregroundStyle(.secondary)
+            }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 8)

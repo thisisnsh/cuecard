@@ -133,12 +133,11 @@ fun EditorSettingsView(
         val range = TeleprompterSettings.EDITOR_FONT_SIZE_RANGE
         AdvancedSection(
             screen = "settings",
-            footer = "Text size can be set from ${range.first} to ${range.last} pt.",
+            footer = "Text size can be set from ${range.first} to ${range.last}.",
             isDark = isDark
         ) {
             NumberRow(
                 label = "Text Size",
-                unit = "pt",
                 value = settings.editorFontSize,
                 range = range,
                 isDark = isDark,
@@ -245,7 +244,6 @@ fun TeleprompterSettingsView(
         ) {
             NumberRow(
                 label = "Teleprompter Text Size",
-                unit = "pt",
                 value = settings.fontSize,
                 range = TeleprompterSettings.FONT_SIZE_RANGE,
                 isDark = isDark,
@@ -253,7 +251,6 @@ fun TeleprompterSettingsView(
             )
             NumberRow(
                 label = "Floating Window Text Size",
-                unit = "pt",
                 value = settings.pipFontSize,
                 range = TeleprompterSettings.PIP_FONT_SIZE_RANGE,
                 isDark = isDark,
@@ -268,8 +265,8 @@ fun TeleprompterSettingsView(
 private fun teleprompterAdvancedFooter(): String {
     val prompter = TeleprompterSettings.FONT_SIZE_RANGE
     val pip = TeleprompterSettings.PIP_FONT_SIZE_RANGE
-    return "Teleprompter text can be set from ${prompter.first} to ${prompter.last} pt, " +
-        "and floating window text from ${pip.first} to ${pip.last} pt."
+    return "Teleprompter text can be set from ${prompter.first} to ${prompter.last}, " +
+        "and floating window text from ${pip.first} to ${pip.last}."
 }
 
 // MARK: - Shared Sections
@@ -485,7 +482,8 @@ private fun SettingsSection(
 @Composable
 private fun NumberRow(
     label: String,
-    unit: String,
+    /** Left out for text sizes, which read as bare numbers. */
+    unit: String? = null,
     value: Int,
     range: IntRange,
     isDark: Boolean,
@@ -553,12 +551,14 @@ private fun NumberRow(
                         isFocused = state.isFocused
                     }
             )
-            Spacer(modifier = Modifier.width(5.dp))
-            Text(
-                text = unit,
-                fontSize = 15.sp,
-                color = AppColors.textSecondary(isDark)
-            )
+            unit?.let {
+                Spacer(modifier = Modifier.width(5.dp))
+                Text(
+                    text = it,
+                    fontSize = 15.sp,
+                    color = AppColors.textSecondary(isDark)
+                )
+            }
         }
     }
 }
@@ -723,7 +723,7 @@ private fun SizePresetPicker(
         label = label,
         options = sizes,
         selected = value,
-        optionLabel = { size -> presets.find { it.value == size }?.label ?: "Custom ($size pt)" },
+        optionLabel = { size -> presets.find { it.value == size }?.label ?: "Custom ($size)" },
         isDark = isDark,
         onSelect = onSelect
     )
