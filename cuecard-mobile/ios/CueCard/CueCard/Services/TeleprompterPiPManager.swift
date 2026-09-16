@@ -20,6 +20,11 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
     @Published private(set) var playback = TeleprompterPlaybackState()
     @Published private(set) var isPiPActive = false
     @Published private(set) var isPiPPossible = false
+    /// A restoration request belongs to the full-screen presentation only. It
+    /// must not reset the scroll smoothing in the still-visible PiP video.
+    @Published private(set) var restorationRequest: UUID?
+    private var restorationCompletion: ((Bool) -> Void)?
+    private var restorationTimeout: DispatchWorkItem?
 
     private var settings: TeleprompterSettings = .default
     private var referenceLineStarts: [Int] = []
@@ -31,7 +36,8 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
 
     private var pipController: AVPictureInPictureController?
     private var videoView: TeleprompterPiPVideoView?
-    private var pipWindow: UIWindow?
+    private weak var readerHost: TeleprompterReaderHostView?
+    private var isRestoringToReader = false
     private var renderer: TeleprompterVideoRenderer?
     private var timebase: CMTimebase?
     private var possibilityObservation: NSKeyValueObservation?
@@ -232,7 +238,7 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         // Keep an inline frame ready for automatic PiP, at a lower frame rate.
         // The clock already runs at 30 Hz. Applying another 30 Hz threshold
         // drops otherwise valid frames when a timer callback arrives early.
-        let renderingPiP = isPiPActive || isStartingPiP
+        let renderingPiP = isPiPActive || isStartingPiP || isRestoringToReader
         guard force || renderingPiP || now - lastFrameTime >= 0.2 else { return }
         if layer.status == .failed { layer.flush() }
         guard layer.isReadyForMoreMediaData else { return }
@@ -263,7 +269,28 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         renderFrame(force: true)
     }
 
+    func attachReader(_ host: TeleprompterReaderHostView) {
+        readerHost = host
+        if let videoView {
+            host.installVideoSource(videoView)
+        } else if renderer != nil {
+            setupPiP()
+        }
+    }
+
+    func completeRestoration(_ request: UUID, restored: Bool = true) {
+        guard restorationRequest == request else { return }
+        let completion = restorationCompletion
+        restorationCompletion = nil
+        restorationTimeout?.cancel()
+        restorationTimeout = nil
+        restorationRequest = nil
+        if !restored { isRestoringToReader = false }
+        completion?(restored)
+    }
+
     func cleanup() {
+        if let request = restorationRequest { completeRestoration(request, restored: false) }
         stopClock()
         countdownDeadline = nil
         playbackAnchor = nil
@@ -272,9 +299,10 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         pipController?.stopPictureInPicture()
         pipController = nil
         videoView?.sampleBufferDisplayLayer.flushAndRemoveImage()
+        videoView?.removeFromSuperview()
         videoView = nil
-        pipWindow?.isHidden = true
-        pipWindow = nil
+        readerHost?.cancelVideoRestoration()
+        isRestoringToReader = false
         renderer = nil
         timebase = nil
         isPiPActive = false
@@ -292,33 +320,14 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
 
     private func setupPiP() {
         guard AVPictureInPictureController.isPictureInPictureSupported() else { return }
-        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
-        guard let scene = scenes.first(where: { $0.activationState == .foregroundActive }) ?? scenes.first,
-              let renderer else { return }
-
-        let host = UIViewController()
-        host.view.backgroundColor = renderer.backgroundColor
+        guard pipController == nil, let host = readerHost, let renderer else { return }
         let source = TeleprompterPiPVideoView()
         source.sampleBufferDisplayLayer.videoGravity = .resizeAspect
-        source.translatesAutoresizingMaskIntoConstraints = false
-        host.view.addSubview(source)
-        NSLayoutConstraint.activate([
-            source.leadingAnchor.constraint(equalTo: host.view.leadingAnchor),
-            source.trailingAnchor.constraint(equalTo: host.view.trailingAnchor),
-            source.topAnchor.constraint(equalTo: host.view.topAnchor),
-            source.bottomAnchor.constraint(equalTo: host.view.bottomAnchor)
-        ])
-        let bounds = scene.screen.bounds
-        let width = min(bounds.width, bounds.height * settings.overlayAspectRatio.ratio)
-        let height = width / settings.overlayAspectRatio.ratio
-        let window = UIWindow(windowScene: scene)
-        window.frame = CGRect(x: bounds.midX - width / 2, y: bounds.midY - height / 2, width: width, height: height)
-        window.windowLevel = .normal - 1
-        window.isUserInteractionEnabled = false
-        window.rootViewController = host
-        window.isHidden = false
-        host.view.layoutIfNeeded()
-        pipWindow = window
+        source.backgroundColor = renderer.backgroundColor
+        // AVKit now animates back into the reader's actual view hierarchy and
+        // bounds, rather than a disconnected window floating behind the app.
+        host.installVideoSource(source)
+        host.layoutIfNeeded()
         videoView = source
 
         var mediaTimebase: CMTimebase?
@@ -410,10 +419,19 @@ extension TeleprompterPiPManager: @preconcurrency AVPictureInPictureControllerDe
 
     func pictureInPictureControllerDidStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
         guard pipController === pictureInPictureController else { return }
+        if let request = restorationRequest { completeRestoration(request, restored: false) }
         isPiPActive = false
         isStartingPiP = false
         minimizeWhenStarted = false
         refreshPresentation()
+        if isRestoringToReader, let readerHost {
+            readerHost.finishVideoRestoration { [weak self] in
+                guard self?.pipController === pictureInPictureController else { return }
+                self?.isRestoringToReader = false
+            }
+        } else {
+            isRestoringToReader = false
+        }
     }
 
     func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, failedToStartPictureInPictureWithError error: Error) {
@@ -421,6 +439,8 @@ extension TeleprompterPiPManager: @preconcurrency AVPictureInPictureControllerDe
         isStartingPiP = false
         isPiPActive = false
         minimizeWhenStarted = false
+        isRestoringToReader = false
+        readerHost?.cancelVideoRestoration()
         print("Could not start PiP: \(error)")
     }
 
@@ -430,11 +450,18 @@ extension TeleprompterPiPManager: @preconcurrency AVPictureInPictureControllerDe
             return
         }
         advanceClock()
-        var state = playback
-        state.snapToken += 1
-        playback = state
-        // Give SwiftUI one main-queue pass to place the shared reading position.
-        DispatchQueue.main.async { completionHandler(true) }
+        if let request = restorationRequest { completeRestoration(request, restored: false) }
+        let request = UUID()
+        isRestoringToReader = true
+        restorationCompletion = completionHandler
+        restorationRequest = request
+        // A detached/dismissed reader must not leave AVKit waiting forever.
+        // Success comes only from the reader's committed layout, not a delay.
+        let timeout = DispatchWorkItem { [weak self] in
+            self?.completeRestoration(request, restored: false)
+        }
+        restorationTimeout = timeout
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: timeout)
     }
 }
 

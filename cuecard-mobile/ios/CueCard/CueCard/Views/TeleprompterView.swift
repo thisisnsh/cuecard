@@ -90,6 +90,10 @@ struct TeleprompterView: View {
                         topPadding: geometry.size.height * Self.readingLineFraction,
                         bottomPadding: geometry.size.height * (1 - Self.readingLineFraction),
                         snapToken: pipManager.playback.snapToken,
+                        restorationRequest: pipManager.restorationRequest,
+                        onRestorationReady: { request in
+                            pipManager.completeRestoration(request)
+                        },
                         onLayoutChange: { starts in
                             referenceLineStarts = starts
                             pipManager.updateReferenceLayout(starts)
@@ -291,6 +295,54 @@ struct TeleprompterView: View {
     }
 }
 
+/// The real PiP landing surface lives underneath the full-screen reader. Once
+/// AVKit finishes returning the video, blend into the already-positioned text.
+final class TeleprompterReaderHostView: UIView {
+    let textView = UITextView(usingTextLayoutManager: false)
+    private weak var videoSource: UIView?
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        clipsToBounds = true
+        textView.frame = bounds
+        textView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        addSubview(textView)
+    }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    func installVideoSource(_ source: UIView) {
+        guard videoSource !== source else { return }
+        videoSource?.removeFromSuperview()
+        source.removeFromSuperview()
+        source.frame = bounds
+        source.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        source.isUserInteractionEnabled = false
+        insertSubview(source, belowSubview: textView)
+        videoSource = source
+    }
+
+    func finishVideoRestoration(completion: @escaping () -> Void) {
+        guard window != nil else {
+            completion()
+            return
+        }
+        textView.layer.removeAllAnimations()
+        textView.alpha = 0
+        UIView.animate(withDuration: UIAccessibility.isReduceMotionEnabled ? 0 : 0.2,
+                       delay: 0, options: [.beginFromCurrentState, .curveEaseInOut, .allowUserInteraction]) {
+            self.textView.alpha = 1
+        } completion: { _ in
+            completion()
+        }
+    }
+
+    func cancelVideoRestoration() {
+        textView.layer.removeAllAnimations()
+        textView.alpha = 1
+    }
+}
+
 /// UITextView wrapper that scrolls the script by rendered line
 ///
 /// The script is one continuous block at one brightness — the position on the
@@ -309,6 +361,8 @@ struct AttributedTextView: UIViewRepresentable {
     /// coming back from the overlay. The script settles at the new position
     /// instead of easing there.
     let snapToken: Int
+    let restorationRequest: UUID?
+    let onRestorationReady: (UUID) -> Void
     /// UTF-16 starts of the full-screen lines define scroll speed and let PiP
     /// find the same text despite using a different font and line wrapping.
     let onLayoutChange: ([Int]) -> Void
@@ -332,6 +386,7 @@ struct AttributedTextView: UIViewRepresentable {
         var lastReportedLineStarts: [Int] = []
         var lastTarget: CGFloat = -1
         var lastSnapToken = 0
+        var lastRestorationRequest: UUID?
         /// True from the moment a drag starts until the script comes to rest, so
         /// playback leaves the scroll alone while the reader has hold of it.
         var isUserScrolling = false
@@ -453,11 +508,12 @@ struct AttributedTextView: UIViewRepresentable {
         }
     }
 
-    func makeUIView(context: Context) -> UITextView {
-        let textView = UITextView(usingTextLayoutManager: false)
+    func makeUIView(context: Context) -> TeleprompterReaderHostView {
+        let host = TeleprompterReaderHostView()
+        let textView = host.textView
         textView.isEditable = false
         textView.isSelectable = false
-        textView.backgroundColor = .clear
+        textView.backgroundColor = colorScheme == .dark ? AppColors.UIColors.Dark.background : AppColors.UIColors.Light.background
         textView.delegate = context.coordinator
         textView.showsVerticalScrollIndicator = false
         textView.alwaysBounceVertical = true
@@ -467,14 +523,19 @@ struct AttributedTextView: UIViewRepresentable {
         let tapGesture = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleTap))
         tapGesture.cancelsTouchesInView = false
         textView.addGestureRecognizer(tapGesture)
-        return textView
+        TeleprompterPiPManager.shared.attachReader(host)
+        return host
     }
 
-    static func dismantleUIView(_ uiView: UITextView, coordinator: Coordinator) {
+    static func dismantleUIView(_ uiView: TeleprompterReaderHostView, coordinator: Coordinator) {
         coordinator.stopEasing()
+        uiView.cancelVideoRestoration()
     }
 
-    func updateUIView(_ textView: UITextView, context: Context) {
+    func updateUIView(_ host: TeleprompterReaderHostView, context: Context) {
+        let textView = host.textView
+        host.layoutIfNeeded()
+        textView.backgroundColor = colorScheme == .dark ? AppColors.UIColors.Dark.background : AppColors.UIColors.Light.background
         let coordinator = context.coordinator
         coordinator.onTap = onTap
         coordinator.onHandOff = onHandOff
@@ -482,6 +543,16 @@ struct AttributedTextView: UIViewRepresentable {
 
         let needsSnap = coordinator.lastSnapToken != snapToken
         coordinator.lastSnapToken = snapToken
+        let needsRestoration = restorationRequest != nil
+            && coordinator.lastRestorationRequest != restorationRequest
+
+        // Returning from the background can leave a pending safe-area/layout
+        // pass. Resolve it before measuring and positioning the reader.
+        if needsRestoration {
+            textView.window?.layoutIfNeeded()
+            textView.superview?.layoutIfNeeded()
+            textView.layoutIfNeeded()
+        }
 
         let contentId = content.fullText
         let needsFullRebuild = coordinator.lastContentId != contentId
@@ -523,7 +594,13 @@ struct AttributedTextView: UIViewRepresentable {
         }
 
         let offsets = coordinator.lineOffsets
-        guard offsets.count > 1 else { return }
+        guard textView.bounds.width > 0, textView.bounds.height > 0 else { return }
+        guard offsets.count > 1 else {
+            if needsRestoration {
+                restoreReader(textView, coordinator: coordinator, at: offsets.first ?? 0)
+            }
+            return
+        }
 
         let position = min(max(linePosition, 0), Double(offsets.count - 1))
         let line = min(Int(position), offsets.count - 2)
@@ -532,6 +609,11 @@ struct AttributedTextView: UIViewRepresentable {
 
         let maxY = max(0, textView.contentSize.height - textView.bounds.height)
         let scrollY = min(max(target, 0), maxY)
+
+        if needsRestoration {
+            restoreReader(textView, coordinator: coordinator, at: scrollY)
+            return
+        }
 
         if isFirstLayout || needsFullRebuild || needsSnap {
             coordinator.settle(at: scrollY, in: textView)
@@ -546,6 +628,23 @@ struct AttributedTextView: UIViewRepresentable {
         // dragged by hand while paused stays where they put it.
         guard abs(scrollY - coordinator.lastTarget) > 0.05 else { return }
         coordinator.ease(to: scrollY, in: textView)
+    }
+
+    private func restoreReader(_ textView: UITextView, coordinator: Coordinator, at offset: CGFloat) {
+        guard let request = restorationRequest,
+              let scene = textView.window?.windowScene,
+              scene.activationState == .foregroundActive || scene.activationState == .foregroundInactive else { return }
+        coordinator.lastRestorationRequest = request
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        CATransaction.setCompletionBlock {
+            DispatchQueue.main.async {
+                onRestorationReady(request)
+            }
+        }
+        coordinator.settle(at: offset, in: textView)
+        textView.layoutIfNeeded()
+        CATransaction.commit()
     }
 
     /// The scroll offset that puts each rendered line on the reading line, one
