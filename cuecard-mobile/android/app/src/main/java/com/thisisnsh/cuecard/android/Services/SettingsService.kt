@@ -56,7 +56,7 @@ enum class OverlayAspectRatio(val displayName: String, val ratio: Float) {
 
     companion object {
         fun fromString(value: String): OverlayAspectRatio =
-            entries.find { it.displayName == value } ?: RATIO_16X9
+            entries.find { it.displayName == value } ?: TeleprompterSettings.DEFAULT.overlayAspectRatio
     }
 }
 
@@ -65,10 +65,10 @@ enum class OverlayAspectRatio(val displayName: String, val ratio: Float) {
 data class TeleprompterSettings(
     val fontSizePreset: FontSizePreset = FontSizePreset.MEDIUM,
     val pipFontSizePreset: FontSizePreset = FontSizePreset.MEDIUM,
-    val overlayAspectRatio: OverlayAspectRatio = OverlayAspectRatio.RATIO_16X9,
+    val overlayAspectRatio: OverlayAspectRatio = OverlayAspectRatio.RATIO_1X1,
     val scrollSpeed: Double = 1.0,
     /** Scroll speed, in lines of the script as the teleprompter renders them. */
-    val linesPerMinute: Int = 50,
+    val linesPerMinute: Int = 34,
     val timerMinutes: Int = 1,
     val timerSeconds: Int = 0,
     val themePreference: ThemePreference = ThemePreference.SYSTEM,
@@ -213,7 +213,7 @@ Try it out. I think you'll love it.
         return TeleprompterSettings(
             fontSizePreset = FontSizePreset.fromString(prefs[FONT_SIZE_PRESET] ?: FontSizePreset.MEDIUM.displayName),
             pipFontSizePreset = FontSizePreset.fromString(prefs[PIP_FONT_SIZE_PRESET] ?: FontSizePreset.MEDIUM.displayName),
-            overlayAspectRatio = OverlayAspectRatio.fromString(prefs[OVERLAY_ASPECT_RATIO] ?: OverlayAspectRatio.RATIO_16X9.displayName),
+            overlayAspectRatio = OverlayAspectRatio.fromString(prefs[OVERLAY_ASPECT_RATIO] ?: TeleprompterSettings.DEFAULT.overlayAspectRatio.displayName),
             scrollSpeed = prefs[SCROLL_SPEED] ?: 1.0,
             linesPerMinute = linesPerMinute,
             timerMinutes = prefs[TIMER_MINUTES] ?: 1,
