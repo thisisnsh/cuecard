@@ -16,6 +16,11 @@ struct TeleprompterView: View {
     private var scriptTime: Double { pipManager.playback.scriptTime }
     private var isCountingDown: Bool { pipManager.playback.isCountingDown }
     private var countdownValue: Int { pipManager.playback.countdownValue }
+    /// During the countdown the play button alternates each second between the
+    /// number, in the cue color, and the pause icon on its usual green.
+    private var showsCountdownNumber: Bool {
+        isCountingDown && pipManager.playback.isCountdownNumberShowing
+    }
     @State private var referenceLineStarts: [Int] = []
     @State private var hasConfiguredSession = false
     @State private var showControls = true
@@ -141,16 +146,32 @@ struct TeleprompterView: View {
                                     AnalyticsEvents.logButtonClick((isPlaying || isCountingDown) ? "pause" : "play", screen: "teleprompter")
                                     togglePlayPause()
                                 }) {
-                                    Image(systemName: (isPlaying || isCountingDown) ? "pause.fill" : "play.fill")
-                                        .font(.system(size: 28, weight: .semibold))
-                                        .foregroundStyle(colorScheme == .dark ? .black : .white)
-                                        .frame(width: 72, height: 72)
-                                        .background(
-                                            Circle()
-                                                .fill(AppColors.green(for: colorScheme))
-                                        )
-                                        .glassedEffect(in: Circle())
+                                    ZStack {
+                                        if showsCountdownNumber {
+                                            Text("\(countdownValue)")
+                                                .font(.system(size: 30, weight: .bold, design: .rounded))
+                                                .monospacedDigit()
+                                                .transition(.opacity)
+                                        } else {
+                                            Image(systemName: (isPlaying || isCountingDown) ? "pause.fill" : "play.fill")
+                                                .font(.system(size: 28, weight: .semibold))
+                                                .transition(.opacity)
+                                        }
+                                    }
+                                    .foregroundStyle(colorScheme == .dark ? .black : .white)
+                                    .frame(width: 72, height: 72)
+                                    .background(
+                                        Circle()
+                                            .fill(showsCountdownNumber
+                                                  ? settings.cueColor.color(for: colorScheme)
+                                                  : AppColors.green(for: colorScheme))
+                                    )
+                                    .glassedEffect(in: Circle())
+                                    .animation(.easeInOut(duration: 0.12), value: showsCountdownNumber)
                                 }
+                                .accessibilityLabel(isCountingDown
+                                                    ? "Pause, starting in \(countdownValue)"
+                                                    : (isPlaying ? "Pause" : "Play"))
 
                                 // Restart button
                                 Button(action: {
