@@ -277,6 +277,8 @@ struct TeleprompterView: View {
                 // Auto-start PiP when app goes to background (like YouTube)
                 startPiP(minimizeApp: false)
             } else if newPhase == .active {
+                // Catch an appearance change made while the app was away.
+                pipManager.update(settings: settings, colorScheme: colorScheme)
                 pipManager.refreshPresentation()
             }
         }
@@ -284,6 +286,10 @@ struct TeleprompterView: View {
             pipManager.update(settings: newSettings, colorScheme: colorScheme)
         }
         .onChange(of: colorScheme) { newScheme in
+            // Going to the background, the system snapshots the app in the other
+            // appearance as well, and the environment flips there and back. The
+            // floating window keeps the appearance the reader last saw on screen.
+            guard scenePhase == .active else { return }
             pipManager.update(settings: settings, colorScheme: newScheme)
         }
         .onChange(of: isPlaying) { playing in
