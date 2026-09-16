@@ -219,6 +219,11 @@ struct HomeView: View {
         editorController.insertCue()
     }
 
+    private func selectAllText() {
+        AnalyticsEvents.logButtonClick("select_all", screen: "home")
+        editorController.selectAll()
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -260,6 +265,7 @@ struct HomeView: View {
                     CueBar(
                         colorScheme: colorScheme,
                         onAddCue: insertCue,
+                        onSelectAll: selectAllText,
                         onDismissKeyboard: { isEditorFocused = false }
                     )
                     .transition(.move(edge: .bottom).combined(with: .opacity))

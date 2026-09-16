@@ -178,6 +178,13 @@ final class CueEditorController: ObservableObject {
     func insertCue() {
         coordinator?.insertEmptyCue()
     }
+
+    /// Select the whole script. Dragging a selection out to the end is awkward
+    /// here: the editor runs on under the keyboard and the cue bar, so the edge
+    /// that would scroll a drag along is out of reach.
+    func selectAll() {
+        coordinator?.selectAll()
+    }
 }
 
 /// Script editor that renders `[cue …]` tags in the cue color while you type, and
@@ -368,6 +375,14 @@ struct CueTextEditor: UIViewRepresentable {
             }
         }
 
+        func selectAll() {
+            guard let textView else { return }
+            if !textView.isFirstResponder {
+                textView.becomeFirstResponder()
+            }
+            textView.selectAll(nil)
+        }
+
         /// The range of an untouched `[cue ]` the caret is sitting inside, if this
         /// backspace is the one deleting its trailing space. A cue with anything
         /// written in it deletes a character at a time like ordinary text.
@@ -455,8 +470,9 @@ extension NSString {
 
 // MARK: - Cue bar
 
-/// The strip above the keyboard while a script is being written: one button to
-/// drop a cue in at the caret, and one to get the keyboard out of the way.
+/// The strip above the keyboard while a script is being written: buttons to drop
+/// a cue in at the caret and to select the whole script, and one to get the
+/// keyboard out of the way.
 struct CueBar: View {
     /// The bar's height. The editor keeps this much room clear at the bottom so
     /// the line being typed never hides behind it.
@@ -464,6 +480,7 @@ struct CueBar: View {
 
     let colorScheme: ColorScheme
     var onAddCue: () -> Void
+    var onSelectAll: () -> Void
     var onDismissKeyboard: () -> Void
 
     var body: some View {
@@ -479,6 +496,16 @@ struct CueBar: View {
                 .padding(.horizontal, 16)
                 .frame(height: 34)
                 .glassedEffect(in: Capsule())
+            }
+            .buttonStyle(.plain)
+
+            Button(action: onSelectAll) {
+                Text("Select All")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                    .padding(.horizontal, 16)
+                    .frame(height: 34)
+                    .glassedEffect(in: Capsule())
             }
             .buttonStyle(.plain)
 
