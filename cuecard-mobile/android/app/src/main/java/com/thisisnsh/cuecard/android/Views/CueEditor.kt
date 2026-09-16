@@ -72,10 +72,20 @@ val CUE_EDITOR_EDGE_FADE = 28.dp
  */
 class CueEditorController {
     internal var onInsertCue: (() -> Unit)? = null
+    internal var onSelectAll: (() -> Unit)? = null
 
     /** Drop an empty cue at the caret and leave the caret inside it. */
     fun insertCue() {
         onInsertCue?.invoke()
+    }
+
+    /**
+     * Select the whole script. Dragging a selection out to the end is awkward
+     * here: the editor runs on under the keyboard and the cue bar, so the edge
+     * that would scroll a drag along is out of reach.
+     */
+    fun selectAll() {
+        onSelectAll?.invoke()
     }
 }
 
@@ -152,6 +162,13 @@ fun CueTextEditor(
             )
         )
 
+        if (!isFocused) {
+            onFocusChange(true)
+        }
+    }
+
+    controller.onSelectAll = {
+        value = value.copy(selection = TextRange(0, value.text.length))
         if (!isFocused) {
             onFocusChange(true)
         }
@@ -301,8 +318,9 @@ private fun emptyCueInsertion(text: String, location: Int): Pair<String, Int> {
 // MARK: - Cue bar
 
 /**
- * The strip above the keyboard while a script is being written: one button to
- * drop a cue in at the caret, and one to get the keyboard out of the way.
+ * The strip above the keyboard while a script is being written: buttons to drop
+ * a cue in at the caret and to select the whole script, and one to get the
+ * keyboard out of the way.
  */
 val CUE_BAR_HEIGHT = 54.dp
 
@@ -310,6 +328,7 @@ val CUE_BAR_HEIGHT = 54.dp
 fun CueBar(
     isDark: Boolean,
     onAddCue: () -> Unit,
+    onSelectAll: () -> Unit,
     onDismissKeyboard: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -345,6 +364,22 @@ fun CueBar(
             )
             Text(
                 text = "Add Cue",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = AppColors.textPrimary(isDark)
+            )
+        }
+
+        Box(
+            modifier = Modifier
+                .height(34.dp)
+                .glassed(Capsule, isDark)
+                .clickableWithoutRipple(onSelectAll)
+                .padding(horizontal = 16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Select All",
                 fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = AppColors.textPrimary(isDark)

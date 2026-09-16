@@ -408,6 +408,10 @@ fun HomeView(
                             AnalyticsEvents.logButtonClick("insert_cue", "home")
                             editorController.insertCue()
                         },
+                        onSelectAll = {
+                            AnalyticsEvents.logButtonClick("select_all", "home")
+                            editorController.selectAll()
+                        },
                         onDismissKeyboard = { isEditorFocused = false },
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
