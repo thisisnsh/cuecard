@@ -97,7 +97,7 @@ struct TeleprompterSettings: Codable, Equatable {
         editorFontSize: 16,
         fontSize: 28,
         pipFontSize: 16,
-        overlayAspectRatio: .ratio16x9,
+        overlayAspectRatio: .ratio1x1,
         scrollSpeed: 1.0,
         linesPerMinute: 34,
         timerMinutes: 1,
@@ -225,7 +225,8 @@ struct TeleprompterSettings: Codable, Equatable {
             pipFontSize = try container.decodeIfPresent(LegacyFontSizePreset.self, forKey: .pipFontSizePreset)?.pipFontSize
                 ?? TeleprompterSettings.default.pipFontSize
         }
-        overlayAspectRatio = try container.decodeIfPresent(OverlayAspectRatio.self, forKey: .overlayAspectRatio) ?? .ratio16x9
+        overlayAspectRatio = try container.decodeIfPresent(OverlayAspectRatio.self, forKey: .overlayAspectRatio)
+            ?? TeleprompterSettings.default.overlayAspectRatio
         scrollSpeed = try container.decode(Double.self, forKey: .scrollSpeed)
         // Speed used to be set in words a minute, back when a highlight ran along
         // the words. Settings saved then carry the old figure and no usable line
