@@ -57,17 +57,18 @@ enum OverlayAspectRatio: String, Codable, CaseIterable {
         }
     }
 
-    /// The shape Settings shows for this ratio in place of its figures.
-    var symbolName: String {
+    /// The name Settings shows for this layout. The raw value is what's saved,
+    /// so it stays the bare ratio.
+    var displayName: String {
         switch self {
-        case .ratio16x9: return "rectangle.ratio.16.to.9"
-        case .ratio4x3: return "rectangle.ratio.4.to.3"
-        case .ratio1x1: return "square"
+        case .ratio16x9: return "Rectangle 16:9"
+        case .ratio4x3: return "Rectangle 4:3"
+        case .ratio1x1: return "Square 1:1"
         }
     }
 }
 
-/// One of the named sizes a text size setting offers as a segment.
+/// One of the named sizes a text size setting offers in its menu.
 struct SettingPreset {
     let label: String
     let value: Int

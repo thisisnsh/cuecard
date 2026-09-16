@@ -263,8 +263,6 @@ private struct AdvancedSection<Fields: View>: View {
                     withAnimation { showAdvanced.toggle() }
                 }
             }
-        } header: {
-            Text("Advanced")
         } footer: {
             if showAdvanced {
                 Text(footer)
@@ -347,46 +345,38 @@ private struct AboutSection: View {
 
 // MARK: - Number Controls
 
-/// A text size picked from the presets, with its title above. A size typed in
-/// Advanced that matches no preset leaves no segment selected.
+/// A text size picked from a menu of presets, the same kind of row as Theme.
+/// A size typed in Advanced that matches no preset shows as its own entry, so
+/// the row never reads blank.
 struct SizePresetPicker: View {
     let title: String
     @Binding var value: Int
     let presets: [SettingPreset]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-            Picker(title, selection: $value) {
-                ForEach(presets, id: \.value) { preset in
-                    Text(preset.label).tag(preset.value)
-                }
+        Picker(title, selection: $value) {
+            ForEach(presets, id: \.value) { preset in
+                Text(preset.label).tag(preset.value)
             }
-            .pickerStyle(.segmented)
-            .labelsHidden()
+            if !presets.contains(where: { $0.value == value }) {
+                Text("Custom (\(value) pt)").tag(value)
+            }
         }
-        .padding(.vertical, 4)
+        .pickerStyle(.menu)
     }
 }
 
-/// The floating window's shape, shown as a shape rather than a ratio.
+/// The floating window's layout, picked from a menu like Theme.
 struct AspectRatioPicker: View {
     @Binding var selection: OverlayAspectRatio
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Dimensions")
-            Picker("Dimensions", selection: $selection) {
-                ForEach(OverlayAspectRatio.allCases, id: \.self) { ratio in
-                    Image(systemName: ratio.symbolName)
-                        .accessibilityLabel(ratio.rawValue)
-                        .tag(ratio)
-                }
+        Picker("Layout", selection: $selection) {
+            ForEach(OverlayAspectRatio.allCases, id: \.self) { ratio in
+                Text(ratio.displayName).tag(ratio)
             }
-            .pickerStyle(.segmented)
-            .labelsHidden()
         }
-        .padding(.vertical, 4)
+        .pickerStyle(.menu)
     }
 }
 
