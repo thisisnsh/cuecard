@@ -609,6 +609,7 @@ private final class TeleprompterVideoRenderer {
     private var lineStarts: [Int] = []
     private var lineOffsets: [CGFloat] = []
     private let timerDuration: Int
+    private let timerFont: UIFont
     private let isDarkMode: Bool
     private var pool: CVPixelBufferPool?
     private var format: CMVideoFormatDescription?
@@ -618,9 +619,15 @@ private final class TeleprompterVideoRenderer {
     // Match the full-screen scroll response while keeping the shared reading
     // position authoritative. Only the displayed offset is smoothed.
     private static let scrollTimeConstant: Double = 0.12
+    /// The in-app timer is 16 pt over 28 pt text by default. The overlay keeps
+    /// that proportion to its own text size, so the timer never outgrows it.
+    private static let timerToTextRatio: CGFloat = 16.0 / 28.0
 
     init(text: String, settings: TeleprompterSettings, timerDuration: Int, isDarkMode: Bool) {
         self.timerDuration = timerDuration
+        timerFont = UIFont.monospacedDigitSystemFont(
+            ofSize: CGFloat(settings.pipFontSize) * Self.timerToTextRatio, weight: .semibold
+        )
         self.isDarkMode = isDarkMode
         backgroundColor = isDarkMode ? AppColors.UIColors.Dark.background : AppColors.UIColors.Light.background
         logicalSize = CGSize(width: 320, height: 320 / settings.overlayAspectRatio.ratio)
@@ -721,13 +728,15 @@ private final class TeleprompterVideoRenderer {
             : AppColors.timerUIColor(remainingSeconds: remaining, totalSeconds: timerDuration, isDarkMode: isDarkMode)
         let style = NSMutableParagraphStyle()
         style.alignment = .center
-        (time as NSString).draw(in: CGRect(x: 12, y: 6, width: 296, height: 22), withAttributes: [
-            .font: UIFont.monospacedDigitSystemFont(ofSize: 14, weight: .semibold),
+        let timerHeight = ceil(timerFont.lineHeight)
+        (time as NSString).draw(in: CGRect(x: 12, y: 6, width: 296, height: timerHeight), withAttributes: [
+            .font: timerFont,
             .foregroundColor: color,
             .paragraphStyle: style
         ])
 
-        let viewport = CGRect(x: 12, y: 34, width: 296, height: logicalSize.height - 42)
+        let viewportTop = 6 + timerHeight + 6
+        let viewport = CGRect(x: 12, y: viewportTop, width: 296, height: logicalSize.height - viewportTop - 8)
         let readingY = viewport.height * 0.45
         let position = TeleprompterTextLayout.linePosition(forCharacter: characterPosition, starts: lineStarts)
         let line = min(Int(position), max(lineOffsets.count - 1, 0))
