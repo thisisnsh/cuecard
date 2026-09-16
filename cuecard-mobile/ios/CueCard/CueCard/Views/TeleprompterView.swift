@@ -30,6 +30,9 @@ struct TeleprompterView: View {
     /// Settings are read live, so a size or speed changed mid-run shows at once.
     private var settings: TeleprompterSettings { settingsService.settings }
 
+    /// Playing or counting down to it. Settings is only offered while neither.
+    private var isRunning: Bool { isPlaying || isCountingDown }
+
     // Timer properties
     private var timerDuration: Int { settings.timerDurationSeconds }
     private var remainingTime: Int {
@@ -218,6 +221,9 @@ struct TeleprompterView: View {
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                     }
+                    .accessibilityLabel("Close")
+                    // Comes and goes with the play, restart and floating window buttons.
+                    .fadedOut(!showControls)
                 }
                 ToolbarItem(placement: .principal) {
                     Text(timeDisplay)
@@ -234,6 +240,9 @@ struct TeleprompterView: View {
                             .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                     }
                     .accessibilityLabel("Settings")
+                    // Only offered while paused, even when a tap has brought
+                    // the other controls back mid-run.
+                    .fadedOut(isRunning)
                 }
             }
             .numberPadDoneButton()
@@ -341,6 +350,17 @@ struct TeleprompterView: View {
     private func stopControlsTimer() {
         controlsTimer?.invalidate()
         controlsTimer = nil
+    }
+}
+
+private extension View {
+    /// Fade a toolbar button out, the way the bottom controls fade, and take it
+    /// out of reach of taps and VoiceOver while it's gone.
+    func fadedOut(_ isHidden: Bool) -> some View {
+        opacity(isHidden ? 0 : 1)
+            .allowsHitTesting(!isHidden)
+            .accessibilityHidden(isHidden)
+            .animation(.easeInOut(duration: 0.2), value: isHidden)
     }
 }
 
