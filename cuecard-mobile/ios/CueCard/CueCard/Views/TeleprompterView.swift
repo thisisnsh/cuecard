@@ -295,11 +295,14 @@ struct TeleprompterView: View {
     }
 }
 
-/// The real PiP landing surface lives underneath the full-screen reader. Once
-/// AVKit finishes returning the video, blend into the already-positioned text.
+/// Reveal the PiP landing surface before AVKit returns the video, then fade it
+/// away over the already-positioned reader once the system transition finishes.
 final class TeleprompterReaderHostView: UIView {
     let textView = UITextView(usingTextLayoutManager: false)
+    var onLayoutChange: (() -> Void)?
     private weak var videoSource: UIView?
+    private var lastLayoutSize: CGSize = .zero
+    private var restorationAnimation: UUID?
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -310,6 +313,18 @@ final class TeleprompterReaderHostView: UIView {
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        guard bounds.size != lastLayoutSize else { return }
+        lastLayoutSize = bounds.size
+        onLayoutChange?()
+    }
+
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        if window != nil { onLayoutChange?() }
+    }
 
     func installVideoSource(_ source: UIView) {
         guard videoSource !== source else { return }
@@ -322,24 +337,38 @@ final class TeleprompterReaderHostView: UIView {
         videoSource = source
     }
 
+    func prepareVideoRestoration() -> Bool {
+        guard window != nil, let videoSource else { return false }
+        cancelVideoRestoration()
+        bringSubviewToFront(videoSource)
+        return true
+    }
+
     func finishVideoRestoration(completion: @escaping () -> Void) {
-        guard window != nil else {
+        guard window != nil, let videoSource else {
+            cancelVideoRestoration()
             completion()
             return
         }
-        textView.layer.removeAllAnimations()
-        textView.alpha = 0
-        UIView.animate(withDuration: UIAccessibility.isReduceMotionEnabled ? 0 : 0.2,
+        let animation = UUID()
+        restorationAnimation = animation
+        UIView.animate(withDuration: UIAccessibility.isReduceMotionEnabled ? 0 : 0.25,
                        delay: 0, options: [.beginFromCurrentState, .curveEaseInOut, .allowUserInteraction]) {
-            self.textView.alpha = 1
-        } completion: { _ in
+            videoSource.alpha = 0
+        } completion: { [weak self] _ in
+            guard let self, self.restorationAnimation == animation else { return }
+            self.cancelVideoRestoration()
             completion()
         }
     }
 
     func cancelVideoRestoration() {
-        textView.layer.removeAllAnimations()
-        textView.alpha = 1
+        restorationAnimation = nil
+        guard let videoSource else { return }
+        videoSource.layer.removeAllAnimations()
+        // Keep the source opaque and attached for the next automatic PiP start.
+        insertSubview(videoSource, belowSubview: textView)
+        videoSource.alpha = 1
     }
 }
 
@@ -375,7 +404,10 @@ struct AttributedTextView: UIViewRepresentable {
         Coordinator(onTap: onTap, onHandOff: onHandOff)
     }
 
+    @MainActor
     class Coordinator: NSObject, UITextViewDelegate {
+        var updateReader: (() -> Void)?
+        private var pendingUpdate: DispatchWorkItem?
         var lastContentId: String?
         var lastFontSize: CGFloat = 0
         var lastCueColor: CueColor?
@@ -405,6 +437,25 @@ struct AttributedTextView: UIViewRepresentable {
         init(onTap: (() -> Void)?, onHandOff: ((Double) -> Void)?) {
             self.onTap = onTap
             self.onHandOff = onHandOff
+        }
+
+        /// UIKit layout and AVKit setup can invalidate SwiftUI's layout graph.
+        /// Coalesce updates and run them after its current update/layout pass.
+        func scheduleUpdate() {
+            guard pendingUpdate == nil else { return }
+            let work = DispatchWorkItem { [weak self] in
+                guard let self else { return }
+                self.pendingUpdate = nil
+                self.updateReader?()
+            }
+            pendingUpdate = work
+            DispatchQueue.main.async(execute: work)
+        }
+
+        func cancelUpdates() {
+            pendingUpdate?.cancel()
+            pendingUpdate = nil
+            updateReader = nil
         }
 
         @objc func handleTap() {
@@ -523,20 +574,34 @@ struct AttributedTextView: UIViewRepresentable {
         let tapGesture = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleTap))
         tapGesture.cancelsTouchesInView = false
         textView.addGestureRecognizer(tapGesture)
-        TeleprompterPiPManager.shared.attachReader(host)
+        host.onLayoutChange = { [weak coordinator = context.coordinator] in
+            coordinator?.scheduleUpdate()
+        }
         return host
     }
 
     static func dismantleUIView(_ uiView: TeleprompterReaderHostView, coordinator: Coordinator) {
+        uiView.onLayoutChange = nil
+        coordinator.cancelUpdates()
         coordinator.stopEasing()
         uiView.cancelVideoRestoration()
     }
 
     func updateUIView(_ host: TeleprompterReaderHostView, context: Context) {
+        let coordinator = context.coordinator
+        coordinator.updateReader = { [weak host, weak coordinator] in
+            guard let host, let coordinator else { return }
+            updateReader(host, coordinator: coordinator)
+        }
+        coordinator.scheduleUpdate()
+    }
+
+    private func updateReader(_ host: TeleprompterReaderHostView, coordinator: Coordinator) {
+        guard host.window != nil, host.bounds.width > 0, host.bounds.height > 0 else { return }
         let textView = host.textView
         host.layoutIfNeeded()
+        TeleprompterPiPManager.shared.attachReader(host)
         textView.backgroundColor = colorScheme == .dark ? AppColors.UIColors.Dark.background : AppColors.UIColors.Light.background
-        let coordinator = context.coordinator
         coordinator.onTap = onTap
         coordinator.onHandOff = onHandOff
         textView.textContainerInset = UIEdgeInsets(top: topPadding, left: 24, bottom: bottomPadding, right: 24)
@@ -545,14 +610,6 @@ struct AttributedTextView: UIViewRepresentable {
         coordinator.lastSnapToken = snapToken
         let needsRestoration = restorationRequest != nil
             && coordinator.lastRestorationRequest != restorationRequest
-
-        // Returning from the background can leave a pending safe-area/layout
-        // pass. Resolve it before measuring and positioning the reader.
-        if needsRestoration {
-            textView.window?.layoutIfNeeded()
-            textView.superview?.layoutIfNeeded()
-            textView.layoutIfNeeded()
-        }
 
         let contentId = content.fullText
         let needsFullRebuild = coordinator.lastContentId != contentId
@@ -586,10 +643,8 @@ struct AttributedTextView: UIViewRepresentable {
 
             if layout.starts != coordinator.lastReportedLineStarts {
                 coordinator.lastReportedLineStarts = layout.starts
-                // Publish outside SwiftUI's current layout pass.
-                DispatchQueue.main.async {
-                    onLayoutChange(layout.starts)
-                }
+                // This entire update is already outside SwiftUI's layout pass.
+                onLayoutChange(layout.starts)
             }
         }
 
@@ -597,7 +652,7 @@ struct AttributedTextView: UIViewRepresentable {
         guard textView.bounds.width > 0, textView.bounds.height > 0 else { return }
         guard offsets.count > 1 else {
             if needsRestoration {
-                restoreReader(textView, coordinator: coordinator, at: offsets.first ?? 0)
+                restoreReader(host, coordinator: coordinator, at: offsets.first ?? 0)
             }
             return
         }
@@ -611,7 +666,7 @@ struct AttributedTextView: UIViewRepresentable {
         let scrollY = min(max(target, 0), maxY)
 
         if needsRestoration {
-            restoreReader(textView, coordinator: coordinator, at: scrollY)
+            restoreReader(host, coordinator: coordinator, at: scrollY)
             return
         }
 
@@ -630,10 +685,12 @@ struct AttributedTextView: UIViewRepresentable {
         coordinator.ease(to: scrollY, in: textView)
     }
 
-    private func restoreReader(_ textView: UITextView, coordinator: Coordinator, at offset: CGFloat) {
+    private func restoreReader(_ host: TeleprompterReaderHostView, coordinator: Coordinator, at offset: CGFloat) {
+        let textView = host.textView
         guard let request = restorationRequest,
               let scene = textView.window?.windowScene,
               scene.activationState == .foregroundActive || scene.activationState == .foregroundInactive else { return }
+        guard host.prepareVideoRestoration() else { return }
         coordinator.lastRestorationRequest = request
         CATransaction.begin()
         CATransaction.setDisableActions(true)

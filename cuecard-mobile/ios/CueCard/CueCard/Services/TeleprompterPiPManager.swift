@@ -285,7 +285,10 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         restorationTimeout?.cancel()
         restorationTimeout = nil
         restorationRequest = nil
-        if !restored { isRestoringToReader = false }
+        if !restored {
+            isRestoringToReader = false
+            readerHost?.cancelVideoRestoration()
+        }
         completion?(restored)
     }
 
@@ -327,7 +330,6 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         // AVKit now animates back into the reader's actual view hierarchy and
         // bounds, rather than a disconnected window floating behind the app.
         host.installVideoSource(source)
-        host.layoutIfNeeded()
         videoView = source
 
         var mediaTimebase: CMTimebase?
@@ -401,6 +403,9 @@ extension TeleprompterPiPManager: @preconcurrency AVPictureInPictureSampleBuffer
 extension TeleprompterPiPManager: @preconcurrency AVPictureInPictureControllerDelegate {
     func pictureInPictureControllerWillStartPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
         guard pipController === pictureInPictureController else { return }
+        if let request = restorationRequest { completeRestoration(request, restored: false) }
+        readerHost?.cancelVideoRestoration()
+        isRestoringToReader = false
         isStartingPiP = true
         advanceClock()
         renderFrame(force: true)
