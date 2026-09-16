@@ -5,6 +5,7 @@ import android.view.WindowManager
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -136,8 +137,8 @@ private const val SCRIPT_FADE_IN_MILLIS = 350
  */
 private const val TIMER_TO_TEXT_RATIO = 16f / 28f
 
-/** How long the controls take to arrive and to leave. */
-private const val CONTROLS_FADE_MILLIS = 200
+/** How the teleprompter's buttons, top and bottom, fade out and back in. */
+private fun <T> controlsFade() = tween<T>(durationMillis = 300, easing = FastOutSlowInEasing)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -543,23 +544,34 @@ fun TeleprompterView(
                         )
                     },
                     navigationIcon = {
-                        Icon(
-                            imageVector = Icons.Filled.Close,
-                            contentDescription = "Close",
-                            tint = AppColors.textPrimary(isDark),
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp)
-                                .size(14.dp)
-                                .clickableWithoutRipple {
-                                    AnalyticsEvents.logButtonClick("close", "teleprompter")
-                                    stopAndDismiss()
-                                }
-                        )
+                        // Comes and goes with the play, restart and floating window buttons.
+                        AnimatedVisibility(
+                            visible = showControls,
+                            enter = fadeIn(controlsFade()),
+                            exit = fadeOut(controlsFade())
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Close,
+                                contentDescription = "Close",
+                                tint = AppColors.textPrimary(isDark),
+                                modifier = Modifier
+                                    .padding(horizontal = 16.dp)
+                                    .size(14.dp)
+                                    .clickableWithoutRipple {
+                                        AnalyticsEvents.logButtonClick("close", "teleprompter")
+                                        stopAndDismiss()
+                                    }
+                            )
+                        }
                     },
                     actions = {
                         // Only offered while paused, even when a tap has brought the
                         // other controls back mid-run.
-                        if (!isRunning) {
+                        AnimatedVisibility(
+                            visible = !isRunning,
+                            enter = fadeIn(controlsFade()),
+                            exit = fadeOut(controlsFade())
+                        ) {
                             Icon(
                                 imageVector = Icons.Outlined.Settings,
                                 contentDescription = "Settings",
@@ -640,8 +652,8 @@ fun TeleprompterView(
                 AnimatedVisibility(
                     visible = showControls,
                     modifier = Modifier.align(Alignment.BottomCenter),
-                    enter = fadeIn(tween(CONTROLS_FADE_MILLIS)),
-                    exit = fadeOut(tween(CONTROLS_FADE_MILLIS))
+                    enter = fadeIn(controlsFade()),
+                    exit = fadeOut(controlsFade())
                 ) {
                     Row(
                         modifier = Modifier.padding(bottom = 48.dp),
