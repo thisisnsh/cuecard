@@ -362,7 +362,6 @@ struct SizePresetPicker: View {
                 Text("Custom (\(value) pt)").tag(value)
             }
         }
-        .pickerStyle(.menu)
     }
 }
 
@@ -376,7 +375,6 @@ struct AspectRatioPicker: View {
                 Text(ratio.displayName).tag(ratio)
             }
         }
-        .pickerStyle(.menu)
     }
 }
 
