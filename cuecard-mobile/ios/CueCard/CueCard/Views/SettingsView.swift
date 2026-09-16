@@ -259,6 +259,24 @@ struct SettingsView: View {
 
     private var rateSection: some View {
         Section {
+            ShareLink(
+                item: AppLinks.appStore,
+                subject: Text("CueCard, a teleprompter that floats above your apps"),
+                message: Text(AppLinks.shareMessage)
+            ) {
+                HStack {
+                    Text("Share CueCard")
+                    Spacer()
+                    Image(systemName: "square.and.arrow.up")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                }
+            }
+            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+            .simultaneousGesture(TapGesture().onEnded {
+                AnalyticsEvents.logButtonClick("share_app", screen: "settings")
+            })
+
             Link(destination: ReviewPromptService.writeReviewURL) {
                 VStack(alignment: .leading) {
                     HStack {

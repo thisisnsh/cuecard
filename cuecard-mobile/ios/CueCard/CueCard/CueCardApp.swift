@@ -62,4 +62,12 @@ enum AppLinks {
     static let sourceCode = URL(string: "https://github.com/thisisnsh/cuecard")!
     static let privacyPolicy = URL(string: "https://cuecard.dev/privacy/")!
     static let appStore = URL(string: "https://apps.apple.com/app/id6757321325")!
+    static let website = URL(string: "https://cuecard.dev")!
+
+    /// What goes out with the App Store link when someone shares the app.
+    static let shareMessage = """
+    I've been using CueCard to read my script while I record and present. It keeps your notes floating above any app, with a timer and cues for when to pause or smile.
+
+    Learn more at \(website.absoluteString)
+    """
 }
