@@ -49,10 +49,15 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
     /// A restoration request belongs to the full-screen presentation only. It
     /// must not reset the scroll smoothing in the still-visible PiP video.
     @Published private(set) var restorationRequest: UUID?
+    /// Bumped whenever the floating window is redrawn with new settings, so a
+    /// preview of it knows to draw again even while playback is still.
+    @Published private(set) var appearanceRevision = 0
     private var restorationCompletion: ((Bool) -> Void)?
     private var restorationTimeout: DispatchWorkItem?
 
     private var settings: TeleprompterSettings = .default
+    private var text = ""
+    private var isDarkMode = false
     private var referenceLineStarts: [Int] = []
     private var clockTimer: Timer?
     private var playbackAnchor: CFTimeInterval?
@@ -90,11 +95,54 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
     func configure(text: String, settings: TeleprompterSettings, timerDuration: Int, colorScheme: ColorScheme) {
         cleanup()
         self.settings = settings
+        self.text = text
+        isDarkMode = colorScheme == .dark
         playback = TeleprompterPlaybackState()
         referenceLineStarts = []
         renderer = TeleprompterVideoRenderer(text: text, settings: settings,
-                                            timerDuration: timerDuration, isDarkMode: colorScheme == .dark)
+                                            timerDuration: timerDuration, isDarkMode: isDarkMode)
         setupPiP()
+    }
+
+    /// Settings changed mid-session. The reader stays on the same line through
+    /// a speed change, and the floating window is redrawn for anything it shows.
+    func update(settings newSettings: TeleprompterSettings, colorScheme: ColorScheme) {
+        let newIsDarkMode = colorScheme == .dark
+        guard newSettings != settings || newIsDarkMode != isDarkMode else { return }
+        advanceClock()
+        let line = playback.scriptTime * linesPerSecond
+        let needsRedraw = newSettings.pipFontSize != settings.pipFontSize
+            || newSettings.overlayAspectRatio != settings.overlayAspectRatio
+            || newSettings.cueColor != settings.cueColor
+            || newSettings.timerDurationSeconds != settings.timerDurationSeconds
+            || newIsDarkMode != isDarkMode
+        let speedChanged = newSettings.linesPerMinute != settings.linesPerMinute
+        settings = newSettings
+        isDarkMode = newIsDarkMode
+
+        if speedChanged && linesPerSecond > 0 {
+            var state = playback
+            state.scriptTime = line / linesPerSecond
+            playback = state
+            reanchorPlayback()
+        }
+        if needsRedraw && renderer != nil {
+            let redrawn = TeleprompterVideoRenderer(text: text, settings: settings,
+                                                    timerDuration: settings.timerDurationSeconds, isDarkMode: isDarkMode)
+            renderer = redrawn
+            videoView?.backgroundColor = redrawn.backgroundColor
+            appearanceRevision += 1
+        }
+        if speedChanged || needsRedraw {
+            refreshVideoTimeline()
+            renderFrame(force: true)
+        }
+    }
+
+    /// The floating window as it looks right now, for showing in the app while
+    /// its size or shape is being picked.
+    func floatingWindowPreview() -> UIImage? {
+        renderer?.previewImage(characterPosition: characterPosition, state: playback)
     }
 
     /// Full-screen line starts are the definition of the lines/minute setting.
@@ -699,7 +747,8 @@ private final class TeleprompterVideoRenderer {
             context.translateBy(x: 0, y: CGFloat(pixelHeight))
             context.scaleBy(x: CGFloat(pixelWidth) / logicalSize.width, y: -CGFloat(pixelHeight) / logicalSize.height)
             UIGraphicsPushContext(context)
-            draw(in: context, characterPosition: characterPosition, state: state, smoothScrolling: smoothScrolling)
+            draw(in: context, characterPosition: characterPosition, state: state,
+                 offset: { scrollOffset(toward: $0, state: state, smoothScrolling: smoothScrolling) })
             UIGraphicsPopContext()
             drewFrame = true
         } else {
@@ -726,8 +775,16 @@ private final class TeleprompterVideoRenderer {
         return sample
     }
 
+    /// One frame drawn as an image instead of a video buffer. It lands straight
+    /// on the reading position, leaving the video's scroll smoothing untouched.
+    func previewImage(characterPosition: Double, state: TeleprompterPlaybackState) -> UIImage {
+        UIGraphicsImageRenderer(size: logicalSize).image { context in
+            draw(in: context.cgContext, characterPosition: characterPosition, state: state, offset: { $0 })
+        }
+    }
+
     private func draw(in context: CGContext, characterPosition: Double, state: TeleprompterPlaybackState,
-                      smoothScrolling: Bool) {
+                      offset resolveOffset: (CGFloat) -> CGFloat) {
         context.setFillColor(backgroundColor.cgColor)
         context.fill(CGRect(origin: .zero, size: logicalSize))
         let remaining = timerDuration > 0 ? timerDuration - Int(state.elapsedTime) : Int(state.elapsedTime)
@@ -756,7 +813,7 @@ private final class TeleprompterVideoRenderer {
                 offset += CGFloat(position - Double(line)) * (lineOffsets[line + 1] - lineOffsets[line])
             }
         }
-        offset = scrollOffset(toward: offset, state: state, smoothScrolling: smoothScrolling)
+        offset = resolveOffset(offset)
         context.saveGState()
         context.clip(to: viewport)
         context.translateBy(x: viewport.minX, y: viewport.minY + readingY - offset)

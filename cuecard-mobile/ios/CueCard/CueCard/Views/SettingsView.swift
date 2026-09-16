@@ -1,85 +1,38 @@
 import SwiftUI
+import UIKit
 import FirebaseAnalytics
 import FirebaseCrashlytics
 
-struct SettingsView: View {
+// MARK: - Editor Settings
+
+/// Settings opened from the editor: how the script is set while writing it,
+/// plus everything the two Settings screens share.
+struct EditorSettingsView: View {
     @EnvironmentObject var settingsService: SettingsService
     @EnvironmentObject var notifications: RemoteNotificationService
-    @Environment(\.dismiss) var dismiss
-    @Environment(\.colorScheme) var colorScheme
-
-    /// The delay, the speed and the text sizes are typed rather than dragged, so
-    /// each field holds text while it is being edited and only becomes a setting
-    /// once editing stops.
-    private enum NumberField { case delay, speed, fontSize, pipFontSize }
-
-    @State private var countdownSecondsText = ""
-    @State private var linesPerMinuteText = ""
-    @State private var fontSizeText = ""
-    @State private var pipFontSizeText = ""
-    @FocusState private var focusedField: NumberField?
 
     private var isCrashlyticsTestEnabled: Bool {
         ProcessInfo.processInfo.environment["CRASHLYTICS_TEST_CRASH"] == "1"
     }
 
     var body: some View {
-        NavigationStack {
-            settingsList
-                .navigationTitle("Settings")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button("Done") {
-                            AnalyticsEvents.logButtonClick("done", screen: "settings")
-                            dismiss()
-                        }
-                    }
-                }
-        }
-        .onAppear {
-            countdownSecondsText = String(settingsService.settings.countdownSeconds)
-            linesPerMinuteText = String(settingsService.settings.linesPerMinute)
-            fontSizeText = String(settingsService.settings.fontSize)
-            pipFontSizeText = String(settingsService.settings.pipFontSize)
-            Analytics.logEvent(AnalyticsEventScreenView, parameters: [
-                AnalyticsParameterScreenName: "settings"
-            ])
-        }
-        .onChange(of: focusedField) { field in
-            if field != .delay { commitCountdownSeconds() }
-            if field != .speed { commitLinesPerMinute() }
-            if field != .fontSize { commitFontSize() }
-            if field != .pipFontSize { commitPipFontSize() }
-        }
-        .onChange(of: settingsService.settings.countdownSeconds) { seconds in
-            if focusedField != .delay { countdownSecondsText = String(seconds) }
-        }
-        .onChange(of: settingsService.settings.linesPerMinute) { lines in
-            if focusedField != .speed { linesPerMinuteText = String(lines) }
-        }
-        .onChange(of: settingsService.settings.fontSize) { size in
-            if focusedField != .fontSize { fontSizeText = String(size) }
-        }
-        .onChange(of: settingsService.settings.pipFontSize) { size in
-            if focusedField != .pipFontSize { pipFontSizeText = String(size) }
-        }
-    }
-
-    private var settingsList: some View {
-        List {
+        SettingsScreen(screen: "settings") {
             remoteMessageSection
-            rateSection
-            teleprompterSection
-            inAppPrompterSection
-            floatingPrompterSection
-            appearanceSection
-            resetSection
+
+            Section("Editor") {
+                PresetNumberRow(
+                    title: "Text Size",
+                    value: $settingsService.settings.editorFontSize,
+                    presets: TeleprompterSettings.editorFontSizePresets,
+                    range: TeleprompterSettings.editorFontSizeRange,
+                    unit: "pt"
+                )
+            }
+
+            AppearanceSection()
+            AboutSection(screen: "settings")
             diagnosticsSection
         }
-        // The number pad has no return key, so the way out of a field is a
-        // scroll, or a tap on the other field.
-        .scrollDismissesKeyboard(.immediately)
     }
 
     /// A notice from the worker, if there's one meant for Settings. Quieter than
@@ -93,84 +46,247 @@ struct SettingsView: View {
         }
     }
 
-    /// Take what was typed as a countdown, holding it to the range a run can
-    /// wait for. Anything that isn't a number leaves the setting alone.
-    private func commitCountdownSeconds() {
-        let digits = countdownSecondsText.filter(\.isNumber)
-        if let typed = Int(digits) {
-            let clamped = min(max(typed, TeleprompterSettings.countdownRange.lowerBound), TeleprompterSettings.countdownRange.upperBound)
-            settingsService.settings.countdownSeconds = clamped
-        }
-        countdownSecondsText = String(settingsService.settings.countdownSeconds)
-    }
-
-    /// Take what was typed as a speed, holding it to the range the teleprompter
-    /// can scroll at. Anything that isn't a number leaves the setting alone.
-    private func commitLinesPerMinute() {
-        let digits = linesPerMinuteText.filter(\.isNumber)
-        if let typed = Int(digits) {
-            let clamped = min(max(typed, TeleprompterSettings.lpmRange.lowerBound), TeleprompterSettings.lpmRange.upperBound)
-            settingsService.settings.linesPerMinute = clamped
-        }
-        linesPerMinuteText = String(settingsService.settings.linesPerMinute)
-    }
-
-    /// Take what was typed as the in-app text size, held to the sizes the
-    /// prompter can draw legibly. Anything that isn't a number leaves it alone.
-    private func commitFontSize() {
-        if let typed = Int(fontSizeText.filter(\.isNumber)) {
-            settingsService.settings.fontSize = TeleprompterSettings.clamp(typed, to: TeleprompterSettings.fontSizeRange)
-        }
-        fontSizeText = String(settingsService.settings.fontSize)
-    }
-
-    /// Take what was typed as the floating prompter's text size, held to the
-    /// sizes that still fit its window. Anything that isn't a number leaves it alone.
-    private func commitPipFontSize() {
-        if let typed = Int(pipFontSizeText.filter(\.isNumber)) {
-            settingsService.settings.pipFontSize = TeleprompterSettings.clamp(typed, to: TeleprompterSettings.pipFontSizeRange)
-        }
-        pipFontSizeText = String(settingsService.settings.pipFontSize)
-    }
-
-    /// One typed setting: the label, then the number and its unit together in
-    /// a filled box. The box is what says the figure can be changed, and the
-    /// unit sits inside it so what is being typed is never read bare.
-    private func numberRow(label: String, text: Binding<String>, field: NumberField, unit: String) -> some View {
-        HStack {
-            Text(label)
-            Spacer()
-            HStack(spacing: 5) {
-                TextField("", text: text)
-                    .keyboardType(.numberPad)
-                    .multilineTextAlignment(.trailing)
-                    .monospacedDigit()
-                    .focused($focusedField, equals: field)
-                    .frame(width: 34, alignment: .trailing)
-                Text(unit)
-                    .foregroundStyle(.secondary)
+    @ViewBuilder
+    private var diagnosticsSection: some View {
+        if isCrashlyticsTestEnabled {
+            Section {
+                Button(role: .destructive) {
+                    AnalyticsEvents.logButtonClick("test_crash", screen: "settings")
+                    Crashlytics.crashlytics().log("Manually triggered test crash")
+                    fatalError("Crashlytics test crash")
+                } label: {
+                    Text("Trigger Test Crash")
+                }
+            } footer: {
+                Text("This intentionally crashes the app to verify Crashlytics reporting.")
+                    .font(.caption)
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 8)
-            .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(AppColors.textSecondary(for: colorScheme).opacity(0.12))
-            )
-            // The unit is part of the target: tapping anywhere in the box
-            // starts editing, not only the digits themselves.
-            .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .onTapGesture { focusedField = field }
         }
-        .padding(.vertical, 4)
+    }
+}
+
+// MARK: - Teleprompter Settings
+
+/// The sizes that are picked over the running script rather than in the list,
+/// so the change can be seen as it's made.
+enum TeleprompterSizePanel: Identifiable {
+    case teleprompter
+    case floatingWindow
+
+    var id: Self { self }
+}
+
+/// Settings opened from the teleprompter: everything that shapes a run, plus
+/// everything the two Settings screens share.
+struct TeleprompterSettingsView: View {
+    @EnvironmentObject var settingsService: SettingsService
+    @Environment(\.colorScheme) var colorScheme
+
+    /// Asks the teleprompter to close Settings and open a size panel over the script.
+    let onAdjust: (TeleprompterSizePanel) -> Void
+
+    private static let screen = "teleprompter_settings"
+
+    var body: some View {
+        SettingsScreen(screen: Self.screen) {
+            Section("Teleprompter") {
+                HStack {
+                    Text("Start Delay")
+                    Spacer()
+                    SettingNumberField(
+                        value: $settingsService.settings.countdownSeconds,
+                        range: TeleprompterSettings.countdownRange,
+                        unit: "seconds"
+                    )
+                }
+                .padding(.vertical, 4)
+
+                PresetNumberRow(
+                    title: "Scroll Speed",
+                    value: $settingsService.settings.linesPerMinute,
+                    presets: TeleprompterSettings.speedPresets(fontSize: settingsService.settings.fontSize),
+                    range: TeleprompterSettings.lpmRange,
+                    unit: "lines/min"
+                )
+
+                adjustRow(title: "Text Size", value: "\(settingsService.settings.fontSize) pt", panel: .teleprompter)
+            }
+
+            Section {
+                adjustRow(title: "Text Size", value: "\(settingsService.settings.pipFontSize) pt", panel: .floatingWindow)
+                adjustRow(title: "Dimensions", value: settingsService.settings.overlayAspectRatio.rawValue, panel: .floatingWindow)
+            } header: {
+                Text("Floating Window")
+            } footer: {
+                Text("Sizes are picked over your script, so you can see them change.")
+            }
+
+            AppearanceSection()
+            AboutSection(screen: Self.screen)
+        }
     }
 
-    /// Everything that shapes a run: how long before it starts, how fast the
-    /// script scrolls, and the color every cue is drawn in.
-    private var teleprompterSection: some View {
-        Section("Teleprompter") {
-            numberRow(label: "Start Delay", text: $countdownSecondsText, field: .delay, unit: "seconds")
+    private func adjustRow(title: String, value: String, panel: TeleprompterSizePanel) -> some View {
+        Button {
+            AnalyticsEvents.logButtonClick(
+                panel == .teleprompter ? "adjust_text_size" : "adjust_floating_window",
+                screen: Self.screen
+            )
+            onAdjust(panel)
+        } label: {
+            HStack {
+                Text(title)
+                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                Spacer()
+                Text(value)
+                    .monospacedDigit()
+                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(AppColors.textSecondary(for: colorScheme).opacity(0.6))
+            }
+            .contentShape(Rectangle())
+        }
+    }
+}
 
-            numberRow(label: "Scroll Speed", text: $linesPerMinuteText, field: .speed, unit: "lines/min")
+/// The small panel over the teleprompter for one size. Every change lands in
+/// the script behind it — or the floating window preview above it — at once.
+struct TeleprompterSizePanelView: View {
+    @EnvironmentObject var settingsService: SettingsService
+    @Environment(\.colorScheme) var colorScheme
+
+    let panel: TeleprompterSizePanel
+    let onDone: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Text(panel == .teleprompter ? "Text Size" : "Floating Window")
+                    .font(.headline)
+                Spacer()
+                Button("Done") {
+                    AnalyticsEvents.logButtonClick("close_size_panel", screen: "teleprompter")
+                    onDone()
+                }
+                .font(.body.weight(.semibold))
+            }
+
+            switch panel {
+            case .teleprompter:
+                PresetNumberRow(
+                    title: "Text Size",
+                    value: Binding(
+                        get: { settingsService.settings.fontSize },
+                        set: { settingsService.settings.setFontSize($0) }
+                    ),
+                    presets: TeleprompterSettings.fontSizePresets,
+                    range: TeleprompterSettings.fontSizeRange,
+                    unit: "pt"
+                )
+
+            case .floatingWindow:
+                PresetNumberRow(
+                    title: "Text Size",
+                    value: $settingsService.settings.pipFontSize,
+                    presets: TeleprompterSettings.pipFontSizePresets,
+                    range: TeleprompterSettings.pipFontSizeRange,
+                    unit: "pt"
+                )
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Dimensions")
+                    Picker("Dimensions", selection: $settingsService.settings.overlayAspectRatio) {
+                        ForEach(OverlayAspectRatio.allCases, id: \.self) { ratio in
+                            Text(ratio.rawValue).tag(ratio)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .labelsHidden()
+                }
+            }
+        }
+        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+        .padding(20)
+        .background(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(AppColors.background(for: colorScheme))
+                .shadow(color: .black.opacity(0.2), radius: 20, y: 4)
+        )
+        .padding(.horizontal, 12)
+        .padding(.bottom, 12)
+    }
+}
+
+/// The floating window as it will look, drawn by the same renderer, and
+/// redrawn as its size and shape are picked.
+struct FloatingWindowPreview: View {
+    @ObservedObject var pipManager: TeleprompterPiPManager
+
+    var body: some View {
+        // Read so a redraw with new settings refreshes the preview even while
+        // playback is still.
+        let _ = pipManager.appearanceRevision
+        if let image = pipManager.floatingWindowPreview() {
+            Image(uiImage: image)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 240)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .shadow(color: .black.opacity(0.25), radius: 16, y: 4)
+        }
+    }
+}
+
+// MARK: - Shared Sections
+
+/// The list both Settings screens are built on, with a Done button and a way
+/// off the number pad, which has no return key.
+private struct SettingsScreen<Content: View>: View {
+    @Environment(\.dismiss) var dismiss
+
+    let screen: String
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        NavigationStack {
+            List {
+                content
+            }
+            .scrollDismissesKeyboard(.immediately)
+            .navigationTitle("Settings")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") {
+                        AnalyticsEvents.logButtonClick("done", screen: screen)
+                        dismiss()
+                    }
+                }
+            }
+            .numberPadDoneButton()
+        }
+        .onAppear {
+            Analytics.logEvent(AnalyticsEventScreenView, parameters: [
+                AnalyticsParameterScreenName: screen
+            ])
+        }
+    }
+}
+
+/// Theme and cue color. Both are one setting for the whole app, so either
+/// Settings screen changes them everywhere.
+private struct AppearanceSection: View {
+    @EnvironmentObject var settingsService: SettingsService
+    @Environment(\.colorScheme) var colorScheme
+
+    var body: some View {
+        Section("Appearance") {
+            Picker("Theme", selection: $settingsService.settings.themePreference) {
+                ForEach(ThemePreference.allCases, id: \.self) { theme in
+                    Text(theme.rawValue).tag(theme)
+                }
+            }
 
             VStack(alignment: .leading, spacing: 12) {
                 Text("Cue Color")
@@ -211,120 +327,214 @@ struct SettingsView: View {
             }
         }
     }
+}
 
-    private var inAppPrompterSection: some View {
+/// Share, review and reset, the same on both Settings screens.
+///
+/// Each row is a plain button whose action does the work. A Link or ShareLink
+/// with a tap gesture laid over it for analytics competes with the row for the
+/// tap, which is what used to take several tries to get through.
+private struct AboutSection: View {
+    @EnvironmentObject var settingsService: SettingsService
+    @Environment(\.colorScheme) var colorScheme
+    @Environment(\.openURL) private var openURL
+
+    let screen: String
+
+    var body: some View {
         Section {
-            numberRow(label: "Text Size", text: $fontSizeText, field: .fontSize, unit: "pt")
-        } header: {
-            Text("In-App Prompter")
-        } footer: {
-            Text(sizeRangeFooter(TeleprompterSettings.fontSizeRange))
-        }
-    }
-
-    private var floatingPrompterSection: some View {
-        Section {
-            numberRow(label: "Text Size", text: $pipFontSizeText, field: .pipFontSize, unit: "pt")
-
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Dimension Ratio")
-                Picker("Dimension Ratio", selection: $settingsService.settings.overlayAspectRatio) {
-                    ForEach(OverlayAspectRatio.allCases, id: \.self) { ratio in
-                        Text(ratio.rawValue).tag(ratio)
-                    }
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
+            Button {
+                AnalyticsEvents.logButtonClick("share_app", screen: screen)
+                presentShareSheet(items: [AppLinks.shareMessage])
+            } label: {
+                row("Share CueCard", systemImage: "square.and.arrow.up")
             }
-        } header: {
-            Text("Floating Prompter")
-        } footer: {
-            Text(sizeRangeFooter(TeleprompterSettings.pipFontSizeRange))
-        }
-    }
 
-    private func sizeRangeFooter(_ range: ClosedRange<Int>) -> String {
-        "Text size can be \(range.lowerBound) to \(range.upperBound) pt."
-    }
-
-    private var appearanceSection: some View {
-        Section("Appearance") {
-            Picker("Theme", selection: $settingsService.settings.themePreference) {
-                ForEach(ThemePreference.allCases, id: \.self) { theme in
-                    Text(theme.rawValue).tag(theme)
-                }
+            Button {
+                AnalyticsEvents.logButtonClick("rate_app", screen: screen)
+                openURL(ReviewPromptService.writeReviewURL)
+            } label: {
+                row("Review on App Store", systemImage: "arrow.up.right")
             }
         }
-    }
 
-    private var rateSection: some View {
-        Section {
-            ShareLink(
-                item: AppLinks.appStore,
-                subject: Text("CueCard, a teleprompter that floats above your apps"),
-                message: Text(AppLinks.shareMessage)
-            ) {
-                HStack {
-                    Text("Share CueCard")
-                    Spacer()
-                    Image(systemName: "square.and.arrow.up")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                }
-            }
-            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-            .simultaneousGesture(TapGesture().onEnded {
-                AnalyticsEvents.logButtonClick("share_app", screen: "settings")
-            })
-
-            Link(destination: ReviewPromptService.writeReviewURL) {
-                VStack(alignment: .leading) {
-                    HStack {
-                        Text("Review on App Store")
-                        Spacer()
-                        Image(systemName: "arrow.up.right")
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                    }
-                }
-            }
-            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-            .simultaneousGesture(TapGesture().onEnded {
-                AnalyticsEvents.logButtonClick("rate_app", screen: "settings")
-            })
-        }
-    }
-
-    private var resetSection: some View {
         Section {
             Button("Reset to Defaults") {
-                AnalyticsEvents.logButtonClick("reset_to_defaults", screen: "settings")
-                settingsService.resetSettings()
+                AnalyticsEvents.logButtonClick("reset_to_defaults", screen: screen)
+                withAnimation { settingsService.resetSettings() }
             }
+            // Greyed out once there's nothing left to reset, so a tap that
+            // changes nothing never looks like one that didn't register.
+            .disabled(!settingsService.canResetSettings)
         }
     }
 
-    @ViewBuilder
-    private var diagnosticsSection: some View {
-        if isCrashlyticsTestEnabled {
-            Section {
-                Button(role: .destructive) {
-                    AnalyticsEvents.logButtonClick("test_crash", screen: "settings")
-                    Crashlytics.crashlytics().log("Manually triggered test crash")
-                    fatalError("Crashlytics test crash")
-                } label: {
-                    Text("Trigger Test Crash")
+    private func row(_ title: String, systemImage: String) -> some View {
+        HStack {
+            Text(title)
+                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+            Spacer()
+            Image(systemName: systemImage)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+        }
+        .contentShape(Rectangle())
+    }
+
+    /// Present the system share sheet over whatever is on screen, which here is
+    /// the Settings sheet itself.
+    private func presentShareSheet(items: [Any]) {
+        guard let root = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene })
+            .flatMap(\.windows)
+            .first(where: \.isKeyWindow)?
+            .rootViewController else { return }
+        var top = root
+        while let presented = top.presentedViewController { top = presented }
+
+        let controller = UIActivityViewController(activityItems: items, applicationActivities: nil)
+        controller.popoverPresentationController?.sourceView = top.view
+        controller.popoverPresentationController?.sourceRect = CGRect(
+            x: top.view.bounds.midX, y: top.view.bounds.midY, width: 0, height: 0
+        )
+        top.present(controller, animated: true)
+    }
+}
+
+// MARK: - Number Controls
+
+/// A number setting picked from a row of presets, or typed as any figure in
+/// the field beside its title. A typed figure that matches no preset leaves
+/// none of them selected.
+struct PresetNumberRow: View {
+    @Environment(\.colorScheme) var colorScheme
+
+    let title: String
+    @Binding var value: Int
+    let presets: [SettingPreset]
+    let range: ClosedRange<Int>
+    let unit: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text(title)
+                Spacer()
+                SettingNumberField(value: $value, range: range, unit: unit)
+            }
+
+            HStack(spacing: 6) {
+                ForEach(presets) { preset in
+                    let isSelected = preset.value == value
+                    Button {
+                        value = preset.value
+                    } label: {
+                        Text(preset.label)
+                            .font(.footnote.weight(.semibold))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 32)
+                            .foregroundStyle(isSelected
+                                             ? AppColors.background(for: colorScheme)
+                                             : AppColors.textPrimary(for: colorScheme))
+                            .background(
+                                Capsule().fill(isSelected
+                                               ? AppColors.textPrimary(for: colorScheme)
+                                               : AppColors.textSecondary(for: colorScheme).opacity(0.12))
+                            )
+                            .contentShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityValue(isSelected ? "Selected" : "")
                 }
-            } footer: {
-                Text("This intentionally crashes the app to verify Crashlytics reporting.")
-                    .font(.caption)
+            }
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+/// A typed number with its unit, in a filled box. The box is what says the
+/// figure can be changed, and the unit sits inside it so what is being typed
+/// is never read bare.
+///
+/// A figure within range takes effect as it's typed, so a size can be watched
+/// changing. Leaving the field holds whatever is there to the range, and
+/// anything that isn't a number leaves the setting alone.
+struct SettingNumberField: View {
+    @Environment(\.colorScheme) var colorScheme
+
+    @Binding var value: Int
+    let range: ClosedRange<Int>
+    let unit: String
+
+    @State private var text = ""
+    @FocusState private var isFocused: Bool
+
+    var body: some View {
+        HStack(spacing: 5) {
+            TextField("", text: $text)
+                .keyboardType(.numberPad)
+                .multilineTextAlignment(.trailing)
+                .monospacedDigit()
+                .focused($isFocused)
+                .frame(width: 34, alignment: .trailing)
+            Text(unit)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(AppColors.textSecondary(for: colorScheme).opacity(0.12))
+        )
+        // The unit is part of the target: tapping anywhere in the box
+        // starts editing, not only the digits themselves.
+        .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .onTapGesture { isFocused = true }
+        .onAppear { text = String(value) }
+        .onChange(of: value) { newValue in
+            if !isFocused || Int(text) != newValue { text = String(newValue) }
+        }
+        .onChange(of: text) { typed in
+            guard isFocused, let number = Int(typed.filter(\.isNumber)), range.contains(number) else { return }
+            if number != value { value = number }
+        }
+        .onChange(of: isFocused) { focused in
+            if !focused { commit() }
+        }
+    }
+
+    private func commit() {
+        if let typed = Int(text.filter(\.isNumber)) {
+            value = TeleprompterSettings.clamp(typed, to: range)
+        }
+        text = String(value)
+    }
+}
+
+extension View {
+    /// A Done button above the number pad, which has no return key of its own.
+    /// Put on a screen once: every field on it shares the one button.
+    func numberPadDoneButton() -> some View {
+        toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                }
             }
         }
     }
 }
 
-#Preview {
-    SettingsView()
+#Preview("Editor") {
+    EditorSettingsView()
         .environmentObject(SettingsService.shared)
         .environmentObject(RemoteNotificationService.shared)
+}
+
+#Preview("Teleprompter") {
+    TeleprompterSettingsView(onAdjust: { _ in })
+        .environmentObject(SettingsService.shared)
 }

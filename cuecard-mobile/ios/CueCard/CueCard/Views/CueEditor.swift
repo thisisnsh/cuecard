@@ -197,12 +197,12 @@ struct CueTextEditor: UIViewRepresentable {
     let controller: CueEditorController
     let cueColor: CueColor
     let colorScheme: ColorScheme
+    /// The text size the script is set in, from Settings.
+    let fontSize: CGFloat
     /// Height of the cue bar floating over the bottom of the editor, if it's showing.
     var keyboardOverlayHeight: CGFloat = 0
     /// Height of whatever floats over the bottom of the editor with the keyboard away.
     var restingOverlayHeight: CGFloat = 0
-
-    static let fontSize: CGFloat = 16
 
     /// How far the script fades into the background at the top and bottom edges.
     /// The text starts and ends this far in, so no line sits inside a fade.
@@ -218,7 +218,7 @@ struct CueTextEditor: UIViewRepresentable {
         textView.alwaysBounceVertical = true
         textView.keyboardDismissMode = .interactive
         textView.text = text
-        Self.applyHighlighting(to: textView, cueColor: cueColor, colorScheme: colorScheme)
+        Self.applyHighlighting(to: textView, cueColor: cueColor, colorScheme: colorScheme, fontSize: fontSize)
         return textView
     }
 
@@ -231,15 +231,17 @@ struct CueTextEditor: UIViewRepresentable {
 
         let styleChanged = context.coordinator.appliedColorScheme != colorScheme
             || context.coordinator.appliedCueColor != cueColor
+            || context.coordinator.appliedFontSize != fontSize
 
         if textView.text != text {
             textView.text = text
-            Self.applyHighlighting(to: textView, cueColor: cueColor, colorScheme: colorScheme)
+            Self.applyHighlighting(to: textView, cueColor: cueColor, colorScheme: colorScheme, fontSize: fontSize)
         } else if styleChanged {
-            Self.applyHighlighting(to: textView, cueColor: cueColor, colorScheme: colorScheme)
+            Self.applyHighlighting(to: textView, cueColor: cueColor, colorScheme: colorScheme, fontSize: fontSize)
         }
         context.coordinator.appliedColorScheme = colorScheme
         context.coordinator.appliedCueColor = cueColor
+        context.coordinator.appliedFontSize = fontSize
 
         // SwiftUI's .focused() doesn't reach into a UIViewRepresentable, so drive
         // first responder status from the binding instead — but after this update
@@ -268,12 +270,12 @@ struct CueTextEditor: UIViewRepresentable {
 
     // MARK: - Highlighting
 
-    static func applyHighlighting(to textView: UITextView, cueColor: CueColor, colorScheme: ColorScheme) {
+    static func applyHighlighting(to textView: UITextView, cueColor: CueColor, colorScheme: ColorScheme, fontSize: CGFloat) {
         // Recoloring mid-composition would drop the in-progress marked text.
         guard textView.markedTextRange == nil else { return }
 
         let isDarkMode = colorScheme == .dark
-        let baseAttributes = baseAttributes(isDarkMode: isDarkMode)
+        let baseAttributes = baseAttributes(isDarkMode: isDarkMode, fontSize: fontSize)
         let tagColor = cueColor.uiColor(isDarkMode: isDarkMode)
         let storage = textView.textStorage
         let fullRange = NSRange(location: 0, length: storage.length)
@@ -300,7 +302,7 @@ struct CueTextEditor: UIViewRepresentable {
         textView.typingAttributes = baseAttributes
     }
 
-    private static func baseAttributes(isDarkMode: Bool) -> [NSAttributedString.Key: Any] {
+    private static func baseAttributes(isDarkMode: Bool, fontSize: CGFloat) -> [NSAttributedString.Key: Any] {
         [
             .font: UIFont.systemFont(ofSize: fontSize, weight: .medium),
             .foregroundColor: isDarkMode ? AppColors.UIColors.Dark.textPrimary : AppColors.UIColors.Light.textPrimary
@@ -314,6 +316,7 @@ struct CueTextEditor: UIViewRepresentable {
         weak var textView: CueTextView?
         var appliedColorScheme: ColorScheme?
         var appliedCueColor: CueColor?
+        var appliedFontSize: CGFloat?
 
         init(parent: CueTextEditor) {
             self.parent = parent
@@ -408,7 +411,8 @@ struct CueTextEditor: UIViewRepresentable {
             CueTextEditor.applyHighlighting(
                 to: textView,
                 cueColor: parent.cueColor,
-                colorScheme: parent.colorScheme
+                colorScheme: parent.colorScheme,
+                fontSize: parent.fontSize
             )
 
             textView.selectedRange = NSRange(location: caret, length: 0)
@@ -423,7 +427,8 @@ struct CueTextEditor: UIViewRepresentable {
             CueTextEditor.applyHighlighting(
                 to: textView,
                 cueColor: parent.cueColor,
-                colorScheme: parent.colorScheme
+                colorScheme: parent.colorScheme,
+                fontSize: parent.fontSize
             )
             textView.selectedRange = selection
 

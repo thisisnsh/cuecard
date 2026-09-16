@@ -5,8 +5,8 @@ import FirebaseCrashlytics
 
 struct TeleprompterView: View {
     let content: TeleprompterContent
-    let settings: TeleprompterSettings
 
+    @EnvironmentObject var settingsService: SettingsService
     @Environment(\.dismiss) var dismiss
     @Environment(\.colorScheme) var colorScheme
     @StateObject private var pipManager = TeleprompterPiPManager.shared
@@ -25,7 +25,14 @@ struct TeleprompterView: View {
     @State private var hasConfiguredSession = false
     @State private var showControls = true
     @State private var controlsTimer: Timer?
+    @State private var showingSettings = false
+    /// The size panel Settings asked for, opened once Settings has finished closing.
+    @State private var requestedPanel: TeleprompterSizePanel?
+    @State private var activePanel: TeleprompterSizePanel?
     @Environment(\.scenePhase) private var scenePhase
+
+    /// Settings are read live, so a size or speed changed mid-run shows at once.
+    private var settings: TeleprompterSettings { settingsService.settings }
 
     // Timer properties
     private var timerDuration: Int { settings.timerDurationSeconds }
@@ -117,8 +124,8 @@ struct TeleprompterView: View {
                     // off flat against the toolbar and the controls.
                     .scriptEdgeFade(for: colorScheme, top: Self.topFade, bottom: Self.bottomFade)
 
-                    // Controls overlay
-                    if showControls {
+                    // Controls overlay. A size panel takes their place while it's open.
+                    if showControls && activePanel == nil {
                         VStack {
                             Spacer()
 
@@ -190,6 +197,24 @@ struct TeleprompterView: View {
                         .transition(.opacity)
                     }
 
+                    if activePanel == .floatingWindow {
+                        VStack {
+                            FloatingWindowPreview(pipManager: pipManager)
+                                .padding(.top, 16)
+                            Spacer()
+                        }
+                        .transition(.opacity.combined(with: .scale(scale: 0.9)))
+                    }
+
+                    if let panel = activePanel {
+                        VStack {
+                            Spacer()
+                            TeleprompterSizePanelView(panel: panel) {
+                                withAnimation(.easeInOut(duration: 0.2)) { activePanel = nil }
+                            }
+                        }
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
                 }
                 .onAppear {
                     setupPiP()
@@ -203,7 +228,6 @@ struct TeleprompterView: View {
                     ])
                 }
             }
-            .navigationTitle("Teleprompter")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(AppColors.background(for: colorScheme), for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
@@ -218,12 +242,30 @@ struct TeleprompterView: View {
                             .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                     }
                 }
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItem(placement: .principal) {
                     Text(timeDisplay)
                         .font(.system(size: 16, weight: .bold, design: .monospaced))
                         .foregroundStyle(timerColor)
                 }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(action: {
+                        AnalyticsEvents.logButtonClick("settings", screen: "teleprompter")
+                        showingSettings = true
+                    }) {
+                        Image(systemName: "gearshape")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                    }
+                    .accessibilityLabel("Settings")
+                }
             }
+            .numberPadDoneButton()
+        }
+        .sheet(isPresented: $showingSettings, onDismiss: openRequestedPanel) {
+            TeleprompterSettingsView(onAdjust: { panel in
+                requestedPanel = panel
+                showingSettings = false
+            })
         }
         .persistentSystemOverlays(.hidden)
         .onDisappear {
@@ -238,9 +280,23 @@ struct TeleprompterView: View {
                 pipManager.refreshPresentation()
             }
         }
+        .onChange(of: settingsService.settings) { newSettings in
+            pipManager.update(settings: newSettings, colorScheme: colorScheme)
+        }
+        .onChange(of: colorScheme) { newScheme in
+            pipManager.update(settings: settings, colorScheme: newScheme)
+        }
         .onChange(of: isPlaying) { playing in
             if playing { resetControlsTimer() } else { stopControlsTimer() }
         }
+    }
+
+    /// The whole Settings sheet is out of the way before a size panel opens,
+    /// so the script it changes can be seen behind the panel.
+    private func openRequestedPanel() {
+        guard let panel = requestedPanel else { return }
+        requestedPanel = nil
+        withAnimation(.easeInOut(duration: 0.25)) { activePanel = panel }
     }
 
     // MARK: - Shared Playback Session
@@ -764,8 +820,6 @@ struct AttributedTextView: UIViewRepresentable {
 }
 
 #Preview {
-    TeleprompterView(
-        content: TeleprompterParser.parseNotes(""),
-        settings: .default
-    )
+    TeleprompterView(content: TeleprompterParser.parseNotes(""))
+        .environmentObject(SettingsService.shared)
 }

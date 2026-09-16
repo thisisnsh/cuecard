@@ -249,6 +249,7 @@ struct HomeView: View {
                         controller: editorController,
                         cueColor: settingsService.settings.cueColor,
                         colorScheme: colorScheme,
+                        fontSize: CGFloat(settingsService.settings.editorFontSize),
                         keyboardOverlayHeight: CueBar.height,
                         restingOverlayHeight: Self.controlsHeight
                     )
@@ -381,7 +382,7 @@ struct HomeView: View {
                 }
             }
             .sheet(isPresented: $showingSettings) {
-                SettingsView()
+                EditorSettingsView()
             }
             .sheet(isPresented: $showingSavedNotes) {
                 SavedNotesView()
@@ -421,10 +422,7 @@ struct HomeView: View {
                 Text(fileErrorMessage ?? "")
             }
             .fullScreenCover(isPresented: $showingTeleprompter, onDismiss: requestReviewIfEarned) {
-                TeleprompterView(
-                    content: TeleprompterParser.parseNotes(settingsService.notes),
-                    settings: settingsService.settings
-                )
+                TeleprompterView(content: TeleprompterParser.parseNotes(settingsService.notes))
             }
         }
         .onAppear {
@@ -442,6 +440,7 @@ struct NotesEditorView: View {
     let controller: CueEditorController
     let cueColor: CueColor
     let colorScheme: ColorScheme
+    let fontSize: CGFloat
     /// Room the cue bar takes at the bottom while the keyboard is up.
     var keyboardOverlayHeight: CGFloat = 0
     /// Room the home controls take at the bottom once the keyboard has gone.
@@ -454,7 +453,7 @@ struct NotesEditorView: View {
                 // Set on the editor's own font and insets, so the first line sits
                 // exactly where the caret waiting in front of it does.
                 Text("Add your script here...\n\nTap Add Cue to drop in a delivery reminder, or type [ to write one yourself.\n\nFor example: Welcome everyone [cue smile and pause]")
-                    .font(.system(size: CueTextEditor.fontSize, weight: .medium))
+                    .font(.system(size: fontSize, weight: .medium))
                     .foregroundStyle(AppColors.textSecondary(for: colorScheme).opacity(0.6))
                     .padding(.horizontal, 20)
                     .padding(.top, CueTextEditor.edgeFade)
@@ -467,6 +466,7 @@ struct NotesEditorView: View {
                 controller: controller,
                 cueColor: cueColor,
                 colorScheme: colorScheme,
+                fontSize: fontSize,
                 keyboardOverlayHeight: keyboardOverlayHeight,
                 restingOverlayHeight: restingOverlayHeight
             )

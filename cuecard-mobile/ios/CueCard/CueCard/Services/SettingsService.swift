@@ -58,8 +58,18 @@ enum OverlayAspectRatio: String, Codable, CaseIterable {
     }
 }
 
+/// One of the named values a number setting offers beside its typed field.
+struct SettingPreset: Identifiable {
+    let label: String
+    let value: Int
+
+    var id: String { label }
+}
+
 /// Settings for the teleprompter
 struct TeleprompterSettings: Codable, Equatable {
+    /// Text size in the script editor, in points.
+    var editorFontSize: Int
     /// Text size in the in-app prompter, in points.
     var fontSize: Int
     /// Text size in the floating prompter, in points of its 320-point-wide page.
@@ -76,11 +86,12 @@ struct TeleprompterSettings: Codable, Equatable {
     var cueColor: CueColor
 
     static let `default` = TeleprompterSettings(
+        editorFontSize: 16,
         fontSize: 28,
         pipFontSize: 16,
         overlayAspectRatio: .ratio16x9,
         scrollSpeed: 1.0,
-        linesPerMinute: 50,
+        linesPerMinute: 34,
         timerMinutes: 1,
         timerSeconds: 0,
         themePreference: .system,
@@ -97,11 +108,82 @@ struct TeleprompterSettings: Codable, Equatable {
     /// The countdowns a typed start delay is held to.
     static let countdownRange = 0...60
 
+    /// The editor's text sizes, in points, a typed size is held to.
+    static let editorFontSizeRange = 12...40
+
     /// The in-app text sizes, in points, a typed size is held to.
     static let fontSizeRange = 16...72
 
     /// The floating prompter's text sizes, in points, a typed size is held to.
     static let pipFontSizeRange = 10...32
+
+    /// The editor's text sizes offered beside its typed field, around the
+    /// 16 pt it has always been set in.
+    static let editorFontSizePresets = [
+        SettingPreset(label: "XS", value: 12),
+        SettingPreset(label: "S", value: 14),
+        SettingPreset(label: "M", value: 16),
+        SettingPreset(label: "L", value: 20),
+        SettingPreset(label: "XL", value: 24),
+    ]
+
+    /// The in-app text sizes offered beside the typed field. Past 40 pt a phone
+    /// line holds fewer than three words, so the larger sizes are left to typing.
+    static let fontSizePresets = [
+        SettingPreset(label: "XS", value: 20),
+        SettingPreset(label: "S", value: 24),
+        SettingPreset(label: "M", value: 28),
+        SettingPreset(label: "L", value: 34),
+        SettingPreset(label: "XL", value: 40),
+    ]
+
+    /// The floating prompter's text sizes offered beside the typed field, spaced
+    /// like the in-app ones around its own default.
+    static let pipFontSizePresets = [
+        SettingPreset(label: "XS", value: 12),
+        SettingPreset(label: "S", value: 14),
+        SettingPreset(label: "M", value: 16),
+        SettingPreset(label: "L", value: 19),
+        SettingPreset(label: "XL", value: 22),
+    ]
+
+    /// The reading paces offered beside the typed speed, in words a minute.
+    /// Most people present at 130–150, so Normal sits there with room either
+    /// side for a careful read or a quick one.
+    private static let wordsPerMinutePresets = [
+        ("Slowest", 100),
+        ("Slow", 120),
+        ("Normal", 140),
+        ("Fast", 160),
+        ("Fastest", 180),
+    ]
+
+    /// Roughly how many words the in-app prompter fits on a line at a text size,
+    /// measured on a 393-point-wide phone. Speed is set in lines, so this is
+    /// what turns a reading pace into a speed.
+    private static func wordsPerLine(fontSize: Int) -> Double {
+        115 / Double(fontSize)
+    }
+
+    /// The speed, in lines a minute, that each reading pace comes to at a text
+    /// size. Bigger text puts fewer words on a line, so the same pace needs more lines.
+    static func speedPresets(fontSize: Int) -> [SettingPreset] {
+        wordsPerMinutePresets.map { label, wordsPerMinute in
+            let lines = (Double(wordsPerMinute) / wordsPerLine(fontSize: fontSize)).rounded()
+            return SettingPreset(label: label, value: clamp(Int(lines), to: lpmRange))
+        }
+    }
+
+    /// Change the in-app text size. A speed picked from the paces keeps its
+    /// pace at the new size; a typed speed is left as typed.
+    mutating func setFontSize(_ size: Int) {
+        let size = TeleprompterSettings.clamp(size, to: TeleprompterSettings.fontSizeRange)
+        let pace = TeleprompterSettings.speedPresets(fontSize: fontSize).firstIndex { $0.value == linesPerMinute }
+        fontSize = size
+        if let pace {
+            linesPerMinute = TeleprompterSettings.speedPresets(fontSize: size)[pace].value
+        }
+    }
 
     /// Get timer duration in seconds
     var timerDurationSeconds: Int {
@@ -109,6 +191,7 @@ struct TeleprompterSettings: Codable, Equatable {
     }
 
     enum CodingKeys: String, CodingKey {
+        case editorFontSize
         /// Only read, and only to carry an older size setting over. See `init(from:)`.
         case fontSizePreset
         case pipFontSizePreset
@@ -127,6 +210,7 @@ struct TeleprompterSettings: Codable, Equatable {
     }
 
     init(
+        editorFontSize: Int,
         fontSize: Int,
         pipFontSize: Int,
         overlayAspectRatio: OverlayAspectRatio,
@@ -138,6 +222,7 @@ struct TeleprompterSettings: Codable, Equatable {
         countdownSeconds: Int,
         cueColor: CueColor
     ) {
+        self.editorFontSize = editorFontSize
         self.fontSize = fontSize
         self.pipFontSize = pipFontSize
         self.overlayAspectRatio = overlayAspectRatio
@@ -152,6 +237,10 @@ struct TeleprompterSettings: Codable, Equatable {
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        editorFontSize = TeleprompterSettings.clamp(
+            try container.decodeIfPresent(Int.self, forKey: .editorFontSize) ?? TeleprompterSettings.default.editorFontSize,
+            to: TeleprompterSettings.editorFontSizeRange
+        )
         // Text size used to be one of three presets. Settings saved then carry the
         // preset and no size, so start them on the size that preset drew at.
         if let size = try container.decodeIfPresent(Int.self, forKey: .fontSize) {
@@ -189,6 +278,7 @@ struct TeleprompterSettings: Codable, Equatable {
 
     func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(editorFontSize, forKey: .editorFontSize)
         try container.encode(fontSize, forKey: .fontSize)
         try container.encode(pipFontSize, forKey: .pipFontSize)
         try container.encode(overlayAspectRatio, forKey: .overlayAspectRatio)
@@ -368,9 +458,22 @@ Try it out. I think you'll love it.
         }
     }
 
-    /// Reset settings to defaults
+    /// Put everything Settings shows back to its default. The timer is set on
+    /// the home screen, not in Settings, so it is left as it is.
     func resetSettings() {
-        settings = .default
+        settings = defaultsKeepingTimer
+    }
+
+    /// Whether Reset to Defaults has anything to reset.
+    var canResetSettings: Bool {
+        settings != defaultsKeepingTimer
+    }
+
+    private var defaultsKeepingTimer: TeleprompterSettings {
+        var defaults = TeleprompterSettings.default
+        defaults.timerMinutes = settings.timerMinutes
+        defaults.timerSeconds = settings.timerSeconds
+        return defaults
     }
 
     /// Save current notes as a new note
