@@ -46,6 +46,7 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.thisisnsh.cuecard.android.models.AppColors
@@ -53,9 +54,6 @@ import com.thisisnsh.cuecard.android.models.CueColor
 import com.thisisnsh.cuecard.android.models.TeleprompterParser
 import com.thisisnsh.cuecard.android.modifiers.Capsule
 import com.thisisnsh.cuecard.android.modifiers.glassed
-
-/** Size of the text in the editor. */
-val CUE_EDITOR_FONT_SIZE = 16.sp
 
 /**
  * How far the script fades into the background at the top and bottom edges.
@@ -104,6 +102,8 @@ fun CueTextEditor(
     controller: CueEditorController,
     cueColor: CueColor,
     isDark: Boolean,
+    /** The text size the script is set in, from Settings. */
+    fontSize: TextUnit,
     modifier: Modifier = Modifier,
     /** Room whatever floats over the bottom of the editor needs kept clear. */
     bottomOverlayHeight: androidx.compose.ui.unit.Dp = 0.dp
@@ -175,7 +175,7 @@ fun CueTextEditor(
     }
 
     val baseStyle = TextStyle(
-        fontSize = CUE_EDITOR_FONT_SIZE,
+        fontSize = fontSize,
         fontWeight = FontWeight.Medium,
         color = AppColors.textPrimary(isDark)
     )

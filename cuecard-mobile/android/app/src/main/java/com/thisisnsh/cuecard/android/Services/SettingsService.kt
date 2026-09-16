@@ -1,6 +1,7 @@
 package com.thisisnsh.cuecard.android.services
 
 import android.content.Context
+import android.content.res.Resources
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -18,6 +19,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.util.UUID
+import kotlin.math.roundToInt
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "cuecard_settings")
 
@@ -34,25 +36,30 @@ enum class ThemePreference(val displayName: String) {
     }
 }
 
-/** Font size presets for teleprompter */
-@Serializable
-enum class FontSizePreset(val displayName: String, val fontSize: Int, val pipFontSize: Int) {
+/**
+ * The Small / Medium / Large text sizes settings used to be saved as. Only read,
+ * to carry an older choice over to the size it stood for.
+ */
+private enum class LegacyFontSizePreset(val displayName: String, val fontSize: Int, val pipFontSize: Int) {
     SMALL("Small", 20, 12),
     MEDIUM("Medium", 28, 16),
     LARGE("Large", 40, 22);
 
     companion object {
-        fun fromString(value: String): FontSizePreset =
-            entries.find { it.displayName == value } ?: MEDIUM
+        fun fromString(value: String?): LegacyFontSizePreset? =
+            entries.find { it.displayName == value }
     }
 }
 
-/** Overlay dimension ratio presets */
+/**
+ * Overlay dimension ratio presets. `displayName` is what's saved, so it stays
+ * the bare ratio; `label` is what Settings shows.
+ */
 @Serializable
-enum class OverlayAspectRatio(val displayName: String, val ratio: Float) {
-    RATIO_16X9("16:9", 16f / 9f),
-    RATIO_4X3("4:3", 4f / 3f),
-    RATIO_1X1("1:1", 1f);
+enum class OverlayAspectRatio(val displayName: String, val label: String, val ratio: Float) {
+    RATIO_16X9("16:9", "Rectangle 16:9", 16f / 9f),
+    RATIO_4X3("4:3", "Rectangle 4:3", 4f / 3f),
+    RATIO_1X1("1:1", "Square 1:1", 1f);
 
     companion object {
         fun fromString(value: String): OverlayAspectRatio =
@@ -60,11 +67,50 @@ enum class OverlayAspectRatio(val displayName: String, val ratio: Float) {
     }
 }
 
+/** One of the named sizes a text size setting offers in its menu. */
+data class SettingPreset(val label: String, val value: Int)
+
+/**
+ * How much bigger text needs to be on this device to look the size it does on a
+ * phone. Sizes are designed on a 393-dp-wide phone, and every other screen is
+ * measured by its short side, so turning the device doesn't change them.
+ */
+object ScreenTextScale {
+    private const val REFERENCE_WIDTH = 393.0
+
+    /**
+     * Grows with the screen, so a line holds about as many words on a tablet as
+     * on a phone. What the teleprompter needs, since it's read from a distance.
+     */
+    val teleprompter: Double by lazy {
+        val metrics = Resources.getSystem().displayMetrics
+        minOf(metrics.widthPixels, metrics.heightPixels) / metrics.density / REFERENCE_WIDTH
+    }
+
+    /**
+     * Grows half as fast: the editor is read up close, where a phone's size times
+     * two is more than anyone writes in.
+     */
+    val editor: Double by lazy { 1 + (teleprompter - 1) / 2 }
+
+    fun scaled(size: Int, by: Double): Int = (size * by).roundToInt()
+
+    fun scaled(range: IntRange, by: Double): IntRange =
+        scaled(range.first, by)..scaled(range.last, by)
+
+    fun scaled(presets: List<SettingPreset>, by: Double): List<SettingPreset> =
+        presets.map { it.copy(value = scaled(it.value, by)) }
+}
+
 /** Settings for the teleprompter */
 @Serializable
 data class TeleprompterSettings(
-    val fontSizePreset: FontSizePreset = FontSizePreset.MEDIUM,
-    val pipFontSizePreset: FontSizePreset = FontSizePreset.MEDIUM,
+    /** Text size in the script editor, in sp. */
+    val editorFontSize: Int = ScreenTextScale.scaled(16, ScreenTextScale.editor),
+    /** Text size in the in-app prompter, in sp. */
+    val fontSize: Int = ScreenTextScale.scaled(28, ScreenTextScale.teleprompter),
+    /** Text size in the floating prompter, in sp. */
+    val pipFontSize: Int = 16,
     val overlayAspectRatio: OverlayAspectRatio = OverlayAspectRatio.RATIO_1X1,
     val scrollSpeed: Double = 1.0,
     /** Scroll speed, in lines of the script as the teleprompter renders them. */
@@ -76,14 +122,6 @@ data class TeleprompterSettings(
     /** The color every `[cue …]` in every script is drawn in. */
     val cueColor: CueColor = CueColor.DEFAULT
 ) {
-    /** Computed font size from preset */
-    val fontSize: Int
-        get() = fontSizePreset.fontSize
-
-    /** Computed PiP font size from preset */
-    val pipFontSize: Int
-        get() = pipFontSizePreset.pipFontSize
-
     /** Get timer duration in seconds */
     val timerDurationSeconds: Int
         get() = timerMinutes * 60 + timerSeconds
@@ -99,6 +137,61 @@ data class TeleprompterSettings(
 
         /** The countdowns a typed start delay is held to. */
         val COUNTDOWN_RANGE = 0..60
+
+        /** The editor's text sizes a typed size is held to. Sized for this screen, like its presets. */
+        val EDITOR_FONT_SIZE_RANGE = ScreenTextScale.scaled(12..40, ScreenTextScale.editor)
+
+        /** The in-app text sizes a typed size is held to. Sized for this screen, like its presets. */
+        val FONT_SIZE_RANGE = ScreenTextScale.scaled(16..72, ScreenTextScale.teleprompter)
+
+        /**
+         * The floating prompter's text sizes a typed size is held to. The overlay
+         * window is about the same size on every device, so these aren't scaled.
+         */
+        val PIP_FONT_SIZE_RANGE = 10..32
+
+        /**
+         * The editor's text sizes offered as presets, around the 16 sp it has
+         * always been set in on a phone, and scaled up for bigger screens.
+         */
+        val EDITOR_FONT_SIZE_PRESETS = ScreenTextScale.scaled(
+            listOf(
+                SettingPreset("XS", 12),
+                SettingPreset("S", 14),
+                SettingPreset("M", 16),
+                SettingPreset("L", 20),
+                SettingPreset("XL", 24)
+            ),
+            ScreenTextScale.editor
+        )
+
+        /**
+         * The in-app text sizes offered as presets, as a phone sees them and scaled
+         * to this screen. Past 40 sp a phone line holds fewer than three words, so
+         * the larger sizes are left to Advanced.
+         */
+        val FONT_SIZE_PRESETS = ScreenTextScale.scaled(
+            listOf(
+                SettingPreset("XS", 20),
+                SettingPreset("S", 24),
+                SettingPreset("M", 28),
+                SettingPreset("L", 34),
+                SettingPreset("XL", 40)
+            ),
+            ScreenTextScale.teleprompter
+        )
+
+        /**
+         * The floating prompter's text sizes offered as presets, spaced like the
+         * in-app ones around its own default. Not scaled: see `PIP_FONT_SIZE_RANGE`.
+         */
+        val PIP_FONT_SIZE_PRESETS = listOf(
+            SettingPreset("XS", 12),
+            SettingPreset("S", 14),
+            SettingPreset("M", 16),
+            SettingPreset("L", 19),
+            SettingPreset("XL", 22)
+        )
     }
 }
 
@@ -145,8 +238,9 @@ Try it out. I think you'll love it.
 """.trimIndent()
 
         // Preference keys
-        private val FONT_SIZE_PRESET = stringPreferencesKey("font_size_preset")
-        private val PIP_FONT_SIZE_PRESET = stringPreferencesKey("pip_font_size_preset")
+        private val EDITOR_FONT_SIZE = intPreferencesKey("editor_font_size")
+        private val FONT_SIZE = intPreferencesKey("font_size")
+        private val PIP_FONT_SIZE = intPreferencesKey("pip_font_size")
         private val OVERLAY_ASPECT_RATIO = stringPreferencesKey("overlay_aspect_ratio")
         private val SCROLL_SPEED = doublePreferencesKey("scroll_speed")
         private val LINES_PER_MINUTE = intPreferencesKey("lines_per_minute")
@@ -166,6 +260,13 @@ Try it out. I think you'll love it.
          */
         private val RETIRED_WORDS_PER_MINUTE = intPreferencesKey("words_per_minute")
         private val RETIRED_AUTO_SCROLL = booleanPreferencesKey("auto_scroll")
+
+        /**
+         * Text size used to be one of three presets. Settings saved then carry the
+         * preset and no size — see `settingsFrom`.
+         */
+        private val RETIRED_FONT_SIZE_PRESET = stringPreferencesKey("font_size_preset")
+        private val RETIRED_PIP_FONT_SIZE_PRESET = stringPreferencesKey("pip_font_size_preset")
 
         @Volatile
         private var instance: SettingsService? = null
@@ -195,7 +296,8 @@ Try it out. I think you'll love it.
 
     /**
      * Read the settings out of a preferences snapshot, carrying an older
-     * words-a-minute speed over: a line holds about five words at these sizes.
+     * words-a-minute speed over — a line holds about five words at these sizes —
+     * and an older text size preset over to the size it drew at.
      */
     private fun settingsFrom(prefs: Preferences): TeleprompterSettings {
         val storedLines = prefs[LINES_PER_MINUTE]
@@ -210,9 +312,19 @@ Try it out. I think you'll love it.
             else -> TeleprompterSettings.DEFAULT.linesPerMinute
         }
 
+        val defaults = TeleprompterSettings.DEFAULT
+        val fontSize = prefs[FONT_SIZE]?.coerceIn(TeleprompterSettings.FONT_SIZE_RANGE)
+            ?: LegacyFontSizePreset.fromString(prefs[RETIRED_FONT_SIZE_PRESET])?.fontSize
+            ?: defaults.fontSize
+        val pipFontSize = prefs[PIP_FONT_SIZE]?.coerceIn(TeleprompterSettings.PIP_FONT_SIZE_RANGE)
+            ?: LegacyFontSizePreset.fromString(prefs[RETIRED_PIP_FONT_SIZE_PRESET])?.pipFontSize
+            ?: defaults.pipFontSize
+
         return TeleprompterSettings(
-            fontSizePreset = FontSizePreset.fromString(prefs[FONT_SIZE_PRESET] ?: FontSizePreset.MEDIUM.displayName),
-            pipFontSizePreset = FontSizePreset.fromString(prefs[PIP_FONT_SIZE_PRESET] ?: FontSizePreset.MEDIUM.displayName),
+            editorFontSize = prefs[EDITOR_FONT_SIZE]?.coerceIn(TeleprompterSettings.EDITOR_FONT_SIZE_RANGE)
+                ?: defaults.editorFontSize,
+            fontSize = fontSize,
+            pipFontSize = pipFontSize,
             overlayAspectRatio = OverlayAspectRatio.fromString(prefs[OVERLAY_ASPECT_RATIO] ?: TeleprompterSettings.DEFAULT.overlayAspectRatio.displayName),
             scrollSpeed = prefs[SCROLL_SPEED] ?: 1.0,
             linesPerMinute = linesPerMinute,
@@ -243,9 +355,9 @@ Try it out. I think you'll love it.
         }
         _currentNoteId.value = prefs[CURRENT_NOTE_ID]
 
-        // A speed carried over from the old setting is written back straight
-        // away, so the retired keys are gone before anything else reads them.
-        if (prefs[LINES_PER_MINUTE] == null) {
+        // A speed or size carried over from an old setting is written back
+        // straight away, so the retired keys are gone before anything else reads them.
+        if (prefs[LINES_PER_MINUTE] == null || prefs[FONT_SIZE] == null) {
             saveSettings(loaded)
         }
     }
@@ -256,8 +368,9 @@ Try it out. I think you'll love it.
     suspend fun saveSettings(newSettings: TeleprompterSettings) {
         _settings.value = newSettings
         context.dataStore.edit { prefs ->
-            prefs[FONT_SIZE_PRESET] = newSettings.fontSizePreset.displayName
-            prefs[PIP_FONT_SIZE_PRESET] = newSettings.pipFontSizePreset.displayName
+            prefs[EDITOR_FONT_SIZE] = newSettings.editorFontSize
+            prefs[FONT_SIZE] = newSettings.fontSize
+            prefs[PIP_FONT_SIZE] = newSettings.pipFontSize
             prefs[OVERLAY_ASPECT_RATIO] = newSettings.overlayAspectRatio.displayName
             prefs[SCROLL_SPEED] = newSettings.scrollSpeed
             prefs[LINES_PER_MINUTE] = newSettings.linesPerMinute
@@ -268,6 +381,8 @@ Try it out. I think you'll love it.
             prefs[CUE_COLOR] = newSettings.cueColor.rawValue
             prefs.remove(RETIRED_WORDS_PER_MINUTE)
             prefs.remove(RETIRED_AUTO_SCROLL)
+            prefs.remove(RETIRED_FONT_SIZE_PRESET)
+            prefs.remove(RETIRED_PIP_FONT_SIZE_PRESET)
         }
     }
 
@@ -316,12 +431,16 @@ Try it out. I think you'll love it.
     /**
      * Update individual setting properties
      */
-    suspend fun updateFontSizePreset(preset: FontSizePreset) {
-        saveSettings(_settings.value.copy(fontSizePreset = preset))
+    suspend fun updateEditorFontSize(size: Int) {
+        saveSettings(_settings.value.copy(editorFontSize = size))
     }
 
-    suspend fun updatePipFontSizePreset(preset: FontSizePreset) {
-        saveSettings(_settings.value.copy(pipFontSizePreset = preset))
+    suspend fun updateFontSize(size: Int) {
+        saveSettings(_settings.value.copy(fontSize = size))
+    }
+
+    suspend fun updatePipFontSize(size: Int) {
+        saveSettings(_settings.value.copy(pipFontSize = size))
     }
 
     suspend fun updateOverlayAspectRatio(ratio: OverlayAspectRatio) {

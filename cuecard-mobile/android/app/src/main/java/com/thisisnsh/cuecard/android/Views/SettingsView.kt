@@ -2,6 +2,7 @@ package com.thisisnsh.cuecard.android.views
 
 import android.content.Context
 import android.content.Intent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -27,13 +28,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowOutward
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.UnfoldMore
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -51,6 +52,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -73,9 +75,9 @@ import com.thisisnsh.cuecard.android.LocalIsDarkTheme
 import com.thisisnsh.cuecard.android.models.AppColors
 import com.thisisnsh.cuecard.android.models.CueColor
 import com.thisisnsh.cuecard.android.models.RemoteNotification
-import com.thisisnsh.cuecard.android.services.FontSizePreset
 import com.thisisnsh.cuecard.android.services.OverlayAspectRatio
 import com.thisisnsh.cuecard.android.services.RemoteNotificationService
+import com.thisisnsh.cuecard.android.services.SettingPreset
 import com.thisisnsh.cuecard.android.services.SettingsService
 import com.thisisnsh.cuecard.android.services.TeleprompterSettings
 import com.thisisnsh.cuecard.android.services.ThemePreference
@@ -170,7 +172,15 @@ fun SettingsView(
                 }
             }
 
-            // MARK: - Teleprompter
+            SettingsSection(title = "Editor", isDark = isDark) {
+                SizePresetPicker(
+                    label = "Text Size",
+                    value = settings.editorFontSize,
+                    presets = TeleprompterSettings.EDITOR_FONT_SIZE_PRESETS,
+                    isDark = isDark,
+                    onSelect = { scope.launch { settingsService.updateEditorFontSize(it) } }
+                )
+            }
 
             SettingsSection(title = "Teleprompter", isDark = isDark) {
                 NumberRow(
@@ -191,124 +201,79 @@ fun SettingsView(
                     onCommit = { scope.launch { settingsService.updateLinesPerMinute(it) } }
                 )
 
-                Column(
-                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text(
-                        text = "Cue Color",
-                        fontSize = 17.sp,
-                        color = AppColors.textPrimary(isDark)
-                    )
-
-                    Row(
-                        modifier = Modifier.padding(vertical = 4.dp),
-                        horizontalArrangement = Arrangement.spacedBy(14.dp)
-                    ) {
-                        CueColor.entries.forEach { option ->
-                            val isSelected = option == settings.cueColor
-                            Box(
-                                modifier = Modifier
-                                    .size(36.dp)
-                                    .clickableWithoutRipple {
-                                        scope.launch { settingsService.updateCueColor(option) }
-                                    },
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .border(
-                                            width = if (isSelected) 2.dp else 0.dp,
-                                            color = if (isSelected) {
-                                                AppColors.textPrimary(isDark)
-                                            } else {
-                                                androidx.compose.ui.graphics.Color.Transparent
-                                            },
-                                            shape = CircleShape
-                                        )
-                                )
-                                Box(
-                                    modifier = Modifier
-                                        .size(28.dp)
-                                        .clip(CircleShape)
-                                        .background(option.color(isDark)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    if (isSelected) {
-                                        Icon(
-                                            imageVector = Icons.Filled.Check,
-                                            contentDescription = option.displayName,
-                                            tint = AppColors.background(isDark),
-                                            modifier = Modifier.size(12.dp)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    Text(
-                        text = "Every cue is shown in this color.",
-                        fontSize = 13.sp,
-                        color = AppColors.textSecondary(isDark)
-                    )
-                }
-            }
-
-            // MARK: - Prompters
-
-            SettingsSection(title = "In-App Prompter", isDark = isDark) {
-                SegmentedRow(
+                SizePresetPicker(
                     label = "Text Size",
-                    options = FontSizePreset.entries.map { it.displayName },
-                    selectedIndex = FontSizePreset.entries.indexOf(settings.fontSizePreset),
+                    value = settings.fontSize,
+                    presets = TeleprompterSettings.FONT_SIZE_PRESETS,
                     isDark = isDark,
-                    onSelect = {
-                        scope.launch {
-                            settingsService.updateFontSizePreset(FontSizePreset.entries[it])
-                        }
-                    }
+                    onSelect = { scope.launch { settingsService.updateFontSize(it) } }
                 )
             }
 
-            SettingsSection(title = "Floating Prompter", isDark = isDark) {
-                SegmentedRow(
+            SettingsSection(title = "Floating Window", isDark = isDark) {
+                SizePresetPicker(
                     label = "Text Size",
-                    options = FontSizePreset.entries.map { it.displayName },
-                    selectedIndex = FontSizePreset.entries.indexOf(settings.pipFontSizePreset),
+                    value = settings.pipFontSize,
+                    presets = TeleprompterSettings.PIP_FONT_SIZE_PRESETS,
                     isDark = isDark,
-                    onSelect = {
-                        scope.launch {
-                            settingsService.updatePipFontSizePreset(FontSizePreset.entries[it])
-                        }
-                    }
+                    onSelect = { scope.launch { settingsService.updatePipFontSize(it) } }
                 )
 
-                SegmentedRow(
-                    label = "Dimension Ratio",
-                    options = OverlayAspectRatio.entries.map { it.displayName },
-                    selectedIndex = OverlayAspectRatio.entries.indexOf(settings.overlayAspectRatio),
+                MenuPickerRow(
+                    label = "Layout",
+                    options = OverlayAspectRatio.entries,
+                    selected = settings.overlayAspectRatio,
+                    optionLabel = { it.label },
                     isDark = isDark,
-                    onSelect = {
-                        scope.launch {
-                            settingsService.updateOverlayAspectRatio(OverlayAspectRatio.entries[it])
-                        }
-                    }
+                    onSelect = { scope.launch { settingsService.updateOverlayAspectRatio(it) } }
                 )
             }
 
             SettingsSection(title = "Appearance", isDark = isDark) {
-                SegmentedRow(
+                MenuPickerRow(
                     label = "Theme",
-                    options = ThemePreference.entries.map { it.displayName },
-                    selectedIndex = ThemePreference.entries.indexOf(settings.themePreference),
+                    options = ThemePreference.entries,
+                    selected = settings.themePreference,
+                    optionLabel = { it.displayName },
                     isDark = isDark,
-                    onSelect = {
-                        scope.launch {
-                            settingsService.updateThemePreference(ThemePreference.entries[it])
-                        }
-                    }
+                    onSelect = { scope.launch { settingsService.updateThemePreference(it) } }
+                )
+
+                CueColorRow(
+                    selected = settings.cueColor,
+                    isDark = isDark,
+                    onSelect = { scope.launch { settingsService.updateCueColor(it) } }
+                )
+            }
+
+            AdvancedSection(
+                screen = "settings",
+                footer = advancedFooter(),
+                isDark = isDark
+            ) {
+                NumberRow(
+                    label = "Editor Text Size",
+                    unit = "pt",
+                    value = settings.editorFontSize,
+                    range = TeleprompterSettings.EDITOR_FONT_SIZE_RANGE,
+                    isDark = isDark,
+                    onCommit = { scope.launch { settingsService.updateEditorFontSize(it) } }
+                )
+                NumberRow(
+                    label = "Teleprompter Text Size",
+                    unit = "pt",
+                    value = settings.fontSize,
+                    range = TeleprompterSettings.FONT_SIZE_RANGE,
+                    isDark = isDark,
+                    onCommit = { scope.launch { settingsService.updateFontSize(it) } }
+                )
+                NumberRow(
+                    label = "Floating Window Text Size",
+                    unit = "pt",
+                    value = settings.pipFontSize,
+                    range = TeleprompterSettings.PIP_FONT_SIZE_RANGE,
+                    isDark = isDark,
+                    onCommit = { scope.launch { settingsService.updatePipFontSize(it) } }
                 )
             }
 
@@ -428,9 +393,9 @@ private fun SettingsSection(
 }
 
 /**
- * A labelled row holding a number the user types, rather than drags. The field
- * keeps whatever is being typed and only becomes a setting once editing stops,
- * so a half-typed figure is never held to the range.
+ * A labelled row holding a number the user types, rather than drags. A figure
+ * within range takes effect as it's typed; leaving the field holds whatever is
+ * there to the range, so a half-typed figure is never clamped mid-typing.
  */
 @Composable
 private fun NumberRow(
@@ -476,7 +441,12 @@ private fun NumberRow(
         ) {
             BasicTextField(
                 value = text,
-                onValueChange = { entered -> text = entered.filter { it.isDigit() }.take(3) },
+                onValueChange = { entered ->
+                    text = entered.filter { it.isDigit() }.take(3)
+                    // A figure within range takes effect as it's typed, so a
+                    // size can be watched changing.
+                    text.toIntOrNull()?.let { if (it in range && it != value) onCommit(it) }
+                },
                 singleLine = true,
                 textStyle = TextStyle(
                     fontSize = 15.sp,
@@ -508,44 +478,223 @@ private fun NumberRow(
     }
 }
 
-/** A labelled segmented control, the parallel to SwiftUI's segmented picker. */
-@OptIn(ExperimentalMaterial3Api::class)
+private fun advancedFooter(): String {
+    val editor = TeleprompterSettings.EDITOR_FONT_SIZE_RANGE
+    val prompter = TeleprompterSettings.FONT_SIZE_RANGE
+    val pip = TeleprompterSettings.PIP_FONT_SIZE_RANGE
+    return "Editor text can be set from ${editor.first} to ${editor.last} pt, " +
+        "teleprompter text from ${prompter.first} to ${prompter.last} pt, " +
+        "and floating window text from ${pip.first} to ${pip.last} pt."
+}
+
+/** The color every cue is drawn in, picked from a row of swatches. */
 @Composable
-private fun SegmentedRow(
-    label: String,
-    options: List<String>,
-    selectedIndex: Int,
-    isDark: Boolean,
-    onSelect: (Int) -> Unit
-) {
+private fun CueColorRow(selected: CueColor, isDark: Boolean, onSelect: (CueColor) -> Unit) {
     Column(
         modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            text = "Cue Color",
+            fontSize = 17.sp,
+            color = AppColors.textPrimary(isDark)
+        )
+
+        Row(
+            modifier = Modifier.padding(vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            CueColor.entries.forEach { option ->
+                val isSelected = option == selected
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clickableWithoutRipple { onSelect(option) },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .border(
+                                width = if (isSelected) 2.dp else 0.dp,
+                                color = if (isSelected) AppColors.textPrimary(isDark) else Color.Transparent,
+                                shape = CircleShape
+                            )
+                    )
+                    Box(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .clip(CircleShape)
+                            .background(option.color(isDark)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (isSelected) {
+                            Icon(
+                                imageVector = Icons.Filled.Check,
+                                contentDescription = option.displayName,
+                                tint = AppColors.background(isDark),
+                                modifier = Modifier.size(12.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        Text(
+            text = "Every cue is shown in this color.",
+            fontSize = 13.sp,
+            color = AppColors.textSecondary(isDark)
+        )
+    }
+}
+
+/**
+ * A setting picked from a menu, with the current choice in grey at the trailing
+ * edge — the parallel to a SwiftUI menu picker.
+ */
+@Composable
+private fun <T> MenuPickerRow(
+    label: String,
+    options: List<T>,
+    selected: T,
+    optionLabel: (T) -> String,
+    isDark: Boolean,
+    onSelect: (T) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickableWithoutRipple { expanded = true }
+            .padding(horizontal = 20.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
             text = label,
             fontSize = 17.sp,
             color = AppColors.textPrimary(isDark)
         )
+        Spacer(modifier = Modifier.weight(1f))
 
-        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-            options.forEachIndexed { index, option ->
-                SegmentedButton(
-                    selected = index == selectedIndex,
-                    onClick = { onSelect(index) },
-                    shape = SegmentedButtonDefaults.itemShape(index = index, count = options.size),
-                    colors = SegmentedButtonDefaults.colors(
-                        activeContainerColor = AppColors.textPrimary(isDark).copy(alpha = 0.12f),
-                        activeContentColor = AppColors.textPrimary(isDark),
-                        inactiveContainerColor = androidx.compose.ui.graphics.Color.Transparent,
-                        inactiveContentColor = AppColors.textSecondary(isDark),
-                        activeBorderColor = AppColors.textSecondary(isDark).copy(alpha = 0.3f),
-                        inactiveBorderColor = AppColors.textSecondary(isDark).copy(alpha = 0.3f)
+        Box {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = optionLabel(selected),
+                    fontSize = 17.sp,
+                    color = AppColors.textSecondary(isDark)
+                )
+                Icon(
+                    imageVector = Icons.Filled.UnfoldMore,
+                    contentDescription = null,
+                    tint = AppColors.textSecondary(isDark),
+                    modifier = Modifier
+                        .padding(start = 4.dp)
+                        .size(16.dp)
+                )
+            }
+
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+                containerColor = AppColors.background(isDark)
+            ) {
+                options.forEach { option ->
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text = optionLabel(option),
+                                color = AppColors.textPrimary(isDark)
+                            )
+                        },
+                        trailingIcon = {
+                            if (option == selected) {
+                                Icon(
+                                    imageVector = Icons.Filled.Check,
+                                    contentDescription = null,
+                                    tint = AppColors.textPrimary(isDark),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        },
+                        onClick = {
+                            expanded = false
+                            onSelect(option)
+                        }
                     )
-                ) {
-                    Text(text = option, fontSize = 14.sp)
                 }
             }
         }
     }
 }
+
+/**
+ * A text size picked from a menu of presets, the same kind of row as Theme. A
+ * size typed in Advanced that matches no preset shows as its own entry, so the
+ * row never reads blank.
+ */
+@Composable
+private fun SizePresetPicker(
+    label: String,
+    value: Int,
+    presets: List<SettingPreset>,
+    isDark: Boolean,
+    onSelect: (Int) -> Unit
+) {
+    val sizes = presets.map { it.value }.let { if (value in it) it else it + value }
+    MenuPickerRow(
+        label = label,
+        options = sizes,
+        selected = value,
+        optionLabel = { size -> presets.find { it.value == size }?.label ?: "Custom ($size pt)" },
+        isDark = isDark,
+        onSelect = onSelect
+    )
+}
+
+/**
+ * Typed sizes for anyone who wants one the presets don't offer. Hidden until
+ * asked for, and the choice to show it is remembered.
+ */
+@Composable
+private fun AdvancedSection(
+    screen: String,
+    footer: String,
+    isDark: Boolean,
+    fields: @Composable () -> Unit
+) {
+    val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
+    val prefs = remember { context.getSharedPreferences(ADVANCED_PREFS, Context.MODE_PRIVATE) }
+    var showAdvanced by remember { mutableStateOf(prefs.getBoolean(SHOW_ADVANCED_KEY, false)) }
+
+    SettingsSection(isDark = isDark, footer = if (showAdvanced) footer else null) {
+        AnimatedVisibility(visible = showAdvanced) {
+            Column { fields() }
+        }
+
+        Text(
+            text = if (showAdvanced) "Hide Advanced Settings" else "Show Advanced Settings",
+            fontSize = 17.sp,
+            color = AppColors.blue(isDark),
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickableWithoutRipple {
+                    AnalyticsEvents.logButtonClick(
+                        if (showAdvanced) "hide_advanced" else "show_advanced",
+                        screen
+                    )
+                    // Leave the field being typed in first, so its figure is
+                    // committed before hiding takes the field away.
+                    focusManager.clearFocus()
+                    showAdvanced = !showAdvanced
+                    prefs.edit().putBoolean(SHOW_ADVANCED_KEY, showAdvanced).apply()
+                }
+                .padding(horizontal = 20.dp, vertical = 12.dp)
+        )
+    }
+}
+
+private const val ADVANCED_PREFS = "cuecard_settings_ui"
+private const val SHOW_ADVANCED_KEY = "settings.showAdvancedSettings"

@@ -394,6 +394,7 @@ fun HomeView(
                         controller = editorController,
                         cueColor = settings.cueColor,
                         isDark = isDark,
+                        fontSize = settings.editorFontSize.sp,
                         bottomOverlayHeight = if (isEditorFocused) CUE_BAR_HEIGHT else CONTROLS_HEIGHT,
                         modifier = Modifier.weight(1f)
                     )
@@ -559,6 +560,7 @@ fun NotesEditorView(
     controller: CueEditorController,
     cueColor: com.thisisnsh.cuecard.android.models.CueColor,
     isDark: Boolean,
+    fontSize: androidx.compose.ui.unit.TextUnit,
     bottomOverlayHeight: androidx.compose.ui.unit.Dp,
     modifier: Modifier = Modifier
 ) {
@@ -572,7 +574,7 @@ fun NotesEditorView(
             // exactly where the caret waiting in front of it does.
             Text(
                 text = "Add your script here...\n\nTap Add Cue to drop in a delivery reminder, or type [ to write one yourself.\n\nFor example: Welcome everyone [cue smile and pause]",
-                fontSize = CUE_EDITOR_FONT_SIZE,
+                fontSize = fontSize,
                 fontWeight = FontWeight.Medium,
                 color = AppColors.textSecondary(isDark).copy(alpha = 0.6f),
                 modifier = Modifier
@@ -589,6 +591,7 @@ fun NotesEditorView(
             controller = controller,
             cueColor = cueColor,
             isDark = isDark,
+            fontSize = fontSize,
             bottomOverlayHeight = bottomOverlayHeight
         )
     }
