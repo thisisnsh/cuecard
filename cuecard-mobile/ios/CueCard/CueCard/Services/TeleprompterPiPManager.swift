@@ -625,8 +625,9 @@ private final class TeleprompterVideoRenderer {
 
     init(text: String, settings: TeleprompterSettings, timerDuration: Int, isDarkMode: Bool) {
         self.timerDuration = timerDuration
-        timerFont = UIFont.monospacedDigitSystemFont(
-            ofSize: CGFloat(settings.pipFontSize) * Self.timerToTextRatio, weight: .semibold
+        // The same face as the in-app timer: SF Mono, bold.
+        timerFont = UIFont.monospacedSystemFont(
+            ofSize: CGFloat(settings.pipFontSize) * Self.timerToTextRatio, weight: .bold
         )
         self.isDarkMode = isDarkMode
         backgroundColor = isDarkMode ? AppColors.UIColors.Dark.background : AppColors.UIColors.Light.background
