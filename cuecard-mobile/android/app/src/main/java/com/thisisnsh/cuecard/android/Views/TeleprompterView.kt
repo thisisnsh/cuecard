@@ -125,6 +125,12 @@ private const val EASE_TIME_CONSTANT = 0.12
  */
 private const val SCRIPT_FADE_IN_MILLIS = 350
 
+/**
+ * The in-app timer is 16 sp over 28 sp text by default. The overlay keeps that
+ * proportion to its own text size, so the timer never outgrows it.
+ */
+private const val TIMER_TO_TEXT_RATIO = 16f / 28f
+
 /** How long the controls take to arrive and to leave. */
 private const val CONTROLS_FADE_MILLIS = 200
 
@@ -499,6 +505,7 @@ fun TeleprompterView(
             scriptDuration = { scriptDuration() },
             timeDisplay = timeDisplay,
             timerColor = timerColor,
+            timerFontSize = settings.pipFontSize * TIMER_TO_TEXT_RATIO,
             isDark = isDark
         )
         return
@@ -738,6 +745,7 @@ private fun TeleprompterOverlay(
     scriptDuration: () -> Double,
     timeDisplay: String,
     timerColor: Color,
+    timerFontSize: Float,
     isDark: Boolean
 ) {
     val density = LocalDensity.current
@@ -787,7 +795,6 @@ private fun TeleprompterOverlay(
             Box(
                 modifier = Modifier
                     .widthIn(min = 50.dp)
-                    .height(24.dp)
                     .background(
                         AppColors.background(isDark).copy(alpha = 0.8f),
                         RoundedCornerShape(6.dp)
@@ -796,7 +803,7 @@ private fun TeleprompterOverlay(
             ) {
                 Text(
                     text = timeDisplay,
-                    fontSize = 14.sp,
+                    fontSize = timerFontSize.sp,
                     fontWeight = FontWeight.Bold,
                     fontFamily = FontFamily.Monospace,
                     color = timerColor,
