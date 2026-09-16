@@ -667,8 +667,26 @@ private final class TeleprompterVideoRenderer {
         context.translateBy(x: viewport.minX, y: viewport.minY + readingY - offset)
         let visibleRect = CGRect(x: 0, y: offset - readingY, width: viewport.width, height: viewport.height)
         let glyphs = layoutManager.glyphRange(forBoundingRect: visibleRect, in: textContainer)
-        layoutManager.drawBackground(forGlyphRange: glyphs, at: .zero)
-        layoutManager.drawGlyphs(forGlyphRange: glyphs, at: .zero)
+        // Bend each line around the viewport's horizontal center, like text
+        // rolling over a cylinder. Keep the middle at its original size so the
+        // reading position and wrapping remain stable as the edges taper away.
+        let bendHeight = min(viewport.height * 0.3, 64)
+        layoutManager.enumerateLineFragments(forGlyphRange: glyphs) { [self] _, usedRect, _, range, _ in
+            let distanceToEdge = min(usedRect.midY - visibleRect.minY, visibleRect.maxY - usedRect.midY)
+            let progress = min(max(distanceToEdge / bendHeight, 0), 1)
+            // Smoothstep joins the full-size reading area without a sudden
+            // change in expansion/contraction speed.
+            let faceAmount = progress * progress * (3 - 2 * progress)
+            let widthScale = 0.72 + 0.28 * faceAmount
+            let heightScale = 0.55 + 0.45 * faceAmount
+            context.saveGState()
+            context.translateBy(x: visibleRect.midX, y: usedRect.midY)
+            context.scaleBy(x: widthScale, y: heightScale)
+            context.translateBy(x: -visibleRect.midX, y: -usedRect.midY)
+            layoutManager.drawBackground(forGlyphRange: range, at: .zero)
+            layoutManager.drawGlyphs(forGlyphRange: range, at: .zero)
+            context.restoreGState()
+        }
         context.restoreGState()
 
         let colors = [backgroundColor.cgColor, backgroundColor.withAlphaComponent(0).cgColor] as CFArray
