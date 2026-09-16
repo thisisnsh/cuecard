@@ -2,943 +2,675 @@ import AVKit
 import UIKit
 import SwiftUI
 
-/// Manager for Picture-in-Picture teleprompter functionality
+/// The app and PiP read this same snapshot. Neither presentation owns a clock.
+struct TeleprompterPlaybackState: Equatable {
+    var elapsedTime: Double = 0
+    var scriptTime: Double = 0
+    var isPlaying = false
+    var isCountingDown = false
+    var countdownValue = 0
+    var hasStarted = false
+    var snapToken = 0
+}
+
 @MainActor
-class TeleprompterPiPManager: NSObject, ObservableObject {
+final class TeleprompterPiPManager: NSObject, ObservableObject {
     static let shared = TeleprompterPiPManager()
 
-    // MARK: - Published Properties
+    @Published private(set) var playback = TeleprompterPlaybackState()
+    @Published private(set) var isPiPActive = false
+    @Published private(set) var isPiPPossible = false
 
-    @Published var isPiPActive = false
-    @Published var isPiPPossible = false
-    @Published var isPlaying = false
-
-    // MARK: - Content Properties
-
-    private(set) var text: String = ""
-    private(set) var settings: TeleprompterSettings = .default
-    private(set) var timerDuration: Int = 0
-    private(set) var elapsedTime: Double = 0
-    /// Where the script has got to, in seconds of reading. It runs with
-    /// `elapsedTime` and parts from it when the reader drags the script, which
-    /// moves the script without touching the time — so the overlay scrolls by
-    /// this and reads the clock off `elapsedTime`.
-    private(set) var scriptTime: Double = 0
-    private(set) var isDarkMode: Bool = true
-    /// How long the script runs for, set by the teleprompter from the lines it
-    /// rendered and the speed. The overlay wraps the same script into more lines
-    /// than the full screen does, so it covers its own content over that time
-    /// rather than counting lines of its own — the two stay on the same word.
-    var scriptDuration: Double = 0
-    private(set) var countdownValue: Int = 0
-    private(set) var isCountingDown: Bool = false
-
-    // MARK: - PiP Components
+    private var settings: TeleprompterSettings = .default
+    private var referenceLineStarts: [Int] = []
+    private var clockTimer: Timer?
+    private var playbackAnchor: CFTimeInterval?
+    private var elapsedAtAnchor: Double = 0
+    private var scriptAtAnchor: Double = 0
+    private var countdownDeadline: CFTimeInterval?
 
     private var pipController: AVPictureInPictureController?
-    private var pipViewController: AVPictureInPictureVideoCallViewController?
-    private var teleprompterContentView: TeleprompterPiPContentView?
-    private var pipContentView: TeleprompterPiPContentView?
+    private var videoView: TeleprompterPiPVideoView?
     private var pipWindow: UIWindow?
+    private var renderer: TeleprompterVideoRenderer?
+    private var timebase: CMTimebase?
+    private var possibilityObservation: NSKeyValueObservation?
+    private var ownsAudioSession = false
+    private var isStartingPiP = false
+    private var minimizeWhenStarted = false
+    private var lastFrameTime: CFTimeInterval = 0
+    private var advertisedPlaybackEnd: Double = 60
 
-    /// Where the window hosting the mirrored script sits: behind the app, for
-    /// the whole of the overlay's life. See `hideSourceBehindApp()`.
-    private static let hiddenSourceLevel: UIWindow.Level = .normal - 1
+    private override init() { super.init() }
 
-    // MARK: - Timers
-
-    private var displayLink: CADisplayLink?
-    private var playbackTimer: Timer?
-    private var playbackTimerStartDate: Date?
-    private var elapsedTimeAtPlaybackStart: Double = 0
-    private var scriptTimeAtPlaybackStart: Double = 0
-    private var needsContentViewUpdate = false
-    private var lastRenderTimestamp: CFTimeInterval = 0
-    private var lastSourceRenderTimestamp: CFTimeInterval = 0
-    private var isRenderingToPiP = false
-
-    // MARK: - Callbacks
-
-    var onPiPClosed: (() -> Void)?
-    var onPiPRestoreUI: (() -> Void)?
-    var onPlayPauseFromPiP: ((Bool) -> Void)?
-    var onRestartFromPiP: (() -> Void)?
-    var onExpandFromPiP: (() -> Void)?
-
-    // MARK: - Initialization
-
-    private override init() {
-        super.init()
+    private var linesPerSecond: Double { Double(settings.linesPerMinute) / 60 }
+    private var scriptDuration: Double {
+        guard linesPerSecond > 0 else { return 0 }
+        return Double(max(referenceLineStarts.count - 1, 0)) / linesPerSecond
+    }
+    private var characterPosition: Double {
+        TeleprompterTextLayout.characterPosition(
+            forLine: playback.scriptTime * linesPerSecond, starts: referenceLineStarts
+        )
     }
 
-    // MARK: - Public API
-
-    /// Configure the PiP manager with content
     func configure(text: String, settings: TeleprompterSettings, timerDuration: Int, colorScheme: ColorScheme) {
         cleanup()
-        self.text = text
         self.settings = settings
-        self.timerDuration = timerDuration
-        self.elapsedTime = 0
-        self.scriptTime = 0
-        self.isDarkMode = colorScheme == .dark
-
+        playback = TeleprompterPlaybackState()
+        referenceLineStarts = []
+        renderer = TeleprompterVideoRenderer(text: text, settings: settings,
+                                            timerDuration: timerDuration, isDarkMode: colorScheme == .dark)
         setupPiP()
     }
 
-    /// Update current state from TeleprompterView
-    func updateState(elapsedTime: Double, scriptTime: Double, isPlaying: Bool, countdownValue: Int = 0, isCountingDown: Bool = false) {
-        self.elapsedTime = elapsedTime
-        self.scriptTime = scriptTime
-        self.isPlaying = isPlaying
-        self.countdownValue = countdownValue
-        self.isCountingDown = isCountingDown
-
-        // While the overlay is up it runs its own clock off a start date, so a
-        // position pushed from the teleprompter has to carry that anchor with
-        // it. Left where it was, the next render overwrites the push with
-        // wherever the overlay had got to on its own: a resume jumps the whole
-        // of the pause, and a seek snaps back within the frame.
-        if isPlaying {
-            if playbackTimer != nil {
-                playbackTimerStartDate = Date()
-                elapsedTimeAtPlaybackStart = elapsedTime
-                scriptTimeAtPlaybackStart = scriptTime
-            } else if isRenderingToPiP {
-                startPlaybackTimer()
-            }
-        } else {
-            stopPlaybackTimer()
+    /// Full-screen line starts are the definition of the lines/minute setting.
+    /// Both layouts address the same UTF-16 text, including cues and whitespace.
+    func updateReferenceLayout(_ starts: [Int]) {
+        guard starts != referenceLineStarts else { return }
+        advanceClock()
+        let character = characterPosition
+        let hadLayout = !referenceLineStarts.isEmpty
+        referenceLineStarts = starts
+        if hadLayout && linesPerSecond > 0 {
+            var state = playback
+            state.scriptTime = TeleprompterTextLayout.linePosition(forCharacter: character, starts: starts) / linesPerSecond
+            state.snapToken += 1
+            playback = state
+            reanchorPlayback()
         }
-
-        needsContentViewUpdate = true
+        refreshVideoTimeline()
+        renderFrame(force: true)
     }
 
-    /// Start PiP mode
-    @discardableResult
-    func startPiP(minimizeApp: Bool = false) -> Bool {
-        guard let pipController = pipController else {
-            print("PiP controller not available")
-            return false
+    func togglePlayPause() {
+        if playback.isPlaying || playback.isCountingDown { pause() } else { play() }
+    }
+
+    /// Native PiP Play and the in-app Play button follow the same start delay.
+    func play() {
+        guard !playback.isPlaying, !playback.isCountingDown else { return }
+        var state = playback
+        if !state.hasStarted && settings.countdownSeconds > 0 {
+            state.isCountingDown = true
+            state.countdownValue = settings.countdownSeconds
+            countdownDeadline = CACurrentMediaTime() + Double(settings.countdownSeconds)
+        } else {
+            state.isPlaying = true
+            state.hasStarted = true
         }
+        playback = state
+        reanchorPlayback()
+        startClock()
+        refreshVideoTimeline()
+        renderFrame(force: true)
+    }
 
-        guard pipController.isPictureInPicturePossible else {
-            print("PiP is not possible")
-            return false
-        }
+    func pause() {
+        advanceClock()
+        var state = playback
+        state.isPlaying = false
+        state.isCountingDown = false
+        state.countdownValue = 0
+        playback = state
+        countdownDeadline = nil
+        playbackAnchor = nil
+        stopClock()
+        refreshVideoTimeline()
+        renderFrame(force: true)
+    }
 
-        hideSourceBehindApp()
-        restoreOverlayContent()
-        lastSourceRenderTimestamp = 0
-        updateContentView()
-        pipController.startPictureInPicture()
+    func restart() {
+        stopClock()
+        countdownDeadline = nil
+        playbackAnchor = nil
+        let nextSnap = playback.snapToken + 1
+        playback = TeleprompterPlaybackState(snapToken: nextSnap)
+        refreshVideoTimeline()
+        renderFrame(force: true)
+    }
 
-        if minimizeApp {
-            // Minimize the app after a short delay to let PiP start
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                self.minimizeApp()
+    /// A drag or native skip changes only the script position, never the timer.
+    func seek(toLine line: Double) {
+        guard line.isFinite, linesPerSecond > 0 else { return }
+        seek(toScriptTime: line / linesPerSecond)
+    }
+
+    private func seek(toScriptTime seconds: Double) {
+        guard seconds.isFinite else { return }
+        advanceClock()
+        var state = playback
+        state.scriptTime = min(max(seconds, 0), scriptDuration)
+        state.snapToken += 1
+        playback = state
+        reanchorPlayback()
+        refreshVideoTimeline()
+        renderFrame(force: true)
+    }
+
+    private func reanchorPlayback() {
+        elapsedAtAnchor = playback.elapsedTime
+        scriptAtAnchor = playback.scriptTime
+        playbackAnchor = playback.isPlaying ? CACurrentMediaTime() : nil
+    }
+
+    private func startClock() {
+        guard clockTimer == nil else { return }
+        let timer = Timer(timeInterval: 1.0 / 30, target: self,
+                          selector: #selector(clockTick), userInfo: nil, repeats: true)
+        RunLoop.main.add(timer, forMode: .common)
+        clockTimer = timer
+    }
+
+    private func stopClock() {
+        clockTimer?.invalidate()
+        clockTimer = nil
+    }
+
+    /// Use a monotonic anchor, so delayed callbacks do not slow playback or the
+    /// countdown. This clock continues across PiP entry, exit and restoration.
+    private func advanceClock() {
+        let now = CACurrentMediaTime()
+        var state = playback
+        var countdownFinished = false
+        if let deadline = countdownDeadline {
+            if now < deadline {
+                state.countdownValue = Int(ceil(deadline - now))
+            } else {
+                state.isCountingDown = false
+                state.countdownValue = 0
+                state.isPlaying = true
+                state.hasStarted = true
+                countdownDeadline = nil
+                elapsedAtAnchor = state.elapsedTime
+                scriptAtAnchor = state.scriptTime
+                playbackAnchor = deadline
+                countdownFinished = true
             }
         }
+        if state.isPlaying, let anchor = playbackAnchor {
+            let elapsed = max(0, now - anchor)
+            state.elapsedTime = elapsedAtAnchor + elapsed
+            // Deliberately unbounded. Only the rendered text clamps at its last
+            // line; reaching it must not pause the video or the session clock.
+            state.scriptTime = scriptAtAnchor + elapsed
+        }
+        if state != playback { playback = state }
+        if countdownFinished { refreshVideoTimeline() }
+    }
 
+    @objc private func clockTick() {
+        advanceClock()
+        // Extend the finite seekable range well before AVKit reaches its end.
+        // The teleprompter is an open-ended session, not a movie whose duration
+        // is the time it takes to reach the last line.
+        if let timebase, CMTimebaseGetTime(timebase).seconds > advertisedPlaybackEnd - 30 {
+            extendPlaybackRange()
+        }
+        renderFrame()
+    }
+
+    private func extendPlaybackRange() {
+        let mediaTime = timebase.map { CMTimebaseGetTime($0).seconds } ?? playback.scriptTime
+        advertisedPlaybackEnd = max(scriptDuration, max(playback.scriptTime, mediaTime)) + 120
+        pipController?.invalidatePlaybackState()
+    }
+
+    private func refreshVideoTimeline() {
+        if let timebase {
+            CMTimebaseSetTime(timebase, time: CMTime(seconds: playback.scriptTime, preferredTimescale: 600))
+            CMTimebaseSetRate(timebase, rate: playback.isPlaying || playback.isCountingDown ? 1 : 0)
+        }
+        videoView?.sampleBufferDisplayLayer.flush()
+        extendPlaybackRange()
+    }
+
+    private func renderFrame(force: Bool = false) {
+        guard let layer = videoView?.sampleBufferDisplayLayer,
+              let renderer, let timebase else { return }
+        let now = CACurrentMediaTime()
+        // Keep an inline frame ready for automatic PiP, at a lower frame rate.
+        // The clock already runs at 30 Hz. Applying another 30 Hz threshold
+        // drops otherwise valid frames when a timer callback arrives early.
+        let renderingPiP = isPiPActive || isStartingPiP
+        guard force || renderingPiP || now - lastFrameTime >= 0.2 else { return }
+        if layer.status == .failed { layer.flush() }
+        guard layer.isReadyForMoreMediaData else { return }
+        guard let frame = renderer.frame(characterPosition: characterPosition, state: playback,
+                                          presentationTime: CMTimebaseGetTime(timebase),
+                                          smoothScrolling: renderingPiP) else { return }
+        layer.enqueue(frame)
+        lastFrameTime = now
+    }
+
+    @discardableResult
+    func startPiP(minimizeApp: Bool = false) -> Bool {
+        guard !isPiPActive, !isStartingPiP,
+              let controller = pipController, controller.isPictureInPicturePossible else { return false }
+        advanceClock()
+        renderFrame(force: true)
+        minimizeWhenStarted = minimizeApp
+        isStartingPiP = true
+        controller.startPictureInPicture()
         return true
     }
 
-    /// Minimize the app to background
-    func minimizeApp() {
-        UIApplication.shared.perform(#selector(NSXPCConnection.suspend))
+    func stopPiP() { pipController?.stopPictureInPicture() }
+
+    /// Called when returning to the foreground; there is no state to copy back.
+    func refreshPresentation() {
+        advanceClock()
+        renderFrame(force: true)
     }
 
-    /// Expand from PiP - bring app back to foreground
-    func expandFromPiP() {
-        stopPiP()
-        onExpandFromPiP?()
-    }
-
-    /// Restart teleprompter from PiP
-    func restartFromPiP() {
-        stopPlaybackTimer()
-        elapsedTime = 0
-        scriptTime = 0
-        isPlaying = false
-        onRestartFromPiP?()
-        updateContentView()
-    }
-
-    /// Toggle play/pause from PiP button
-    func togglePlayPauseFromPiP() {
-        isPlaying.toggle()
-        if isPlaying {
-            startPlaybackTimer()
-        } else {
-            stopPlaybackTimer()
-        }
-        onPlayPauseFromPiP?(isPlaying)
-        updateContentView()
-    }
-
-    // MARK: - Playback Timer (for background PiP)
-
-    private func startPlaybackTimer() {
-        stopPlaybackTimer()
-        playbackTimerStartDate = Date()
-        elapsedTimeAtPlaybackStart = elapsedTime
-        scriptTimeAtPlaybackStart = scriptTime
-        let interval = 1.0 / 30.0
-        let timer = Timer(timeInterval: interval, target: self, selector: #selector(handlePlaybackTimerTick), userInfo: nil, repeats: true)
-        RunLoop.main.add(timer, forMode: .common)
-        playbackTimer = timer
-        needsContentViewUpdate = true
-    }
-
-    @objc private func handlePlaybackTimerTick() {
-        // Fallback renderer for when the display link is not firing (app in background).
-        guard CACurrentMediaTime() - lastRenderTimestamp > 0.05 else { return }
-        render()
-    }
-
-    private func stopPlaybackTimer() {
-        playbackTimer?.invalidate()
-        playbackTimer = nil
-        playbackTimerStartDate = nil  // Prevents stale Task blocks from writing elapsedTime
-    }
-
-    /// Stop PiP mode
-    func stopPiP() {
-        pipController?.stopPictureInPicture()
-    }
-
-    /// Toggle play/pause
-    func togglePlayPause() {
-        isPlaying.toggle()
-        updateContentView()
-    }
-
-    /// Cleanup resources
     func cleanup() {
-        stopDisplayLink()
-        stopPlaybackTimer()
-        hideSourceBehindApp()
+        stopClock()
+        countdownDeadline = nil
+        playbackAnchor = nil
+        possibilityObservation = nil
+        pipController?.delegate = nil
         pipController?.stopPictureInPicture()
         pipController = nil
-        pipViewController = nil
-        teleprompterContentView?.removeFromSuperview()
-        teleprompterContentView = nil
-        pipContentView?.removeFromSuperview()
-        pipContentView = nil
+        videoView?.sampleBufferDisplayLayer.flushAndRemoveImage()
+        videoView = nil
         pipWindow?.isHidden = true
         pipWindow = nil
+        renderer = nil
+        timebase = nil
         isPiPActive = false
-        isRenderingToPiP = false
-        lastRenderTimestamp = 0
-        lastSourceRenderTimestamp = 0
-    }
-
-    /// Shut the overlay down and keep it down for this session. Used by the
-    /// remote kill switch, where the point is that nothing offers PiP at all.
-    func disable() {
-        cleanup()
         isPiPPossible = false
+        isStartingPiP = false
+        minimizeWhenStarted = false
+        lastFrameTime = 0
+        if ownsAudioSession {
+            try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+            ownsAudioSession = false
+        }
     }
 
-    // MARK: - PiP Setup
+    func disable() { cleanup() }
 
     private func setupPiP() {
-        guard AVPictureInPictureController.isPictureInPictureSupported() else {
-            print("PiP not supported on this device")
-            isPiPPossible = false
-            return
-        }
-
+        guard AVPictureInPictureController.isPictureInPictureSupported() else { return }
         let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
-        guard let windowScene = scenes.first(where: { $0.activationState == .foregroundActive }) ?? scenes.first else {
-            print("No window scene available")
-            return
-        }
+        guard let scene = scenes.first(where: { $0.activationState == .foregroundActive }) ?? scenes.first,
+              let renderer else { return }
 
-        let screenBounds = windowScene.screen.bounds
-        let maxWidth = screenBounds.width
-        let maxHeight = screenBounds.height
-        let ratio = settings.overlayAspectRatio.ratio
-        var preferredWidth = maxWidth
-        var preferredHeight = preferredWidth / ratio
-        if preferredHeight > maxHeight {
-            preferredHeight = maxHeight
-            preferredWidth = preferredHeight * ratio
-        }
-        let preferredSize = CGSize(width: preferredWidth, height: preferredHeight)
-        let pipWidth = preferredSize.width
-        let pipHeight = preferredSize.height
-
-        // Create the teleprompter content view
-        let contentView = TeleprompterPiPContentView(frame: CGRect(x: 0, y: 0, width: pipWidth, height: pipHeight))
-        contentView.isDarkMode = isDarkMode
-        contentView.cueColor = settings.cueColor
-        self.teleprompterContentView = contentView
-
-        // Create a host view controller
-        let hostVC = UIViewController()
-        hostVC.view.addSubview(contentView)
-        contentView.translatesAutoresizingMaskIntoConstraints = false
+        let host = UIViewController()
+        host.view.backgroundColor = renderer.backgroundColor
+        let source = TeleprompterPiPVideoView()
+        source.sampleBufferDisplayLayer.videoGravity = .resizeAspect
+        source.translatesAutoresizingMaskIntoConstraints = false
+        host.view.addSubview(source)
         NSLayoutConstraint.activate([
-            contentView.topAnchor.constraint(equalTo: hostVC.view.topAnchor),
-            contentView.bottomAnchor.constraint(equalTo: hostVC.view.bottomAnchor),
-            contentView.leadingAnchor.constraint(equalTo: hostVC.view.leadingAnchor),
-            contentView.trailingAnchor.constraint(equalTo: hostVC.view.trailingAnchor)
+            source.leadingAnchor.constraint(equalTo: host.view.leadingAnchor),
+            source.trailingAnchor.constraint(equalTo: host.view.trailingAnchor),
+            source.topAnchor.constraint(equalTo: host.view.topAnchor),
+            source.bottomAnchor.constraint(equalTo: host.view.bottomAnchor)
         ])
-
-        // Host the source view in a window behind the app's own. The system
-        // animates the overlay out of, and back into, this view's place on
-        // screen, so it sits where the script is rather than off-screen —
-        // otherwise the overlay flies in from nowhere on the way back.
-        let window = UIWindow(windowScene: windowScene)
-        window.frame = CGRect(
-            x: (screenBounds.width - pipWidth) / 2,
-            y: (screenBounds.height - pipHeight) / 2,
-            width: pipWidth,
-            height: pipHeight
-        )
-        window.rootViewController = hostVC
-        window.isHidden = false
+        let bounds = scene.screen.bounds
+        let width = min(bounds.width, bounds.height * settings.overlayAspectRatio.ratio)
+        let height = width / settings.overlayAspectRatio.ratio
+        let window = UIWindow(windowScene: scene)
+        window.frame = CGRect(x: bounds.midX - width / 2, y: bounds.midY - height / 2, width: width, height: height)
+        window.windowLevel = .normal - 1
         window.isUserInteractionEnabled = false
-        window.windowLevel = Self.hiddenSourceLevel
-        self.pipWindow = window
+        window.rootViewController = host
+        window.isHidden = false
+        host.view.layoutIfNeeded()
+        pipWindow = window
+        videoView = source
 
-        // Create the PiP video call view controller
-        let pipVC = AVPictureInPictureVideoCallViewController()
-        pipVC.preferredContentSize = preferredSize
-        // The teleprompter's own background, sitting behind the script. It makes
-        // no difference while the overlay is running, since the script covers it
-        // and paints the same colour — it is what shows through in the moments
-        // the script does not: before the first frame is rendered, and once the
-        // overlay has been emptied for the way out. Left clear, those moments
-        // are the system's black rather than the reader's page.
-        pipVC.view.backgroundColor = isDarkMode
-            ? AppColors.UIColors.Dark.background
-            : AppColors.UIColors.Light.background
-
-        // Add content to PiP VC's view
-        let pipContent = TeleprompterPiPContentView(frame: .zero)
-        pipContent.isDarkMode = isDarkMode
-        pipContent.cueColor = settings.cueColor
-        pipVC.view.addSubview(pipContent)
-        pipContent.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            pipContent.topAnchor.constraint(equalTo: pipVC.view.topAnchor),
-            pipContent.bottomAnchor.constraint(equalTo: pipVC.view.bottomAnchor),
-            pipContent.leadingAnchor.constraint(equalTo: pipVC.view.leadingAnchor),
-            pipContent.trailingAnchor.constraint(equalTo: pipVC.view.trailingAnchor)
-        ])
-        self.pipContentView = pipContent
-        self.pipViewController = pipVC
-
-        // Create the PiP controller with video call content source
-        let contentSource = AVPictureInPictureController.ContentSource(
-            activeVideoCallSourceView: contentView,
-            contentViewController: pipVC
-        )
-
-        let controller = AVPictureInPictureController(contentSource: contentSource)
-        controller.delegate = self
-        controller.canStartPictureInPictureAutomaticallyFromInline = true
-        self.pipController = controller
-
-        // Check if PiP is possible after setup
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-            self?.isPiPPossible = controller.isPictureInPicturePossible
+        var mediaTimebase: CMTimebase?
+        guard CMTimebaseCreateWithSourceClock(allocator: kCFAllocatorDefault,
+                                             sourceClock: CMClockGetHostTimeClock(),
+                                             timebaseOut: &mediaTimebase) == noErr,
+              let mediaTimebase else {
+            cleanup()
+            return
         }
-
-        // Start rendering
-        startDisplayLink()
-        updateContentView()
-    }
-
-    // MARK: - Hand-back Transition
-
-    /// Take the script out of the overlay before the system takes the overlay
-    /// away.
-    ///
-    /// The overlay is the system's own window: it cannot be closed early, and
-    /// the travel it makes to the middle of the screen on the way out cannot be
-    /// skipped. What can be decided is whether there is anything in it to watch.
-    /// Emptied here, at the first moment the return is known about, the overlay
-    /// is already gone as far as the reader is concerned, and the trip it still
-    /// has to make is made blank over the teleprompter.
-    private func blankOverlay() {
-        pipContentView?.alpha = 0
-    }
-
-    /// Put the script back in, for the next time the overlay opens.
-    private func restoreOverlayContent() {
-        pipContentView?.alpha = 1
-    }
-
-    /// Keep the window holding the mirrored script behind the app, always.
-    ///
-    /// It exists for the way out: the system needs a view on screen to shrink
-    /// the overlay out of, and this is where the script is, so the overlay
-    /// leaves from the words rather than from nowhere. On the way back it is not
-    /// wanted. The overlay travels to the middle of the screen and stops there —
-    /// it will not open the rest of the way out however it is met — so bringing
-    /// the script up in front of the app only puts a second, differently
-    /// wrapped copy over the real one and leaves something to be cleared away
-    /// afterwards. Left where it is, the overlay reaches the middle and goes,
-    /// and the teleprompter is already underneath at full size.
-    private func hideSourceBehindApp() {
-        guard let window = pipWindow else { return }
-        window.layer.removeAllAnimations()
-        window.windowLevel = Self.hiddenSourceLevel
-        window.alpha = 1
-        window.transform = .identity
-    }
-
-    // MARK: - Content Rendering
-
-    private func startDisplayLink() {
-        displayLink = CADisplayLink(target: self, selector: #selector(updateDisplay))
-        displayLink?.preferredFrameRateRange = CAFrameRateRange(minimum: 30, maximum: 60, preferred: 60)
-        displayLink?.add(to: .main, forMode: .common)
-    }
-
-    private func stopDisplayLink() {
-        displayLink?.invalidate()
-        displayLink = nil
-    }
-
-    @objc private func updateDisplay() {
-        guard isRenderingToPiP || needsContentViewUpdate else { return }
-        render()
-    }
-
-    private func render() {
-        if isPlaying, let startDate = playbackTimerStartDate {
-            let playing = Date().timeIntervalSince(startDate)
-            elapsedTime = elapsedTimeAtPlaybackStart + playing
-            scriptTime = scriptTimeAtPlaybackStart + playing
-        }
-        needsContentViewUpdate = false
-        lastRenderTimestamp = CACurrentMediaTime()
-        updateContentView()
-    }
-
-    private func updateContentView() {
-        // Off PiP nothing is on screen, so the mirrored views only need to stay
-        // roughly current for the transition instead of tracking every frame.
-        if !isRenderingToPiP {
-            guard CACurrentMediaTime() - lastSourceRenderTimestamp > 0.1 else { return }
-            lastSourceRenderTimestamp = CACurrentMediaTime()
-        }
-
-        let fontSize = CGFloat(settings.pipFontSize)
-        let remainingTime = timerDuration > 0 ? timerDuration - Int(elapsedTime) : Int(elapsedTime)
-
-        // Show countdown value if counting down (in mm:ss format), otherwise show timer
-        let timerText = isCountingDown ? TeleprompterParser.formatTime(countdownValue) : TeleprompterParser.formatTime(remainingTime)
-
-        if !isRenderingToPiP {
-            teleprompterContentView?.update(
-                text: text,
-                fontSize: fontSize,
-                isPlaying: isPlaying,
-                timerText: timerText,
-                timerDuration: timerDuration,
-                remainingTime: remainingTime,
-                scriptTime: scriptTime,
-                scriptDuration: scriptDuration,
-                isCountingDown: isCountingDown
-            )
-        }
-
-        pipContentView?.update(
-            text: text,
-            fontSize: fontSize,
-            isPlaying: isPlaying,
-            timerText: timerText,
-            timerDuration: timerDuration,
-            remainingTime: remainingTime,
-            scriptTime: scriptTime,
-            scriptDuration: scriptDuration,
-            isCountingDown: isCountingDown
-        )
-    }
-
-    // MARK: - Scroll Timer
-    // Intentionally no internal timer; PiP mirrors the teleprompter state.
-}
-
-// MARK: - AVPictureInPictureControllerDelegate
-
-extension TeleprompterPiPManager: AVPictureInPictureControllerDelegate {
-    nonisolated func pictureInPictureControllerWillStartPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
-        Task { @MainActor in
-            isPiPActive = true
-            isRenderingToPiP = true
-            pipContentView?.isLive = true
-            // Every opening comes through here, `startPiP` and the system's own
-            // automatic one alike — and only that first kind ever gets to put
-            // the script back itself. Backgrounding the app takes the automatic
-            // one, so without this the overlay opens still emptied out from the
-            // last time it closed.
-            restoreOverlayContent()
-            // Start playback timer if already playing when PiP starts
-            if isPlaying {
-                startPlaybackTimer()
-            }
-        }
-    }
-
-    nonisolated func pictureInPictureControllerDidStartPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
-        Task { @MainActor in
-            isPiPActive = true
-        }
-    }
-
-    nonisolated func pictureInPictureControllerWillStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
-        Task { @MainActor in
-            stopPlaybackTimer()
-            isRenderingToPiP = false
-            pipContentView?.isLive = false
-            // Already done on the way in from the overlay's own button; this is
-            // for a stop from inside the app, which never goes through the
-            // restore handler.
-            blankOverlay()
-            lastSourceRenderTimestamp = 0
-            updateContentView()
-        }
-    }
-
-    nonisolated func pictureInPictureControllerDidStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
-        Task { @MainActor in
-            isPiPActive = false
-            // The overlay is off screen by now, so this is not seen. It leaves
-            // the emptying as something that lasts only as long as the closing
-            // does, rather than a state the overlay can be found resting in.
-            restoreOverlayContent()
-            onPiPClosed?()
-        }
-    }
-
-    nonisolated func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, failedToStartPictureInPictureWithError error: Error) {
-        Task { @MainActor in
-            isPiPActive = false
-            isRenderingToPiP = false
-            pipContentView?.isLive = false
-            stopPlaybackTimer()
-            hideSourceBehindApp()
-            onPiPClosed?()
-        }
-    }
-
-    nonisolated func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, restoreUserInterfaceForPictureInPictureStopWithCompletionHandler completionHandler: @escaping (Bool) -> Void) {
-        Task { @MainActor in
-            onPiPRestoreUI?()
-            // Empty the overlay here rather than at will-stop: this is the
-            // first the app hears of the return, and every frame the script is
-            // left in it is a frame of it sitting over the teleprompter.
-            blankOverlay()
-            // Let the teleprompter lay out at the position the overlay is on
-            // before the overlay goes. It is uncovering this screen, so this
-            // screen has to be on the line it left off at — reporting the
-            // restore done straight away uncovers the old position, and the
-            // script visibly catches up afterwards.
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.03) {
-                completionHandler(true)
-            }
-        }
-    }
-}
-
-// MARK: - Teleprompter PiP Content View
-
-private class TeleprompterPiPContentView: UIView {
-    private let textView = UITextView()
-    private let timerLabel = UILabel()
-    private let topGradientView = UIView()
-    private let bottomGradientView = UIView()
-    private var topGradientLayer: CAGradientLayer?
-    private var bottomGradientLayer: CAGradientLayer?
-    private var lastContentId: String = ""
-    private var lastTimerText: String?
-    private var lastTimerColor: UIColor?
-
-    /// Where on screen the line being read sits, as a fraction of the script's
-    /// height — the same place the full screen reads from. It doubles as the
-    /// script's top inset, so the first line starts on the reading line and a
-    /// line's scroll offset is its own position in the text.
-    private static let readingLineFraction: CGFloat = 0.45
-
-    /// How far the script scrolls over its whole run, and the text view size it
-    /// was measured at. Measured from the laid-out text rather than read back
-    /// from the text view every frame — see `refreshScrollRange()`.
-    private var scrollRange: CGFloat = 0
-    private var scrollRangeSize: CGSize = .zero
-    /// The last line's own position in the laid-out text, which is as far as the
-    /// script scrolls: at that offset the last line is on the reading line.
-    private var lastLineTop: CGFloat = 0
-    private var lastLineTopWidth: CGFloat = -1
-    private var needsScrollRange = true
-    /// How far into the script the last update put the reader. Kept so a resize
-    /// can put the script back at the same place in the text at the new size.
-    private var lastScrollFraction: CGFloat = 0
-    /// Set when the position has to be taken up without easing: the first
-    /// layout, a rebuild, or a resize.
-    private var needsSettle = true
-
-    /// The scroll eases toward its target instead of being written straight to
-    /// the text view, the same way the full-screen script does. Playback moves
-    /// the target in small steps so the easing is invisible; what it takes out
-    /// is the jitter from the target being sampled a moment late whenever the
-    /// main thread is busy.
-    private static let scrollTimeConstant: Double = 0.12
-    private var targetOffset: CGFloat = 0
-    private var lastScrollTimestamp: CFTimeInterval = 0
-
-    /// True while this view is the copy showing in the overlay. The mirrored
-    /// copy behind the app is only kept roughly current, so it takes positions
-    /// straight rather than easing toward them.
-    var isLive = false {
-        didSet {
-            guard isLive != oldValue else { return }
-            lastScrollTimestamp = 0
-        }
-    }
-
-    var isDarkMode: Bool = true {
-        didSet {
-            lastTimerColor = nil
-            updateColors()
-        }
-    }
-
-    var cueColor: CueColor = .default {
-        didSet {
-            guard cueColor != oldValue else { return }
-            lastContentId = ""
-        }
-    }
-
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        setupViews()
-    }
-
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
-        setupViews()
-    }
-
-    private func setupViews() {
-        // Touching the layout manager puts the text view on TextKit 1, where the
-        // whole script can be laid out up front. Left on TextKit 2 it lays out
-        // only what is on screen and estimates the rest, so the height it
-        // reports keeps being revised as the script scrolls — and a position
-        // measured as a fraction of that height jumps every time it is.
-        _ = textView.layoutManager
-        textView.isEditable = false
-        textView.isSelectable = false
-        textView.isScrollEnabled = true
-        textView.showsVerticalScrollIndicator = false
-        textView.backgroundColor = .clear
-        textView.textContainer.lineFragmentPadding = 0
-        textView.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(textView)
-
-        timerLabel.font = .monospacedDigitSystemFont(ofSize: 14, weight: .bold)
-        timerLabel.textAlignment = .center
-        timerLabel.layer.cornerRadius = 6
-        timerLabel.layer.masksToBounds = true
-        timerLabel.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(timerLabel)
-
-        // Setup gradient views for fade effect
-        topGradientView.translatesAutoresizingMaskIntoConstraints = false
-        topGradientView.isUserInteractionEnabled = false
-        addSubview(topGradientView)
-
-        bottomGradientView.translatesAutoresizingMaskIntoConstraints = false
-        bottomGradientView.isUserInteractionEnabled = false
-        addSubview(bottomGradientView)
-
-        NSLayoutConstraint.activate([
-            timerLabel.topAnchor.constraint(equalTo: topAnchor, constant: 6),
-            timerLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
-            timerLabel.widthAnchor.constraint(greaterThanOrEqualToConstant: 50),
-            timerLabel.heightAnchor.constraint(equalToConstant: 24),
-
-            textView.topAnchor.constraint(equalTo: timerLabel.bottomAnchor, constant: 4),
-            textView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 8),
-            textView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -8),
-            textView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -8),
-
-            // Top gradient - starts at top of textView
-            topGradientView.topAnchor.constraint(equalTo: textView.topAnchor),
-            topGradientView.leadingAnchor.constraint(equalTo: textView.leadingAnchor),
-            topGradientView.trailingAnchor.constraint(equalTo: textView.trailingAnchor),
-            topGradientView.heightAnchor.constraint(equalToConstant: 40),
-
-            // Bottom gradient
-            bottomGradientView.bottomAnchor.constraint(equalTo: textView.bottomAnchor),
-            bottomGradientView.leadingAnchor.constraint(equalTo: textView.leadingAnchor),
-            bottomGradientView.trailingAnchor.constraint(equalTo: textView.trailingAnchor),
-            bottomGradientView.heightAnchor.constraint(equalToConstant: 40)
-        ])
-
-        updateColors()
-    }
-
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        topGradientLayer?.frame = topGradientView.bounds
-        bottomGradientLayer?.frame = bottomGradientView.bounds
-        refreshScrollRange()
-    }
-
-    /// Measure how far the script scrolls, laying the whole of it out to do it.
-    /// The measurement only has to be redone when the text view changes size,
-    /// and the text itself only when the width changes — a taller or shorter
-    /// window reads the same lines.
-    private func refreshScrollRange() {
-        let size = textView.bounds.size
-        guard size.width > 0, size.height > 0 else { return }
-        guard needsScrollRange || size != scrollRangeSize else { return }
-        needsScrollRange = false
-        scrollRangeSize = size
-
-        // The script is inset from the top by exactly where the reading line is,
-        // so the first line starts on it and every line's scroll offset is its own
-        // position in the text.
-        textView.textContainerInset = UIEdgeInsets(
-            top: size.height * Self.readingLineFraction,
-            left: 12,
-            bottom: size.height * (1 - Self.readingLineFraction),
-            right: 12
-        )
-
-        if lastLineTopWidth != size.width {
-            lastLineTopWidth = size.width
-            lastLineTop = measureLastLineTop()
-        }
-
-        scrollRange = max(0, lastLineTop)
-        // A resize keeps the reader on the same part of the script rather than
-        // easing across to it from where the old size had them.
-        settleScroll(at: lastScrollFraction * scrollRange)
-    }
-
-    /// Where the last line sits in the laid-out text. On TextKit 1 the whole
-    /// script is laid out to answer, which is the point: the position comes back
-    /// exact and stays put, instead of being an estimate that gets revised as the
-    /// script scrolls.
-    private func measureLastLineTop() -> CGFloat {
-        let layoutManager = textView.layoutManager
-        let container = textView.textContainer
-        layoutManager.ensureLayout(for: container)
-
-        let glyphRange = layoutManager.glyphRange(for: container)
-        guard glyphRange.length > 0 else { return 0 }
-
-        // Line fragments are measured inside the text container, which is already
-        // the offset that line should be scrolled to.
-        let lastLine = layoutManager.lineFragmentRect(
-            forGlyphAt: NSMaxRange(glyphRange) - 1,
-            effectiveRange: nil
-        )
-        return lastLine.origin.y
-    }
-
-    private func updateColors() {
-        let bgColor = isDarkMode ? AppColors.UIColors.Dark.background : AppColors.UIColors.Light.background
-        backgroundColor = bgColor
-        textView.textColor = isDarkMode ? AppColors.UIColors.Dark.textPrimary : AppColors.UIColors.Light.textPrimary
-
-        // Update top gradient (fades from background to transparent)
-        topGradientLayer?.removeFromSuperlayer()
-        let topGradient = CAGradientLayer()
-        topGradient.colors = [bgColor.cgColor, bgColor.withAlphaComponent(0).cgColor]
-        topGradient.locations = [0.0, 1.0]
-        topGradient.startPoint = CGPoint(x: 0.5, y: 0.0)
-        topGradient.endPoint = CGPoint(x: 0.5, y: 1.0)
-        topGradient.frame = topGradientView.bounds
-        topGradientView.layer.addSublayer(topGradient)
-        topGradientLayer = topGradient
-
-        // Update bottom gradient (fades from transparent to background)
-        bottomGradientLayer?.removeFromSuperlayer()
-        let bottomGradient = CAGradientLayer()
-        bottomGradient.colors = [bgColor.withAlphaComponent(0).cgColor, bgColor.cgColor]
-        bottomGradient.locations = [0.0, 1.0]
-        bottomGradient.startPoint = CGPoint(x: 0.5, y: 0.0)
-        bottomGradient.endPoint = CGPoint(x: 0.5, y: 1.0)
-        bottomGradient.frame = bottomGradientView.bounds
-        bottomGradientView.layer.addSublayer(bottomGradient)
-        bottomGradientLayer = bottomGradient
-    }
-
-    func update(
-        text: String,
-        fontSize: CGFloat,
-        isPlaying: Bool,
-        timerText: String,
-        timerDuration: Int,
-        remainingTime: Int,
-        scriptTime: Double,
-        scriptDuration: Double,
-        isCountingDown: Bool = false
-    ) {
-        let needsFullRebuild = lastContentId != text
-
-        if needsFullRebuild {
-            textView.attributedText = buildAttributedString(text: text, fontSize: fontSize)
-            textView.layoutIfNeeded()
-            lastContentId = text
-            lastTimerText = nil
-            lastTimerColor = nil
-            lastLineTopWidth = -1
-            needsScrollRange = true
-            needsSettle = true
-        }
-
-        // Continuous time-based scroll
-        refreshScrollRange()
-        updateContinuousScroll(scriptTime: scriptTime, scriptDuration: scriptDuration)
-
-        if lastTimerText != timerText {
-            lastTimerText = timerText
-            timerLabel.text = " \(timerText) "
-        }
-
-        let timerColor: UIColor
-        if isCountingDown {
-            timerColor = isDarkMode ? AppColors.UIColors.Dark.pink : AppColors.UIColors.Light.pink
-        } else {
-            timerColor = AppColors.timerUIColor(
-                remainingSeconds: remainingTime,
-                totalSeconds: timerDuration,
-                isDarkMode: isDarkMode
-            )
-        }
-        if lastTimerColor != timerColor {
-            lastTimerColor = timerColor
-            timerLabel.textColor = timerColor
-            timerLabel.backgroundColor = (isDarkMode ? AppColors.UIColors.Dark.background : AppColors.UIColors.Light.background).withAlphaComponent(0.8)
-        }
-    }
-
-    private func updateContinuousScroll(scriptTime: Double, scriptDuration: Double) {
-        guard scriptDuration > 0 else { return }
-
-        lastScrollFraction = CGFloat(min(max(scriptTime / scriptDuration, 0), 1))
-        let targetY = lastScrollFraction * scrollRange
-
-        if needsSettle || !isLive {
-            needsSettle = false
-            settleScroll(at: targetY)
-        } else {
-            ease(to: targetY)
-        }
-    }
-
-    /// Take the position up without easing, for a first layout, a rebuild or a
-    /// resize — nothing the reader should see the script travel across.
-    private func settleScroll(at offset: CGFloat) {
-        targetOffset = offset
-        lastScrollTimestamp = 0
-        guard textView.contentOffset.y != offset else { return }
-        textView.contentOffset = CGPoint(x: 0, y: offset)
-    }
-
-    /// Move a step of the way toward the target, by however much time has passed
-    /// since the last one. This rides the overlay's own render clock rather than
-    /// a display link of its own: the display link stops once the app is in the
-    /// background, and the overlay carries on from a timer there.
-    private func ease(to offset: CGFloat) {
-        targetOffset = offset
-
-        let now = CACurrentMediaTime()
-        let elapsed = lastScrollTimestamp == 0 ? 0 : now - lastScrollTimestamp
-        lastScrollTimestamp = now
-        guard elapsed > 0 else { return }
-
-        let distance = targetOffset - textView.contentOffset.y
-        guard abs(distance) > 0.05 else {
-            textView.contentOffset = CGPoint(x: 0, y: targetOffset)
+        timebase = mediaTimebase
+        source.sampleBufferDisplayLayer.controlTimebase = mediaTimebase
+        do {
+            let session = AVAudioSession.sharedInstance()
+            try session.setCategory(.playback, mode: .moviePlayback, options: .mixWithOthers)
+            try session.setActive(true)
+            ownsAudioSession = true
+        } catch {
+            print("Could not activate PiP audio session: \(error)")
+            cleanup()
             return
         }
 
-        let advance = distance * (1 - exp(-elapsed / Self.scrollTimeConstant))
-        textView.contentOffset = CGPoint(x: 0, y: textView.contentOffset.y + advance)
+        let controller = AVPictureInPictureController(contentSource: .init(
+            sampleBufferDisplayLayer: source.sampleBufferDisplayLayer, playbackDelegate: self
+        ))
+        controller.delegate = self
+        controller.requiresLinearPlayback = false
+        controller.canStartPictureInPictureAutomaticallyFromInline = true
+        pipController = controller
+        possibilityObservation = controller.observe(\.isPictureInPicturePossible, options: [.initial, .new]) { [weak self] controller, _ in
+            Task { @MainActor in
+                guard let self, self.pipController === controller else { return }
+                self.isPiPPossible = controller.isPictureInPicturePossible
+            }
+        }
+        refreshVideoTimeline()
+        renderFrame(force: true)
+    }
+}
+
+extension TeleprompterPiPManager: @preconcurrency AVPictureInPictureSampleBufferPlaybackDelegate {
+    func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, setPlaying playing: Bool) {
+        guard pipController === pictureInPictureController else { return }
+        if playing { play() } else { pause() }
     }
 
-    private func buildAttributedString(
-        text: String,
-        fontSize: CGFloat
-    ) -> NSAttributedString {
+    func pictureInPictureControllerIsPlaybackPaused(_ pictureInPictureController: AVPictureInPictureController) -> Bool {
+        !playback.isPlaying && !playback.isCountingDown
+    }
+
+    func pictureInPictureControllerTimeRangeForPlayback(_ pictureInPictureController: AVPictureInPictureController) -> CMTimeRange {
+        CMTimeRange(start: .zero, duration: CMTime(seconds: advertisedPlaybackEnd, preferredTimescale: 600))
+    }
+
+    func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, skipByInterval interval: CMTime, completion: @escaping () -> Void) {
+        defer { completion() }
+        guard pipController === pictureInPictureController, interval.seconds.isFinite else { return }
+        advanceClock()
+        seek(toScriptTime: min(playback.scriptTime, scriptDuration) + interval.seconds)
+    }
+
+    func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, didTransitionToRenderSize newRenderSize: CMVideoDimensions) {
+        // The video has a fixed logical page and 1280-pixel width. A PiP resize
+        // scales that page; it never changes font sizes, wrapping or position.
+        guard pipController === pictureInPictureController else { return }
+        renderFrame(force: true)
+    }
+}
+
+extension TeleprompterPiPManager: @preconcurrency AVPictureInPictureControllerDelegate {
+    func pictureInPictureControllerWillStartPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
+        guard pipController === pictureInPictureController else { return }
+        isStartingPiP = true
+        advanceClock()
+        renderFrame(force: true)
+    }
+
+    func pictureInPictureControllerDidStartPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
+        guard pipController === pictureInPictureController else { return }
+        isStartingPiP = false
+        isPiPActive = true
+        renderFrame(force: true)
+        if minimizeWhenStarted {
+            minimizeWhenStarted = false
+            UIApplication.shared.perform(#selector(NSXPCConnection.suspend))
+        }
+    }
+
+    func pictureInPictureControllerDidStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
+        guard pipController === pictureInPictureController else { return }
+        isPiPActive = false
+        isStartingPiP = false
+        minimizeWhenStarted = false
+        refreshPresentation()
+    }
+
+    func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, failedToStartPictureInPictureWithError error: Error) {
+        guard pipController === pictureInPictureController else { return }
+        isStartingPiP = false
+        isPiPActive = false
+        minimizeWhenStarted = false
+        print("Could not start PiP: \(error)")
+    }
+
+    func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, restoreUserInterfaceForPictureInPictureStopWithCompletionHandler completionHandler: @escaping (Bool) -> Void) {
+        guard pipController === pictureInPictureController else {
+            completionHandler(false)
+            return
+        }
+        advanceClock()
+        var state = playback
+        state.snapToken += 1
+        playback = state
+        // Give SwiftUI one main-queue pass to place the shared reading position.
+        DispatchQueue.main.async { completionHandler(true) }
+    }
+}
+
+private final class TeleprompterPiPVideoView: UIView {
+    override class var layerClass: AnyClass { AVSampleBufferDisplayLayer.self }
+    var sampleBufferDisplayLayer: AVSampleBufferDisplayLayer { layer as! AVSampleBufferDisplayLayer }
+}
+
+/// Shared text construction is essential: character offsets cannot synchronize
+/// two layouts if one preserves spaces and the other splits text into words.
+@MainActor
+enum TeleprompterTextLayout {
+    static func attributedString(text: String, fontSize: CGFloat, cueColor: CueColor, isDarkMode: Bool) -> NSAttributedString {
         let result = NSMutableAttributedString()
-        let font = UIFont.systemFont(ofSize: fontSize, weight: .medium)
-        let noteFont = UIFont.systemFont(ofSize: fontSize * 0.72, weight: .semibold)
-        let noteKern = fontSize * 0.05
-
-        let textColor = isDarkMode ? AppColors.UIColors.Dark.textPrimary : AppColors.UIColors.Light.textPrimary
-
-        let paragraphs = text.components(separatedBy: "\n\n")
-
-        for (paragraphIndex, paragraph) in paragraphs.enumerated() {
-            if paragraphIndex > 0 {
-                result.append(NSAttributedString(string: "\n"))
-            }
-
-            let lines = paragraph.components(separatedBy: "\n")
-
-            for (lineIndex, line) in lines.enumerated() {
-                if lineIndex > 0 {
-                    result.append(NSAttributedString(string: "\n"))
-                }
-
-                if line.isEmpty { continue }
-
-                let segments = TeleprompterParser.segments(in: line)
-                var lineWordIndex = 0
-
-                for segment in segments {
+        let textAttributes: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: fontSize, weight: .medium),
+            .foregroundColor: isDarkMode ? AppColors.UIColors.Dark.textPrimary : AppColors.UIColors.Light.textPrimary
+        ]
+        let cueAttributes: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: fontSize * 0.72, weight: .semibold),
+            .foregroundColor: cueColor.uiColor(isDarkMode: isDarkMode),
+            .kern: fontSize * 0.05
+        ]
+        for (paragraphIndex, paragraph) in text.components(separatedBy: "\n\n").enumerated() {
+            if paragraphIndex > 0 { result.append(NSAttributedString(string: "\n")) }
+            for (lineIndex, line) in paragraph.components(separatedBy: "\n").enumerated() {
+                if lineIndex > 0 { result.append(NSAttributedString(string: "\n")) }
+                for (index, segment) in TeleprompterParser.segments(in: line).enumerated() {
+                    if index > 0 { result.append(NSAttributedString(string: " ", attributes: textAttributes)) }
                     switch segment {
-                    case .cue(let noteContent):
-                        let noteAttrs: [NSAttributedString.Key: Any] = [
-                            .font: noteFont,
-                            .foregroundColor: cueColor.uiColor(isDarkMode: isDarkMode),
-                            .kern: noteKern
-                        ]
-                        let noteWords = noteContent.split(separator: " ", omittingEmptySubsequences: true)
-                        for word in noteWords {
-                            if lineWordIndex > 0 {
-                                result.append(NSAttributedString(string: " ", attributes: noteAttrs))
-                            }
-                            result.append(NSAttributedString(string: String(word), attributes: noteAttrs))
-                            lineWordIndex += 1
-                        }
-                    case .text(let textContent):
-                        let wordAttrs: [NSAttributedString.Key: Any] = [
-                            .font: font,
-                            .foregroundColor: textColor
-                        ]
-                        let words = textContent.split(separator: " ", omittingEmptySubsequences: true).map(String.init)
-                        for word in words {
-                            if lineWordIndex > 0 {
-                                result.append(NSAttributedString(string: " ", attributes: wordAttrs))
-                            }
-                            result.append(NSAttributedString(string: word, attributes: wordAttrs))
-                            lineWordIndex += 1
-                        }
+                    case .text(let text):
+                        result.append(NSAttributedString(string: text, attributes: textAttributes))
+                    case .cue(let cue):
+                        result.append(NSAttributedString(string: cue, attributes: cueAttributes))
                     }
                 }
             }
         }
-
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.lineSpacing = fontSize * 0.18
         paragraphStyle.paragraphSpacing = fontSize * 0.45
-        if result.length > 0 {
-            result.addAttribute(.paragraphStyle, value: paragraphStyle, range: NSRange(location: 0, length: result.length))
-        }
-
+        result.addAttribute(.paragraphStyle, value: paragraphStyle, range: NSRange(location: 0, length: result.length))
         return result
+    }
+
+    static func characterPosition(forLine position: Double, starts: [Int]) -> Double {
+        guard let last = starts.last else { return 0 }
+        let line = max(position, 0)
+        guard line < Double(starts.count - 1) else { return Double(last) }
+        let index = Int(line)
+        return Double(starts[index]) + (line - Double(index)) * Double(starts[index + 1] - starts[index])
+    }
+
+    static func linePosition(forCharacter position: Double, starts: [Int]) -> Double {
+        guard starts.count > 1 else { return 0 }
+        if position <= Double(starts[0]) { return 0 }
+        if position >= Double(starts[starts.count - 1]) { return Double(starts.count - 1) }
+        var low = 0
+        var high = starts.count - 1
+        while low + 1 < high {
+            let middle = (low + high) / 2
+            if Double(starts[middle]) <= position { low = middle } else { high = middle }
+        }
+        let length = starts[low + 1] - starts[low]
+        return Double(low) + (length > 0 ? (position - Double(starts[low])) / Double(length) : 0)
+    }
+}
+
+/// Draw glyphs directly into the video buffer. Capturing a UITextView's layers
+/// captures cached raster tiles, which can be low-resolution or stale offscreen.
+@MainActor
+private final class TeleprompterVideoRenderer {
+    let backgroundColor: UIColor
+    private let logicalSize: CGSize
+    private let pixelWidth = 1280
+    private let pixelHeight: Int
+    private let textStorage: NSTextStorage
+    private let layoutManager = NSLayoutManager()
+    private let textContainer: NSTextContainer
+    private var lineStarts: [Int] = []
+    private var lineOffsets: [CGFloat] = []
+    private let timerDuration: Int
+    private let isDarkMode: Bool
+    private var pool: CVPixelBufferPool?
+    private var format: CMVideoFormatDescription?
+    private var displayedOffset: CGFloat?
+    private var lastScrollFrameTime: CFTimeInterval = 0
+    private var lastSnapToken: Int = -1
+    // Match the full-screen scroll response while keeping the shared reading
+    // position authoritative. Only the displayed offset is smoothed.
+    private static let scrollTimeConstant: Double = 0.12
+
+    init(text: String, settings: TeleprompterSettings, timerDuration: Int, isDarkMode: Bool) {
+        self.timerDuration = timerDuration
+        self.isDarkMode = isDarkMode
+        backgroundColor = isDarkMode ? AppColors.UIColors.Dark.background : AppColors.UIColors.Light.background
+        logicalSize = CGSize(width: 320, height: 320 / settings.overlayAspectRatio.ratio)
+        pixelHeight = Int((1280 / settings.overlayAspectRatio.ratio).rounded())
+        textStorage = NSTextStorage(attributedString: TeleprompterTextLayout.attributedString(
+            text: text, fontSize: CGFloat(settings.pipFontSize), cueColor: settings.cueColor, isDarkMode: isDarkMode
+        ))
+        textContainer = NSTextContainer(size: CGSize(width: 296, height: CGFloat.greatestFiniteMagnitude))
+        textContainer.lineFragmentPadding = 0
+        layoutManager.addTextContainer(textContainer)
+        textStorage.addLayoutManager(layoutManager)
+        layoutManager.ensureLayout(for: textContainer)
+        let glyphs = layoutManager.glyphRange(for: textContainer)
+        layoutManager.enumerateLineFragments(forGlyphRange: glyphs) { [self] rect, _, _, range, _ in
+            lineStarts.append(layoutManager.characterIndexForGlyph(at: range.location))
+            lineOffsets.append(rect.minY)
+        }
+    }
+
+    func frame(characterPosition: Double, state: TeleprompterPlaybackState, presentationTime: CMTime,
+               smoothScrolling: Bool) -> CMSampleBuffer? {
+        if pool == nil {
+            let attributes: [CFString: Any] = [
+                kCVPixelBufferPixelFormatTypeKey: kCVPixelFormatType_32BGRA,
+                kCVPixelBufferWidthKey: pixelWidth,
+                kCVPixelBufferHeightKey: pixelHeight,
+                kCVPixelBufferCGBitmapContextCompatibilityKey: true,
+                kCVPixelBufferIOSurfacePropertiesKey: [:]
+            ]
+            guard CVPixelBufferPoolCreate(kCFAllocatorDefault, nil, attributes as CFDictionary, &pool) == kCVReturnSuccess else { return nil }
+        }
+        guard let pool else { return nil }
+        var buffer: CVPixelBuffer?
+        let limits = [kCVPixelBufferPoolAllocationThresholdKey: 3] as CFDictionary
+        guard CVPixelBufferPoolCreatePixelBufferWithAuxAttributes(kCFAllocatorDefault, pool, limits, &buffer) == kCVReturnSuccess,
+              let buffer else { return nil }
+        guard CVPixelBufferLockBaseAddress(buffer, []) == kCVReturnSuccess else { return nil }
+        let drewFrame: Bool
+        if let context = CGContext(data: CVPixelBufferGetBaseAddress(buffer), width: pixelWidth, height: pixelHeight,
+                                   bitsPerComponent: 8, bytesPerRow: CVPixelBufferGetBytesPerRow(buffer),
+                                   space: CGColorSpaceCreateDeviceRGB(),
+                                   bitmapInfo: CGBitmapInfo.byteOrder32Little.rawValue | CGImageAlphaInfo.premultipliedFirst.rawValue) {
+            context.translateBy(x: 0, y: CGFloat(pixelHeight))
+            context.scaleBy(x: CGFloat(pixelWidth) / logicalSize.width, y: -CGFloat(pixelHeight) / logicalSize.height)
+            UIGraphicsPushContext(context)
+            draw(in: context, characterPosition: characterPosition, state: state, smoothScrolling: smoothScrolling)
+            UIGraphicsPopContext()
+            drewFrame = true
+        } else {
+            drewFrame = false
+        }
+        CVPixelBufferUnlockBaseAddress(buffer, [])
+        guard drewFrame else { return nil }
+        if format == nil {
+            guard CMVideoFormatDescriptionCreateForImageBuffer(allocator: kCFAllocatorDefault, imageBuffer: buffer,
+                                                               formatDescriptionOut: &format) == noErr else { return nil }
+        }
+        guard let format else { return nil }
+        var timing = CMSampleTimingInfo(duration: CMTime(value: 1, timescale: 30),
+                                        presentationTimeStamp: presentationTime, decodeTimeStamp: .invalid)
+        var sample: CMSampleBuffer?
+        guard CMSampleBufferCreateReadyWithImageBuffer(allocator: kCFAllocatorDefault, imageBuffer: buffer,
+                                                       formatDescription: format, sampleTiming: &timing,
+                                                       sampleBufferOut: &sample) == noErr, let sample else { return nil }
+        if let attachments = CMSampleBufferGetSampleAttachmentsArray(sample, createIfNecessary: true) {
+            let dictionary = unsafeBitCast(CFArrayGetValueAtIndex(attachments, 0), to: CFMutableDictionary.self)
+            CFDictionarySetValue(dictionary, Unmanaged.passUnretained(kCMSampleAttachmentKey_DisplayImmediately).toOpaque(),
+                                 Unmanaged.passUnretained(kCFBooleanTrue).toOpaque())
+        }
+        return sample
+    }
+
+    private func draw(in context: CGContext, characterPosition: Double, state: TeleprompterPlaybackState,
+                      smoothScrolling: Bool) {
+        context.setFillColor(backgroundColor.cgColor)
+        context.fill(CGRect(origin: .zero, size: logicalSize))
+        let remaining = timerDuration > 0 ? timerDuration - Int(state.elapsedTime) : Int(state.elapsedTime)
+        let time = TeleprompterParser.formatTime(state.isCountingDown ? state.countdownValue : remaining)
+        let color = state.isCountingDown
+            ? (isDarkMode ? AppColors.UIColors.Dark.pink : AppColors.UIColors.Light.pink)
+            : AppColors.timerUIColor(remainingSeconds: remaining, totalSeconds: timerDuration, isDarkMode: isDarkMode)
+        let style = NSMutableParagraphStyle()
+        style.alignment = .center
+        (time as NSString).draw(in: CGRect(x: 12, y: 6, width: 296, height: 22), withAttributes: [
+            .font: UIFont.monospacedDigitSystemFont(ofSize: 14, weight: .semibold),
+            .foregroundColor: color,
+            .paragraphStyle: style
+        ])
+
+        let viewport = CGRect(x: 12, y: 34, width: 296, height: logicalSize.height - 42)
+        let readingY = viewport.height * 0.45
+        let position = TeleprompterTextLayout.linePosition(forCharacter: characterPosition, starts: lineStarts)
+        let line = min(Int(position), max(lineOffsets.count - 1, 0))
+        var offset: CGFloat = 0
+        if !lineOffsets.isEmpty {
+            offset = lineOffsets[line]
+            if line + 1 < lineOffsets.count {
+                offset += CGFloat(position - Double(line)) * (lineOffsets[line + 1] - lineOffsets[line])
+            }
+        }
+        offset = scrollOffset(toward: offset, state: state, smoothScrolling: smoothScrolling)
+        context.saveGState()
+        context.clip(to: viewport)
+        context.translateBy(x: viewport.minX, y: viewport.minY + readingY - offset)
+        let visibleRect = CGRect(x: 0, y: offset - readingY, width: viewport.width, height: viewport.height)
+        let glyphs = layoutManager.glyphRange(forBoundingRect: visibleRect, in: textContainer)
+        layoutManager.drawBackground(forGlyphRange: glyphs, at: .zero)
+        layoutManager.drawGlyphs(forGlyphRange: glyphs, at: .zero)
+        context.restoreGState()
+
+        let colors = [backgroundColor.cgColor, backgroundColor.withAlphaComponent(0).cgColor] as CFArray
+        if let fade = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: colors, locations: [0, 1]) {
+            context.saveGState()
+            context.clip(to: viewport)
+            context.drawLinearGradient(fade, start: CGPoint(x: 0, y: viewport.minY),
+                                       end: CGPoint(x: 0, y: viewport.minY + 18), options: [])
+            context.drawLinearGradient(fade, start: CGPoint(x: 0, y: viewport.maxY),
+                                       end: CGPoint(x: 0, y: viewport.maxY - 18), options: [])
+            context.restoreGState()
+        }
+    }
+
+    private func scrollOffset(toward target: CGFloat, state: TeleprompterPlaybackState,
+                              smoothScrolling: Bool) -> CGFloat {
+        let now = CACurrentMediaTime()
+        defer {
+            lastScrollFrameTime = now
+            lastSnapToken = state.snapToken
+        }
+        guard smoothScrolling, state.isPlaying,
+              lastSnapToken == state.snapToken, let previous = displayedOffset else {
+            // Explicit seeks/restarts and restoration must land at the shared
+            // position immediately, without animating through skipped text.
+            displayedOffset = target
+            return target
+        }
+        // A delayed frame must not move the whole accumulated distance at once.
+        let delta = min(max(now - lastScrollFrameTime, 0), 1.0 / 15.0)
+        let distance = target - previous
+        let next = abs(distance) < 0.05 ? target
+            : previous + distance * CGFloat(1 - exp(-delta / Self.scrollTimeConstant))
+        displayedOffset = next
+        return next
     }
 }

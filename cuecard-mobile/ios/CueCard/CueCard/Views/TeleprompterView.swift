@@ -11,37 +11,15 @@ struct TeleprompterView: View {
     @Environment(\.colorScheme) var colorScheme
     @StateObject private var pipManager = TeleprompterPiPManager.shared
 
-    @State private var isPlaying = false
-    @State private var elapsedTime: Double = 0
-    /// How far behind the timer the script is, in seconds, from the reader having
-    /// dragged it — negative if they dragged it ahead. A drag moves the script,
-    /// never the time, so going back for a line costs nothing on the clock.
-    @State private var scriptLag: Double = 0
-    @State private var timer: Timer?
-    @State private var timerStartDate: Date?
-    @State private var elapsedTimeAtTimerStart: Double = 0
-    /// How many lines the script wrapped into on this screen. Zero until it lays out.
-    @State private var lineCount: Int = 0
+    private var isPlaying: Bool { pipManager.playback.isPlaying }
+    private var elapsedTime: Double { pipManager.playback.elapsedTime }
+    private var scriptTime: Double { pipManager.playback.scriptTime }
+    private var isCountingDown: Bool { pipManager.playback.isCountingDown }
+    private var countdownValue: Int { pipManager.playback.countdownValue }
+    @State private var referenceLineStarts: [Int] = []
+    @State private var hasConfiguredSession = false
     @State private var showControls = true
     @State private var controlsTimer: Timer?
-    @State private var countdownValue: Int = 0
-    @State private var isCountingDown = false
-    @State private var countdownTimer: Timer?
-    /// Whether playback has begun since the last restart. The countdown only
-    /// runs on the first play; resuming from a pause starts right away.
-    @State private var hasStarted = false
-    /// Bumped whenever the reader's position comes back from the overlay rather
-    /// than from this view's own clock. The script jumps straight to it instead
-    /// of easing, so the app is already where the overlay was when it expands.
-    @State private var scriptSnapToken = 0
-    /// How far the script has arrived. One at all times except across a return
-    /// from the overlay, where it is taken away as the overlay starts closing
-    /// and brought back once the overlay has gone — so the reader is handed a
-    /// blank page for that moment and the script comes up onto it, rather than
-    /// having the overlay lift off a screen that was finished all along.
-    @State private var scriptOpacity: Double = 1
-    /// How long the script takes to arrive.
-    private static let scriptFadeInDuration: Double = 0.35
     @Environment(\.scenePhase) private var scenePhase
 
     // Timer properties
@@ -85,21 +63,6 @@ struct TeleprompterView: View {
     private static let topFade: CGFloat = 96
     private static let bottomFade: CGFloat = 140
 
-    /// Where the script has got to, in seconds of reading. It runs with the timer
-    /// and a drag moves it, which is what keeps the two apart. See `scriptLag`.
-    private var scriptTime: Double { max(elapsedTime - scriptLag, 0) }
-
-    /// How long the whole script takes at the current speed: the time for the
-    /// last line to reach the reading line. Zero until the script has laid out.
-    private var scriptDuration: Double {
-        duration(forLines: lineCount)
-    }
-
-    private func duration(forLines lines: Int) -> Double {
-        guard lines > 1, settings.linesPerMinute > 0 else { return 0 }
-        return Double(lines - 1) * 60.0 / Double(settings.linesPerMinute)
-    }
-
     /// Where on screen the line being read sits, as a fraction of the view height.
     /// Just above centre: high enough to leave the next few lines in view, low
     /// enough to read as the middle of the screen rather than the top of it.
@@ -126,10 +89,10 @@ struct TeleprompterView: View {
                         colorScheme: colorScheme,
                         topPadding: geometry.size.height * Self.readingLineFraction,
                         bottomPadding: geometry.size.height * (1 - Self.readingLineFraction),
-                        snapToken: scriptSnapToken,
-                        onLineCountChange: { lines in
-                            lineCount = lines
-                            pipManager.scriptDuration = duration(forLines: lines)
+                        snapToken: pipManager.playback.snapToken,
+                        onLayoutChange: { starts in
+                            referenceLineStarts = starts
+                            pipManager.updateReferenceLayout(starts)
                         },
                         onHandOff: { line in
                             handOff(toLine: line)
@@ -144,10 +107,6 @@ struct TeleprompterView: View {
                     // Lines arrive and leave through a fade rather than being cut
                     // off flat against the toolbar and the controls.
                     .scriptEdgeFade(for: colorScheme, top: Self.topFade, bottom: Self.bottomFade)
-                    // Held back while the overlay is closing, so the script
-                    // arrives on the blank page rather than being there waiting
-                    // behind it. See `scriptOpacity`.
-                    .opacity(scriptOpacity)
 
                     // Controls overlay
                     if showControls {
@@ -243,113 +202,40 @@ struct TeleprompterView: View {
         }
         .persistentSystemOverlays(.hidden)
         .onDisappear {
-            stopTimer()
             stopControlsTimer()
-            stopCountdownTimer()
             UIApplication.shared.isIdleTimerDisabled = false
         }
         .onChange(of: scenePhase) { newPhase in
             if newPhase == .background && !pipManager.isPiPActive && pipManager.isPiPPossible {
                 // Auto-start PiP when app goes to background (like YouTube)
                 startPiP(minimizeApp: false)
-            } else if newPhase == .active && pipManager.isPiPActive {
-                // Sync state when coming back to foreground
-                syncFromPiP()
+            } else if newPhase == .active {
+                pipManager.refreshPresentation()
             }
+        }
+        .onChange(of: isPlaying) { playing in
+            if playing { resetControlsTimer() } else { stopControlsTimer() }
         }
     }
 
-    // MARK: - PiP Setup
+    // MARK: - Shared Playback Session
 
     private func setupPiP() {
+        guard !hasConfiguredSession else { return }
+        hasConfiguredSession = true
         pipManager.configure(
             text: content.fullText,
             settings: settings,
             timerDuration: timerDuration,
             colorScheme: colorScheme
         )
-        pipManager.scriptDuration = scriptDuration
-
-        // The overlay has gone by the time this runs, so this is the moment the
-        // screen is the reader's again: the script comes up onto the blank page,
-        // and the clock starts with it.
-        pipManager.onPiPClosed = {
-            syncFromPiP()
-            withAnimation(.easeOut(duration: Self.scriptFadeInDuration)) {
-                scriptOpacity = 1
-            }
-            if isPlaying {
-                startTimer()
-            }
-        }
-
-        // Take the position, clear the script, and leave the clock stopped. The
-        // overlay's own clock stopped when it began closing and close reports
-        // that position back, so running on here only earns a jump backwards to
-        // it. Both start again on close, above.
-        pipManager.onPiPRestoreUI = {
-            syncFromPiP()
-            scriptOpacity = 0
-        }
-
-        // Handle play/pause from PiP controls
-        pipManager.onPlayPauseFromPiP = { playing in
-            if playing {
-                isPlaying = true
-                hasStarted = true
-                if !pipManager.isPiPActive {
-                    startTimer()
-                }
-            } else {
-                isPlaying = false
-                stopTimer()
-            }
-        }
-
-        // Handle restart from PiP controls
-        pipManager.onRestartFromPiP = {
-            stopTimer()
-            stopCountdownTimer()
-            isCountingDown = false
-            elapsedTime = 0
-            scriptLag = 0
-            isPlaying = false
-            hasStarted = false
-        }
-
-        // Handle expand from PiP - app will come to foreground automatically
-        pipManager.onExpandFromPiP = {
-            syncFromPiP()
-            if isPlaying {
-                startTimer()
-            }
-        }
-    }
-
-    /// Take the reader's position back from the overlay. The script snaps to it
-    /// rather than scrolling there, so the two are already on the same line when
-    /// the overlay expands back into the app.
-    private func syncFromPiP() {
-        elapsedTime = pipManager.elapsedTime
-        scriptLag = pipManager.elapsedTime - pipManager.scriptTime
-        isPlaying = pipManager.isPlaying
-        scriptSnapToken += 1
+        pipManager.updateReferenceLayout(referenceLineStarts)
     }
 
     private func startPiP(minimizeApp: Bool = false) {
-        pipManager.scriptDuration = scriptDuration
-        pipManager.updateState(
-            elapsedTime: elapsedTime,
-            scriptTime: scriptTime,
-            isPlaying: isPlaying,
-            countdownValue: countdownValue,
-            isCountingDown: isCountingDown
-        )
-        // Stop the view's timer — PiP manager has its own playback timer.
-        // Running both causes dual writes to pipManager state and doubles CPU work.
-        guard pipManager.startPiP(minimizeApp: minimizeApp) else { return }
-        stopTimer()
-        Analytics.logEvent("teleprompter_pip_started", parameters: nil)
+        if pipManager.startPiP(minimizeApp: minimizeApp) {
+            Analytics.logEvent("teleprompter_pip_started", parameters: nil)
+        }
     }
 
     private func togglePiP() {
@@ -357,141 +243,31 @@ struct TeleprompterView: View {
             pipManager.stopPiP()
             Analytics.logEvent("teleprompter_pip_stopped", parameters: nil)
         } else {
-            // Start PiP and minimize the app
             startPiP(minimizeApp: true)
         }
     }
 
-    // MARK: - Controls
-
     private func togglePlayPause() {
-        if isPlaying || isCountingDown {
-            pause()
-        } else {
-            startCountdownThenPlay()
-        }
+        let wasRunning = isPlaying || isCountingDown
+        pipManager.togglePlayPause()
+        Analytics.logEvent(wasRunning ? "teleprompter_pause" : "teleprompter_play", parameters: nil)
         resetControlsTimer()
     }
 
-    private func startCountdownThenPlay() {
-        // Only count down from the top of the script — a resume plays immediately
-        guard settings.countdownSeconds > 0, !hasStarted else {
-            play()
-            return
-        }
-
-        // Start countdown
-        countdownValue = settings.countdownSeconds
-        isCountingDown = true
-        pipManager.updateState(elapsedTime: elapsedTime, scriptTime: scriptTime, isPlaying: isPlaying, countdownValue: countdownValue, isCountingDown: true)
-
-        countdownTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
-            Task { @MainActor in
-                withAnimation(.snappy) {
-                    countdownValue -= 1
-                }
-                pipManager.updateState(elapsedTime: elapsedTime, scriptTime: scriptTime, isPlaying: isPlaying, countdownValue: countdownValue, isCountingDown: countdownValue > 0)
-
-                if countdownValue <= 0 {
-                    stopCountdownTimer()
-                    isCountingDown = false
-                    play()
-                }
-            }
-        }
-    }
-
-    private func stopCountdownTimer() {
-        countdownTimer?.invalidate()
-        countdownTimer = nil
-    }
-
-    private func play() {
-        isPlaying = true
-        hasStarted = true
-        startTimer()
-        pipManager.updateState(elapsedTime: elapsedTime, scriptTime: scriptTime, isPlaying: true)
-        Analytics.logEvent("teleprompter_play", parameters: nil)
-        resetControlsTimer()
-    }
-
-    private func pause() {
-        // Cancel countdown if running
-        if isCountingDown {
-            stopCountdownTimer()
-            isCountingDown = false
-            pipManager.updateState(elapsedTime: elapsedTime, scriptTime: scriptTime, isPlaying: false, countdownValue: 0, isCountingDown: false)
-            return
-        }
-        isPlaying = false
-        stopTimer()
-        pipManager.updateState(elapsedTime: elapsedTime, scriptTime: scriptTime, isPlaying: false)
-        Analytics.logEvent("teleprompter_pause", parameters: nil)
-    }
-
-    /// Back to the first line, which the script scrolls up to rather than snapping.
     private func restart() {
-        stopTimer()
-        stopCountdownTimer()
-        isCountingDown = false
-        elapsedTime = 0
-        scriptLag = 0
-        isPlaying = false
-        hasStarted = false
-        pipManager.updateState(elapsedTime: 0, scriptTime: 0, isPlaying: false)
+        pipManager.restart()
         Analytics.logEvent("teleprompter_restart", parameters: nil)
     }
 
-    /// Playback carries on from the line the reader left on the reading line: the
-    /// script's own position moves, the timer does not.
     private func handOff(toLine line: Double) {
-        guard settings.linesPerMinute > 0 else { return }
-        scriptLag = elapsedTime - line * 60.0 / Double(settings.linesPerMinute)
-        pipManager.updateState(
-            elapsedTime: elapsedTime,
-            scriptTime: scriptTime,
-            isPlaying: isPlaying,
-            countdownValue: countdownValue,
-            isCountingDown: isCountingDown
-        )
+        pipManager.seek(toLine: line)
     }
 
     private func stopAndDismiss() {
-        stopTimer()
-        stopCountdownTimer()
         pipManager.cleanup()
-        Analytics.logEvent("teleprompter_closed", parameters: [
-            "elapsed_time": Int(elapsedTime)
-        ])
+        Analytics.logEvent("teleprompter_closed", parameters: ["elapsed_time": Int(elapsedTime)])
         ReviewPromptService.shared.recordCompletedSession()
         dismiss()
-    }
-
-    // MARK: - Timer
-
-    private func startTimer() {
-        // Prevent multiple timers from running simultaneously
-        stopTimer()
-
-        // Track wall-clock start time to avoid drift from accumulated intervals
-        timerStartDate = Date()
-        elapsedTimeAtTimerStart = elapsedTime
-
-        let interval = 1.0 / 30.0
-
-        timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
-            Task { @MainActor in
-                guard let startDate = timerStartDate else { return }
-                elapsedTime = elapsedTimeAtTimerStart + Date().timeIntervalSince(startDate)
-                pipManager.updateState(elapsedTime: elapsedTime, scriptTime: scriptTime, isPlaying: isPlaying)
-            }
-        }
-    }
-
-    private func stopTimer() {
-        timer?.invalidate()
-        timer = nil
-        timerStartDate = nil  // Prevents stale Task blocks from writing elapsedTime
     }
 
     // MARK: - Controls Timer
@@ -533,9 +309,9 @@ struct AttributedTextView: UIViewRepresentable {
     /// coming back from the overlay. The script settles at the new position
     /// instead of easing there.
     let snapToken: Int
-    /// Reports how many lines the script laid out into, which is what turns the
-    /// lines-per-minute setting into a duration.
-    let onLineCountChange: (Int) -> Void
+    /// UTF-16 starts of the full-screen lines define scroll speed and let PiP
+    /// find the same text despite using a different font and line wrapping.
+    let onLayoutChange: ([Int]) -> Void
     /// Reports the line the reader left on the reading line, so playback can carry
     /// on from there.
     let onHandOff: (Double) -> Void
@@ -553,7 +329,7 @@ struct AttributedTextView: UIViewRepresentable {
         /// The scroll offset that puts each rendered line on the reading line.
         var lineOffsets: [CGFloat] = []
         var lastLayoutSize: CGSize = .zero
-        var lastReportedLineCount = -1
+        var lastReportedLineStarts: [Int] = []
         var lastTarget: CGFloat = -1
         var lastSnapToken = 0
         /// True from the moment a drag starts until the script comes to rest, so
@@ -678,7 +454,7 @@ struct AttributedTextView: UIViewRepresentable {
     }
 
     func makeUIView(context: Context) -> UITextView {
-        let textView = UITextView()
+        let textView = UITextView(usingTextLayoutManager: false)
         textView.isEditable = false
         textView.isSelectable = false
         textView.backgroundColor = .clear
@@ -714,7 +490,9 @@ struct AttributedTextView: UIViewRepresentable {
             || coordinator.lastColorScheme != colorScheme
 
         if needsFullRebuild {
-            textView.attributedText = buildAttributedString()
+            textView.attributedText = TeleprompterTextLayout.attributedString(
+                text: content.fullText, fontSize: fontSize, cueColor: cueColor, isDarkMode: colorScheme == .dark
+            )
             textView.layoutIfNeeded()
 
             coordinator.lastContentId = contentId
@@ -732,14 +510,14 @@ struct AttributedTextView: UIViewRepresentable {
         let isFirstLayout = coordinator.lineOffsets.isEmpty
         if isFirstLayout || coordinator.lastLayoutSize != layoutSize {
             coordinator.lastLayoutSize = layoutSize
-            coordinator.lineOffsets = lineOffsets(for: textView)
+            let layout = layoutLines(for: textView)
+            coordinator.lineOffsets = layout.offsets
 
-            let lineCount = coordinator.lineOffsets.count
-            if lineCount != coordinator.lastReportedLineCount {
-                coordinator.lastReportedLineCount = lineCount
-                // Out of the layout pass this call is inside.
+            if layout.starts != coordinator.lastReportedLineStarts {
+                coordinator.lastReportedLineStarts = layout.starts
+                // Publish outside SwiftUI's current layout pass.
                 DispatchQueue.main.async {
-                    onLineCountChange(lineCount)
+                    onLayoutChange(layout.starts)
                 }
             }
         }
@@ -772,7 +550,7 @@ struct AttributedTextView: UIViewRepresentable {
 
     /// The scroll offset that puts each rendered line on the reading line, one
     /// entry per line the script actually wraps into on this screen.
-    private func lineOffsets(for textView: UITextView) -> [CGFloat] {
+    private func layoutLines(for textView: UITextView) -> (offsets: [CGFloat], starts: [Int]) {
         let layoutManager = textView.layoutManager
         let container = textView.textContainer
         layoutManager.ensureLayout(for: container)
@@ -780,6 +558,7 @@ struct AttributedTextView: UIViewRepresentable {
         // Line fragments are measured inside the text container, which is already
         // the offset that line should be scrolled to.
         var offsets: [CGFloat] = []
+        var starts: [Int] = []
         let glyphRange = layoutManager.glyphRange(for: container)
         var glyphIndex = glyphRange.location
 
@@ -787,66 +566,15 @@ struct AttributedTextView: UIViewRepresentable {
             var lineRange = NSRange(location: 0, length: 0)
             let fragment = layoutManager.lineFragmentRect(forGlyphAt: glyphIndex, effectiveRange: &lineRange)
             offsets.append(fragment.origin.y)
+            starts.append(layoutManager.characterIndexForGlyph(at: glyphIndex))
 
             guard lineRange.length > 0 else { break }
             glyphIndex = NSMaxRange(lineRange)
         }
 
-        return offsets
+        return (offsets, starts)
     }
 
-    private func buildAttributedString() -> NSAttributedString {
-        let result = NSMutableAttributedString()
-        let paragraphs = content.fullText.components(separatedBy: "\n\n")
-
-        let textColor = colorScheme == .dark ? AppColors.UIColors.Dark.textPrimary : AppColors.UIColors.Light.textPrimary
-        let textAttrs: [NSAttributedString.Key: Any] = [
-            .font: UIFont.systemFont(ofSize: fontSize, weight: .medium),
-            .foregroundColor: textColor
-        ]
-        let cueAttrs: [NSAttributedString.Key: Any] = [
-            .font: UIFont.systemFont(ofSize: fontSize * 0.72, weight: .semibold),
-            .foregroundColor: cueColor.uiColor(isDarkMode: colorScheme == .dark),
-            .kern: fontSize * 0.05
-        ]
-
-        for (paragraphIndex, paragraph) in paragraphs.enumerated() {
-            if paragraphIndex > 0 {
-                result.append(NSAttributedString(string: "\n"))
-            }
-
-            let lines = paragraph.components(separatedBy: "\n")
-
-            for (lineIndex, line) in lines.enumerated() {
-                if lineIndex > 0 {
-                    result.append(NSAttributedString(string: "\n"))
-                }
-
-                if line.isEmpty { continue }
-
-                for (segmentIndex, segment) in TeleprompterParser.segments(in: line).enumerated() {
-                    if segmentIndex > 0 {
-                        result.append(NSAttributedString(string: " ", attributes: textAttrs))
-                    }
-
-                    switch segment {
-                    case .cue(let cueText):
-                        result.append(NSAttributedString(string: cueText, attributes: cueAttrs))
-                    case .text(let text):
-                        result.append(NSAttributedString(string: text, attributes: textAttrs))
-                    }
-                }
-            }
-        }
-
-        // Add paragraph style for line spacing
-        let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.lineSpacing = fontSize * 0.18
-        paragraphStyle.paragraphSpacing = fontSize * 0.45
-        result.addAttribute(.paragraphStyle, value: paragraphStyle, range: NSRange(location: 0, length: result.length))
-
-        return result
-    }
 }
 
 #Preview {
