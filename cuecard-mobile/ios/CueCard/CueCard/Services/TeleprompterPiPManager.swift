@@ -1,6 +1,11 @@
 import AVKit
 import UIKit
 import SwiftUI
+#if DEBUG
+import os
+
+private let pipPerformanceLog = OSLog(subsystem: "com.thisisnsh.cuecard.ios", category: .pointsOfInterest)
+#endif
 
 /// The app and PiP read this same snapshot. Neither presentation owns a clock.
 struct TeleprompterPlaybackState: Equatable {
@@ -11,6 +16,24 @@ struct TeleprompterPlaybackState: Equatable {
     var countdownValue = 0
     var hasStarted = false
     var snapToken = 0
+}
+
+/// Limit progress from the last frame actually submitted, rather than letting
+/// missed callbacks or a full video queue build up a scroll catch-up burst.
+struct TeleprompterFramePacing {
+    private var submittedScriptTime: Double?
+    private var snapToken = 0
+    static let maximumFrameAdvance = 1.0 / 15.0
+
+    mutating func record(scriptTime: Double, snapToken: Int) {
+        submittedScriptTime = scriptTime
+        self.snapToken = snapToken
+    }
+
+    func scriptTime(for proposedTime: Double, snapToken: Int) -> Double {
+        guard self.snapToken == snapToken, let submittedScriptTime else { return proposedTime }
+        return min(proposedTime, submittedScriptTime + Self.maximumFrameAdvance)
+    }
 }
 
 @MainActor
@@ -45,6 +68,7 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
     private var isStartingPiP = false
     private var minimizeWhenStarted = false
     private var lastFrameTime: CFTimeInterval = 0
+    private var framePacing = TeleprompterFramePacing()
     private var advertisedPlaybackEnd: Double = 60
 
     private override init() { super.init() }
@@ -158,6 +182,7 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         elapsedAtAnchor = playback.elapsedTime
         scriptAtAnchor = playback.scriptTime
         playbackAnchor = playback.isPlaying ? CACurrentMediaTime() : nil
+        framePacing.record(scriptTime: playback.scriptTime, snapToken: playback.snapToken)
     }
 
     private func startClock() {
@@ -173,8 +198,9 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         clockTimer = nil
     }
 
-    /// Use a monotonic anchor, so delayed callbacks do not slow playback or the
-    /// countdown. This clock continues across PiP entry, exit and restoration.
+    /// The session timer and countdown follow real elapsed time. During PiP,
+    /// script progress is bounded by submitted frames so stalls never create a
+    /// backlog of text to rush through when rendering resumes.
     private func advanceClock() {
         let now = CACurrentMediaTime()
         var state = playback
@@ -197,15 +223,30 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         if state.isPlaying, let anchor = playbackAnchor {
             let elapsed = max(0, now - anchor)
             state.elapsedTime = elapsedAtAnchor + elapsed
-            // Deliberately unbounded. Only the rendered text clamps at its last
-            // line; reaching it must not pause the video or the session clock.
-            state.scriptTime = scriptAtAnchor + elapsed
+            let proposedTime = scriptAtAnchor + elapsed
+            if isPiPActive || isStartingPiP || isRestoringToReader {
+                // The inline preview may be older when PiP starts; never move
+                // back to that preview's position while waiting for a frame.
+                state.scriptTime = max(state.scriptTime,
+                                       framePacing.scriptTime(for: proposedTime, snapToken: state.snapToken))
+                // Discard missed scroll time permanently. Capping a single
+                // frame without rebasing would just postpone the catch-up.
+                scriptAtAnchor -= proposedTime - state.scriptTime
+            } else {
+                state.scriptTime = proposedTime
+            }
+            // Only rendered text clamps at the last line; the timer keeps going.
         }
         if state != playback { playback = state }
         if countdownFinished { refreshVideoTimeline() }
     }
 
     @objc private func clockTick() {
+        #if DEBUG
+        if isPiPActive || isStartingPiP {
+            os_signpost(.event, log: pipPerformanceLog, name: "PiP clock tick")
+        }
+        #endif
         advanceClock()
         // Extend the finite seekable range well before AVKit reaches its end.
         // The teleprompter is an open-ended session, not a movie whose duration
@@ -240,12 +281,26 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         // drops otherwise valid frames when a timer callback arrives early.
         let renderingPiP = isPiPActive || isStartingPiP || isRestoringToReader
         guard force || renderingPiP || now - lastFrameTime >= 0.2 else { return }
+        #if DEBUG
+        let signpostID = OSSignpostID(log: pipPerformanceLog)
+        os_signpost(.begin, log: pipPerformanceLog, name: "PiP render", signpostID: signpostID)
+        defer { os_signpost(.end, log: pipPerformanceLog, name: "PiP render", signpostID: signpostID) }
+        #endif
         if layer.status == .failed { layer.flush() }
-        guard layer.isReadyForMoreMediaData else { return }
+        guard layer.isReadyForMoreMediaData else {
+            #if DEBUG
+            os_signpost(.event, log: pipPerformanceLog, name: "PiP queue full")
+            #endif
+            return
+        }
         guard let frame = renderer.frame(characterPosition: characterPosition, state: playback,
                                           presentationTime: CMTimebaseGetTime(timebase),
                                           smoothScrolling: renderingPiP) else { return }
         layer.enqueue(frame)
+        #if DEBUG
+        os_signpost(.event, log: pipPerformanceLog, name: "PiP frame submitted")
+        #endif
+        framePacing.record(scriptTime: playback.scriptTime, snapToken: playback.snapToken)
         lastFrameTime = now
     }
 
@@ -313,6 +368,7 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         isStartingPiP = false
         minimizeWhenStarted = false
         lastFrameTime = 0
+        framePacing = TeleprompterFramePacing()
         if ownsAudioSession {
             try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
             ownsAudioSession = false
@@ -406,8 +462,9 @@ extension TeleprompterPiPManager: @preconcurrency AVPictureInPictureControllerDe
         if let request = restorationRequest { completeRestoration(request, restored: false) }
         readerHost?.cancelVideoRestoration()
         isRestoringToReader = false
-        isStartingPiP = true
         advanceClock()
+        framePacing.record(scriptTime: playback.scriptTime, snapToken: playback.snapToken)
+        isStartingPiP = true
         renderFrame(force: true)
     }
 
@@ -424,6 +481,7 @@ extension TeleprompterPiPManager: @preconcurrency AVPictureInPictureControllerDe
 
     func pictureInPictureControllerDidStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
         guard pipController === pictureInPictureController else { return }
+        advanceClock()
         if let request = restorationRequest { completeRestoration(request, restored: false) }
         isPiPActive = false
         isStartingPiP = false
@@ -441,6 +499,7 @@ extension TeleprompterPiPManager: @preconcurrency AVPictureInPictureControllerDe
 
     func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, failedToStartPictureInPictureWithError error: Error) {
         guard pipController === pictureInPictureController else { return }
+        advanceClock()
         isStartingPiP = false
         isPiPActive = false
         minimizeWhenStarted = false
@@ -543,6 +602,7 @@ private final class TeleprompterVideoRenderer {
     private let logicalSize: CGSize
     private let pixelWidth = 1280
     private let pixelHeight: Int
+    private let edgeFade: UIImage
     private let textStorage: NSTextStorage
     private let layoutManager = NSLayoutManager()
     private let textContainer: NSTextContainer
@@ -565,6 +625,18 @@ private final class TeleprompterVideoRenderer {
         backgroundColor = isDarkMode ? AppColors.UIColors.Dark.background : AppColors.UIColors.Light.background
         logicalSize = CGSize(width: 320, height: 320 / settings.overlayAspectRatio.ratio)
         pixelHeight = Int((1280 / settings.overlayAspectRatio.ratio).rounded())
+        // The fade never changes during playback. Rasterize it once at video
+        // resolution instead of evaluating two gradients on every frame.
+        let fadeFormat = UIGraphicsImageRendererFormat()
+        fadeFormat.scale = CGFloat(pixelWidth) / logicalSize.width
+        fadeFormat.opaque = false
+        fadeFormat.preferredRange = .standard
+        let colors = [backgroundColor.cgColor, backgroundColor.withAlphaComponent(0).cgColor] as CFArray
+        edgeFade = UIGraphicsImageRenderer(size: CGSize(width: 296, height: 18), format: fadeFormat).image { context in
+            if let fade = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: colors, locations: [0, 1]) {
+                context.cgContext.drawLinearGradient(fade, start: .zero, end: CGPoint(x: 0, y: 18), options: [])
+            }
+        }
         textStorage = NSTextStorage(attributedString: TeleprompterTextLayout.attributedString(
             text: text, fontSize: CGFloat(settings.pipFontSize), cueColor: settings.cueColor, isDarkMode: isDarkMode
         ))
@@ -595,8 +667,13 @@ private final class TeleprompterVideoRenderer {
         guard let pool else { return nil }
         var buffer: CVPixelBuffer?
         let limits = [kCVPixelBufferPoolAllocationThresholdKey: 3] as CFDictionary
-        guard CVPixelBufferPoolCreatePixelBufferWithAuxAttributes(kCFAllocatorDefault, pool, limits, &buffer) == kCVReturnSuccess,
-              let buffer else { return nil }
+        let allocationStatus = CVPixelBufferPoolCreatePixelBufferWithAuxAttributes(kCFAllocatorDefault, pool, limits, &buffer)
+        guard allocationStatus == kCVReturnSuccess, let buffer else {
+            #if DEBUG
+            os_signpost(.event, log: pipPerformanceLog, name: "PiP buffer unavailable", "status=%{public}d", allocationStatus)
+            #endif
+            return nil
+        }
         guard CVPixelBufferLockBaseAddress(buffer, []) == kCVReturnSuccess else { return nil }
         let drewFrame: Bool
         if let context = CGContext(data: CVPixelBufferGetBaseAddress(buffer), width: pixelWidth, height: pixelHeight,
@@ -667,38 +744,16 @@ private final class TeleprompterVideoRenderer {
         context.translateBy(x: viewport.minX, y: viewport.minY + readingY - offset)
         let visibleRect = CGRect(x: 0, y: offset - readingY, width: viewport.width, height: viewport.height)
         let glyphs = layoutManager.glyphRange(forBoundingRect: visibleRect, in: textContainer)
-        // Bend each line around the viewport's horizontal center, like text
-        // rolling over a cylinder. Keep the middle at its original size so the
-        // reading position and wrapping remain stable as the edges taper away.
-        let bendHeight = min(viewport.height * 0.3, 64)
-        layoutManager.enumerateLineFragments(forGlyphRange: glyphs) { [self] _, usedRect, _, range, _ in
-            let distanceToEdge = min(usedRect.midY - visibleRect.minY, visibleRect.maxY - usedRect.midY)
-            let progress = min(max(distanceToEdge / bendHeight, 0), 1)
-            // Smoothstep joins the full-size reading area without a sudden
-            // change in expansion/contraction speed.
-            let faceAmount = progress * progress * (3 - 2 * progress)
-            let widthScale = 0.72 + 0.28 * faceAmount
-            let heightScale = 0.55 + 0.45 * faceAmount
-            context.saveGState()
-            context.translateBy(x: visibleRect.midX, y: usedRect.midY)
-            context.scaleBy(x: widthScale, y: heightScale)
-            context.translateBy(x: -visibleRect.midX, y: -usedRect.midY)
-            layoutManager.drawBackground(forGlyphRange: range, at: .zero)
-            layoutManager.drawGlyphs(forGlyphRange: range, at: .zero)
-            context.restoreGState()
-        }
+        layoutManager.drawBackground(forGlyphRange: glyphs, at: .zero)
+        layoutManager.drawGlyphs(forGlyphRange: glyphs, at: .zero)
         context.restoreGState()
 
-        let colors = [backgroundColor.cgColor, backgroundColor.withAlphaComponent(0).cgColor] as CFArray
-        if let fade = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: colors, locations: [0, 1]) {
-            context.saveGState()
-            context.clip(to: viewport)
-            context.drawLinearGradient(fade, start: CGPoint(x: 0, y: viewport.minY),
-                                       end: CGPoint(x: 0, y: viewport.minY + 18), options: [])
-            context.drawLinearGradient(fade, start: CGPoint(x: 0, y: viewport.maxY),
-                                       end: CGPoint(x: 0, y: viewport.maxY - 18), options: [])
-            context.restoreGState()
-        }
+        edgeFade.draw(in: CGRect(x: viewport.minX, y: viewport.minY, width: viewport.width, height: 18))
+        context.saveGState()
+        context.translateBy(x: viewport.minX, y: viewport.maxY)
+        context.scaleBy(x: 1, y: -1)
+        edgeFade.draw(in: CGRect(x: 0, y: 0, width: viewport.width, height: 18))
+        context.restoreGState()
     }
 
     private func scrollOffset(toward target: CGFloat, state: TeleprompterPlaybackState,

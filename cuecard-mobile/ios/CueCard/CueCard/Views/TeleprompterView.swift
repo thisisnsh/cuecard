@@ -422,6 +422,7 @@ struct AttributedTextView: UIViewRepresentable {
         /// True from the moment a drag starts until the script comes to rest, so
         /// playback leaves the scroll alone while the reader has hold of it.
         var isUserScrolling = false
+        var isScrollSuspended = false
         var onTap: (() -> Void)?
         var onHandOff: ((Double) -> Void)?
 
@@ -598,6 +599,13 @@ struct AttributedTextView: UIViewRepresentable {
 
     private func updateReader(_ host: TeleprompterReaderHostView, coordinator: Coordinator) {
         guard host.window != nil, host.bounds.width > 0, host.bounds.height > 0 else { return }
+        // PiP owns presentation while the app is in the background. Updating
+        // the hidden UITextView and its display link competes with video frames.
+        if UIApplication.shared.applicationState == .background && restorationRequest == nil {
+            coordinator.stopEasing()
+            coordinator.isScrollSuspended = true
+            return
+        }
         let textView = host.textView
         host.layoutIfNeeded()
         TeleprompterPiPManager.shared.attachReader(host)
@@ -606,7 +614,8 @@ struct AttributedTextView: UIViewRepresentable {
         coordinator.onHandOff = onHandOff
         textView.textContainerInset = UIEdgeInsets(top: topPadding, left: 24, bottom: bottomPadding, right: 24)
 
-        let needsSnap = coordinator.lastSnapToken != snapToken
+        let needsSnap = coordinator.lastSnapToken != snapToken || coordinator.isScrollSuspended
+        coordinator.isScrollSuspended = false
         coordinator.lastSnapToken = snapToken
         let needsRestoration = restorationRequest != nil
             && coordinator.lastRestorationRequest != restorationRequest
