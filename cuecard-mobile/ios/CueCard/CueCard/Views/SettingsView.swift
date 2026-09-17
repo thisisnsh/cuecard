@@ -17,6 +17,7 @@ struct EditorSettingsView: View {
 
     var body: some View {
         SettingsScreen(screen: "settings") {
+            WhatsNewSection(screen: "settings")
             remoteMessageSection
 
             Section("Editor") {
@@ -86,6 +87,8 @@ struct TeleprompterSettingsView: View {
 
     var body: some View {
         SettingsScreen(screen: Self.screen) {
+            WhatsNewSection(screen: Self.screen)
+
             Section("Teleprompter") {
                 AdvancedNumberRow(
                     title: "Start Delay",
@@ -177,6 +180,38 @@ private struct SettingsScreen<Content: View>: View {
             Analytics.logEvent(AnalyticsEventScreenView, parameters: [
                 AnalyticsParameterScreenName: screen
             ])
+        }
+    }
+}
+
+/// Opens this build's new features again. Left out when there are none for it.
+private struct WhatsNewSection: View {
+    @ObservedObject private var whatsNew = WhatsNewService.shared
+    @Environment(\.colorScheme) var colorScheme
+    @State private var isPresented = false
+
+    let screen: String
+
+    var body: some View {
+        if let release = whatsNew.release {
+            Section {
+                Button {
+                    AnalyticsEvents.logButtonClick("whats_new", screen: screen)
+                    whatsNew.logShown(source: screen)
+                    withoutPresentationAnimation { isPresented = true }
+                } label: {
+                    HStack {
+                        Text("What's New")
+                            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                        Spacer()
+                        Image(systemName: "sparkles")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                    }
+                    .contentShape(Rectangle())
+                }
+                .whatsNewCover(isPresented: $isPresented, release: release, version: whatsNew.version)
+            }
         }
     }
 }

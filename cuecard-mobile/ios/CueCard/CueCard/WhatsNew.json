@@ -1,0 +1,12 @@
+{
+  "1.5.0-14": {
+    "title": "Improved with New Features",
+    "features": [
+      "A rebuilt floating window with native play and pause controls, and smoother scrolling.",
+      "Text sizes set in points, with presets scaled to your screen.",
+      "Select All in the editor's cue bar.",
+      "The play button counts down before your script starts.",
+      "A simpler Settings screen, with a way to share CueCard."
+    ]
+  }
+}

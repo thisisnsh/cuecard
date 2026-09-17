@@ -27,6 +27,9 @@
 		024 /* RemoteNotification.swift in Sources */ = {isa = PBXBuildFile; fileRef = 118 /* RemoteNotification.swift */; };
 		025 /* RemoteNotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 119 /* RemoteNotificationService.swift */; };
 		026 /* NotificationViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 120 /* NotificationViews.swift */; };
+		027 /* WhatsNewService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 121 /* WhatsNewService.swift */; };
+		028 /* WhatsNewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 122 /* WhatsNewView.swift */; };
+		029 /* WhatsNew.json in Resources */ = {isa = PBXBuildFile; fileRef = 202 /* WhatsNew.json */; };
 		AA7130F62F04E5BC00F5C366 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = AA7130F52F04E5BC00F5C366 /* GoogleService-Info.plist */; };
 		AA856D562F060DFC00B0CBC6 /* GlassEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA856D542F060DFC00B0CBC6 /* GlassEffect.swift */; };
 /* End PBXBuildFile section */
@@ -50,6 +53,9 @@
 		118 /* RemoteNotification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteNotification.swift; sourceTree = "<group>"; };
 		119 /* RemoteNotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteNotificationService.swift; sourceTree = "<group>"; };
 		120 /* NotificationViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationViews.swift; sourceTree = "<group>"; };
+		121 /* WhatsNewService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhatsNewService.swift; sourceTree = "<group>"; };
+		122 /* WhatsNewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhatsNewView.swift; sourceTree = "<group>"; };
+		202 /* WhatsNew.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = WhatsNew.json; sourceTree = "<group>"; };
 		201 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		501 /* CueCard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CueCard.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA2E5C0E2F0F38B500E1D079 /* CueCard.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CueCard.entitlements; sourceTree = "<group>"; };
@@ -89,6 +95,7 @@
 				713 /* Models */,
 				107 /* Info.plist */,
 				201 /* Assets.xcassets */,
+				202 /* WhatsNew.json */,
 				AA7130F52F04E5BC00F5C366 /* GoogleService-Info.plist */,
 			);
 			path = CueCard;
@@ -104,6 +111,7 @@
 				109 /* SettingsView.swift */,
 				110 /* TeleprompterView.swift */,
 				120 /* NotificationViews.swift */,
+				122 /* WhatsNewView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -115,6 +123,7 @@
 				114 /* ReviewPromptService.swift */,
 				112 /* TeleprompterPiPManager.swift */,
 				119 /* RemoteNotificationService.swift */,
+				121 /* WhatsNewService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -215,6 +224,7 @@
 			files = (
 				007 /* Assets.xcassets in Resources */,
 				AA7130F62F04E5BC00F5C366 /* GoogleService-Info.plist in Resources */,
+				029 /* WhatsNew.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -266,6 +276,8 @@
 				024 /* RemoteNotification.swift in Sources */,
 				025 /* RemoteNotificationService.swift in Sources */,
 				026 /* NotificationViews.swift in Sources */,
+				027 /* WhatsNewService.swift in Sources */,
+				028 /* WhatsNewView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
