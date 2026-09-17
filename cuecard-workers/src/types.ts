@@ -1,6 +1,6 @@
 // The wire format for GET /v2/notifications.
-// Mirrored by RemoteConfig.swift on iOS and RemoteConfig.kt on Android — change
-// all three together.
+// Mirrored by RemoteNotification.swift on iOS, RemoteNotification.kt on Android
+// and cuecard-desktop/src/notifications.js — change all four together.
 
 // Payload version. Bump only for a breaking change to the shape below.
 export type Schema = 1;
@@ -31,13 +31,14 @@ export type Action =
 export interface Target {
   // Not a closed union on device: a platform a build doesn't recognise simply
   // never matches, so adding one here can't break something already shipped.
-  platform: "ios" | "android";
+  platform: "ios" | "android" | "macos" | "windows" | "linux";
   // Marketing version, inclusive on both ends. One to four numbers separated by
   // dots — "1.3" and "1.3.0" both parse, "1.3.0-beta" doesn't and drops the
   // whole notification. Compared component-wise, so 1.10.0 is above 1.9.0.
   minVersion?: string;
   maxVersion?: string;
-  // CURRENT_PROJECT_VERSION on iOS, versionCode on Android. Inclusive.
+  // CURRENT_PROJECT_VERSION on iOS, versionCode on Android. Inclusive. Desktop
+  // has no build number, so a target with either bound never matches it.
   minBuild?: number;
   maxBuild?: number;
 }

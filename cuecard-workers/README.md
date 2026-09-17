@@ -1,11 +1,13 @@
-# cuecard-mobile worker
+# CueCard workers
 
-Notifications for the CueCard mobile apps, served from
-`cuecard-mobile.thisisnsh.workers.dev`.
+Notifications for the CueCard mobile and desktop apps, served from
+`cuecard-mobile.thisisnsh.workers.dev`. The worker keeps the `cuecard-mobile`
+name even though it now lives here: that URL is baked into released iOS,
+Android and desktop builds, so renaming it would silence all of them.
 
 | Endpoint | Purpose |
 | --- | --- |
-| `GET /v2/notifications` | Everything the apps should show right now. |
+| `GET /v2/notifications` | Everything the apps should show right now. Read by iOS, Android and desktop. |
 | `POST /v2/welcome` | Retired welcome-email endpoint, kept as a 204 shim so already-released builds don't surface an error. |
 
 The list is hardcoded, so publishing a notification is an edit to
@@ -44,8 +46,9 @@ and no `node_modules` to install.
 
 Fields, defaults and the exact unions live in `src/types.ts` — that file is the
 schema, and `tsc` will reject anything that doesn't fit. The shape is mirrored by
-`RemoteConfig.swift` on iOS and `RemoteConfig.kt` on Android, so a change to the
-type is a change to three files.
+`RemoteNotification.swift` on iOS, `RemoteNotification.kt` on Android and
+`cuecard-desktop/src/notifications.js` on desktop, so a change to the type is a
+change to four files.
 
 Two things worth care:
 
@@ -111,6 +114,10 @@ Two things to know before relying on it:
   `minVersion` takes the whole notification down on both platforms rather than
   quietly widening it back to everyone. `tsc` catches the shape; it can't catch
   `"1.3.0-beta"`.
+
+Desktop reports its platform as `"macos"`, `"windows"` or `"linux"`, and its
+version is the one in `tauri.conf.json`. It has no build number, so a target with
+`minBuild` or `maxBuild` never matches a desktop.
 
 An unrecognised `platform` isn't malformed — it just never matches, so a future
 platform can be targeted without breaking either app as it stands.

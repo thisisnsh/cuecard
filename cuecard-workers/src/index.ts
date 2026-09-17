@@ -1,6 +1,6 @@
-// CueCard mobile worker — cuecard-mobile.thisisnsh.workers.dev
+// CueCard worker — cuecard-mobile.thisisnsh.workers.dev
 //
-// Serves the notifications the mobile apps show. The list is hardcoded, so
+// Serves the notifications the mobile and desktop apps show. The list is hardcoded, so
 // publishing one is an edit plus a deploy. See README.md.
 import { handleNotifications } from "./endpoints/notifications";
 import { handleWelcome } from "./endpoints/welcome";
