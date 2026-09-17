@@ -26,7 +26,7 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
     @Published private(set) var isPiPActive = false
     @Published private(set) var isPiPPossible = false
     /// A restoration request belongs to the full-screen presentation only. The
-    /// still-visible PiP video keeps playing its queued frames through it.
+    /// still-visible overlay carries on scrolling through it.
     @Published private(set) var restorationRequest: UUID?
     private var restorationCompletion: ((Bool) -> Void)?
     private var restorationTimeout: DispatchWorkItem?
@@ -43,26 +43,21 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
     private var countdownDeadline: CFTimeInterval?
 
     private var pipController: AVPictureInPictureController?
-    private var videoView: TeleprompterPiPVideoView?
+    private var sourceView: UIView?
+    private var pipViewController: AVPictureInPictureVideoCallViewController?
+    private var contentView: TeleprompterPiPContentView?
     private weak var readerHost: TeleprompterReaderHostView?
     private var isRestoringToReader = false
-    private var renderer: TeleprompterVideoRenderer?
-    private var timebase: CMTimebase?
+    private var renderer: TeleprompterOverlayRenderer?
     private var possibilityObservation: NSKeyValueObservation?
-    private var ownsAudioSession = false
     private var isStartingPiP = false
     private var minimizeWhenStarted = false
     private var lastFrameTime: CFTimeInterval = 0
-    /// Index of the next frame to queue, in units of `frameRate`, or nil when
-    /// nothing timed is queued and playback frames start again from the present.
-    private var nextFrameIndex: Int64?
-    private var advertisedPlaybackEnd: Double = 60
 
-    /// Frames are stamped for the layer's control timebase and queued this far
-    /// ahead. The layer then shows each one at its own moment, so neither the
-    /// clock timer's jitter nor the time spent drawing shows up as motion.
-    private static let frameRate: Int32 = 30
-    private static let frameLookahead: Double = 1.0 / 3.0
+    /// The overlay is repainted on the clock's tick. It is a view rather than a
+    /// video, so there is no queue to fill ahead of time: each tick draws the
+    /// position the clock is at when it fires.
+    private static let paintRate: Double = 1.0 / 30
 
     private override init() { super.init() }
 
@@ -110,7 +105,7 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         isDarkMode = colorScheme == .dark
         playback = TeleprompterPlaybackState()
         referenceLineStarts = []
-        renderer = TeleprompterVideoRenderer(text: text, settings: settings,
+        renderer = TeleprompterOverlayRenderer(text: text, settings: settings,
                                             timerDuration: timerDuration, isDarkMode: isDarkMode)
         setupPiP()
     }
@@ -137,15 +132,18 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
             playback = state
         }
         if needsRedraw && renderer != nil {
-            let redrawn = TeleprompterVideoRenderer(text: text, settings: settings,
+            let redrawn = TeleprompterOverlayRenderer(text: text, settings: settings,
                                                     timerDuration: settings.timerDurationSeconds, isDarkMode: isDarkMode)
             renderer = redrawn
-            videoView?.backgroundColor = redrawn.backgroundColor
+            sourceView?.backgroundColor = redrawn.backgroundColor
+            contentView?.renderer = redrawn
+            pipViewController?.view.backgroundColor = redrawn.backgroundColor
+            pipViewController?.preferredContentSize = redrawn.logicalSize
         }
         if speedChanged || needsRedraw {
             // A new overlay layout changes its line count and pace as well.
             reanchorPlayback()
-            refreshVideoTimeline()
+            repaintOverlay()
             renderFrame(force: true)
         }
     }
@@ -165,7 +163,7 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
             playback = state
             reanchorPlayback()
         }
-        refreshVideoTimeline()
+        repaintOverlay()
         renderFrame(force: true)
     }
 
@@ -188,7 +186,7 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         playback = state
         reanchorPlayback()
         startClock()
-        refreshVideoTimeline()
+        repaintOverlay()
         renderFrame(force: true)
     }
 
@@ -201,18 +199,18 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         playback = state
         countdownDeadline = nil
         playbackAnchor = nil
-        stopClock()
-        refreshVideoTimeline()
+        syncClock()
+        repaintOverlay()
         renderFrame(force: true)
     }
 
     func restart() {
-        stopClock()
         countdownDeadline = nil
         playbackAnchor = nil
         let nextSnap = playback.snapToken + 1
         playback = TeleprompterPlaybackState(snapToken: nextSnap)
-        refreshVideoTimeline()
+        syncClock()
+        repaintOverlay()
         renderFrame(force: true)
     }
 
@@ -230,7 +228,7 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         state.snapToken += 1
         playback = state
         reanchorPlayback()
-        refreshVideoTimeline()
+        repaintOverlay()
         renderFrame(force: true)
     }
 
@@ -241,9 +239,21 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         playbackAnchor = playback.isPlaying ? CACurrentMediaTime() : nil
     }
 
+    /// The clock timer also paints the floating window, so it keeps running
+    /// while that window is up even with playback paused. A paused window that
+    /// loses its picture is repainted on the next tick instead of staying black
+    /// until something happens to redraw it.
+    private var needsClock: Bool {
+        playback.isPlaying || playback.isCountingDown || isPiPActive || isStartingPiP
+    }
+
+    private func syncClock() {
+        if needsClock { startClock() } else { stopClock() }
+    }
+
     private func startClock() {
         guard clockTimer == nil else { return }
-        let timer = Timer(timeInterval: 1.0 / 30, target: self,
+        let timer = Timer(timeInterval: Self.paintRate, target: self,
                           selector: #selector(clockTick), userInfo: nil, repeats: true)
         RunLoop.main.add(timer, forMode: .common)
         clockTimer = timer
@@ -309,7 +319,7 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
             countdownFinished = true
         }
         if state != playback { playback = state }
-        if countdownFinished { refreshVideoTimeline() }
+        if countdownFinished { repaintOverlay() }
     }
 
     /// Bring the clock up to date under the outgoing driver before a change of
@@ -325,99 +335,37 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         }
         #endif
         advanceClock()
-        // Extend the finite seekable range well before AVKit reaches its end.
-        // The teleprompter is an open-ended session, not a movie whose duration
-        // is the time it takes to reach the last line.
-        if let timebase, CMTimebaseGetTime(timebase).seconds > advertisedPlaybackEnd - 30 {
-            extendPlaybackRange()
-        }
         renderFrame()
     }
 
-    private func extendPlaybackRange() {
-        let mediaTime = timebase.map { CMTimebaseGetTime($0).seconds } ?? playback.scriptTime
-        advertisedPlaybackEnd = max(scriptDuration, max(playback.scriptTime, mediaTime)) + 120
-        pipController?.invalidatePlaybackState()
+    /// Every jump in the shared position comes through here. The overlay holds
+    /// no queued frames, so a jump is simply the next paint.
+    private func repaintOverlay() {
+        renderFrame(force: true)
     }
 
-    /// Every jump in the shared position comes through here. Frames already
-    /// queued were drawn for the old timeline, so they go with it.
-    private func refreshVideoTimeline() {
-        if let timebase {
-            CMTimebaseSetTime(timebase, time: CMTime(seconds: playback.scriptTime, preferredTimescale: 600))
-            CMTimebaseSetRate(timebase, rate: playback.isPlaying || playback.isCountingDown ? 1 : 0)
-        }
-        videoView?.sampleBufferDisplayLayer.flush()
-        nextFrameIndex = nil
-        extendPlaybackRange()
-    }
-
+    /// Paint the overlay at the position the clock is at now. The floating
+    /// window is a hosted view, not a video: there is no queue to fill ahead and
+    /// nothing in the media pipeline for another app to take away, which is what
+    /// let a camera recording blank the old sample-buffer window.
     private func renderFrame(force: Bool = false) {
-        guard let layer = videoView?.sampleBufferDisplayLayer,
-              let renderer, let timebase else { return }
+        guard let contentView, renderer != nil else { return }
         let hostNow = CACurrentMediaTime()
         let renderingPiP = isPiPActive || isStartingPiP || isRestoringToReader
-        let timebaseNow = CMTimebaseGetTime(timebase)
-        if layer.status == .failed { layer.flush() }
         #if DEBUG
         let signpostID = OSSignpostID(log: pipPerformanceLog)
         os_signpost(.begin, log: pipPerformanceLog, name: "PiP render", signpostID: signpostID)
         defer { os_signpost(.end, log: pipPerformanceLog, name: "PiP render", signpostID: signpostID) }
         #endif
-
-        guard renderingPiP, playback.isPlaying || playback.isCountingDown else {
-            // Paused, or inline: one frame of the present. Inline it only keeps
-            // a current picture ready for automatic PiP, at a lower rate.
-            guard force || renderingPiP || hostNow - lastFrameTime >= 0.2 else { return }
-            if nextFrameIndex != nil {
-                // Frames queued for later must not overtake this one.
-                layer.flush()
-                nextFrameIndex = nil
-            }
-            guard layer.isReadyForMoreMediaData else {
-                #if DEBUG
-                os_signpost(.event, log: pipPerformanceLog, name: "PiP queue full")
-                #endif
-                return
-            }
-            guard let frame = renderer.frame(linePosition: overlayLine(for: playback), state: playback,
-                                              presentationTime: timebaseNow, displayImmediately: true) else { return }
-            layer.enqueue(frame)
-            #if DEBUG
-            os_signpost(.event, log: pipPerformanceLog, name: "PiP frame submitted")
-            #endif
-            lastFrameTime = hostNow
-            return
+        // Off the overlay the mirrored view only has to stay roughly current for
+        // the transition into it; on it, every tick is a frame of the scroll.
+        if !renderingPiP && !force {
+            guard hostNow - lastFrameTime >= 0.2 else { return }
         }
-
-        // Playing in PiP: top the queue up to the lookahead. Each frame is drawn
-        // for its own presentation time, which the timebase maps to a host time.
-        // The timebase runs on the host clock at rate 1, so the mapping holds
-        // for every frame until the next refresh.
-        let rate = Double(Self.frameRate)
-        let currentIndex = Int64((timebaseNow.seconds * rate).rounded(.down))
-        // After a stall longer than the lookahead, skip the missed frames rather
-        // than replay them; the text lands where the clock says it should be.
-        var index = max(nextFrameIndex ?? currentIndex + 1, currentIndex)
-        let lastIndex = Int64(((timebaseNow.seconds + Self.frameLookahead) * rate).rounded(.down))
-        while index <= lastIndex {
-            guard layer.isReadyForMoreMediaData else {
-                #if DEBUG
-                os_signpost(.event, log: pipPerformanceLog, name: "PiP queue full")
-                #endif
-                break
-            }
-            let presentationTime = CMTime(value: index, timescale: Self.frameRate)
-            let projection = projection(at: hostNow + (presentationTime.seconds - timebaseNow.seconds))
-            guard let frame = renderer.frame(linePosition: projection.overlayLine, state: projection.state,
-                                              presentationTime: presentationTime, displayImmediately: false) else { break }
-            layer.enqueue(frame)
-            #if DEBUG
-            os_signpost(.event, log: pipPerformanceLog, name: "PiP frame submitted")
-            #endif
-            index += 1
-        }
-        nextFrameIndex = index
+        contentView.present(linePosition: overlayLine(for: playback), state: playback)
+        #if DEBUG
+        os_signpost(.event, log: pipPerformanceLog, name: "PiP frame submitted")
+        #endif
         lastFrameTime = hostNow
     }
 
@@ -444,8 +392,8 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
 
     func attachReader(_ host: TeleprompterReaderHostView) {
         readerHost = host
-        if let videoView {
-            host.installVideoSource(videoView)
+        if let sourceView {
+            host.installVideoSource(sourceView)
         } else if renderer != nil {
             setupPiP()
         }
@@ -474,23 +422,19 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         pipController?.delegate = nil
         pipController?.stopPictureInPicture()
         pipController = nil
-        videoView?.sampleBufferDisplayLayer.flushAndRemoveImage()
-        videoView?.removeFromSuperview()
-        videoView = nil
+        contentView?.removeFromSuperview()
+        contentView = nil
+        pipViewController = nil
+        sourceView?.removeFromSuperview()
+        sourceView = nil
         readerHost?.cancelVideoRestoration()
         isRestoringToReader = false
         renderer = nil
-        timebase = nil
         isPiPActive = false
         isPiPPossible = false
         isStartingPiP = false
         minimizeWhenStarted = false
         lastFrameTime = 0
-        nextFrameIndex = nil
-        if ownsAudioSession {
-            try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
-            ownsAudioSession = false
-        }
     }
 
     func disable() { cleanup() }
@@ -498,78 +442,44 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
     private func setupPiP() {
         guard AVPictureInPictureController.isPictureInPictureSupported() else { return }
         guard pipController == nil, let host = readerHost, let renderer else { return }
-        let source = TeleprompterPiPVideoView()
-        source.sampleBufferDisplayLayer.videoGravity = .resizeAspect
+        // The source view is what AVKit animates the overlay out of and back
+        // into. It stays in the reader's own hierarchy and bounds, so the
+        // transition lands on the script rather than flying in from nowhere.
+        let source = UIView()
         source.backgroundColor = renderer.backgroundColor
-        // AVKit now animates back into the reader's actual view hierarchy and
-        // bounds, rather than a disconnected window floating behind the app.
         host.installVideoSource(source)
-        videoView = source
+        sourceView = source
 
-        var mediaTimebase: CMTimebase?
-        guard CMTimebaseCreateWithSourceClock(allocator: kCFAllocatorDefault,
-                                             sourceClock: CMClockGetHostTimeClock(),
-                                             timebaseOut: &mediaTimebase) == noErr,
-              let mediaTimebase else {
-            cleanup()
-            return
-        }
-        timebase = mediaTimebase
-        source.sampleBufferDisplayLayer.controlTimebase = mediaTimebase
-        do {
-            let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.playback, mode: .moviePlayback, options: .mixWithOthers)
-            try session.setActive(true)
-            ownsAudioSession = true
-        } catch {
-            print("Could not activate PiP audio session: \(error)")
-            cleanup()
-            return
-        }
+        // A video-call overlay hosts this app's own views. Nothing goes through
+        // the media pipeline, so no other app's recording can take it away, and
+        // no audio session is needed to hold it open.
+        let controller = AVPictureInPictureVideoCallViewController()
+        controller.preferredContentSize = renderer.logicalSize
+        controller.view.backgroundColor = renderer.backgroundColor
+        let content = TeleprompterPiPContentView(renderer: renderer)
+        content.translatesAutoresizingMaskIntoConstraints = false
+        controller.view.addSubview(content)
+        NSLayoutConstraint.activate([
+            content.topAnchor.constraint(equalTo: controller.view.topAnchor),
+            content.bottomAnchor.constraint(equalTo: controller.view.bottomAnchor),
+            content.leadingAnchor.constraint(equalTo: controller.view.leadingAnchor),
+            content.trailingAnchor.constraint(equalTo: controller.view.trailingAnchor)
+        ])
+        pipViewController = controller
+        contentView = content
 
-        let controller = AVPictureInPictureController(contentSource: .init(
-            sampleBufferDisplayLayer: source.sampleBufferDisplayLayer, playbackDelegate: self
+        let pip = AVPictureInPictureController(contentSource: .init(
+            activeVideoCallSourceView: source, contentViewController: controller
         ))
-        controller.delegate = self
-        controller.requiresLinearPlayback = false
-        controller.canStartPictureInPictureAutomaticallyFromInline = true
-        pipController = controller
-        possibilityObservation = controller.observe(\.isPictureInPicturePossible, options: [.initial, .new]) { [weak self] controller, _ in
+        pip.delegate = self
+        pip.canStartPictureInPictureAutomaticallyFromInline = true
+        pipController = pip
+        possibilityObservation = pip.observe(\.isPictureInPicturePossible, options: [.initial, .new]) { [weak self] controller, _ in
             Task { @MainActor in
                 guard let self, self.pipController === controller else { return }
                 self.isPiPPossible = controller.isPictureInPicturePossible
             }
         }
-        refreshVideoTimeline()
-        renderFrame(force: true)
-    }
-}
-
-extension TeleprompterPiPManager: @preconcurrency AVPictureInPictureSampleBufferPlaybackDelegate {
-    func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, setPlaying playing: Bool) {
-        guard pipController === pictureInPictureController else { return }
-        if playing { play() } else { pause() }
-    }
-
-    func pictureInPictureControllerIsPlaybackPaused(_ pictureInPictureController: AVPictureInPictureController) -> Bool {
-        !playback.isPlaying && !playback.isCountingDown
-    }
-
-    func pictureInPictureControllerTimeRangeForPlayback(_ pictureInPictureController: AVPictureInPictureController) -> CMTimeRange {
-        CMTimeRange(start: .zero, duration: CMTime(seconds: advertisedPlaybackEnd, preferredTimescale: 600))
-    }
-
-    func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, skipByInterval interval: CMTime, completion: @escaping () -> Void) {
-        defer { completion() }
-        guard pipController === pictureInPictureController, interval.seconds.isFinite else { return }
-        advanceClock()
-        seek(toScriptTime: min(playback.scriptTime, scriptDuration) + interval.seconds)
-    }
-
-    func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, didTransitionToRenderSize newRenderSize: CMVideoDimensions) {
-        // The video has a fixed logical page and 1280-pixel width. A PiP resize
-        // scales that page; it never changes font sizes, wrapping or position.
-        guard pipController === pictureInPictureController else { return }
         renderFrame(force: true)
     }
 }
@@ -583,6 +493,7 @@ extension TeleprompterPiPManager: @preconcurrency AVPictureInPictureControllerDe
         switchDriver()
         isStartingPiP = true
         reanchorPlayback()
+        syncClock()
         renderFrame(force: true)
     }
 
@@ -590,6 +501,8 @@ extension TeleprompterPiPManager: @preconcurrency AVPictureInPictureControllerDe
         guard pipController === pictureInPictureController else { return }
         isStartingPiP = false
         isPiPActive = true
+        // The window is now this app's to keep painting, paused or not.
+        syncClock()
         renderFrame(force: true)
         if minimizeWhenStarted {
             minimizeWhenStarted = false
@@ -605,6 +518,7 @@ extension TeleprompterPiPManager: @preconcurrency AVPictureInPictureControllerDe
         isStartingPiP = false
         minimizeWhenStarted = false
         reanchorPlayback()
+        syncClock()
         refreshPresentation()
         if isRestoringToReader, let readerHost {
             readerHost.finishVideoRestoration { [weak self] in
@@ -624,6 +538,7 @@ extension TeleprompterPiPManager: @preconcurrency AVPictureInPictureControllerDe
         minimizeWhenStarted = false
         isRestoringToReader = false
         reanchorPlayback()
+        syncClock()
         readerHost?.cancelVideoRestoration()
         print("Could not start PiP: \(error)")
     }
@@ -649,9 +564,52 @@ extension TeleprompterPiPManager: @preconcurrency AVPictureInPictureControllerDe
     }
 }
 
-private final class TeleprompterPiPVideoView: UIView {
-    override class var layerClass: AnyClass { AVSampleBufferDisplayLayer.self }
-    var sampleBufferDisplayLayer: AVSampleBufferDisplayLayer { layer as! AVSampleBufferDisplayLayer }
+/// The overlay's page, hosted as a view. This is the same drawing the video
+/// renderer did, going to a layer the system composites instead of to a sample
+/// buffer — which is what keeps it painting while another app uses the camera.
+@MainActor
+private final class TeleprompterPiPContentView: UIView {
+    var renderer: TeleprompterOverlayRenderer {
+        didSet {
+            backgroundColor = renderer.backgroundColor
+            setNeedsDisplay()
+        }
+    }
+    private var linePosition: Double = 0
+    private var state = TeleprompterPlaybackState()
+
+    init(renderer: TeleprompterOverlayRenderer) {
+        self.renderer = renderer
+        super.init(frame: CGRect(origin: .zero, size: renderer.logicalSize))
+        backgroundColor = renderer.backgroundColor
+        isOpaque = true
+        isUserInteractionEnabled = false
+        contentMode = .redraw
+    }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    func present(linePosition: Double, state: TeleprompterPlaybackState) {
+        guard linePosition != self.linePosition || state != self.state else { return }
+        self.linePosition = linePosition
+        self.state = state
+        setNeedsDisplay()
+    }
+
+    override func draw(_ rect: CGRect) {
+        guard let context = UIGraphicsGetCurrentContext(), bounds.width > 0, bounds.height > 0 else { return }
+        // The page keeps a fixed logical size, as it did as a video: resizing the
+        // overlay scales the page rather than re-wrapping the script, so the line
+        // being read never moves under the reader when the window changes size.
+        let size = renderer.logicalSize
+        let scale = min(bounds.width / size.width, bounds.height / size.height)
+        context.saveGState()
+        context.translateBy(x: (bounds.width - size.width * scale) / 2,
+                            y: (bounds.height - size.height * scale) / 2)
+        context.scaleBy(x: scale, y: scale)
+        renderer.draw(in: context, linePosition: linePosition, state: state)
+        context.restoreGState()
+    }
 }
 
 /// Shared text construction is essential: character offsets cannot synchronize
@@ -714,14 +672,16 @@ enum TeleprompterTextLayout {
     }
 }
 
-/// Draw glyphs directly into the video buffer. Capturing a UITextView's layers
-/// captures cached raster tiles, which can be low-resolution or stale offscreen.
+/// Draw glyphs directly into the overlay's context. Capturing a UITextView's
+/// layers captures cached raster tiles, which can be low-resolution or stale
+/// offscreen, which is what used to make the script flicker and drop out.
 @MainActor
-private final class TeleprompterVideoRenderer {
+private final class TeleprompterOverlayRenderer {
     let backgroundColor: UIColor
-    private let logicalSize: CGSize
-    private let pixelWidth = 1280
-    private let pixelHeight: Int
+    let logicalSize: CGSize
+    /// The fade is rasterized at the resolution the page was drawn at when it
+    /// was a video, which is comfortably above any size the overlay is shown at.
+    private let rasterWidth: CGFloat = 1280
     private let edgeFade: UIImage
     private let textStorage: NSTextStorage
     private let layoutManager = NSLayoutManager()
@@ -732,11 +692,6 @@ private final class TeleprompterVideoRenderer {
     private let timerDuration: Int
     private let timerFont: UIFont
     private let isDarkMode: Bool
-    private var pool: CVPixelBufferPool?
-    private var format: CMVideoFormatDescription?
-    /// Enough buffers for the queued lookahead, the frame on screen and a couple
-    /// in flight. Beyond that the frame is skipped rather than allocated afresh.
-    private static let bufferLimit = 16
     /// The in-app timer is 16 pt over 28 pt text by default. The overlay keeps
     /// that proportion to its own text size, so the timer never outgrows it.
     private static let timerToTextRatio: CGFloat = 16.0 / 28.0
@@ -750,11 +705,10 @@ private final class TeleprompterVideoRenderer {
         self.isDarkMode = isDarkMode
         backgroundColor = isDarkMode ? AppColors.UIColors.Dark.background : AppColors.UIColors.Light.background
         logicalSize = CGSize(width: 320, height: 320 / settings.overlayAspectRatio.ratio)
-        pixelHeight = Int((1280 / settings.overlayAspectRatio.ratio).rounded())
         // The fade never changes during playback. Rasterize it once at video
         // resolution instead of evaluating two gradients on every frame.
         let fadeFormat = UIGraphicsImageRendererFormat()
-        fadeFormat.scale = CGFloat(pixelWidth) / logicalSize.width
+        fadeFormat.scale = rasterWidth / logicalSize.width
         fadeFormat.opaque = false
         fadeFormat.preferredRange = .standard
         let colors = [backgroundColor.cgColor, backgroundColor.withAlphaComponent(0).cgColor] as CFArray
@@ -787,68 +741,8 @@ private final class TeleprompterVideoRenderer {
     }
 
     /// Draw the script with `linePosition` (fractional, in this layout's lines)
-    /// on the reading line. There is no smoothing: the frame is shown at
-    /// `presentationTime` against the layer's timebase, so steady motion comes
-    /// from steady timestamps and positions, not from when it was drawn.
-    func frame(linePosition: Double, state: TeleprompterPlaybackState, presentationTime: CMTime,
-               displayImmediately: Bool) -> CMSampleBuffer? {
-        if pool == nil {
-            let attributes: [CFString: Any] = [
-                kCVPixelBufferPixelFormatTypeKey: kCVPixelFormatType_32BGRA,
-                kCVPixelBufferWidthKey: pixelWidth,
-                kCVPixelBufferHeightKey: pixelHeight,
-                kCVPixelBufferCGBitmapContextCompatibilityKey: true,
-                kCVPixelBufferIOSurfacePropertiesKey: [:]
-            ]
-            guard CVPixelBufferPoolCreate(kCFAllocatorDefault, nil, attributes as CFDictionary, &pool) == kCVReturnSuccess else { return nil }
-        }
-        guard let pool else { return nil }
-        var buffer: CVPixelBuffer?
-        let limits = [kCVPixelBufferPoolAllocationThresholdKey: Self.bufferLimit] as CFDictionary
-        let allocationStatus = CVPixelBufferPoolCreatePixelBufferWithAuxAttributes(kCFAllocatorDefault, pool, limits, &buffer)
-        guard allocationStatus == kCVReturnSuccess, let buffer else {
-            #if DEBUG
-            os_signpost(.event, log: pipPerformanceLog, name: "PiP buffer unavailable", "status=%{public}d", allocationStatus)
-            #endif
-            return nil
-        }
-        guard CVPixelBufferLockBaseAddress(buffer, []) == kCVReturnSuccess else { return nil }
-        let drewFrame: Bool
-        if let context = CGContext(data: CVPixelBufferGetBaseAddress(buffer), width: pixelWidth, height: pixelHeight,
-                                   bitsPerComponent: 8, bytesPerRow: CVPixelBufferGetBytesPerRow(buffer),
-                                   space: CGColorSpaceCreateDeviceRGB(),
-                                   bitmapInfo: CGBitmapInfo.byteOrder32Little.rawValue | CGImageAlphaInfo.premultipliedFirst.rawValue) {
-            context.translateBy(x: 0, y: CGFloat(pixelHeight))
-            context.scaleBy(x: CGFloat(pixelWidth) / logicalSize.width, y: -CGFloat(pixelHeight) / logicalSize.height)
-            UIGraphicsPushContext(context)
-            draw(in: context, linePosition: linePosition, state: state)
-            UIGraphicsPopContext()
-            drewFrame = true
-        } else {
-            drewFrame = false
-        }
-        CVPixelBufferUnlockBaseAddress(buffer, [])
-        guard drewFrame else { return nil }
-        if format == nil {
-            guard CMVideoFormatDescriptionCreateForImageBuffer(allocator: kCFAllocatorDefault, imageBuffer: buffer,
-                                                               formatDescriptionOut: &format) == noErr else { return nil }
-        }
-        guard let format else { return nil }
-        var timing = CMSampleTimingInfo(duration: CMTime(value: 1, timescale: presentationTime.timescale),
-                                        presentationTimeStamp: presentationTime, decodeTimeStamp: .invalid)
-        var sample: CMSampleBuffer?
-        guard CMSampleBufferCreateReadyWithImageBuffer(allocator: kCFAllocatorDefault, imageBuffer: buffer,
-                                                       formatDescription: format, sampleTiming: &timing,
-                                                       sampleBufferOut: &sample) == noErr, let sample else { return nil }
-        if displayImmediately, let attachments = CMSampleBufferGetSampleAttachmentsArray(sample, createIfNecessary: true) {
-            let dictionary = unsafeBitCast(CFArrayGetValueAtIndex(attachments, 0), to: CFMutableDictionary.self)
-            CFDictionarySetValue(dictionary, Unmanaged.passUnretained(kCMSampleAttachmentKey_DisplayImmediately).toOpaque(),
-                                 Unmanaged.passUnretained(kCFBooleanTrue).toOpaque())
-        }
-        return sample
-    }
-
-    private func draw(in context: CGContext, linePosition: Double, state: TeleprompterPlaybackState) {
+    /// on the reading line, into a context already scaled to `logicalSize`.
+    func draw(in context: CGContext, linePosition: Double, state: TeleprompterPlaybackState) {
         context.setFillColor(backgroundColor.cgColor)
         context.fill(CGRect(origin: .zero, size: logicalSize))
         let remaining = timerDuration > 0 ? timerDuration - Int(state.elapsedTime) : Int(state.elapsedTime)
