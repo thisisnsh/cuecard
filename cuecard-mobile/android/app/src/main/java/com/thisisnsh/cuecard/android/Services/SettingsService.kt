@@ -111,7 +111,7 @@ data class TeleprompterSettings(
     val fontSize: Int = ScreenTextScale.scaled(28, ScreenTextScale.teleprompter),
     /** Text size in the floating prompter, in sp. */
     val pipFontSize: Int = 16,
-    val overlayAspectRatio: OverlayAspectRatio = OverlayAspectRatio.RATIO_1X1,
+    val overlayAspectRatio: OverlayAspectRatio = OverlayAspectRatio.RATIO_16X9,
     val scrollSpeed: Double = 1.0,
     /** Scroll speed, in lines of the script as the teleprompter renders them. */
     val linesPerMinute: Int = 34,

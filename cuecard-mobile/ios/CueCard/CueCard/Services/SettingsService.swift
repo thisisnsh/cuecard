@@ -128,7 +128,7 @@ struct TeleprompterSettings: Codable, Equatable {
         editorFontSize: ScreenTextScale.scaled(16, by: ScreenTextScale.editor),
         fontSize: ScreenTextScale.scaled(28, by: ScreenTextScale.teleprompter),
         pipFontSize: 16,
-        overlayAspectRatio: .ratio1x1,
+        overlayAspectRatio: .ratio16x9,
         scrollSpeed: 1.0,
         linesPerMinute: 34,
         timerMinutes: 1,
