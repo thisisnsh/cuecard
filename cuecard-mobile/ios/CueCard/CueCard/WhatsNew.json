@@ -1,8 +1,8 @@
 {
-  "1.5.0-14": {
+  "1.5.0-15": {
     "title": "Improved with New Features",
     "features": [
-        "Rebuilt floating window with play and pause controls, and smoother scrolling.",
+        "Better sync between the floating window and teleprompter, with smoother scrolling.",
         "See the start countdown directly on the play button.",
         "More text sizes and separate settings for the editor and teleprompter."
     ]
