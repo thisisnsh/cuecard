@@ -41,9 +41,11 @@ export default {
     }
 
     // Allowed endpoints (whitelist for security)
+    // Restricted to the CueCard repository only, to prevent this proxy from
+    // being abused to access arbitrary public GitHub repositories.
     const allowedPaths = [
-      /^\/repos\/[^/]+\/[^/]+$/,           // /repos/{owner}/{repo}
-      /^\/repos\/[^/]+\/[^/]+\/releases$/, // /repos/{owner}/{repo}/releases
+      /^\/repos\/thisisnsh\/cuecard$/,           // /repos/thisisnsh/cuecard
+      /^\/repos\/thisisnsh\/cuecard\/releases$/, // /repos/thisisnsh/cuecard/releases
     ];
 
     const isAllowed = allowedPaths.some(pattern => pattern.test(path));
