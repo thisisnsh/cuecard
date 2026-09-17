@@ -1,0 +1,12 @@
+{
+  "1.0.0-10": {
+    "title": "Improved with New Features",
+    "features": [
+      "Text sizes set in points, with presets scaled to your screen.",
+      "Select All in the editor's cue bar.",
+      "The play button counts down before your script starts.",
+      "The floating window's timer grows with its text.",
+      "Separate Settings for the editor and the teleprompter, with a way to share CueCard."
+    ]
+  }
+}

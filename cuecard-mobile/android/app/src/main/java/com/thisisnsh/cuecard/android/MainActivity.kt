@@ -19,6 +19,7 @@ import com.thisisnsh.cuecard.android.services.OnboardingService
 import com.thisisnsh.cuecard.android.services.RemoteNotificationService
 import com.thisisnsh.cuecard.android.services.SettingsService
 import com.thisisnsh.cuecard.android.services.TeleprompterPiPManager
+import com.thisisnsh.cuecard.android.services.WhatsNewService
 import com.thisisnsh.cuecard.android.views.ContentView
 
 class MainActivity : ComponentActivity() {
@@ -37,6 +38,7 @@ class MainActivity : ComponentActivity() {
             val settingsService = remember { SettingsService.getInstance(context) }
             val notifications = remember { RemoteNotificationService.getInstance(context) }
             val onboarding = remember { OnboardingService.getInstance(context) }
+            val whatsNew = remember { WhatsNewService.getInstance(context) }
             val settings by settingsService.settings.collectAsState()
 
             LaunchedEffect(Unit) {
@@ -52,7 +54,8 @@ class MainActivity : ComponentActivity() {
                     ContentView(
                         settingsService = settingsService,
                         notifications = notifications,
-                        onboarding = onboarding
+                        onboarding = onboarding,
+                        whatsNew = whatsNew
                     )
                 }
             }

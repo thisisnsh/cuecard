@@ -12,6 +12,8 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.thisisnsh.cuecard.android.services.OnboardingService
 import com.thisisnsh.cuecard.android.services.RemoteNotificationService
 import com.thisisnsh.cuecard.android.services.SettingsService
+import com.thisisnsh.cuecard.android.services.WhatsNewService
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /** The screen the app opens on: the welcome, on a fresh install, or the script. */
@@ -19,14 +21,24 @@ import kotlinx.coroutines.launch
 fun ContentView(
     settingsService: SettingsService,
     notifications: RemoteNotificationService,
-    onboarding: OnboardingService
+    onboarding: OnboardingService,
+    whatsNew: WhatsNewService
 ) {
     val hasSeenWelcome by onboarding.hasSeenWelcome.collectAsState()
+    val showingWhatsNew by whatsNew.isPresented.collectAsState()
     val scope = rememberCoroutineScope()
     val lifecycleOwner = LocalLifecycleOwner.current
 
     LaunchedEffect(Unit) {
         notifications.refresh()
+    }
+
+    // Once the welcome flag is known, float this build's features over the
+    // first screen, after letting it settle.
+    LaunchedEffect(hasSeenWelcome) {
+        val seen = hasSeenWelcome ?: return@LaunchedEffect
+        delay(500)
+        whatsNew.presentIfUnseen(hasSeenWelcome = seen)
     }
 
     // Coming back to the app is the natural moment to pick up a new notice. The
@@ -59,5 +71,10 @@ fun ContentView(
             settingsService = settingsService,
             notifications = notifications
         )
+    }
+
+    val release = whatsNew.release
+    if (showingWhatsNew && release != null) {
+        WhatsNewDialog(release = release, version = whatsNew.version, onDismiss = whatsNew::dismiss)
     }
 }

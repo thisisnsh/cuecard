@@ -26,6 +26,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowOutward
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.UnfoldMore
@@ -81,6 +82,7 @@ import com.thisisnsh.cuecard.android.services.SettingPreset
 import com.thisisnsh.cuecard.android.services.SettingsService
 import com.thisisnsh.cuecard.android.services.TeleprompterSettings
 import com.thisisnsh.cuecard.android.services.ThemePreference
+import com.thisisnsh.cuecard.android.services.WhatsNewService
 import kotlinx.coroutines.launch
 
 // MARK: - Editor Settings
@@ -107,6 +109,8 @@ fun EditorSettingsView(
     }
 
     SettingsScreen(screen = "settings", onDismiss = onDismiss) {
+        WhatsNewSection(screen = "settings", isDark = isDark)
+
         // A notice from the worker, if there's one meant for Settings.
         settingsNotification?.let { notification ->
             SettingsSection(isDark = isDark) {
@@ -188,6 +192,8 @@ fun TeleprompterSettingsView(
     val settings by settingsService.settings.collectAsState()
 
     SettingsScreen(screen = TELEPROMPTER_SETTINGS_SCREEN, onDismiss = onDismiss) {
+        WhatsNewSection(screen = TELEPROMPTER_SETTINGS_SCREEN, isDark = isDark)
+
         SettingsSection(title = "Teleprompter", isDark = isDark) {
             NumberRow(
                 label = "Start Delay",
@@ -331,6 +337,27 @@ private fun SettingsScreen(
             content()
             Spacer(modifier = Modifier.height(32.dp))
         }
+    }
+}
+
+/** Opens this build's new features again. Left out when there are none for it. */
+@Composable
+private fun WhatsNewSection(screen: String, isDark: Boolean) {
+    val context = LocalContext.current
+    val whatsNew = remember { WhatsNewService.getInstance(context) }
+    val release = whatsNew.release ?: return
+    var showing by remember { mutableStateOf(false) }
+
+    SettingsSection(isDark = isDark) {
+        LinkRow(title = "What's New", icon = Icons.Filled.AutoAwesome, isDark = isDark) {
+            AnalyticsEvents.logButtonClick("whats_new", screen)
+            whatsNew.logShown(screen)
+            showing = true
+        }
+    }
+
+    if (showing) {
+        WhatsNewDialog(release = release, version = whatsNew.version, onDismiss = { showing = false })
     }
 }
 
