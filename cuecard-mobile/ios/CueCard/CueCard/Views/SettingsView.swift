@@ -197,7 +197,6 @@ private struct WhatsNewSection: View {
             Section {
                 Button {
                     AnalyticsEvents.logButtonClick("whats_new", screen: screen)
-                    whatsNew.logShown(source: screen)
                     withoutPresentationAnimation { isPresented = true }
                 } label: {
                     HStack {

@@ -60,15 +60,20 @@ class WhatsNewService private constructor(private val context: Context) {
         if (!hasSeenWelcome) return
 
         _isPresented.value = true
-        logShown("launch")
+        logShown()
     }
 
     fun dismiss() {
         _isPresented.value = false
     }
 
-    fun logShown(source: String) {
-        AnalyticsEvents.logEvent("whats_new_shown", mapOf("version" to version, "source" to source))
+    /**
+     * Counts the people this build's features reached on their own. Opening the
+     * card from Settings is a `button_click` instead, so this stays a clean
+     * impression count rather than one mixed with people going looking.
+     */
+    private fun logShown() {
+        AnalyticsEvents.logEvent("whats_new_shown", mapOf("version" to version))
     }
 
     companion object {

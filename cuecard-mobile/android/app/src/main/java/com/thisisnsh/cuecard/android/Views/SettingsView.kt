@@ -351,7 +351,6 @@ private fun WhatsNewSection(screen: String, isDark: Boolean) {
     SettingsSection(isDark = isDark) {
         LinkRow(title = "What's New", icon = Icons.Filled.AutoAwesome, isDark = isDark) {
             AnalyticsEvents.logButtonClick("whats_new", screen)
-            whatsNew.logShown(screen)
             showing = true
         }
     }
