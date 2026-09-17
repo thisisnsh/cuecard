@@ -340,7 +340,7 @@ private fun SettingsScreen(
     }
 }
 
-/** Opens this build's new features again. Left out when there are none for it. */
+/** Opens this version's new features again. Left out when there are none for it. */
 @Composable
 private fun WhatsNewSection(screen: String, isDark: Boolean) {
     val context = LocalContext.current

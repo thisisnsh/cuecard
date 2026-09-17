@@ -184,7 +184,7 @@ private struct SettingsScreen<Content: View>: View {
     }
 }
 
-/// Opens this build's new features again. Left out when there are none for it.
+/// Opens this version's new features again. Left out when there are none for it.
 private struct WhatsNewSection: View {
     @ObservedObject private var whatsNew = WhatsNewService.shared
     @Environment(\.colorScheme) var colorScheme

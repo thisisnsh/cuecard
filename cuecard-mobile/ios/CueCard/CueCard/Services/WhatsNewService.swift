@@ -1,11 +1,12 @@
 import Foundation
 import FirebaseAnalytics
 
-/// The new features for this build, read from `WhatsNew.json` in the bundle.
+/// The new features for this version, read from `WhatsNew.json` in the bundle.
 ///
-/// Entries are keyed by `<version>-<build>`, so a release that forgets to add its
-/// own entry shows nothing rather than the last release's features. Each build is
-/// shown once on launch, remembered under `new-features-<version>-<build>`.
+/// Entries are keyed by `<version>`, so a release that forgets to add its own
+/// entry shows nothing rather than the last release's features. Builds of the
+/// same version share an entry, so a rebuild doesn't show it again. Each version
+/// is shown once on launch, remembered under `new-features-<version>`.
 @MainActor
 final class WhatsNewService: ObservableObject {
     static let shared = WhatsNewService()
@@ -15,7 +16,7 @@ final class WhatsNewService: ObservableObject {
         let features: [String]
     }
 
-    /// This build's entry, or nil when the file has none for it.
+    /// This version's entry, or nil when the file has none for it.
     let release: Release?
 
     /// The version as people see it, e.g. "1.5.0".
@@ -30,12 +31,10 @@ final class WhatsNewService: ObservableObject {
     private init() {
         let info = Bundle.main.infoDictionary
         let version = info?["CFBundleShortVersionString"] as? String ?? "0"
-        let build = info?["CFBundleVersion"] as? String ?? "0"
-        let key = "\(version)-\(build)"
 
         self.version = version
-        self.seenKey = "new-features-\(key)"
-        self.release = Self.loadReleases()[key].flatMap { $0.features.isEmpty ? nil : $0 }
+        self.seenKey = "new-features-\(version)"
+        self.release = Self.loadReleases()[version].flatMap { $0.features.isEmpty ? nil : $0 }
     }
 
     private static func loadReleases() -> [String: Release] {
@@ -46,7 +45,7 @@ final class WhatsNewService: ObservableObject {
         return releases
     }
 
-    /// Show this build's features if they haven't been seen. A fresh install has
+    /// Show this version's features if they haven't been seen. A fresh install has
     /// only just met the app, so it skips them: `hasSeenWelcome` is false there.
     /// Counted as seen once shown, so closing the app on the card doesn't bring
     /// it back.
@@ -59,7 +58,7 @@ final class WhatsNewService: ObservableObject {
         logShown()
     }
 
-    /// Counts the people this build's features reached on their own. Opening the
+    /// Counts the people this version's features reached on their own. Opening the
     /// card from Settings is a `button_click` instead, so this stays a clean
     /// impression count rather than one mixed with people going looking.
     private func logShown() {

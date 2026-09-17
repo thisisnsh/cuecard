@@ -33,7 +33,7 @@ fun ContentView(
         notifications.refresh()
     }
 
-    // Once the welcome flag is known, float this build's features over the
+    // Once the welcome flag is known, float this version's features over the
     // first screen, after letting it settle.
     LaunchedEffect(hasSeenWelcome) {
         val seen = hasSeenWelcome ?: return@LaunchedEffect

@@ -1,5 +1,5 @@
 {
-  "1.5.0-15": {
+  "1.5.0": {
     "title": "Improved with New Features",
     "features": [
         "Better sync between the floating window and teleprompter, with smoother scrolling.",
