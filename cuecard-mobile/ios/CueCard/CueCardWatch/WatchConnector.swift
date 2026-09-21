@@ -13,6 +13,12 @@ final class WatchConnector: NSObject, ObservableObject {
     @Published private(set) var isReachable = false
 
     private let session = WCSession.default
+    /// When the watch last moved the iPhone's deck itself.
+    private var movedAt: Date?
+
+    /// How long a move made here outranks the iPhone's word on where the deck
+    /// is: long enough for the replies to a quick run of swipes to come back.
+    private static let moveGrace: TimeInterval = 1.5
 
     private override init() { super.init() }
 
@@ -40,11 +46,38 @@ final class WatchConnector: NSObject, ObservableObject {
         )
     }
 
+    /// Move the iPhone's deck to a card. Shown here at once; out of reach,
+    /// the move waits to be delivered, and only the latest one is kept.
+    func showCard(_ index: Int, session deckSession: UUID) {
+        if phone?.cards?.session == deckSession {
+            phone?.cards?.index = index
+        }
+        movedAt = Date()
+
+        let command = WatchCommand.showCard(session: deckSession, index: index)
+        cancelQueuedCommands()
+        send(command) { [weak self] in
+            guard let self else { return }
+            self.cancelQueuedCommands()
+            self.session.transferUserInfo(WatchLink.payload(command, key: WatchLink.commandKey))
+        }
+    }
+
     // MARK: - Private
 
     private func apply(_ state: WatchPhoneState) {
         if let phone, phone.sentAt > state.sentAt { return }
+        var state = state
+        // The reply to an earlier swipe would put the deck back a card.
+        if let movedAt, Date().timeIntervalSince(movedAt) < Self.moveGrace,
+           let local = phone?.cards, local.session == state.cards?.session {
+            state.cards?.index = local.index
+        }
         phone = state
+    }
+
+    private func cancelQueuedCommands() {
+        session.outstandingUserInfoTransfers.forEach { $0.cancel() }
     }
 
     private func reachabilityChanged() {

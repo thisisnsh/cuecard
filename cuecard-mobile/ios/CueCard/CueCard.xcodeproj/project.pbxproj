@@ -73,6 +73,11 @@
 		068 /* WatchSessionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 146 /* WatchSessionService.swift */; };
 		069 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 203 /* Assets.xcassets */; };
 		070 /* TeleprompterRemoteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 153 /* TeleprompterRemoteView.swift */; };
+		071 /* CardPager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 154 /* CardPager.swift */; };
+		072 /* PhoneDeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 155 /* PhoneDeckView.swift */; };
+		073 /* CueCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135 /* CueCards.swift */; };
+		074 /* CueCardRun.swift in Sources */ = {isa = PBXBuildFile; fileRef = 143 /* CueCardRun.swift */; };
+		075 /* TeleprompterParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 111 /* TeleprompterParser.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -174,6 +179,8 @@
 		203 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		503 /* CueCardWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CueCardWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		153 /* TeleprompterRemoteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeleprompterRemoteView.swift; sourceTree = "<group>"; };
+		154 /* CardPager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardPager.swift; sourceTree = "<group>"; };
+		155 /* PhoneDeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneDeckView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -320,6 +327,8 @@
 		740 /* CueCardWatch */ = {
 			isa = PBXGroup;
 			children = (
+				155 /* PhoneDeckView.swift */,
+				154 /* CardPager.swift */,
 				153 /* TeleprompterRemoteView.swift */,
 				150 /* CueCardWatchApp.swift */,
 				151 /* WatchConnector.swift */,
@@ -556,6 +565,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				075 /* TeleprompterParser.swift in Sources */,
+				074 /* CueCardRun.swift in Sources */,
+				073 /* CueCards.swift in Sources */,
+				072 /* PhoneDeckView.swift in Sources */,
+				071 /* CardPager.swift in Sources */,
 				070 /* TeleprompterRemoteView.swift in Sources */,
 				061 /* CueCardWatchApp.swift in Sources */,
 				062 /* WatchConnector.swift in Sources */,

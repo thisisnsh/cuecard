@@ -1,3 +1,4 @@
+import FirebaseAnalytics
 import Foundation
 import WatchConnectivity
 
@@ -27,9 +28,16 @@ final class WatchSessionService: NSObject, ObservableObject {
 
     /// What the watch shows of the iPhone right now.
     var state: WatchPhoneState {
-        WatchPhoneState(
+        let deck = CueCardsSession.shared
+        return WatchPhoneState(
             teleprompter: TeleprompterPiPManager.shared.timerState,
-            cards: nil,
+            cards: deck.cards.isEmpty ? nil : WatchCardsState(
+                session: deck.sessionID,
+                deckID: deck.deckID,
+                title: deck.title,
+                cards: deck.cards,
+                index: deck.index
+            ),
             cueColor: SettingsService.shared.settings.cueColor,
             sentAt: Date()
         )
@@ -51,12 +59,19 @@ final class WatchSessionService: NSObject, ObservableObject {
     private func handle(_ command: WatchCommand) async {
         switch command {
         case .refresh:
-            break
+            // Launched in the background to answer, the deck is still on disk.
+            _ = CueCardsSession.shared.restoreIfNeeded()
         case .togglePlayPause:
             _ = TeleprompterRemoteCommand.togglePlayPause.run(source: "watch")
         case .skipBack:
             _ = TeleprompterRemoteCommand.skipBack.run(source: "watch")
-        case .showCard, .openDeck:
+        case .showCard(let session, let index):
+            let deck = CueCardsSession.shared
+            guard deck.restoreIfNeeded(), deck.sessionID == session else { return }
+            deck.show(cardAt: index)
+            await deck.waitForLockScreen()
+            Analytics.logEvent("cards_show", parameters: ["source": "watch"])
+        case .openDeck:
             break
         }
     }

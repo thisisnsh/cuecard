@@ -7,6 +7,11 @@ import FirebaseAnalytics
 /// as a Live Activity too, and both move together.
 struct CueCardsView: View {
     let cards: [String]
+    /// What the watch calls the deck.
+    let title: String
+    /// The saved note the deck came from, so the watch can match it to its
+    /// own copy.
+    let deckID: UUID?
 
     @EnvironmentObject var settingsService: SettingsService
     @Environment(\.dismiss) private var dismiss
@@ -74,7 +79,7 @@ struct CueCardsView: View {
             }
         }
         .onAppear {
-            session.start(cards: cards, cueColor: settings.cueColor,
+            session.start(cards: cards, title: title, deckID: deckID, cueColor: settings.cueColor,
                           showOnLockScreen: settings.cardDisplay == .lockScreen)
             Analytics.logEvent(AnalyticsEventScreenView, parameters: [
                 AnalyticsParameterScreenName: "cards"

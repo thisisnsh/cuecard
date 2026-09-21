@@ -5,7 +5,8 @@ import Foundation
 ///
 /// The Lock Screen's buttons run in the app, launching it in the background
 /// if it was quit, so the deck is kept on disk as well: a button pressed then
-/// picks up where the deck was left.
+/// picks up where the deck was left. The watch follows the same deck and
+/// moves it too.
 @MainActor
 final class CueCardsSession: ObservableObject {
     static let shared = CueCardsSession()
@@ -16,6 +17,12 @@ final class CueCardsSession: ObservableObject {
     /// The card on top. Equal to the number of cards once every one has been
     /// put away.
     @Published private(set) var index = 0
+    /// This opening of the deck, so a move the watch made for an earlier one
+    /// can be told apart.
+    @Published private(set) var sessionID = UUID()
+    private(set) var title = ""
+    /// The saved note the deck came from, when it came from one.
+    private(set) var deckID: UUID?
     /// Whether the deck is up on the Lock Screen right now.
     @Published private(set) var isOnLockScreen = false
     /// Live Activities are turned off for the app in Settings.
@@ -34,6 +41,9 @@ final class CueCardsSession: ObservableObject {
         var cards: [String]
         var index: Int
         var cueColor: CueColor
+        var sessionID: UUID?
+        var title: String?
+        var deckID: UUID?
     }
 
     /// A Lock Screen card holds four lines; this is well past what they fit,
@@ -42,12 +52,18 @@ final class CueCardsSession: ObservableObject {
 
     private init() {}
 
-    /// Open a deck on its first card, and put it on the Lock Screen if asked.
-    func start(cards: [String], cueColor: CueColor, showOnLockScreen: Bool) {
+    /// Open a deck, on its first card unless told otherwise, and put it on
+    /// the Lock Screen if asked.
+    func start(cards: [String], title: String, deckID: UUID?, index: Int = 0,
+               cueColor: CueColor, showOnLockScreen: Bool) {
         self.cards = cards
+        self.title = title
+        self.deckID = deckID
         self.cueColor = cueColor
-        index = 0
+        self.index = min(max(index, 0), cards.count)
+        sessionID = UUID()
         save()
+        WatchSessionService.shared.stateChanged()
 
         // One left over from a deck the app was quit during.
         endActivities()
@@ -92,12 +108,24 @@ final class CueCardsSession: ObservableObject {
         deckChanged()
     }
 
+    /// Show a card by number, as the watch asks. Equal to the number of cards
+    /// puts every one away.
+    func show(cardAt newIndex: Int) {
+        let newIndex = min(max(newIndex, 0), cards.count)
+        guard newIndex != index else { return }
+        index = newIndex
+        deckChanged()
+    }
+
     /// Close the deck and take it off the Lock Screen.
     func end() {
         cards = []
         index = 0
+        title = ""
+        deckID = nil
         UserDefaults.standard.removeObject(forKey: Self.storageKey)
         endActivities()
+        WatchSessionService.shared.stateChanged()
     }
 
     /// Pick up the deck a Lock Screen button is pressed for, when the button
@@ -111,6 +139,9 @@ final class CueCardsSession: ObservableObject {
         cards = stored.cards
         index = min(stored.index, stored.cards.count)
         cueColor = stored.cueColor
+        sessionID = stored.sessionID ?? UUID()
+        title = stored.title ?? ""
+        deckID = stored.deckID
         if let activity = Activity<CueCardsActivityAttributes>.activities.first {
             self.activity = activity
             isOnLockScreen = true
@@ -134,6 +165,7 @@ final class CueCardsSession: ObservableObject {
 
     private func deckChanged() {
         save()
+        WatchSessionService.shared.stateChanged()
         guard let activity else { return }
         let content = ActivityContent(state: contentState, staleDate: nil)
         let previous = pendingUpdate
@@ -145,7 +177,8 @@ final class CueCardsSession: ObservableObject {
     }
 
     private func save() {
-        let stored = Stored(cards: cards, index: index, cueColor: cueColor)
+        let stored = Stored(cards: cards, index: index, cueColor: cueColor,
+                            sessionID: sessionID, title: title, deckID: deckID)
         if let data = try? JSONEncoder().encode(stored) {
             UserDefaults.standard.set(data, forKey: Self.storageKey)
         }

@@ -547,7 +547,9 @@ struct HomeView: View {
                 TeleprompterView(content: TeleprompterParser.parseNotes(settingsService.notes))
             }
             .fullScreenCover(isPresented: $showingCards) {
-                CueCardsView(cards: CueCards.cards(in: settingsService.notes))
+                CueCardsView(cards: CueCards.cards(in: settingsService.notes),
+                             title: settingsService.currentNote?.title ?? "Cards",
+                             deckID: settingsService.currentNoteId)
             }
         }
         .onAppear {

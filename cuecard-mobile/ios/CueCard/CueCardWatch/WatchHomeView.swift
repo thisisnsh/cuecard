@@ -7,9 +7,11 @@ struct WatchHomeView: View {
 
     enum Route: Hashable {
         case teleprompter
+        case phoneDeck
     }
 
     private var isTeleprompterOpen: Bool { connector.phone?.teleprompter != nil }
+    private var phoneDeckSession: UUID? { connector.phone?.cards?.session }
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -24,7 +26,18 @@ struct WatchHomeView: View {
                                     .foregroundStyle(timer.tint.color)
                             }
                         }
-                    } else {
+                    }
+                    if let deck = connector.phone?.cards {
+                        NavigationLink(value: Route.phoneDeck) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Label(deck.title, systemImage: "rectangle.stack.fill")
+                                Text(cardProgress(index: deck.index, count: deck.cards.count))
+                                    .font(.footnote.monospacedDigit())
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                    if connector.phone?.teleprompter == nil && connector.phone?.cards == nil {
                         Text("Open a script or cards in CueCard on your iPhone.")
                             .font(.footnote)
                             .foregroundStyle(.secondary)
@@ -36,6 +49,8 @@ struct WatchHomeView: View {
                 switch route {
                 case .teleprompter:
                     TeleprompterRemoteView()
+                case .phoneDeck:
+                    PhoneDeckView()
                 }
             }
         }
@@ -43,6 +58,12 @@ struct WatchHomeView: View {
         .onChange(of: isTeleprompterOpen) { _, isOpen in
             if isOpen, path.last != .teleprompter {
                 path = [.teleprompter]
+            }
+        }
+        // So do cards.
+        .onChange(of: phoneDeckSession) { _, session in
+            if session != nil, path.last != .phoneDeck {
+                path = [.phoneDeck]
             }
         }
     }
