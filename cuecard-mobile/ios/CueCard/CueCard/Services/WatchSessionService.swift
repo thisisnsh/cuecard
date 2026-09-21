@@ -19,6 +19,7 @@ final class WatchSessionService: NSObject, ObservableObject {
 
     private let session: WCSession? = WCSession.isSupported() ? .default : nil
     private var notesSubscription: AnyCancellable?
+    private var settingsSubscription: AnyCancellable?
     /// The decks last sent, so an unchanged set isn't sent again.
     private var sentDecks: Data?
 
@@ -37,6 +38,16 @@ final class WatchSessionService: NSObject, ObservableObject {
             .merge(with: settings.$watchNoteIDs.map { _ in () })
             .debounce(for: .seconds(1), scheduler: RunLoop.main)
             .sink { [weak self] in self?.sendDecks() }
+
+        // The cue color or a watch setting changed.
+        settingsSubscription = settings.$settings
+            .map { WatchSettingsKey(cueColor: $0.cueColor, watch: $0.watch) }
+            .removeDuplicates()
+            .dropFirst()
+            .sink { [weak self] _ in
+                // $settings fires before the change is stored.
+                Task { @MainActor in self?.stateChanged() }
+            }
     }
 
     /// What the watch shows of the iPhone right now.
@@ -52,6 +63,7 @@ final class WatchSessionService: NSObject, ObservableObject {
                 index: deck.index
             ),
             cueColor: SettingsService.shared.settings.cueColor,
+            settings: SettingsService.shared.settings.watch,
             sentAt: Date()
         )
     }
@@ -137,6 +149,12 @@ final class WatchSessionService: NSObject, ObservableObject {
         stateChanged()
         sendDecks()
     }
+}
+
+/// The settings the watch shows, to tell when one of them changed.
+private struct WatchSettingsKey: Equatable {
+    var cueColor: CueColor
+    var watch: WatchSettings
 }
 
 extension WatchSessionService: WCSessionDelegate {

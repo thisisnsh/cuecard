@@ -129,6 +129,8 @@ struct TeleprompterSettings: Codable, Equatable {
     /// Where cards are read, which sets how long each one can be. Chosen on
     /// the home screen, like the timer.
     var cardDisplay: CardDisplay
+    /// How the watch app shows cards.
+    var watch: WatchSettings
 
     static let `default` = TeleprompterSettings(
         editorFontSize: ScreenTextScale.scaled(16, by: ScreenTextScale.editor),
@@ -143,7 +145,8 @@ struct TeleprompterSettings: Codable, Equatable {
         countdownSeconds: 5,
         cueColor: .default,
         scriptMode: .teleprompter,
-        cardDisplay: .lockScreen
+        cardDisplay: .lockScreen,
+        watch: .default
     )
 
     /// Scroll speed range (multiplier)
@@ -222,6 +225,7 @@ struct TeleprompterSettings: Codable, Equatable {
         case cueColor
         case scriptMode
         case cardDisplay
+        case watch
     }
 
     init(
@@ -237,7 +241,8 @@ struct TeleprompterSettings: Codable, Equatable {
         countdownSeconds: Int,
         cueColor: CueColor,
         scriptMode: ScriptMode,
-        cardDisplay: CardDisplay
+        cardDisplay: CardDisplay,
+        watch: WatchSettings
     ) {
         self.editorFontSize = editorFontSize
         self.fontSize = fontSize
@@ -252,6 +257,7 @@ struct TeleprompterSettings: Codable, Equatable {
         self.cueColor = cueColor
         self.scriptMode = scriptMode
         self.cardDisplay = cardDisplay
+        self.watch = watch
     }
 
     init(from decoder: Decoder) throws {
@@ -294,6 +300,8 @@ struct TeleprompterSettings: Codable, Equatable {
             ?? TeleprompterSettings.default.scriptMode
         cardDisplay = try container.decodeIfPresent(CardDisplay.self, forKey: .cardDisplay)
             ?? TeleprompterSettings.default.cardDisplay
+        watch = try container.decodeIfPresent(WatchSettings.self, forKey: .watch)
+            ?? TeleprompterSettings.default.watch
     }
 
     static func clamp(_ value: Int, to range: ClosedRange<Int>) -> Int {
@@ -315,6 +323,7 @@ struct TeleprompterSettings: Codable, Equatable {
         try container.encode(cueColor, forKey: .cueColor)
         try container.encode(scriptMode, forKey: .scriptMode)
         try container.encode(cardDisplay, forKey: .cardDisplay)
+        try container.encode(watch, forKey: .watch)
     }
 }
 

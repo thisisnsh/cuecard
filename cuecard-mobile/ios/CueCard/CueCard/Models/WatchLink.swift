@@ -34,6 +34,30 @@ enum WatchTips {
     static let returnToClock = "To keep CueCard on screen through a talk, open the Watch app on your iPhone, go to General › Return to Clock, choose CueCard, and set it to return after 1 hour."
 }
 
+/// How the watch app shows cards, set in the iPhone's Settings.
+struct WatchSettings: Codable, Equatable {
+    var cardTextSize: WatchCardTextSize
+    /// A tap on the wrist as the card changes, and on the teleprompter's buttons.
+    var haptics: Bool
+
+    static let `default` = WatchSettings(cardTextSize: .medium, haptics: true)
+}
+
+enum WatchCardTextSize: String, Codable, CaseIterable {
+    case small = "Small"
+    case medium = "Medium"
+    case large = "Large"
+
+    /// In points, on the watch.
+    var pointSize: Double {
+        switch self {
+        case .small: return 16
+        case .medium: return 19
+        case .large: return 23
+        }
+    }
+}
+
 /// Something the watch asks the iPhone to do.
 enum WatchCommand: Codable, Equatable {
     case togglePlayPause
@@ -67,6 +91,7 @@ struct WatchPhoneState: Codable, Equatable {
     /// Nil while no deck is open.
     var cards: WatchCardsState?
     var cueColor: CueColor
+    var settings: WatchSettings
     /// When the iPhone sent it. A push and an application context can arrive
     /// out of turn, and the older of the two is dropped.
     var sentAt: Date

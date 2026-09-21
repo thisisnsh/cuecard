@@ -11,15 +11,18 @@ struct CardPager: View {
     @Binding var index: Int
     let cueColor: CueColor
 
+    @EnvironmentObject var connector: WatchConnector
     /// Wrist down with Always On: the card stays up, dimmed.
     @Environment(\.isLuminanceReduced) private var isLuminanceReduced
 
     private var isFinished: Bool { index >= cards.count }
+    private var settings: WatchSettings { connector.phone?.settings ?? .default }
 
     var body: some View {
         TabView(selection: $index) {
             ForEach(cards.indices, id: \.self) { cardIndex in
-                CardPage(runs: CueCards.runs(for: cards[cardIndex]), cueColor: cueColor)
+                CardPage(runs: CueCards.runs(for: cards[cardIndex]), cueColor: cueColor,
+                         textSize: settings.cardTextSize.pointSize)
                     .tag(cardIndex)
             }
             DonePage()
@@ -49,7 +52,7 @@ struct CardPager: View {
             }
         }
         .onChange(of: index) {
-            WKInterfaceDevice.current().play(.click)
+            if settings.haptics { WKInterfaceDevice.current().play(.click) }
         }
     }
 }
@@ -63,6 +66,7 @@ func cardProgress(index: Int, count: Int) -> String {
 private struct CardPage: View {
     let runs: [CueCardRun]
     let cueColor: CueColor
+    let textSize: Double
 
     @Environment(\.isLuminanceReduced) private var isLuminanceReduced
 
@@ -70,7 +74,7 @@ private struct CardPage: View {
         ScrollView {
             runs.text(primary: AppColors.Dark.textPrimary, cue: cueColor.color(for: .dark))
                 .opacity(isLuminanceReduced ? 0.6 : 1)
-                .font(.system(size: 19, weight: .semibold))
+                .font(.system(size: textSize, weight: .semibold))
                 .frame(maxWidth: .infinity, alignment: .leading)
                 // Clear of the Back and Next buttons at the bottom.
                 .padding(.bottom, 36)

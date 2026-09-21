@@ -62,7 +62,9 @@ struct TeleprompterRemoteView: View {
     }
 
     private func send(_ command: WatchCommand) {
-        WKInterfaceDevice.current().play(.click)
+        if connector.phone?.settings.haptics ?? true {
+            WKInterfaceDevice.current().play(.click)
+        }
         connector.send(command) {
             WKInterfaceDevice.current().play(.failure)
         }

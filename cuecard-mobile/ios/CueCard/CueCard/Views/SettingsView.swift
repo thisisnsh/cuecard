@@ -282,9 +282,9 @@ private struct PlaybackControlsSection: View {
     }
 }
 
-/// Which saved notes are on the watch, to read there with the iPhone out of
-/// reach, or a way to install the watch app while a watch is paired without
-/// it. Left out when no watch is paired.
+/// The watch app: a way to install it while a watch is paired without it,
+/// then how it shows cards and which saved notes are on it, to read there with
+/// the iPhone out of reach. Left out when no watch is paired.
 private struct AppleWatchSection: View {
     @EnvironmentObject var settingsService: SettingsService
     @ObservedObject private var watch = WatchSessionService.shared
@@ -298,6 +298,19 @@ private struct AppleWatchSection: View {
 
     var body: some View {
         if watch.isWatchAppInstalled {
+            Section {
+                Picker("Card Text Size", selection: $settingsService.settings.watch.cardTextSize) {
+                    ForEach(WatchCardTextSize.allCases, id: \.self) { size in
+                        Text(size.rawValue).tag(size)
+                    }
+                }
+                Toggle("Haptics", isOn: $settingsService.settings.watch.haptics)
+            } header: {
+                Text("Apple Watch")
+            } footer: {
+                Text("Haptics tap your wrist as the card changes, and when you press play or skip back.")
+            }
+
             Section {
                 if settingsService.savedNotes.isEmpty {
                     Text("Save a note to put it on your watch.")
@@ -318,7 +331,7 @@ private struct AppleWatchSection: View {
                     }
                 }
             } header: {
-                Text("Apple Watch")
+                Text("On Watch")
             } footer: {
                 Text("Notes you turn on stay on your watch, to swipe through card by card even without your iPhone. A note splits into cards where it has separators.\n\n\(WatchTips.returnToClock)")
             }
