@@ -10,6 +10,7 @@ struct WatchHomeView: View {
     enum Route: Hashable {
         case teleprompter
         case phoneDeck
+        case savedDeck(UUID)
     }
 
     private var isTeleprompterOpen: Bool { connector.phone?.teleprompter != nil }
@@ -48,11 +49,13 @@ struct WatchHomeView: View {
 
                 Section {
                     ForEach(store.decks) { deck in
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(deck.title)
-                            Text(deck.cards.count == 1 ? "1 card" : "\(deck.cards.count) cards")
-                                .font(.footnote)
-                                .foregroundStyle(.secondary)
+                        NavigationLink(value: Route.savedDeck(deck.id)) {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(deck.title)
+                                Text(deck.cards.count == 1 ? "1 card" : "\(deck.cards.count) cards")
+                                    .font(.footnote)
+                                    .foregroundStyle(.secondary)
+                            }
                         }
                     }
                 } header: {
@@ -70,6 +73,8 @@ struct WatchHomeView: View {
                     TeleprompterRemoteView()
                 case .phoneDeck:
                     PhoneDeckView()
+                case .savedDeck(let id):
+                    SavedDeckView(deckID: id)
                 }
             }
         }
@@ -81,9 +86,10 @@ struct WatchHomeView: View {
         }
         // So do cards.
         .onChange(of: phoneDeckSession) { _, session in
-            if session != nil, path.last != .phoneDeck {
-                path = [.phoneDeck]
-            }
+            guard session != nil, path.last != .phoneDeck else { return }
+            // Opened from here, the deck is already up.
+            if case .savedDeck(let id)? = path.last, id == connector.phone?.cards?.deckID { return }
+            path = [.phoneDeck]
         }
     }
 }

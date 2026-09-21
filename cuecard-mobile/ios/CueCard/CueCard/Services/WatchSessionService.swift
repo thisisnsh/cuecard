@@ -111,8 +111,17 @@ final class WatchSessionService: NSObject, ObservableObject {
             deck.show(cardAt: index)
             await deck.waitForLockScreen()
             Analytics.logEvent("cards_show", parameters: ["source": "watch"])
-        case .openDeck:
-            break
+        case .openDeck(let id, let title, let cards, let index):
+            let settings = SettingsService.shared.settings
+            CueCardsSession.shared.start(cards: cards, title: title, deckID: id, index: index,
+                                         cueColor: settings.cueColor,
+                                         showOnLockScreen: settings.cardDisplay == .lockScreen)
+            await CueCardsSession.shared.waitForLockScreen()
+            Analytics.logEvent("cards_open", parameters: [
+                "count": cards.count,
+                "display": settings.cardDisplay.rawValue,
+                "source": "watch"
+            ])
         }
     }
 

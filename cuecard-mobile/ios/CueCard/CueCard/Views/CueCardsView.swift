@@ -6,7 +6,8 @@ import FirebaseAnalytics
 /// notifications are cleared. With the Lock Screen chosen, the same deck runs
 /// as a Live Activity too, and both move together.
 struct CueCardsView: View {
-    let cards: [String]
+    /// The deck to open. Nil when it is already open: opened from the watch.
+    let cards: [String]?
     /// What the watch calls the deck.
     let title: String
     /// The saved note the deck came from, so the watch can match it to its
@@ -79,11 +80,12 @@ struct CueCardsView: View {
             }
         }
         .onAppear {
-            session.start(cards: cards, title: title, deckID: deckID, cueColor: settings.cueColor,
-                          showOnLockScreen: settings.cardDisplay == .lockScreen)
             Analytics.logEvent(AnalyticsEventScreenView, parameters: [
                 AnalyticsParameterScreenName: "cards"
             ])
+            guard let cards else { return }
+            session.start(cards: cards, title: title, deckID: deckID, cueColor: settings.cueColor,
+                          showOnLockScreen: settings.cardDisplay == .lockScreen)
             Analytics.logEvent("cards_open", parameters: [
                 "count": cards.count,
                 "display": settings.cardDisplay.rawValue

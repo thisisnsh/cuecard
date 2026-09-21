@@ -11,6 +11,8 @@ struct HomeView: View {
     @State private var showingSettings = false
     @State private var showingTeleprompter = false
     @State private var showingCards = false
+    /// The cards showing were opened from the watch, not from the editor.
+    @State private var cardsOpenedOnWatch = false
     @State private var showingTimerPicker = false
     @State private var timerPickerContentVisible = false
     @State private var showingSavedNotes = false
@@ -25,6 +27,8 @@ struct HomeView: View {
     @State private var isEditorFocused = false
     @StateObject private var editorController = CueEditorController()
     @ObservedObject private var watch = WatchSessionService.shared
+    @ObservedObject private var cardsSession = CueCardsSession.shared
+    @Environment(\.scenePhase) private var scenePhase
     @Environment(\.requestReview) private var requestReview
 
     /// How much of the editor's bottom the controls row covers: the play button
@@ -126,6 +130,13 @@ struct HomeView: View {
         .padding(.horizontal, 12)
         .frame(height: 28)
         .glassedEffect(in: Capsule())
+    }
+
+    private func showCardsOpenedOnWatch() {
+        guard scenePhase == .active, !cardsSession.cards.isEmpty, !showingCards,
+              !showingTeleprompter, !showingSettings, !showingSavedNotes else { return }
+        cardsOpenedOnWatch = true
+        showingCards = true
     }
 
     private func openTimerPicker() {
@@ -395,6 +406,7 @@ struct HomeView: View {
                         isEditorFocused = false
                         if isCardsMode {
                             AnalyticsEvents.logButtonClick("start_cards", screen: "home")
+                            cardsOpenedOnWatch = false
                             showingCards = true
                         } else {
                             AnalyticsEvents.logButtonClick("start_teleprompter", screen: "home")
@@ -560,9 +572,16 @@ struct HomeView: View {
                 TeleprompterView(content: TeleprompterParser.parseNotes(settingsService.notes))
             }
             .fullScreenCover(isPresented: $showingCards) {
-                CueCardsView(cards: CueCards.cards(in: settingsService.notes),
+                CueCardsView(cards: cardsOpenedOnWatch ? nil : CueCards.cards(in: settingsService.notes),
                              title: settingsService.currentNote?.title ?? "Cards",
                              deckID: settingsService.currentNoteId)
+            }
+            // A deck opened from the watch comes up here too, if nothing else is.
+            .onChange(of: cardsSession.sessionID) { _ in
+                showCardsOpenedOnWatch()
+            }
+            .onChange(of: scenePhase) { _ in
+                showCardsOpenedOnWatch()
             }
         }
         .onAppear {

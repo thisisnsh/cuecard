@@ -1,5 +1,6 @@
 import ActivityKit
 import Foundation
+import UIKit
 
 /// The deck open in cards mode, and its Live Activity on the Lock Screen.
 ///
@@ -64,6 +65,20 @@ final class CueCardsSession: ObservableObject {
         sessionID = UUID()
         save()
         WatchSessionService.shared.stateChanged()
+
+        if showOnLockScreen, UIApplication.shared.applicationState != .active,
+           let existing = Activity<CueCardsActivityAttributes>.activities.first {
+            // Only an app on screen may start an activity. A deck opened from
+            // the watch with the app in the background takes over the one
+            // already up instead.
+            if activity?.id != existing.id {
+                activity = existing
+                watch(existing)
+            }
+            isOnLockScreen = true
+            updateLockScreen()
+            return
+        }
 
         // One left over from a deck the app was quit during.
         endActivities()
@@ -166,6 +181,10 @@ final class CueCardsSession: ObservableObject {
     private func deckChanged() {
         save()
         WatchSessionService.shared.stateChanged()
+        updateLockScreen()
+    }
+
+    private func updateLockScreen() {
         guard let activity else { return }
         let content = ActivityContent(state: contentState, staleDate: nil)
         let previous = pendingUpdate
