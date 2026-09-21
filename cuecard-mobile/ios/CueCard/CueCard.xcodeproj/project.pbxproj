@@ -62,6 +62,16 @@
 		057 /* TeleprompterTimerState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 144 /* TeleprompterTimerState.swift */; };
 		058 /* TeleprompterTimerState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 144 /* TeleprompterTimerState.swift */; };
 		059 /* WatchLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 145 /* WatchLink.swift */; };
+		060 /* CueCardWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 503 /* CueCardWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		061 /* CueCardWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 150 /* CueCardWatchApp.swift */; };
+		062 /* WatchConnector.swift in Sources */ = {isa = PBXBuildFile; fileRef = 151 /* WatchConnector.swift */; };
+		063 /* WatchHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 152 /* WatchHomeView.swift */; };
+		064 /* WatchLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 145 /* WatchLink.swift */; };
+		065 /* TeleprompterTimerState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 144 /* TeleprompterTimerState.swift */; };
+		066 /* CueColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 116 /* CueColor.swift */; };
+		067 /* AppColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 113 /* AppColors.swift */; };
+		068 /* WatchSessionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 146 /* WatchSessionService.swift */; };
+		069 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 203 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -71,6 +81,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = 810;
 			remoteInfo = CueCardWidgets;
+		};
+		1202 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1000 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 820;
+			remoteInfo = CueCardWatch;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -84,6 +101,17 @@
 				032 /* CueCardWidgets.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		805 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				060 /* CueCardWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -138,6 +166,12 @@
 		143 /* CueCardRun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardRun.swift; sourceTree = "<group>"; };
 		144 /* TeleprompterTimerState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeleprompterTimerState.swift; sourceTree = "<group>"; };
 		145 /* WatchLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchLink.swift; sourceTree = "<group>"; };
+		146 /* WatchSessionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSessionService.swift; sourceTree = "<group>"; };
+		150 /* CueCardWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardWatchApp.swift; sourceTree = "<group>"; };
+		151 /* WatchConnector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchConnector.swift; sourceTree = "<group>"; };
+		152 /* WatchHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchHomeView.swift; sourceTree = "<group>"; };
+		203 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		503 /* CueCardWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CueCardWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -157,6 +191,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		822 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -165,6 +206,7 @@
 			children = (
 				710 /* CueCard */,
 				730 /* CueCardWidgets */,
+				740 /* CueCardWatch */,
 				720 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -206,6 +248,7 @@
 			isa = PBXGroup;
 			children = (
 				139 /* CueCardsRemoteCommand+App.swift */,
+				146 /* WatchSessionService.swift */,
 				138 /* CueCardsSession.swift */,
 				108 /* SettingsService.swift */,
 				114 /* ReviewPromptService.swift */,
@@ -245,6 +288,7 @@
 			children = (
 				501 /* CueCard.app */,
 				502 /* CueCardWidgets.appex */,
+				503 /* CueCardWatch.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -271,6 +315,17 @@
 			path = CueCardWidgets;
 			sourceTree = "<group>";
 		};
+		740 /* CueCardWatch */ = {
+			isa = PBXGroup;
+			children = (
+				150 /* CueCardWatchApp.swift */,
+				151 /* WatchConnector.swift */,
+				152 /* WatchHomeView.swift */,
+				203 /* Assets.xcassets */,
+			);
+			path = CueCardWatch;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -282,12 +337,14 @@
 				601 /* Frameworks */,
 				802 /* Resources */,
 				804 /* Embed Foundation Extensions */,
+				805 /* Embed Watch Content */,
 				803 /* Crashlytics Run */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 				1201 /* PBXTargetDependency */,
+				1203 /* PBXTargetDependency */,
 			);
 			name = CueCard;
 			packageProductDependencies = (
@@ -315,6 +372,23 @@
 			productReference = 502 /* CueCardWidgets.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		820 /* CueCardWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 920 /* Build configuration list for PBXNativeTarget "CueCardWatch" */;
+			buildPhases = (
+				821 /* Sources */,
+				822 /* Frameworks */,
+				823 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CueCardWatch;
+			productName = CueCardWatch;
+			productReference = 503 /* CueCardWatch.app */;
+			productType = "com.apple.product-type.application";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -329,6 +403,9 @@
 						CreatedOnToolsVersion = 15.0;
 					};
 					810 = {
+						CreatedOnToolsVersion = 26.0;
+					};
+					820 = {
 						CreatedOnToolsVersion = 26.0;
 					};
 				};
@@ -351,6 +428,7 @@
 			targets = (
 				800 /* CueCard */,
 				810 /* CueCardWidgets */,
+				820 /* CueCardWatch */,
 			);
 		};
 /* End PBXProject section */
@@ -370,6 +448,14 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		823 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				069 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -403,6 +489,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				068 /* WatchSessionService.swift in Sources */,
 				059 /* WatchLink.swift in Sources */,
 				057 /* TeleprompterTimerState.swift in Sources */,
 				055 /* CueCardRun.swift in Sources */,
@@ -462,6 +549,20 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		821 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				061 /* CueCardWatchApp.swift in Sources */,
+				062 /* WatchConnector.swift in Sources */,
+				063 /* WatchHomeView.swift in Sources */,
+				064 /* WatchLink.swift in Sources */,
+				065 /* TeleprompterTimerState.swift in Sources */,
+				066 /* CueColor.swift in Sources */,
+				067 /* AppColors.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -469,6 +570,11 @@
 			isa = PBXTargetDependency;
 			target = 810 /* CueCardWidgets */;
 			targetProxy = 1200 /* PBXContainerItemProxy */;
+		};
+		1203 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 820 /* CueCardWatch */;
+			targetProxy = 1202 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -720,6 +826,64 @@
 			};
 			name = Release;
 		};
+		A07 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 18;
+				DEVELOPMENT_TEAM = 983LBM5U6B;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = CueCard;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.thisisnsh.cuecard.ios;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.5.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.thisisnsh.cuecard.ios.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
+		A08 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 18;
+				DEVELOPMENT_TEAM = 983LBM5U6B;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = CueCard;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_WKCompanionAppBundleIdentifier = com.thisisnsh.cuecard.ios;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.5.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.thisisnsh.cuecard.ios.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -746,6 +910,15 @@
 			buildConfigurations = (
 				A05 /* Debug */,
 				A06 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		920 /* Build configuration list for PBXNativeTarget "CueCardWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A07 /* Debug */,
+				A08 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -37,8 +37,6 @@ enum WatchCommand: Codable, Equatable {
     case showCard(session: UUID, index: Int)
     /// Open one of the watch's decks on the iPhone, where the watch is in it.
     case openDeck(id: UUID, title: String, cards: [String], index: Int)
-    /// Close the deck open on the iPhone.
-    case closeDeck(session: UUID)
     /// Send the current state back.
     case refresh
 }

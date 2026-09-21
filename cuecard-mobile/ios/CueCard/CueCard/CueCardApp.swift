@@ -38,6 +38,10 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(true)
 
         Analytics.logEvent(AnalyticsEventAppOpen, parameters: nil)
+
+        // At launch, so a command from the watch that launched the app in the
+        // background is heard.
+        WatchSessionService.shared.activate()
         return true
     }
 }
