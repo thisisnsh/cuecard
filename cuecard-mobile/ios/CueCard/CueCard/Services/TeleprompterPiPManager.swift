@@ -23,7 +23,10 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
     static let shared = TeleprompterPiPManager()
 
     @Published private(set) var playback = TeleprompterPlaybackState() {
-        didSet { syncLiveActivity() }
+        didSet {
+            syncLiveActivity()
+            syncWatch()
+        }
     }
     @Published private(set) var isPiPActive = false {
         didSet { syncLiveActivity() }
@@ -64,6 +67,8 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
     private var minimizeWhenStarted = false
     private var lastFrameTime: CFTimeInterval = 0
     private let liveActivity = TeleprompterActivityController()
+    /// What the watch was last told, so it is only told again on a change.
+    private var watchTimer: TeleprompterTimerState?
 
     /// The overlay is repainted on the clock's tick. It is a view rather than a
     /// video, so there is no queue to fill ahead of time: each tick draws the
@@ -119,6 +124,7 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         renderer = TeleprompterOverlayRenderer(text: text, settings: settings,
                                             timerDuration: timerDuration, isDarkMode: isDarkMode)
         setupPiP()
+        syncWatch()
     }
 
     /// Settings changed mid-session. The reader stays on the same line through
@@ -266,6 +272,31 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         liveActivity.sync(playback,
                           countdownRemaining: countdownDeadline.map { max(0, $0 - CACurrentMediaTime()) },
                           timerDuration: settings.timerDurationSeconds)
+    }
+
+    /// The session timer as the watch shows it. Nil while no script is open.
+    var timerState: TeleprompterTimerState? {
+        guard hasSession else { return nil }
+        return TeleprompterActivityController.contentState(
+            for: playback,
+            countdownRemaining: countdownDeadline.map { max(0, $0 - CACurrentMediaTime()) },
+            timerDuration: settings.timerDurationSeconds
+        )
+    }
+
+    /// Like the island, the watch ticks the running time itself, so it is
+    /// only told when what it shows changes.
+    private func syncWatch() {
+        let state = timerState
+        switch (state, watchTimer) {
+        case (nil, nil):
+            return
+        case let (state?, last?) where state.matches(last):
+            return
+        default:
+            watchTimer = state
+            WatchSessionService.shared.stateChanged()
+        }
     }
 
     /// The app is leaving the screen and the floating window starts once it
@@ -487,6 +518,7 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         isStartingPiP = false
         minimizeWhenStarted = false
         lastFrameTime = 0
+        syncWatch()
     }
 
     func disable() { cleanup() }

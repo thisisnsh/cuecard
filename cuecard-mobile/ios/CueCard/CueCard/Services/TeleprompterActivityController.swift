@@ -52,10 +52,10 @@ final class TeleprompterActivityController {
         }
     }
 
-    /// The same time and color as the in-app timer.
-    private static func contentState(for playback: TeleprompterPlaybackState,
-                                     countdownRemaining: Double?,
-                                     timerDuration: Int) -> ContentState {
+    /// The same time and color as the in-app timer. The watch shows it too.
+    static func contentState(for playback: TeleprompterPlaybackState,
+                             countdownRemaining: Double?,
+                             timerDuration: Int) -> TeleprompterTimerState {
         let now = Date()
         if playback.isCountingDown {
             return ContentState(phase: .countingDown, tint: .pink,

@@ -4,7 +4,7 @@ import Foundation
 extension TeleprompterRemoteCommand {
     /// Drives the open session. False when there is none.
     @MainActor
-    func run() -> Bool {
+    func run(source: String = "remote") -> Bool {
         let manager = TeleprompterPiPManager.shared
         guard manager.hasSession else { return false }
         switch self {
@@ -12,10 +12,10 @@ extension TeleprompterRemoteCommand {
             let wasRunning = manager.playback.isPlaying || manager.playback.isCountingDown
             manager.togglePlayPause()
             Analytics.logEvent(wasRunning ? "teleprompter_pause" : "teleprompter_play",
-                               parameters: ["source": "remote"])
+                               parameters: ["source": source])
         case .skipBack:
             manager.skip(bySeconds: -Double(Self.skipBackSeconds))
-            Analytics.logEvent("teleprompter_skip_back", parameters: ["source": "remote"])
+            Analytics.logEvent("teleprompter_skip_back", parameters: ["source": source])
         }
         return true
     }

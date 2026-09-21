@@ -28,7 +28,7 @@ final class WatchSessionService: NSObject, ObservableObject {
     /// What the watch shows of the iPhone right now.
     var state: WatchPhoneState {
         WatchPhoneState(
-            teleprompter: nil,
+            teleprompter: TeleprompterPiPManager.shared.timerState,
             cards: nil,
             cueColor: SettingsService.shared.settings.cueColor,
             sentAt: Date()
@@ -52,7 +52,11 @@ final class WatchSessionService: NSObject, ObservableObject {
         switch command {
         case .refresh:
             break
-        case .togglePlayPause, .skipBack, .showCard, .openDeck:
+        case .togglePlayPause:
+            _ = TeleprompterRemoteCommand.togglePlayPause.run(source: "watch")
+        case .skipBack:
+            _ = TeleprompterRemoteCommand.skipBack.run(source: "watch")
+        case .showCard, .openDeck:
             break
         }
     }
