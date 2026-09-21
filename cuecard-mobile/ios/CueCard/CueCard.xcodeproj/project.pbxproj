@@ -32,7 +32,38 @@
 		029 /* WhatsNew.json in Resources */ = {isa = PBXBuildFile; fileRef = 202 /* WhatsNew.json */; };
 		AA7130F62F04E5BC00F5C366 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = AA7130F52F04E5BC00F5C366 /* GoogleService-Info.plist */; };
 		AA856D562F060DFC00B0CBC6 /* GlassEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA856D542F060DFC00B0CBC6 /* GlassEffect.swift */; };
+		030 /* TeleprompterActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123 /* TeleprompterActivityAttributes.swift */; };
+		031 /* TeleprompterActivityController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 124 /* TeleprompterActivityController.swift */; };
+		032 /* CueCardWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 502 /* CueCardWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		033 /* CueCardWidgetsBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130 /* CueCardWidgetsBundle.swift */; };
+		034 /* TeleprompterLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 131 /* TeleprompterLiveActivity.swift */; };
+		035 /* TeleprompterActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123 /* TeleprompterActivityAttributes.swift */; };
+		036 /* AppColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 113 /* AppColors.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		1200 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 1000 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 810;
+			remoteInfo = CueCardWidgets;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		804 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				032 /* CueCardWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		101 /* CueCardApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardApp.swift; sourceTree = "<group>"; };
@@ -55,9 +86,15 @@
 		120 /* NotificationViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationViews.swift; sourceTree = "<group>"; };
 		121 /* WhatsNewService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhatsNewService.swift; sourceTree = "<group>"; };
 		122 /* WhatsNewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhatsNewView.swift; sourceTree = "<group>"; };
+		123 /* TeleprompterActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeleprompterActivityAttributes.swift; sourceTree = "<group>"; };
+		124 /* TeleprompterActivityController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeleprompterActivityController.swift; sourceTree = "<group>"; };
+		130 /* CueCardWidgetsBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardWidgetsBundle.swift; sourceTree = "<group>"; };
+		131 /* TeleprompterLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeleprompterLiveActivity.swift; sourceTree = "<group>"; };
+		132 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		201 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		202 /* WhatsNew.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = WhatsNew.json; sourceTree = "<group>"; };
 		501 /* CueCard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CueCard.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		502 /* CueCardWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = CueCardWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA2E5C0E2F0F38B500E1D079 /* CueCard.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CueCard.entitlements; sourceTree = "<group>"; };
 		AA7130F52F04E5BC00F5C366 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		AA856D542F060DFC00B0CBC6 /* GlassEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassEffect.swift; sourceTree = "<group>"; };
@@ -73,6 +110,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		812 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -80,6 +124,7 @@
 			isa = PBXGroup;
 			children = (
 				710 /* CueCard */,
+				730 /* CueCardWidgets */,
 				720 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -122,6 +167,7 @@
 				108 /* SettingsService.swift */,
 				114 /* ReviewPromptService.swift */,
 				112 /* TeleprompterPiPManager.swift */,
+				124 /* TeleprompterActivityController.swift */,
 				119 /* RemoteNotificationService.swift */,
 				121 /* WhatsNewService.swift */,
 			);
@@ -136,6 +182,7 @@
 				115 /* ScriptDocument.swift */,
 				116 /* CueColor.swift */,
 				118 /* RemoteNotification.swift */,
+				123 /* TeleprompterActivityAttributes.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -144,6 +191,7 @@
 			isa = PBXGroup;
 			children = (
 				501 /* CueCard.app */,
+				502 /* CueCardWidgets.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -156,6 +204,16 @@
 			path = Modifiers;
 			sourceTree = "<group>";
 		};
+		730 /* CueCardWidgets */ = {
+			isa = PBXGroup;
+			children = (
+				130 /* CueCardWidgetsBundle.swift */,
+				131 /* TeleprompterLiveActivity.swift */,
+				132 /* Info.plist */,
+			);
+			path = CueCardWidgets;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -166,11 +224,13 @@
 				801 /* Sources */,
 				601 /* Frameworks */,
 				802 /* Resources */,
+				804 /* Embed Foundation Extensions */,
 				803 /* Crashlytics Run */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				1201 /* PBXTargetDependency */,
 			);
 			name = CueCard;
 			packageProductDependencies = (
@@ -180,6 +240,23 @@
 			productName = CueCard;
 			productReference = 501 /* CueCard.app */;
 			productType = "com.apple.product-type.application";
+		};
+		810 /* CueCardWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 910 /* Build configuration list for PBXNativeTarget "CueCardWidgets" */;
+			buildPhases = (
+				811 /* Sources */,
+				812 /* Frameworks */,
+				813 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CueCardWidgets;
+			productName = CueCardWidgets;
+			productReference = 502 /* CueCardWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -193,6 +270,9 @@
 				TargetAttributes = {
 					800 = {
 						CreatedOnToolsVersion = 15.0;
+					};
+					810 = {
+						CreatedOnToolsVersion = 26.0;
 					};
 				};
 			};
@@ -213,6 +293,7 @@
 			projectRoot = "";
 			targets = (
 				800 /* CueCard */,
+				810 /* CueCardWidgets */,
 			);
 		};
 /* End PBXProject section */
@@ -225,6 +306,13 @@
 				007 /* Assets.xcassets in Resources */,
 				AA7130F62F04E5BC00F5C366 /* GoogleService-Info.plist in Resources */,
 				029 /* WhatsNew.json in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		813 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -278,10 +366,31 @@
 				026 /* NotificationViews.swift in Sources */,
 				027 /* WhatsNewService.swift in Sources */,
 				028 /* WhatsNewView.swift in Sources */,
+				030 /* TeleprompterActivityAttributes.swift in Sources */,
+				031 /* TeleprompterActivityController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		811 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				033 /* CueCardWidgetsBundle.swift in Sources */,
+				034 /* TeleprompterLiveActivity.swift in Sources */,
+				035 /* TeleprompterActivityAttributes.swift in Sources */,
+				036 /* AppColors.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		1201 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 810 /* CueCardWidgets */;
+			targetProxy = 1200 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		A01 /* Debug */ = {
@@ -473,6 +582,64 @@
 			};
 			name = Release;
 		};
+		A05 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 18;
+				DEVELOPMENT_TEAM = 983LBM5U6B;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CueCardWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = CueCard;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.5.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.thisisnsh.cuecard.ios.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		A06 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 18;
+				DEVELOPMENT_TEAM = 983LBM5U6B;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CueCardWidgets/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = CueCard;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.5.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.thisisnsh.cuecard.ios.widgets;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -490,6 +657,15 @@
 			buildConfigurations = (
 				A03 /* Debug */,
 				A04 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		910 /* Build configuration list for PBXNativeTarget "CueCardWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A05 /* Debug */,
+				A06 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
