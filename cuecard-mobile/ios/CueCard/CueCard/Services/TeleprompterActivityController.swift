@@ -8,31 +8,7 @@ import Foundation
 final class TeleprompterActivityController {
     private typealias ContentState = TeleprompterActivityAttributes.ContentState
 
-    /// Every iPhone from hardware generation 15 has the island: the 14 Pro is
-    /// `iPhone15,2`, while the plain 14 is still `iPhone14,7`. Later models are
-    /// assumed to have it too. The 16e is the one since then with a notch.
-    private static let firstDynamicIslandGeneration = 15
-    private static let modelsWithoutDynamicIsland: Set<String> = ["iPhone17,5"] // 16e
-
-    static let hasDynamicIsland: Bool = {
-        // The simulator reports the Mac's architecture, and the simulated
-        // device separately.
-        let model: String
-        if let simulated = ProcessInfo.processInfo.environment["SIMULATOR_MODEL_IDENTIFIER"] {
-            model = simulated
-        } else {
-            var systemInfo = utsname()
-            uname(&systemInfo)
-            model = withUnsafeBytes(of: &systemInfo.machine) { bytes in
-                String(decoding: bytes.prefix { $0 != 0 }, as: UTF8.self)
-            }
-        }
-        // "iPhone15,2" is generation 15. iPads and anything else never match.
-        guard model.hasPrefix("iPhone"), !modelsWithoutDynamicIsland.contains(model),
-              let generation = Int(model.dropFirst("iPhone".count).prefix { $0.isNumber })
-        else { return false }
-        return generation >= firstDynamicIslandGeneration
-    }()
+    static var hasDynamicIsland: Bool { DeviceModel.hasDynamicIsland }
 
     private var activity: Activity<TeleprompterActivityAttributes>?
     private var lastState: ContentState?

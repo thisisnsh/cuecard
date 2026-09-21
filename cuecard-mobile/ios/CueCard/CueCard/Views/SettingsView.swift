@@ -1,3 +1,4 @@
+import AppIntents
 import SwiftUI
 import UIKit
 import FirebaseAnalytics
@@ -27,6 +28,8 @@ struct EditorSettingsView: View {
                     presets: TeleprompterSettings.editorFontSizePresets
                 )
             }
+
+            PlaybackControlsSection(screen: "settings")
 
             AppearanceSection()
 
@@ -121,6 +124,8 @@ struct TeleprompterSettingsView: View {
                 AspectRatioPicker(selection: $settingsService.settings.overlayAspectRatio)
             }
 
+            PlaybackControlsSection(screen: Self.screen)
+
             AppearanceSection()
 
             AdvancedSection(screen: Self.screen, footer: advancedFooter) {
@@ -212,6 +217,66 @@ private struct WhatsNewSection: View {
                 .whatsNewCover(isPresented: $isPresented, release: release, version: whatsNew.version)
             }
         }
+    }
+}
+
+/// Where play/pause and back 10 seconds can be reached without opening the
+/// app, and how to set each up. Only what this iPhone has is listed, and none
+/// of it before iOS 17, which the intents need.
+private struct PlaybackControlsSection: View {
+    @Environment(\.colorScheme) var colorScheme
+
+    let screen: String
+
+    var body: some View {
+        if #available(iOS 17.0, *) {
+            Section {
+                if TeleprompterActivityController.hasDynamicIsland {
+                    row("Dynamic Island", systemImage: "capsule.fill",
+                        detail: "While the floating window is up, touch and hold the timer in the island.")
+                }
+                if DeviceModel.hasActionButton {
+                    row("Action Button", systemImage: "button.vertical.left.press",
+                        detail: "In the Settings app, go to Action Button, choose Shortcut, and pick Play or Pause under CueCard.")
+                }
+                if #available(iOS 18.0, *) {
+                    row("Control Center", systemImage: "switch.2",
+                        detail: "Open Control Center, tap +, then Add a Control, and search for CueCard.")
+                }
+                row("Siri", systemImage: "waveform",
+                    detail: "Say \u{201C}Play or pause CueCard\u{201D} or \u{201C}Skip back in CueCard.\u{201D}")
+
+                ShortcutsLink {
+                    AnalyticsEvents.logButtonClick("shortcuts_link", screen: screen)
+                }
+                .shortcutsLinkStyle(colorScheme == .dark ? .dark : .light)
+                .frame(maxWidth: .infinity)
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+            } header: {
+                Text("Playback Controls")
+            } footer: {
+                Text("Play, pause, or go back \(TeleprompterRemoteCommand.skipBackSeconds) seconds without opening CueCard while a script is open in the teleprompter.")
+            }
+        }
+    }
+
+    private func row(_ title: String, systemImage: String, detail: String) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: systemImage)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                .frame(width: 22)
+                .padding(.top, 2)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                Text(detail)
+                    .font(.footnote)
+                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+            }
+        }
+        .padding(.vertical, 2)
     }
 }
 
