@@ -91,32 +91,3 @@ enum ScriptFile {
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
-
-/// Helpers for moving scripts between the editor and Apple Notes. Notes has no
-/// API other apps can read or write, so a script goes out through the share
-/// sheet, where Notes is one of the destinations, and comes back in through the
-/// clipboard.
-enum AppleNotes {
-    /// Opens the Notes app, so the user can copy the note they want to bring in.
-    static let appURL = URL(string: "mobilenotes://")!
-
-    /// Share sheet destinations that aren't Notes, left out so Notes is easy to find.
-    static let excludedActivityTypes: [UIActivity.ActivityType] = [
-        .airDrop, .mail, .message, .print, .copyToPasteboard,
-        .assignToContact, .saveToCameraRoll, .addToReadingList,
-        .markupAsPDF, .openInIBooks,
-        .postToFacebook, .postToTwitter, .postToWeibo, .postToTencentWeibo,
-        .postToFlickr, .postToVimeo
-    ]
-
-    /// Title for a script pasted in from Notes. Notes titles a note with its
-    /// first line, so the script keeps that same name here.
-    static func title(for text: String) -> String {
-        let firstLine = text
-            .split(whereSeparator: \.isNewline)
-            .lazy
-            .map { $0.trimmingCharacters(in: .whitespaces) }
-            .first { !$0.isEmpty }
-        return firstLine.map { String($0.prefix(60)) } ?? "Imported Note"
-    }
-}

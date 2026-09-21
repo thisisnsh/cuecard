@@ -17,7 +17,6 @@ struct HomeView: View {
     @State private var saveNoteTitle = ""
     @State private var showingImporter = false
     @State private var showingExporter = false
-    @State private var showingAppleNotesImport = false
     @State private var exportDocument: ScriptDocument?
     @State private var exportFileName = "Speech"
     @State private var fileErrorMessage: String?
@@ -206,26 +205,6 @@ struct HomeView: View {
         }
     }
 
-    /// Hand the script to the share sheet, where Notes saves it as a new note.
-    private func exportToAppleNotes() {
-        guard let root = UIApplication.shared.connectedScenes
-            .compactMap({ $0 as? UIWindowScene })
-            .flatMap(\.windows)
-            .first(where: \.isKeyWindow)?
-            .rootViewController else { return }
-        var top = root
-        while let presented = top.presentedViewController { top = presented }
-
-        let text = TeleprompterParser.normalizingTags(in: settingsService.notes)
-        let controller = UIActivityViewController(activityItems: [text], applicationActivities: nil)
-        controller.excludedActivityTypes = AppleNotes.excludedActivityTypes
-        controller.popoverPresentationController?.sourceView = top.view
-        controller.popoverPresentationController?.sourceRect = CGRect(
-            x: top.view.bounds.midX, y: top.view.bounds.midY, width: 0, height: 0
-        )
-        top.present(controller, animated: true)
-    }
-
     private func handleExport(_ result: Result<URL, Error>) {
         exportDocument = nil
         if case .failure(let error) = result {
@@ -370,40 +349,18 @@ struct HomeView: View {
 
                             Divider()
 
-                            Menu {
-                                Button(action: {
-                                    AnalyticsEvents.logButtonClick("import_file", screen: "home")
-                                    showingImporter = true
-                                }) {
-                                    Label("From Files", systemImage: "folder")
-                                }
-
-                                Button(action: {
-                                    AnalyticsEvents.logButtonClick("import_apple_notes", screen: "home")
-                                    showingAppleNotesImport = true
-                                }) {
-                                    Label("From Apple Notes", systemImage: "note.text")
-                                }
-                            } label: {
-                                Label("Import Notes", systemImage: "square.and.arrow.down.on.square")
+                            Button(action: {
+                                AnalyticsEvents.logButtonClick("import_file", screen: "home")
+                                showingImporter = true
+                            }) {
+                                Label("Import from File", systemImage: "arrow.down.doc")
                             }
 
-                            Menu {
-                                Button(action: {
-                                    AnalyticsEvents.logButtonClick("export_file", screen: "home")
-                                    startExport()
-                                }) {
-                                    Label("To Files", systemImage: "folder")
-                                }
-
-                                Button(action: {
-                                    AnalyticsEvents.logButtonClick("export_apple_notes", screen: "home")
-                                    exportToAppleNotes()
-                                }) {
-                                    Label("To Apple Notes", systemImage: "note.text")
-                                }
-                            } label: {
-                                Label("Export Notes", systemImage: "square.and.arrow.up.on.square")
+                            Button(action: {
+                                AnalyticsEvents.logButtonClick("export_file", screen: "home")
+                                startExport()
+                            }) {
+                                Label("Export to File", systemImage: "arrow.up.doc")
                             }
                             .disabled(!hasNotes)
                         } label: {
@@ -429,9 +386,6 @@ struct HomeView: View {
             }
             .sheet(isPresented: $showingSavedNotes) {
                 SavedNotesView()
-            }
-            .sheet(isPresented: $showingAppleNotesImport) {
-                AppleNotesImportView()
             }
             .alert("Save Note", isPresented: $showingSaveDialog) {
                 TextField("Note title", text: $saveNoteTitle)
@@ -526,94 +480,6 @@ struct NotesEditorView: View {
     /// The bottom fade reaches up past the floating controls, so a line is gone
     /// before it can pass behind them.
     private static let bottomFade: CGFloat = 72
-}
-
-/// Brings a note in from Apple Notes. Notes can't be read directly, so the user
-/// copies the note there and pastes it here.
-struct AppleNotesImportView: View {
-    @EnvironmentObject var settingsService: SettingsService
-    @Environment(\.dismiss) var dismiss
-    @Environment(\.openURL) private var openURL
-    @Environment(\.colorScheme) var colorScheme
-    @State private var errorMessage: String?
-
-    var body: some View {
-        NavigationStack {
-            VStack(alignment: .leading, spacing: 20) {
-                VStack(alignment: .leading, spacing: 12) {
-                    step(1, "Open the note in Notes.")
-                    step(2, "Tap and hold the text, then choose Select All and Copy.")
-                    step(3, "Come back here and tap Paste.")
-                }
-
-                if let errorMessage {
-                    Text(errorMessage)
-                        .font(.subheadline)
-                        .foregroundStyle(.red)
-                }
-
-                Spacer()
-
-                VStack(spacing: 12) {
-                    PasteButton(payloadType: String.self) { strings in
-                        let text = strings.joined(separator: "\n")
-                        Task { @MainActor in importPasted(text) }
-                    }
-                    .labelStyle(.titleAndIcon)
-                    .buttonBorderShape(.capsule)
-                    .frame(maxWidth: .infinity)
-
-                    Button {
-                        AnalyticsEvents.logButtonClick("open_apple_notes", screen: "apple_notes_import")
-                        openURL(AppleNotes.appURL)
-                    } label: {
-                        Label("Open Notes", systemImage: "arrow.up.right")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.bordered)
-                    .buttonBorderShape(.capsule)
-                    .controlSize(.large)
-                }
-            }
-            .padding(20)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .background(AppColors.background(for: colorScheme))
-            .navigationTitle("Import from Apple Notes")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Cancel") {
-                        AnalyticsEvents.logButtonClick("cancel", screen: "apple_notes_import")
-                        dismiss()
-                    }
-                }
-            }
-        }
-        .presentationDetents([.medium, .large])
-    }
-
-    private func step(_ number: Int, _ text: String) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 10) {
-            Text("\(number).")
-                .font(.body.monospacedDigit().weight(.semibold))
-                .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-            Text(text)
-                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-        }
-    }
-
-    private func importPasted(_ text: String) {
-        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            errorMessage = "There's no text on the clipboard. Copy the note in Notes first."
-            return
-        }
-        AnalyticsEvents.logButtonClick("paste_apple_note", screen: "apple_notes_import")
-        settingsService.importNote(
-            title: AppleNotes.title(for: text),
-            content: TeleprompterParser.normalizingTags(in: text)
-        )
-        dismiss()
-    }
 }
 
 /// View for displaying and managing saved notes
