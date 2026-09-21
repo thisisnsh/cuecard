@@ -57,6 +57,11 @@
 		052 /* CueCardsLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 141 /* CueCardsLiveActivity.swift */; };
 		053 /* CueCardsRemoteCommand+Widget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 142 /* CueCardsRemoteCommand+Widget.swift */; };
 		054 /* CueColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 116 /* CueColor.swift */; };
+		055 /* CueCardRun.swift in Sources */ = {isa = PBXBuildFile; fileRef = 143 /* CueCardRun.swift */; };
+		056 /* CueCardRun.swift in Sources */ = {isa = PBXBuildFile; fileRef = 143 /* CueCardRun.swift */; };
+		057 /* TeleprompterTimerState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 144 /* TeleprompterTimerState.swift */; };
+		058 /* TeleprompterTimerState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 144 /* TeleprompterTimerState.swift */; };
+		059 /* WatchLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 145 /* WatchLink.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -130,6 +135,9 @@
 		AA2E5C0E2F0F38B500E1D079 /* CueCard.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CueCard.entitlements; sourceTree = "<group>"; };
 		AA7130F52F04E5BC00F5C366 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		AA856D542F060DFC00B0CBC6 /* GlassEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassEffect.swift; sourceTree = "<group>"; };
+		143 /* CueCardRun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardRun.swift; sourceTree = "<group>"; };
+		144 /* TeleprompterTimerState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeleprompterTimerState.swift; sourceTree = "<group>"; };
+		145 /* WatchLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchLink.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -215,6 +223,9 @@
 		713 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				145 /* WatchLink.swift */,
+				144 /* TeleprompterTimerState.swift */,
+				143 /* CueCardRun.swift */,
 				137 /* CueCardsIntents.swift */,
 				136 /* CueCardsActivityAttributes.swift */,
 				135 /* CueCards.swift */,
@@ -392,6 +403,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				059 /* WatchLink.swift in Sources */,
+				057 /* TeleprompterTimerState.swift in Sources */,
+				055 /* CueCardRun.swift in Sources */,
 				051 /* CueCardsView.swift in Sources */,
 				050 /* CueCardsRemoteCommand+App.swift in Sources */,
 				049 /* CueCardsSession.swift in Sources */,
@@ -431,6 +445,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				058 /* TeleprompterTimerState.swift in Sources */,
+				056 /* CueCardRun.swift in Sources */,
 				054 /* CueColor.swift in Sources */,
 				053 /* CueCardsRemoteCommand+Widget.swift in Sources */,
 				052 /* CueCardsLiveActivity.swift in Sources */,

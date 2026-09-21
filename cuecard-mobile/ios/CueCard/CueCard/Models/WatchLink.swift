@@ -1,0 +1,76 @@
+import Foundation
+
+/// What the iPhone app and the watch app say to each other. Shared by both.
+///
+/// Each message, reply and application context carries one of these types as
+/// JSON under one key, so the two sides agree on types rather than on
+/// dictionary spellings.
+enum WatchLink {
+    /// A `WatchCommand`, from the watch.
+    static let commandKey = "command"
+    /// A `WatchPhoneState`, from the iPhone: in the application context, in a
+    /// push, and in the reply to a command.
+    static let stateKey = "state"
+    /// Names what a transferred file holds.
+    static let fileKindKey = "kind"
+    /// A transferred file holding `[WatchDeck]`.
+    static let decksFileKind = "decks"
+
+    static func payload<Value: Encodable>(_ value: Value, key: String) -> [String: Any] {
+        guard let data = try? JSONEncoder().encode(value) else { return [:] }
+        return [key: data]
+    }
+
+    static func value<Value: Decodable>(_ type: Value.Type, key: String, in payload: [String: Any]) -> Value? {
+        guard let data = payload[key] as? Data else { return nil }
+        return try? JSONDecoder().decode(type, from: data)
+    }
+}
+
+/// Something the watch asks the iPhone to do.
+enum WatchCommand: Codable, Equatable {
+    case togglePlayPause
+    case skipBack
+    /// Show this card of the deck open on the iPhone. A card number rather
+    /// than next or back, so a move the watch made while out of reach lands
+    /// in the same place when it gets through.
+    case showCard(session: UUID, index: Int)
+    /// Open one of the watch's decks on the iPhone, where the watch is in it.
+    case openDeck(id: UUID, title: String, cards: [String], index: Int)
+    /// Close the deck open on the iPhone.
+    case closeDeck(session: UUID)
+    /// Send the current state back.
+    case refresh
+}
+
+/// The deck open in cards mode on the iPhone.
+struct WatchCardsState: Codable, Equatable {
+    /// This opening of the deck. A move made for an earlier one is dropped.
+    var session: UUID
+    /// The saved note the deck came from, when it came from one.
+    var deckID: UUID?
+    var title: String
+    var cards: [String]
+    /// Equal to the number of cards once every one has been put away.
+    var index: Int
+}
+
+/// Everything the watch shows of the iPhone.
+struct WatchPhoneState: Codable, Equatable {
+    /// Nil while no script is open in the teleprompter.
+    var teleprompter: TeleprompterTimerState?
+    /// Nil while no deck is open.
+    var cards: WatchCardsState?
+    var cueColor: CueColor
+    /// When the iPhone sent it. A push and an application context can arrive
+    /// out of turn, and the older of the two is dropped.
+    var sentAt: Date
+}
+
+/// A saved note sent to the watch, to be read there on its own.
+struct WatchDeck: Codable, Identifiable, Equatable {
+    /// The saved note's.
+    var id: UUID
+    var title: String
+    var cards: [String]
+}
