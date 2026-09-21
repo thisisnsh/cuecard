@@ -232,6 +232,17 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         seek(toScriptTime: line / linesPerSecond)
     }
 
+    /// A script is open in the teleprompter, so there is playback to control.
+    var hasSession: Bool { renderer != nil }
+
+    /// Move the script by a number of its seconds, from where it shows now.
+    /// Playing on past the last line leaves the text resting there, so a skip
+    /// back from the end counts from the last line rather than the clock.
+    func skip(bySeconds seconds: Double) {
+        advanceClock()
+        seek(toScriptTime: min(playback.scriptTime, scriptDuration) + seconds)
+    }
+
     private func seek(toScriptTime seconds: Double) {
         guard seconds.isFinite else { return }
         advanceClock()

@@ -1,0 +1,43 @@
+import AppIntents
+import Foundation
+
+/// Playback commands that reach a running session without opening the app:
+/// the Live Activity's buttons, and anything else that runs these intents.
+/// Shared by the app and the widget extension. A Live Activity intent always
+/// runs in the app's process, where `run()` drives the session; the widget
+/// extension only needs the types to build its buttons.
+enum TeleprompterRemoteCommand {
+    case togglePlayPause, skipBack
+
+    /// How far Back goes, in seconds of script.
+    static let skipBackSeconds = 10
+}
+
+/// Nothing to control until a script is open in the teleprompter.
+struct TeleprompterNotRunningError: Error, CustomLocalizedStringResourceConvertible {
+    var localizedStringResource: LocalizedStringResource {
+        "Open a script in CueCard's teleprompter first."
+    }
+}
+
+@available(iOS 17.0, *)
+struct ToggleTeleprompterPlaybackIntent: LiveActivityIntent {
+    static var title: LocalizedStringResource = "Play or Pause Teleprompter"
+    static var description = IntentDescription("Plays or pauses the script open in the teleprompter.")
+
+    func perform() async throws -> some IntentResult {
+        guard await TeleprompterRemoteCommand.togglePlayPause.run() else { throw TeleprompterNotRunningError() }
+        return .result()
+    }
+}
+
+@available(iOS 17.0, *)
+struct SkipBackTeleprompterIntent: LiveActivityIntent {
+    static var title: LocalizedStringResource = "Skip Teleprompter Back 10 Seconds"
+    static var description = IntentDescription("Moves the teleprompter's script back 10 seconds. The timer carries on.")
+
+    func perform() async throws -> some IntentResult {
+        guard await TeleprompterRemoteCommand.skipBack.run() else { throw TeleprompterNotRunningError() }
+        return .result()
+    }
+}

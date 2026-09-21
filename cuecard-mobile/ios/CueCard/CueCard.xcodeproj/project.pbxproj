@@ -39,6 +39,10 @@
 		034 /* TeleprompterLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 131 /* TeleprompterLiveActivity.swift */; };
 		035 /* TeleprompterActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123 /* TeleprompterActivityAttributes.swift */; };
 		036 /* AppColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 113 /* AppColors.swift */; };
+		037 /* TeleprompterPlaybackIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 125 /* TeleprompterPlaybackIntents.swift */; };
+		038 /* TeleprompterPlaybackIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 125 /* TeleprompterPlaybackIntents.swift */; };
+		039 /* TeleprompterRemoteCommand+App.swift in Sources */ = {isa = PBXBuildFile; fileRef = 126 /* TeleprompterRemoteCommand+App.swift */; };
+		040 /* TeleprompterRemoteCommand+Widget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 133 /* TeleprompterRemoteCommand+Widget.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -88,9 +92,12 @@
 		122 /* WhatsNewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhatsNewView.swift; sourceTree = "<group>"; };
 		123 /* TeleprompterActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeleprompterActivityAttributes.swift; sourceTree = "<group>"; };
 		124 /* TeleprompterActivityController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeleprompterActivityController.swift; sourceTree = "<group>"; };
+		125 /* TeleprompterPlaybackIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeleprompterPlaybackIntents.swift; sourceTree = "<group>"; };
+		126 /* TeleprompterRemoteCommand+App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TeleprompterRemoteCommand+App.swift"; sourceTree = "<group>"; };
 		130 /* CueCardWidgetsBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardWidgetsBundle.swift; sourceTree = "<group>"; };
 		131 /* TeleprompterLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeleprompterLiveActivity.swift; sourceTree = "<group>"; };
 		132 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		133 /* TeleprompterRemoteCommand+Widget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TeleprompterRemoteCommand+Widget.swift"; sourceTree = "<group>"; };
 		201 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		202 /* WhatsNew.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = WhatsNew.json; sourceTree = "<group>"; };
 		501 /* CueCard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CueCard.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -168,6 +175,7 @@
 				114 /* ReviewPromptService.swift */,
 				112 /* TeleprompterPiPManager.swift */,
 				124 /* TeleprompterActivityController.swift */,
+				126 /* TeleprompterRemoteCommand+App.swift */,
 				119 /* RemoteNotificationService.swift */,
 				121 /* WhatsNewService.swift */,
 			);
@@ -183,6 +191,7 @@
 				116 /* CueColor.swift */,
 				118 /* RemoteNotification.swift */,
 				123 /* TeleprompterActivityAttributes.swift */,
+				125 /* TeleprompterPlaybackIntents.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -209,6 +218,7 @@
 			children = (
 				130 /* CueCardWidgetsBundle.swift */,
 				131 /* TeleprompterLiveActivity.swift */,
+				133 /* TeleprompterRemoteCommand+Widget.swift */,
 				132 /* Info.plist */,
 			);
 			path = CueCardWidgets;
@@ -368,6 +378,8 @@
 				028 /* WhatsNewView.swift in Sources */,
 				030 /* TeleprompterActivityAttributes.swift in Sources */,
 				031 /* TeleprompterActivityController.swift in Sources */,
+				037 /* TeleprompterPlaybackIntents.swift in Sources */,
+				039 /* TeleprompterRemoteCommand+App.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -379,6 +391,8 @@
 				034 /* TeleprompterLiveActivity.swift in Sources */,
 				035 /* TeleprompterActivityAttributes.swift in Sources */,
 				036 /* AppColors.swift in Sources */,
+				038 /* TeleprompterPlaybackIntents.swift in Sources */,
+				040 /* TeleprompterRemoteCommand+Widget.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

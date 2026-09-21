@@ -33,6 +33,11 @@ struct TeleprompterLiveActivity: Widget {
                         .frame(maxWidth: 140, alignment: .trailing)
                         .padding(.trailing, 4)
                 }
+                DynamicIslandExpandedRegion(.bottom) {
+                    PlaybackButtons(state: state, tint: tint,
+                                    fill: AppColors.Dark.textSecondary.opacity(0.25))
+                        .padding(.top, 4)
+                }
             } compactLeading: {
                 Image(systemName: state.symbolName)
                     .foregroundStyle(tint)
@@ -58,24 +63,62 @@ private struct LockScreenTimerView: View {
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("CueCard")
-                    .font(.caption)
-                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                Label(state.statusTitle, systemImage: state.symbolName)
-                    .font(.headline)
-                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+        VStack(spacing: 12) {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("CueCard")
+                        .font(.caption)
+                        .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                    Label(state.statusTitle, systemImage: state.symbolName)
+                        .font(.headline)
+                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                }
+                Spacer()
+                TimerText(state: state)
+                    .font(.system(size: 36, weight: .bold, design: .rounded).monospacedDigit())
+                    .foregroundStyle(state.tint.color(for: colorScheme))
+                    .multilineTextAlignment(.trailing)
+                    .frame(maxWidth: 160, alignment: .trailing)
             }
-            Spacer()
-            TimerText(state: state)
-                .font(.system(size: 36, weight: .bold, design: .rounded).monospacedDigit())
-                .foregroundStyle(state.tint.color(for: colorScheme))
-                .multilineTextAlignment(.trailing)
-                .frame(maxWidth: 160, alignment: .trailing)
+            PlaybackButtons(state: state,
+                            tint: AppColors.textPrimary(for: colorScheme),
+                            fill: AppColors.textSecondary(for: colorScheme).opacity(0.18))
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 16)
+    }
+}
+
+/// Back 10 seconds and play/pause, run in the app without opening it. Buttons
+/// in a Live Activity need iOS 17; before that the timer shows alone.
+private struct PlaybackButtons: View {
+    let state: ContentState
+    let tint: Color
+    let fill: Color
+
+    var body: some View {
+        if #available(iOS 17.0, *) {
+            HStack(spacing: 12) {
+                Button(intent: SkipBackTeleprompterIntent()) {
+                    label("gobackward.\(TeleprompterRemoteCommand.skipBackSeconds)")
+                }
+                .accessibilityLabel("Back \(TeleprompterRemoteCommand.skipBackSeconds) Seconds")
+
+                Button(intent: ToggleTeleprompterPlaybackIntent()) {
+                    label(state.phase == .paused ? "play.fill" : "pause.fill")
+                }
+                .accessibilityLabel(state.phase == .paused ? "Play" : "Pause")
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private func label(_ systemImage: String) -> some View {
+        Image(systemName: systemImage)
+            .font(.system(size: 18, weight: .semibold))
+            .foregroundStyle(tint)
+            .frame(maxWidth: .infinity, minHeight: 40)
+            .background(fill, in: Capsule())
     }
 }
 
