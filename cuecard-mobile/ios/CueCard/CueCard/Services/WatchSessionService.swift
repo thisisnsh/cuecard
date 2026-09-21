@@ -12,6 +12,8 @@ import WatchConnectivity
 final class WatchSessionService: NSObject, ObservableObject {
     static let shared = WatchSessionService()
 
+    /// A watch is paired with this iPhone, whether or not CueCard is on it.
+    @Published private(set) var isPaired = false
     /// A watch is paired and has CueCard on it.
     @Published private(set) var isWatchAppInstalled = false
 
@@ -127,6 +129,7 @@ final class WatchSessionService: NSObject, ObservableObject {
 
     private func sessionStateChanged() {
         guard let session else { return }
+        isPaired = session.activationState == .activated && session.isPaired
         isWatchAppInstalled = session.activationState == .activated
             && session.isPaired && session.isWatchAppInstalled
         // A watch app installed again, or another watch, has none of them.

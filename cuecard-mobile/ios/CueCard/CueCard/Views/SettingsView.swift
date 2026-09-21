@@ -283,13 +283,18 @@ private struct PlaybackControlsSection: View {
 }
 
 /// Which saved notes are on the watch, to read there with the iPhone out of
-/// reach. Left out when there is no watch with CueCard on it.
+/// reach, or a way to install the watch app while a watch is paired without
+/// it. Left out when no watch is paired.
 private struct AppleWatchSection: View {
     @EnvironmentObject var settingsService: SettingsService
     @ObservedObject private var watch = WatchSessionService.shared
     @Environment(\.colorScheme) var colorScheme
+    @Environment(\.openURL) private var openURL
 
     let screen: String
+
+    /// The Watch app on the iPhone, open on its App Store.
+    private static let watchAppURL = URL(string: "itms-watchs://")!
 
     var body: some View {
         if watch.isWatchAppInstalled {
@@ -316,6 +321,27 @@ private struct AppleWatchSection: View {
                 Text("Apple Watch")
             } footer: {
                 Text("Notes you turn on stay on your watch, to swipe through card by card even without your iPhone. A note splits into cards where it has separators.\n\n\(WatchTips.returnToClock)")
+            }
+        } else if watch.isPaired {
+            Section {
+                Button {
+                    AnalyticsEvents.logButtonClick("watch_install", screen: screen)
+                    openURL(Self.watchAppURL)
+                } label: {
+                    HStack {
+                        Text("Install on Apple Watch")
+                            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                        Spacer()
+                        Image(systemName: "applewatch")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                    }
+                    .contentShape(Rectangle())
+                }
+            } header: {
+                Text("Apple Watch")
+            } footer: {
+                Text("Opens the Watch app. Under Available Apps, tap Install next to CueCard. Then move through cards and control the teleprompter from your wrist.")
             }
         }
     }
