@@ -31,6 +31,8 @@ struct EditorSettingsView: View {
 
             PlaybackControlsSection(screen: "settings")
 
+            AppleWatchSection(screen: "settings")
+
             AppearanceSection()
 
             AdvancedSection(
@@ -277,6 +279,45 @@ private struct PlaybackControlsSection: View {
             }
         }
         .padding(.vertical, 2)
+    }
+}
+
+/// Which saved notes are on the watch, to read there with the iPhone out of
+/// reach. Left out when there is no watch with CueCard on it.
+private struct AppleWatchSection: View {
+    @EnvironmentObject var settingsService: SettingsService
+    @ObservedObject private var watch = WatchSessionService.shared
+    @Environment(\.colorScheme) var colorScheme
+
+    let screen: String
+
+    var body: some View {
+        if watch.isWatchAppInstalled {
+            Section {
+                if settingsService.savedNotes.isEmpty {
+                    Text("Save a note to put it on your watch.")
+                        .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                } else {
+                    ForEach(settingsService.savedNotes.sorted { $0.updatedAt > $1.updatedAt }) { note in
+                        Toggle(isOn: Binding(
+                            get: { settingsService.watchNoteIDs.contains(note.id) },
+                            set: { isOn in
+                                AnalyticsEvents.logButtonClick(isOn ? "watch_add_note" : "watch_remove_note",
+                                                               screen: screen)
+                                settingsService.setOnWatch(isOn, noteID: note.id)
+                            }
+                        )) {
+                            Text(note.title)
+                                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                        }
+                    }
+                }
+            } header: {
+                Text("Apple Watch")
+            } footer: {
+                Text("Notes you turn on stay on your watch, to swipe through card by card even without your iPhone. A note splits into cards where it has separators.")
+            }
+        }
     }
 }
 

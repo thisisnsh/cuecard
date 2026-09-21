@@ -78,6 +78,7 @@
 		073 /* CueCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135 /* CueCards.swift */; };
 		074 /* CueCardRun.swift in Sources */ = {isa = PBXBuildFile; fileRef = 143 /* CueCardRun.swift */; };
 		075 /* TeleprompterParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 111 /* TeleprompterParser.swift */; };
+		076 /* DeckStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 156 /* DeckStore.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -181,6 +182,7 @@
 		153 /* TeleprompterRemoteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeleprompterRemoteView.swift; sourceTree = "<group>"; };
 		154 /* CardPager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardPager.swift; sourceTree = "<group>"; };
 		155 /* PhoneDeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneDeckView.swift; sourceTree = "<group>"; };
+		156 /* DeckStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckStore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -327,6 +329,7 @@
 		740 /* CueCardWatch */ = {
 			isa = PBXGroup;
 			children = (
+				156 /* DeckStore.swift */,
 				155 /* PhoneDeckView.swift */,
 				154 /* CardPager.swift */,
 				153 /* TeleprompterRemoteView.swift */,
@@ -565,6 +568,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				076 /* DeckStore.swift in Sources */,
 				075 /* TeleprompterParser.swift in Sources */,
 				074 /* CueCardRun.swift in Sources */,
 				073 /* CueCards.swift in Sources */,

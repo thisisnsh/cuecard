@@ -110,6 +110,14 @@ extension WatchConnector: WCSessionDelegate {
         Task { @MainActor in self.apply(state) }
     }
 
+    /// The decks the iPhone put on the watch. The file is gone once this
+    /// returns, so it is read here.
+    nonisolated func session(_ session: WCSession, didReceive file: WCSessionFile) {
+        guard file.metadata?[WatchLink.fileKindKey] as? String == WatchLink.decksFileKind,
+              let data = try? Data(contentsOf: file.fileURL) else { return }
+        Task { @MainActor in DeckStore.shared.replace(with: data) }
+    }
+
     nonisolated func session(_ session: WCSession, didReceiveMessage message: [String: Any]) {
         guard let state = WatchLink.value(WatchPhoneState.self, key: WatchLink.stateKey, in: message) else { return }
         Task { @MainActor in self.apply(state) }

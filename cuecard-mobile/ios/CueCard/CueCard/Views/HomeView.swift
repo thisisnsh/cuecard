@@ -24,6 +24,7 @@ struct HomeView: View {
     @State private var timerPickerTransitionTask: Task<Void, Never>?
     @State private var isEditorFocused = false
     @StateObject private var editorController = CueEditorController()
+    @ObservedObject private var watch = WatchSessionService.shared
     @Environment(\.requestReview) private var requestReview
 
     /// How much of the editor's bottom the controls row covers: the play button
@@ -459,6 +460,18 @@ struct HomeView: View {
                                 Label("Save as New", systemImage: "doc.badge.plus")
                             }
                             .disabled(!hasNotes)
+
+                            if watch.isWatchAppInstalled, let note = settingsService.currentNote {
+                                let isOnWatch = settingsService.watchNoteIDs.contains(note.id)
+                                Button(action: {
+                                    AnalyticsEvents.logButtonClick(isOnWatch ? "watch_remove_note" : "watch_add_note",
+                                                                   screen: "home")
+                                    settingsService.setOnWatch(!isOnWatch, noteID: note.id)
+                                }) {
+                                    Label(isOnWatch ? "Remove from Apple Watch" : "Keep on Apple Watch",
+                                          systemImage: isOnWatch ? "applewatch.slash" : "applewatch")
+                                }
+                            }
 
                             Divider()
 

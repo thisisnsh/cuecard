@@ -1,8 +1,10 @@
 import SwiftUI
 
-/// The watch app's first screen: what is open on the iPhone.
+/// The watch app's first screen: what is open on the iPhone, and the decks
+/// kept on the watch.
 struct WatchHomeView: View {
     @EnvironmentObject var connector: WatchConnector
+    @EnvironmentObject var store: DeckStore
     @State private var path: [Route] = []
 
     enum Route: Hashable {
@@ -41,6 +43,23 @@ struct WatchHomeView: View {
                         Text("Open a script or cards in CueCard on your iPhone.")
                             .font(.footnote)
                             .foregroundStyle(.secondary)
+                    }
+                }
+
+                Section {
+                    ForEach(store.decks) { deck in
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(deck.title)
+                            Text(deck.cards.count == 1 ? "1 card" : "\(deck.cards.count) cards")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                } header: {
+                    Text("On Watch")
+                } footer: {
+                    if store.decks.isEmpty {
+                        Text("Choose notes to keep on your watch in CueCard's Settings on your iPhone.")
                     }
                 }
             }

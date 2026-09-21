@@ -1,3 +1,4 @@
+import Combine
 import FirebaseAnalytics
 import Foundation
 import WatchConnectivity
@@ -15,6 +16,9 @@ final class WatchSessionService: NSObject, ObservableObject {
     @Published private(set) var isWatchAppInstalled = false
 
     private let session: WCSession? = WCSession.isSupported() ? .default : nil
+    private var notesSubscription: AnyCancellable?
+    /// The decks last sent, so an unchanged set isn't sent again.
+    private var sentDecks: Data?
 
     private override init() { super.init() }
 
@@ -24,6 +28,13 @@ final class WatchSessionService: NSObject, ObservableObject {
         guard let session else { return }
         session.delegate = self
         session.activate()
+
+        // A note edited, renamed, deleted, or put on or off the watch.
+        let settings = SettingsService.shared
+        notesSubscription = settings.$savedNotes.map { _ in () }
+            .merge(with: settings.$watchNoteIDs.map { _ in () })
+            .debounce(for: .seconds(1), scheduler: RunLoop.main)
+            .sink { [weak self] in self?.sendDecks() }
     }
 
     /// What the watch shows of the iPhone right now.
@@ -54,6 +65,35 @@ final class WatchSessionService: NSObject, ObservableObject {
         }
     }
 
+    /// The saved notes chosen for the watch, split into cards. A note with
+    /// no separators is one card.
+    var decks: [WatchDeck] {
+        let settings = SettingsService.shared
+        return settings.savedNotes
+            .filter { settings.watchNoteIDs.contains($0.id) }
+            .sorted { $0.updatedAt > $1.updatedAt }
+            .map { WatchDeck(id: $0.id, title: $0.title, cards: CueCards.cards(in: $0.content)) }
+    }
+
+    /// Send the watch its decks, if they changed. They go as a file, which
+    /// has no size limit and waits for the watch if it is out of reach. A
+    /// newer set replaces one still on its way.
+    func sendDecks() {
+        guard let session, isWatchAppInstalled,
+              let data = try? JSONEncoder().encode(decks), data != sentDecks else { return }
+
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("watch-decks-\(UUID().uuidString).json")
+        guard (try? data.write(to: url)) != nil else { return }
+
+        for transfer in session.outstandingFileTransfers
+        where transfer.file.metadata?[WatchLink.fileKindKey] as? String == WatchLink.decksFileKind {
+            transfer.cancel()
+        }
+        session.transferFile(url, metadata: [WatchLink.fileKindKey: WatchLink.decksFileKind])
+        sentDecks = data
+    }
+
     // MARK: - Private
 
     private func handle(_ command: WatchCommand) async {
@@ -80,7 +120,10 @@ final class WatchSessionService: NSObject, ObservableObject {
         guard let session else { return }
         isWatchAppInstalled = session.activationState == .activated
             && session.isPaired && session.isWatchAppInstalled
+        // A watch app installed again, or another watch, has none of them.
+        if !isWatchAppInstalled { sentDecks = nil }
         stateChanged()
+        sendDecks()
     }
 }
 
@@ -110,6 +153,17 @@ extension WatchSessionService: WCSessionDelegate {
             if let command { await self.handle(command) }
             replyHandler(WatchLink.payload(self.state, key: WatchLink.stateKey))
         }
+    }
+
+    nonisolated func session(_ session: WCSession, didFinish fileTransfer: WCSessionFileTransfer, error: Error?) {
+        try? FileManager.default.removeItem(at: fileTransfer.file.fileURL)
+        guard error != nil else { return }
+        // Failed, not replaced by a newer set: send it again next time.
+        let isReplaced = session.outstandingFileTransfers.contains {
+            $0.file.metadata?[WatchLink.fileKindKey] as? String == WatchLink.decksFileKind
+        }
+        guard !isReplaced else { return }
+        Task { @MainActor in self.sentDecks = nil }
     }
 
     /// A command queued while the iPhone was out of reach.

@@ -345,6 +345,7 @@ class SettingsService: ObservableObject {
     private let notesKey = "cuecard_notes"
     private let savedNotesKey = "cuecard_saved_notes"
     private let currentNoteIdKey = "cuecard_current_note_id"
+    private let watchNoteIDsKey = "cuecard_watch_note_ids"
     private let hasSeenWelcomeKey = "cuecard_has_seen_welcome"
     /// Cues used to be saved in a library. They're written straight into the
     /// script now, so the stored library is cleared out on the way past.
@@ -378,6 +379,13 @@ class SettingsService: ObservableObject {
     @Published var currentNoteId: UUID? {
         didSet {
             saveCurrentNoteId()
+        }
+    }
+
+    /// The saved notes the user has put on their Apple Watch.
+    @Published var watchNoteIDs: Set<UUID> = [] {
+        didSet {
+            userDefaults.set(watchNoteIDs.map(\.uuidString), forKey: watchNoteIDsKey)
         }
     }
 
@@ -451,6 +459,10 @@ Ask for questions before wrapping up.
         if let idString = userDefaults.string(forKey: currentNoteIdKey),
            let id = UUID(uuidString: idString) {
             self.currentNoteId = id
+        }
+
+        if let strings = userDefaults.stringArray(forKey: watchNoteIDsKey) {
+            self.watchNoteIDs = Set(strings.compactMap(UUID.init(uuidString:)))
         }
 
         userDefaults.removeObject(forKey: retiredCuesKey)
@@ -556,6 +568,7 @@ Ask for questions before wrapping up.
     /// Delete a saved note
     func deleteNote(id: UUID) {
         savedNotes.removeAll { $0.id == id }
+        watchNoteIDs.remove(id)
         if currentNoteId == id {
             currentNoteId = nil
         }
@@ -584,6 +597,15 @@ Ask for questions before wrapping up.
         notes = settings.scriptMode == .cards ? Self.defaultCardsText : Self.defaultNoteText
     }
 
+    /// Put a saved note on the watch, or take it off.
+    func setOnWatch(_ isOnWatch: Bool, noteID: UUID) {
+        if isOnWatch {
+            watchNoteIDs.insert(noteID)
+        } else {
+            watchNoteIDs.remove(noteID)
+        }
+    }
+
     /// Get the currently loaded note if any
     var currentNote: SavedNote? {
         guard let id = currentNoteId else { return nil }
@@ -604,6 +626,7 @@ Ask for questions before wrapping up.
         notes = ""
         savedNotes = []
         currentNoteId = nil
+        watchNoteIDs = []
         userDefaults.removeObject(forKey: settingsKey)
         userDefaults.removeObject(forKey: notesKey)
         userDefaults.removeObject(forKey: savedNotesKey)
