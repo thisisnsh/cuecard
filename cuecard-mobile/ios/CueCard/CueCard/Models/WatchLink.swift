@@ -27,6 +27,13 @@ enum WatchLink {
     }
 }
 
+/// What both apps tell the user about the watch.
+enum WatchTips {
+    /// A watch goes back to its clock soon after the wrist drops, and an app
+    /// can't keep itself up. The user can.
+    static let returnToClock = "To keep CueCard on screen through a talk, open the Watch app on your iPhone, go to General › Return to Clock, choose CueCard, and set it to return after 1 hour."
+}
+
 /// Something the watch asks the iPhone to do.
 enum WatchCommand: Codable, Equatable {
     case togglePlayPause

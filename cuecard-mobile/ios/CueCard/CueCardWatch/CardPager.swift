@@ -11,6 +11,9 @@ struct CardPager: View {
     @Binding var index: Int
     let cueColor: CueColor
 
+    /// Wrist down with Always On: the card stays up, dimmed.
+    @Environment(\.isLuminanceReduced) private var isLuminanceReduced
+
     private var isFinished: Bool { index >= cards.count }
 
     var body: some View {
@@ -23,6 +26,7 @@ struct CardPager: View {
                 .tag(cards.count)
         }
         .tabViewStyle(.page(indexDisplayMode: .never))
+        .toolbar(isLuminanceReduced ? .hidden : .automatic, for: .bottomBar)
         .toolbar {
             ToolbarItemGroup(placement: .bottomBar) {
                 Button {
@@ -60,9 +64,12 @@ private struct CardPage: View {
     let runs: [CueCardRun]
     let cueColor: CueColor
 
+    @Environment(\.isLuminanceReduced) private var isLuminanceReduced
+
     var body: some View {
         ScrollView {
             runs.text(primary: AppColors.Dark.textPrimary, cue: cueColor.color(for: .dark))
+                .opacity(isLuminanceReduced ? 0.6 : 1)
                 .font(.system(size: 19, weight: .semibold))
                 .frame(maxWidth: .infinity, alignment: .leading)
                 // Clear of the Back and Next buttons at the bottom.

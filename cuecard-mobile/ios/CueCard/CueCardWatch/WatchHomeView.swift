@@ -65,6 +65,14 @@ struct WatchHomeView: View {
                         Text("Choose notes to keep on your watch in CueCard's Settings on your iPhone.")
                     }
                 }
+
+                Section {
+                    Text(WatchTips.returnToClock)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                } header: {
+                    Text("During a Talk")
+                }
             }
             .navigationTitle("CueCard")
             .navigationDestination(for: Route.self) { route in

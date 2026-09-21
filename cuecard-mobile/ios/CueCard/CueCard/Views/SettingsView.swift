@@ -315,7 +315,7 @@ private struct AppleWatchSection: View {
             } header: {
                 Text("Apple Watch")
             } footer: {
-                Text("Notes you turn on stay on your watch, to swipe through card by card even without your iPhone. A note splits into cards where it has separators.")
+                Text("Notes you turn on stay on your watch, to swipe through card by card even without your iPhone. A note splits into cards where it has separators.\n\n\(WatchTips.returnToClock)")
             }
         }
     }

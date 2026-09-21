@@ -5,6 +5,8 @@ import WatchKit
 /// teleprompter, with its timer.
 struct TeleprompterRemoteView: View {
     @EnvironmentObject var connector: WatchConnector
+    /// Wrist down with Always On: the timer stays up, the buttons go.
+    @Environment(\.isLuminanceReduced) private var isLuminanceReduced
 
     var body: some View {
         Group {
@@ -54,6 +56,7 @@ struct TeleprompterRemoteView: View {
                 .primaryHandGesture()
                 .accessibilityLabel(timer.phase == .paused ? "Play" : "Pause")
             }
+            .opacity(isLuminanceReduced ? 0 : 1)
         }
         .padding(.horizontal, 4)
     }
