@@ -1,10 +1,10 @@
 {
-  "1.5.0": {
-    "title": "Improved with New Features",
+  "1.6.0": {
+    "title": "Cards and Apple Watch",
     "features": [
-        "Better sync between the floating window and teleprompter, with smoother scrolling.",
-        "See the start countdown directly on the play button.",
-        "More text sizes and separate settings for the editor and teleprompter."
+        "Cards mode: split your notes into cards and swipe through them, even from the Lock Screen.",
+        "CueCard on Apple Watch: play, pause and move through cards from your wrist, or read decks right on the watch.",
+        "Play, pause and go back 10 seconds from the Dynamic Island, Control Center, the Action button or Siri."
     ]
   }
 }
