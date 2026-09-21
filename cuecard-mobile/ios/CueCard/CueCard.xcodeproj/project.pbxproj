@@ -46,6 +46,17 @@
 		041 /* TeleprompterShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 127 /* TeleprompterShortcuts.swift */; };
 		042 /* TeleprompterControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134 /* TeleprompterControls.swift */; };
 		043 /* DeviceModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 128 /* DeviceModel.swift */; };
+		044 /* CueCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135 /* CueCards.swift */; };
+		045 /* CueCardsActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 136 /* CueCardsActivityAttributes.swift */; };
+		046 /* CueCardsActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 136 /* CueCardsActivityAttributes.swift */; };
+		047 /* CueCardsIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 137 /* CueCardsIntents.swift */; };
+		048 /* CueCardsIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 137 /* CueCardsIntents.swift */; };
+		049 /* CueCardsSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138 /* CueCardsSession.swift */; };
+		050 /* CueCardsRemoteCommand+App.swift in Sources */ = {isa = PBXBuildFile; fileRef = 139 /* CueCardsRemoteCommand+App.swift */; };
+		051 /* CueCardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 140 /* CueCardsView.swift */; };
+		052 /* CueCardsLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 141 /* CueCardsLiveActivity.swift */; };
+		053 /* CueCardsRemoteCommand+Widget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 142 /* CueCardsRemoteCommand+Widget.swift */; };
+		054 /* CueColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 116 /* CueColor.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -104,6 +115,14 @@
 		132 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		133 /* TeleprompterRemoteCommand+Widget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TeleprompterRemoteCommand+Widget.swift"; sourceTree = "<group>"; };
 		134 /* TeleprompterControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeleprompterControls.swift; sourceTree = "<group>"; };
+		135 /* CueCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCards.swift; sourceTree = "<group>"; };
+		136 /* CueCardsActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardsActivityAttributes.swift; sourceTree = "<group>"; };
+		137 /* CueCardsIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardsIntents.swift; sourceTree = "<group>"; };
+		138 /* CueCardsSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardsSession.swift; sourceTree = "<group>"; };
+		139 /* CueCardsRemoteCommand+App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CueCardsRemoteCommand+App.swift"; sourceTree = "<group>"; };
+		140 /* CueCardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardsView.swift; sourceTree = "<group>"; };
+		141 /* CueCardsLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardsLiveActivity.swift; sourceTree = "<group>"; };
+		142 /* CueCardsRemoteCommand+Widget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CueCardsRemoteCommand+Widget.swift"; sourceTree = "<group>"; };
 		201 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		202 /* WhatsNew.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = WhatsNew.json; sourceTree = "<group>"; };
 		501 /* CueCard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CueCard.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -162,6 +181,7 @@
 		711 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				140 /* CueCardsView.swift */,
 				102 /* ContentView.swift */,
 				103 /* WelcomeView.swift */,
 				104 /* HomeView.swift */,
@@ -177,6 +197,8 @@
 		712 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				139 /* CueCardsRemoteCommand+App.swift */,
+				138 /* CueCardsSession.swift */,
 				108 /* SettingsService.swift */,
 				114 /* ReviewPromptService.swift */,
 				112 /* TeleprompterPiPManager.swift */,
@@ -193,6 +215,9 @@
 		713 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				137 /* CueCardsIntents.swift */,
+				136 /* CueCardsActivityAttributes.swift */,
+				135 /* CueCards.swift */,
 				111 /* TeleprompterParser.swift */,
 				113 /* AppColors.swift */,
 				115 /* ScriptDocument.swift */,
@@ -224,6 +249,8 @@
 		730 /* CueCardWidgets */ = {
 			isa = PBXGroup;
 			children = (
+				142 /* CueCardsRemoteCommand+Widget.swift */,
+				141 /* CueCardsLiveActivity.swift */,
 				130 /* CueCardWidgetsBundle.swift */,
 				131 /* TeleprompterLiveActivity.swift */,
 				133 /* TeleprompterRemoteCommand+Widget.swift */,
@@ -365,6 +392,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				051 /* CueCardsView.swift in Sources */,
+				050 /* CueCardsRemoteCommand+App.swift in Sources */,
+				049 /* CueCardsSession.swift in Sources */,
+				047 /* CueCardsIntents.swift in Sources */,
+				045 /* CueCardsActivityAttributes.swift in Sources */,
+				044 /* CueCards.swift in Sources */,
 				001 /* CueCardApp.swift in Sources */,
 				017 /* AppColors.swift in Sources */,
 				002 /* ContentView.swift in Sources */,
@@ -398,6 +431,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				054 /* CueColor.swift in Sources */,
+				053 /* CueCardsRemoteCommand+Widget.swift in Sources */,
+				052 /* CueCardsLiveActivity.swift in Sources */,
+				048 /* CueCardsIntents.swift in Sources */,
+				046 /* CueCardsActivityAttributes.swift in Sources */,
 				033 /* CueCardWidgetsBundle.swift in Sources */,
 				034 /* TeleprompterLiveActivity.swift in Sources */,
 				035 /* TeleprompterActivityAttributes.swift in Sources */,

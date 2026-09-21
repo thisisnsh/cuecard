@@ -70,7 +70,8 @@ enum TeleprompterParser {
 
     /// Parse script content for teleprompter display
     static func parseNotes(_ notes: String) -> TeleprompterContent {
-        let cleanedNotes = cleanText(notes)
+        // A script written as cards reads straight through, a card to a line.
+        let cleanedNotes = cleanText(CueCards.removingSeparators(from: notes))
 
         return TeleprompterContent(
             fullText: cleanedNotes,
@@ -87,15 +88,16 @@ enum TeleprompterParser {
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    /// Rewrite every cue tag into the canonical `[cue …]` spelling.
+    /// Rewrite every cue tag into the canonical `[cue …]` spelling, and every
+    /// card separator into `[separator]`.
     ///
     /// Used at the file boundary, so a script that leaves the app carries the
     /// current syntax and one that arrives is brought up to it.
     static func normalizingTags(in text: String) -> String {
-        let result = NSMutableString(string: text)
+        let result = NSMutableString(string: CueCards.normalizingSeparators(in: text))
 
         // Back to front, so replacing a tag doesn't shift the ones still to come.
-        for match in cueMatches(in: text).reversed() {
+        for match in cueMatches(in: result as String).reversed() {
             result.replaceCharacters(in: match.range, with: cueTag(text: match.content))
         }
 

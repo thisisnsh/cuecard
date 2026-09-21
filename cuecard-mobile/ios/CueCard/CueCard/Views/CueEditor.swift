@@ -174,9 +174,17 @@ final class CueTextView: UITextView {
 final class CueEditorController: ObservableObject {
     fileprivate weak var coordinator: CueTextEditor.Coordinator?
 
+    /// Where the caret is, so cards mode can say which card is being written.
+    @Published fileprivate(set) var caretLocation = 0
+
     /// Drop an empty cue at the caret and leave the caret inside it.
     func insertCue() {
         coordinator?.insertEmptyCue()
+    }
+
+    /// End the card the caret is in and start a new one after it.
+    func insertCardSeparator() {
+        coordinator?.insertCardSeparator()
     }
 
     /// Select the whole script. Dragging a selection out to the end is awkward
@@ -191,6 +199,10 @@ final class CueEditorController: ObservableObject {
 /// writes the brackets for you: pressing `[` drops in a whole empty cue with the
 /// caret inside it, so a cue is never left half-open — except inside a cue, where
 /// there is nothing left for it to open.
+///
+/// In cards mode `[` writes a `[separator]` instead, ending the card, and cues
+/// come from the cue bar. A separator is edited as one piece: a backspace into
+/// it takes the whole tag. Whatever runs past a card's limit is marked in red.
 struct CueTextEditor: UIViewRepresentable {
     @Binding var text: String
     @Binding var isFocused: Bool
@@ -199,6 +211,9 @@ struct CueTextEditor: UIViewRepresentable {
     let colorScheme: ColorScheme
     /// The text size the script is set in, from Settings.
     let fontSize: CGFloat
+    var mode: ScriptMode = .teleprompter
+    /// In cards mode, the characters a card holds before the rest is marked.
+    var cardLimit: Int?
     /// Height of the cue bar floating over the bottom of the editor, if it's showing.
     var keyboardOverlayHeight: CGFloat = 0
     /// Height of whatever floats over the bottom of the editor with the keyboard away.
@@ -218,7 +233,7 @@ struct CueTextEditor: UIViewRepresentable {
         textView.alwaysBounceVertical = true
         textView.keyboardDismissMode = .interactive
         textView.text = text
-        Self.applyHighlighting(to: textView, cueColor: cueColor, colorScheme: colorScheme, fontSize: fontSize)
+        applyHighlighting(to: textView)
         return textView
     }
 
@@ -232,16 +247,18 @@ struct CueTextEditor: UIViewRepresentable {
         let styleChanged = context.coordinator.appliedColorScheme != colorScheme
             || context.coordinator.appliedCueColor != cueColor
             || context.coordinator.appliedFontSize != fontSize
+            || context.coordinator.appliedCardLimit != cardLimit
 
         if textView.text != text {
             textView.text = text
-            Self.applyHighlighting(to: textView, cueColor: cueColor, colorScheme: colorScheme, fontSize: fontSize)
+            applyHighlighting(to: textView)
         } else if styleChanged {
-            Self.applyHighlighting(to: textView, cueColor: cueColor, colorScheme: colorScheme, fontSize: fontSize)
+            applyHighlighting(to: textView)
         }
         context.coordinator.appliedColorScheme = colorScheme
         context.coordinator.appliedCueColor = cueColor
         context.coordinator.appliedFontSize = fontSize
+        context.coordinator.appliedCardLimit = cardLimit
 
         // SwiftUI's .focused() doesn't reach into a UIViewRepresentable, so drive
         // first responder status from the binding instead — but after this update
@@ -270,7 +287,13 @@ struct CueTextEditor: UIViewRepresentable {
 
     // MARK: - Highlighting
 
-    static func applyHighlighting(to textView: UITextView, cueColor: CueColor, colorScheme: ColorScheme, fontSize: CGFloat) {
+    func applyHighlighting(to textView: UITextView) {
+        Self.applyHighlighting(to: textView, cueColor: cueColor, colorScheme: colorScheme,
+                               fontSize: fontSize, cardLimit: cardLimit)
+    }
+
+    static func applyHighlighting(to textView: UITextView, cueColor: CueColor, colorScheme: ColorScheme,
+                                  fontSize: CGFloat, cardLimit: Int?) {
         // Recoloring mid-composition would drop the in-progress marked text.
         guard textView.markedTextRange == nil else { return }
 
@@ -279,13 +302,23 @@ struct CueTextEditor: UIViewRepresentable {
         let tagColor = cueColor.uiColor(isDarkMode: isDarkMode)
         let storage = textView.textStorage
         let fullRange = NSRange(location: 0, length: storage.length)
+        let cues = TeleprompterParser.cueMatches(in: textView.text)
 
         storage.beginEditing()
         storage.setAttributes(baseAttributes, range: fullRange)
 
+        // Separators show in either mode, quieter than the words, so a script
+        // written as cards reads as one in the teleprompter's editor too.
+        for separator in CueCards.separatorRanges(in: textView.text) {
+            storage.addAttributes([
+                .foregroundColor: isDarkMode ? AppColors.UIColors.Dark.textSecondary : AppColors.UIColors.Light.textSecondary,
+                .font: UIFont.systemFont(ofSize: fontSize * 0.8, weight: .bold)
+            ], range: separator)
+        }
+
         // Only closed tags are colored, so a cue being typed stays plain text
         // until its bracket lands.
-        for match in TeleprompterParser.cueMatches(in: textView.text) {
+        for match in cues {
             // The tag syntax stays visible — and editable — but recedes.
             storage.addAttributes([
                 .foregroundColor: tagColor.withAlphaComponent(0.45),
@@ -296,6 +329,22 @@ struct CueTextEditor: UIViewRepresentable {
                 .foregroundColor: tagColor,
                 .font: UIFont.systemFont(ofSize: fontSize, weight: .semibold)
             ], range: match.contentRange)
+        }
+
+        // What a card holds past its limit, marked so it's plain where the
+        // card has to end and a new one begin.
+        if let cardLimit {
+            let red = isDarkMode ? AppColors.UIColors.Dark.red : AppColors.UIColors.Light.red
+            let nsText = textView.text as NSString
+            for card in CueCards.cardRanges(in: textView.text) {
+                guard let overflow = CueCards.measure(card, in: nsText, cues: cues, limit: cardLimit).overflow else {
+                    continue
+                }
+                storage.addAttributes([
+                    .foregroundColor: red,
+                    .backgroundColor: red.withAlphaComponent(0.14)
+                ], range: overflow)
+            }
         }
         storage.endEditing()
 
@@ -317,6 +366,7 @@ struct CueTextEditor: UIViewRepresentable {
         var appliedColorScheme: ColorScheme?
         var appliedCueColor: CueColor?
         var appliedFontSize: CGFloat?
+        var appliedCardLimit: Int?
 
         init(parent: CueTextEditor) {
             self.parent = parent
@@ -333,7 +383,13 @@ struct CueTextEditor: UIViewRepresentable {
             if text == "[", range.length == 0 {
                 // Cues don't nest, and in here both brackets are already written,
                 // so `[` has nothing left to do.
-                guard TeleprompterParser.cueTag(containing: range.location, in: textView.text) == nil else {
+                guard TeleprompterParser.cueTag(containing: range.location, in: textView.text) == nil,
+                      CueCards.separator(containing: range.location, in: textView.text) == nil else {
+                    return false
+                }
+
+                if parent.mode == .cards {
+                    insertSeparator(at: range.location, in: textView)
                     return false
                 }
 
@@ -348,6 +404,11 @@ struct CueTextEditor: UIViewRepresentable {
 
             if text.isEmpty, range.length == 1, let emptyCue = emptyCueSurrounding(range, in: textView) {
                 replace(emptyCue, with: "[", caret: emptyCue.location + 1, in: textView)
+                return false
+            }
+
+            if text.isEmpty, range.length == 1, let separator = separatorDeleted(by: range, in: textView) {
+                replace(separator, with: "", caret: separator.location, in: textView)
                 return false
             }
 
@@ -376,6 +437,52 @@ struct CueTextEditor: UIViewRepresentable {
             if !textView.isFirstResponder {
                 textView.becomeFirstResponder()
             }
+        }
+
+        /// Write a separator in after the caret, as if it had been typed there.
+        func insertCardSeparator() {
+            guard let textView else { return }
+
+            // Past the end of a selection, and past any tag the caret is in.
+            var location = NSMaxRange(textView.selectedRange)
+            if let enclosing = TeleprompterParser.cueTag(containing: location, in: textView.text) {
+                location = NSMaxRange(enclosing.range)
+            }
+            if let enclosing = CueCards.separator(containing: location, in: textView.text) {
+                location = NSMaxRange(enclosing)
+            }
+            insertSeparator(at: location, in: textView)
+
+            if !textView.isFirstResponder {
+                textView.becomeFirstResponder()
+            }
+        }
+
+        /// A separator on a line of its own, with the caret on the line after,
+        /// ready for the next card.
+        private func insertSeparator(at location: Int, in textView: UITextView) {
+            let insertion = (textView.text as NSString).separatorInsertion(at: location)
+            replace(
+                NSRange(location: location, length: 0),
+                with: insertion.text,
+                caret: location + insertion.caretOffset,
+                in: textView
+            )
+        }
+
+        /// The separator a backspace is reaching into, with the line break after
+        /// it: a backspace inside the tag, or on the line break that follows it.
+        private func separatorDeleted(by range: NSRange, in textView: UITextView) -> NSRange? {
+            let full = textView.text as NSString
+            for separator in CueCards.separatorRanges(in: textView.text) {
+                let end = NSMaxRange(separator)
+                let hasLineBreak = end < full.length && full.character(at: end) == 0x0A
+                let whole = NSRange(location: separator.location, length: separator.length + (hasLineBreak ? 1 : 0))
+                if NSLocationInRange(range.location, whole) {
+                    return whole
+                }
+            }
+            return nil
         }
 
         func selectAll() {
@@ -408,12 +515,7 @@ struct CueTextEditor: UIViewRepresentable {
             // keeps autocorrecting against the text it still thinks is there.
             textView.inputDelegate?.textWillChange(textView)
             textView.textStorage.replaceCharacters(in: range, with: replacement)
-            CueTextEditor.applyHighlighting(
-                to: textView,
-                cueColor: parent.cueColor,
-                colorScheme: parent.colorScheme,
-                fontSize: parent.fontSize
-            )
+            parent.applyHighlighting(to: textView)
 
             textView.selectedRange = NSRange(location: caret, length: 0)
             textView.inputDelegate?.textDidChange(textView)
@@ -424,12 +526,7 @@ struct CueTextEditor: UIViewRepresentable {
 
         func textViewDidChange(_ textView: UITextView) {
             let selection = textView.selectedRange
-            CueTextEditor.applyHighlighting(
-                to: textView,
-                cueColor: parent.cueColor,
-                colorScheme: parent.colorScheme,
-                fontSize: parent.fontSize
-            )
+            parent.applyHighlighting(to: textView)
             textView.selectedRange = selection
 
             parent.text = textView.text
@@ -437,6 +534,16 @@ struct CueTextEditor: UIViewRepresentable {
             // UITextView's own scroll-to-caret ignores the bottom inset, so the
             // last line would slide under the cue bar as it's typed.
             (textView as? CueTextView)?.scrollCaretIntoView()
+        }
+
+        func textViewDidChangeSelection(_ textView: UITextView) {
+            // Published after this pass, since SwiftUI may be mid-update here.
+            let location = NSMaxRange(textView.selectedRange)
+            let controller = parent.controller
+            DispatchQueue.main.async {
+                guard controller.caretLocation != location else { return }
+                controller.caretLocation = location
+            }
         }
 
         func textViewDidBeginEditing(_ textView: UITextView) {
@@ -476,8 +583,8 @@ extension NSString {
 // MARK: - Cue bar
 
 /// The strip above the keyboard while a script is being written: buttons to drop
-/// a cue in at the caret and to select the whole script, and one to get the
-/// keyboard out of the way.
+/// a cue in at the caret — and in cards mode, to start a new card — and to select
+/// the whole script, and one to get the keyboard out of the way.
 struct CueBar: View {
     /// The bar's height. The editor keeps this much room clear at the bottom so
     /// the line being typed never hides behind it.
@@ -485,34 +592,19 @@ struct CueBar: View {
 
     let colorScheme: ColorScheme
     var onAddCue: () -> Void
+    /// Set in cards mode, where the bar offers Add Card as well.
+    var onAddCard: (() -> Void)?
     var onSelectAll: () -> Void
     var onDismissKeyboard: () -> Void
 
     var body: some View {
         HStack(spacing: 10) {
-            Button(action: onAddCue) {
-                HStack(spacing: 6) {
-                    Image(systemName: "plus")
-                        .font(.system(size: 13, weight: .bold))
-                    Text("Add Cue")
-                        .font(.subheadline.weight(.semibold))
-                }
-                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                .padding(.horizontal, 16)
-                .frame(height: 34)
-                .glassedEffect(in: Capsule())
+            // Three buttons don't fit a small phone with their full names, so
+            // the adds drop their verb when they have to.
+            ViewThatFits(in: .horizontal) {
+                buttons(short: false)
+                buttons(short: true)
             }
-            .buttonStyle(.plain)
-
-            Button(action: onSelectAll) {
-                Text("Select All")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                    .padding(.horizontal, 16)
-                    .frame(height: 34)
-                    .glassedEffect(in: Capsule())
-            }
-            .buttonStyle(.plain)
 
             Spacer(minLength: 0)
 
@@ -533,5 +625,43 @@ struct CueBar: View {
                 .fill(AppColors.textSecondary(for: colorScheme).opacity(0.15))
                 .frame(height: 0.5)
         }
+    }
+
+    private func buttons(short: Bool) -> some View {
+        HStack(spacing: 10) {
+            addButton(short ? "Cue" : "Add Cue", accessibilityLabel: "Add Cue", action: onAddCue)
+
+            if let onAddCard {
+                addButton(short ? "Card" : "Add Card", accessibilityLabel: "Add Card", action: onAddCard)
+            }
+
+            Button(action: onSelectAll) {
+                Text("Select All")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                    .padding(.horizontal, 16)
+                    .frame(height: 34)
+                    .glassedEffect(in: Capsule())
+            }
+            .buttonStyle(.plain)
+        }
+        .fixedSize()
+    }
+
+    private func addButton(_ title: String, accessibilityLabel: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Image(systemName: "plus")
+                    .font(.system(size: 13, weight: .bold))
+                Text(title)
+                    .font(.subheadline.weight(.semibold))
+            }
+            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+            .padding(.horizontal, 16)
+            .frame(height: 34)
+            .glassedEffect(in: Capsule())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(accessibilityLabel)
     }
 }

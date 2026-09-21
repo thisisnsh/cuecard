@@ -10,6 +10,7 @@ struct HomeView: View {
     @Environment(\.colorScheme) var colorScheme
     @State private var showingSettings = false
     @State private var showingTeleprompter = false
+    @State private var showingCards = false
     @State private var showingTimerPicker = false
     @State private var timerPickerContentVisible = false
     @State private var showingSavedNotes = false
@@ -32,6 +33,98 @@ struct HomeView: View {
 
     private var hasNotes: Bool {
         !settingsService.notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private var isCardsMode: Bool { settingsService.settings.scriptMode == .cards }
+
+    /// Teleprompter or cards: what the editor writes and the Play button opens.
+    private var modePicker: some View {
+        Picker("Mode", selection: Binding(
+            get: { settingsService.settings.scriptMode },
+            set: { mode in
+                AnalyticsEvents.logButtonClick("mode_\(mode.rawValue)", screen: "home")
+                if showingTimerPicker { closeTimerPicker() }
+                settingsService.settings.scriptMode = mode
+            }
+        )) {
+            ForEach(ScriptMode.allCases) { mode in
+                Text(mode.displayName).tag(mode)
+            }
+        }
+        .pickerStyle(.segmented)
+        .frame(width: 220)
+    }
+
+    /// Where the cards will be read. It is chosen before writing, since it sets
+    /// how long each card can be, so the menu says so beside each choice.
+    private var cardDisplayMenu: some View {
+        let current = settingsService.settings.cardDisplay
+
+        return Menu {
+            Section("Where will you read your cards?") {
+                ForEach(CardDisplay.allCases) { display in
+                    Button(action: {
+                        AnalyticsEvents.logButtonClick("card_display_\(display.rawValue)", screen: "home")
+                        settingsService.settings.cardDisplay = display
+                    }) {
+                        Label(display.displayName, systemImage: display == current ? "checkmark" : display.systemImage)
+                        Text("Up to \(display.characterLimit) characters a card")
+                    }
+                }
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: current.systemImage)
+                    .font(.system(size: 13, weight: .semibold))
+                Text(current.displayName)
+                    .font(.subheadline.weight(.semibold))
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+            }
+            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+            .padding(.horizontal, 16)
+            .frame(height: 52)
+            .glassedEffect(in: Capsule())
+        }
+        .accessibilityLabel("Show cards on the \(current.displayName)")
+    }
+
+    /// The card being written and how full it is, or once the keyboard has
+    /// gone, how many cards there are and how many run too long.
+    @ViewBuilder
+    private var cardStatus: some View {
+        let notes = settingsService.notes
+        let limit = settingsService.settings.cardDisplay.characterLimit
+        let red = AppColors.red(for: colorScheme)
+
+        Group {
+            if isEditorFocused {
+                let position = CueCards.position(of: editorController.caretLocation, in: notes, limit: limit)
+                let isOver = position.measure.overflow != nil
+                HStack(spacing: 6) {
+                    Text(position.number.map { "Card \($0)" } ?? "New card")
+                        .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                    Text("\(position.measure.length)/\(limit)")
+                        .foregroundStyle(isOver ? red : AppColors.textPrimary(for: colorScheme))
+                }
+            } else {
+                let count = CueCards.cards(in: notes).count
+                let overflowing = CueCards.overflowingCount(in: notes, limit: limit)
+                HStack(spacing: 6) {
+                    Text(count == 1 ? "1 card" : "\(count) cards")
+                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                    if overflowing > 0 {
+                        Text("\(overflowing) too long")
+                            .foregroundStyle(red)
+                    }
+                }
+            }
+        }
+        .font(.caption.weight(.semibold).monospacedDigit())
+        .padding(.horizontal, 12)
+        .frame(height: 28)
+        .glassedEffect(in: Capsule())
     }
 
     private func openTimerPicker() {
@@ -87,7 +180,9 @@ struct HomeView: View {
 
     @ViewBuilder
     private var timerControl: some View {
-        if hasNotes || showingTimerPicker {
+        if isCardsMode && hasNotes {
+            cardDisplayMenu
+        } else if hasNotes || showingTimerPicker {
             VStack(alignment: .leading, spacing: 0) {
                 if showingTimerPicker {
                     VStack(alignment: .leading, spacing: 12) {
@@ -219,6 +314,12 @@ struct HomeView: View {
         editorController.insertCue()
     }
 
+    /// End the card being written and start the next one at the caret.
+    private func insertCard() {
+        AnalyticsEvents.logButtonClick("insert_card", screen: "home")
+        editorController.insertCardSeparator()
+    }
+
     private func selectAllText() {
         AnalyticsEvents.logButtonClick("select_all", screen: "home")
         editorController.selectAll()
@@ -250,6 +351,8 @@ struct HomeView: View {
                         cueColor: settingsService.settings.cueColor,
                         colorScheme: colorScheme,
                         fontSize: CGFloat(settingsService.settings.editorFontSize),
+                        mode: settingsService.settings.scriptMode,
+                        cardLimit: isCardsMode ? settingsService.settings.cardDisplay.characterLimit : nil,
                         keyboardOverlayHeight: CueBar.height,
                         restingOverlayHeight: Self.controlsHeight
                     )
@@ -258,6 +361,14 @@ struct HomeView: View {
                     // inset. SwiftUI's avoidance would resize it instead, and the
                     // gap it leaves behind on dismissal cuts the script off.
                     .ignoresSafeArea(.keyboard, edges: .bottom)
+                    .overlay(alignment: .topTrailing) {
+                        if isCardsMode && hasNotes {
+                            cardStatus
+                                .padding(.top, 6)
+                                .padding(.trailing, 16)
+                                .allowsHitTesting(false)
+                        }
+                    }
                 }
                 .animation(.easeInOut(duration: 0.25), value: notifications.dismissedIDs)
             }
@@ -266,6 +377,7 @@ struct HomeView: View {
                     CueBar(
                         colorScheme: colorScheme,
                         onAddCue: insertCue,
+                        onAddCard: isCardsMode ? insertCard : nil,
                         onSelectAll: selectAllText,
                         onDismissKeyboard: { isEditorFocused = false }
                     )
@@ -279,11 +391,16 @@ struct HomeView: View {
                     Spacer(minLength: 12)
 
                     Button(action: {
-                        AnalyticsEvents.logButtonClick("start_teleprompter", screen: "home")
                         isEditorFocused = false
-                        showingTeleprompter = true
+                        if isCardsMode {
+                            AnalyticsEvents.logButtonClick("start_cards", screen: "home")
+                            showingCards = true
+                        } else {
+                            AnalyticsEvents.logButtonClick("start_teleprompter", screen: "home")
+                            showingTeleprompter = true
+                        }
                     }) {
-                        Image(systemName: "play.fill")
+                        Image(systemName: isCardsMode ? "rectangle.stack.fill" : "play.fill")
                             .font(.system(size: 20, weight: .semibold))
                             .foregroundStyle(colorScheme == .dark ? .black : .white)
                             .frame(width: 52, height: 52)
@@ -295,6 +412,7 @@ struct HomeView: View {
                     }
                     .disabled(!hasNotes)
                     .opacity(hasNotes ? 1.0 : 0.6)
+                    .accessibilityLabel(isCardsMode ? "Open Cards" : "Start Teleprompter")
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 24)
@@ -306,6 +424,10 @@ struct HomeView: View {
             .toolbarBackground(AppColors.background(for: colorScheme), for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    modePicker
+                }
+
                 ToolbarItem(placement: .topBarLeading) {
                     Button(action: {
                         AnalyticsEvents.logButtonClick("saved_notes", screen: "home")
@@ -424,6 +546,9 @@ struct HomeView: View {
             .fullScreenCover(isPresented: $showingTeleprompter, onDismiss: requestReviewIfEarned) {
                 TeleprompterView(content: TeleprompterParser.parseNotes(settingsService.notes))
             }
+            .fullScreenCover(isPresented: $showingCards) {
+                CueCardsView(cards: CueCards.cards(in: settingsService.notes))
+            }
         }
         .onAppear {
             Analytics.logEvent(AnalyticsEventScreenView, parameters: [
@@ -441,6 +566,8 @@ struct NotesEditorView: View {
     let cueColor: CueColor
     let colorScheme: ColorScheme
     let fontSize: CGFloat
+    var mode: ScriptMode = .teleprompter
+    var cardLimit: Int?
     /// Room the cue bar takes at the bottom while the keyboard is up.
     var keyboardOverlayHeight: CGFloat = 0
     /// Room the home controls take at the bottom once the keyboard has gone.
@@ -452,7 +579,9 @@ struct NotesEditorView: View {
             if text.isEmpty {
                 // Set on the editor's own font and insets, so the first line sits
                 // exactly where the caret waiting in front of it does.
-                Text("Add your script here...\n\nTap Add Cue to drop in a delivery reminder, or type [ to write one yourself.\n\nFor example: Welcome everyone [cue smile and pause]")
+                Text(mode == .cards
+                     ? "Write your first card here...\n\nTap Add Card, or type [, to end a card and start the next. Tap Add Cue for a delivery reminder.\n\nKeep each card short enough for where you'll read it: 120 characters on the Lock Screen, 280 in the app."
+                     : "Add your script here...\n\nTap Add Cue to drop in a delivery reminder, or type [ to write one yourself.\n\nFor example: Welcome everyone [cue smile and pause]")
                     .font(.system(size: fontSize, weight: .medium))
                     .foregroundStyle(AppColors.textSecondary(for: colorScheme).opacity(0.6))
                     .padding(.horizontal, 20)
@@ -467,6 +596,8 @@ struct NotesEditorView: View {
                 cueColor: cueColor,
                 colorScheme: colorScheme,
                 fontSize: fontSize,
+                mode: mode,
+                cardLimit: cardLimit,
                 keyboardOverlayHeight: keyboardOverlayHeight,
                 restingOverlayHeight: restingOverlayHeight
             )

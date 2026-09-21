@@ -123,6 +123,12 @@ struct TeleprompterSettings: Codable, Equatable {
     var countdownSeconds: Int
     /// The color every `[cue …]` in every script is drawn in.
     var cueColor: CueColor
+    /// What the editor writes and the Play button opens. Chosen on the home
+    /// screen, like the timer.
+    var scriptMode: ScriptMode
+    /// Where cards are read, which sets how long each one can be. Chosen on
+    /// the home screen, like the timer.
+    var cardDisplay: CardDisplay
 
     static let `default` = TeleprompterSettings(
         editorFontSize: ScreenTextScale.scaled(16, by: ScreenTextScale.editor),
@@ -135,7 +141,9 @@ struct TeleprompterSettings: Codable, Equatable {
         timerSeconds: 0,
         themePreference: .system,
         countdownSeconds: 5,
-        cueColor: .default
+        cueColor: .default,
+        scriptMode: .teleprompter,
+        cardDisplay: .lockScreen
     )
 
     /// Scroll speed range (multiplier)
@@ -212,6 +220,8 @@ struct TeleprompterSettings: Codable, Equatable {
         case themePreference
         case countdownSeconds
         case cueColor
+        case scriptMode
+        case cardDisplay
     }
 
     init(
@@ -225,7 +235,9 @@ struct TeleprompterSettings: Codable, Equatable {
         timerSeconds: Int,
         themePreference: ThemePreference,
         countdownSeconds: Int,
-        cueColor: CueColor
+        cueColor: CueColor,
+        scriptMode: ScriptMode,
+        cardDisplay: CardDisplay
     ) {
         self.editorFontSize = editorFontSize
         self.fontSize = fontSize
@@ -238,6 +250,8 @@ struct TeleprompterSettings: Codable, Equatable {
         self.themePreference = themePreference
         self.countdownSeconds = countdownSeconds
         self.cueColor = cueColor
+        self.scriptMode = scriptMode
+        self.cardDisplay = cardDisplay
     }
 
     init(from decoder: Decoder) throws {
@@ -276,6 +290,10 @@ struct TeleprompterSettings: Codable, Equatable {
         themePreference = try container.decode(ThemePreference.self, forKey: .themePreference)
         countdownSeconds = try container.decodeIfPresent(Int.self, forKey: .countdownSeconds) ?? 5
         cueColor = try container.decodeIfPresent(CueColor.self, forKey: .cueColor) ?? .default
+        scriptMode = try container.decodeIfPresent(ScriptMode.self, forKey: .scriptMode)
+            ?? TeleprompterSettings.default.scriptMode
+        cardDisplay = try container.decodeIfPresent(CardDisplay.self, forKey: .cardDisplay)
+            ?? TeleprompterSettings.default.cardDisplay
     }
 
     static func clamp(_ value: Int, to range: ClosedRange<Int>) -> Int {
@@ -295,6 +313,8 @@ struct TeleprompterSettings: Codable, Equatable {
         try container.encode(themePreference, forKey: .themePreference)
         try container.encode(countdownSeconds, forKey: .countdownSeconds)
         try container.encode(cueColor, forKey: .cueColor)
+        try container.encode(scriptMode, forKey: .scriptMode)
+        try container.encode(cardDisplay, forKey: .cardDisplay)
     }
 }
 
@@ -392,6 +412,18 @@ Those are your secret cues — reminders to smile, pause, or not panic.
 Try it out. I think you'll love it.
 """
 
+    /// Sample text for cards mode: short meeting notes, each short enough for
+    /// the Lock Screen.
+    static let defaultCardsText = """
+Thank everyone for joining. [cue smile]
+[separator]
+Q3 revenue is up 18%. Lead with this.
+[separator]
+Two engineers start in October. [cue pause]
+[separator]
+Ask for questions before wrapping up.
+"""
+
     private init() {
         self.hasSeenWelcome = userDefaults.bool(forKey: hasSeenWelcomeKey)
 
@@ -464,8 +496,9 @@ Try it out. I think you'll love it.
         }
     }
 
-    /// Put everything Settings shows back to its default. The timer is set on
-    /// the home screen, not in Settings, so it is left as it is.
+    /// Put everything Settings shows back to its default. The timer, the mode
+    /// and where cards are read are set on the home screen, not in Settings,
+    /// so they are left as they are.
     func resetSettings() {
         settings = defaultsKeepingTimer
     }
@@ -479,6 +512,8 @@ Try it out. I think you'll love it.
         var defaults = TeleprompterSettings.default
         defaults.timerMinutes = settings.timerMinutes
         defaults.timerSeconds = settings.timerSeconds
+        defaults.scriptMode = settings.scriptMode
+        defaults.cardDisplay = settings.cardDisplay
         return defaults
     }
 
@@ -544,9 +579,9 @@ Try it out. I think you'll love it.
         saveCurrentNote(title: title)
     }
 
-    /// Add sample text to current note
+    /// Add sample text to current note, written for the mode the editor is in.
     func addSampleText() {
-        notes = Self.defaultNoteText
+        notes = settings.scriptMode == .cards ? Self.defaultCardsText : Self.defaultNoteText
     }
 
     /// Get the currently loaded note if any
