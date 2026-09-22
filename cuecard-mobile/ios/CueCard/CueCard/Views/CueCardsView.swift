@@ -81,7 +81,8 @@ struct CueCardsView: View {
         }
         .onAppear {
             Analytics.logEvent(AnalyticsEventScreenView, parameters: [
-                AnalyticsParameterScreenName: "cards"
+                AnalyticsParameterScreenName: "cards",
+                AnalyticsParameterScreenClass: "CueCardsView"
             ])
             guard let cards else { return }
             session.start(cards: cards, title: title, deckID: deckID, cueColor: settings.cueColor,

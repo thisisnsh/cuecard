@@ -185,7 +185,8 @@ private struct SettingsScreen<Content: View>: View {
         }
         .onAppear {
             Analytics.logEvent(AnalyticsEventScreenView, parameters: [
-                AnalyticsParameterScreenName: screen
+                AnalyticsParameterScreenName: screen,
+                AnalyticsParameterScreenClass: "SettingsView"
             ])
         }
     }

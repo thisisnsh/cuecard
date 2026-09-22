@@ -99,7 +99,8 @@ struct WelcomeView: View {
         }
         .onAppear {
             Analytics.logEvent(AnalyticsEventScreenView, parameters: [
-                AnalyticsParameterScreenName: "welcome"
+                AnalyticsParameterScreenName: "welcome",
+                AnalyticsParameterScreenClass: "WelcomeView"
             ])
         }
     }

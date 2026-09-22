@@ -586,7 +586,8 @@ struct HomeView: View {
         }
         .onAppear {
             Analytics.logEvent(AnalyticsEventScreenView, parameters: [
-                AnalyticsParameterScreenName: "home"
+                AnalyticsParameterScreenName: "home",
+                AnalyticsParameterScreenClass: "HomeView"
             ])
         }
     }
