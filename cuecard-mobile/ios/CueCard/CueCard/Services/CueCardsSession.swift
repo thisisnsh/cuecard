@@ -143,6 +143,11 @@ final class CueCardsSession: ObservableObject {
         return true
     }
 
+    /// Put back any card still in the deck that has left the Lock Screen.
+    func refreshLockScreen() {
+        updateLockScreen()
+    }
+
     /// Wait for the Lock Screen to catch up with the last move, so the app
     /// isn't suspended before it has.
     func waitForLockScreen() async {

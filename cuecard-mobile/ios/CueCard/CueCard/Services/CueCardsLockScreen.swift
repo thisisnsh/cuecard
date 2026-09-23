@@ -1,3 +1,4 @@
+import FirebaseAnalytics
 import Foundation
 import UserNotifications
 
@@ -72,6 +73,40 @@ enum CueCardsLockScreen {
             // One at a time, so each lands after, and above, the one before.
             try? await center.add(request)
         }
+    }
+
+    /// A card cleared, or Back or Start Over pressed on one. Runs in the app,
+    /// launched in the background if it was quit.
+    static func handle(_ response: UNNotificationResponse) async {
+        let info = response.notification.request.content.userInfo
+        guard response.notification.request.content.categoryIdentifier == categoryID,
+              let session = info[sessionKey] as? String,
+              let cardIndex = info[indexKey] as? Int else { return }
+        let deck = CueCardsSession.shared
+        guard deck.restoreIfNeeded(), deck.sessionID.uuidString == session else { return }
+
+        switch response.actionIdentifier {
+        case UNNotificationDismissActionIdentifier:
+            // Only the card on top moves the deck. One cleared from under it
+            // is just gone.
+            guard cardIndex == deck.index else { return }
+            deck.next()
+            Analytics.logEvent("cards_next", parameters: ["source": "lock_screen"])
+        case backActionID:
+            deck.previous()
+            Analytics.logEvent("cards_previous", parameters: ["source": "lock_screen"])
+        case restartActionID:
+            deck.restart()
+            Analytics.logEvent("cards_restart", parameters: ["source": "lock_screen"])
+        default:
+            break
+        }
+        // An action, or a tap, takes its card down with it. Put it back up if
+        // the deck still has it.
+        if response.actionIdentifier != UNNotificationDismissActionIdentifier {
+            deck.refreshLockScreen()
+        }
+        await deck.waitForLockScreen()
     }
 
     /// Take every card down.

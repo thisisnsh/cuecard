@@ -1,4 +1,5 @@
 import SwiftUI
+import UserNotifications
 import FirebaseCore
 import FirebaseAnalytics
 import FirebaseCrashlytics
@@ -29,7 +30,7 @@ struct CueCardApp: App {
     }
 }
 
-class AppDelegate: NSObject, UIApplicationDelegate {
+class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         FirebaseApp.configure()
@@ -42,7 +43,29 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         // At launch, so a command from the watch that launched the app in the
         // background is heard.
         WatchSessionService.shared.activate()
+
+        // At launch too, so a Lock Screen card cleared while the app was quit
+        // is heard.
+        UNUserNotificationCenter.current().delegate = self
+        CueCardsLockScreen.registerCategory()
         return true
+    }
+
+    /// The deck's cards go to the Lock Screen and Notification Center, never a
+    /// banner over the app showing the same deck.
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                willPresent notification: UNNotification,
+                                withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        completionHandler([.list])
+    }
+
+    func userNotificationCenter(_ center: UNUserNotificationCenter,
+                                didReceive response: UNNotificationResponse,
+                                withCompletionHandler completionHandler: @escaping () -> Void) {
+        Task { @MainActor in
+            await CueCardsLockScreen.handle(response)
+            completionHandler()
+        }
     }
 }
 
