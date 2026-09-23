@@ -8,7 +8,7 @@ final class DeckStore: ObservableObject {
 
     @Published private(set) var decks: [WatchDeck] = []
     /// Where each deck was left, so it opens there again.
-    private var positions: [String: Int]
+    @Published private var positions: [String: Int]
 
     private static let positionsKey = "deck_positions"
 

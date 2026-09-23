@@ -53,11 +53,14 @@ struct HomeView: View {
             }
         )) {
             ForEach(ScriptMode.allCases) { mode in
-                Text(mode.displayName).tag(mode)
+                Image(systemName: mode == .cards ? "rectangle.stack" : "text.alignleft")
+                    .accessibilityLabel(mode.displayName)
+                    .tag(mode)
             }
         }
         .pickerStyle(.segmented)
-        .frame(width: 220)
+        .frame(width: 112)
+        .accessibilityLabel("Reading mode")
     }
 
     /// Where the cards will be read. It is chosen before writing, since it sets
@@ -88,9 +91,7 @@ struct HomeView: View {
                     .foregroundStyle(AppColors.textSecondary(for: colorScheme))
             }
             .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-            .padding(.horizontal, 16)
-            .frame(height: 52)
-            .glassedEffect(in: Capsule())
+            .frame(minHeight: 44)
         }
         .accessibilityLabel("Show cards on the \(current.displayName)")
     }
@@ -127,9 +128,7 @@ struct HomeView: View {
             }
         }
         .font(.caption.weight(.semibold).monospacedDigit())
-        .padding(.horizontal, 12)
-        .frame(height: 28)
-        .glassedEffect(in: Capsule())
+        .accessibilityElement(children: .combine)
     }
 
     private func showCardsOpenedOnWatch() {
@@ -193,7 +192,14 @@ struct HomeView: View {
     @ViewBuilder
     private var timerControl: some View {
         if isCardsMode && hasNotes {
-            cardDisplayMenu
+            Button(action: insertCard) {
+                Label("Add Card", systemImage: "plus")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                    .padding(.horizontal, 16)
+                    .frame(height: 52)
+                    .glassedEffect(in: Capsule())
+            }
         } else if hasNotes || showingTimerPicker {
             VStack(alignment: .leading, spacing: 0) {
                 if showingTimerPicker {
@@ -355,6 +361,22 @@ struct HomeView: View {
                             .transition(.move(edge: .top).combined(with: .opacity))
                     }
 
+                    if isCardsMode {
+                        ViewThatFits(in: .horizontal) {
+                            HStack(spacing: 12) {
+                                cardDisplayMenu
+                                Spacer(minLength: 8)
+                                cardStatus
+                            }
+                            VStack(alignment: .leading, spacing: 0) {
+                                cardDisplayMenu
+                                cardStatus
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.top, 4)
+                    }
+
                     // Notes editor
                     NotesEditorView(
                         text: $settingsService.notes,
@@ -373,14 +395,6 @@ struct HomeView: View {
                     // inset. SwiftUI's avoidance would resize it instead, and the
                     // gap it leaves behind on dismissal cuts the script off.
                     .ignoresSafeArea(.keyboard, edges: .bottom)
-                    .overlay(alignment: .topTrailing) {
-                        if isCardsMode && hasNotes {
-                            cardStatus
-                                .padding(.top, 6)
-                                .padding(.trailing, 16)
-                                .allowsHitTesting(false)
-                        }
-                    }
                 }
                 .animation(.easeInOut(duration: 0.25), value: notifications.dismissedIDs)
             }
@@ -400,7 +414,7 @@ struct HomeView: View {
                         timerControl
                     }
 
-                    Spacer(minLength: 12)
+                    Spacer(minLength: isCardsMode ? 0 : 12)
 
                     Button(action: {
                         isEditorFocused = false
@@ -413,17 +427,29 @@ struct HomeView: View {
                             showingTeleprompter = true
                         }
                     }) {
-                        Image(systemName: isCardsMode ? "rectangle.stack.fill" : "play.fill")
-                            .font(.system(size: 20, weight: .semibold))
-                            .foregroundStyle(colorScheme == .dark ? .black : .white)
-                            .frame(width: 52, height: 52)
-                            .background(
-                                Circle()
-                                    .fill(AppColors.green(for: colorScheme))
-                            )
-                            .glassedEffect(in: Circle())
+                        if isCardsMode {
+                            Label("Read Cards", systemImage: "rectangle.stack.fill")
+                                .font(.subheadline.weight(.semibold))
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
+                                .foregroundStyle(colorScheme == .dark ? .black : .white)
+                                .padding(.horizontal, 16)
+                                .frame(height: 52)
+                                .background(Capsule().fill(AppColors.green(for: colorScheme)))
+                                .glassedEffect(in: Capsule())
+                        } else {
+                            Image(systemName: "play.fill")
+                                .font(.system(size: 20, weight: .semibold))
+                                .foregroundStyle(colorScheme == .dark ? .black : .white)
+                                .frame(width: 52, height: 52)
+                                .background(
+                                    Circle()
+                                        .fill(AppColors.green(for: colorScheme))
+                                )
+                                .glassedEffect(in: Circle())
+                        }
                     }
-                    .disabled(!hasNotes)
+                    .disabled(isCardsMode ? CueCards.cards(in: settingsService.notes).isEmpty : !hasNotes)
                     .opacity(hasNotes ? 1.0 : 0.6)
                     .accessibilityLabel(isCardsMode ? "Open Cards" : "Start Teleprompter")
                 }
@@ -615,7 +641,7 @@ struct NotesEditorView: View {
                 // Set on the editor's own font and insets, so the first line sits
                 // exactly where the caret waiting in front of it does.
                 Text(mode == .cards
-                     ? "Write your first card here...\n\nTap Add Card, or type [, to end a card and start the next. Tap Add Cue for a delivery reminder.\n\nKeep each card short enough for where you'll read it: 120 characters on the Lock Screen, 280 in the app."
+                     ? "One thought per card.\n\nWrite a few talking points, then tap Add Card for the next one.\n\nUse Add Cue for reminders like [cue pause]."
                      : "Add your script here...\n\nTap Add Cue to drop in a delivery reminder, or type [ to write one yourself.\n\nFor example: Welcome everyone [cue smile and pause]")
                     .font(.system(size: fontSize, weight: .medium))
                     .foregroundStyle(AppColors.textSecondary(for: colorScheme).opacity(0.6))

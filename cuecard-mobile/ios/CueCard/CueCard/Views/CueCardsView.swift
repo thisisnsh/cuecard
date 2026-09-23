@@ -19,6 +19,9 @@ struct CueCardsView: View {
     @Environment(\.colorScheme) private var colorScheme
     @ObservedObject private var session = CueCardsSession.shared
     @State private var dragOffset: CGFloat = 0
+    @State private var showingLockScreenHelp = false
+    @Environment(\.openURL) private var openURL
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var settings: TeleprompterSettings { settingsService.settings }
 
@@ -32,6 +35,13 @@ struct CueCardsView: View {
         session.isFinished ? "Done" : "\(session.index + 1) of \(session.cards.count)"
     }
 
+    private var nextLabel: String {
+        if session.isFinished { return "Start Over" }
+        return session.index == session.cards.count - 1 ? "Finish" : "Next Card"
+    }
+
+    private var animation: Animation? { reduceMotion ? nil : Self.deckAnimation }
+
     var body: some View {
         NavigationStack {
             GeometryReader { geometry in
@@ -40,6 +50,13 @@ struct CueCardsView: View {
                         .ignoresSafeArea()
 
                     VStack(spacing: 0) {
+                        ProgressView(value: Double(min(session.index + 1, session.cards.count)),
+                                     total: Double(max(session.cards.count, 1)))
+                            .tint(AppColors.green(for: colorScheme))
+                            .padding(.horizontal, 24)
+                            .padding(.top, 8)
+                            .accessibilityHidden(true)
+
                         deck(width: geometry.size.width)
                             .padding(.horizontal, 20)
                             .padding(.top, 12)
@@ -51,8 +68,9 @@ struct CueCardsView: View {
                             .padding(.top, 12)
 
                         controls
-                            .padding(.top, 20)
-                            .padding(.bottom, 32)
+                            .padding(.horizontal, 24)
+                            .padding(.top, 16)
+                            .padding(.bottom, 16)
                     }
                 }
             }
@@ -73,10 +91,51 @@ struct CueCardsView: View {
                     .accessibilityLabel("Close")
                 }
                 ToolbarItem(placement: .principal) {
-                    Text(progress)
-                        .font(.system(size: 16, weight: .bold, design: .monospaced))
-                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                    VStack(spacing: 2) {
+                        Text(session.title.isEmpty ? title : session.title)
+                            .font(.subheadline.weight(.semibold))
+                            .lineLimit(1)
+                        Text(progress)
+                            .font(.caption.monospacedDigit())
+                            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                    }
+                    .accessibilityElement(children: .combine)
                 }
+            }
+            .sheet(isPresented: $showingLockScreenHelp) {
+                NavigationStack {
+                    List {
+                        Section {
+                            Label("Swipe a notification left to move to the next card.", systemImage: "hand.draw")
+                            Label("Touch and hold a notification to go back or start over.", systemImage: "hand.tap")
+                        } header: {
+                            Text("Read from your Lock Screen")
+                        } footer: {
+                            Text("Your place stays in sync with the app and Apple Watch. Closing this deck removes its notifications.")
+                        }
+                        if session.lockScreenUnavailable && !session.isOnLockScreen {
+                            Text("Allow notifications for CueCard in Settings, then try again.")
+                                .foregroundStyle(.secondary)
+                            Button("Open Notification Settings") {
+                                if let url = URL(string: UIApplication.openNotificationSettingsURLString) {
+                                    openURL(url)
+                                }
+                            }
+                            Button("Try Again") {
+                                session.showOnLockScreen()
+                                showingLockScreenHelp = false
+                            }
+                        }
+                    }
+                    .navigationTitle("Lock Screen")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Done") { showingLockScreenHelp = false }
+                        }
+                    }
+                }
+                .presentationDetents([.medium, .large])
             }
         }
         .onAppear {
@@ -127,11 +186,12 @@ struct CueCardsView: View {
                 .opacity(placement.opacity)
                 .zIndex(placement.zIndex)
                 .accessibilityHidden(cardIndex != session.index)
+                .allowsHitTesting(cardIndex == session.index)
             }
         }
         .contentShape(Rectangle())
-        .gesture(swipe(width: width))
-        .animation(Self.deckAnimation, value: session.index)
+        .simultaneousGesture(swipe(width: width))
+        .animation(animation, value: session.index)
     }
 
     private struct Placement {
@@ -181,12 +241,17 @@ struct CueCardsView: View {
     private func swipe(width: CGFloat) -> some Gesture {
         DragGesture(minimumDistance: 12)
             .onChanged { value in
+                guard abs(value.translation.width) > abs(value.translation.height) else { return }
                 dragOffset = value.translation.width
             }
             .onEnded { value in
                 let distance = value.translation.width
                 let predicted = value.predictedEndTranslation.width
-                withAnimation(Self.deckAnimation) {
+                guard abs(distance) > abs(value.translation.height) else {
+                    withAnimation(animation) { dragOffset = 0 }
+                    return
+                }
+                withAnimation(animation) {
                     if (distance < -Self.swipeDistance || predicted < -width / 2), !session.isFinished {
                         session.next()
                         Analytics.logEvent("cards_next", parameters: ["source": "swipe"])
@@ -228,48 +293,43 @@ struct CueCardsView: View {
     private var hint: some View {
         let secondary = AppColors.textSecondary(for: colorScheme)
 
-        if settings.cardDisplay == .lockScreen {
-            if session.isOnLockScreen {
-                Label("On your Lock Screen too. Swipe a card left there for the next, or touch and hold it to go back.",
-                      systemImage: "lock.fill")
-                    .font(.footnote)
-                    .foregroundStyle(secondary)
-                    .multilineTextAlignment(.center)
-            } else if session.lockScreenUnavailable {
-                Label("Turn on notifications for CueCard in Settings to see your cards on the Lock Screen.",
-                      systemImage: "lock.slash")
-                    .font(.footnote)
-                    .foregroundStyle(secondary)
-                    .multilineTextAlignment(.center)
+        if settings.cardDisplay == .lockScreen || session.isOnLockScreen {
+            if session.isOnLockScreen || session.lockScreenUnavailable {
+                Button { showingLockScreenHelp = true } label: {
+                    Label(session.isOnLockScreen ? "Also on Lock Screen" : "Enable Lock Screen cards",
+                          systemImage: session.isOnLockScreen ? "lock.fill" : "lock.slash")
+                        .font(.footnote)
+                        .foregroundStyle(secondary)
+                        .frame(minHeight: 44)
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("Shows Lock Screen instructions")
             } else {
                 Button(action: {
                     AnalyticsEvents.logButtonClick("show_on_lock_screen", screen: "cards")
                     session.showOnLockScreen()
                 }) {
                     Label("Show on Lock Screen", systemImage: "lock.fill")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                        .padding(.horizontal, 16)
-                        .frame(height: 40)
-                        .glassedEffect(in: Capsule())
+                        .font(.footnote.weight(.medium))
+                        .foregroundStyle(secondary)
+                        .frame(minHeight: 44)
                 }
                 .buttonStyle(.plain)
             }
-        } else {
-            Text("Swipe left for the next card, right to bring one back.")
+        } else if !session.isFinished {
+            Text("Swipe to turn the card")
                 .font(.footnote)
                 .foregroundStyle(secondary)
-                .multilineTextAlignment(.center)
         }
     }
 
     // MARK: - Controls
 
     private var controls: some View {
-        HStack(spacing: 24) {
+        HStack(spacing: 16) {
             Button(action: {
                 AnalyticsEvents.logButtonClick("previous_card", screen: "cards")
-                withAnimation(Self.deckAnimation) { session.previous() }
+                withAnimation(animation) { session.previous() }
             }) {
                 Image(systemName: "chevron.left")
                     .font(.system(size: 20, weight: .semibold))
@@ -284,24 +344,25 @@ struct CueCardsView: View {
             Button(action: {
                 if session.isFinished {
                     AnalyticsEvents.logButtonClick("restart_cards", screen: "cards")
-                    withAnimation(Self.deckAnimation) { session.restart() }
+                    withAnimation(animation) { session.restart() }
                 } else {
                     AnalyticsEvents.logButtonClick("next_card", screen: "cards")
-                    withAnimation(Self.deckAnimation) { session.next() }
+                    withAnimation(animation) { session.next() }
                 }
             }) {
-                Image(systemName: session.isFinished ? "arrow.counterclockwise" : "chevron.right")
-                    .font(.system(size: 26, weight: .semibold))
-                    .foregroundStyle(colorScheme == .dark ? .black : .white)
-                    .frame(width: 72, height: 72)
-                    .background(Circle().fill(AppColors.green(for: colorScheme)))
-                    .glassedEffect(in: Circle())
+                HStack(spacing: 10) {
+                    Text(nextLabel)
+                    Image(systemName: session.isFinished ? "arrow.counterclockwise" :
+                            (session.index == session.cards.count - 1 ? "checkmark" : "arrow.right"))
+                }
+                .font(.headline)
+                .foregroundStyle(colorScheme == .dark ? .black : .white)
+                .frame(maxWidth: .infinity)
+                .frame(height: 56)
+                .background(Capsule().fill(AppColors.green(for: colorScheme)))
+                .glassedEffect(in: Capsule())
             }
-            .accessibilityLabel(session.isFinished ? "Start Over" : "Next Card")
-
-            // Balances the back button, so the main one sits in the middle.
-            Color.clear
-                .frame(width: 52, height: 52)
+            .accessibilityLabel(nextLabel)
         }
     }
 }
@@ -316,20 +377,24 @@ private struct CueCardFace: View {
     static let cornerRadius: CGFloat = 28
 
     var body: some View {
-        runs.text(primary: AppColors.textPrimary(for: colorScheme), cue: cueColor.color(for: colorScheme))
-            .font(.system(size: fontSize, weight: .semibold))
-            // A card past its limit shrinks to fit rather than being cut off.
-            .minimumScaleFactor(0.4)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .padding(28)
-            .background(
-                RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous)
-                    .fill(colorScheme == .dark ? Color(white: 0.11) : Color.white)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous)
-                    .stroke(AppColors.textSecondary(for: colorScheme).opacity(0.2), lineWidth: 0.7)
-            )
-            .shadow(color: .black.opacity(colorScheme == .dark ? 0.5 : 0.1), radius: 16, y: 6)
+        ScrollView {
+            runs.text(primary: AppColors.textPrimary(for: colorScheme), cue: cueColor.color(for: colorScheme))
+                .font(.system(size: fontSize, weight: .semibold))
+                .lineSpacing(4)
+                .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(24)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .clipShape(RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous))
+        .background(
+            RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous)
+                .fill(colorScheme == .dark ? Color(white: 0.11) : Color.white)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous)
+                .stroke(AppColors.textSecondary(for: colorScheme).opacity(0.2), lineWidth: 0.7)
+        )
+        .shadow(color: .black.opacity(colorScheme == .dark ? 0.5 : 0.1), radius: 16, y: 6)
     }
 }
