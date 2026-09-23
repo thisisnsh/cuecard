@@ -1,9 +1,9 @@
 import ActivityKit
 import Foundation
-import UIKit
-import os
 
-/// Mirrors a started teleprompter session into the island and Lock Screen.
+/// Mirrors the session timer into a Live Activity for the Dynamic Island while
+/// the floating window is up, which then leaves the timer out of its own page.
+/// iPhones without the island keep the timer in the window and get no activity.
 @MainActor
 final class TeleprompterActivityController {
     private typealias ContentState = TeleprompterActivityAttributes.ContentState
@@ -12,18 +12,6 @@ final class TeleprompterActivityController {
 
     private var activity: Activity<TeleprompterActivityAttributes>?
     private var lastState: ContentState?
-    private var pendingUpdate: Task<Void, Never>?
-    private var stateObservation: Task<Void, Never>?
-    private var wasDismissed = false
-    private var retryAfter = Date.distantPast
-    private var lastUpdate = Date.distantPast
-    private var heartbeat: Timer?
-    private let logger = Logger(subsystem: "com.thisisnsh.cuecard.ios", category: "LiveActivity")
-
-    var isActive: Bool {
-        guard let activity else { return false }
-        return activity.activityState == .active || activity.activityState == .stale
-    }
 
     /// Called on every playback change, up to each clock tick. The system
     /// ticks the running time itself, so an update is only sent when what it
@@ -31,94 +19,33 @@ final class TeleprompterActivityController {
     func sync(_ playback: TeleprompterPlaybackState, countdownRemaining: Double?, timerDuration: Int) {
         let state = Self.contentState(for: playback, countdownRemaining: countdownRemaining,
                                       timerDuration: timerDuration)
+        if let lastState, lastState.matches(state) { return }
+        lastState = state
+
         if let activity {
-            guard isActive else { return }
-            if let lastState, lastState.matches(state), Date().timeIntervalSince(lastUpdate) < 30 { return }
-            lastState = state
-            lastUpdate = Date()
-            let content = ActivityContent(state: state, staleDate: Date().addingTimeInterval(60))
-            let previous = pendingUpdate
-            pendingUpdate = Task {
-                await previous?.value
-                await activity.update(content)
-            }
+            Task { await activity.update(ActivityContent(state: state, staleDate: nil)) }
             return
         }
-        guard !wasDismissed, Date() >= retryAfter,
-              UIApplication.shared.applicationState == .active,
-              ActivityAuthorizationInfo().areActivitiesEnabled else { return }
+        guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
         // One left over from a session the app was quit during.
         endActivities(Activity<TeleprompterActivityAttributes>.activities)
         // Only an app still on screen may start one.
-        do {
-            let activity = try Activity.request(
-                attributes: TeleprompterActivityAttributes(),
-                content: ActivityContent(state: state, staleDate: Date().addingTimeInterval(60))
-            )
-            self.activity = activity
-            lastState = state
-            lastUpdate = Date()
-            // Paused readers have no playback clock. Renew freshness there too,
-            // so an intentionally paused session never looks disconnected.
-            heartbeat = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
-                Task { @MainActor [weak self] in
-                    guard let self, self.isActive, let state = self.lastState,
-                          let activity = self.activity else { return }
-                    let previous = self.pendingUpdate
-                    self.pendingUpdate = Task {
-                        await previous?.value
-                        await activity.update(ActivityContent(state: state, staleDate: Date().addingTimeInterval(60)))
-                    }
-                    self.lastUpdate = Date()
-                }
-            }
-            stateObservation = Task { [weak self] in
-                for await state in activity.activityStateUpdates {
-                    guard let self, self.activity?.id == activity.id else { return }
-                    if state == .dismissed || state == .ended {
-                        self.activity = nil
-                        self.lastState = nil
-                        self.wasDismissed = true
-                        self.heartbeat?.invalidate()
-                        self.heartbeat = nil
-                        return
-                    }
-                }
-            }
-        } catch {
-            // A request may fail during a foreground transition. Don't cache
-            // the state as delivered, or hammer ActivityKit on every frame.
-            retryAfter = Date().addingTimeInterval(5)
-            logger.error("Could not start teleprompter activity: \(error.localizedDescription, privacy: .public)")
-        }
+        activity = try? Activity.request(
+            attributes: TeleprompterActivityAttributes(),
+            content: ActivityContent(state: state, staleDate: nil)
+        )
     }
 
     func end() {
-        heartbeat?.invalidate()
-        heartbeat = nil
-        stateObservation?.cancel()
-        stateObservation = nil
+        guard activity != nil || lastState != nil else { return }
         activity = nil
         lastState = nil
-        wasDismissed = false
-        retryAfter = .distantPast
         endActivities(Activity<TeleprompterActivityAttributes>.activities)
-    }
-
-    func waitForUpdates() async {
-        await pendingUpdate?.value
     }
 
     private func endActivities(_ activities: [Activity<TeleprompterActivityAttributes>]) {
         guard !activities.isEmpty else { return }
-        // Give an end requested during backgrounding time to reach ActivityKit.
-        let backgroundTask = UIApplication.shared.beginBackgroundTask(withName: "End teleprompter activity")
-        let previous = pendingUpdate
-        pendingUpdate = Task {
-            defer {
-                if backgroundTask != .invalid { UIApplication.shared.endBackgroundTask(backgroundTask) }
-            }
-            await previous?.value
+        Task {
             for activity in activities {
                 await activity.end(nil, dismissalPolicy: .immediate)
             }

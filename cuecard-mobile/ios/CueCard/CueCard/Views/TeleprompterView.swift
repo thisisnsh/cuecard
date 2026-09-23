@@ -258,7 +258,16 @@ struct TeleprompterView: View {
             UIApplication.shared.isIdleTimerDisabled = false
         }
         .onChange(of: scenePhase) { newPhase in
-            if newPhase == .active {
+            if newPhase == .inactive {
+                pipManager.prepareForPiP()
+            } else if newPhase == .background {
+                // Auto-start PiP when app goes to background (like YouTube)
+                if !pipManager.isPiPActive && pipManager.isPiPPossible {
+                    startPiP(minimizeApp: false)
+                }
+                pipManager.cancelPreparedPiP()
+            } else if newPhase == .active {
+                pipManager.cancelPreparedPiP()
                 // Catch an appearance change made while the app was away.
                 pipManager.update(settings: settings, colorScheme: colorScheme)
                 pipManager.refreshPresentation()

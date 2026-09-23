@@ -4,50 +4,53 @@ import WidgetKit
 
 private typealias ContentState = TeleprompterActivityAttributes.ContentState
 
-/// One glanceable timer and the same two controls on both system surfaces.
+/// The session timer in the Dynamic Island and on the Lock Screen.
 struct TeleprompterLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: TeleprompterActivityAttributes.self) { context in
-            LockScreenTimerView(state: context.state, isStale: context.isStale)
-                .activityBackgroundTint(Color(white: 0.06))
-                .activitySystemActionForegroundColor(.white)
+            LockScreenTimerView(state: context.state)
         } dynamicIsland: { context in
             let state = context.state
-            let tint = context.isStale ? AppColors.Dark.textSecondary : state.tint.color
+            // The island is always black, whatever the system appearance.
+            let tint = state.tint.color(for: .dark)
             return DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    Label("Teleprompter", systemImage: "text.alignleft")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.white)
-                        .padding(.leading, 4)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("CueCard")
+                            .font(.caption)
+                            .foregroundStyle(AppColors.Dark.textSecondary)
+                        Label(state.statusTitle, systemImage: state.symbolName)
+                            .font(.headline)
+                            .foregroundStyle(tint)
+                    }
+                    .padding(.leading, 4)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    Text("CueCard")
-                        .font(.caption)
-                        .foregroundStyle(AppColors.Dark.textSecondary)
+                    TimerText(state: state)
+                        .font(.system(size: 32, weight: .bold, design: .rounded).monospacedDigit())
+                        .foregroundStyle(tint)
+                        .multilineTextAlignment(.trailing)
+                        .frame(maxWidth: 140, alignment: .trailing)
                         .padding(.trailing, 4)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    TimerAndControls(state: state, isStale: context.isStale)
-                        .padding(.horizontal, 4)
-                        .padding(.top, 6)
-                        .padding(.bottom, 4)
+                    PlaybackButtons(state: state, tint: tint,
+                                    fill: AppColors.Dark.textSecondary.opacity(0.25))
+                        .padding(.top, 4)
                 }
             } compactLeading: {
-                Image(systemName: context.isStale ? "stop.fill" : state.symbolName)
-                    .font(.system(size: 13, weight: .semibold))
+                Image(systemName: state.symbolName)
                     .foregroundStyle(tint)
-                    .accessibilityLabel(context.isStale ? "Teleprompter unavailable" : state.timerTitle)
             } compactTrailing: {
-                TimerText(state: state, isStale: context.isStale)
-                    .font(.system(size: 15, weight: .semibold, design: .rounded).monospacedDigit())
+                // A running timer's text takes all the width it is offered.
+                TimerText(state: state)
+                    .font(.system(size: 15, weight: .semibold).monospacedDigit())
                     .foregroundStyle(tint)
                     .multilineTextAlignment(.trailing)
-                    .lineLimit(1)
                     .minimumScaleFactor(0.7)
-                    .frame(width: state.needsHours ? 66 : 52, alignment: .trailing)
+                    .frame(width: 52, alignment: .trailing)
             } minimal: {
-                Image(systemName: context.isStale ? "stop.fill" : state.symbolName)
+                Image(systemName: state.symbolName)
                     .foregroundStyle(tint)
             }
             .keylineTint(tint)
@@ -57,104 +60,79 @@ struct TeleprompterLiveActivity: Widget {
 
 private struct LockScreenTimerView: View {
     let state: ContentState
-    var isStale = false
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(spacing: 12) {
             HStack {
-                Label("Teleprompter", systemImage: "text.alignleft")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(.white)
-                Spacer(minLength: 8)
-                Text("CueCard")
-                    .font(.caption)
-                    .foregroundStyle(AppColors.Dark.textSecondary)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("CueCard")
+                        .font(.caption)
+                        .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                    Label(state.statusTitle, systemImage: state.symbolName)
+                        .font(.headline)
+                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                }
+                Spacer()
+                TimerText(state: state)
+                    .font(.system(size: 36, weight: .bold, design: .rounded).monospacedDigit())
+                    .foregroundStyle(state.tint.color(for: colorScheme))
+                    .multilineTextAlignment(.trailing)
+                    .frame(maxWidth: 160, alignment: .trailing)
             }
-            TimerAndControls(state: state, isStale: isStale)
+            PlaybackButtons(state: state,
+                            tint: AppColors.textPrimary(for: colorScheme),
+                            fill: AppColors.textSecondary(for: colorScheme).opacity(0.18))
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 16)
-        .environment(\.colorScheme, .dark)
     }
 }
 
-private struct TimerAndControls: View {
-    let state: ContentState
-    let isStale: Bool
-
-    var body: some View {
-        HStack(alignment: .center, spacing: 16) {
-            VStack(alignment: .leading, spacing: 2) {
-                TimerText(state: state, isStale: isStale)
-                    .font(.system(size: 40, weight: .semibold, design: .rounded).monospacedDigit())
-                    .foregroundStyle(isStale ? AppColors.Dark.textSecondary : state.tint.color)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.6)
-                    .multilineTextAlignment(.leading)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                Text(isStale ? "Open CueCard to continue" : state.timerTitle)
-                    .font(.caption)
-                    .foregroundStyle(AppColors.Dark.textSecondary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-            }
-            if !isStale {
-                PlaybackButtons(state: state)
-            }
-        }
-    }
-}
-
-/// The primary control is distinct from the smaller script rewind. Both have
-/// at least a 44-point hit target; rewinding never changes the session timer.
+/// Back 10 seconds and play/pause, run in the app without opening it. Buttons
+/// in a Live Activity need iOS 17; before that the timer shows alone.
 private struct PlaybackButtons: View {
     let state: ContentState
+    let tint: Color
+    let fill: Color
 
     var body: some View {
         if #available(iOS 17.0, *) {
-            HStack(spacing: 10) {
+            HStack(spacing: 12) {
                 Button(intent: SkipBackTeleprompterIntent()) {
-                    Image(systemName: "gobackward.\(TeleprompterRemoteCommand.skipBackSeconds)")
-                        .font(.system(size: 20, weight: .medium))
-                        .foregroundStyle(.white)
-                        .frame(width: 44, height: 44)
-                        .background(.white.opacity(0.12), in: Circle())
+                    label("gobackward.\(TeleprompterRemoteCommand.skipBackSeconds)")
                 }
-                .accessibilityLabel("Move script back \(TeleprompterRemoteCommand.skipBackSeconds) seconds")
-                .disabled(state.phase == .countingDown)
-                .opacity(state.phase == .countingDown ? 0.4 : 1)
+                .accessibilityLabel("Back \(TeleprompterRemoteCommand.skipBackSeconds) Seconds")
 
                 Button(intent: ToggleTeleprompterPlaybackIntent()) {
-                    Image(systemName: state.phase == .paused ? "play.fill" : "pause.fill")
-                        .font(.system(size: 21, weight: .semibold))
-                        .foregroundStyle(.black)
-                        .frame(width: 52, height: 52)
-                        .background(.white, in: Circle())
+                    label(state.phase == .paused ? "play.fill" : "pause.fill")
                 }
-                .accessibilityLabel(state.phase == .paused ? "Resume teleprompter" : "Pause teleprompter")
+                .accessibilityLabel(state.phase == .paused ? "Play" : "Pause")
             }
             .buttonStyle(.plain)
-            .fixedSize()
         }
+    }
+
+    private func label(_ systemImage: String) -> some View {
+        Image(systemName: systemImage)
+            .font(.system(size: 18, weight: .semibold))
+            .foregroundStyle(tint)
+            .frame(maxWidth: .infinity, minHeight: 40)
+            .background(fill, in: Capsule())
     }
 }
 
-/// ActivityKit advances the clock. A stale activity must not keep claiming
-/// playback is running after the app process has gone away.
+/// Running, the system ticks the time from the zero date, so it stays current
+/// without the app sending an update each second.
 private struct TimerText: View {
     let state: ContentState
-    var isStale = false
 
     var body: some View {
-        if isStale {
-            Text("—:—")
-        } else {
-            switch state.phase {
-            case .paused:
-                Text(state.pausedDisplay)
-            case .countingDown, .playing:
-                Text(state.isOvertime ? "−" : "") + Text(state.zeroDate, style: .timer)
-            }
+        switch state.phase {
+        case .paused:
+            Text(state.pausedDisplay)
+        case .countingDown, .playing:
+            Text(state.isOvertime ? "-" : "") + Text(state.zeroDate, style: .timer)
         }
     }
 }
@@ -163,46 +141,28 @@ private extension ContentState {
     var symbolName: String {
         switch phase {
         case .countingDown: return "timer"
-        case .playing: return "text.alignleft"
+        case .playing: return "play.fill"
         case .paused: return "pause.fill"
         }
     }
 
-    var timerTitle: String {
-        if phase == .countingDown { return "Starting in" }
-        let title = isOvertime ? "Overtime" : tint == .primary ? "Elapsed time" : "Time remaining"
-        return phase == .paused ? "Paused · \(title.lowercased())" : title
-    }
-
-    var needsHours: Bool {
-        phase == .paused ? abs(pausedSeconds) >= 3600 : abs(zeroDate.timeIntervalSinceNow) >= 3600
+    var statusTitle: String {
+        switch phase {
+        case .countingDown: return "Starting"
+        case .playing: return isOvertime ? "Overtime" : "Reading"
+        case .paused: return "Paused"
+        }
     }
 }
 
 private extension ContentState.Tint {
-    var color: Color {
+    func color(for colorScheme: ColorScheme) -> Color {
         switch self {
-        case .primary: return .white
-        case .pink: return AppColors.Dark.pink
-        case .green: return AppColors.Dark.green
-        case .yellow: return AppColors.Dark.yellow
-        case .red: return AppColors.Dark.red
+        case .primary: return AppColors.textPrimary(for: colorScheme)
+        case .pink: return AppColors.pink(for: colorScheme)
+        case .green: return AppColors.green(for: colorScheme)
+        case .yellow: return AppColors.yellow(for: colorScheme)
+        case .red: return AppColors.red(for: colorScheme)
         }
     }
 }
-
-#if DEBUG
-struct TeleprompterActivityLayoutPreviews: PreviewProvider {
-    static var previews: some View {
-        ForEach([ContentState.Phase.playing, .paused, .countingDown], id: \.self) { phase in
-            LockScreenTimerView(state: ContentState(
-                phase: phase, tint: phase == .countingDown ? .pink : .green,
-                zeroDate: Date().addingTimeInterval(142), pausedSeconds: 142, isOvertime: false
-            ))
-            .background(Color(white: 0.06))
-            .previewLayout(.fixed(width: 350, height: 136))
-            .previewDisplayName(phase.rawValue)
-        }
-    }
-}
-#endif

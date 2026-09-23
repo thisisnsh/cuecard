@@ -28,7 +28,9 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
             syncWatch()
         }
     }
-    @Published private(set) var isPiPActive = false
+    @Published private(set) var isPiPActive = false {
+        didSet { syncLiveActivity() }
+    }
     @Published private(set) var isPiPPossible = false
     /// A restoration request belongs to the full-screen presentation only. The
     /// still-visible overlay carries on scrolling through it.
@@ -55,11 +57,16 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
     private var isRestoringToReader = false
     private var renderer: TeleprompterOverlayRenderer?
     private var possibilityObservation: NSKeyValueObservation?
-    private var isStartingPiP = false
+    private var isStartingPiP = false {
+        didSet { syncLiveActivity() }
+    }
+    /// The app is on its way out and the floating window will follow it.
+    private var expectsPiP = false {
+        didSet { syncLiveActivity() }
+    }
     private var minimizeWhenStarted = false
     private var lastFrameTime: CFTimeInterval = 0
     private let liveActivity = TeleprompterActivityController()
-    private var isInBackground = false
     /// What the watch was last told, so it is only told again on a change.
     private var watchTimer: TeleprompterTimerState?
 
@@ -117,7 +124,6 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         renderer = TeleprompterOverlayRenderer(text: text, settings: settings,
                                             timerDuration: timerDuration, isDarkMode: isDarkMode)
         setupPiP()
-        syncLiveActivity()
         syncWatch()
     }
 
@@ -235,12 +241,6 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
     /// A script is open in the teleprompter, so there is playback to control.
     var hasSession: Bool { renderer != nil }
 
-    /// The overlay always owns its timer on non-island devices, and takes it
-    /// back if the Live Activity is unavailable or dismissed.
-    var showsTimerInPiP: Bool {
-        !TeleprompterActivityController.hasDynamicIsland || !liveActivity.isActive
-    }
-
     /// Move the script by a number of its seconds, from where it shows now.
     /// Playing on past the last line leaves the text resting there, so a skip
     /// back from the end counts from the last line rather than the clock.
@@ -261,49 +261,17 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         renderFrame(force: true)
     }
 
-    /// Opening a reader is not playback. Begin on Play (including its start
-    /// delay), retain controls while paused, and end on restart or dismissal.
+    /// The Dynamic Island carries the floating window's timer, only while the
+    /// window is up, or about to be.
     private func syncLiveActivity() {
-        let hasBegun = playback.hasStarted || playback.isCountingDown
-        pipController?.canStartPictureInPictureAutomaticallyFromInline = hasBegun
-        guard hasSession, hasBegun,
-              !isInBackground || isPiPActive || isStartingPiP || isRestoringToReader else {
+        guard TeleprompterActivityController.hasDynamicIsland,
+              isPiPActive || isStartingPiP || expectsPiP else {
             liveActivity.end()
             return
         }
         liveActivity.sync(playback,
                           countdownRemaining: countdownDeadline.map { max(0, $0 - CACurrentMediaTime()) },
                           timerDuration: settings.timerDurationSeconds)
-    }
-
-    /// A background app without a floating reader cannot keep prompting.
-    /// Called from the app scene, so it also runs if the reader was dismissed.
-    func sceneDidChange(to phase: ScenePhase) {
-        switch phase {
-        case .background:
-            isInBackground = true
-            if hasSession, playback.hasStarted || playback.isCountingDown,
-               !isPiPActive, !isStartingPiP {
-                _ = startPiP()
-            }
-            pauseIfNoPresentation()
-        case .active:
-            isInBackground = false
-            refreshPresentation()
-        default:
-            break
-        }
-        syncLiveActivity()
-    }
-
-    private func pauseIfNoPresentation() {
-        guard isInBackground, !isPiPActive, !isStartingPiP, !isRestoringToReader else { return }
-        pause()
-        liveActivity.end()
-    }
-
-    func waitForLiveActivity() async {
-        await liveActivity.waitForUpdates()
     }
 
     /// The session timer as the watch shows it. Nil while no script is open.
@@ -329,6 +297,17 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
             watchTimer = state
             WatchSessionService.shared.stateChanged()
         }
+    }
+
+    /// The app is leaving the screen and the floating window starts once it
+    /// has. Only an app still on screen may start a Live Activity, so the
+    /// island's timer starts now. Cancelled if the app comes straight back.
+    func prepareForPiP() {
+        expectsPiP = isPiPPossible && !isPiPActive
+    }
+
+    func cancelPreparedPiP() {
+        expectsPiP = false
     }
 
     private func reanchorPlayback() {
@@ -448,10 +427,7 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
     /// nothing in the media pipeline for another app to take away, which is what
     /// let a camera recording blank the old sample-buffer window.
     private func renderFrame(force: Bool = false) {
-        guard let contentView, let renderer else { return }
-        // Non-island phones always retain the overlay timer. On an island
-        // phone, hide it only after ActivityKit actually accepted the timer.
-        renderer.showsTimer = showsTimerInPiP
+        guard let contentView, renderer != nil else { return }
         let hostNow = CACurrentMediaTime()
         let renderingPiP = isPiPActive || isStartingPiP || isRestoringToReader
         #if DEBUG
@@ -473,6 +449,9 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
 
     @discardableResult
     func startPiP(minimizeApp: Bool = false) -> Bool {
+        // Starting now or not at all, so the prepared activity is handed over
+        // to the start, or ended.
+        defer { expectsPiP = false }
         guard !isPiPActive, !isStartingPiP,
               let controller = pipController, controller.isPictureInPicturePossible else { return false }
         switchDriver()
@@ -522,6 +501,7 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         countdownDeadline = nil
         playbackAnchor = nil
         possibilityObservation = nil
+        expectsPiP = false
         pipController?.delegate = nil
         pipController?.stopPictureInPicture()
         pipController = nil
@@ -576,7 +556,7 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
             activeVideoCallSourceView: source, contentViewController: controller
         ))
         pip.delegate = self
-        pip.canStartPictureInPictureAutomaticallyFromInline = playback.hasStarted || playback.isCountingDown
+        pip.canStartPictureInPictureAutomaticallyFromInline = true
         pipController = pip
         possibilityObservation = pip.observe(\.isPictureInPicturePossible, options: [.initial, .new]) { [weak self] controller, _ in
             Task { @MainActor in
@@ -605,7 +585,6 @@ extension TeleprompterPiPManager: @preconcurrency AVPictureInPictureControllerDe
         guard pipController === pictureInPictureController else { return }
         isStartingPiP = false
         isPiPActive = true
-        syncLiveActivity()
         // The window is now this app's to keep painting, paused or not.
         syncClock()
         renderFrame(force: true)
@@ -633,8 +612,6 @@ extension TeleprompterPiPManager: @preconcurrency AVPictureInPictureControllerDe
         } else {
             isRestoringToReader = false
         }
-        pauseIfNoPresentation()
-        syncLiveActivity()
     }
 
     func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, failedToStartPictureInPictureWithError error: Error) {
@@ -648,8 +625,6 @@ extension TeleprompterPiPManager: @preconcurrency AVPictureInPictureControllerDe
         syncClock()
         readerHost?.cancelVideoRestoration()
         print("Could not start PiP: \(error)")
-        pauseIfNoPresentation()
-        syncLiveActivity()
     }
 
     func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, restoreUserInterfaceForPictureInPictureStopWithCompletionHandler completionHandler: @escaping (Bool) -> Void) {
@@ -800,8 +775,8 @@ private final class TeleprompterOverlayRenderer {
     var lineCount: Int { lineStarts.count }
     private let timerDuration: Int
     private let timerFont: UIFont
-    /// Updated by the session when the island can actually carry the timer.
-    var showsTimer = true
+    /// The Dynamic Island shows the timer while the window is up.
+    private let showsTimer = !TeleprompterActivityController.hasDynamicIsland
     private let isDarkMode: Bool
     /// The in-app timer is 16 pt over 28 pt text by default. The overlay keeps
     /// that proportion to its own text size, so the timer never outgrows it.

@@ -20,7 +20,6 @@ struct CueCardApp: App {
                     await notifications.refresh()
                 }
                 .onChange(of: scenePhase) { phase in
-                    TeleprompterPiPManager.shared.sceneDidChange(to: phase)
                     // Coming back to the app is the natural moment to pick up a
                     // new notice. The service throttles itself, so this is cheap.
                     guard phase == .active else { return }
@@ -34,8 +33,6 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         FirebaseApp.configure()
-        // A previous process cannot still be running this in-memory reader.
-        TeleprompterPiPManager.shared.cleanup()
 
         // Configure Crashlytics
         Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(true)
@@ -46,10 +43,6 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         // background is heard.
         WatchSessionService.shared.activate()
         return true
-    }
-
-    func applicationWillTerminate(_ application: UIApplication) {
-        TeleprompterPiPManager.shared.cleanup()
     }
 }
 

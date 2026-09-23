@@ -2,11 +2,6 @@ import FirebaseAnalytics
 import Foundation
 
 extension TeleprompterRemoteCommand {
-    @MainActor
-    static func waitForActivity() async {
-        await TeleprompterPiPManager.shared.waitForLiveActivity()
-    }
-
     /// Drives the open session. False when there is none.
     @MainActor
     func run(source: String = "remote") -> Bool {

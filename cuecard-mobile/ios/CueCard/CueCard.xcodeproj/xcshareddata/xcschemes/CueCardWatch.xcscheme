@@ -37,15 +37,14 @@
       launchStyle = "0"
       useCustomWorkingDirectory = "NO"
       ignoresPersistentStateOnLaunch = "NO"
-      debugDocumentVersioning = "YES"
-      debugServiceExtension = "internal"
-      allowLocationSimulation = "YES">
+      debugDocumentVersioning = "YES">
       <BuildableProductRunnable
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "820"
             BuildableName = "CueCardWatch.app"
+            BlueprintName = "CueCardWatch"
             ReferencedContainer = "container:CueCard.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -62,6 +61,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "820"
             BuildableName = "CueCardWatch.app"
+            BlueprintName = "CueCardWatch"
             ReferencedContainer = "container:CueCard.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
