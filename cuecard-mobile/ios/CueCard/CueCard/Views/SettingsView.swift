@@ -1,4 +1,3 @@
-import AppIntents
 import SwiftUI
 import UIKit
 import FirebaseAnalytics
@@ -29,7 +28,7 @@ struct EditorSettingsView: View {
                 )
             }
 
-            PlaybackControlsSection(screen: "settings")
+            PlaybackControlsSection()
 
             AppleWatchSection(screen: "settings")
 
@@ -126,7 +125,7 @@ struct TeleprompterSettingsView: View {
                 AspectRatioPicker(selection: $settingsService.settings.overlayAspectRatio)
             }
 
-            PlaybackControlsSection(screen: Self.screen)
+            PlaybackControlsSection()
 
             AppearanceSection()
 
@@ -224,38 +223,19 @@ private struct WhatsNewSection: View {
 }
 
 /// Where play/pause and back 10 seconds can be reached without opening the
-/// app, and how to set each up. Only what this iPhone has is listed, and none
-/// of it before iOS 17, which the intents need.
+/// app, and how to set each up. The controls need iOS 18.
 private struct PlaybackControlsSection: View {
     @Environment(\.colorScheme) var colorScheme
 
-    let screen: String
-
     var body: some View {
-        if #available(iOS 17.0, *) {
+        if #available(iOS 18.0, *) {
             Section {
-                if TeleprompterActivityController.hasDynamicIsland {
-                    row("Dynamic Island", systemImage: "capsule.fill",
-                        detail: "While the floating window is up, touch and hold the timer in the island.")
-                }
                 if DeviceModel.hasActionButton {
                     row("Action Button", systemImage: "button.vertical.left.press",
-                        detail: "In the Settings app, go to Action Button, choose Shortcut, and pick Play or Pause under CueCard.")
+                        detail: "In the Settings app, go to Action Button, choose Controls, and pick Play or Pause under CueCard.")
                 }
-                if #available(iOS 18.0, *) {
-                    row("Control Center", systemImage: "switch.2",
-                        detail: "Open Control Center, tap +, then Add a Control, and search for CueCard.")
-                }
-                row("Siri", systemImage: "waveform",
-                    detail: "Say \u{201C}Play or pause CueCard\u{201D} or \u{201C}Skip back in CueCard.\u{201D}")
-
-                ShortcutsLink {
-                    AnalyticsEvents.logButtonClick("shortcuts_link", screen: screen)
-                }
-                .shortcutsLinkStyle(colorScheme == .dark ? .dark : .light)
-                .frame(maxWidth: .infinity)
-                .listRowBackground(Color.clear)
-                .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
+                row("Control Center", systemImage: "switch.2",
+                    detail: "Open Control Center, tap +, then Add a Control, and search for CueCard.")
             } header: {
                 Text("Playback Controls")
             } footer: {
