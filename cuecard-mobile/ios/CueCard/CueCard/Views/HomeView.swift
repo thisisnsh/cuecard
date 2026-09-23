@@ -596,11 +596,15 @@ struct HomeView: View {
             }
             .fullScreenCover(isPresented: $showingTeleprompter, onDismiss: requestReviewIfEarned) {
                 TeleprompterView(content: TeleprompterParser.parseNotes(settingsService.notes))
+                    // Passed on by hand: as an iPad app on a Mac, a full screen
+                    // cover doesn't inherit environment objects.
+                    .environmentObject(settingsService)
             }
             .fullScreenCover(isPresented: $showingCards) {
                 CueCardsView(cards: cardsOpenedOnWatch ? nil : CueCards.cards(in: settingsService.notes),
                              title: settingsService.currentNote?.title ?? "Cards",
                              deckID: settingsService.currentNoteId)
+                    .environmentObject(settingsService)
             }
             // A deck opened from the watch comes up here too, if nothing else is.
             .onChange(of: cardsSession.sessionID) { _ in
