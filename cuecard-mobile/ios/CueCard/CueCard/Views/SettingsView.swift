@@ -594,14 +594,14 @@ struct SettingNumberField: View {
         .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .onTapGesture { isFocused = true }
         .onAppear { text = String(value) }
-        .onChange(of: value) { newValue in
+        .onChange(of: value) { _, newValue in
             if !isFocused || Int(text) != newValue { text = String(newValue) }
         }
-        .onChange(of: text) { typed in
+        .onChange(of: text) { _, typed in
             guard isFocused, let number = Int(typed.filter(\.isNumber)), range.contains(number) else { return }
             if number != value { value = number }
         }
-        .onChange(of: isFocused) { focused in
+        .onChange(of: isFocused) { _, focused in
             if !focused { commit() }
         }
     }

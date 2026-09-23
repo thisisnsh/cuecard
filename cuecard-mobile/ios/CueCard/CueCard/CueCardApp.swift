@@ -19,7 +19,7 @@ struct CueCardApp: App {
                 .task {
                     await notifications.refresh()
                 }
-                .onChange(of: scenePhase) { phase in
+                .onChange(of: scenePhase) { _, phase in
                     // Coming back to the app is the natural moment to pick up a
                     // new notice. The service throttles itself, so this is cheap.
                     guard phase == .active else { return }

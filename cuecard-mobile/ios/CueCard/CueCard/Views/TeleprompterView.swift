@@ -257,7 +257,7 @@ struct TeleprompterView: View {
             stopControlsTimer()
             UIApplication.shared.isIdleTimerDisabled = false
         }
-        .onChange(of: scenePhase) { newPhase in
+        .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .background && !pipManager.isPiPActive && pipManager.isPiPPossible {
                 // Auto-start PiP when app goes to background (like YouTube)
                 startPiP(minimizeApp: false)
@@ -267,17 +267,17 @@ struct TeleprompterView: View {
                 pipManager.refreshPresentation()
             }
         }
-        .onChange(of: settingsService.settings) { newSettings in
+        .onChange(of: settingsService.settings) { _, newSettings in
             pipManager.update(settings: newSettings, colorScheme: colorScheme)
         }
-        .onChange(of: colorScheme) { newScheme in
+        .onChange(of: colorScheme) { _, newScheme in
             // Going to the background, the system snapshots the app in the other
             // appearance as well, and the environment flips there and back. The
             // floating window keeps the appearance the reader last saw on screen.
             guard scenePhase == .active else { return }
             pipManager.update(settings: settings, colorScheme: newScheme)
         }
-        .onChange(of: isPlaying) { playing in
+        .onChange(of: isPlaying) { _, playing in
             if playing { resetControlsTimer() } else { stopControlsTimer() }
         }
     }

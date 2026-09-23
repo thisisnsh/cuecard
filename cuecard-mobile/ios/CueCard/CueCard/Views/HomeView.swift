@@ -607,10 +607,10 @@ struct HomeView: View {
                     .environmentObject(settingsService)
             }
             // A deck opened from the watch comes up here too, if nothing else is.
-            .onChange(of: cardsSession.sessionID) { _ in
+            .onChange(of: cardsSession.sessionID) {
                 showCardsOpenedOnWatch()
             }
-            .onChange(of: scenePhase) { _ in
+            .onChange(of: scenePhase) {
                 showCardsOpenedOnWatch()
             }
         }
