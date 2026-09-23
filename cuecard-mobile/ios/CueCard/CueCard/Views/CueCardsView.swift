@@ -85,7 +85,7 @@ struct CueCardsView: View {
                 AnalyticsParameterScreenClass: "CueCardsView"
             ])
             guard let cards else { return }
-            session.start(cards: cards, title: title, deckID: deckID, cueColor: settings.cueColor,
+            session.start(cards: cards, title: title, deckID: deckID,
                           showOnLockScreen: settings.cardDisplay == .lockScreen)
             Analytics.logEvent("cards_open", parameters: [
                 "count": cards.count,

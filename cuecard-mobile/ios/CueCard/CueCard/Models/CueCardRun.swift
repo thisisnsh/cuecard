@@ -2,8 +2,7 @@ import SwiftUI
 
 /// A stretch of a card: spoken text, or a cue drawn in the cue color.
 ///
-/// Kept apart from the Live Activity's types, which need ActivityKit, so the
-/// watch app can draw cards the same way.
+/// Kept in its own file so the watch app can draw cards the same way.
 struct CueCardRun: Codable, Hashable {
     var text: String
     var isCue: Bool

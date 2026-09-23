@@ -6,7 +6,7 @@ import WatchConnectivity
 /// The iPhone's end of the link to the watch app.
 ///
 /// The watch sends commands, and a message from it launches the app in the
-/// background if it has to, the way a Live Activity button does. Each reply,
+/// background if it has to, the way clearing a Lock Screen card does. Each reply,
 /// and each change made here, carries the state the watch shows.
 @MainActor
 final class WatchSessionService: NSObject, ObservableObject {
@@ -128,7 +128,6 @@ final class WatchSessionService: NSObject, ObservableObject {
         case .openDeck(let id, let title, let cards, let index):
             let settings = SettingsService.shared.settings
             CueCardsSession.shared.start(cards: cards, title: title, deckID: id, index: index,
-                                         cueColor: settings.cueColor,
                                          showOnLockScreen: settings.cardDisplay == .lockScreen)
             await CueCardsSession.shared.waitForLockScreen()
             Analytics.logEvent("cards_open", parameters: [

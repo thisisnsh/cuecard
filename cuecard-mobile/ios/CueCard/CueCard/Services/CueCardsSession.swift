@@ -27,7 +27,6 @@ final class CueCardsSession: ObservableObject {
 
     var isFinished: Bool { index >= cards.count }
 
-    private var cueColor: CueColor = .default
     private var pendingUpdate: Task<Void, Never>?
 
     private static let storageKey = "cuecard_cards_session"
@@ -36,7 +35,6 @@ final class CueCardsSession: ObservableObject {
     private struct Stored: Codable {
         var cards: [String]
         var index: Int
-        var cueColor: CueColor
         var sessionID: UUID?
         var title: String?
         var deckID: UUID?
@@ -48,11 +46,10 @@ final class CueCardsSession: ObservableObject {
     /// Open a deck, on its first card unless told otherwise, and put it on
     /// the Lock Screen if asked.
     func start(cards: [String], title: String, deckID: UUID?, index: Int = 0,
-               cueColor: CueColor, showOnLockScreen: Bool) {
+               showOnLockScreen: Bool) {
         self.cards = cards
         self.title = title
         self.deckID = deckID
-        self.cueColor = cueColor
         self.index = min(max(index, 0), cards.count)
         sessionID = UUID()
         save()
@@ -135,7 +132,6 @@ final class CueCardsSession: ObservableObject {
 
         cards = stored.cards
         index = min(stored.index, stored.cards.count)
-        cueColor = stored.cueColor
         sessionID = stored.sessionID ?? UUID()
         title = stored.title ?? ""
         deckID = stored.deckID
@@ -181,7 +177,7 @@ final class CueCardsSession: ObservableObject {
     }
 
     private func save() {
-        let stored = Stored(cards: cards, index: index, cueColor: cueColor,
+        let stored = Stored(cards: cards, index: index,
                             sessionID: sessionID, title: title, deckID: deckID,
                             isOnLockScreen: isOnLockScreen)
         if let data = try? JSONEncoder().encode(stored) {

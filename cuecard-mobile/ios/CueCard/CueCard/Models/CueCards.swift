@@ -18,8 +18,9 @@ enum ScriptMode: String, Codable, CaseIterable, Identifiable {
     }
 }
 
-/// Where a deck of cards is read. It sets how long a card can be: a Live
-/// Activity on the Lock Screen has room for a few lines, the app a whole screen.
+/// Where a deck of cards is read. It sets how long a card can be: a
+/// notification on the Lock Screen has room for a few lines, the app a whole
+/// screen.
 ///
 /// The raw value is persisted with the settings, so it has to stay stable.
 enum CardDisplay: String, Codable, CaseIterable, Identifiable {
@@ -43,7 +44,7 @@ enum CardDisplay: String, Codable, CaseIterable, Identifiable {
     }
 
     /// Characters a card holds before the editor marks the rest as too long.
-    /// The Lock Screen's is what four lines of its card fit at 17 points.
+    /// The Lock Screen's is about what a notification shows there uncut.
     var characterLimit: Int {
         switch self {
         case .lockScreen: return 120
@@ -188,8 +189,8 @@ enum CueCards {
         return cardRanges(in: text).filter { measure($0, in: nsText, cues: cues, limit: limit).overflow != nil }.count
     }
 
-    /// A card as runs of text and cue, the way both the app and the Lock
-    /// Screen draw it. Past `maxLength` characters the rest is cut, which only
+    /// A card as runs of text and cue, the way the app and the watch draw it,
+    /// and the Lock Screen as plain text. Past `maxLength` characters the rest is cut, which only
     /// a card far over its limit ever reaches.
     static func runs(for card: String, maxLength: Int = .max) -> [CueCardRun] {
         var runs: [CueCardRun] = []

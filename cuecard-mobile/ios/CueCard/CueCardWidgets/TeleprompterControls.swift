@@ -2,8 +2,8 @@ import SwiftUI
 import WidgetKit
 
 /// Control Center, Lock Screen and Action button controls for the session
-/// open in the teleprompter. Their intents run in the app, like the Live
-/// Activity's buttons, so they work while the floating window is up.
+/// open in the teleprompter. Their intents run in the app, so they work while
+/// the floating window is up.
 @available(iOS 18.0, *)
 struct TeleprompterPlayPauseControl: ControlWidget {
     var body: some ControlWidgetConfiguration {
