@@ -22,14 +22,6 @@ enum DeviceModel {
         return Int(identifier.dropFirst("iPhone".count).prefix { $0.isNumber })
     }()
 
-    /// Every iPhone from hardware generation 15 has the island: the 14 Pro is
-    /// `iPhone15,2`, while the plain 14 is still `iPhone14,7`. Later models are
-    /// assumed to have it too. The 16e is the one since then with a notch.
-    static let hasDynamicIsland: Bool = {
-        guard let generation = iPhoneGeneration, identifier != "iPhone17,5" /* 16e */ else { return false }
-        return generation >= 15
-    }()
-
     /// The 15 Pro, `iPhone16,1`, was the first with the Action button, and
     /// every iPhone since has one, the 16e included. The plain 15 is still
     /// `iPhone15,4`.

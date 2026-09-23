@@ -71,8 +71,7 @@ struct TeleprompterRemoteView: View {
     }
 }
 
-/// Running, the system ticks the time from the zero date, the same way the
-/// Dynamic Island does.
+/// Running, the system ticks the time from the zero date.
 struct TimerText: View {
     let state: TeleprompterTimerState
 

@@ -2,10 +2,10 @@ import AppIntents
 import Foundation
 
 /// Playback commands that reach a running session without opening the app:
-/// the Live Activity's buttons, and anything else that runs these intents.
-/// Shared by the app and the widget extension. A Live Activity intent always
-/// runs in the app's process, where `run()` drives the session; the widget
-/// extension only needs the types to build its buttons.
+/// the Control Center and Action button controls. Shared by the app and the
+/// widget extension. A Live Activity intent always runs in the app's process,
+/// where `run()` drives the session; the widget extension only needs the
+/// types to build its controls.
 enum TeleprompterRemoteCommand {
     case togglePlayPause, skipBack
 

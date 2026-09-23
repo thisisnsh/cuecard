@@ -1,8 +1,6 @@
 import Foundation
 
-/// The session timer as the Dynamic Island, the Lock Screen and the watch
-/// show it. The Live Activity carries it as its content, and the watch gets
-/// the same, so all of them read the time the same way.
+/// The session timer as the watch shows it, sent over from the iPhone.
 struct TeleprompterTimerState: Codable, Hashable {
     enum Phase: String, Codable {
         case countingDown, playing, paused

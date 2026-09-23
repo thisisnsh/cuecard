@@ -23,14 +23,9 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
     static let shared = TeleprompterPiPManager()
 
     @Published private(set) var playback = TeleprompterPlaybackState() {
-        didSet {
-            syncLiveActivity()
-            syncWatch()
-        }
+        didSet { syncWatch() }
     }
-    @Published private(set) var isPiPActive = false {
-        didSet { syncLiveActivity() }
-    }
+    @Published private(set) var isPiPActive = false
     @Published private(set) var isPiPPossible = false
     /// A restoration request belongs to the full-screen presentation only. The
     /// still-visible overlay carries on scrolling through it.
@@ -57,16 +52,9 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
     private var isRestoringToReader = false
     private var renderer: TeleprompterOverlayRenderer?
     private var possibilityObservation: NSKeyValueObservation?
-    private var isStartingPiP = false {
-        didSet { syncLiveActivity() }
-    }
-    /// The app is on its way out and the floating window will follow it.
-    private var expectsPiP = false {
-        didSet { syncLiveActivity() }
-    }
+    private var isStartingPiP = false
     private var minimizeWhenStarted = false
     private var lastFrameTime: CFTimeInterval = 0
-    private let liveActivity = TeleprompterActivityController()
     /// What the watch was last told, so it is only told again on a change.
     private var watchTimer: TeleprompterTimerState?
 
@@ -163,7 +151,6 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
             repaintOverlay()
             renderFrame(force: true)
         }
-        syncLiveActivity()
     }
 
     /// Full-screen line starts are the definition of the lines/minute setting.
@@ -261,31 +248,54 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         renderFrame(force: true)
     }
 
-    /// The Dynamic Island carries the floating window's timer, only while the
-    /// window is up, or about to be.
-    private func syncLiveActivity() {
-        guard TeleprompterActivityController.hasDynamicIsland,
-              isPiPActive || isStartingPiP || expectsPiP else {
-            liveActivity.end()
-            return
-        }
-        liveActivity.sync(playback,
-                          countdownRemaining: countdownDeadline.map { max(0, $0 - CACurrentMediaTime()) },
-                          timerDuration: settings.timerDurationSeconds)
-    }
-
     /// The session timer as the watch shows it. Nil while no script is open.
     var timerState: TeleprompterTimerState? {
         guard hasSession else { return nil }
-        return TeleprompterActivityController.contentState(
+        return Self.timerState(
             for: playback,
             countdownRemaining: countdownDeadline.map { max(0, $0 - CACurrentMediaTime()) },
             timerDuration: settings.timerDurationSeconds
         )
     }
 
-    /// Like the island, the watch ticks the running time itself, so it is
-    /// only told when what it shows changes.
+    /// The same time and color as the in-app timer.
+    private static func timerState(for playback: TeleprompterPlaybackState,
+                                   countdownRemaining: Double?,
+                                   timerDuration: Int) -> TeleprompterTimerState {
+        let now = Date()
+        if playback.isCountingDown {
+            return TeleprompterTimerState(phase: .countingDown, tint: .pink,
+                                          zeroDate: now.addingTimeInterval(countdownRemaining ?? Double(playback.countdownValue)),
+                                          pausedSeconds: 0, isOvertime: false)
+        }
+
+        let elapsed = playback.elapsedTime
+        let remaining = timerDuration - Int(elapsed)
+        let isOvertime = timerDuration > 0 && remaining < 0
+        let tint: TeleprompterTimerState.Tint
+        if timerDuration == 0 {
+            tint = .primary
+        } else if remaining < 0 {
+            tint = .red
+        } else if Double(remaining) / Double(timerDuration) <= 0.2 {
+            tint = .yellow
+        } else {
+            tint = .green
+        }
+
+        if playback.isPlaying {
+            return TeleprompterTimerState(phase: .playing, tint: tint,
+                                          zeroDate: now.addingTimeInterval(Double(timerDuration) - elapsed),
+                                          pausedSeconds: 0, isOvertime: isOvertime)
+        }
+        return TeleprompterTimerState(phase: .paused, tint: tint,
+                                      zeroDate: Date(timeIntervalSince1970: 0),
+                                      pausedSeconds: timerDuration > 0 ? remaining : Int(elapsed),
+                                      isOvertime: isOvertime)
+    }
+
+    /// The watch ticks the running time itself, so it is only told when what
+    /// it shows changes.
     private func syncWatch() {
         let state = timerState
         switch (state, watchTimer) {
@@ -297,17 +307,6 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
             watchTimer = state
             WatchSessionService.shared.stateChanged()
         }
-    }
-
-    /// The app is leaving the screen and the floating window starts once it
-    /// has. Only an app still on screen may start a Live Activity, so the
-    /// island's timer starts now. Cancelled if the app comes straight back.
-    func prepareForPiP() {
-        expectsPiP = isPiPPossible && !isPiPActive
-    }
-
-    func cancelPreparedPiP() {
-        expectsPiP = false
     }
 
     private func reanchorPlayback() {
@@ -449,9 +448,6 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
 
     @discardableResult
     func startPiP(minimizeApp: Bool = false) -> Bool {
-        // Starting now or not at all, so the prepared activity is handed over
-        // to the start, or ended.
-        defer { expectsPiP = false }
         guard !isPiPActive, !isStartingPiP,
               let controller = pipController, controller.isPictureInPicturePossible else { return false }
         switchDriver()
@@ -497,11 +493,9 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
     func cleanup() {
         if let request = restorationRequest { completeRestoration(request, restored: false) }
         stopClock()
-        liveActivity.end()
         countdownDeadline = nil
         playbackAnchor = nil
         possibilityObservation = nil
-        expectsPiP = false
         pipController?.delegate = nil
         pipController?.stopPictureInPicture()
         pipController = nil
@@ -775,8 +769,6 @@ private final class TeleprompterOverlayRenderer {
     var lineCount: Int { lineStarts.count }
     private let timerDuration: Int
     private let timerFont: UIFont
-    /// The Dynamic Island shows the timer while the window is up.
-    private let showsTimer = !TeleprompterActivityController.hasDynamicIsland
     private let isDarkMode: Bool
     /// The in-app timer is 16 pt over 28 pt text by default. The overlay keeps
     /// that proportion to its own text size, so the timer never outgrows it.
@@ -831,23 +823,21 @@ private final class TeleprompterOverlayRenderer {
     func draw(in context: CGContext, linePosition: Double, state: TeleprompterPlaybackState) {
         context.setFillColor(backgroundColor.cgColor)
         context.fill(CGRect(origin: .zero, size: logicalSize))
-        var viewportTop: CGFloat = 8
-        if showsTimer {
-            let remaining = timerDuration > 0 ? timerDuration - Int(state.elapsedTime) : Int(state.elapsedTime)
-            let time = TeleprompterParser.formatTime(state.isCountingDown ? state.countdownValue : remaining)
-            let color = state.isCountingDown
-                ? (isDarkMode ? AppColors.UIColors.Dark.pink : AppColors.UIColors.Light.pink)
-                : AppColors.timerUIColor(remainingSeconds: remaining, totalSeconds: timerDuration, isDarkMode: isDarkMode)
-            let style = NSMutableParagraphStyle()
-            style.alignment = .center
-            let timerHeight = ceil(timerFont.lineHeight)
-            (time as NSString).draw(in: CGRect(x: 12, y: 6, width: 296, height: timerHeight), withAttributes: [
-                .font: timerFont,
-                .foregroundColor: color,
-                .paragraphStyle: style
-            ])
-            viewportTop = 6 + timerHeight + 6
-        }
+        let remaining = timerDuration > 0 ? timerDuration - Int(state.elapsedTime) : Int(state.elapsedTime)
+        let time = TeleprompterParser.formatTime(state.isCountingDown ? state.countdownValue : remaining)
+        let color = state.isCountingDown
+            ? (isDarkMode ? AppColors.UIColors.Dark.pink : AppColors.UIColors.Light.pink)
+            : AppColors.timerUIColor(remainingSeconds: remaining, totalSeconds: timerDuration, isDarkMode: isDarkMode)
+        let style = NSMutableParagraphStyle()
+        style.alignment = .center
+        let timerHeight = ceil(timerFont.lineHeight)
+        (time as NSString).draw(in: CGRect(x: 12, y: 6, width: 296, height: timerHeight), withAttributes: [
+            .font: timerFont,
+            .foregroundColor: color,
+            .paragraphStyle: style
+        ])
+
+        let viewportTop = 6 + timerHeight + 6
         let viewport = CGRect(x: 12, y: viewportTop, width: 296, height: logicalSize.height - viewportTop - 8)
         let readingY = viewport.height * 0.45
         let position = min(max(linePosition, 0), Double(max(lineOffsets.count - 1, 0)))
