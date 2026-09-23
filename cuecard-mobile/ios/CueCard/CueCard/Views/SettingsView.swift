@@ -236,7 +236,7 @@ private struct PlaybackControlsSection: View {
             Section {
                 if TeleprompterActivityController.hasDynamicIsland {
                     row("Dynamic Island", systemImage: "capsule.fill",
-                        detail: "While the floating window is up, touch and hold the timer in the island.")
+                        detail: "Start the teleprompter, then touch and hold the timer in the island for playback controls.")
                 }
                 if DeviceModel.hasActionButton {
                     row("Action Button", systemImage: "button.vertical.left.press",

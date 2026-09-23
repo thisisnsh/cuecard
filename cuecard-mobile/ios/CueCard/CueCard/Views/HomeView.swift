@@ -568,7 +568,10 @@ struct HomeView: View {
             } message: {
                 Text(fileErrorMessage ?? "")
             }
-            .fullScreenCover(isPresented: $showingTeleprompter, onDismiss: requestReviewIfEarned) {
+            .fullScreenCover(isPresented: $showingTeleprompter, onDismiss: {
+                TeleprompterPiPManager.shared.cleanup()
+                requestReviewIfEarned()
+            }) {
                 TeleprompterView(content: TeleprompterParser.parseNotes(settingsService.notes))
             }
             .fullScreenCover(isPresented: $showingCards) {

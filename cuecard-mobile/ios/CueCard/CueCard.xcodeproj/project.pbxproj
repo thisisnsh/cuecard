@@ -30,8 +30,6 @@
 		027 /* WhatsNewService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 121 /* WhatsNewService.swift */; };
 		028 /* WhatsNewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 122 /* WhatsNewView.swift */; };
 		029 /* WhatsNew.json in Resources */ = {isa = PBXBuildFile; fileRef = 202 /* WhatsNew.json */; };
-		AA7130F62F04E5BC00F5C366 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = AA7130F52F04E5BC00F5C366 /* GoogleService-Info.plist */; };
-		AA856D562F060DFC00B0CBC6 /* GlassEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA856D542F060DFC00B0CBC6 /* GlassEffect.swift */; };
 		030 /* TeleprompterActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123 /* TeleprompterActivityAttributes.swift */; };
 		031 /* TeleprompterActivityController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 124 /* TeleprompterActivityController.swift */; };
 		032 /* CueCardWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 502 /* CueCardWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -80,6 +78,9 @@
 		075 /* TeleprompterParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 111 /* TeleprompterParser.swift */; };
 		076 /* DeckStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 156 /* DeckStore.swift */; };
 		077 /* SavedDeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 157 /* SavedDeckView.swift */; };
+		AA7130F62F04E5BC00F5C366 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = AA7130F52F04E5BC00F5C366 /* GoogleService-Info.plist */; };
+		AA856D562F060DFC00B0CBC6 /* GlassEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA856D542F060DFC00B0CBC6 /* GlassEffect.swift */; };
+		CC1001 /* TeleprompterActivityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC1002; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -97,6 +98,7 @@
 			remoteGlobalIDString = 820;
 			remoteInfo = CueCardWatch;
 		};
+		CC1004 = {isa = PBXContainerItemProxy; containerPortal = 1000; proxyType = 1; remoteGlobalIDString = 800; remoteInfo = CueCard; };
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -164,13 +166,6 @@
 		140 /* CueCardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardsView.swift; sourceTree = "<group>"; };
 		141 /* CueCardsLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardsLiveActivity.swift; sourceTree = "<group>"; };
 		142 /* CueCardsRemoteCommand+Widget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CueCardsRemoteCommand+Widget.swift"; sourceTree = "<group>"; };
-		201 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		202 /* WhatsNew.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = WhatsNew.json; sourceTree = "<group>"; };
-		501 /* CueCard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CueCard.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		502 /* CueCardWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = CueCardWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		AA2E5C0E2F0F38B500E1D079 /* CueCard.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CueCard.entitlements; sourceTree = "<group>"; };
-		AA7130F52F04E5BC00F5C366 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
-		AA856D542F060DFC00B0CBC6 /* GlassEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassEffect.swift; sourceTree = "<group>"; };
 		143 /* CueCardRun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardRun.swift; sourceTree = "<group>"; };
 		144 /* TeleprompterTimerState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeleprompterTimerState.swift; sourceTree = "<group>"; };
 		145 /* WatchLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchLink.swift; sourceTree = "<group>"; };
@@ -178,13 +173,22 @@
 		150 /* CueCardWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardWatchApp.swift; sourceTree = "<group>"; };
 		151 /* WatchConnector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchConnector.swift; sourceTree = "<group>"; };
 		152 /* WatchHomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchHomeView.swift; sourceTree = "<group>"; };
-		203 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		503 /* CueCardWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CueCardWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		153 /* TeleprompterRemoteView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeleprompterRemoteView.swift; sourceTree = "<group>"; };
 		154 /* CardPager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardPager.swift; sourceTree = "<group>"; };
 		155 /* PhoneDeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneDeckView.swift; sourceTree = "<group>"; };
 		156 /* DeckStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckStore.swift; sourceTree = "<group>"; };
 		157 /* SavedDeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedDeckView.swift; sourceTree = "<group>"; };
+		201 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		202 /* WhatsNew.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = WhatsNew.json; sourceTree = "<group>"; };
+		203 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		501 /* CueCard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CueCard.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		502 /* CueCardWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = CueCardWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		503 /* CueCardWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CueCardWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA2E5C0E2F0F38B500E1D079 /* CueCard.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CueCard.entitlements; sourceTree = "<group>"; };
+		AA7130F52F04E5BC00F5C366 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		AA856D542F060DFC00B0CBC6 /* GlassEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassEffect.swift; sourceTree = "<group>"; };
+		CC1002 /* TeleprompterActivityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardTests/TeleprompterActivityTests.swift; sourceTree = SOURCE_ROOT; };
+		CC1003 /* CueCardTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = CueCardTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -211,12 +215,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		CC1005 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		700 = {
 			isa = PBXGroup;
 			children = (
+				CC1002 /* TeleprompterActivityTests.swift */,
 				710 /* CueCard */,
 				730 /* CueCardWidgets */,
 				740 /* CueCardWatch */,
@@ -306,14 +312,6 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		AA856D552F060DFC00B0CBC6 /* Modifiers */ = {
-			isa = PBXGroup;
-			children = (
-				AA856D542F060DFC00B0CBC6 /* GlassEffect.swift */,
-			);
-			path = Modifiers;
-			sourceTree = "<group>";
-		};
 		730 /* CueCardWidgets */ = {
 			isa = PBXGroup;
 			children = (
@@ -342,6 +340,14 @@
 				203 /* Assets.xcassets */,
 			);
 			path = CueCardWatch;
+			sourceTree = "<group>";
+		};
+		AA856D552F060DFC00B0CBC6 /* Modifiers */ = {
+			isa = PBXGroup;
+			children = (
+				AA856D542F060DFC00B0CBC6 /* GlassEffect.swift */,
+			);
+			path = Modifiers;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -407,6 +413,17 @@
 			productReference = 503 /* CueCardWatch.app */;
 			productType = "com.apple.product-type.application";
 		};
+		CC1006 /* CueCardTests */ = {
+            isa = PBXNativeTarget;
+            buildConfigurationList = CC1007;
+            buildPhases = (CC1008, CC1005);
+            buildRules = ();
+            dependencies = (CC1009);
+            name = CueCardTests;
+            productName = CueCardTests;
+            productReference = CC1003;
+            productType = "com.apple.product-type.bundle.unit-test";
+        };
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -444,6 +461,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
+				CC1006 /* CueCardTests */,
 				800 /* CueCard */,
 				810 /* CueCardWidgets */,
 				820 /* CueCardWatch */,
@@ -589,6 +607,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		CC1008 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (CC1001); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -602,6 +621,7 @@
 			target = 820 /* CueCardWatch */;
 			targetProxy = 1202 /* PBXContainerItemProxy */;
 		};
+		CC1009 = {isa = PBXTargetDependency; target = 800; targetProxy = CC1004; };
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
@@ -739,6 +759,7 @@
 				INFOPLIST_FILE = CueCard/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = CueCard;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
@@ -774,6 +795,7 @@
 				INFOPLIST_FILE = CueCard/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = CueCard;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
@@ -870,7 +892,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.6.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.thisisnsh.cuecard.watchos;
+				PRODUCT_BUNDLE_IDENTIFIER = com.thisisnsh.cuecard.ios.watch;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
@@ -899,7 +921,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.6.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.thisisnsh.cuecard.watchos;
+				PRODUCT_BUNDLE_IDENTIFIER = com.thisisnsh.cuecard.ios.watch;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
@@ -910,6 +932,38 @@
 			};
 			name = Release;
 		};
+        CC1010 = {
+            isa = XCBuildConfiguration;
+            buildSettings = {
+                BUNDLE_LOADER = "$(TEST_HOST)";
+                GENERATE_INFOPLIST_FILE = YES;
+                IPHONEOS_DEPLOYMENT_TARGET = 16.6;
+                PRODUCT_BUNDLE_IDENTIFIER = com.thisisnsh.cuecard.ios.tests;
+                PRODUCT_NAME = "$(TARGET_NAME)";
+                SDKROOT = iphoneos;
+                SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+                SWIFT_VERSION = 5.0;
+                TARGETED_DEVICE_FAMILY = "1,2";
+                TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CueCard.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CueCard";
+            };
+            name = Debug;
+        };
+        CC1011 = {
+            isa = XCBuildConfiguration;
+            buildSettings = {
+                BUNDLE_LOADER = "$(TEST_HOST)";
+                GENERATE_INFOPLIST_FILE = YES;
+                IPHONEOS_DEPLOYMENT_TARGET = 16.6;
+                PRODUCT_BUNDLE_IDENTIFIER = com.thisisnsh.cuecard.ios.tests;
+                PRODUCT_NAME = "$(TARGET_NAME)";
+                SDKROOT = iphoneos;
+                SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+                SWIFT_VERSION = 5.0;
+                TARGETED_DEVICE_FAMILY = "1,2";
+                TEST_HOST = "$(BUILT_PRODUCTS_DIR)/CueCard.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/CueCard";
+            };
+            name = Release;
+        };
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -949,6 +1003,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		CC1007 = {isa = XCConfigurationList; buildConfigurations = (CC1010, CC1011); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */

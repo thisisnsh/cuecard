@@ -57,6 +57,8 @@ final class CueCardsSession: ObservableObject {
     /// the Lock Screen if asked.
     func start(cards: [String], title: String, deckID: UUID?, index: Int = 0,
                cueColor: CueColor, showOnLockScreen: Bool) {
+        // Switching to cards (including from the watch) ends the prompter.
+        TeleprompterPiPManager.shared.cleanup()
         self.cards = cards
         self.title = title
         self.deckID = deckID

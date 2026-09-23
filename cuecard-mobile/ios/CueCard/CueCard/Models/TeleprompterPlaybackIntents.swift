@@ -27,6 +27,7 @@ struct ToggleTeleprompterPlaybackIntent: LiveActivityIntent {
 
     func perform() async throws -> some IntentResult {
         guard await TeleprompterRemoteCommand.togglePlayPause.run() else { throw TeleprompterNotRunningError() }
+        await TeleprompterRemoteCommand.waitForActivity()
         return .result()
     }
 }
@@ -38,6 +39,7 @@ struct SkipBackTeleprompterIntent: LiveActivityIntent {
 
     func perform() async throws -> some IntentResult {
         guard await TeleprompterRemoteCommand.skipBack.run() else { throw TeleprompterNotRunningError() }
+        await TeleprompterRemoteCommand.waitForActivity()
         return .result()
     }
 }
