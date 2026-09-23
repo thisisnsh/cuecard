@@ -69,6 +69,11 @@
 		075 /* TeleprompterParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 111 /* TeleprompterParser.swift */; };
 		076 /* DeckStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 156 /* DeckStore.swift */; };
 		077 /* SavedDeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 157 /* SavedDeckView.swift */; };
+		C0CA4D530000000000000000 /* CueCardsWidgetState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CA4D520000000000000001 /* CueCardsWidgetState.swift */; };
+		C0CA4D530000000000000001 /* CueCardsWidgetState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CA4D520000000000000001 /* CueCardsWidgetState.swift */; };
+		C0CA4D530000000000000010 /* CueCardsRemoteCommand+App.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CA4D520000000000000002 /* CueCardsRemoteCommand+App.swift */; };
+		C0CA4D530000000000000020 /* CueCardsRemoteCommand+Widget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CA4D520000000000000003 /* CueCardsRemoteCommand+Widget.swift */; };
+		C0CA4D530000000000000030 /* CueCardsWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CA4D520000000000000004 /* CueCardsWidgets.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -166,6 +171,11 @@
 		155 /* PhoneDeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneDeckView.swift; sourceTree = "<group>"; };
 		156 /* DeckStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckStore.swift; sourceTree = "<group>"; };
 		157 /* SavedDeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedDeckView.swift; sourceTree = "<group>"; };
+		C0CA4D520000000000000001 /* CueCardsWidgetState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CueCardsWidgetState.swift"; sourceTree = "<group>"; };
+		C0CA4D520000000000000002 /* CueCardsRemoteCommand+App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CueCardsRemoteCommand+App.swift"; sourceTree = "<group>"; };
+		C0CA4D520000000000000003 /* CueCardsRemoteCommand+Widget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CueCardsRemoteCommand+Widget.swift"; sourceTree = "<group>"; };
+		C0CA4D520000000000000004 /* CueCardsWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CueCardsWidgets.swift"; sourceTree = "<group>"; };
+		C0CA4D520000000000000005 /* CueCardWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "CueCardWidgets.entitlements"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -241,6 +251,7 @@
 		712 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				C0CA4D520000000000000002 /* CueCardsRemoteCommand+App.swift */,
 				146 /* WatchSessionService.swift */,
 				138 /* CueCardsSession.swift */,
 				C0CA4D5100000000000000A2 /* CueCardsLockScreen.swift */,
@@ -258,6 +269,7 @@
 		713 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				C0CA4D520000000000000001 /* CueCardsWidgetState.swift */,
 				145 /* WatchLink.swift */,
 				144 /* TeleprompterTimerState.swift */,
 				143 /* CueCardRun.swift */,
@@ -293,6 +305,9 @@
 		730 /* CueCardWidgets */ = {
 			isa = PBXGroup;
 			children = (
+				C0CA4D520000000000000005 /* CueCardWidgets.entitlements */,
+				C0CA4D520000000000000004 /* CueCardsWidgets.swift */,
+				C0CA4D520000000000000003 /* CueCardsRemoteCommand+Widget.swift */,
 				130 /* CueCardWidgetsBundle.swift */,
 				133 /* TeleprompterRemoteCommand+Widget.swift */,
 				134 /* TeleprompterControls.swift */,
@@ -481,6 +496,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C0CA4D530000000000000010 /* CueCardsRemoteCommand+App.swift in Sources */,
+				C0CA4D530000000000000000 /* CueCardsWidgetState.swift in Sources */,
 				068 /* WatchSessionService.swift in Sources */,
 				059 /* WatchLink.swift in Sources */,
 				057 /* TeleprompterTimerState.swift in Sources */,
@@ -519,6 +536,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C0CA4D530000000000000030 /* CueCardsWidgets.swift in Sources */,
+				C0CA4D530000000000000020 /* CueCardsRemoteCommand+Widget.swift in Sources */,
+				C0CA4D530000000000000001 /* CueCardsWidgetState.swift in Sources */,
 				058 /* TeleprompterTimerState.swift in Sources */,
 				056 /* CueCardRun.swift in Sources */,
 				054 /* CueColor.swift in Sources */,
@@ -765,6 +785,7 @@
 				DEVELOPMENT_TEAM = 983LBM5U6B;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = CueCardWidgets/Info.plist;
+				CODE_SIGN_ENTITLEMENTS = CueCardWidgets/CueCardWidgets.entitlements;
 				INFOPLIST_KEY_CFBundleDisplayName = CueCard;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -794,6 +815,7 @@
 				DEVELOPMENT_TEAM = 983LBM5U6B;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = CueCardWidgets/Info.plist;
+				CODE_SIGN_ENTITLEMENTS = CueCardWidgets/CueCardWidgets.entitlements;
 				INFOPLIST_KEY_CFBundleDisplayName = CueCard;
 				IPHONEOS_DEPLOYMENT_TARGET = 16.6;
 				LD_RUNPATH_SEARCH_PATHS = (

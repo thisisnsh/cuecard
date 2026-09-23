@@ -1,11 +1,8 @@
 import Foundation
+import WidgetKit
 
-/// The deck open in cards mode, and its cards on the Lock Screen.
-///
-/// Clearing a card on the Lock Screen, or its Back and Start Over, launch the
-/// app in the background if it was quit, so the deck is kept on disk as well:
-/// the move then picks up where the deck was left. The watch follows the same
-/// deck and moves it too.
+/// The open deck shared by the app, Watch, widgets and Live Activity.
+/// Persisted so an intent can resume the session after the app exits.
 @MainActor
 final class CueCardsSession: ObservableObject {
     static let shared = CueCardsSession()
@@ -22,7 +19,7 @@ final class CueCardsSession: ObservableObject {
     private(set) var deckID: UUID?
     /// Whether the deck is up on the Lock Screen right now.
     @Published private(set) var isOnLockScreen = false
-    /// Notifications are turned off for the app in Settings.
+    /// Live Activities are disabled or the activity could not be started.
     @Published private(set) var lockScreenUnavailable = false
 
     var isFinished: Bool { index >= cards.count }
@@ -52,10 +49,10 @@ final class CueCardsSession: ObservableObject {
         self.deckID = deckID
         self.index = min(max(index, 0), cards.count)
         sessionID = UUID()
+        isOnLockScreen = false
+        lockScreenUnavailable = false
         save()
         WatchSessionService.shared.stateChanged()
-
-        isOnLockScreen = false
         if showOnLockScreen {
             self.showOnLockScreen()
         } else {
@@ -64,22 +61,18 @@ final class CueCardsSession: ObservableObject {
         }
     }
 
-    /// Put the open deck's cards on the Lock Screen, asking for notifications
-    /// the first time.
+    /// Start a Live Activity for the current deck, without notification permission.
     func showOnLockScreen() {
         guard !cards.isEmpty else { return }
         let sessionID = sessionID
         enqueue { [self] in
-            guard await CueCardsLockScreen.requestAuthorization() else {
-                lockScreenUnavailable = true
-                return
-            }
-            // Closed, or another deck opened, while the prompt was up.
             guard self.sessionID == sessionID, !cards.isEmpty else { return }
-            lockScreenUnavailable = false
-            isOnLockScreen = true
+            let shown = await CueCardsLockScreen.show(widgetState)
+            guard self.sessionID == sessionID, !cards.isEmpty else { return }
+            isOnLockScreen = shown
+            if shown { await CueCardsLockScreen.sync(widgetState) }
+            lockScreenUnavailable = !shown
             save()
-            await CueCardsLockScreen.sync(cards: cards, title: title, index: index, session: sessionID)
         }
     }
 
@@ -118,12 +111,13 @@ final class CueCardsSession: ObservableObject {
         deckID = nil
         UserDefaults.standard.removeObject(forKey: Self.storageKey)
         isOnLockScreen = false
+        lockScreenUnavailable = false
+        publishWidget()
         enqueue { await CueCardsLockScreen.clear() }
         WatchSessionService.shared.stateChanged()
     }
 
-    /// Pick up the deck a Lock Screen card is cleared or pressed for, when that
-    /// has launched the app in the background. False when there is none.
+    /// Restore a session for a widget, Live Activity or Watch command.
     func restoreIfNeeded() -> Bool {
         if !cards.isEmpty { return true }
         guard let data = UserDefaults.standard.data(forKey: Self.storageKey),
@@ -131,16 +125,19 @@ final class CueCardsSession: ObservableObject {
               !stored.cards.isEmpty else { return false }
 
         cards = stored.cards
-        index = min(stored.index, stored.cards.count)
+        index = min(max(stored.index, 0), stored.cards.count)
         sessionID = stored.sessionID ?? UUID()
         title = stored.title ?? ""
         deckID = stored.deckID
-        isOnLockScreen = stored.isOnLockScreen ?? false
+        isOnLockScreen = CueCardsLockScreen.isActive(session: sessionID)
+        publishWidget()
         return true
     }
 
-    /// Put back any card still in the deck that has left the Lock Screen.
+    /// Reconcile a Live Activity dismissed or expired while the app was away.
     func refreshLockScreen() {
+        guard restoreIfNeeded() else { return }
+        isOnLockScreen = CueCardsLockScreen.isActive(session: sessionID)
         updateLockScreen()
     }
 
@@ -160,9 +157,9 @@ final class CueCardsSession: ObservableObject {
 
     private func updateLockScreen() {
         guard isOnLockScreen else { return }
-        let cards = cards, title = title, index = index, sessionID = sessionID
+        let state = widgetState
         enqueue {
-            await CueCardsLockScreen.sync(cards: cards, title: title, index: index, session: sessionID)
+            await CueCardsLockScreen.sync(state)
         }
     }
 
@@ -176,7 +173,33 @@ final class CueCardsSession: ObservableObject {
         }
     }
 
+    private var widgetState: CueCardsWidgetState {
+        // Keep ActivityKit's payload well below 4 KB, including unusual Unicode.
+        func bounded(_ text: String, bytes: Int) -> String {
+            var result = ""
+            for character in text {
+                guard result.utf8.count + String(character).utf8.count <= bytes else { break }
+                result.append(character)
+            }
+            return result
+        }
+        let text = isFinished ? "All cards done" : CueCards.runs(for: cards[index]).map(\.text).joined()
+        var state = CueCardsWidgetState(sessionID: sessionID, title: bounded(title, bytes: 160),
+                                        text: bounded(text, bytes: 1600), index: index, count: cards.count)
+        // JSON escaping can expand control characters beyond their UTF-8 size.
+        while !state.text.isEmpty, let data = try? JSONEncoder().encode(state), data.count > 3000 {
+            state.text.removeLast()
+        }
+        return state
+    }
+
+    private func publishWidget() {
+        CueCardsWidgetStore.write(cards.isEmpty ? nil : widgetState)
+        WidgetCenter.shared.reloadTimelines(ofKind: CueCardsWidgetStore.kind)
+    }
+
     private func save() {
+        publishWidget()
         let stored = Stored(cards: cards, index: index,
                             sessionID: sessionID, title: title, deckID: deckID,
                             isOnLockScreen: isOnLockScreen)

@@ -19,7 +19,7 @@ enum ScriptMode: String, Codable, CaseIterable, Identifiable {
 }
 
 /// Where a deck of cards is read. It sets how long a card can be: a
-/// notification on the Lock Screen has room for a few lines, the app a whole
+/// Live Activity on the Lock Screen has room for a few lines, the app a whole
 /// screen.
 ///
 /// The raw value is persisted with the settings, so it has to stay stable.
@@ -44,7 +44,7 @@ enum CardDisplay: String, Codable, CaseIterable, Identifiable {
     }
 
     /// Characters a card holds before the editor marks the rest as too long.
-    /// The Lock Screen's is about what a notification shows there uncut.
+    /// The Lock Screen limit keeps the Live Activity readable.
     var characterLimit: Int {
         switch self {
         case .lockScreen: return 120

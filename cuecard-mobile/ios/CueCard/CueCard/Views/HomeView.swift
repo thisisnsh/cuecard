@@ -615,6 +615,7 @@ struct HomeView: View {
             }
         }
         .onAppear {
+            showCardsOpenedOnWatch()
             Analytics.logEvent(AnalyticsEventScreenView, parameters: [
                 AnalyticsParameterScreenName: "home",
                 AnalyticsParameterScreenClass: "HomeView"

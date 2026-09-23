@@ -1,5 +1,4 @@
 import SwiftUI
-import UserNotifications
 import FirebaseCore
 import FirebaseAnalytics
 import FirebaseCrashlytics
@@ -24,13 +23,14 @@ struct CueCardApp: App {
                     // Coming back to the app is the natural moment to pick up a
                     // new notice. The service throttles itself, so this is cheap.
                     guard phase == .active else { return }
+                    CueCardsSession.shared.refreshLockScreen()
                     Task { await notifications.refresh() }
                 }
         }
     }
 }
 
-class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
+class AppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         FirebaseApp.configure()
@@ -44,28 +44,9 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         // background is heard.
         WatchSessionService.shared.activate()
 
-        // At launch too, so a Lock Screen card cleared while the app was quit
-        // is heard.
-        UNUserNotificationCenter.current().delegate = self
-        CueCardsLockScreen.registerCategory()
+        _ = CueCardsSession.shared.restoreIfNeeded()
+        Task { await CueCardsLockScreen.removeLegacyNotifications() }
         return true
-    }
-
-    /// The deck's cards go to the Lock Screen and Notification Center, never a
-    /// banner over the app showing the same deck.
-    func userNotificationCenter(_ center: UNUserNotificationCenter,
-                                willPresent notification: UNNotification,
-                                withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
-        completionHandler([.list])
-    }
-
-    func userNotificationCenter(_ center: UNUserNotificationCenter,
-                                didReceive response: UNNotificationResponse,
-                                withCompletionHandler completionHandler: @escaping () -> Void) {
-        Task { @MainActor in
-            await CueCardsLockScreen.handle(response)
-            completionHandler()
-        }
     }
 }
 

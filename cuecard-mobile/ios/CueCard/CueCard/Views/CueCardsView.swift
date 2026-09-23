@@ -1,10 +1,7 @@
 import SwiftUI
 import FirebaseAnalytics
 
-/// Cards mode: the script as a deck, one card at a time. Swipe the top card
-/// left to put it away and right to bring the last one back, the way
-/// notifications are cleared. With the Lock Screen chosen, the same deck is
-/// up there as notifications too, and both move together.
+/// Cards mode: one card at a time, synced with widgets and the Live Activity.
 struct CueCardsView: View {
     /// The deck to open. Nil when it is already open: opened from the watch.
     let cards: [String]?
@@ -18,6 +15,7 @@ struct CueCardsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
     @ObservedObject private var session = CueCardsSession.shared
+    @State private var hasOpenedDeck = false
     @State private var dragOffset: CGFloat = 0
     @State private var showingLockScreenHelp = false
     @Environment(\.openURL) private var openURL
@@ -82,6 +80,7 @@ struct CueCardsView: View {
                 ToolbarItem(placement: .topBarLeading) {
                     Button(action: {
                         AnalyticsEvents.logButtonClick("close", screen: "cards")
+                        session.end()
                         dismiss()
                     }) {
                         Image(systemName: "xmark")
@@ -106,18 +105,21 @@ struct CueCardsView: View {
                 NavigationStack {
                     List {
                         Section {
-                            Label("Swipe a notification left to move to the next card.", systemImage: "hand.draw")
-                            Label("Touch and hold a notification to go back or start over.", systemImage: "hand.tap")
+                            Label("Use Back and Next on the Live Activity to turn cards.", systemImage: "hand.tap")
+                            Label("Authenticate with Face ID, Touch ID or your passcode to use the buttons.", systemImage: "lock.open")
+                            Label("Add the Cards widget from your Home Screen widget gallery. Medium and large widgets include card controls.", systemImage: "square.grid.2x2")
+                            Text("The small Lock Screen widget shows a preview. Interactive buttons require iOS 17 or later.")
+                                .foregroundStyle(.secondary)
                         } header: {
                             Text("Read from your Lock Screen")
                         } footer: {
-                            Text("Your place stays in sync with the app and Apple Watch. Closing this deck removes its notifications.")
+                            Text("Your place stays in sync with the app and Apple Watch. Closing this deck ends its Live Activity and clears the widgets.")
                         }
                         if session.lockScreenUnavailable && !session.isOnLockScreen {
-                            Text("Allow notifications for CueCard in Settings, then try again.")
+                            Text("Check that Live Activities are enabled for CueCard in Settings, then return to this deck and try again.")
                                 .foregroundStyle(.secondary)
-                            Button("Open Notification Settings") {
-                                if let url = URL(string: UIApplication.openNotificationSettingsURLString) {
+                            Button("Open Settings") {
+                                if let url = URL(string: UIApplication.openSettingsURLString) {
                                     openURL(url)
                                 }
                             }
@@ -143,6 +145,8 @@ struct CueCardsView: View {
                 AnalyticsParameterScreenName: "cards",
                 AnalyticsParameterScreenClass: "CueCardsView"
             ])
+            guard !hasOpenedDeck else { return }
+            hasOpenedDeck = true
             guard let cards else { return }
             session.start(cards: cards, title: title, deckID: deckID,
                           showOnLockScreen: settings.cardDisplay == .lockScreen)
@@ -150,9 +154,6 @@ struct CueCardsView: View {
                 "count": cards.count,
                 "display": settings.cardDisplay.rawValue
             ])
-        }
-        .onDisappear {
-            session.end()
         }
     }
 
