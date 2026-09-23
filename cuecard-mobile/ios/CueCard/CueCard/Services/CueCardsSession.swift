@@ -1,18 +1,14 @@
-import ActivityKit
 import Foundation
-import UIKit
 
-/// The deck open in cards mode, and its Live Activity on the Lock Screen.
+/// The deck open in cards mode, and its cards on the Lock Screen.
 ///
-/// The Lock Screen's buttons run in the app, launching it in the background
-/// if it was quit, so the deck is kept on disk as well: a button pressed then
-/// picks up where the deck was left. The watch follows the same deck and
-/// moves it too.
+/// Clearing a card on the Lock Screen, or its Back and Start Over, launch the
+/// app in the background if it was quit, so the deck is kept on disk as well:
+/// the move then picks up where the deck was left. The watch follows the same
+/// deck and moves it too.
 @MainActor
 final class CueCardsSession: ObservableObject {
     static let shared = CueCardsSession()
-
-    private typealias ContentState = CueCardsActivityAttributes.ContentState
 
     @Published private(set) var cards: [String] = []
     /// The card on top. Equal to the number of cards once every one has been
@@ -26,13 +22,12 @@ final class CueCardsSession: ObservableObject {
     private(set) var deckID: UUID?
     /// Whether the deck is up on the Lock Screen right now.
     @Published private(set) var isOnLockScreen = false
-    /// Live Activities are turned off for the app in Settings.
+    /// Notifications are turned off for the app in Settings.
     @Published private(set) var lockScreenUnavailable = false
 
     var isFinished: Bool { index >= cards.count }
 
     private var cueColor: CueColor = .default
-    private var activity: Activity<CueCardsActivityAttributes>?
     private var pendingUpdate: Task<Void, Never>?
 
     private static let storageKey = "cuecard_cards_session"
@@ -45,11 +40,8 @@ final class CueCardsSession: ObservableObject {
         var sessionID: UUID?
         var title: String?
         var deckID: UUID?
+        var isOnLockScreen: Bool?
     }
-
-    /// A Lock Screen card holds four lines; this is well past what they fit,
-    /// and well inside the 4 KB an activity may carry.
-    private static let lockScreenMaxLength = 300
 
     private init() {}
 
@@ -66,43 +58,32 @@ final class CueCardsSession: ObservableObject {
         save()
         WatchSessionService.shared.stateChanged()
 
-        if showOnLockScreen, UIApplication.shared.applicationState != .active,
-           let existing = Activity<CueCardsActivityAttributes>.activities.first {
-            // Only an app on screen may start an activity. A deck opened from
-            // the watch with the app in the background takes over the one
-            // already up instead.
-            if activity?.id != existing.id {
-                activity = existing
-                watch(existing)
-            }
-            isOnLockScreen = true
-            updateLockScreen()
-            return
-        }
-
-        // One left over from a deck the app was quit during.
-        endActivities()
+        isOnLockScreen = false
         if showOnLockScreen {
             self.showOnLockScreen()
+        } else {
+            // Any left over from a deck the app was quit during.
+            enqueue { await CueCardsLockScreen.clear() }
         }
     }
 
-    /// Start the Live Activity for the open deck. Only an app on screen may.
+    /// Put the open deck's cards on the Lock Screen, asking for notifications
+    /// the first time.
     func showOnLockScreen() {
-        guard !cards.isEmpty, activity == nil else { return }
-        guard ActivityAuthorizationInfo().areActivitiesEnabled else {
-            lockScreenUnavailable = true
-            return
+        guard !cards.isEmpty else { return }
+        let sessionID = sessionID
+        enqueue { [self] in
+            guard await CueCardsLockScreen.requestAuthorization() else {
+                lockScreenUnavailable = true
+                return
+            }
+            // Closed, or another deck opened, while the prompt was up.
+            guard self.sessionID == sessionID, !cards.isEmpty else { return }
+            lockScreenUnavailable = false
+            isOnLockScreen = true
+            save()
+            await CueCardsLockScreen.sync(cards: cards, title: title, index: index, session: sessionID)
         }
-        lockScreenUnavailable = false
-
-        guard let activity = try? Activity.request(
-            attributes: CueCardsActivityAttributes(cueColor: cueColor),
-            content: ActivityContent(state: contentState, staleDate: nil)
-        ) else { return }
-        self.activity = activity
-        isOnLockScreen = true
-        watch(activity)
     }
 
     func next() {
@@ -139,12 +120,13 @@ final class CueCardsSession: ObservableObject {
         title = ""
         deckID = nil
         UserDefaults.standard.removeObject(forKey: Self.storageKey)
-        endActivities()
+        isOnLockScreen = false
+        enqueue { await CueCardsLockScreen.clear() }
         WatchSessionService.shared.stateChanged()
     }
 
-    /// Pick up the deck a Lock Screen button is pressed for, when the button
-    /// has launched the app in the background to run. False when there is none.
+    /// Pick up the deck a Lock Screen card is cleared or pressed for, when that
+    /// has launched the app in the background. False when there is none.
     func restoreIfNeeded() -> Bool {
         if !cards.isEmpty { return true }
         guard let data = UserDefaults.standard.data(forKey: Self.storageKey),
@@ -157,26 +139,17 @@ final class CueCardsSession: ObservableObject {
         sessionID = stored.sessionID ?? UUID()
         title = stored.title ?? ""
         deckID = stored.deckID
-        if let activity = Activity<CueCardsActivityAttributes>.activities.first {
-            self.activity = activity
-            isOnLockScreen = true
-            watch(activity)
-        }
+        isOnLockScreen = stored.isOnLockScreen ?? false
         return true
     }
 
-    /// Wait for the Lock Screen to catch up with the last move, so an intent
-    /// doesn't return, and let the app be suspended, before it has.
+    /// Wait for the Lock Screen to catch up with the last move, so the app
+    /// isn't suspended before it has.
     func waitForLockScreen() async {
         await pendingUpdate?.value
     }
 
     // MARK: - Private
-
-    private var contentState: ContentState {
-        let runs = isFinished ? [] : CueCards.runs(for: cards[index], maxLength: Self.lockScreenMaxLength)
-        return ContentState(runs: runs, index: index, count: cards.count)
-    }
 
     private func deckChanged() {
         save()
@@ -185,47 +158,29 @@ final class CueCardsSession: ObservableObject {
     }
 
     private func updateLockScreen() {
-        guard let activity else { return }
-        let content = ActivityContent(state: contentState, staleDate: nil)
+        guard isOnLockScreen else { return }
+        let cards = cards, title = title, index = index, sessionID = sessionID
+        enqueue {
+            await CueCardsLockScreen.sync(cards: cards, title: title, index: index, session: sessionID)
+        }
+    }
+
+    /// Lock Screen work runs in order, so a quick run of moves can't land out
+    /// of turn, and a closed deck can't be put back up by a late one.
+    private func enqueue(_ work: @escaping @MainActor () async -> Void) {
         let previous = pendingUpdate
         pendingUpdate = Task {
-            // In order, so a quick run of taps can't land out of turn.
             await previous?.value
-            await activity.update(content)
+            await work()
         }
     }
 
     private func save() {
         let stored = Stored(cards: cards, index: index, cueColor: cueColor,
-                            sessionID: sessionID, title: title, deckID: deckID)
+                            sessionID: sessionID, title: title, deckID: deckID,
+                            isOnLockScreen: isOnLockScreen)
         if let data = try? JSONEncoder().encode(stored) {
             UserDefaults.standard.set(data, forKey: Self.storageKey)
-        }
-    }
-
-    /// Notice the activity being swiped away on the Lock Screen, so the app
-    /// can offer to put it back.
-    private func watch(_ activity: Activity<CueCardsActivityAttributes>) {
-        Task { [weak self] in
-            for await state in activity.activityStateUpdates where state == .dismissed || state == .ended {
-                guard let self, self.activity?.id == activity.id else { return }
-                self.activity = nil
-                self.isOnLockScreen = false
-                return
-            }
-        }
-    }
-
-    private func endActivities() {
-        activity = nil
-        isOnLockScreen = false
-        pendingUpdate = nil
-        let activities = Activity<CueCardsActivityAttributes>.activities
-        guard !activities.isEmpty else { return }
-        Task {
-            for activity in activities {
-                await activity.end(nil, dismissalPolicy: .immediate)
-            }
         }
     }
 }

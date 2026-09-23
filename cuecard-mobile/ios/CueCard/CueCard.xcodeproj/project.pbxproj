@@ -47,6 +47,7 @@
 		047 /* CueCardsIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 137 /* CueCardsIntents.swift */; };
 		048 /* CueCardsIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 137 /* CueCardsIntents.swift */; };
 		049 /* CueCardsSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138 /* CueCardsSession.swift */; };
+		C0CA4D5100000000000000A1 /* CueCardsLockScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CA4D5100000000000000A2 /* CueCardsLockScreen.swift */; };
 		050 /* CueCardsRemoteCommand+App.swift in Sources */ = {isa = PBXBuildFile; fileRef = 139 /* CueCardsRemoteCommand+App.swift */; };
 		051 /* CueCardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 140 /* CueCardsView.swift */; };
 		052 /* CueCardsLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 141 /* CueCardsLiveActivity.swift */; };
@@ -151,6 +152,7 @@
 		136 /* CueCardsActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardsActivityAttributes.swift; sourceTree = "<group>"; };
 		137 /* CueCardsIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardsIntents.swift; sourceTree = "<group>"; };
 		138 /* CueCardsSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardsSession.swift; sourceTree = "<group>"; };
+		C0CA4D5100000000000000A2 /* CueCardsLockScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardsLockScreen.swift; sourceTree = "<group>"; };
 		139 /* CueCardsRemoteCommand+App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CueCardsRemoteCommand+App.swift"; sourceTree = "<group>"; };
 		140 /* CueCardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardsView.swift; sourceTree = "<group>"; };
 		141 /* CueCardsLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardsLiveActivity.swift; sourceTree = "<group>"; };
@@ -254,6 +256,7 @@
 				139 /* CueCardsRemoteCommand+App.swift */,
 				146 /* WatchSessionService.swift */,
 				138 /* CueCardsSession.swift */,
+				C0CA4D5100000000000000A2 /* CueCardsLockScreen.swift */,
 				108 /* SettingsService.swift */,
 				114 /* ReviewPromptService.swift */,
 				112 /* TeleprompterPiPManager.swift */,
@@ -501,6 +504,7 @@
 				051 /* CueCardsView.swift in Sources */,
 				050 /* CueCardsRemoteCommand+App.swift in Sources */,
 				049 /* CueCardsSession.swift in Sources */,
+				C0CA4D5100000000000000A1 /* CueCardsLockScreen.swift in Sources */,
 				047 /* CueCardsIntents.swift in Sources */,
 				045 /* CueCardsActivityAttributes.swift in Sources */,
 				044 /* CueCards.swift in Sources */,

@@ -3,8 +3,8 @@ import FirebaseAnalytics
 
 /// Cards mode: the script as a deck, one card at a time. Swipe the top card
 /// left to put it away and right to bring the last one back, the way
-/// notifications are cleared. With the Lock Screen chosen, the same deck runs
-/// as a Live Activity too, and both move together.
+/// notifications are cleared. With the Lock Screen chosen, the same deck is
+/// up there as notifications too, and both move together.
 struct CueCardsView: View {
     /// The deck to open. Nil when it is already open: opened from the watch.
     let cards: [String]?
@@ -230,13 +230,13 @@ struct CueCardsView: View {
 
         if settings.cardDisplay == .lockScreen {
             if session.isOnLockScreen {
-                Label("On your Lock Screen too. Use its arrows to move through the cards there.",
+                Label("On your Lock Screen too. Swipe a card left there for the next, or touch and hold it to go back.",
                       systemImage: "lock.fill")
                     .font(.footnote)
                     .foregroundStyle(secondary)
                     .multilineTextAlignment(.center)
             } else if session.lockScreenUnavailable {
-                Label("Turn on Live Activities for CueCard in Settings to see your cards on the Lock Screen.",
+                Label("Turn on notifications for CueCard in Settings to see your cards on the Lock Screen.",
                       systemImage: "lock.slash")
                     .font(.footnote)
                     .foregroundStyle(secondary)
