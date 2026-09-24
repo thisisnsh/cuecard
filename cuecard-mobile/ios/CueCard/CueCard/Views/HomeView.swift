@@ -11,8 +11,6 @@ struct HomeView: View {
     @State private var showingSettings = false
     @State private var showingTeleprompter = false
     @State private var showingCards = false
-    /// A deck just put on the Lock Screen, and how to get to it.
-    @State private var showingLockScreenDeck = false
     /// The cards showing were opened from the watch, not from the editor.
     @State private var cardsOpenedOnWatch = false
     @State private var showingTimerPicker = false
@@ -77,76 +75,11 @@ struct HomeView: View {
         .accessibilityLabel("Mode: \(current.displayName)")
     }
 
-    /// Where the cards will be read. It is chosen before writing, since it sets
-    /// how long each card can be, so the menu says so beside each choice.
-    private var cardDisplayMenu: some View {
-        let current = settingsService.settings.cardDisplay
-
-        return Menu {
-            Section("Where will you read your cards?") {
-                ForEach(CardDisplay.allCases) { display in
-                    Button(action: {
-                        AnalyticsEvents.logButtonClick("card_display_\(display.rawValue)", screen: "home")
-                        settingsService.settings.cardDisplay = display
-                    }) {
-                        Label(display.displayName, systemImage: display == current ? "checkmark" : display.systemImage)
-                        Text("Up to \(display.characterLimit) characters a card")
-                    }
-                }
-            }
-        } label: {
-            HStack(spacing: 6) {
-                Image(systemName: current.systemImage)
-                    .font(.system(size: 13, weight: .semibold))
-                Text(current.displayName)
-                    .font(.subheadline.weight(.semibold))
-                Image(systemName: "chevron.up.chevron.down")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-            }
-            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-            .frame(minHeight: 44)
-        }
-        .accessibilityLabel("Show cards on the \(current.displayName)")
-    }
-
-    /// Cards read on the Lock Screen never open in the app.
-    private var readsOnLockScreen: Bool {
-        isCardsMode && settingsService.settings.cardDisplay == .lockScreen
-    }
-
-    /// A deck is up on the Lock Screen.
-    private var isDeckOnLockScreen: Bool {
-        !cardsSession.cards.isEmpty && cardsSession.isOnLockScreen
-    }
-
     private func showCardsOpenedOnWatch() {
-        guard settingsService.settings.cardDisplay == .inApp,
-              scenePhase == .active, !cardsSession.cards.isEmpty, !showingCards,
-              !showingTeleprompter, !showingSettings, !showingSavedNotes,
-              !showingLockScreenDeck else { return }
+        guard scenePhase == .active, !cardsSession.cards.isEmpty, !showingCards,
+              !showingTeleprompter, !showingSettings, !showingSavedNotes else { return }
         cardsOpenedOnWatch = true
         showingCards = true
-    }
-
-    /// Put the deck on the Lock Screen, without opening it here, and say how
-    /// to get to it.
-    private func showOnLockScreen() {
-        let cards = CueCards.cards(in: settingsService.notes)
-        guard !cards.isEmpty else { return }
-        AnalyticsEvents.logButtonClick("show_on_lock_screen", screen: "home")
-        cardsSession.start(cards: cards, title: settingsService.currentNote?.title ?? "Cards",
-                           deckID: settingsService.currentNoteId, showOnLockScreen: true)
-        Analytics.logEvent("cards_open", parameters: [
-            "count": cards.count,
-            "display": CardDisplay.lockScreen.rawValue
-        ])
-        showingLockScreenDeck = true
-    }
-
-    private func endLockScreenDeck() {
-        AnalyticsEvents.logButtonClick("end_deck", screen: "home")
-        cardsSession.end()
     }
 
     private func openTimerPicker() {
@@ -198,35 +131,6 @@ struct HomeView: View {
                 showingTimerPicker = false
             }
         }
-    }
-
-    /// Lock Screen mode's main button: put the deck up there, or take down
-    /// the one that is.
-    @ViewBuilder
-    private var lockScreenButton: some View {
-        let onLockScreen = isDeckOnLockScreen
-        Button(action: {
-            isEditorFocused = false
-            if onLockScreen {
-                endLockScreenDeck()
-            } else {
-                showOnLockScreen()
-            }
-        }) {
-            Label(onLockScreen ? "End Deck" : "Show on Lock Screen",
-                  systemImage: onLockScreen ? "xmark" : "lock.fill")
-                .font(.subheadline.weight(.semibold))
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-                .foregroundStyle(onLockScreen ? AppColors.textPrimary(for: colorScheme)
-                                              : (colorScheme == .dark ? .black : .white))
-                .padding(.horizontal, 16)
-                .frame(height: 52)
-                .background(Capsule().fill(onLockScreen ? Color.clear : AppColors.green(for: colorScheme)))
-                .glassedEffect(in: Capsule())
-        }
-        .disabled(!onLockScreen && CueCards.cards(in: settingsService.notes).isEmpty)
-        .opacity(onLockScreen || hasNotes ? 1.0 : 0.6)
     }
 
     @ViewBuilder
@@ -387,13 +291,6 @@ struct HomeView: View {
                     }
 
                     if isCardsMode {
-                        HStack {
-                            cardDisplayMenu
-                            Spacer(minLength: 0)
-                        }
-                        .padding(.horizontal, 20)
-                        .padding(.top, 4)
-
                         CardsEditorView(
                             text: $settingsService.notes,
                             isFocused: $isEditorFocused,
@@ -401,7 +298,7 @@ struct HomeView: View {
                             cueColor: settingsService.settings.cards.cueColor,
                             colorScheme: colorScheme,
                             fontSize: CGFloat(settingsService.settings.cards.editorFontSize),
-                            cardLimit: settingsService.settings.cardDisplay.characterLimit,
+                            cardLimit: settingsService.settings.cards.characterLimit,
                             bottomInset: isEditorFocused ? CueBar.height : Self.controlsHeight
                         )
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -443,46 +340,42 @@ struct HomeView: View {
 
                     Spacer(minLength: isCardsMode ? 0 : 12)
 
-                    if readsOnLockScreen {
-                        lockScreenButton
-                    } else {
-                        Button(action: {
-                            isEditorFocused = false
-                            if isCardsMode {
-                                AnalyticsEvents.logButtonClick("start_cards", screen: "home")
-                                cardsOpenedOnWatch = false
-                                showingCards = true
-                            } else {
-                                AnalyticsEvents.logButtonClick("start_teleprompter", screen: "home")
-                                showingTeleprompter = true
-                            }
-                        }) {
-                            if isCardsMode {
-                                Label("Read Cards", systemImage: "rectangle.stack.fill")
-                                    .font(.subheadline.weight(.semibold))
-                                    .lineLimit(1)
-                                    .minimumScaleFactor(0.8)
-                                    .foregroundStyle(colorScheme == .dark ? .black : .white)
-                                    .padding(.horizontal, 16)
-                                    .frame(height: 52)
-                                    .background(Capsule().fill(AppColors.green(for: colorScheme)))
-                                    .glassedEffect(in: Capsule())
-                            } else {
-                                Image(systemName: "play.fill")
-                                    .font(.system(size: 20, weight: .semibold))
-                                    .foregroundStyle(colorScheme == .dark ? .black : .white)
-                                    .frame(width: 52, height: 52)
-                                    .background(
-                                        Circle()
-                                            .fill(AppColors.green(for: colorScheme))
-                                    )
-                                    .glassedEffect(in: Circle())
-                            }
+                    Button(action: {
+                        isEditorFocused = false
+                        if isCardsMode {
+                            AnalyticsEvents.logButtonClick("start_cards", screen: "home")
+                            cardsOpenedOnWatch = false
+                            showingCards = true
+                        } else {
+                            AnalyticsEvents.logButtonClick("start_teleprompter", screen: "home")
+                            showingTeleprompter = true
                         }
-                        .disabled(isCardsMode ? CueCards.cards(in: settingsService.notes).isEmpty : !hasNotes)
-                        .opacity(hasNotes ? 1.0 : 0.6)
-                        .accessibilityLabel(isCardsMode ? "Open Cards" : "Start Teleprompter")
+                    }) {
+                        if isCardsMode {
+                            Label("Read Cards", systemImage: "rectangle.stack.fill")
+                                .font(.subheadline.weight(.semibold))
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
+                                .foregroundStyle(colorScheme == .dark ? .black : .white)
+                                .padding(.horizontal, 16)
+                                .frame(height: 52)
+                                .background(Capsule().fill(AppColors.green(for: colorScheme)))
+                                .glassedEffect(in: Capsule())
+                        } else {
+                            Image(systemName: "play.fill")
+                                .font(.system(size: 20, weight: .semibold))
+                                .foregroundStyle(colorScheme == .dark ? .black : .white)
+                                .frame(width: 52, height: 52)
+                                .background(
+                                    Circle()
+                                        .fill(AppColors.green(for: colorScheme))
+                                )
+                                .glassedEffect(in: Circle())
+                        }
                     }
+                    .disabled(isCardsMode ? CueCards.cards(in: settingsService.notes).isEmpty : !hasNotes)
+                    .opacity(hasNotes ? 1.0 : 0.6)
+                    .accessibilityLabel(isCardsMode ? "Open Cards" : "Start Teleprompter")
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 24)
@@ -626,10 +519,6 @@ struct HomeView: View {
                     // Passed on by hand: as an iPad app on a Mac, a full screen
                     // cover doesn't inherit environment objects.
                     .environmentObject(settingsService)
-            }
-            .sheet(isPresented: $showingLockScreenDeck) {
-                LockScreenDeckSheet(onEnd: endLockScreenDeck)
-                    .presentationDetents([.medium])
             }
             .fullScreenCover(isPresented: $showingCards) {
                 CueCardsView(cards: cardsOpenedOnWatch ? nil : CueCards.cards(in: settingsService.notes),
@@ -928,68 +817,6 @@ struct CardsEditorView: View {
         let script = CueCards.script(for: cards.map(\.text))
         writtenText = script
         if text != script { text = script }
-    }
-}
-
-/// Shown once a deck is on its way to the Lock Screen. An app can't lock the
-/// iPhone itself, so this says how, and offers a way to take the deck down.
-private struct LockScreenDeckSheet: View {
-    let onEnd: () -> Void
-
-    @Environment(\.dismiss) private var dismiss
-    @Environment(\.colorScheme) private var colorScheme
-    @Environment(\.openURL) private var openURL
-    @ObservedObject private var session = CueCardsSession.shared
-
-    var body: some View {
-        NavigationStack {
-            VStack(spacing: 16) {
-                Spacer(minLength: 0)
-
-                if session.isOnLockScreen {
-                    Image(systemName: "lock.iphone")
-                        .font(.system(size: 44, weight: .semibold))
-                        .foregroundStyle(AppColors.green(for: colorScheme))
-                    Text("Your cards are on the Lock Screen")
-                        .font(.title3.weight(.semibold))
-                    Text("Press the side button to lock your iPhone. Use Back and Next on the card to move through the deck.")
-                } else if session.lockScreenUnavailable {
-                    Image(systemName: "lock.slash")
-                        .font(.system(size: 44, weight: .semibold))
-                        .foregroundStyle(AppColors.red(for: colorScheme))
-                    Text("Couldn't show your cards")
-                        .font(.title3.weight(.semibold))
-                    Text("Check that Live Activities are turned on for CueCard in Settings, then try again.")
-                    HStack(spacing: 12) {
-                        Button("Open Settings") {
-                            if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
-                        }
-                        Button("Try Again") { session.showOnLockScreen() }
-                    }
-                    .buttonStyle(.bordered)
-                } else {
-                    ProgressView()
-                    Text("Putting your cards on the Lock Screen…")
-                }
-
-                Spacer(minLength: 0)
-            }
-            .multilineTextAlignment(.center)
-            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-            .padding(.horizontal, 32)
-            .frame(maxWidth: .infinity)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("End Deck", role: .destructive) {
-                        onEnd()
-                        dismiss()
-                    }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
-                }
-            }
-        }
     }
 }
 

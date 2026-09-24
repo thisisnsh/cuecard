@@ -100,6 +100,20 @@ final class CueCardsSession: ObservableObject {
         }
     }
 
+    /// Take the deck off the Lock Screen and keep reading it here.
+    func hideFromLockScreen() {
+        guard !cards.isEmpty else { return }
+        let sessionID = sessionID
+        // Queued, so it also takes down a deck still on its way up.
+        enqueue { [self] in
+            await CueCardsLockScreen.clear()
+            guard self.sessionID == sessionID, !cards.isEmpty else { return }
+            isOnLockScreen = false
+            lockScreenUnavailable = false
+            save()
+        }
+    }
+
     func next() {
         guard index < cards.count else { return }
         index += 1

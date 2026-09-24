@@ -167,11 +167,19 @@ struct CueCardsView: View {
             hasOpenedDeck = true
             guard let cards else { return }
             session.start(cards: cards, title: title, deckID: deckID,
-                          showOnLockScreen: settings.cardDisplay == .lockScreen)
+                          showOnLockScreen: settings.cards.showOnLockScreen)
             Analytics.logEvent("cards_open", parameters: [
                 "count": cards.count,
-                "display": settings.cardDisplay.rawValue
+                "on_lock_screen": settings.cards.showOnLockScreen ? 1 : 0
             ])
+        }
+        // Turned on or off in Settings with the deck open.
+        .onChange(of: settings.cards.showOnLockScreen) {
+            if settings.cards.showOnLockScreen {
+                session.showOnLockScreen()
+            } else {
+                session.hideFromLockScreen()
+            }
         }
     }
 
@@ -327,29 +335,16 @@ struct CueCardsView: View {
     private var hint: some View {
         let secondary = AppColors.textSecondary(for: colorScheme)
 
-        if settings.cardDisplay == .lockScreen || session.isOnLockScreen {
-            if session.isOnLockScreen || session.lockScreenUnavailable {
-                Button { showingLockScreenHelp = true } label: {
-                    Label(session.isOnLockScreen ? "Also on Lock Screen" : "Enable Lock Screen cards",
-                          systemImage: session.isOnLockScreen ? "lock.fill" : "lock.slash")
-                        .font(.footnote)
-                        .foregroundStyle(secondary)
-                        .frame(minHeight: 44)
-                }
-                .buttonStyle(.plain)
-                .accessibilityHint("Shows Lock Screen instructions")
-            } else {
-                Button(action: {
-                    AnalyticsEvents.logButtonClick("show_on_lock_screen", screen: "cards")
-                    session.showOnLockScreen()
-                }) {
-                    Label("Show on Lock Screen", systemImage: "lock.fill")
-                        .font(.footnote.weight(.medium))
-                        .foregroundStyle(secondary)
-                        .frame(minHeight: 44)
-                }
-                .buttonStyle(.plain)
+        if session.isOnLockScreen || (settings.cards.showOnLockScreen && session.lockScreenUnavailable) {
+            Button { showingLockScreenHelp = true } label: {
+                Label(session.isOnLockScreen ? "Also on Lock Screen" : "Enable Lock Screen cards",
+                      systemImage: session.isOnLockScreen ? "lock.fill" : "lock.slash")
+                    .font(.footnote)
+                    .foregroundStyle(secondary)
+                    .frame(minHeight: 44)
             }
+            .buttonStyle(.plain)
+            .accessibilityHint("Shows Lock Screen instructions")
         } else if !session.isFinished {
             Text("Swipe to turn the card")
                 .font(.footnote)

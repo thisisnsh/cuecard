@@ -25,41 +25,6 @@ enum ScriptMode: String, Codable, CaseIterable, Identifiable {
     }
 }
 
-/// Where a deck of cards is read. It sets how long a card can be: a
-/// Live Activity on the Lock Screen has room for a few lines, the app a whole
-/// screen.
-///
-/// The raw value is persisted with the settings, so it has to stay stable.
-enum CardDisplay: String, Codable, CaseIterable, Identifiable {
-    case lockScreen
-    case inApp
-
-    var id: String { rawValue }
-
-    var displayName: String {
-        switch self {
-        case .lockScreen: return "Lock Screen"
-        case .inApp: return "In App"
-        }
-    }
-
-    var systemImage: String {
-        switch self {
-        case .lockScreen: return "lock.fill"
-        case .inApp: return "iphone"
-        }
-    }
-
-    /// Characters a card holds before the editor marks the rest as too long.
-    /// The Lock Screen limit keeps the Live Activity readable.
-    var characterLimit: Int {
-        switch self {
-        case .lockScreen: return 120
-        case .inApp: return 280
-        }
-    }
-}
-
 /// How much of a card shows, and where it runs past its limit.
 struct CardMeasure {
     /// Characters the card shows: its text and cues, without the tag syntax or
@@ -76,6 +41,13 @@ struct CardMeasure {
 /// separator as a line break.
 enum CueCards {
     static let separatorTag = "[separator]"
+
+    /// Characters a card holds before the editor marks the rest as too long.
+    /// On the Lock Screen too, it's kept to what the Live Activity has room
+    /// for; in the app alone a card has a whole screen.
+    static func characterLimit(onLockScreen: Bool) -> Int {
+        onLockScreen ? 120 : 280
+    }
 
     private static let separatorRegex = try! NSRegularExpression(
         pattern: #"\[separator\]"#,

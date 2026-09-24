@@ -29,6 +29,10 @@ struct EditorSettingsView: View {
                 )
             }
 
+            if settingsService.settings.scriptMode == .cards {
+                LockScreenCardsSection(screen: "settings")
+            }
+
             AppleWatchSection(screen: "settings", mode: settingsService.settings.scriptMode)
 
             AppearanceSection(cueColor: $settingsService.settings.activeCueColor)
@@ -183,6 +187,8 @@ struct CardsSettingsView: View {
                 )
             }
 
+            LockScreenCardsSection(screen: Self.screen)
+
             AppleWatchSection(screen: Self.screen, mode: .cards)
 
             AppearanceSection(cueColor: $settingsService.settings.cards.cueColor)
@@ -213,6 +219,31 @@ struct CardsSettingsView: View {
 }
 
 // MARK: - Shared Sections
+
+/// Whether a deck being read is on the Lock Screen too. It sets how long a
+/// card can be, so the footer says what each choice allows.
+private struct LockScreenCardsSection: View {
+    let screen: String
+
+    @EnvironmentObject var settingsService: SettingsService
+
+    var body: some View {
+        Section {
+            Toggle("Show on Lock Screen", isOn: Binding(
+                get: { settingsService.settings.cards.showOnLockScreen },
+                set: { isOn in
+                    AnalyticsEvents.logButtonClick(isOn ? "cards_lock_screen_on" : "cards_lock_screen_off",
+                                                   screen: screen)
+                    settingsService.settings.cards.showOnLockScreen = isOn
+                }
+            ))
+        } footer: {
+            Text("Lock your iPhone while reading and turn cards from the Lock Screen. "
+                 + "Cards hold up to \(CueCards.characterLimit(onLockScreen: true)) characters to fit there, "
+                 + "or \(CueCards.characterLimit(onLockScreen: false)) with this off.")
+        }
+    }
+}
 
 /// The list both Settings screens are built on, with a Done button and a way
 /// off the number pad, which has no return key.

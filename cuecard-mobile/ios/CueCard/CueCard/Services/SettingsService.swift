@@ -116,11 +116,42 @@ struct CardsSettings: Codable, Equatable {
     var cueColor: CueColor
     var timerMinutes: Int
     var timerSeconds: Int
+    /// A deck being read is on the Lock Screen too, as a Live Activity. It
+    /// keeps cards short enough to read there.
+    var showOnLockScreen: Bool
 
     var timerDurationSeconds: Int {
         timerMinutes * 60 + timerSeconds
     }
 
+    /// Characters a card holds before the editor marks the rest as too long.
+    var characterLimit: Int {
+        CueCards.characterLimit(onLockScreen: showOnLockScreen)
+    }
+
+    init(editorFontSize: Int, fontSize: Int, cueColor: CueColor,
+         timerMinutes: Int, timerSeconds: Int, showOnLockScreen: Bool = true) {
+        self.editorFontSize = editorFontSize
+        self.fontSize = fontSize
+        self.cueColor = cueColor
+        self.timerMinutes = timerMinutes
+        self.timerSeconds = timerSeconds
+        self.showOnLockScreen = showOnLockScreen
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case editorFontSize, fontSize, cueColor, timerMinutes, timerSeconds, showOnLockScreen
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        editorFontSize = try container.decode(Int.self, forKey: .editorFontSize)
+        fontSize = try container.decode(Int.self, forKey: .fontSize)
+        cueColor = try container.decode(CueColor.self, forKey: .cueColor)
+        timerMinutes = try container.decode(Int.self, forKey: .timerMinutes)
+        timerSeconds = try container.decode(Int.self, forKey: .timerSeconds)
+        showOnLockScreen = try container.decodeIfPresent(Bool.self, forKey: .showOnLockScreen) ?? true
+    }
 }
 
 /// Settings for the teleprompter
@@ -144,9 +175,6 @@ struct TeleprompterSettings: Codable, Equatable {
     /// What the editor writes and the Play button opens. Chosen on the home
     /// screen, like the timer.
     var scriptMode: ScriptMode
-    /// Where cards are read, which sets how long each one can be. Chosen on
-    /// the home screen, like the timer.
-    var cardDisplay: CardDisplay
     /// How the watch app shows cards.
     var watch: WatchSettings
     /// Cards mode's own text sizes, cue color and timer.
@@ -165,7 +193,6 @@ struct TeleprompterSettings: Codable, Equatable {
         countdownSeconds: 5,
         cueColor: .default,
         scriptMode: .teleprompter,
-        cardDisplay: .lockScreen,
         watch: .default,
         cards: CardsSettings(
             editorFontSize: ScreenTextScale.scaled(16, by: ScreenTextScale.editor),
@@ -277,6 +304,8 @@ struct TeleprompterSettings: Codable, Equatable {
         case countdownSeconds
         case cueColor
         case scriptMode
+        /// Only read, to carry the old Lock Screen / In App choice over to
+        /// `cards.showOnLockScreen`. See `init(from:)`.
         case cardDisplay
         case watch
         case cards
@@ -295,7 +324,6 @@ struct TeleprompterSettings: Codable, Equatable {
         countdownSeconds: Int,
         cueColor: CueColor,
         scriptMode: ScriptMode,
-        cardDisplay: CardDisplay,
         watch: WatchSettings,
         cards: CardsSettings
     ) {
@@ -311,7 +339,6 @@ struct TeleprompterSettings: Codable, Equatable {
         self.countdownSeconds = countdownSeconds
         self.cueColor = cueColor
         self.scriptMode = scriptMode
-        self.cardDisplay = cardDisplay
         self.watch = watch
         self.cards = cards
     }
@@ -354,14 +381,18 @@ struct TeleprompterSettings: Codable, Equatable {
         cueColor = try container.decodeIfPresent(CueColor.self, forKey: .cueColor) ?? .default
         scriptMode = try container.decodeIfPresent(ScriptMode.self, forKey: .scriptMode)
             ?? TeleprompterSettings.default.scriptMode
-        cardDisplay = try container.decodeIfPresent(CardDisplay.self, forKey: .cardDisplay)
-            ?? TeleprompterSettings.default.cardDisplay
         watch = try container.decodeIfPresent(WatchSettings.self, forKey: .watch)
             ?? TeleprompterSettings.default.watch
         // From before cards kept their own: start them on what both used.
         cards = try container.decodeIfPresent(CardsSettings.self, forKey: .cards)
             ?? CardsSettings(editorFontSize: editorFontSize, fontSize: fontSize, cueColor: cueColor,
                              timerMinutes: timerMinutes, timerSeconds: timerSeconds)
+        // Cards used to be read either on the Lock Screen or in the app. Now
+        // they're read in the app, and In App was the choice to keep them off
+        // the Lock Screen.
+        if let display = try container.decodeIfPresent(String.self, forKey: .cardDisplay) {
+            cards.showOnLockScreen = display != "inApp"
+        }
     }
 
     static func clamp(_ value: Int, to range: ClosedRange<Int>) -> Int {
@@ -382,7 +413,6 @@ struct TeleprompterSettings: Codable, Equatable {
         try container.encode(countdownSeconds, forKey: .countdownSeconds)
         try container.encode(cueColor, forKey: .cueColor)
         try container.encode(scriptMode, forKey: .scriptMode)
-        try container.encode(cardDisplay, forKey: .cardDisplay)
         try container.encode(watch, forKey: .watch)
         try container.encode(cards, forKey: .cards)
     }
@@ -668,7 +698,6 @@ Ask for questions before wrapping up.
         defaults.cards.timerMinutes = settings.cards.timerMinutes
         defaults.cards.timerSeconds = settings.cards.timerSeconds
         defaults.scriptMode = settings.scriptMode
-        defaults.cardDisplay = settings.cardDisplay
         return defaults
     }
 
