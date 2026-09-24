@@ -28,8 +28,6 @@ struct EditorSettingsView: View {
                 )
             }
 
-            PlaybackControlsSection()
-
             AppleWatchSection(screen: "settings")
 
             AppearanceSection()
@@ -222,24 +220,20 @@ private struct WhatsNewSection: View {
     }
 }
 
-/// Where play/pause and back 10 seconds can be reached without opening the
-/// app, and how to set each up. The controls need iOS 18.
+/// How to set up the Action button to play or pause without opening the app.
+/// Left out on iPhones without one; the control needs iOS 18.
 private struct PlaybackControlsSection: View {
     @Environment(\.colorScheme) var colorScheme
 
     var body: some View {
-        if #available(iOS 18.0, *) {
+        if #available(iOS 18.0, *), DeviceModel.hasActionButton {
             Section {
-                if DeviceModel.hasActionButton {
-                    row("Action Button", systemImage: "button.vertical.left.press",
-                        detail: "In the Settings app, go to Action Button, choose Controls, and pick Play or Pause under CueCard.")
-                }
-                row("Control Center", systemImage: "switch.2",
-                    detail: "Open Control Center, tap +, then Add a Control, and search for CueCard.")
+                row("Action Button", systemImage: "button.vertical.left.press",
+                    detail: "In the Settings app, go to Action Button, choose Controls, and pick Play or Pause under CueCard.")
             } header: {
                 Text("Playback Controls")
             } footer: {
-                Text("Play, pause, or go back \(TeleprompterRemoteCommand.skipBackSeconds) seconds without opening CueCard while a script is open in the teleprompter.")
+                Text("Play or pause without opening CueCard while a script is open in the teleprompter.")
             }
         }
     }
