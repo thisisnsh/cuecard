@@ -1,3 +1,4 @@
+import Combine
 import Foundation
 import WidgetKit
 
@@ -38,7 +39,23 @@ final class CueCardsSession: ObservableObject {
         var isOnLockScreen: Bool?
     }
 
-    private init() {}
+    private var cueColorSubscription: AnyCancellable?
+
+    private init() {
+        // Redraw the widgets and Live Activity in a newly picked cue color.
+        cueColorSubscription = SettingsService.shared.$settings
+            .map(\.cueColor)
+            .removeDuplicates()
+            .dropFirst()
+            .sink { [weak self] _ in
+                // $settings fires before the change is stored.
+                Task { @MainActor in
+                    guard let self, !self.cards.isEmpty else { return }
+                    self.publishWidget()
+                    self.updateLockScreen()
+                }
+            }
+    }
 
     /// Open a deck, on its first card unless told otherwise, and put it on
     /// the Lock Screen if asked.
@@ -183,12 +200,24 @@ final class CueCardsSession: ObservableObject {
             }
             return result
         }
-        let text = isFinished ? "All cards done" : CueCards.runs(for: cards[index]).map(\.text).joined()
-        var state = CueCardsWidgetState(sessionID: sessionID, title: bounded(title, bytes: 160),
-                                        text: bounded(text, bytes: 1600), index: index, count: cards.count)
+        let allRuns = isFinished
+            ? [CueCardRun(text: "All cards done", isCue: false)]
+            : CueCards.runs(for: cards[index])
+        var runs: [CueCardRun] = []
+        var budget = 1600
+        for run in allRuns where budget > 0 {
+            let text = bounded(run.text, bytes: budget)
+            guard !text.isEmpty else { break }
+            budget -= text.utf8.count
+            runs.append(CueCardRun(text: text, isCue: run.isCue))
+        }
+        var state = CueCardsWidgetState(sessionID: sessionID, title: bounded(title, bytes: 160), runs: runs,
+                                        cueColor: SettingsService.shared.settings.cueColor,
+                                        index: index, count: cards.count)
         // JSON escaping can expand control characters beyond their UTF-8 size.
-        while !state.text.isEmpty, let data = try? JSONEncoder().encode(state), data.count > 3000 {
-            state.text.removeLast()
+        while !state.runs.isEmpty, let data = try? JSONEncoder().encode(state), data.count > 3000 {
+            state.runs[state.runs.count - 1].text.removeLast()
+            if state.runs[state.runs.count - 1].text.isEmpty { state.runs.removeLast() }
         }
         return state
     }

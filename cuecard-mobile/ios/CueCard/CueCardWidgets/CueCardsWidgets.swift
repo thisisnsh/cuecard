@@ -26,7 +26,9 @@ struct CueCardsWidget: Widget {
         StaticConfiguration(kind: CueCardsWidgetStore.kind, provider: CueCardsProvider()) { entry in
             if #available(iOS 17.0, *) {
                 CueCardsWidgetView(state: entry.state)
-                    .containerBackground(.background, for: .widget)
+                    .containerBackground(for: .widget) {
+                        CueCardsGlass()
+                    }
             } else {
                 CueCardsWidgetView(state: entry.state)
                     .padding()
@@ -47,7 +49,7 @@ private struct CueCardsWidgetView: View {
             if family == .accessoryRectangular {
                 VStack(alignment: .leading, spacing: 3) {
                     Text("Cards · \(state.progress)").font(.caption.weight(.semibold))
-                    Text(state.text).font(.caption).lineLimit(2)
+                    CueCardsText(state: state).font(.caption).lineLimit(2)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             } else {
@@ -84,7 +86,7 @@ private struct CueCardsSurface: View {
             .font(.caption.weight(.semibold))
             .foregroundStyle(.secondary)
 
-            Text(state.text)
+            CueCardsText(state: state)
                 .font(textFont)
                 .lineLimit(lineLimit)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -110,6 +112,7 @@ private struct CueCardsButtons: View {
                 Label("Back", systemImage: "chevron.left")
                     .frame(minHeight: 28)
             }
+            .tint(.gray)
             .disabled(state.index == 0)
             Spacer(minLength: 8)
             Button(intent: MoveCueCardIntent(state: state, targetIndex: state.isFinished ? 0 : state.index + 1)) {
@@ -124,15 +127,36 @@ private struct CueCardsButtons: View {
     }
 }
 
+/// The card's text, cues in the cue color as the app draws them.
+private struct CueCardsText: View {
+    @Environment(\.colorScheme) private var colorScheme
+    let state: CueCardsWidgetState
+
+    var body: some View {
+        state.runs.text(primary: AppColors.textPrimary(for: colorScheme),
+                        cue: state.cueColor.color(for: colorScheme))
+    }
+}
+
+/// The app's background, with a soft sheen across the top like light on
+/// glass. Where the system draws its own glass (clear and tinted Home
+/// Screens), it replaces this.
+private struct CueCardsGlass: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some View {
+        ZStack {
+            AppColors.background(for: colorScheme)
+            LinearGradient(colors: [.white.opacity(colorScheme == .dark ? 0.08 : 0.5), .clear],
+                           startPoint: .top, endPoint: .center)
+        }
+    }
+}
+
 struct CueCardsLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: CueCardsActivityAttributes.self) { context in
-            CueCardsSurface(state: context.state)
-                .padding(12)
-                .frame(height: 160)
-                .activityBackgroundTint(Color(white: 0.12))
-                .activitySystemActionForegroundColor(.white)
-                .environment(\.colorScheme, .dark)
+            CueCardsActivityView(state: context.state)
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
@@ -144,7 +168,7 @@ struct CueCardsLiveActivity: Widget {
                 }
                 DynamicIslandExpandedRegion(.bottom) {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text(context.state.text).font(.body).lineLimit(3)
+                        CueCardsText(state: context.state).font(.body).lineLimit(3)
                         if #available(iOS 17.0, *) {
                             CueCardsButtons(state: context.state)
                         }
@@ -159,5 +183,20 @@ struct CueCardsLiveActivity: Widget {
                 Image(systemName: "rectangle.stack")
             }
         }
+    }
+}
+
+/// The Lock Screen card, in the app's background color. It's see-through, so
+/// the system's blur shows through as glass over the wallpaper.
+private struct CueCardsActivityView: View {
+    @Environment(\.colorScheme) private var colorScheme
+    let state: CueCardsWidgetState
+
+    var body: some View {
+        CueCardsSurface(state: state)
+            .padding(12)
+            .frame(height: 160)
+            .activityBackgroundTint(AppColors.background(for: colorScheme).opacity(colorScheme == .dark ? 0.55 : 0.6))
+            .activitySystemActionForegroundColor(AppColors.textPrimary(for: colorScheme))
     }
 }

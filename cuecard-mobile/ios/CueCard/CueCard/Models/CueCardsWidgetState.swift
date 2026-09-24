@@ -7,15 +7,21 @@ import Foundation
 struct CueCardsWidgetState: Codable, Hashable {
     var sessionID: UUID
     var title: String
-    var text: String
+    /// The card on top, cues kept apart so they draw in the cue color.
+    var runs: [CueCardRun]
+    var cueColor: CueColor
     var index: Int
     var count: Int
 
     var isFinished: Bool { index >= count }
     var progress: String { isFinished ? "Done" : "\(index + 1) of \(count)" }
+    var text: String { runs.map(\.text).joined() }
 
     static let preview = Self(sessionID: UUID(), title: "My cards",
-                              text: "Take a breath. Look up. Start with your main idea.", index: 0, count: 5)
+                              runs: [CueCardRun(text: "Take a breath. ", isCue: false),
+                                     CueCardRun(text: "Look up.", isCue: true),
+                                     CueCardRun(text: " Start with your main idea.", isCue: false)],
+                              cueColor: .default, index: 0, count: 5)
 }
 
 enum CueCardsWidgetStore {
