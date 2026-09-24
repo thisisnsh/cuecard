@@ -49,11 +49,9 @@ struct CueCardsView: View {
                         .ignoresSafeArea()
 
                     VStack(spacing: 0) {
-                        ProgressView(value: Double(min(session.index + 1, session.cards.count)),
-                                     total: Double(max(session.cards.count, 1)))
-                            .tint(AppColors.green(for: colorScheme))
+                        PageDots(count: session.cards.count, index: session.index, colorScheme: colorScheme)
                             .padding(.horizontal, 24)
-                            .padding(.top, 8)
+                            .padding(.top, 12)
                             .accessibilityHidden(true)
 
                         deck(width: geometry.size.width)
@@ -381,6 +379,50 @@ struct CueCardsView: View {
             }
             .accessibilityLabel(nextLabel)
         }
+    }
+}
+
+/// Where the deck is, a dot a card. A long deck shows the dots around the
+/// card on top, the ones at either edge shrunk to say there are more.
+private struct PageDots: View {
+    let count: Int
+    let index: Int
+    let colorScheme: ColorScheme
+
+    private static let maxVisible = 9
+    private static let size: CGFloat = 7
+
+    var body: some View {
+        let window = visibleRange
+        HStack(spacing: 8) {
+            ForEach(window, id: \.self) { dot in
+                Circle()
+                    .fill(color(for: dot))
+                    .frame(width: Self.size, height: Self.size)
+                    .scaleEffect(scale(for: dot, in: window))
+            }
+        }
+        .frame(height: Self.size)
+        .animation(.easeInOut(duration: 0.2), value: index)
+    }
+
+    private var visibleRange: Range<Int> {
+        guard count > Self.maxVisible else { return 0..<count }
+        let start = min(max(index - Self.maxVisible / 2, 0), count - Self.maxVisible)
+        return start..<(start + Self.maxVisible)
+    }
+
+    /// The card on top in green, and every card once the deck is done.
+    private func color(for dot: Int) -> Color {
+        dot == index || index >= count
+            ? AppColors.green(for: colorScheme)
+            : AppColors.textSecondary(for: colorScheme).opacity(0.35)
+    }
+
+    private func scale(for dot: Int, in window: Range<Int>) -> CGFloat {
+        let moreBefore = window.lowerBound > 0 && dot == window.lowerBound
+        let moreAfter = window.upperBound < count && dot == window.upperBound - 1
+        return moreBefore || moreAfter ? 0.55 : 1
     }
 }
 
