@@ -43,7 +43,7 @@ final class CueCardsSession: ObservableObject {
     private init() {
         // Redraw the Live Activity in a newly picked cue color.
         cueColorSubscription = SettingsService.shared.$settings
-            .map(\.cueColor)
+            .map(\.cards.cueColor)
             .removeDuplicates()
             .dropFirst()
             .sink { [weak self] _ in
@@ -205,7 +205,7 @@ final class CueCardsSession: ObservableObject {
             runs.append(CueCardRun(text: text, isCue: run.isCue))
         }
         var state = CueCardsWidgetState(sessionID: sessionID, title: bounded(title, bytes: 160), runs: runs,
-                                        cueColor: SettingsService.shared.settings.cueColor,
+                                        cueColor: SettingsService.shared.settings.cards.cueColor,
                                         index: index, count: cards.count)
         // JSON escaping can expand control characters beyond their UTF-8 size.
         while !state.runs.isEmpty, let data = try? JSONEncoder().encode(state), data.count > 3000 {

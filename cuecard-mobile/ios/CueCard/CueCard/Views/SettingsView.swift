@@ -20,17 +20,18 @@ struct EditorSettingsView: View {
             WhatsNewSection(screen: "settings")
             remoteMessageSection
 
-            Section("Editor") {
+            // Each mode has its own editor text size and cue color.
+            Section(settingsService.settings.scriptMode == .cards ? "Cards Editor" : "Editor") {
                 SizePresetPicker(
                     title: "Text Size",
-                    value: $settingsService.settings.editorFontSize,
+                    value: $settingsService.settings.activeEditorFontSize,
                     presets: TeleprompterSettings.editorFontSizePresets
                 )
             }
 
             AppleWatchSection(screen: "settings")
 
-            AppearanceSection()
+            AppearanceSection(cueColor: $settingsService.settings.activeCueColor)
 
             AdvancedSection(
                 screen: "settings",
@@ -38,7 +39,7 @@ struct EditorSettingsView: View {
             ) {
                 AdvancedNumberRow(
                     title: "Text Size",
-                    value: $settingsService.settings.editorFontSize,
+                    value: $settingsService.settings.activeEditorFontSize,
                     range: TeleprompterSettings.editorFontSizeRange
                 )
             }
@@ -125,7 +126,7 @@ struct TeleprompterSettingsView: View {
 
             PlaybackControlsSection()
 
-            AppearanceSection()
+            AppearanceSection(cueColor: $settingsService.settings.cueColor)
 
             AdvancedSection(screen: Self.screen, footer: advancedFooter) {
                 AdvancedNumberRow(
@@ -149,6 +150,63 @@ struct TeleprompterSettingsView: View {
         let pip = TeleprompterSettings.pipFontSizeRange
         return "Teleprompter text can be set from \(prompter.lowerBound) to \(prompter.upperBound), "
             + "and floating window text from \(pip.lowerBound) to \(pip.upperBound)."
+    }
+}
+
+// MARK: - Cards Settings
+
+/// Settings opened from a deck being read: how the cards are set, plus
+/// everything the Settings screens share. Cards keep their own values, so
+/// nothing here changes the teleprompter.
+struct CardsSettingsView: View {
+    @EnvironmentObject var settingsService: SettingsService
+
+    private static let screen = "cards_settings"
+
+    var body: some View {
+        SettingsScreen(screen: Self.screen) {
+            WhatsNewSection(screen: Self.screen)
+
+            Section("Cards") {
+                SizePresetPicker(
+                    title: "Text Size",
+                    value: $settingsService.settings.cards.fontSize,
+                    presets: TeleprompterSettings.fontSizePresets
+                )
+
+                SizePresetPicker(
+                    title: "Editor Text Size",
+                    value: $settingsService.settings.cards.editorFontSize,
+                    presets: TeleprompterSettings.editorFontSizePresets
+                )
+            }
+
+            AppleWatchSection(screen: Self.screen)
+
+            AppearanceSection(cueColor: $settingsService.settings.cards.cueColor)
+
+            AdvancedSection(screen: Self.screen, footer: advancedFooter) {
+                AdvancedNumberRow(
+                    title: "Card Text Size",
+                    value: $settingsService.settings.cards.fontSize,
+                    range: TeleprompterSettings.fontSizeRange
+                )
+                AdvancedNumberRow(
+                    title: "Editor Text Size",
+                    value: $settingsService.settings.cards.editorFontSize,
+                    range: TeleprompterSettings.editorFontSizeRange
+                )
+            }
+
+            AboutSection(screen: Self.screen)
+        }
+    }
+
+    private var advancedFooter: String {
+        let card = TeleprompterSettings.fontSizeRange
+        let editor = TeleprompterSettings.editorFontSizeRange
+        return "Card text can be set from \(card.lowerBound) to \(card.upperBound), "
+            + "and editor text from \(editor.lowerBound) to \(editor.upperBound)."
     }
 }
 
@@ -335,11 +393,12 @@ private struct AppleWatchSection: View {
     }
 }
 
-/// Theme and cue color. Both are one setting for the whole app, so either
-/// Settings screen changes them everywhere.
+/// Theme and cue color. The theme is one setting for the whole app; the cue
+/// color is the one for the mode these settings belong to.
 private struct AppearanceSection: View {
     @EnvironmentObject var settingsService: SettingsService
     @Environment(\.colorScheme) var colorScheme
+    @Binding var cueColor: CueColor
 
     var body: some View {
         Section("Appearance") {
@@ -355,13 +414,13 @@ private struct AppearanceSection: View {
                 HStack(spacing: 14) {
                     ForEach(CueColor.allCases) { option in
                         Button {
-                            settingsService.settings.cueColor = option
+                            cueColor = option
                         } label: {
                             Circle()
                                 .fill(option.color(for: colorScheme))
                                 .frame(width: 28, height: 28)
                                 .overlay {
-                                    if option == settingsService.settings.cueColor {
+                                    if option == cueColor {
                                         Image(systemName: "checkmark")
                                             .font(.system(size: 12, weight: .bold))
                                             .foregroundStyle(AppColors.background(for: colorScheme))
@@ -371,7 +430,7 @@ private struct AppearanceSection: View {
                                     Circle()
                                         .stroke(
                                             AppColors.textPrimary(for: colorScheme),
-                                            lineWidth: option == settingsService.settings.cueColor ? 2 : 0
+                                            lineWidth: option == cueColor ? 2 : 0
                                         )
                                         .padding(-4)
                                 )

@@ -105,6 +105,24 @@ enum ScreenTextScale {
     }
 }
 
+/// Cards mode's own values for everything it has in common with the
+/// teleprompter, so setting one up never changes the other.
+struct CardsSettings: Codable, Equatable {
+    /// Text size in the cards editor, in points.
+    var editorFontSize: Int
+    /// Text size on a card being read, in points.
+    var fontSize: Int
+    /// The color every `[cue …]` on a card is drawn in.
+    var cueColor: CueColor
+    var timerMinutes: Int
+    var timerSeconds: Int
+
+    var timerDurationSeconds: Int {
+        timerMinutes * 60 + timerSeconds
+    }
+
+}
+
 /// Settings for the teleprompter
 struct TeleprompterSettings: Codable, Equatable {
     /// Text size in the script editor, in points.
@@ -131,6 +149,8 @@ struct TeleprompterSettings: Codable, Equatable {
     var cardDisplay: CardDisplay
     /// How the watch app shows cards.
     var watch: WatchSettings
+    /// Cards mode's own text sizes, cue color and timer.
+    var cards: CardsSettings
 
     static let `default` = TeleprompterSettings(
         editorFontSize: ScreenTextScale.scaled(16, by: ScreenTextScale.editor),
@@ -146,7 +166,14 @@ struct TeleprompterSettings: Codable, Equatable {
         cueColor: .default,
         scriptMode: .teleprompter,
         cardDisplay: .lockScreen,
-        watch: .default
+        watch: .default,
+        cards: CardsSettings(
+            editorFontSize: ScreenTextScale.scaled(16, by: ScreenTextScale.editor),
+            fontSize: ScreenTextScale.scaled(28, by: ScreenTextScale.teleprompter),
+            cueColor: .default,
+            timerMinutes: 1,
+            timerSeconds: 0
+        )
     )
 
     /// Scroll speed range (multiplier)
@@ -206,6 +233,32 @@ struct TeleprompterSettings: Codable, Equatable {
         timerMinutes * 60 + timerSeconds
     }
 
+    // MARK: Mode's own values
+
+    /// The editor text size for the mode being written in.
+    var activeEditorFontSize: Int {
+        get { scriptMode == .cards ? cards.editorFontSize : editorFontSize }
+        set { if scriptMode == .cards { cards.editorFontSize = newValue } else { editorFontSize = newValue } }
+    }
+
+    /// The cue color for the mode being written in.
+    var activeCueColor: CueColor {
+        get { scriptMode == .cards ? cards.cueColor : cueColor }
+        set { if scriptMode == .cards { cards.cueColor = newValue } else { cueColor = newValue } }
+    }
+
+    /// The timer minutes for the mode being written in.
+    var activeTimerMinutes: Int {
+        get { scriptMode == .cards ? cards.timerMinutes : timerMinutes }
+        set { if scriptMode == .cards { cards.timerMinutes = newValue } else { timerMinutes = newValue } }
+    }
+
+    /// The timer seconds for the mode being written in.
+    var activeTimerSeconds: Int {
+        get { scriptMode == .cards ? cards.timerSeconds : timerSeconds }
+        set { if scriptMode == .cards { cards.timerSeconds = newValue } else { timerSeconds = newValue } }
+    }
+
     enum CodingKeys: String, CodingKey {
         case editorFontSize
         /// Only read, and only to carry an older size setting over. See `init(from:)`.
@@ -226,6 +279,7 @@ struct TeleprompterSettings: Codable, Equatable {
         case scriptMode
         case cardDisplay
         case watch
+        case cards
     }
 
     init(
@@ -242,7 +296,8 @@ struct TeleprompterSettings: Codable, Equatable {
         cueColor: CueColor,
         scriptMode: ScriptMode,
         cardDisplay: CardDisplay,
-        watch: WatchSettings
+        watch: WatchSettings,
+        cards: CardsSettings
     ) {
         self.editorFontSize = editorFontSize
         self.fontSize = fontSize
@@ -258,6 +313,7 @@ struct TeleprompterSettings: Codable, Equatable {
         self.scriptMode = scriptMode
         self.cardDisplay = cardDisplay
         self.watch = watch
+        self.cards = cards
     }
 
     init(from decoder: Decoder) throws {
@@ -302,6 +358,10 @@ struct TeleprompterSettings: Codable, Equatable {
             ?? TeleprompterSettings.default.cardDisplay
         watch = try container.decodeIfPresent(WatchSettings.self, forKey: .watch)
             ?? TeleprompterSettings.default.watch
+        // From before cards kept their own: start them on what both used.
+        cards = try container.decodeIfPresent(CardsSettings.self, forKey: .cards)
+            ?? CardsSettings(editorFontSize: editorFontSize, fontSize: fontSize, cueColor: cueColor,
+                             timerMinutes: timerMinutes, timerSeconds: timerSeconds)
     }
 
     static func clamp(_ value: Int, to range: ClosedRange<Int>) -> Int {
@@ -324,6 +384,7 @@ struct TeleprompterSettings: Codable, Equatable {
         try container.encode(scriptMode, forKey: .scriptMode)
         try container.encode(cardDisplay, forKey: .cardDisplay)
         try container.encode(watch, forKey: .watch)
+        try container.encode(cards, forKey: .cards)
     }
 }
 
@@ -604,6 +665,8 @@ Ask for questions before wrapping up.
         var defaults = TeleprompterSettings.default
         defaults.timerMinutes = settings.timerMinutes
         defaults.timerSeconds = settings.timerSeconds
+        defaults.cards.timerMinutes = settings.cards.timerMinutes
+        defaults.cards.timerSeconds = settings.cards.timerSeconds
         defaults.scriptMode = settings.scriptMode
         defaults.cardDisplay = settings.cardDisplay
         return defaults

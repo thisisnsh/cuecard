@@ -197,7 +197,7 @@ struct HomeView: View {
 
                             Spacer()
 
-                            Picker("Minutes", selection: $settingsService.settings.timerMinutes) {
+                            Picker("Minutes", selection: $settingsService.settings.activeTimerMinutes) {
                                 ForEach(0..<60) { minute in
                                     Text("\(minute)").tag(minute)
                                 }
@@ -210,7 +210,7 @@ struct HomeView: View {
                                 .font(.headline)
                                 .foregroundStyle(AppColors.textSecondary(for: colorScheme))
 
-                            Picker("Seconds", selection: $settingsService.settings.timerSeconds) {
+                            Picker("Seconds", selection: $settingsService.settings.activeTimerSeconds) {
                                 ForEach(0..<60) { second in
                                     Text(String(format: "%02d", second)).tag(second)
                                 }
@@ -335,9 +335,9 @@ struct HomeView: View {
                             text: $settingsService.notes,
                             isFocused: $isEditorFocused,
                             controller: editorController,
-                            cueColor: settingsService.settings.cueColor,
+                            cueColor: settingsService.settings.cards.cueColor,
                             colorScheme: colorScheme,
-                            fontSize: CGFloat(settingsService.settings.editorFontSize),
+                            fontSize: CGFloat(settingsService.settings.cards.editorFontSize),
                             cardLimit: settingsService.settings.cardDisplay.characterLimit,
                             bottomInset: isEditorFocused ? CueBar.height : Self.controlsHeight
                         )

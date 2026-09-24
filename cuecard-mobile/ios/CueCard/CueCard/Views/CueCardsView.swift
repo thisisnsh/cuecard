@@ -18,6 +18,7 @@ struct CueCardsView: View {
     @State private var hasOpenedDeck = false
     @State private var dragOffset: CGFloat = 0
     @State private var showingLockScreenHelp = false
+    @State private var showingSettings = false
     @Environment(\.openURL) private var openURL
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -100,6 +101,21 @@ struct CueCardsView: View {
                     }
                     .accessibilityElement(children: .combine)
                 }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(action: {
+                        AnalyticsEvents.logButtonClick("settings", screen: "cards")
+                        showingSettings = true
+                    }) {
+                        Image(systemName: "gearshape")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                    }
+                    .accessibilityLabel("Settings")
+                }
+            }
+            .sheet(isPresented: $showingSettings) {
+                CardsSettingsView()
+                    .environmentObject(settingsService)
             }
             .sheet(isPresented: $showingLockScreenHelp) {
                 NavigationStack {
@@ -177,8 +193,8 @@ struct CueCardsView: View {
                 let placement = placement(of: cardIndex - session.index, width: width)
                 CueCardFace(
                     runs: CueCards.runs(for: session.cards[cardIndex]),
-                    cueColor: settings.cueColor,
-                    fontSize: CGFloat(settings.fontSize),
+                    cueColor: settings.cards.cueColor,
+                    fontSize: CGFloat(settings.cards.fontSize),
                     colorScheme: colorScheme
                 )
                 .scaleEffect(placement.scale, anchor: .bottom)
