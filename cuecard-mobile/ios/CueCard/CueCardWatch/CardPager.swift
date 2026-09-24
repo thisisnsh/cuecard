@@ -10,6 +10,10 @@ struct CardPager: View {
     /// last, once every one has been gone through.
     @Binding var index: Int
     let cueColor: CueColor
+    /// When the deck's timer started, if it has one showing.
+    var timerStart: Date?
+    /// The timer's length in seconds. Zero counts up.
+    var timerDuration = 0
 
     @EnvironmentObject var connector: WatchConnector
     /// Wrist down with Always On: the card stays up, dimmed.
@@ -43,6 +47,11 @@ struct CardPager: View {
         }
         .toolbar(isLuminanceReduced ? .hidden : .automatic, for: .bottomBar)
         .toolbar {
+            if let timerStart, !isFinished {
+                ToolbarItem(placement: .topBarTrailing) {
+                    CardsTimerText(start: timerStart, duration: timerDuration)
+                }
+            }
             ToolbarItemGroup(placement: .bottomBar) {
                 Button {
                     index = max(index - 1, 0)
@@ -69,6 +78,21 @@ struct CardPager: View {
         }
         .onChange(of: index) {
             if settings.haptics { WKInterfaceDevice.current().play(.click) }
+        }
+    }
+}
+
+/// A deck's timer, recolored each second as it nears and runs past the end.
+struct CardsTimerText: View {
+    let start: Date
+    let duration: Int
+
+    var body: some View {
+        TimelineView(.periodic(from: start, by: 1)) { context in
+            let state = TeleprompterTimerState.running(since: start, duration: duration, at: context.date)
+            TimerText(state: state)
+                .font(.caption.weight(.semibold).monospacedDigit())
+                .foregroundStyle(state.tint.color)
         }
     }
 }

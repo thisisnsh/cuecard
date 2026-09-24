@@ -41,7 +41,8 @@ final class WatchSessionService: NSObject, ObservableObject {
 
         // The cue color or a watch setting changed.
         settingsSubscription = settings.$settings
-            .map { WatchSettingsKey(cueColor: $0.cards.cueColor, watch: $0.watch) }
+            .map { WatchSettingsKey(cueColor: $0.cards.cueColor, watch: $0.watch,
+                                    cardsTimerDuration: $0.cards.timerDurationSeconds) }
             .removeDuplicates()
             .dropFirst()
             .sink { [weak self] _ in
@@ -60,11 +61,14 @@ final class WatchSessionService: NSObject, ObservableObject {
                 deckID: deck.deckID,
                 title: deck.title,
                 cards: deck.cards,
-                index: deck.index
+                index: deck.index,
+                startedAt: deck.startedAt,
+                timerDuration: deck.timerDuration
             ),
             // The watch shows cards, so it draws cues in the cards' color.
             cueColor: SettingsService.shared.settings.cards.cueColor,
             settings: SettingsService.shared.settings.watch,
+            cardsTimerDuration: SettingsService.shared.settings.cards.timerDurationSeconds,
             sentAt: Date()
         )
     }
@@ -155,6 +159,7 @@ final class WatchSessionService: NSObject, ObservableObject {
 private struct WatchSettingsKey: Equatable {
     var cueColor: CueColor
     var watch: WatchSettings
+    var cardsTimerDuration: Int
 }
 
 extension WatchSessionService: WCSessionDelegate {

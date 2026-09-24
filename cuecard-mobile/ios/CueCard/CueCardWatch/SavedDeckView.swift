@@ -9,6 +9,8 @@ struct SavedDeckView: View {
     @EnvironmentObject var connector: WatchConnector
     @EnvironmentObject var store: DeckStore
     @State private var index = 0
+    /// When this deck was opened here, for its timer while it's read alone.
+    @State private var openedAt = Date()
 
     /// The iPhone's deck, while it is this one.
     private var linked: WatchCardsState? {
@@ -19,7 +21,9 @@ struct SavedDeckView: View {
     var body: some View {
         if let deck = store.deck(id: deckID) {
             let cards = linked?.cards ?? deck.cards
-            CardPager(cards: cards, index: $index, cueColor: connector.phone?.cueColor ?? .default)
+            CardPager(cards: cards, index: $index, cueColor: connector.phone?.cueColor ?? .default,
+                      timerStart: linked?.startedAt ?? openedAt,
+                      timerDuration: linked?.timerDuration ?? connector.phone?.cardsTimerDuration ?? 0)
                 .navigationTitle(cardProgress(index: index, count: cards.count))
                 .onAppear {
                     if let linked {

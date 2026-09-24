@@ -30,6 +30,8 @@ final class CueCardsSession: ObservableObject {
     var isFinished: Bool { index >= cards.count }
 
     private var pendingUpdate: Task<Void, Never>?
+    /// Waits for the timer to change color, to redraw the Lock Screen then.
+    private var timerColorUpdate: Task<Void, Never>?
 
     private static let storageKey = "cuecard_cards_session"
 
@@ -73,6 +75,7 @@ final class CueCardsSession: ObservableObject {
         isOnLockScreen = false
         lockScreenUnavailable = false
         save()
+        scheduleTimerColorUpdate()
         WatchSessionService.shared.stateChanged()
         if showOnLockScreen {
             self.showOnLockScreen()
@@ -133,6 +136,7 @@ final class CueCardsSession: ObservableObject {
         UserDefaults.standard.removeObject(forKey: Self.storageKey)
         isOnLockScreen = false
         lockScreenUnavailable = false
+        timerColorUpdate?.cancel()
         enqueue { await CueCardsLockScreen.clear() }
         WatchSessionService.shared.stateChanged()
     }
@@ -152,6 +156,7 @@ final class CueCardsSession: ObservableObject {
         startedAt = stored.startedAt ?? Date()
         timerDuration = stored.timerDuration ?? 0
         isOnLockScreen = CueCardsLockScreen.isActive(session: sessionID)
+        scheduleTimerColorUpdate()
         return true
     }
 
@@ -167,20 +172,7 @@ final class CueCardsSession: ObservableObject {
     /// Nil while no deck is open.
     func timerState(at now: Date = Date()) -> TeleprompterTimerState? {
         guard !cards.isEmpty else { return nil }
-        let remaining = timerDuration - Int(now.timeIntervalSince(startedAt))
-        let tint: TeleprompterTimerState.Tint
-        if timerDuration == 0 {
-            tint = .primary
-        } else if remaining < 0 {
-            tint = .red
-        } else if Double(remaining) / Double(timerDuration) <= 0.2 {
-            tint = .yellow
-        } else {
-            tint = .green
-        }
-        return TeleprompterTimerState(phase: .playing, tint: tint,
-                                      zeroDate: startedAt.addingTimeInterval(Double(timerDuration)),
-                                      pausedSeconds: 0, isOvertime: timerDuration > 0 && remaining < 0)
+        return .running(since: startedAt, duration: timerDuration, at: now)
     }
 
     /// Wait for the Lock Screen to catch up with the last move, so the app
@@ -195,6 +187,26 @@ final class CueCardsSession: ObservableObject {
         save()
         WatchSessionService.shared.stateChanged()
         updateLockScreen()
+    }
+
+    /// The Live Activity ticks the time itself but can't recolor it, so it
+    /// is redrawn as the timer turns yellow and again as it runs over.
+    private func scheduleTimerColorUpdate() {
+        timerColorUpdate?.cancel()
+        guard !cards.isEmpty, timerDuration > 0 else { return }
+        let duration = Double(timerDuration)
+        let now = Date()
+        let changes = [duration * 0.8, duration + 1]
+            .map { startedAt.addingTimeInterval($0 + 0.2) }
+            .filter { $0 > now }
+        guard let next = changes.first else { return }
+        let sessionID = sessionID
+        timerColorUpdate = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: UInt64(next.timeIntervalSince(now) * 1_000_000_000))
+            guard !Task.isCancelled, let self, self.sessionID == sessionID else { return }
+            self.updateLockScreen()
+            self.scheduleTimerColorUpdate()
+        }
     }
 
     private func updateLockScreen() {
@@ -238,7 +250,8 @@ final class CueCardsSession: ObservableObject {
         }
         var state = CueCardsWidgetState(sessionID: sessionID, title: bounded(title, bytes: 160), runs: runs,
                                         cueColor: SettingsService.shared.settings.cards.cueColor,
-                                        index: index, count: cards.count)
+                                        index: index, count: cards.count,
+                                        timer: timerState())
         // JSON escaping can expand control characters beyond their UTF-8 size.
         while !state.runs.isEmpty, let data = try? JSONEncoder().encode(state), data.count > 3000 {
             state.runs[state.runs.count - 1].text.removeLast()

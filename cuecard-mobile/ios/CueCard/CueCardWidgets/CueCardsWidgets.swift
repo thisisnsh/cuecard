@@ -12,6 +12,10 @@ private struct CueCardsSurface: View {
                 Text(state.title.isEmpty ? "Cards" : state.title)
                     .lineLimit(1)
                 Spacer(minLength: 8)
+                if let timer = state.timer, !state.isFinished {
+                    CueCardsTimer(timer: timer)
+                    Text("·")
+                }
                 Text(state.progress).monospacedDigit()
             }
             .font(.caption.weight(.semibold))
@@ -58,6 +62,21 @@ private struct CueCardsButtons: View {
     }
 }
 
+/// The deck's timer. The system ticks it, counting down to the zero date and
+/// up again past it; the app redraws it as its color changes.
+private struct CueCardsTimer: View {
+    @Environment(\.colorScheme) private var colorScheme
+    let timer: TeleprompterTimerState
+
+    var body: some View {
+        (Text(timer.isOvertime ? "-" : "") + Text(timer.zeroDate, style: .timer))
+            .monospacedDigit()
+            .multilineTextAlignment(.trailing)
+            .frame(maxWidth: 60, alignment: .trailing)
+            .foregroundStyle(timer.tint.color(for: colorScheme))
+    }
+}
+
 /// The card's text, cues in the cue color as the app draws them.
 private struct CueCardsText: View {
     @Environment(\.colorScheme) private var colorScheme
@@ -80,7 +99,13 @@ struct CueCardsLiveActivity: Widget {
                         .font(.caption)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    Text(context.state.progress).font(.caption.monospacedDigit())
+                    VStack(alignment: .trailing, spacing: 2) {
+                        if let timer = context.state.timer, !context.state.isFinished {
+                            CueCardsTimer(timer: timer)
+                        }
+                        Text(context.state.progress)
+                    }
+                    .font(.caption.monospacedDigit())
                 }
                 DynamicIslandExpandedRegion(.bottom) {
                     VStack(alignment: .leading, spacing: 8) {

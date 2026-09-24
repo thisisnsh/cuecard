@@ -32,6 +32,27 @@ struct TeleprompterTimerState: Codable, Hashable {
 }
 
 extension TeleprompterTimerState {
+    /// A timer that has been running since `start` without a pause, as a deck
+    /// of cards has: counting down from `duration`, or up when it is zero.
+    /// Green, yellow for the last fifth, red once it's over, like the
+    /// teleprompter's.
+    static func running(since start: Date, duration: Int, at now: Date = Date()) -> TeleprompterTimerState {
+        let remaining = duration - Int(now.timeIntervalSince(start))
+        let tint: Tint
+        if duration == 0 {
+            tint = .primary
+        } else if remaining < 0 {
+            tint = .red
+        } else if Double(remaining) / Double(duration) <= 0.2 {
+            tint = .yellow
+        } else {
+            tint = .green
+        }
+        return TeleprompterTimerState(phase: .playing, tint: tint,
+                                      zeroDate: start.addingTimeInterval(Double(duration)),
+                                      pausedSeconds: 0, isOvertime: duration > 0 && remaining < 0)
+    }
+
     /// Paused time in the same m:ss form the system's running timer uses.
     var pausedDisplay: String {
         let seconds = abs(pausedSeconds)

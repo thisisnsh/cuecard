@@ -12,6 +12,8 @@ struct CueCardsWidgetState: Codable, Hashable {
     var cueColor: CueColor
     var index: Int
     var count: Int
+    /// The deck's timer, ticked by the system between updates.
+    var timer: TeleprompterTimerState?
 
     var isFinished: Bool { index >= count }
     var progress: String { isFinished ? "Done" : "\(index + 1) of \(count)" }
