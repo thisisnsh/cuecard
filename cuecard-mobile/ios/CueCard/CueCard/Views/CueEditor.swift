@@ -45,6 +45,8 @@ final class CueTextView: UITextView {
 
     /// Breathing room left between the caret and whatever sits below it.
     private static let caretPadding: CGFloat = 8
+    /// In a card, room for the rest of the card below the caret as well.
+    private static let cardCaretPadding: CGFloat = 28
 
     private var keyboardScreenFrame: CGRect = .null
     private var appliedBottomInset: CGFloat?
@@ -73,6 +75,19 @@ final class CueTextView: UITextView {
             name: UIResponder.keyboardWillHideNotification,
             object: nil
         )
+        center.addObserver(
+            self,
+            selector: #selector(keyboardDidShow),
+            name: UIResponder.keyboardDidShowNotification,
+            object: nil
+        )
+    }
+
+    /// A card's list only makes room for the keyboard once it is up, so the
+    /// caret is brought clear of it then.
+    @objc private func keyboardDidShow(_ notification: Notification) {
+        guard !isScrollEnabled else { return }
+        scrollCaretIntoView(animated: true)
     }
 
     @objc private func keyboardWillChangeFrame(_ notification: Notification) {
@@ -130,8 +145,13 @@ final class CueTextView: UITextView {
     }
 
     /// Scroll so the caret sits inside the part of the editor nothing is covering.
-    func scrollCaretIntoView() {
-        guard isScrollEnabled, isFirstResponder, let caret = selectedTextRange?.end else { return }
+    func scrollCaretIntoView(animated: Bool = false) {
+        guard isFirstResponder, let caret = selectedTextRange?.end else { return }
+        guard isScrollEnabled else {
+            // After SwiftUI has grown the card to fit what was just typed.
+            DispatchQueue.main.async { [weak self] in self?.scrollCaretIntoList(animated: animated) }
+            return
+        }
 
         let rect = caretRect(for: caret).insetBy(dx: 0, dy: -Self.caretPadding)
         guard rect.minY.isFinite, rect.maxY.isFinite else { return }
@@ -149,6 +169,51 @@ final class CueTextView: UITextView {
         }
 
         setContentOffsetY(target)
+    }
+
+    /// A card's editor doesn't scroll, the list of cards does. Scroll that so
+    /// the caret sits clear of the keyboard and the cue bar riding on it.
+    private func scrollCaretIntoList(animated: Bool) {
+        guard isFirstResponder, let caret = selectedTextRange?.end, let window,
+              let list = enclosingScrollView else { return }
+
+        let rect = convert(caretRect(for: caret), to: window)
+            .insetBy(dx: 0, dy: -Self.cardCaretPadding)
+        guard rect.minY.isFinite, rect.maxY.isFinite else { return }
+
+        let listFrame = list.convert(list.bounds, to: window)
+        var visibleBottom = listFrame.maxY - list.safeAreaInsets.bottom
+        if !keyboardScreenFrame.isNull {
+            let keyboard = window.convert(keyboardScreenFrame, from: nil)
+            visibleBottom = min(visibleBottom, keyboard.minY)
+        }
+        visibleBottom -= keyboardOverlayHeight
+        let visibleTop = listFrame.minY + list.safeAreaInsets.top
+
+        var target = list.contentOffset.y
+        if rect.maxY > visibleBottom {
+            target += rect.maxY - visibleBottom
+        } else if rect.minY < visibleTop {
+            target -= visibleTop - rect.minY
+        } else {
+            return
+        }
+
+        let lowest = -list.adjustedContentInset.top
+        let highest = max(lowest, list.contentSize.height + list.adjustedContentInset.bottom - list.bounds.height)
+        let offset = min(max(target, lowest), highest)
+        guard offset != list.contentOffset.y else { return }
+        list.setContentOffset(CGPoint(x: list.contentOffset.x, y: offset), animated: animated)
+    }
+
+    /// The nearest scroll view this one sits in.
+    private var enclosingScrollView: UIScrollView? {
+        var view = superview
+        while let current = view {
+            if let scrollView = current as? UIScrollView { return scrollView }
+            view = current.superview
+        }
+        return nil
     }
 
     /// Scroll back down to the end of the text if the content has been left past it.

@@ -723,7 +723,8 @@ struct CardsEditorView: View {
                     colorScheme: colorScheme,
                     fontSize: fontSize,
                     cardLimit: cardLimit,
-                    growsWithText: true
+                    growsWithText: true,
+                    keyboardOverlayHeight: CueBar.height
                 )
             }
             .frame(minHeight: fontSize * 3, alignment: .topLeading)
