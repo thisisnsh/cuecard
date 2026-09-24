@@ -2,78 +2,9 @@ import ActivityKit
 import SwiftUI
 import WidgetKit
 
-struct CueCardsEntry: TimelineEntry {
-    let date: Date
-    let state: CueCardsWidgetState?
-}
-
-struct CueCardsProvider: TimelineProvider {
-    func placeholder(in context: Context) -> CueCardsEntry {
-        CueCardsEntry(date: .now, state: .preview)
-    }
-
-    func getSnapshot(in context: Context, completion: @escaping (CueCardsEntry) -> Void) {
-        completion(CueCardsEntry(date: .now, state: context.isPreview ? .preview : CueCardsWidgetStore.read()))
-    }
-
-    func getTimeline(in context: Context, completion: @escaping (Timeline<CueCardsEntry>) -> Void) {
-        completion(Timeline(entries: [CueCardsEntry(date: .now, state: CueCardsWidgetStore.read())], policy: .never))
-    }
-}
-
-struct CueCardsWidget: Widget {
-    var body: some WidgetConfiguration {
-        StaticConfiguration(kind: CueCardsWidgetStore.kind, provider: CueCardsProvider()) { entry in
-            if #available(iOS 17.0, *) {
-                CueCardsWidgetView(state: entry.state)
-                    .containerBackground(for: .widget) {
-                        CueCardsGlass()
-                    }
-            } else {
-                CueCardsWidgetView(state: entry.state)
-                    .padding()
-            }
-        }
-        .configurationDisplayName("Cards")
-        .description("Read your open deck and turn cards from your Home Screen.")
-        .supportedFamilies([.systemMedium, .systemLarge, .accessoryRectangular])
-    }
-}
-
-private struct CueCardsWidgetView: View {
-    @Environment(\.widgetFamily) private var family
-    let state: CueCardsWidgetState?
-
-    var body: some View {
-        if let state {
-            if family == .accessoryRectangular {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("Cards · \(state.progress)").font(.caption.weight(.semibold))
-                    CueCardsText(state: state).font(.caption).lineLimit(2)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-            } else {
-                CueCardsSurface(state: state, lineLimit: family == .systemLarge ? 10 : 3,
-                                textFont: family == .systemLarge ? .body.weight(.semibold) : .subheadline.weight(.semibold))
-            }
-        } else {
-            VStack(alignment: .leading, spacing: 6) {
-                Label("CueCard", systemImage: "rectangle.stack")
-                    .font(.headline)
-                Text("Open a deck in Cards mode to read it here.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-    }
-}
-
-/// Shared layout for Home Screen cards and the larger Lock Screen surface.
+/// The card on the Lock Screen: deck title, progress, text and buttons.
 private struct CueCardsSurface: View {
     let state: CueCardsWidgetState
-    var lineLimit = 3
-    var textFont: Font = .body.weight(.semibold)
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -87,8 +18,8 @@ private struct CueCardsSurface: View {
             .foregroundStyle(.secondary)
 
             CueCardsText(state: state)
-                .font(textFont)
-                .lineLimit(lineLimit)
+                .font(.body.weight(.semibold))
+                .lineLimit(3)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
 
             if #available(iOS 17.0, *) {
@@ -135,21 +66,6 @@ private struct CueCardsText: View {
     var body: some View {
         state.runs.text(primary: AppColors.textPrimary(for: colorScheme),
                         cue: state.cueColor.color(for: colorScheme))
-    }
-}
-
-/// The app's background, with a soft sheen across the top like light on
-/// glass. Where the system draws its own glass (clear and tinted Home
-/// Screens), it replaces this.
-private struct CueCardsGlass: View {
-    @Environment(\.colorScheme) private var colorScheme
-
-    var body: some View {
-        ZStack {
-            AppColors.background(for: colorScheme)
-            LinearGradient(colors: [.white.opacity(colorScheme == .dark ? 0.08 : 0.5), .clear],
-                           startPoint: .top, endPoint: .center)
-        }
     }
 }
 

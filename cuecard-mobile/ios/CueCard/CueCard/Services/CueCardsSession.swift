@@ -1,8 +1,7 @@
 import Combine
 import Foundation
-import WidgetKit
 
-/// The open deck shared by the app, Watch, widgets and Live Activity.
+/// The open deck shared by the app, Watch and Live Activity.
 /// Persisted so an intent can resume the session after the app exits.
 @MainActor
 final class CueCardsSession: ObservableObject {
@@ -42,18 +41,14 @@ final class CueCardsSession: ObservableObject {
     private var cueColorSubscription: AnyCancellable?
 
     private init() {
-        // Redraw the widgets and Live Activity in a newly picked cue color.
+        // Redraw the Live Activity in a newly picked cue color.
         cueColorSubscription = SettingsService.shared.$settings
             .map(\.cueColor)
             .removeDuplicates()
             .dropFirst()
             .sink { [weak self] _ in
                 // $settings fires before the change is stored.
-                Task { @MainActor in
-                    guard let self, !self.cards.isEmpty else { return }
-                    self.publishWidget()
-                    self.updateLockScreen()
-                }
+                Task { @MainActor in self?.updateLockScreen() }
             }
     }
 
@@ -129,12 +124,11 @@ final class CueCardsSession: ObservableObject {
         UserDefaults.standard.removeObject(forKey: Self.storageKey)
         isOnLockScreen = false
         lockScreenUnavailable = false
-        publishWidget()
         enqueue { await CueCardsLockScreen.clear() }
         WatchSessionService.shared.stateChanged()
     }
 
-    /// Restore a session for a widget, Live Activity or Watch command.
+    /// Restore a session for a Live Activity or Watch command.
     func restoreIfNeeded() -> Bool {
         if !cards.isEmpty { return true }
         guard let data = UserDefaults.standard.data(forKey: Self.storageKey),
@@ -147,7 +141,6 @@ final class CueCardsSession: ObservableObject {
         title = stored.title ?? ""
         deckID = stored.deckID
         isOnLockScreen = CueCardsLockScreen.isActive(session: sessionID)
-        publishWidget()
         return true
     }
 
@@ -222,13 +215,7 @@ final class CueCardsSession: ObservableObject {
         return state
     }
 
-    private func publishWidget() {
-        CueCardsWidgetStore.write(cards.isEmpty ? nil : widgetState)
-        WidgetCenter.shared.reloadTimelines(ofKind: CueCardsWidgetStore.kind)
-    }
-
     private func save() {
-        publishWidget()
         let stored = Stored(cards: cards, index: index,
                             sessionID: sessionID, title: title, deckID: deckID,
                             isOnLockScreen: isOnLockScreen)

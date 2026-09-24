@@ -3,7 +3,7 @@ import AppIntents
 import Foundation
 
 /// A presentation snapshot. Only the app writes it; commands run in the app
-/// process, keeping the app, Watch and widgets on one session.
+/// process, keeping the app, Watch and Live Activity on one session.
 struct CueCardsWidgetState: Codable, Hashable {
     var sessionID: UUID
     var title: String
@@ -15,33 +15,6 @@ struct CueCardsWidgetState: Codable, Hashable {
 
     var isFinished: Bool { index >= count }
     var progress: String { isFinished ? "Done" : "\(index + 1) of \(count)" }
-    var text: String { runs.map(\.text).joined() }
-
-    static let preview = Self(sessionID: UUID(), title: "My cards",
-                              runs: [CueCardRun(text: "Take a breath. ", isCue: false),
-                                     CueCardRun(text: "Look up.", isCue: true),
-                                     CueCardRun(text: " Start with your main idea.", isCue: false)],
-                              cueColor: .default, index: 0, count: 5)
-}
-
-enum CueCardsWidgetStore {
-    static let kind = "com.thisisnsh.cuecard.ios.cards"
-    static let groupID = "group.com.thisisnsh.cuecard.ios"
-    private static let key = "cards_widget_state"
-
-    static func read() -> CueCardsWidgetState? {
-        guard let data = UserDefaults(suiteName: groupID)?.data(forKey: key) else { return nil }
-        return try? JSONDecoder().decode(CueCardsWidgetState.self, from: data)
-    }
-
-    static func write(_ state: CueCardsWidgetState?) {
-        let defaults = UserDefaults(suiteName: groupID)
-        if let state, let data = try? JSONEncoder().encode(state) {
-            defaults?.set(data, forKey: key)
-        } else {
-            defaults?.removeObject(forKey: key)
-        }
-    }
 }
 
 struct CueCardsActivityAttributes: ActivityAttributes {

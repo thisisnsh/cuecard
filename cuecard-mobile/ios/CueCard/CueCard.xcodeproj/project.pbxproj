@@ -175,7 +175,6 @@
 		C0CA4D520000000000000002 /* CueCardsRemoteCommand+App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CueCardsRemoteCommand+App.swift"; sourceTree = "<group>"; };
 		C0CA4D520000000000000003 /* CueCardsRemoteCommand+Widget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CueCardsRemoteCommand+Widget.swift"; sourceTree = "<group>"; };
 		C0CA4D520000000000000004 /* CueCardsWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardsWidgets.swift; sourceTree = "<group>"; };
-		C0CA4D520000000000000005 /* CueCardWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CueCardWidgets.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -297,7 +296,6 @@
 		730 /* CueCardWidgets */ = {
 			isa = PBXGroup;
 			children = (
-				C0CA4D520000000000000005 /* CueCardWidgets.entitlements */,
 				C0CA4D520000000000000004 /* CueCardsWidgets.swift */,
 				C0CA4D520000000000000003 /* CueCardsRemoteCommand+Widget.swift */,
 				130 /* CueCardWidgetsBundle.swift */,
@@ -784,7 +782,6 @@
 		A05 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = CueCardWidgets/CueCardWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 18;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -813,7 +810,6 @@
 		A06 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_ENTITLEMENTS = CueCardWidgets/CueCardWidgets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 18;
 				GENERATE_INFOPLIST_FILE = YES;
