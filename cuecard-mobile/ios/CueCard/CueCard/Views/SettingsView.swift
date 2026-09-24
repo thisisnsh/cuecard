@@ -29,7 +29,7 @@ struct EditorSettingsView: View {
                 )
             }
 
-            AppleWatchSection(screen: "settings")
+            AppleWatchSection(screen: "settings", mode: settingsService.settings.scriptMode)
 
             AppearanceSection(cueColor: $settingsService.settings.activeCueColor)
 
@@ -126,6 +126,8 @@ struct TeleprompterSettingsView: View {
 
             PlaybackControlsSection()
 
+            AppleWatchSection(screen: Self.screen, mode: .teleprompter)
+
             AppearanceSection(cueColor: $settingsService.settings.cueColor)
 
             AdvancedSection(screen: Self.screen, footer: advancedFooter) {
@@ -181,7 +183,7 @@ struct CardsSettingsView: View {
                 )
             }
 
-            AppleWatchSection(screen: Self.screen)
+            AppleWatchSection(screen: Self.screen, mode: .cards)
 
             AppearanceSection(cueColor: $settingsService.settings.cards.cueColor)
 
@@ -315,9 +317,10 @@ private struct PlaybackControlsSection: View {
     }
 }
 
-/// The watch app: a way to install it while a watch is paired without it,
-/// then how it shows cards and which saved notes are on it, to read there with
-/// the iPhone out of reach. Left out when no watch is paired.
+/// The watch app: what it does in the mode these settings belong to, a way to
+/// install it while a watch is paired without it, then how it shows cards and
+/// which saved notes are on it, to read there with the iPhone out of reach.
+/// Left out when no watch is paired.
 private struct AppleWatchSection: View {
     @EnvironmentObject var settingsService: SettingsService
     @ObservedObject private var watch = WatchSessionService.shared
@@ -325,16 +328,70 @@ private struct AppleWatchSection: View {
     @Environment(\.openURL) private var openURL
 
     let screen: String
+    let mode: ScriptMode
 
     /// The Watch app on the iPhone, open on its App Store.
     private static let watchAppURL = URL(string: "itms-watchs://")!
 
+    private struct Capability: Identifiable {
+        let title: String
+        let systemImage: String
+        let detail: String
+        var id: String { title }
+    }
+
+    private var capabilities: [Capability] {
+        switch mode {
+        case .teleprompter:
+            return [
+                Capability(title: "Play and Pause", systemImage: "playpause.fill",
+                           detail: "Start and stop the teleprompter from your wrist."),
+                Capability(title: "Skip Back", systemImage: "gobackward",
+                           detail: "Go back 10 seconds when you lose your place."),
+                Capability(title: "See the Timer", systemImage: "timer",
+                           detail: "The time left, in the same colors as the app."),
+                Capability(title: "Feel Haptics", systemImage: "hand.tap",
+                           detail: "A tap on your wrist as you play, pause or skip back."),
+            ]
+        case .cards:
+            return [
+                Capability(title: "Turn Cards", systemImage: "rectangle.stack",
+                           detail: "Swipe or tap Next to move the deck on your iPhone and Lock Screen."),
+                Capability(title: "Read Without Your iPhone", systemImage: "applewatch",
+                           detail: "Decks you keep on your watch open there on their own."),
+                Capability(title: "See the Timer", systemImage: "timer",
+                           detail: "The cards timer runs on your wrist too."),
+                Capability(title: "Feel Haptics", systemImage: "hand.tap",
+                           detail: "A tap on your wrist as each card changes."),
+            ]
+        }
+    }
+
     var body: some View {
+        if watch.isPaired {
+            Section {
+                ForEach(capabilities) { capability in
+                    row(capability)
+                }
+                if !watch.isWatchAppInstalled {
+                    installButton
+                }
+            } header: {
+                Text("With Apple Watch")
+            } footer: {
+                if !watch.isWatchAppInstalled {
+                    Text("Opens the Watch app. Under Available Apps, tap Install next to CueCard.")
+                }
+            }
+        }
+
         if watch.isWatchAppInstalled {
             Section {
-                Picker("Card Text Size", selection: $settingsService.settings.watch.cardTextSize) {
-                    ForEach(WatchCardTextSize.allCases, id: \.self) { size in
-                        Text(size.rawValue).tag(size)
+                if mode == .cards {
+                    Picker("Card Text Size", selection: $settingsService.settings.watch.cardTextSize) {
+                        ForEach(WatchCardTextSize.allCases, id: \.self) { size in
+                            Text(size.rawValue).tag(size)
+                        }
                     }
                 }
                 Toggle("Haptics", isOn: $settingsService.settings.watch.haptics)
@@ -344,52 +401,69 @@ private struct AppleWatchSection: View {
                 Text("Haptics tap your wrist as the card changes, and when you press play or skip back.")
             }
 
-            Section {
-                if settingsService.savedNotes.isEmpty {
-                    Text("Save a note to put it on your watch.")
-                        .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                } else {
-                    ForEach(settingsService.savedNotes.sorted { $0.updatedAt > $1.updatedAt }) { note in
-                        Toggle(isOn: Binding(
-                            get: { settingsService.watchNoteIDs.contains(note.id) },
-                            set: { isOn in
-                                AnalyticsEvents.logButtonClick(isOn ? "watch_add_note" : "watch_remove_note",
-                                                               screen: screen)
-                                settingsService.setOnWatch(isOn, noteID: note.id)
+            if mode == .cards {
+                Section {
+                    if settingsService.savedNotes.isEmpty {
+                        Text("Save a deck to put it on your watch.")
+                            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                    } else {
+                        ForEach(settingsService.savedNotes.sorted { $0.updatedAt > $1.updatedAt }) { note in
+                            Toggle(isOn: Binding(
+                                get: { settingsService.watchNoteIDs.contains(note.id) },
+                                set: { isOn in
+                                    AnalyticsEvents.logButtonClick(isOn ? "watch_add_note" : "watch_remove_note",
+                                                                   screen: screen)
+                                    settingsService.setOnWatch(isOn, noteID: note.id)
+                                }
+                            )) {
+                                Text(note.title)
+                                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                             }
-                        )) {
-                            Text(note.title)
-                                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                         }
                     }
+                } header: {
+                    Text("On Watch")
+                } footer: {
+                    Text("Saved content you turn on stays on your watch, to swipe through card by card even without your iPhone.\n\n\(WatchTips.returnToClock)")
                 }
-            } header: {
-                Text("On Watch")
-            } footer: {
-                Text("Notes you turn on stay on your watch, to swipe through card by card even without your iPhone. A note splits into cards where it has separators.\n\n\(WatchTips.returnToClock)")
-            }
-        } else if watch.isPaired {
-            Section {
-                Button {
-                    AnalyticsEvents.logButtonClick("watch_install", screen: screen)
-                    openURL(Self.watchAppURL)
-                } label: {
-                    HStack {
-                        Text("Install on Apple Watch")
-                            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                        Spacer()
-                        Image(systemName: "applewatch")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                    }
-                    .contentShape(Rectangle())
-                }
-            } header: {
-                Text("Apple Watch")
-            } footer: {
-                Text("Opens the Watch app. Under Available Apps, tap Install next to CueCard. Then move through cards and control the teleprompter from your wrist.")
             }
         }
+    }
+
+    private var installButton: some View {
+        Button {
+            AnalyticsEvents.logButtonClick("watch_install", screen: screen)
+            openURL(Self.watchAppURL)
+        } label: {
+            HStack {
+                Text("Install on Apple Watch")
+                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                Spacer()
+                Image(systemName: "applewatch")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+            }
+            .contentShape(Rectangle())
+        }
+    }
+
+    private func row(_ capability: Capability) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: capability.systemImage)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                .frame(width: 22)
+                .padding(.top, 2)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(capability.title)
+                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                Text(capability.detail)
+                    .font(.footnote)
+                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+            }
+        }
+        .padding(.vertical, 2)
+        .accessibilityElement(children: .combine)
     }
 }
 
