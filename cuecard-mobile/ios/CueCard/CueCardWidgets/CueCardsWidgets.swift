@@ -77,14 +77,21 @@ private struct CueCardsTimer: View {
     }
 }
 
-/// The card's text, cues in the cue color as the app draws them.
+/// The card's text, cues in the cue color as the app draws them. It fades
+/// between cards rather than blurring, and ends in an ellipsis when cut off.
 private struct CueCardsText: View {
     @Environment(\.colorScheme) private var colorScheme
     let state: CueCardsWidgetState
 
     var body: some View {
-        state.runs.text(primary: AppColors.textPrimary(for: colorScheme),
-                        cue: state.cueColor.color(for: colorScheme))
+        // Text cut off at a paragraph break gets no ellipsis, so break lines
+        // within one paragraph instead.
+        state.runs
+            .map { CueCardRun(text: $0.text.replacingOccurrences(of: "\n", with: "\u{2028}"), isCue: $0.isCue) }
+            .text(primary: AppColors.textPrimary(for: colorScheme),
+                  cue: state.cueColor.color(for: colorScheme))
+            .truncationMode(.tail)
+            .contentTransition(.opacity)
     }
 }
 
