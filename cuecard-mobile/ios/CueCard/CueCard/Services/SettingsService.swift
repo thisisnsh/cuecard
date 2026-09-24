@@ -332,15 +332,32 @@ struct SavedNote: Codable, Identifiable, Equatable {
     let id: UUID
     var title: String
     var content: String
+    /// The mode it was written in, and opens back up in.
+    var mode: ScriptMode
     let createdAt: Date
     var updatedAt: Date
 
-    init(id: UUID = UUID(), title: String, content: String, createdAt: Date = Date(), updatedAt: Date = Date()) {
+    init(id: UUID = UUID(), title: String, content: String, mode: ScriptMode,
+         createdAt: Date = Date(), updatedAt: Date = Date()) {
         self.id = id
         self.title = title
         self.content = content
+        self.mode = mode
         self.createdAt = createdAt
         self.updatedAt = updatedAt
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        title = try container.decode(String.self, forKey: .title)
+        content = try container.decode(String.self, forKey: .content)
+        // Notes saved before each mode kept its own are cards if they were
+        // split into any.
+        mode = try container.decodeIfPresent(ScriptMode.self, forKey: .mode)
+            ?? (CueCards.separatorRanges(in: content).isEmpty ? .teleprompter : .cards)
+        createdAt = try container.decode(Date.self, forKey: .createdAt)
+        updatedAt = try container.decode(Date.self, forKey: .updatedAt)
     }
 }
 
@@ -351,9 +368,13 @@ class SettingsService: ObservableObject {
 
     private let userDefaults = UserDefaults.standard
     private let settingsKey = "cuecard_settings"
+    /// The teleprompter's script. Named from when it was the only one.
     private let notesKey = "cuecard_notes"
+    private let cardsNotesKey = "cuecard_cards_notes"
     private let savedNotesKey = "cuecard_saved_notes"
+    /// The teleprompter's open note. Named from when it was the only one.
     private let currentNoteIdKey = "cuecard_current_note_id"
+    private let cardsNoteIdKey = "cuecard_cards_note_id"
     private let watchNoteIDsKey = "cuecard_watch_note_ids"
     private let hasSeenWelcomeKey = "cuecard_has_seen_welcome"
     /// Cues used to be saved in a library. They're written straight into the
@@ -367,9 +388,21 @@ class SettingsService: ObservableObject {
         }
     }
 
-    @Published var notes: String {
-        didSet {
-            saveNotes()
+    /// Each mode keeps its own script, so switching modes never shows one
+    /// written for the other.
+    @Published private var teleprompterNotes: String {
+        didSet { userDefaults.set(teleprompterNotes, forKey: notesKey) }
+    }
+
+    @Published private var cardsNotes: String {
+        didSet { userDefaults.set(cardsNotes, forKey: cardsNotesKey) }
+    }
+
+    /// The script for the mode the editor is in.
+    var notes: String {
+        get { notes(for: settings.scriptMode) }
+        set {
+            setNotes(newValue, for: settings.scriptMode)
             // Update the timestamp on the current note when content changes (but not when loading)
             if !isLoadingNote,
                let id = currentNoteId,
@@ -379,15 +412,44 @@ class SettingsService: ObservableObject {
         }
     }
 
+    func notes(for mode: ScriptMode) -> String {
+        mode == .cards ? cardsNotes : teleprompterNotes
+    }
+
+    private func setNotes(_ text: String, for mode: ScriptMode) {
+        if mode == .cards {
+            cardsNotes = text
+        } else {
+            teleprompterNotes = text
+        }
+    }
+
     @Published var savedNotes: [SavedNote] = [] {
         didSet {
             saveSavedNotes()
         }
     }
 
-    @Published var currentNoteId: UUID? {
-        didSet {
-            saveCurrentNoteId()
+    /// The saved note open in each mode.
+    @Published private var teleprompterNoteId: UUID? {
+        didSet { saveNoteId(teleprompterNoteId, forKey: currentNoteIdKey) }
+    }
+
+    @Published private var cardsNoteId: UUID? {
+        didSet { saveNoteId(cardsNoteId, forKey: cardsNoteIdKey) }
+    }
+
+    /// The saved note open in the mode the editor is in.
+    var currentNoteId: UUID? {
+        get { settings.scriptMode == .cards ? cardsNoteId : teleprompterNoteId }
+        set { setNoteId(newValue, for: settings.scriptMode) }
+    }
+
+    private func setNoteId(_ id: UUID?, for mode: ScriptMode) {
+        if mode == .cards {
+            cardsNoteId = id
+        } else {
+            teleprompterNoteId = id
         }
     }
 
@@ -446,28 +508,41 @@ Ask for questions before wrapping up.
 
         // Load settings from UserDefaults
         var needsSave = false
+        let loadedSettings: TeleprompterSettings
         if let data = userDefaults.data(forKey: settingsKey),
            let decoded = try? JSONDecoder().decode(TeleprompterSettings.self, from: data) {
-            let normalizedSettings = decoded
-            self.settings = normalizedSettings
+            loadedSettings = decoded
         } else {
-            self.settings = .default
+            loadedSettings = .default
             needsSave = true
         }
+        self.settings = loadedSettings
 
         // Load notes from UserDefaults
-        self.notes = userDefaults.string(forKey: notesKey) ?? ""
+        let legacyNotes = userDefaults.string(forKey: notesKey) ?? ""
+        let legacyNoteId = userDefaults.string(forKey: currentNoteIdKey).flatMap(UUID.init(uuidString:))
+        if userDefaults.object(forKey: cardsNotesKey) == nil && loadedSettings.scriptMode == .cards {
+            // From before each mode kept its own script: what was being
+            // written belongs to cards, the mode it was written in.
+            self.teleprompterNotes = ""
+            self.cardsNotes = legacyNotes
+            self.teleprompterNoteId = nil
+            self.cardsNoteId = legacyNoteId
+            userDefaults.set(legacyNotes, forKey: cardsNotesKey)
+            userDefaults.set("", forKey: notesKey)
+            userDefaults.set(legacyNoteId?.uuidString, forKey: cardsNoteIdKey)
+            userDefaults.removeObject(forKey: currentNoteIdKey)
+        } else {
+            self.teleprompterNotes = legacyNotes
+            self.cardsNotes = userDefaults.string(forKey: cardsNotesKey) ?? ""
+            self.teleprompterNoteId = legacyNoteId
+            self.cardsNoteId = userDefaults.string(forKey: cardsNoteIdKey).flatMap(UUID.init(uuidString:))
+        }
 
         // Load saved notes from UserDefaults
         if let data = userDefaults.data(forKey: savedNotesKey),
            let decoded = try? JSONDecoder().decode([SavedNote].self, from: data) {
             self.savedNotes = decoded
-        }
-
-        // Load current note id
-        if let idString = userDefaults.string(forKey: currentNoteIdKey),
-           let id = UUID(uuidString: idString) {
-            self.currentNoteId = id
         }
 
         if let strings = userDefaults.stringArray(forKey: watchNoteIDsKey) {
@@ -488,21 +563,17 @@ Ask for questions before wrapping up.
         }
     }
 
-    private func saveNotes() {
-        userDefaults.set(notes, forKey: notesKey)
-    }
-
     private func saveSavedNotes() {
         if let encoded = try? JSONEncoder().encode(savedNotes) {
             userDefaults.set(encoded, forKey: savedNotesKey)
         }
     }
 
-    private func saveCurrentNoteId() {
-        if let id = currentNoteId {
-            userDefaults.set(id.uuidString, forKey: currentNoteIdKey)
+    private func saveNoteId(_ id: UUID?, forKey key: String) {
+        if let id {
+            userDefaults.set(id.uuidString, forKey: key)
         } else {
-            userDefaults.removeObject(forKey: currentNoteIdKey)
+            userDefaults.removeObject(forKey: key)
         }
     }
 
@@ -543,7 +614,7 @@ Ask for questions before wrapping up.
         let trimmedContent = notes.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedContent.isEmpty else { return }
 
-        let note = SavedNote(title: title, content: notes)
+        let note = SavedNote(title: title, content: notes, mode: settings.scriptMode)
         savedNotes.insert(note, at: 0)
         currentNoteId = note.id
     }
@@ -566,8 +637,9 @@ Ask for questions before wrapping up.
         updateNote(id: id, content: notes)
     }
 
-    /// Load a saved note into the editor
+    /// Load a saved note into the editor, switching to the mode it was written in.
     func loadNote(_ note: SavedNote) {
+        settings.scriptMode = note.mode
         isLoadingNote = true
         notes = note.content
         currentNoteId = note.id
@@ -578,9 +650,8 @@ Ask for questions before wrapping up.
     func deleteNote(id: UUID) {
         savedNotes.removeAll { $0.id == id }
         watchNoteIDs.remove(id)
-        if currentNoteId == id {
-            currentNoteId = nil
-        }
+        if teleprompterNoteId == id { teleprompterNoteId = nil }
+        if cardsNoteId == id { cardsNoteId = nil }
     }
 
     /// Create a new empty note
@@ -632,14 +703,18 @@ Ask for questions before wrapping up.
     /// Clear all stored data
     func clearAllData() {
         settings = .default
-        notes = ""
+        teleprompterNotes = ""
+        cardsNotes = ""
         savedNotes = []
-        currentNoteId = nil
+        teleprompterNoteId = nil
+        cardsNoteId = nil
         watchNoteIDs = []
         userDefaults.removeObject(forKey: settingsKey)
         userDefaults.removeObject(forKey: notesKey)
+        userDefaults.removeObject(forKey: cardsNotesKey)
         userDefaults.removeObject(forKey: savedNotesKey)
         userDefaults.removeObject(forKey: currentNoteIdKey)
+        userDefaults.removeObject(forKey: cardsNoteIdKey)
         ReviewPromptService.shared.reset()
     }
 }
