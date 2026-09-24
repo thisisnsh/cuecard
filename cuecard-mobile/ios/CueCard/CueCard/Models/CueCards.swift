@@ -16,6 +16,13 @@ enum ScriptMode: String, Codable, CaseIterable, Identifiable {
         case .cards: return "Cards"
         }
     }
+
+    var systemImage: String {
+        switch self {
+        case .teleprompter: return "text.alignleft"
+        case .cards: return "rectangle.stack"
+        }
+    }
 }
 
 /// Where a deck of cards is read. It sets how long a card can be: a

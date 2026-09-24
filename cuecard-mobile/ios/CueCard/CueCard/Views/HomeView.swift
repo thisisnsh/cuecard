@@ -43,24 +43,36 @@ struct HomeView: View {
     private var isCardsMode: Bool { settingsService.settings.scriptMode == .cards }
 
     /// Teleprompter or cards: what the editor writes and the Play button opens.
-    private var modePicker: some View {
-        Picker("Mode", selection: Binding(
-            get: { settingsService.settings.scriptMode },
-            set: { mode in
-                AnalyticsEvents.logButtonClick("mode_\(mode.rawValue)", screen: "home")
-                if showingTimerPicker { closeTimerPicker() }
-                settingsService.settings.scriptMode = mode
+    private var modeMenu: some View {
+        let current = settingsService.settings.scriptMode
+
+        return Menu {
+            Picker("Mode", selection: Binding(
+                get: { settingsService.settings.scriptMode },
+                set: { mode in
+                    AnalyticsEvents.logButtonClick("mode_\(mode.rawValue)", screen: "home")
+                    if showingTimerPicker { closeTimerPicker() }
+                    isEditorFocused = false
+                    settingsService.settings.scriptMode = mode
+                }
+            )) {
+                ForEach(ScriptMode.allCases) { mode in
+                    Label(mode.displayName, systemImage: mode.systemImage)
+                        .tag(mode)
+                }
             }
-        )) {
-            ForEach(ScriptMode.allCases) { mode in
-                Image(systemName: mode == .cards ? "rectangle.stack" : "text.alignleft")
-                    .accessibilityLabel(mode.displayName)
-                    .tag(mode)
+        } label: {
+            HStack(spacing: 6) {
+                Text(current.displayName)
+                    .font(.headline)
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
             }
+            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+            .fixedSize()
         }
-        .pickerStyle(.segmented)
-        .frame(width: 112)
-        .accessibilityLabel("Reading mode")
+        .accessibilityLabel("Mode: \(current.displayName)")
     }
 
     /// Where the cards will be read. It is chosen before writing, since it sets
@@ -463,19 +475,8 @@ struct HomeView: View {
             .toolbarBackground(AppColors.background(for: colorScheme), for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
-                ToolbarItem(placement: .principal) {
-                    modePicker
-                }
-
                 ToolbarItem(placement: .topBarLeading) {
-                    Button(action: {
-                        AnalyticsEvents.logButtonClick("saved_notes", screen: "home")
-                        showingSavedNotes = true
-                    }) {
-                        Image(systemName: "folder")
-                            .font(.title3)
-                            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                    }
+                    modeMenu
                 }
 
                 ToolbarItem(placement: .topBarTrailing) {
@@ -517,7 +518,14 @@ struct HomeView: View {
                                 AnalyticsEvents.logButtonClick("new_note", screen: "home")
                                 settingsService.createNewNote()
                             }) {
-                                Label("New Note", systemImage: "square.and.pencil")
+                                Label("New", systemImage: "square.and.pencil")
+                            }
+
+                            Button(action: {
+                                AnalyticsEvents.logButtonClick("saved_notes", screen: "home")
+                                showingSavedNotes = true
+                            }) {
+                                Label("Saved Content", systemImage: "folder")
                             }
 
                             Divider()
@@ -694,6 +702,12 @@ struct SavedNotesView: View {
         return formatter
     }()
 
+    /// The start of a note, with card breaks read as spaces.
+    private func preview(of note: SavedNote) -> String {
+        String(CueCards.removingSeparators(from: note.content).prefix(120))
+            .replacingOccurrences(of: "\n", with: " ")
+    }
+
     var body: some View {
         NavigationStack {
             Group {
@@ -703,11 +717,11 @@ struct SavedNotesView: View {
                             .font(.system(size: 48))
                             .foregroundStyle(AppColors.textSecondary(for: colorScheme))
 
-                        Text("No Saved Notes")
+                        Text("No Saved Content")
                             .font(.headline)
                             .foregroundStyle(AppColors.textPrimary(for: colorScheme))
 
-                        Text("Save your notes to access them later")
+                        Text("Save your scripts and cards to open them later")
                             .font(.subheadline)
                             .foregroundStyle(AppColors.textSecondary(for: colorScheme))
                             .multilineTextAlignment(.center)
@@ -723,11 +737,22 @@ struct SavedNotesView: View {
                                 dismiss()
                             }) {
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text(note.title)
-                                        .font(.headline)
-                                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                                    HStack(spacing: 8) {
+                                        Text(note.title)
+                                            .font(.headline)
+                                            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
 
-                                    Text(note.content.prefix(100).replacingOccurrences(of: "\n", with: " "))
+                                        if note.mode == .cards {
+                                            Text("Cards")
+                                                .font(.caption2.weight(.semibold))
+                                                .foregroundStyle(AppColors.green(for: colorScheme))
+                                                .padding(.horizontal, 8)
+                                                .padding(.vertical, 3)
+                                                .background(Capsule().fill(AppColors.green(for: colorScheme).opacity(0.15)))
+                                        }
+                                    }
+
+                                    Text(preview(of: note))
                                         .font(.subheadline)
                                         .foregroundStyle(AppColors.textSecondary(for: colorScheme))
                                         .lineLimit(2)
@@ -760,7 +785,7 @@ struct SavedNotesView: View {
                     }
                 }
             }
-            .navigationTitle("Saved Notes")
+            .navigationTitle("Saved Content")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
