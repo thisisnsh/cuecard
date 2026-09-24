@@ -2,8 +2,8 @@ import AppIntents
 import Foundation
 
 /// Playback commands that reach a running session without opening the app:
-/// the Control Center and Action button controls. Shared by the app and the
-/// widget extension. A Live Activity intent always runs in the app's process,
+/// the Control Center and Action button control, and the watch. Shared by the
+/// app and the widget extension. A Live Activity intent always runs in the app's process,
 /// where `run()` drives the session; the widget extension only needs the
 /// types to build its controls.
 enum TeleprompterRemoteCommand {
@@ -27,17 +27,6 @@ struct ToggleTeleprompterPlaybackIntent: LiveActivityIntent {
 
     func perform() async throws -> some IntentResult {
         guard await TeleprompterRemoteCommand.togglePlayPause.run() else { throw TeleprompterNotRunningError() }
-        return .result()
-    }
-}
-
-@available(iOS 17.0, *)
-struct SkipBackTeleprompterIntent: LiveActivityIntent {
-    static var title: LocalizedStringResource = "Skip Teleprompter Back 10 Seconds"
-    static var description = IntentDescription("Moves the teleprompter's script back 10 seconds. The timer carries on.")
-
-    func perform() async throws -> some IntentResult {
-        guard await TeleprompterRemoteCommand.skipBack.run() else { throw TeleprompterNotRunningError() }
         return .result()
     }
 }
