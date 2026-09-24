@@ -41,3 +41,20 @@ extension TeleprompterTimerState {
         return isOvertime ? "-\(formatted)" : formatted
     }
 }
+
+#if os(iOS)
+import SwiftUI
+
+extension TeleprompterTimerState.Tint {
+    /// The app's color for this tint.
+    func color(for colorScheme: ColorScheme) -> Color {
+        switch self {
+        case .primary: return AppColors.textPrimary(for: colorScheme)
+        case .pink: return AppColors.pink(for: colorScheme)
+        case .green: return AppColors.green(for: colorScheme)
+        case .yellow: return AppColors.yellow(for: colorScheme)
+        case .red: return AppColors.red(for: colorScheme)
+        }
+    }
+}
+#endif

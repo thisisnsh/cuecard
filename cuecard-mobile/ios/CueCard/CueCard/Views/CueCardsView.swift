@@ -90,14 +90,18 @@ struct CueCardsView: View {
                 }
                 ToolbarItem(placement: .principal) {
                     VStack(spacing: 2) {
+                        // The dots show where the deck is, so the title
+                        // bar is the timer's.
+                        TimelineView(.periodic(from: session.startedAt, by: 1)) { context in
+                            timerText(at: context.date)
+                        }
                         Text(session.title.isEmpty ? title : session.title)
-                            .font(.subheadline.weight(.semibold))
-                            .lineLimit(1)
-                        Text(progress)
-                            .font(.caption.monospacedDigit())
+                            .font(.caption)
                             .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                            .lineLimit(1)
                     }
                     .accessibilityElement(children: .combine)
+                    .accessibilityValue(progress)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button(action: {
@@ -168,6 +172,21 @@ struct CueCardsView: View {
                 "count": cards.count,
                 "display": settings.cardDisplay.rawValue
             ])
+        }
+    }
+
+    // MARK: - Timer
+
+    /// Time left on the cards timer, or time since the deck opened with no
+    /// timer set, the way the teleprompter shows it.
+    @ViewBuilder
+    private func timerText(at date: Date) -> some View {
+        if let state = session.timerState(at: date) {
+            let elapsed = Int(date.timeIntervalSince(session.startedAt))
+            let seconds = session.timerDuration > 0 ? session.timerDuration - elapsed : elapsed
+            Text(" \(TeleprompterParser.formatTime(seconds)) ")
+                .font(.system(size: 16, weight: .bold, design: .monospaced))
+                .foregroundStyle(state.tint.color(for: colorScheme))
         }
     }
 

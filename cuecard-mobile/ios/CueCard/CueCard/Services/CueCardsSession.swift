@@ -21,6 +21,11 @@ final class CueCardsSession: ObservableObject {
     @Published private(set) var isOnLockScreen = false
     /// Live Activities are disabled or the activity could not be started.
     @Published private(set) var lockScreenUnavailable = false
+    /// When the deck was opened. Its timer runs from here.
+    @Published private(set) var startedAt = Date()
+    /// The cards timer as it was set when the deck was opened, in seconds.
+    /// Zero counts up instead.
+    private(set) var timerDuration = 0
 
     var isFinished: Bool { index >= cards.count }
 
@@ -36,6 +41,8 @@ final class CueCardsSession: ObservableObject {
         var title: String?
         var deckID: UUID?
         var isOnLockScreen: Bool?
+        var startedAt: Date?
+        var timerDuration: Int?
     }
 
     private var cueColorSubscription: AnyCancellable?
@@ -61,6 +68,8 @@ final class CueCardsSession: ObservableObject {
         self.deckID = deckID
         self.index = min(max(index, 0), cards.count)
         sessionID = UUID()
+        startedAt = Date()
+        timerDuration = SettingsService.shared.settings.cards.timerDurationSeconds
         isOnLockScreen = false
         lockScreenUnavailable = false
         save()
@@ -140,6 +149,8 @@ final class CueCardsSession: ObservableObject {
         sessionID = stored.sessionID ?? UUID()
         title = stored.title ?? ""
         deckID = stored.deckID
+        startedAt = stored.startedAt ?? Date()
+        timerDuration = stored.timerDuration ?? 0
         isOnLockScreen = CueCardsLockScreen.isActive(session: sessionID)
         return true
     }
@@ -149,6 +160,27 @@ final class CueCardsSession: ObservableObject {
         guard restoreIfNeeded() else { return }
         isOnLockScreen = CueCardsLockScreen.isActive(session: sessionID)
         updateLockScreen()
+    }
+
+    /// The deck's timer at `now`, colored the way the teleprompter's is:
+    /// green, yellow for the last fifth, red and counting up once it's over.
+    /// Nil while no deck is open.
+    func timerState(at now: Date = Date()) -> TeleprompterTimerState? {
+        guard !cards.isEmpty else { return nil }
+        let remaining = timerDuration - Int(now.timeIntervalSince(startedAt))
+        let tint: TeleprompterTimerState.Tint
+        if timerDuration == 0 {
+            tint = .primary
+        } else if remaining < 0 {
+            tint = .red
+        } else if Double(remaining) / Double(timerDuration) <= 0.2 {
+            tint = .yellow
+        } else {
+            tint = .green
+        }
+        return TeleprompterTimerState(phase: .playing, tint: tint,
+                                      zeroDate: startedAt.addingTimeInterval(Double(timerDuration)),
+                                      pausedSeconds: 0, isOvertime: timerDuration > 0 && remaining < 0)
     }
 
     /// Wait for the Lock Screen to catch up with the last move, so the app
@@ -218,7 +250,8 @@ final class CueCardsSession: ObservableObject {
     private func save() {
         let stored = Stored(cards: cards, index: index,
                             sessionID: sessionID, title: title, deckID: deckID,
-                            isOnLockScreen: isOnLockScreen)
+                            isOnLockScreen: isOnLockScreen,
+                            startedAt: startedAt, timerDuration: timerDuration)
         if let data = try? JSONEncoder().encode(stored) {
             UserDefaults.standard.set(data, forKey: Self.storageKey)
         }
