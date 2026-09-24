@@ -623,6 +623,8 @@ struct CardsEditorView: View {
 
     static let cornerRadius: CGFloat = 22
     private static let newCardButtonID = "new-card"
+    /// The first card starts below the top fade, never inside it.
+    private static let topFade: CGFloat = 20
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -668,10 +670,16 @@ struct CardsEditorView: View {
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
             .scrollDismissesKeyboard(.interactively)
-            .contentMargins(.top, 8, for: .scrollContent)
+            .contentMargins(.top, Self.topFade - 8, for: .scrollContent)
             .contentMargins(.bottom, bottomInset + 16, for: .scrollContent)
         }
-        .scriptEdgeFade(for: colorScheme, top: 12, bottom: 40)
+        // A list draws on past its frame into the home indicator's strip, below
+        // where the fade ends. Kept inside it, the cards fade out before the
+        // edge like the script does.
+        .clipped()
+        // The bottom fade reaches up past what floats over the list, so a card
+        // is gone before it passes behind the controls or the cue bar.
+        .scriptEdgeFade(for: colorScheme, top: Self.topFade, bottom: bottomInset)
         .onAppear(perform: loadCards)
         .onChange(of: text) {
             guard text != writtenText else { return }
