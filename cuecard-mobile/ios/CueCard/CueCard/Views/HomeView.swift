@@ -108,41 +108,6 @@ struct HomeView: View {
         .accessibilityLabel("Show cards on the \(current.displayName)")
     }
 
-    /// The card being written and how full it is, or once the keyboard has
-    /// gone, how many cards there are and how many run too long.
-    @ViewBuilder
-    private var cardStatus: some View {
-        let notes = settingsService.notes
-        let limit = settingsService.settings.cardDisplay.characterLimit
-        let red = AppColors.red(for: colorScheme)
-
-        Group {
-            if isEditorFocused {
-                let position = CueCards.position(of: editorController.caretLocation, in: notes, limit: limit)
-                let isOver = position.measure.overflow != nil
-                HStack(spacing: 6) {
-                    Text(position.number.map { "Card \($0)" } ?? "New card")
-                        .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                    Text("\(position.measure.length)/\(limit)")
-                        .foregroundStyle(isOver ? red : AppColors.textPrimary(for: colorScheme))
-                }
-            } else {
-                let count = CueCards.cards(in: notes).count
-                let overflowing = CueCards.overflowingCount(in: notes, limit: limit)
-                HStack(spacing: 6) {
-                    Text(count == 1 ? "1 card" : "\(count) cards")
-                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                    if overflowing > 0 {
-                        Text("\(overflowing) too long")
-                            .foregroundStyle(red)
-                    }
-                }
-            }
-        }
-        .font(.caption.weight(.semibold).monospacedDigit())
-        .accessibilityElement(children: .combine)
-    }
-
     private func showCardsOpenedOnWatch() {
         guard scenePhase == .active, !cardsSession.cards.isEmpty, !showingCards,
               !showingTeleprompter, !showingSettings, !showingSavedNotes else { return }
@@ -203,16 +168,7 @@ struct HomeView: View {
 
     @ViewBuilder
     private var timerControl: some View {
-        if isCardsMode && hasNotes {
-            Button(action: insertCard) {
-                Label("Add Card", systemImage: "plus")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                    .padding(.horizontal, 16)
-                    .frame(height: 52)
-                    .glassedEffect(in: Capsule())
-            }
-        } else if hasNotes || showingTimerPicker {
+        if hasNotes || showingTimerPicker {
             VStack(alignment: .leading, spacing: 0) {
                 if showingTimerPicker {
                     VStack(alignment: .leading, spacing: 12) {
@@ -344,12 +300,6 @@ struct HomeView: View {
         editorController.insertCue()
     }
 
-    /// End the card being written and start the next one at the caret.
-    private func insertCard() {
-        AnalyticsEvents.logButtonClick("insert_card", screen: "home")
-        editorController.insertCardSeparator()
-    }
-
     private func selectAllText() {
         AnalyticsEvents.logButtonClick("select_all", screen: "home")
         editorController.selectAll()
@@ -374,39 +324,42 @@ struct HomeView: View {
                     }
 
                     if isCardsMode {
-                        ViewThatFits(in: .horizontal) {
-                            HStack(spacing: 12) {
-                                cardDisplayMenu
-                                Spacer(minLength: 8)
-                                cardStatus
-                            }
-                            VStack(alignment: .leading, spacing: 0) {
-                                cardDisplayMenu
-                                cardStatus
-                            }
+                        HStack {
+                            cardDisplayMenu
+                            Spacer(minLength: 0)
                         }
                         .padding(.horizontal, 20)
                         .padding(.top, 4)
-                    }
 
-                    // Notes editor
-                    NotesEditorView(
-                        text: $settingsService.notes,
-                        isFocused: $isEditorFocused,
-                        controller: editorController,
-                        cueColor: settingsService.settings.cueColor,
-                        colorScheme: colorScheme,
-                        fontSize: CGFloat(settingsService.settings.editorFontSize),
-                        mode: settingsService.settings.scriptMode,
-                        cardLimit: isCardsMode ? settingsService.settings.cardDisplay.characterLimit : nil,
-                        keyboardOverlayHeight: CueBar.height,
-                        restingOverlayHeight: Self.controlsHeight
-                    )
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    // The editor makes its own room for the keyboard, as scroll
-                    // inset. SwiftUI's avoidance would resize it instead, and the
-                    // gap it leaves behind on dismissal cuts the script off.
-                    .ignoresSafeArea(.keyboard, edges: .bottom)
+                        CardsEditorView(
+                            text: $settingsService.notes,
+                            isFocused: $isEditorFocused,
+                            controller: editorController,
+                            cueColor: settingsService.settings.cueColor,
+                            colorScheme: colorScheme,
+                            fontSize: CGFloat(settingsService.settings.editorFontSize),
+                            cardLimit: settingsService.settings.cardDisplay.characterLimit,
+                            bottomInset: isEditorFocused ? CueBar.height : Self.controlsHeight
+                        )
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else {
+                        // Notes editor
+                        NotesEditorView(
+                            text: $settingsService.notes,
+                            isFocused: $isEditorFocused,
+                            controller: editorController,
+                            cueColor: settingsService.settings.cueColor,
+                            colorScheme: colorScheme,
+                            fontSize: CGFloat(settingsService.settings.editorFontSize),
+                            keyboardOverlayHeight: CueBar.height,
+                            restingOverlayHeight: Self.controlsHeight
+                        )
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        // The editor makes its own room for the keyboard, as scroll
+                        // inset. SwiftUI's avoidance would resize it instead, and the
+                        // gap it leaves behind on dismissal cuts the script off.
+                        .ignoresSafeArea(.keyboard, edges: .bottom)
+                    }
                 }
                 .animation(.easeInOut(duration: 0.25), value: notifications.dismissedIDs)
             }
@@ -415,7 +368,6 @@ struct HomeView: View {
                     CueBar(
                         colorScheme: colorScheme,
                         onAddCue: insertCue,
-                        onAddCard: isCardsMode ? insertCard : nil,
                         onSelectAll: selectAllText,
                         onDismissKeyboard: { isEditorFocused = false }
                     )
@@ -640,8 +592,6 @@ struct NotesEditorView: View {
     let cueColor: CueColor
     let colorScheme: ColorScheme
     let fontSize: CGFloat
-    var mode: ScriptMode = .teleprompter
-    var cardLimit: Int?
     /// Room the cue bar takes at the bottom while the keyboard is up.
     var keyboardOverlayHeight: CGFloat = 0
     /// Room the home controls take at the bottom once the keyboard has gone.
@@ -653,9 +603,7 @@ struct NotesEditorView: View {
             if text.isEmpty {
                 // Set on the editor's own font and insets, so the first line sits
                 // exactly where the caret waiting in front of it does.
-                Text(mode == .cards
-                     ? "One thought per card.\n\nWrite a few talking points, then tap Add Card for the next one.\n\nUse Add Cue for reminders like [cue pause]."
-                     : "Add your script here...\n\nTap Add Cue to drop in a delivery reminder, or type [ to write one yourself.\n\nFor example: Welcome everyone [cue smile and pause]")
+                Text("Add your script here...\n\nTap Add Cue to drop in a delivery reminder, or type [ to write one yourself.\n\nFor example: Welcome everyone [cue smile and pause]")
                     .font(.system(size: fontSize, weight: .medium))
                     .foregroundStyle(AppColors.textSecondary(for: colorScheme).opacity(0.6))
                     .padding(.horizontal, 20)
@@ -670,8 +618,6 @@ struct NotesEditorView: View {
                 cueColor: cueColor,
                 colorScheme: colorScheme,
                 fontSize: fontSize,
-                mode: mode,
-                cardLimit: cardLimit,
                 keyboardOverlayHeight: keyboardOverlayHeight,
                 restingOverlayHeight: restingOverlayHeight
             )
@@ -685,6 +631,233 @@ struct NotesEditorView: View {
     /// The bottom fade reaches up past the floating controls, so a line is gone
     /// before it can pass behind them.
     private static let bottomFade: CGFloat = 72
+}
+
+/// Cards mode's editor: every card its own page, written on separately, with
+/// a button below the last one to start another. A swipe removes a card.
+///
+/// The deck is stored as one script with a separator between cards; the
+/// separators are only ever written here, never shown.
+struct CardsEditorView: View {
+    @Binding var text: String
+    @Binding var isFocused: Bool
+    let controller: CueEditorController
+    let cueColor: CueColor
+    let colorScheme: ColorScheme
+    let fontSize: CGFloat
+    /// The characters a card holds before the rest is marked.
+    let cardLimit: Int
+    /// Room kept clear below the last card for what floats over the list.
+    let bottomInset: CGFloat
+
+    private struct EditableCard: Identifiable {
+        let id = UUID()
+        var text: String
+    }
+
+    @State private var cards: [EditableCard] = []
+    /// The script last written from `cards`, so an edit made here isn't read
+    /// back in as a whole new deck.
+    @State private var writtenText: String?
+    @State private var focusedCard: UUID?
+
+    static let cornerRadius: CGFloat = 22
+    private static let newCardButtonID = "new-card"
+
+    var body: some View {
+        ScrollViewReader { proxy in
+            List {
+                ForEach(Array(cards.enumerated()), id: \.element.id) { index, card in
+                    cardRow(card, number: index + 1)
+                        .id(card.id)
+                        .listRowInsets(EdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 20))
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color.clear)
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            Button(role: .destructive) {
+                                AnalyticsEvents.logButtonClick("remove_card", screen: "home")
+                                remove(card.id)
+                            } label: {
+                                Label("Remove", systemImage: "trash")
+                            }
+                        }
+                }
+
+                Button {
+                    AnalyticsEvents.logButtonClick("insert_card", screen: "home")
+                    addCard(scrollingWith: proxy)
+                } label: {
+                    Label("Create New Card", systemImage: "plus")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 52)
+                        .background(
+                            RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous)
+                                .stroke(AppColors.textSecondary(for: colorScheme).opacity(0.35),
+                                        style: StrokeStyle(lineWidth: 1, dash: [6, 6]))
+                        )
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .id(Self.newCardButtonID)
+                .listRowInsets(EdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 20))
+                .listRowSeparator(.hidden)
+                .listRowBackground(Color.clear)
+            }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .scrollDismissesKeyboard(.interactively)
+            .contentMargins(.top, 8, for: .scrollContent)
+            .contentMargins(.bottom, bottomInset + 16, for: .scrollContent)
+        }
+        .scriptEdgeFade(for: colorScheme, top: 12, bottom: 40)
+        .onAppear(perform: loadCards)
+        .onChange(of: text) {
+            guard text != writtenText else { return }
+            loadCards()
+        }
+        .onChange(of: focusedCard) {
+            let hasFocus = focusedCard != nil
+            if isFocused != hasFocus { isFocused = hasFocus }
+        }
+        .onChange(of: isFocused) {
+            if !isFocused {
+                focusedCard = nil
+            } else if focusedCard == nil {
+                focusedCard = cards.last?.id
+            }
+        }
+    }
+
+    private func cardRow(_ card: EditableCard, number: Int) -> some View {
+        let measure = CueCards.measure(card: card.text, limit: cardLimit)
+        let isOver = measure.overflow != nil
+        let secondary = AppColors.textSecondary(for: colorScheme)
+
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("Card \(number)")
+                    .foregroundStyle(secondary)
+                Spacer()
+                Text("\(measure.length)/\(cardLimit)")
+                    .foregroundStyle(isOver ? AppColors.red(for: colorScheme) : secondary)
+            }
+            .font(.caption.weight(.semibold).monospacedDigit())
+            .accessibilityElement(children: .combine)
+
+            ZStack(alignment: .topLeading) {
+                if card.text.isEmpty {
+                    Text(placeholder(forCardNumber: number))
+                        .font(.system(size: fontSize, weight: .medium))
+                        .foregroundStyle(secondary.opacity(0.6))
+                        .fixedSize(horizontal: false, vertical: true)
+                        .allowsHitTesting(false)
+                }
+
+                CueTextEditor(
+                    text: binding(for: card.id),
+                    isFocused: focusBinding(for: card.id),
+                    controller: controller,
+                    cueColor: cueColor,
+                    colorScheme: colorScheme,
+                    fontSize: fontSize,
+                    cardLimit: cardLimit,
+                    growsWithText: true
+                )
+            }
+            .frame(minHeight: fontSize * 3, alignment: .topLeading)
+        }
+        .padding(18)
+        .background(
+            RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous)
+                .fill(colorScheme == .dark ? Color(white: 0.11) : Color.white)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous)
+                .stroke(isOver ? AppColors.red(for: colorScheme).opacity(0.6)
+                               : AppColors.textSecondary(for: colorScheme).opacity(0.2),
+                        lineWidth: isOver ? 1 : 0.7)
+        )
+        .contentShape(RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous))
+        // A tap on the card around the text still starts writing in it.
+        .onTapGesture { focusedCard = card.id }
+    }
+
+    /// The first card explains the deck. Later ones only ask for the next
+    /// thought, since by then it's clear what a card is.
+    private func placeholder(forCardNumber number: Int) -> String {
+        number == 1
+            ? "One thought per card.\n\nType [ or tap Add Cue for reminders like [cue pause]."
+            : "Your next thought…"
+    }
+
+    private func binding(for id: UUID) -> Binding<String> {
+        Binding(
+            get: { cards.first { $0.id == id }?.text ?? "" },
+            set: { newText in
+                guard let index = cards.firstIndex(where: { $0.id == id }),
+                      cards[index].text != newText else { return }
+                cards[index].text = newText
+                writeScript()
+            }
+        )
+    }
+
+    private func focusBinding(for id: UUID) -> Binding<Bool> {
+        Binding(
+            get: { focusedCard == id },
+            set: { isFocused in
+                if isFocused {
+                    focusedCard = id
+                } else if focusedCard == id {
+                    focusedCard = nil
+                }
+            }
+        )
+    }
+
+    /// Start writing in a new card after the last, or in the last one if it
+    /// hasn't been written in yet.
+    private func addCard(scrollingWith proxy: ScrollViewProxy) {
+        if let last = cards.last, last.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            focusedCard = last.id
+            withAnimation { proxy.scrollTo(Self.newCardButtonID, anchor: .bottom) }
+            return
+        }
+
+        let card = EditableCard(text: "")
+        cards.append(card)
+        writeScript()
+        focusedCard = card.id
+        // After the new row is laid out, so there is somewhere to scroll to.
+        DispatchQueue.main.async {
+            withAnimation { proxy.scrollTo(Self.newCardButtonID, anchor: .bottom) }
+        }
+    }
+
+    /// Take a card out of the deck. The last one left is emptied instead, so
+    /// there is always a card to write in.
+    private func remove(_ id: UUID) {
+        if focusedCard == id { focusedCard = nil }
+        if cards.count == 1 {
+            cards = [EditableCard(text: "")]
+        } else {
+            cards.removeAll { $0.id == id }
+        }
+        writeScript()
+    }
+
+    private func loadCards() {
+        cards = CueCards.editableCards(in: text).map { EditableCard(text: $0) }
+        writtenText = text
+    }
+
+    private func writeScript() {
+        let script = CueCards.script(for: cards.map(\.text))
+        writtenText = script
+        if text != script { text = script }
+    }
 }
 
 /// View for displaying and managing saved notes

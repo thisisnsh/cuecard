@@ -94,6 +94,9 @@ final class CueTextView: UITextView {
     /// Keep clear whatever covers the bottom of the editor: the keyboard and the
     /// cue bar on top of it while it's up, the home controls once it's gone.
     private func updateBottomInset(travellingWith animation: KeyboardAnimation? = nil) {
+        // A card's editor grows with its text and leaves scrolling to the list
+        // it sits in.
+        guard isScrollEnabled else { return }
         let overlap = keyboardOverlap()
         let inset = overlap > 0 ? overlap + keyboardOverlayHeight : restingOverlayHeight
         guard inset != appliedBottomInset else { return }
@@ -128,7 +131,7 @@ final class CueTextView: UITextView {
 
     /// Scroll so the caret sits inside the part of the editor nothing is covering.
     func scrollCaretIntoView() {
-        guard isFirstResponder, let caret = selectedTextRange?.end else { return }
+        guard isScrollEnabled, isFirstResponder, let caret = selectedTextRange?.end else { return }
 
         let rect = caretRect(for: caret).insetBy(dx: 0, dy: -Self.caretPadding)
         guard rect.minY.isFinite, rect.maxY.isFinite else { return }
@@ -174,17 +177,9 @@ final class CueTextView: UITextView {
 final class CueEditorController: ObservableObject {
     fileprivate weak var coordinator: CueTextEditor.Coordinator?
 
-    /// Where the caret is, so cards mode can say which card is being written.
-    @Published fileprivate(set) var caretLocation = 0
-
     /// Drop an empty cue at the caret and leave the caret inside it.
     func insertCue() {
         coordinator?.insertEmptyCue()
-    }
-
-    /// End the card the caret is in and start a new one after it.
-    func insertCardSeparator() {
-        coordinator?.insertCardSeparator()
     }
 
     /// Select the whole script. Dragging a selection out to the end is awkward
@@ -200,9 +195,8 @@ final class CueEditorController: ObservableObject {
 /// caret inside it, so a cue is never left half-open — except inside a cue, where
 /// there is nothing left for it to open.
 ///
-/// In cards mode `[` writes a `[separator]` instead, ending the card, and cues
-/// come from the cue bar. A separator is edited as one piece: a backspace into
-/// it takes the whole tag. Whatever runs past a card's limit is marked in red.
+/// A card's editor is given the card's limit, and whatever runs past it is
+/// marked in red.
 struct CueTextEditor: UIViewRepresentable {
     @Binding var text: String
     @Binding var isFocused: Bool
@@ -211,9 +205,10 @@ struct CueTextEditor: UIViewRepresentable {
     let colorScheme: ColorScheme
     /// The text size the script is set in, from Settings.
     let fontSize: CGFloat
-    var mode: ScriptMode = .teleprompter
-    /// In cards mode, the characters a card holds before the rest is marked.
+    /// In a card, the characters it holds before the rest is marked.
     var cardLimit: Int?
+    /// Sized to its text, without scrolling, for a card in a list of them.
+    var growsWithText = false
     /// Height of the cue bar floating over the bottom of the editor, if it's showing.
     var keyboardOverlayHeight: CGFloat = 0
     /// Height of whatever floats over the bottom of the editor with the keyboard away.
@@ -228,10 +223,16 @@ struct CueTextEditor: UIViewRepresentable {
         textView.delegate = context.coordinator
         context.coordinator.textView = textView
         textView.backgroundColor = .clear
-        textView.textContainerInset = UIEdgeInsets(top: Self.edgeFade, left: 16, bottom: Self.edgeFade, right: 16)
         textView.textContainer.lineFragmentPadding = 0
-        textView.alwaysBounceVertical = true
-        textView.keyboardDismissMode = .interactive
+        if growsWithText {
+            textView.isScrollEnabled = false
+            textView.textContainerInset = .zero
+            textView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        } else {
+            textView.textContainerInset = UIEdgeInsets(top: Self.edgeFade, left: 16, bottom: Self.edgeFade, right: 16)
+            textView.alwaysBounceVertical = true
+            textView.keyboardDismissMode = .interactive
+        }
         textView.text = text
         applyHighlighting(to: textView)
         return textView
@@ -240,7 +241,11 @@ struct CueTextEditor: UIViewRepresentable {
     func updateUIView(_ textView: CueTextView, context: Context) {
         context.coordinator.parent = self
         context.coordinator.textView = textView
-        controller.coordinator = context.coordinator
+        // With a card editor for every card, the cue bar writes into the one
+        // being typed in.
+        if controller.coordinator == nil || textView.isFirstResponder {
+            controller.coordinator = context.coordinator
+        }
         textView.keyboardOverlayHeight = keyboardOverlayHeight
         textView.restingOverlayHeight = restingOverlayHeight
 
@@ -281,8 +286,16 @@ struct CueTextEditor: UIViewRepresentable {
 
     func makeCoordinator() -> Coordinator {
         let coordinator = Coordinator(parent: self)
-        controller.coordinator = coordinator
+        if controller.coordinator == nil {
+            controller.coordinator = coordinator
+        }
         return coordinator
+    }
+
+    func sizeThatFits(_ proposal: ProposedViewSize, uiView: CueTextView, context: Context) -> CGSize? {
+        guard growsWithText, let width = proposal.width, width.isFinite else { return nil }
+        let fitting = uiView.sizeThatFits(CGSize(width: width, height: .greatestFiniteMagnitude))
+        return CGSize(width: width, height: ceil(fitting.height))
     }
 
     // MARK: - Highlighting
@@ -383,13 +396,7 @@ struct CueTextEditor: UIViewRepresentable {
             if text == "[", range.length == 0 {
                 // Cues don't nest, and in here both brackets are already written,
                 // so `[` has nothing left to do.
-                guard TeleprompterParser.cueTag(containing: range.location, in: textView.text) == nil,
-                      CueCards.separator(containing: range.location, in: textView.text) == nil else {
-                    return false
-                }
-
-                if parent.mode == .cards {
-                    insertSeparator(at: range.location, in: textView)
+                guard TeleprompterParser.cueTag(containing: range.location, in: textView.text) == nil else {
                     return false
                 }
 
@@ -404,11 +411,6 @@ struct CueTextEditor: UIViewRepresentable {
 
             if text.isEmpty, range.length == 1, let emptyCue = emptyCueSurrounding(range, in: textView) {
                 replace(emptyCue, with: "[", caret: emptyCue.location + 1, in: textView)
-                return false
-            }
-
-            if text.isEmpty, range.length == 1, let separator = separatorDeleted(by: range, in: textView) {
-                replace(separator, with: "", caret: separator.location, in: textView)
                 return false
             }
 
@@ -437,52 +439,6 @@ struct CueTextEditor: UIViewRepresentable {
             if !textView.isFirstResponder {
                 textView.becomeFirstResponder()
             }
-        }
-
-        /// Write a separator in after the caret, as if it had been typed there.
-        func insertCardSeparator() {
-            guard let textView else { return }
-
-            // Past the end of a selection, and past any tag the caret is in.
-            var location = NSMaxRange(textView.selectedRange)
-            if let enclosing = TeleprompterParser.cueTag(containing: location, in: textView.text) {
-                location = NSMaxRange(enclosing.range)
-            }
-            if let enclosing = CueCards.separator(containing: location, in: textView.text) {
-                location = NSMaxRange(enclosing)
-            }
-            insertSeparator(at: location, in: textView)
-
-            if !textView.isFirstResponder {
-                textView.becomeFirstResponder()
-            }
-        }
-
-        /// A separator on a line of its own, with the caret on the line after,
-        /// ready for the next card.
-        private func insertSeparator(at location: Int, in textView: UITextView) {
-            let insertion = (textView.text as NSString).separatorInsertion(at: location)
-            replace(
-                NSRange(location: location, length: 0),
-                with: insertion.text,
-                caret: location + insertion.caretOffset,
-                in: textView
-            )
-        }
-
-        /// The separator a backspace is reaching into, with the line break after
-        /// it: a backspace inside the tag, or on the line break that follows it.
-        private func separatorDeleted(by range: NSRange, in textView: UITextView) -> NSRange? {
-            let full = textView.text as NSString
-            for separator in CueCards.separatorRanges(in: textView.text) {
-                let end = NSMaxRange(separator)
-                let hasLineBreak = end < full.length && full.character(at: end) == 0x0A
-                let whole = NSRange(location: separator.location, length: separator.length + (hasLineBreak ? 1 : 0))
-                if NSLocationInRange(range.location, whole) {
-                    return whole
-                }
-            }
-            return nil
         }
 
         func selectAll() {
@@ -536,17 +492,8 @@ struct CueTextEditor: UIViewRepresentable {
             (textView as? CueTextView)?.scrollCaretIntoView()
         }
 
-        func textViewDidChangeSelection(_ textView: UITextView) {
-            // Published after this pass, since SwiftUI may be mid-update here.
-            let location = NSMaxRange(textView.selectedRange)
-            let controller = parent.controller
-            DispatchQueue.main.async {
-                guard controller.caretLocation != location else { return }
-                controller.caretLocation = location
-            }
-        }
-
         func textViewDidBeginEditing(_ textView: UITextView) {
+            parent.controller.coordinator = self
             guard !parent.isFocused else { return }
             parent.isFocused = true
         }
@@ -583,8 +530,8 @@ extension NSString {
 // MARK: - Cue bar
 
 /// The strip above the keyboard while a script is being written: buttons to drop
-/// a cue in at the caret — and in cards mode, to start a new card — and to select
-/// the whole script, and one to get the keyboard out of the way.
+/// a cue in at the caret and to select the whole script, and one to get the
+/// keyboard out of the way.
 struct CueBar: View {
     /// The bar's height. The editor keeps this much room clear at the bottom so
     /// the line being typed never hides behind it.
@@ -592,8 +539,6 @@ struct CueBar: View {
 
     let colorScheme: ColorScheme
     var onAddCue: () -> Void
-    /// Set in cards mode, where the bar offers Add Card as well.
-    var onAddCard: (() -> Void)?
     var onSelectAll: () -> Void
     var onDismissKeyboard: () -> Void
 
@@ -630,10 +575,6 @@ struct CueBar: View {
     private func buttons(short: Bool) -> some View {
         HStack(spacing: 10) {
             addButton(short ? "Cue" : "Add Cue", accessibilityLabel: "Add Cue", action: onAddCue)
-
-            if let onAddCard {
-                addButton(short ? "Card" : "Add Card", accessibilityLabel: "Add Card", action: onAddCard)
-            }
 
             Button(action: onSelectAll) {
                 Text("Select All")

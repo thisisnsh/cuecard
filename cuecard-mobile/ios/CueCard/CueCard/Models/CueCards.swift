@@ -71,8 +71,9 @@ struct CardMeasure {
 
 /// Cards mode's `[separator]` tag, which ends one card and starts the next.
 ///
-/// Like `[cue …]`, it is plain text in the script, so it survives import and
-/// export as it is. The teleprompter reads a separator as a line break.
+/// The editor shows each card on its own, and the tag is only written where
+/// the deck is stored, imported and exported. The teleprompter reads a
+/// separator as a line break.
 enum CueCards {
     static let separatorTag = "[separator]"
 
@@ -87,14 +88,6 @@ enum CueCards {
         return separatorRegex
             .matches(in: text, options: [], range: NSRange(location: 0, length: length))
             .map(\.range)
-    }
-
-    /// The separator the caret is inside, if it is inside one. Against either
-    /// bracket counts as outside, like a cue.
-    static func separator(containing location: Int, in text: String) -> NSRange? {
-        separatorRanges(in: text).first {
-            $0.location < location && location < NSMaxRange($0)
-        }
     }
 
     /// The stretches of text between separators, blank ones included.
@@ -165,35 +158,29 @@ enum CueCards {
         return CardMeasure(length: solidCount, overflow: overflow)
     }
 
-    /// Where the caret is in the deck, for the editor's card count.
-    struct Position {
-        /// One-based, among the cards with something in them. Nil while the
-        /// caret sits in a card that is still blank.
-        let number: Int?
-        let total: Int
-        let measure: CardMeasure
+    /// How much of a single card shows against `limit`.
+    static func measure(card: String, limit: Int) -> CardMeasure {
+        let nsText = card as NSString
+        return measure(NSRange(location: 0, length: nsText.length), in: nsText,
+                       cues: TeleprompterParser.cueMatches(in: card), limit: limit)
     }
 
-    static func position(of location: Int, in text: String, limit: Int) -> Position {
-        let nsText = text as NSString
-        let cues = TeleprompterParser.cueMatches(in: text)
-        let ranges = cardRanges(in: text)
-        let measures = ranges.map { measure($0, in: nsText, cues: cues, limit: limit) }
-
-        // A caret inside a separator belongs to the card before it.
-        let separatorsBefore = separatorRanges(in: text).filter { NSMaxRange($0) <= location }.count
-        let current = min(separatorsBefore, ranges.count - 1)
-
-        let filled = measures.map { $0.length > 0 }
-        let number = filled[current] ? filled[...current].filter { $0 }.count : nil
-        return Position(number: number, total: filled.filter { $0 }.count, measure: measures[current])
+    /// The cards as the editor shows them: blank ones kept, so a card just
+    /// added stays put, and the line breaks around each separator left out.
+    static func editableCards(in text: String) -> [String] {
+        let normalized = text
+            .replacingOccurrences(of: "\r\n", with: "\n")
+            .replacingOccurrences(of: "\r", with: "\n")
+        let nsText = normalized as NSString
+        return cardRanges(in: normalized)
+            .map { nsText.substring(with: $0).trimmingCharacters(in: .newlines) }
     }
 
-    /// How many cards run past `limit`.
-    static func overflowingCount(in text: String, limit: Int) -> Int {
-        let nsText = text as NSString
-        let cues = TeleprompterParser.cueMatches(in: text)
-        return cardRanges(in: text).filter { measure($0, in: nsText, cues: cues, limit: limit).overflow != nil }.count
+    /// The script for a deck, a separator on its own line between each card.
+    /// A single blank card is no script at all.
+    static func script(for cards: [String]) -> String {
+        if cards.count == 1, cards[0].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return "" }
+        return cards.joined(separator: "\n\(separatorTag)\n")
     }
 
     /// A card as runs of text and cue, the way the app and the watch draw it,
@@ -234,23 +221,5 @@ enum CueCards {
             }
         }
         return runs
-    }
-}
-
-// MARK: - Separator insertion
-
-extension NSString {
-    /// The text to splice in for a separator at `location`, on a line of its
-    /// own, and how far into it the caret belongs: the start of the new card.
-    func separatorInsertion(at location: Int) -> (text: String, caretOffset: Int) {
-        let previous = location > 0 ? substring(with: NSRange(location: location - 1, length: 1)) : ""
-        let next = location < length ? substring(with: NSRange(location: location, length: 1)) : ""
-
-        let leading = previous.isEmpty || previous == "\n" ? "" : "\n"
-        // A line break already waiting after the caret serves as the tag's own.
-        let trailing = next == "\n" ? "" : "\n"
-        let text = leading + CueCards.separatorTag + trailing
-        let caretOffset = (leading as NSString).length + (CueCards.separatorTag as NSString).length + 1
-        return (text, caretOffset)
     }
 }
