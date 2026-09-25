@@ -18,6 +18,11 @@ struct WhatsNewView: View {
     var body: some View {
         ZStack {
             if isShowing {
+                // A slight dimming of the app, so the card stands out from it.
+                Color.black.opacity(0.25)
+                    .ignoresSafeArea()
+                    .transition(.opacity)
+
                 card
                     // A slow drift, out of step with the icon's, so the two
                     // never move as one.
