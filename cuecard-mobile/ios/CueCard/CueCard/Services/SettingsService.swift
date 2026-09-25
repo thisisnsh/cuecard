@@ -555,43 +555,57 @@ class SettingsService: ObservableObject {
     /// nowhere else, so a fresh install opens on it again.
     @Published private(set) var hasSeenWelcome: Bool
 
-    /// Default text for new notes
+    /// Sample text for teleprompter mode: a short talk about the teleprompter.
     static let defaultNoteText = """
-Welcome everyone.
+Hi everyone.
 
-I'm excited to be here today to talk about CueCard.
+I'm excited to be here today to talk about CueCard's teleprompter.
 
 [cue smile and pause]
 
-It keeps your speaker notes visible above all apps, so you can use your existing camera apps and still read your notes.
+It scrolls your script at your pace, so your eyes stay up and your words stay on track.
 
 [cue pause]
 
-It has a timer so you know if you're being brief… or too passionate.
+Leave the app and it keeps going in a floating window, right over your camera or your video call.
+
+[cue slow down]
+
+Lost your place? Drag the script back. Running long? Skip ahead.
+
+And the timer turns yellow near the end… and red if you get a little too passionate.
 
 [cue light chuckle]
 
-And the colored highlights?
+You can even play or pause from your Apple Watch, or with the Action Button.
+
+And these colored words?
 
 [cue emphasize]
 
-Those are your secret cues — reminders to smile, pause, or not panic.
+Those are your cues. Reminders to smile, pause, or not panic. They're never meant to be read out.
 
 [cue pause]
 
 Try it out. I think you'll love it.
 """
 
-    /// Sample text for cards mode: short meeting notes, each short enough for
-    /// the Lock Screen.
+    /// Sample text for cards mode: a short talk about cards, each card short
+    /// enough for the Lock Screen.
     static let defaultCardsText = """
-Thank everyone for joining. [cue smile]
+Hi everyone. Introducing Cue Cards. [cue smile]
 [separator]
-Q3 revenue is up 18%. Lead with this.
+One thought per card. Swipe to the next one when you're ready.
 [separator]
-Two engineers start in October. [cue pause]
+The timer at the top keeps you honest. [cue light chuckle]
 [separator]
-Ask for questions before wrapping up.
+Turn on Show on Lock Screen to read and turn your cards from there.
+[separator]
+Or turn them from your Apple Watch. [cue pause]
+[separator]
+Colored words are cues, not lines. [cue emphasize]
+[separator]
+Thanks for listening. Questions?
 """
 
     private init() {
