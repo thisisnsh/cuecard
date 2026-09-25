@@ -300,10 +300,9 @@ private struct PlaybackControlsSection: View {
     }
 }
 
-/// The watch app: what it does in the mode these settings belong to, a way to
-/// install it while a watch is paired without it, then how it shows cards and
-/// which saved notes are on it, to read there with the iPhone out of reach.
-/// Left out when no watch is paired.
+/// The watch app: a way to install it while a watch is paired without it,
+/// and once it's on, how big it draws cards. Left out when there's nothing
+/// to show for the mode.
 private struct AppleWatchSection: View {
     @EnvironmentObject var settingsService: SettingsService
     @ObservedObject private var watch = WatchSessionService.shared
@@ -316,98 +315,27 @@ private struct AppleWatchSection: View {
     /// The Watch app on the iPhone, open on its App Store.
     private static let watchAppURL = URL(string: "itms-watchs://")!
 
-    private struct Capability: Identifiable {
-        let title: String
-        let systemImage: String
-        let detail: String
-        var id: String { title }
-    }
-
-    private var capabilities: [Capability] {
-        switch mode {
-        case .teleprompter:
-            return [
-                Capability(title: "Play and Pause", systemImage: "playpause.fill",
-                           detail: "Start and stop the teleprompter from your wrist."),
-                Capability(title: "Skip Back", systemImage: "gobackward",
-                           detail: "Go back 10 seconds when you lose your place."),
-                Capability(title: "See the Timer", systemImage: "timer",
-                           detail: "The time left, in the same colors as the app."),
-                Capability(title: "Feel Haptics", systemImage: "hand.tap",
-                           detail: "A tap on your wrist as you play, pause or skip back."),
-            ]
-        case .cards:
-            return [
-                Capability(title: "Turn Cards", systemImage: "rectangle.stack",
-                           detail: "Swipe or tap Next to move the deck on your iPhone and Lock Screen."),
-                Capability(title: "Read Without Your iPhone", systemImage: "applewatch",
-                           detail: "Decks you keep on your watch open there on their own."),
-                Capability(title: "See the Timer", systemImage: "timer",
-                           detail: "The cards timer runs on your wrist too."),
-                Capability(title: "Feel Haptics", systemImage: "hand.tap",
-                           detail: "A tap on your wrist as each card changes."),
-            ]
-        }
-    }
+    private var needsInstall: Bool { watch.isPaired && !watch.isWatchAppInstalled }
+    private var showsCardTextSize: Bool { mode == .cards && watch.isWatchAppInstalled }
 
     var body: some View {
-        if watch.isPaired {
+        if needsInstall || showsCardTextSize {
             Section {
-                ForEach(capabilities) { capability in
-                    row(capability)
-                }
-                if !watch.isWatchAppInstalled {
+                if needsInstall {
                     installButton
                 }
-            } header: {
-                Text("With Apple Watch")
-            } footer: {
-                if !watch.isWatchAppInstalled {
-                    Text("Opens the Watch app. Under Available Apps, tap Install next to CueCard.")
-                }
-            }
-        }
-
-        if watch.isWatchAppInstalled {
-            Section {
-                if mode == .cards {
+                if showsCardTextSize {
                     Picker("Card Text Size", selection: $settingsService.settings.watch.cardTextSize) {
                         ForEach(WatchCardTextSize.allCases, id: \.self) { size in
                             Text(size.rawValue).tag(size)
                         }
                     }
                 }
-                Toggle("Haptics", isOn: $settingsService.settings.watch.haptics)
             } header: {
                 Text("Apple Watch")
             } footer: {
-                Text("Haptics tap your wrist as the card changes, and when you press play or skip back.")
-            }
-
-            if mode == .cards {
-                Section {
-                    if settingsService.savedNotes.isEmpty {
-                        Text("Save a deck to put it on your watch.")
-                            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                    } else {
-                        ForEach(settingsService.savedNotes.sorted { $0.updatedAt > $1.updatedAt }) { note in
-                            Toggle(isOn: Binding(
-                                get: { settingsService.watchNoteIDs.contains(note.id) },
-                                set: { isOn in
-                                    AnalyticsEvents.logButtonClick(isOn ? "watch_add_note" : "watch_remove_note",
-                                                                   screen: screen)
-                                    settingsService.setOnWatch(isOn, noteID: note.id)
-                                }
-                            )) {
-                                Text(note.title)
-                                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                            }
-                        }
-                    }
-                } header: {
-                    Text("On Watch")
-                } footer: {
-                    Text("Saved content you turn on stays on your watch, to swipe through card by card even without your iPhone.\n\n\(WatchTips.returnToClock)")
+                if needsInstall {
+                    Text("Opens the Watch app. Under Available Apps, tap Install next to CueCard.")
                 }
             }
         }
@@ -428,25 +356,6 @@ private struct AppleWatchSection: View {
             }
             .contentShape(Rectangle())
         }
-    }
-
-    private func row(_ capability: Capability) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: capability.systemImage)
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                .frame(width: 22)
-                .padding(.top, 2)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(capability.title)
-                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                Text(capability.detail)
-                    .font(.footnote)
-                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-            }
-        }
-        .padding(.vertical, 2)
-        .accessibilityElement(children: .combine)
     }
 }
 
