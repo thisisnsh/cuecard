@@ -482,9 +482,9 @@ struct HomeView: View {
                     }
                 }
 
-                HelpToolbarItem(page: .home, isPresented: $showingHelp)
+                HelpToolbarItem(page: .writing(settingsService.settings.scriptMode), isPresented: $showingHelp)
             }
-            .helpSheet(for: .home, isPresented: $showingHelp)
+            .helpSheet(for: .writing(settingsService.settings.scriptMode), isPresented: $showingHelp)
             .sheet(isPresented: $showingSettings) {
                 EditorSettingsView()
             }
