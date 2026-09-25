@@ -51,13 +51,12 @@ struct HomeView: View {
     private var isCardsMode: Bool { settingsService.settings.scriptMode == .cards }
 
     /// Teleprompter or cards: what the editor writes and the Play button opens.
-    /// The bar shows only the chosen mode's icon, to leave room at the top;
-    /// the menu names each one.
+    /// The bar shows the chosen mode's icon and name.
     private var modeMenu: some View {
         let current = settingsService.settings.scriptMode
 
         // Plain buttons rather than a picker, so the menu shows no checkmark:
-        // the icon in the bar already says which mode is on.
+        // the bar already says which mode is on.
         return Menu {
             ForEach(ScriptMode.allCases) { mode in
                 Button {
@@ -73,6 +72,8 @@ struct HomeView: View {
             HStack(spacing: 6) {
                 Image(systemName: current.systemImage)
                     .font(.system(size: 17, weight: .semibold))
+                Text(current.displayName)
+                    .font(.headline)
                 Image(systemName: "chevron.down")
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(AppColors.textSecondary(for: colorScheme))
