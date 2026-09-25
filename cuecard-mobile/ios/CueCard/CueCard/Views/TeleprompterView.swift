@@ -350,14 +350,13 @@ private extension View {
     }
 }
 
-/// Reveal the PiP landing surface before AVKit returns the video, then fade it
-/// away over the already-positioned reader once the system transition finishes.
+/// Keep the PiP transition anchor behind the reader so the full-screen text is
+/// already visible when the system returns, without a separate reveal animation.
 final class TeleprompterReaderHostView: UIView {
     let textView = UITextView(usingTextLayoutManager: false)
     var onLayoutChange: (() -> Void)?
     private weak var videoSource: UIView?
     private var lastLayoutSize: CGSize = .zero
-    private var restorationAnimation: UUID?
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -390,40 +389,6 @@ final class TeleprompterReaderHostView: UIView {
         source.isUserInteractionEnabled = false
         insertSubview(source, belowSubview: textView)
         videoSource = source
-    }
-
-    func prepareVideoRestoration() -> Bool {
-        guard window != nil, let videoSource else { return false }
-        cancelVideoRestoration()
-        bringSubviewToFront(videoSource)
-        return true
-    }
-
-    func finishVideoRestoration(completion: @escaping () -> Void) {
-        guard window != nil, let videoSource else {
-            cancelVideoRestoration()
-            completion()
-            return
-        }
-        let animation = UUID()
-        restorationAnimation = animation
-        UIView.animate(withDuration: UIAccessibility.isReduceMotionEnabled ? 0 : 0.25,
-                       delay: 0, options: [.beginFromCurrentState, .curveEaseInOut, .allowUserInteraction]) {
-            videoSource.alpha = 0
-        } completion: { [weak self] _ in
-            guard let self, self.restorationAnimation == animation else { return }
-            self.cancelVideoRestoration()
-            completion()
-        }
-    }
-
-    func cancelVideoRestoration() {
-        restorationAnimation = nil
-        guard let videoSource else { return }
-        videoSource.layer.removeAllAnimations()
-        // Keep the source opaque and attached for the next automatic PiP start.
-        insertSubview(videoSource, belowSubview: textView)
-        videoSource.alpha = 1
     }
 }
 
@@ -640,7 +605,6 @@ struct AttributedTextView: UIViewRepresentable {
         uiView.onLayoutChange = nil
         coordinator.cancelUpdates()
         coordinator.stopEasing()
-        uiView.cancelVideoRestoration()
     }
 
     func updateUIView(_ host: TeleprompterReaderHostView, context: Context) {
@@ -754,7 +718,6 @@ struct AttributedTextView: UIViewRepresentable {
         guard let request = restorationRequest,
               let scene = textView.window?.windowScene,
               scene.activationState == .foregroundActive || scene.activationState == .foregroundInactive else { return }
-        guard host.prepareVideoRestoration() else { return }
         coordinator.lastRestorationRequest = request
         CATransaction.begin()
         CATransaction.setDisableActions(true)
