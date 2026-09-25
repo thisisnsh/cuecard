@@ -100,8 +100,8 @@ struct EditorSettingsView: View {
 
     @ViewBuilder
     private var cardsSections: some View {
-        // Whether a deck being read is on the Lock Screen too. It sets how
-        // long a card can be, so the footer says what each choice allows.
+        // Whether a deck being read is on the Lock Screen too. That keeps cards
+        // short enough to fit there, which the footer says only while it's on.
         Section {
             SizePresetPicker(
                 title: "Text Size",
@@ -126,9 +126,10 @@ struct EditorSettingsView: View {
         } header: {
             Text("Cards")
         } footer: {
-            Text("Lock your iPhone while reading and turn cards from the Lock Screen. "
-                 + "Cards hold up to \(CueCards.characterLimit(onLockScreen: true)) characters to fit there, "
-                 + "or \(CueCards.characterLimit(onLockScreen: false)) with this off.")
+            if settingsService.settings.cards.showOnLockScreen {
+                Text("Cards longer than \(CueCards.characterLimit(onLockScreen: true)) characters "
+                     + "will be truncated on the Lock Screen.")
+            }
         }
 
         AppleWatchSection(screen: Self.screen, mode: .cards)
