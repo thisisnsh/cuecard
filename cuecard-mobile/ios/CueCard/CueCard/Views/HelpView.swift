@@ -223,7 +223,6 @@ struct HelpView: View {
                 }
             }
         }
-        .presentationDetents([.medium, .large])
         .onAppear {
             Analytics.logEvent(AnalyticsEventScreenView, parameters: [
                 AnalyticsParameterScreenName: Self.screen,
