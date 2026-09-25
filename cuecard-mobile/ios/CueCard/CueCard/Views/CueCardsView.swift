@@ -18,7 +18,6 @@ struct CueCardsView: View {
     @State private var hasOpenedDeck = false
     @State private var dragOffset: CGFloat = 0
     @State private var showingLockScreenHelp = false
-    @State private var showingSettings = false
     @Environment(\.openURL) private var openURL
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -103,21 +102,6 @@ struct CueCardsView: View {
                     .accessibilityElement(children: .combine)
                     .accessibilityValue(progress)
                 }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button(action: {
-                        AnalyticsEvents.logButtonClick("settings", screen: "cards")
-                        showingSettings = true
-                    }) {
-                        Image(systemName: "gearshape")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                    }
-                    .accessibilityLabel("Settings")
-                }
-            }
-            .sheet(isPresented: $showingSettings) {
-                CardsSettingsView()
-                    .environmentObject(settingsService)
             }
             .sheet(isPresented: $showingLockScreenHelp) {
                 NavigationStack {
@@ -172,14 +156,6 @@ struct CueCardsView: View {
                 "count": cards.count,
                 "on_lock_screen": settings.cards.showOnLockScreen ? 1 : 0
             ])
-        }
-        // Turned on or off in Settings with the deck open.
-        .onChange(of: settings.cards.showOnLockScreen) {
-            if settings.cards.showOnLockScreen {
-                session.showOnLockScreen()
-            } else {
-                session.hideFromLockScreen()
-            }
         }
     }
 

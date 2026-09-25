@@ -3,54 +3,166 @@ import UIKit
 import FirebaseAnalytics
 import FirebaseCrashlytics
 
-// MARK: - Editor Settings
+// MARK: - Settings
 
-/// Settings opened from the editor: how the script is set while writing it,
-/// plus everything the two Settings screens share.
+/// The one Settings screen, opened from the editor. It shows the settings for
+/// the mode being written in: the teleprompter's, or the cards'. Each mode
+/// keeps its own values, so nothing set for one changes the other.
 struct EditorSettingsView: View {
     @EnvironmentObject var settingsService: SettingsService
     @EnvironmentObject var notifications: RemoteNotificationService
+
+    private static let screen = "settings"
 
     private var isCrashlyticsTestEnabled: Bool {
         ProcessInfo.processInfo.environment["CRASHLYTICS_TEST_CRASH"] == "1"
     }
 
     var body: some View {
-        SettingsScreen(screen: "settings") {
-            WhatsNewSection(screen: "settings")
+        SettingsScreen(screen: Self.screen) {
+            WhatsNewSection(screen: Self.screen)
             remoteMessageSection
 
-            // Each mode has its own editor text size and cue color.
-            Section(settingsService.settings.scriptMode == .cards ? "Cards Editor" : "Editor") {
-                SizePresetPicker(
-                    title: "Text Size",
-                    value: $settingsService.settings.activeEditorFontSize,
-                    presets: TeleprompterSettings.editorFontSizePresets
-                )
+            switch settingsService.settings.scriptMode {
+            case .teleprompter: teleprompterSections
+            case .cards: cardsSections
             }
 
-            if settingsService.settings.scriptMode == .cards {
-                LockScreenCardsSection(screen: "settings")
-            }
-
-            AppleWatchSection(screen: "settings", mode: settingsService.settings.scriptMode)
-
-            AppearanceSection(cueColor: $settingsService.settings.activeCueColor)
-
-            AdvancedSection(
-                screen: "settings",
-                footer: "Text size can be set from \(TeleprompterSettings.editorFontSizeRange.lowerBound) to \(TeleprompterSettings.editorFontSizeRange.upperBound)."
-            ) {
-                AdvancedNumberRow(
-                    title: "Text Size",
-                    value: $settingsService.settings.activeEditorFontSize,
-                    range: TeleprompterSettings.editorFontSizeRange
-                )
-            }
-
-            AboutSection(screen: "settings")
+            AboutSection(screen: Self.screen)
             diagnosticsSection
         }
+    }
+
+    @ViewBuilder
+    private var teleprompterSections: some View {
+        Section("Teleprompter") {
+            AdvancedNumberRow(
+                title: "Start Delay",
+                value: $settingsService.settings.countdownSeconds,
+                range: TeleprompterSettings.countdownRange,
+                unit: "seconds"
+            )
+
+            AdvancedNumberRow(
+                title: "Scroll Speed",
+                value: $settingsService.settings.linesPerMinute,
+                range: TeleprompterSettings.lpmRange,
+                unit: "lines/min"
+            )
+
+            SizePresetPicker(
+                title: "Text Size",
+                value: $settingsService.settings.fontSize,
+                presets: TeleprompterSettings.fontSizePresets
+            )
+
+            SizePresetPicker(
+                title: "Editor Text Size",
+                value: $settingsService.settings.editorFontSize,
+                presets: TeleprompterSettings.editorFontSizePresets
+            )
+        }
+
+        Section("Floating Window") {
+            SizePresetPicker(
+                title: "Text Size",
+                value: $settingsService.settings.pipFontSize,
+                presets: TeleprompterSettings.pipFontSizePresets
+            )
+
+            AspectRatioPicker(selection: $settingsService.settings.overlayAspectRatio)
+        }
+
+        PlaybackControlsSection()
+
+        AppleWatchSection(screen: Self.screen, mode: .teleprompter)
+
+        AppearanceSection(cueColor: $settingsService.settings.cueColor)
+
+        AdvancedSection(screen: Self.screen, footer: teleprompterAdvancedFooter) {
+            AdvancedNumberRow(
+                title: "Teleprompter Text Size",
+                value: $settingsService.settings.fontSize,
+                range: TeleprompterSettings.fontSizeRange
+            )
+            AdvancedNumberRow(
+                title: "Floating Window Text Size",
+                value: $settingsService.settings.pipFontSize,
+                range: TeleprompterSettings.pipFontSizeRange
+            )
+            AdvancedNumberRow(
+                title: "Editor Text Size",
+                value: $settingsService.settings.editorFontSize,
+                range: TeleprompterSettings.editorFontSizeRange
+            )
+        }
+    }
+
+    @ViewBuilder
+    private var cardsSections: some View {
+        // Whether a deck being read is on the Lock Screen too. It sets how
+        // long a card can be, so the footer says what each choice allows.
+        Section {
+            SizePresetPicker(
+                title: "Text Size",
+                value: $settingsService.settings.cards.fontSize,
+                presets: TeleprompterSettings.fontSizePresets
+            )
+
+            SizePresetPicker(
+                title: "Editor Text Size",
+                value: $settingsService.settings.cards.editorFontSize,
+                presets: TeleprompterSettings.editorFontSizePresets
+            )
+
+            Toggle("Show on Lock Screen", isOn: Binding(
+                get: { settingsService.settings.cards.showOnLockScreen },
+                set: { isOn in
+                    AnalyticsEvents.logButtonClick(isOn ? "cards_lock_screen_on" : "cards_lock_screen_off",
+                                                   screen: Self.screen)
+                    settingsService.settings.cards.showOnLockScreen = isOn
+                }
+            ))
+        } header: {
+            Text("Cards")
+        } footer: {
+            Text("Lock your iPhone while reading and turn cards from the Lock Screen. "
+                 + "Cards hold up to \(CueCards.characterLimit(onLockScreen: true)) characters to fit there, "
+                 + "or \(CueCards.characterLimit(onLockScreen: false)) with this off.")
+        }
+
+        AppleWatchSection(screen: Self.screen, mode: .cards)
+
+        AppearanceSection(cueColor: $settingsService.settings.cards.cueColor)
+
+        AdvancedSection(screen: Self.screen, footer: cardsAdvancedFooter) {
+            AdvancedNumberRow(
+                title: "Card Text Size",
+                value: $settingsService.settings.cards.fontSize,
+                range: TeleprompterSettings.fontSizeRange
+            )
+            AdvancedNumberRow(
+                title: "Editor Text Size",
+                value: $settingsService.settings.cards.editorFontSize,
+                range: TeleprompterSettings.editorFontSizeRange
+            )
+        }
+    }
+
+    private var teleprompterAdvancedFooter: String {
+        let prompter = TeleprompterSettings.fontSizeRange
+        let pip = TeleprompterSettings.pipFontSizeRange
+        let editor = TeleprompterSettings.editorFontSizeRange
+        return "Teleprompter text can be set from \(prompter.lowerBound) to \(prompter.upperBound), "
+            + "floating window text from \(pip.lowerBound) to \(pip.upperBound), "
+            + "and editor text from \(editor.lowerBound) to \(editor.upperBound)."
+    }
+
+    private var cardsAdvancedFooter: String {
+        let card = TeleprompterSettings.fontSizeRange
+        let editor = TeleprompterSettings.editorFontSizeRange
+        return "Card text can be set from \(card.lowerBound) to \(card.upperBound), "
+            + "and editor text from \(editor.lowerBound) to \(editor.upperBound)."
     }
 
     /// A notice from the worker, if there's one meant for Settings. Quieter than
@@ -69,7 +181,7 @@ struct EditorSettingsView: View {
         if isCrashlyticsTestEnabled {
             Section {
                 Button(role: .destructive) {
-                    AnalyticsEvents.logButtonClick("test_crash", screen: "settings")
+                    AnalyticsEvents.logButtonClick("test_crash", screen: Self.screen)
                     Crashlytics.crashlytics().log("Manually triggered test crash")
                     fatalError("Crashlytics test crash")
                 } label: {
@@ -83,169 +195,9 @@ struct EditorSettingsView: View {
     }
 }
 
-// MARK: - Teleprompter Settings
-
-/// Settings opened from the teleprompter: everything that shapes a run, plus
-/// everything the two Settings screens share.
-struct TeleprompterSettingsView: View {
-    @EnvironmentObject var settingsService: SettingsService
-
-    private static let screen = "teleprompter_settings"
-
-    var body: some View {
-        SettingsScreen(screen: Self.screen) {
-            WhatsNewSection(screen: Self.screen)
-
-            Section("Teleprompter") {
-                AdvancedNumberRow(
-                    title: "Start Delay",
-                    value: $settingsService.settings.countdownSeconds,
-                    range: TeleprompterSettings.countdownRange,
-                    unit: "seconds"
-                )
-
-                AdvancedNumberRow(
-                    title: "Scroll Speed",
-                    value: $settingsService.settings.linesPerMinute,
-                    range: TeleprompterSettings.lpmRange,
-                    unit: "lines/min"
-                )
-
-                SizePresetPicker(
-                    title: "Text Size",
-                    value: $settingsService.settings.fontSize,
-                    presets: TeleprompterSettings.fontSizePresets
-                )
-            }
-
-            Section("Floating Window") {
-                SizePresetPicker(
-                    title: "Text Size",
-                    value: $settingsService.settings.pipFontSize,
-                    presets: TeleprompterSettings.pipFontSizePresets
-                )
-
-                AspectRatioPicker(selection: $settingsService.settings.overlayAspectRatio)
-            }
-
-            PlaybackControlsSection()
-
-            AppleWatchSection(screen: Self.screen, mode: .teleprompter)
-
-            AppearanceSection(cueColor: $settingsService.settings.cueColor)
-
-            AdvancedSection(screen: Self.screen, footer: advancedFooter) {
-                AdvancedNumberRow(
-                    title: "Teleprompter Text Size",
-                    value: $settingsService.settings.fontSize,
-                    range: TeleprompterSettings.fontSizeRange
-                )
-                AdvancedNumberRow(
-                    title: "Floating Window Text Size",
-                    value: $settingsService.settings.pipFontSize,
-                    range: TeleprompterSettings.pipFontSizeRange
-                )
-            }
-
-            AboutSection(screen: Self.screen)
-        }
-    }
-
-    private var advancedFooter: String {
-        let prompter = TeleprompterSettings.fontSizeRange
-        let pip = TeleprompterSettings.pipFontSizeRange
-        return "Teleprompter text can be set from \(prompter.lowerBound) to \(prompter.upperBound), "
-            + "and floating window text from \(pip.lowerBound) to \(pip.upperBound)."
-    }
-}
-
-// MARK: - Cards Settings
-
-/// Settings opened from a deck being read: how the cards are set, plus
-/// everything the Settings screens share. Cards keep their own values, so
-/// nothing here changes the teleprompter.
-struct CardsSettingsView: View {
-    @EnvironmentObject var settingsService: SettingsService
-
-    private static let screen = "cards_settings"
-
-    var body: some View {
-        SettingsScreen(screen: Self.screen) {
-            WhatsNewSection(screen: Self.screen)
-
-            Section("Cards") {
-                SizePresetPicker(
-                    title: "Text Size",
-                    value: $settingsService.settings.cards.fontSize,
-                    presets: TeleprompterSettings.fontSizePresets
-                )
-
-                SizePresetPicker(
-                    title: "Editor Text Size",
-                    value: $settingsService.settings.cards.editorFontSize,
-                    presets: TeleprompterSettings.editorFontSizePresets
-                )
-            }
-
-            LockScreenCardsSection(screen: Self.screen)
-
-            AppleWatchSection(screen: Self.screen, mode: .cards)
-
-            AppearanceSection(cueColor: $settingsService.settings.cards.cueColor)
-
-            AdvancedSection(screen: Self.screen, footer: advancedFooter) {
-                AdvancedNumberRow(
-                    title: "Card Text Size",
-                    value: $settingsService.settings.cards.fontSize,
-                    range: TeleprompterSettings.fontSizeRange
-                )
-                AdvancedNumberRow(
-                    title: "Editor Text Size",
-                    value: $settingsService.settings.cards.editorFontSize,
-                    range: TeleprompterSettings.editorFontSizeRange
-                )
-            }
-
-            AboutSection(screen: Self.screen)
-        }
-    }
-
-    private var advancedFooter: String {
-        let card = TeleprompterSettings.fontSizeRange
-        let editor = TeleprompterSettings.editorFontSizeRange
-        return "Card text can be set from \(card.lowerBound) to \(card.upperBound), "
-            + "and editor text from \(editor.lowerBound) to \(editor.upperBound)."
-    }
-}
-
 // MARK: - Shared Sections
 
-/// Whether a deck being read is on the Lock Screen too. It sets how long a
-/// card can be, so the footer says what each choice allows.
-private struct LockScreenCardsSection: View {
-    let screen: String
-
-    @EnvironmentObject var settingsService: SettingsService
-
-    var body: some View {
-        Section {
-            Toggle("Show on Lock Screen", isOn: Binding(
-                get: { settingsService.settings.cards.showOnLockScreen },
-                set: { isOn in
-                    AnalyticsEvents.logButtonClick(isOn ? "cards_lock_screen_on" : "cards_lock_screen_off",
-                                                   screen: screen)
-                    settingsService.settings.cards.showOnLockScreen = isOn
-                }
-            ))
-        } footer: {
-            Text("Lock your iPhone while reading and turn cards from the Lock Screen. "
-                 + "Cards hold up to \(CueCards.characterLimit(onLockScreen: true)) characters to fit there, "
-                 + "or \(CueCards.characterLimit(onLockScreen: false)) with this off.")
-        }
-    }
-}
-
-/// The list both Settings screens are built on, with a Done button and a way
+/// The list Settings is built on, with a Done button and a way
 /// off the number pad, which has no return key.
 private struct SettingsScreen<Content: View>: View {
     @Environment(\.dismiss) var dismiss
@@ -555,7 +507,7 @@ private struct AppearanceSection: View {
 }
 
 /// Typed sizes for anyone who wants one the presets don't offer. Hidden until
-/// asked for, and the choice to show it is remembered across both screens.
+/// asked for, and the choice to show it is remembered across both modes.
 private struct AdvancedSection<Fields: View>: View {
     @AppStorage("settings.showAdvancedSettings") private var showAdvanced = false
 
@@ -586,7 +538,7 @@ private struct AdvancedSection<Fields: View>: View {
     }
 }
 
-/// Share, review and reset, the same on both Settings screens.
+/// Share, review and reset, the same in both modes.
 ///
 /// Each row is a plain button whose action does the work. A Link or ShareLink
 /// with a tap gesture laid over it for analytics competes with the row for the
@@ -787,13 +739,8 @@ extension View {
     }
 }
 
-#Preview("Editor") {
+#Preview {
     EditorSettingsView()
         .environmentObject(SettingsService.shared)
         .environmentObject(RemoteNotificationService.shared)
-}
-
-#Preview("Teleprompter") {
-    TeleprompterSettingsView()
-        .environmentObject(SettingsService.shared)
 }

@@ -24,14 +24,10 @@ struct TeleprompterView: View {
     @State private var hasConfiguredSession = false
     @State private var showControls = true
     @State private var controlsTimer: Timer?
-    @State private var showingSettings = false
     @Environment(\.scenePhase) private var scenePhase
 
     /// Settings are read live, so a size or speed changed mid-run shows at once.
     private var settings: TeleprompterSettings { settingsService.settings }
-
-    /// Playing or counting down to it. Settings is only offered while neither.
-    private var isRunning: Bool { isPlaying || isCountingDown }
 
     // Timer properties
     private var timerDuration: Int { settings.timerDurationSeconds }
@@ -231,26 +227,7 @@ struct TeleprompterView: View {
                         .font(.system(size: 16, weight: .bold, design: .monospaced))
                         .foregroundStyle(timerColor)
                 }
-                // Only offered while paused, even when a tap has brought the
-                // other controls back mid-run.
-                if !isRunning {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button(action: {
-                            AnalyticsEvents.logButtonClick("settings", screen: "teleprompter")
-                            showingSettings = true
-                        }) {
-                            Image(systemName: "gearshape")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                        }
-                        .accessibilityLabel("Settings")
-                    }
-                }
             }
-            .numberPadDoneButton()
-        }
-        .sheet(isPresented: $showingSettings) {
-            TeleprompterSettingsView()
         }
         .persistentSystemOverlays(.hidden)
         .onDisappear {
