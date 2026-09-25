@@ -2,11 +2,11 @@
   "1.6.0": {
     "title": "Cards and Apple Watch",
     "features": [
-        "Cards: one thought per card, swiped through with its own script, settings and timer.",
-        "Turn cards from the Lock Screen, timer included.",
-        "Apple Watch: run the teleprompter, turn cards, or keep decks on your wrist.",
-        "Play or pause with the Action button.",
-        "Help on every screen: tap ? for tips."
+        "Cards Mode: Swipe through cue cards, one thought each, with a timer.",
+        "Cards on Lock Screen: See your cards with the timer and turn them, all without unlocking.",
+        "Apple Watch: Run the teleprompter, turn cards, or keep decks on your wrist.",
+        "Action Button: Play or pause the teleprompter without touching the screen.",
+        "Help: Tap ? on any screen for tips."
     ]
   }
 }
