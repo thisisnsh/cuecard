@@ -111,7 +111,7 @@ struct EditorSettingsView: View {
     @ViewBuilder
     private var cardsSections: some View {
         // Whether a deck being read is on the Lock Screen too. That keeps cards
-        // short enough to fit there, which the note above the toggle says only
+        // short enough to fit there, which the toggle's subtitle says only
         // while it's on.
         Section {
             SizePresetPicker(
@@ -120,21 +120,24 @@ struct EditorSettingsView: View {
                 presets: TeleprompterSettings.fontSizePresets
             )
 
-            if settingsService.settings.cards.showOnLockScreen {
-                Text("Cards longer than \(CueCards.characterLimit(onLockScreen: true)) characters "
-                     + "will be truncated on the Lock Screen.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-            }
-
-            Toggle("Show on Lock Screen", isOn: Binding(
+            Toggle(isOn: Binding(
                 get: { settingsService.settings.cards.showOnLockScreen },
                 set: { isOn in
                     AnalyticsEvents.logButtonClick(isOn ? "cards_lock_screen_on" : "cards_lock_screen_off",
                                                    screen: Self.screen)
                     settingsService.settings.cards.showOnLockScreen = isOn
                 }
-            ))
+            )) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Show on Lock Screen")
+                    if settingsService.settings.cards.showOnLockScreen {
+                        Text("Cards longer than \(CueCards.characterLimit(onLockScreen: true)) characters "
+                             + "will be truncated on the Lock Screen.")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
         } header: {
             Text("Cards")
         }
