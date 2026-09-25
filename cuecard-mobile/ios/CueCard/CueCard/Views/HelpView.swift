@@ -128,20 +128,14 @@ private enum SharedHelp {
                   detail: WatchTips.returnToClock)
     ])
 
-    /// The Play or Pause control needs iOS 18, and the Action button an
-    /// iPhone that has one.
-    static var controls: HelpSection? {
-        guard #available(iOS 18.0, *) else { return nil }
-        var topics: [HelpTopic] = []
-        if DeviceModel.hasActionButton {
-            topics.append(HelpTopic("Play or Pause with the Action Button", systemImage: "button.vertical.left.press",
-                                    detail: "In the Settings app, go to Action Button, choose Controls, "
-                                        + "and pick Play or Pause under CueCard."))
-        }
-        topics.append(HelpTopic("Control Center", systemImage: "switch.2",
-                                detail: "Add CueCard's Play or Pause to Control Center or the Lock Screen. "
-                                    + "It works while a script is open in the teleprompter."))
-        return HelpSection(title: DeviceModel.hasActionButton ? "Action Button" : "Controls", topics: topics)
+    /// The Play or Pause control needs iOS 18 and an iPhone with an Action button.
+    static var actionButton: HelpSection? {
+        guard #available(iOS 18.0, *), DeviceModel.hasActionButton else { return nil }
+        return HelpSection(title: "Action Button", topics: [
+            HelpTopic("Play or Pause with the Action Button", systemImage: "button.vertical.left.press",
+                      detail: "In the Settings app, go to Action Button, choose Controls, "
+                          + "and pick Play or Pause under CueCard.")
+        ])
     }
 }
 
@@ -164,7 +158,7 @@ struct HelpView: View {
 
     private var sections: [HelpSection] {
         let trimmed = query.trimmingCharacters(in: .whitespaces)
-        let shared = [SharedHelp.appleWatch] + (SharedHelp.controls.map { [$0] } ?? [])
+        let shared = [SharedHelp.appleWatch] + (SharedHelp.actionButton.map { [$0] } ?? [])
 
         guard !trimmed.isEmpty else {
             return [HelpSection(title: page.title, topics: page.topics)] + shared
