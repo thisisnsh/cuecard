@@ -23,7 +23,26 @@ struct EditorSettingsView: View {
             WhatsNewSection(screen: Self.screen)
             remoteMessageSection
 
-            switch settingsService.settings.scriptMode {
+            let mode = settingsService.settings.scriptMode
+
+            Section("Editor") {
+                switch mode {
+                case .teleprompter:
+                    SizePresetPicker(
+                        title: "Editor Text Size",
+                        value: $settingsService.settings.editorFontSize,
+                        presets: TeleprompterSettings.editorFontSizePresets
+                    )
+                case .cards:
+                    SizePresetPicker(
+                        title: "Editor Text Size",
+                        value: $settingsService.settings.cards.editorFontSize,
+                        presets: TeleprompterSettings.editorFontSizePresets
+                    )
+                }
+            }
+
+            switch mode {
             case .teleprompter: teleprompterSections
             case .cards: cardsSections
             }
@@ -54,12 +73,6 @@ struct EditorSettingsView: View {
                 title: "Text Size",
                 value: $settingsService.settings.fontSize,
                 presets: TeleprompterSettings.fontSizePresets
-            )
-
-            SizePresetPicker(
-                title: "Editor Text Size",
-                value: $settingsService.settings.editorFontSize,
-                presets: TeleprompterSettings.editorFontSizePresets
             )
         }
 
@@ -107,12 +120,6 @@ struct EditorSettingsView: View {
                 title: "Text Size",
                 value: $settingsService.settings.cards.fontSize,
                 presets: TeleprompterSettings.fontSizePresets
-            )
-
-            SizePresetPicker(
-                title: "Editor Text Size",
-                value: $settingsService.settings.cards.editorFontSize,
-                presets: TeleprompterSettings.editorFontSizePresets
             )
 
             Toggle("Show on Lock Screen", isOn: Binding(
