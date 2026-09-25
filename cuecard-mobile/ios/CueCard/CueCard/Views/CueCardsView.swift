@@ -19,7 +19,6 @@ struct CueCardsView: View {
     @State private var dragOffset: CGFloat = 0
     @State private var showingLockScreenHelp = false
     @State private var showingHelp = false
-    @State private var showingSettings = false
     @Environment(\.openURL) private var openURL
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -104,23 +103,9 @@ struct CueCardsView: View {
                     .accessibilityElement(children: .combine)
                     .accessibilityValue(progress)
                 }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button(action: {
-                        AnalyticsEvents.logButtonClick("settings", screen: "cards")
-                        showingSettings = true
-                    }) {
-                        Image(systemName: "gearshape")
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                    }
-                    .accessibilityLabel("Settings")
-                }
                 HelpToolbarItem(page: .cards, isPresented: $showingHelp)
             }
             .helpSheet(for: .cards, isPresented: $showingHelp)
-            .sheet(isPresented: $showingSettings) {
-                EditorSettingsView()
-            }
             .sheet(isPresented: $showingLockScreenHelp) {
                 NavigationStack {
                     List {

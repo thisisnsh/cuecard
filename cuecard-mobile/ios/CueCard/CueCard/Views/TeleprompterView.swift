@@ -24,7 +24,6 @@ struct TeleprompterView: View {
     @State private var hasConfiguredSession = false
     @State private var showControls = true
     @State private var showingHelp = false
-    @State private var showingSettings = false
     @State private var controlsTimer: Timer?
     @Environment(\.scenePhase) private var scenePhase
 
@@ -223,17 +222,6 @@ struct TeleprompterView: View {
                         }
                         .accessibilityLabel("Close")
                     }
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button(action: {
-                            AnalyticsEvents.logButtonClick("settings", screen: "teleprompter")
-                            showingSettings = true
-                        }) {
-                            Image(systemName: "gearshape")
-                                .font(.system(size: 15, weight: .semibold))
-                                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                        }
-                        .accessibilityLabel("Settings")
-                    }
                     HelpToolbarItem(page: .teleprompter, isPresented: $showingHelp)
                 }
                 ToolbarItem(placement: .principal) {
@@ -243,9 +231,6 @@ struct TeleprompterView: View {
                 }
             }
             .helpSheet(for: .teleprompter, isPresented: $showingHelp)
-            .sheet(isPresented: $showingSettings) {
-                EditorSettingsView()
-            }
         }
         .persistentSystemOverlays(.hidden)
         .onDisappear {
