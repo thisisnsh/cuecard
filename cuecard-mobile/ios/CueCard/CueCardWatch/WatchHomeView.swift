@@ -69,7 +69,7 @@ struct WatchHomeView: View {
                     Text("On Watch")
                 } footer: {
                     if store.decks.isEmpty {
-                        Text("Choose notes to keep on your watch in CueCard's Settings on your iPhone.")
+                        Text("In CueCard on your iPhone, open a saved deck and choose Keep on Apple Watch from the ••• menu.")
                     }
                 }
             }
