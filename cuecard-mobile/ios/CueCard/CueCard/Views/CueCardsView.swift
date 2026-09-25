@@ -306,15 +306,18 @@ struct CueCardsView: View {
 
     // MARK: - Hint
 
-    /// How to move through the deck, and whether it is on the Lock Screen too.
+    /// Whether the deck is on the Lock Screen too, or else how to move
+    /// through it. A deck meant for the Lock Screen says so from the start,
+    /// not only once its Live Activity is up.
     @ViewBuilder
     private var hint: some View {
         let secondary = AppColors.textSecondary(for: colorScheme)
+        let unavailable = session.lockScreenUnavailable && !session.isOnLockScreen
 
-        if session.isOnLockScreen || (settings.cards.showOnLockScreen && session.lockScreenUnavailable) {
+        if session.isOnLockScreen || settings.cards.showOnLockScreen {
             Button { showingLockScreenHelp = true } label: {
-                Label(session.isOnLockScreen ? "Also on Lock Screen" : "Enable Lock Screen cards",
-                      systemImage: session.isOnLockScreen ? "lock.fill" : "lock.slash")
+                Label(unavailable ? "Enable Lock Screen cards" : "Also on Lock Screen",
+                      systemImage: unavailable ? "lock.slash" : "lock.fill")
                     .font(.footnote)
                     .foregroundStyle(secondary)
                     .frame(minHeight: 44)
@@ -325,6 +328,7 @@ struct CueCardsView: View {
             Text("Swipe to turn the card")
                 .font(.footnote)
                 .foregroundStyle(secondary)
+                .frame(minHeight: 44)
         }
     }
 
