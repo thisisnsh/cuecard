@@ -53,6 +53,14 @@ struct HomeView: View {
     /// Teleprompter or cards: what the editor writes and the Play button opens.
     /// The bar shows only the chosen mode's icon, to leave room at the top;
     /// the menu names each one.
+    private var appName: some View {
+        Text("CueCard")
+            .font(.headline)
+            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+            .fixedSize()
+            .accessibilityAddTraits(.isHeader)
+    }
+
     private var modeMenu: some View {
         let current = settingsService.settings.scriptMode
 
@@ -392,11 +400,22 @@ struct HomeView: View {
                 }
             }
             .animation(.easeInOut(duration: 0.2), value: isEditorFocused)
-            .navigationTitle("CueCard")
             .navigationBarTitleDisplayMode(.inline)
             // No bar background: the script's fade shows through its lower half.
             .toolbarBackground(.hidden, for: .navigationBar)
             .toolbar {
+                // The name sits at the left, in place of a centered title.
+                if #available(iOS 26.0, *) {
+                    ToolbarItem(placement: .topBarLeading) {
+                        appName
+                    }
+                    .sharedBackgroundVisibility(.hidden)
+                } else {
+                    ToolbarItem(placement: .topBarLeading) {
+                        appName
+                    }
+                }
+
                 ToolbarItem(placement: .topBarLeading) {
                     modeMenu
                 }
