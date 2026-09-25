@@ -43,67 +43,67 @@ enum HelpPage: String {
         case .writingTeleprompter:
             return [
                 WritingHelp.pickMode,
-                HelpTopic("Add Cues", systemImage: "plus",
+                HelpTopic("Add Cues",
                           detail: "Type [ or tap + above the keyboard to add a cue, like [cue pause]. "
                               + "Cues show in color, as reminders rather than words to say."),
-                HelpTopic("Set a Timer", systemImage: "timer",
+                HelpTopic("Set a Timer",
                           detail: "Tap the timer beside Play to set how long you have. "
                               + "It turns yellow near the end and red once you're over."),
-                HelpTopic("Save and Open", systemImage: "ellipsis.circle",
+                HelpTopic("Save and Open",
                           detail: "The ••• menu saves your script, opens saved ones, "
                               + "and imports or exports text files.")
             ]
         case .writingCards:
             return [
                 WritingHelp.pickMode,
-                HelpTopic("Write Cards", systemImage: "rectangle.stack.badge.plus",
+                HelpTopic("Write Cards",
                           detail: "Each box is one card. Tap Create New Card for another."),
-                HelpTopic("Add Cues", systemImage: "plus",
+                HelpTopic("Add Cues",
                           detail: "Type [ or tap + above the keyboard to add a cue, like [cue pause]. "
                               + "Cues show in color, as reminders rather than words to say."),
-                HelpTopic("Set a Timer", systemImage: "timer",
+                HelpTopic("Set a Timer",
                           detail: "Tap the timer beside Play to set how long you have. "
                               + "The time on your cards counts it down."),
-                HelpTopic("Save and Open", systemImage: "ellipsis.circle",
+                HelpTopic("Save and Open",
                           detail: "The ••• menu saves your deck, opens saved ones, "
                               + "and imports or exports text files.")
             ]
         case .settings:
             return [
-                HelpTopic("Settings for Each Mode", systemImage: "slider.horizontal.3",
+                HelpTopic("Settings for Each Mode",
                           detail: "Settings show the mode you're writing in. "
                               + "Teleprompter and Cards each keep their own sizes and colors."),
-                HelpTopic("Start Delay and Scroll Speed", systemImage: "speedometer",
+                HelpTopic("Start Delay and Scroll Speed",
                           detail: "Start Delay counts down before the script moves. "
                               + "Scroll Speed is how many lines pass each minute."),
-                HelpTopic("Exact Sizes", systemImage: "textformat.size",
+                HelpTopic("Exact Sizes",
                           detail: "Tap Show Advanced Settings to type a text size the presets don't offer.")
             ]
         case .savedContent:
             return [
-                HelpTopic("Open", systemImage: "folder",
+                HelpTopic("Open",
                           detail: "Tap a script or deck to open it in the editor."),
-                HelpTopic("Rename or Delete", systemImage: "hand.draw",
+                HelpTopic("Rename or Delete",
                           detail: "Swipe right to rename, or swipe left to delete.")
             ]
         case .teleprompter:
             return [
-                HelpTopic("Play and Pause", systemImage: "playpause",
+                HelpTopic("Play and Pause",
                           detail: "The buttons fade while the script scrolls. Tap the screen to bring them back."),
-                HelpTopic("Scroll by Hand", systemImage: "hand.draw",
+                HelpTopic("Scroll by Hand",
                           detail: "Drag the script to go back or ahead. It carries on from where you leave it."),
-                HelpTopic("Floating Window", systemImage: "pip",
+                HelpTopic("Floating Window",
                           detail: "Keeps your script over other apps, like a video call. "
                               + "It opens by itself when you leave CueCard.")
             ]
         case .cards:
             return [
-                HelpTopic("Turn Cards", systemImage: "hand.draw",
+                HelpTopic("Turn Cards",
                           detail: "Swipe, or tap Back and Next. The dots at the top show where you are."),
-                HelpTopic("Read from the Lock Screen", systemImage: "lock",
+                HelpTopic("Read from the Lock Screen",
                           detail: "With Show on Lock Screen on in Settings, lock your iPhone "
                               + "and turn cards from the Live Activity."),
-                HelpTopic("Timer", systemImage: "timer",
+                HelpTopic("Timer",
                           detail: "The time at the top counts down your timer, "
                               + "or up from when the deck opened.")
             ]
@@ -127,21 +127,19 @@ enum HelpPage: String {
 }
 
 private enum WritingHelp {
-    static let pickMode = HelpTopic("Pick a Mode", systemImage: "rectangle.stack",
+    static let pickMode = HelpTopic("Pick a Mode",
                                     detail: "Tap the mode's name at the top left. Teleprompter scrolls your script; "
                                         + "Cards shows it one card at a time.")
 }
 
 struct HelpTopic: Identifiable {
     let title: String
-    let systemImage: String
     let detail: String
 
     var id: String { title }
 
-    init(_ title: String, systemImage: String, detail: String) {
+    init(_ title: String, detail: String) {
         self.title = title
-        self.systemImage = systemImage
         self.detail = detail
     }
 
@@ -160,18 +158,18 @@ private struct HelpSection: Identifiable {
 // MARK: - Topics Across the App
 
 private enum SharedHelp {
-    private static let install = HelpTopic("Install on Apple Watch", systemImage: "applewatch",
+    private static let install = HelpTopic("Install on Apple Watch",
                                            detail: "Open the Watch app on your iPhone. Under Available Apps, tap Install next to CueCard.")
-    private static let remote = HelpTopic("Teleprompter Remote", systemImage: "playpause",
+    private static let remote = HelpTopic("Teleprompter Remote",
                                           detail: "While a script is open on your iPhone, the watch shows its timer "
                                               + "and can play, pause or go back 10 seconds.")
-    private static let cardsOnWrist = HelpTopic("Cards on Your Wrist", systemImage: "rectangle.stack",
+    private static let cardsOnWrist = HelpTopic("Cards on Your Wrist",
                                                 detail: "A deck open on your iPhone shows on the watch too, "
                                                     + "and turning a card on either moves both.")
-    private static let keepDecks = HelpTopic("Keep Decks on the Watch", systemImage: "applewatch.radiowaves.left.and.right",
+    private static let keepDecks = HelpTopic("Keep Decks on the Watch",
                                              detail: "Open a saved deck and choose Keep on Apple Watch from the ••• menu "
                                                  + "to read it even without your iPhone.")
-    private static let stayOnScreen = HelpTopic("Stay on Screen", systemImage: "clock.arrow.circlepath",
+    private static let stayOnScreen = HelpTopic("Stay on Screen",
                                                 detail: WatchTips.returnToClock)
 
     static let appleWatch = HelpSection(title: "Apple Watch",
@@ -185,7 +183,7 @@ private enum SharedHelp {
     static var actionButton: HelpSection? {
         guard #available(iOS 18.0, *), DeviceModel.hasActionButton else { return nil }
         return HelpSection(title: "Action Button", topics: [
-            HelpTopic("Play or Pause with the Action Button", systemImage: "button.vertical.left.press",
+            HelpTopic("Play or Pause with the Action Button",
                       detail: "In the Settings app, go to Action Button, choose Controls, "
                           + "and pick Play or Pause under CueCard.")
         ])
@@ -290,19 +288,12 @@ struct HelpView: View {
     }
 
     private func row(_ topic: HelpTopic) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: topic.systemImage)
-                .font(.system(size: 15, weight: .semibold))
+        VStack(alignment: .leading, spacing: 2) {
+            Text(topic.title)
+                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+            Text(topic.detail)
+                .font(.footnote)
                 .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                .frame(width: 22)
-                .padding(.top, 2)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(topic.title)
-                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                Text(topic.detail)
-                    .font(.footnote)
-                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-            }
         }
         .padding(.vertical, 2)
     }
