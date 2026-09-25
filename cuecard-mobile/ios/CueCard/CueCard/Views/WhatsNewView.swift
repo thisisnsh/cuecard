@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// This build's new features, on a glass card floating over whatever is on
-/// screen, which shows through blurred. Shown once per build on launch, and
+/// screen. Shown once per build on launch, and
 /// again from Settings.
 struct WhatsNewView: View {
     let release: WhatsNewService.Release
@@ -17,14 +17,6 @@ struct WhatsNewView: View {
 
     var body: some View {
         ZStack {
-            // What's underneath stays in view, softened, so the card reads as
-            // hovering over it rather than replacing it.
-            Rectangle()
-                .fill(.ultraThinMaterial)
-                .overlay(Color.black.opacity(colorScheme == .dark ? 0.25 : 0.12))
-                .opacity(isShowing ? 1 : 0)
-                .ignoresSafeArea()
-
             if isShowing {
                 card
                     // A slow drift, out of step with the icon's, so the two
