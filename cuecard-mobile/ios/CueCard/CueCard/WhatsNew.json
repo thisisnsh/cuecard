@@ -2,10 +2,11 @@
   "1.6.0": {
     "title": "Cards and Apple Watch",
     "features": [
-        "Cards mode: write one thought per card, then swipe through them. Cards keep their own content, settings and timer, apart from the teleprompter.",
-        "Decks show on the Lock Screen too: lock your iPhone while reading and turn cards from there. The timer comes along.",
-        "CueCard on Apple Watch: play, pause and turn cards from your wrist, see the timer, or read decks right on the watch.",
-        "Play or pause from Control Center or the Action button."
+        "Cards: one thought per card, swiped through with its own script, settings and timer.",
+        "Turn cards from the Lock Screen, timer included.",
+        "Apple Watch: run the teleprompter, turn cards, or keep decks on your wrist.",
+        "Play or pause with the Action button.",
+        "Help on every screen: tap ? for tips."
     ]
   }
 }
