@@ -43,6 +43,8 @@ struct HomeView: View {
     private var isCardsMode: Bool { settingsService.settings.scriptMode == .cards }
 
     /// Teleprompter or cards: what the editor writes and the Play button opens.
+    /// The bar shows only the chosen mode's icon, to leave room at the top;
+    /// the menu names each one.
     private var modeMenu: some View {
         let current = settingsService.settings.scriptMode
 
@@ -63,8 +65,8 @@ struct HomeView: View {
             }
         } label: {
             HStack(spacing: 6) {
-                Text(current.displayName)
-                    .font(.headline)
+                Image(systemName: current.systemImage)
+                    .font(.system(size: 17, weight: .semibold))
                 Image(systemName: "chevron.down")
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(AppColors.textSecondary(for: colorScheme))
