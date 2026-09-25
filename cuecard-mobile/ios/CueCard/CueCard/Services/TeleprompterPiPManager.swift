@@ -27,8 +27,8 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
     }
     @Published private(set) var isPiPActive = false
     @Published private(set) var isPiPPossible = false
-    /// The reader commits its position before the return transition proceeds.
-    /// Playback continues while the expanding PiP content is hidden.
+    /// A restoration request belongs to the full-screen presentation only. The
+    /// still-visible overlay carries on scrolling through it.
     @Published private(set) var restorationRequest: UUID?
     private var restorationCompletion: ((Bool) -> Void)?
     private var restorationTimeout: DispatchWorkItem?
@@ -491,7 +491,7 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         restorationRequest = nil
         if !restored {
             isRestoringToReader = false
-            contentView?.isHidden = false
+            readerHost?.cancelVideoRestoration()
         }
         completion?(restored)
     }
@@ -510,6 +510,7 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         pipViewController = nil
         sourceView?.removeFromSuperview()
         sourceView = nil
+        readerHost?.cancelVideoRestoration()
         isRestoringToReader = false
         renderer = nil
         isPiPActive = false
@@ -570,7 +571,7 @@ extension TeleprompterPiPManager: @preconcurrency AVPictureInPictureControllerDe
     func pictureInPictureControllerWillStartPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
         guard pipController === pictureInPictureController else { return }
         if let request = restorationRequest { completeRestoration(request, restored: false) }
-        contentView?.isHidden = false
+        readerHost?.cancelVideoRestoration()
         isRestoringToReader = false
         switchDriver()
         isStartingPiP = true
@@ -588,15 +589,6 @@ extension TeleprompterPiPManager: @preconcurrency AVPictureInPictureControllerDe
         renderFrame(force: true)
     }
 
-    func pictureInPictureControllerWillStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
-        guard pipController === pictureInPictureController else { return }
-        // Also cover closing PiP from the already-visible reader. Hide the
-        // small-window layout before AVKit scales it into the app.
-        if isRestoringToReader || UIApplication.shared.applicationState == .active {
-            contentView?.isHidden = true
-        }
-    }
-
     func pictureInPictureControllerDidStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
         guard pipController === pictureInPictureController else { return }
         switchDriver()
@@ -606,7 +598,14 @@ extension TeleprompterPiPManager: @preconcurrency AVPictureInPictureControllerDe
         reanchorPlayback()
         syncClock()
         refreshPresentation()
-        isRestoringToReader = false
+        if isRestoringToReader, let readerHost {
+            readerHost.finishVideoRestoration { [weak self] in
+                guard self?.pipController === pictureInPictureController else { return }
+                self?.isRestoringToReader = false
+            }
+        } else {
+            isRestoringToReader = false
+        }
     }
 
     func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, failedToStartPictureInPictureWithError error: Error) {
@@ -617,7 +616,7 @@ extension TeleprompterPiPManager: @preconcurrency AVPictureInPictureControllerDe
         isRestoringToReader = false
         reanchorPlayback()
         syncClock()
-        contentView?.isHidden = false
+        readerHost?.cancelVideoRestoration()
         print("Could not start PiP: \(error)")
     }
 
@@ -630,10 +629,6 @@ extension TeleprompterPiPManager: @preconcurrency AVPictureInPictureControllerDe
         if let request = restorationRequest { completeRestoration(request, restored: false) }
         let request = UUID()
         isRestoringToReader = true
-        // Hide the PiP text while the reader is being positioned, before its
-        // committed layout allows AVKit to begin the return expansion. The
-        // normal reader stays visible; there is no second reveal after landing.
-        contentView?.isHidden = true
         restorationCompletion = completionHandler
         restorationRequest = request
         // A detached/dismissed reader must not leave AVKit waiting forever.
