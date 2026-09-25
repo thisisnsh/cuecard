@@ -47,6 +47,7 @@ struct EditorSettingsView: View {
             case .cards: cardsSections
             }
 
+            HowToSection(mode: mode)
             AboutSection(screen: Self.screen)
             diagnosticsSection
         }
@@ -85,8 +86,6 @@ struct EditorSettingsView: View {
 
             AspectRatioPicker(selection: $settingsService.settings.overlayAspectRatio)
         }
-
-        PlaybackControlsSection()
 
         AppleWatchSection(screen: Self.screen, mode: .teleprompter)
 
@@ -269,20 +268,41 @@ private struct WhatsNewSection: View {
     }
 }
 
-/// How to set up the Action button to play or pause without opening the app.
-/// Left out on iPhones without one; the control needs iOS 18.
-private struct PlaybackControlsSection: View {
+/// How to use what isn't set here: the Action button, the Lock Screen and
+/// the watch app. Last in Settings, after everything that is a setting.
+private struct HowToSection: View {
+    @EnvironmentObject var settingsService: SettingsService
+    @ObservedObject private var watch = WatchSessionService.shared
     @Environment(\.colorScheme) var colorScheme
 
+    let mode: ScriptMode
+
+    /// The Action button control needs iOS 18, and an iPhone with the button.
+    private var showsActionButton: Bool {
+        guard mode == .teleprompter else { return false }
+        if #available(iOS 18.0, *) { return DeviceModel.hasActionButton }
+        return false
+    }
+
+    private var showsLockScreen: Bool { mode == .cards && settingsService.settings.cards.showOnLockScreen }
+    private var showsWatchInstall: Bool { watch.isPaired && !watch.isWatchAppInstalled }
+
     var body: some View {
-        if #available(iOS 18.0, *), DeviceModel.hasActionButton {
-            Section {
-                row("Action Button", systemImage: "button.vertical.left.press",
-                    detail: "In the Settings app, go to Action Button, choose Controls, and pick Play or Pause under CueCard.")
-            } header: {
-                Text("Playback Controls")
-            } footer: {
-                Text("Play or pause without opening CueCard while a script is open in the teleprompter.")
+        if showsActionButton || showsLockScreen || showsWatchInstall {
+            Section("How To") {
+                if showsActionButton {
+                    row("Play or Pause with the Action Button", systemImage: "button.vertical.left.press",
+                        detail: "In the Settings app, go to Action Button, choose Controls, and pick Play or Pause "
+                            + "under CueCard. It works while a script is open in the teleprompter.")
+                }
+                if showsLockScreen {
+                    row("Read from the Lock Screen", systemImage: "lock",
+                        detail: "Lock your iPhone while reading, and turn cards from the Lock Screen.")
+                }
+                if showsWatchInstall {
+                    row("Get CueCard on Apple Watch", systemImage: "applewatch",
+                        detail: "Open the Watch app. Under Available Apps, tap Install next to CueCard.")
+                }
             }
         }
     }
@@ -306,7 +326,7 @@ private struct PlaybackControlsSection: View {
     }
 }
 
-/// The watch app: a way to install it while a watch is paired without it,
+/// The watch app: a row that installs it while a watch is paired without it,
 /// and once it's on, how big it draws cards. Left out when there's nothing
 /// to show for the mode.
 private struct AppleWatchSection: View {
@@ -339,10 +359,6 @@ private struct AppleWatchSection: View {
                 }
             } header: {
                 Text("Apple Watch")
-            } footer: {
-                if needsInstall {
-                    Text("Opens the Watch app. Under Available Apps, tap Install next to CueCard.")
-                }
             }
         }
     }
@@ -412,10 +428,6 @@ private struct AppearanceSection: View {
                     }
                 }
                 .padding(.vertical, 4)
-
-                Text("Every cue is shown in this color.")
-                    .font(.footnote)
-                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
             }
         }
     }
