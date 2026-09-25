@@ -139,17 +139,13 @@ struct CueCardsLiveActivity: Widget {
     }
 }
 
-/// The Lock Screen card, in the app's background color. It's see-through, so
-/// the system's blur shows through as glass over the wallpaper.
+/// The Lock Screen card, on the system's own background, like a notification.
 private struct CueCardsActivityView: View {
-    @Environment(\.colorScheme) private var colorScheme
     let state: CueCardsWidgetState
 
     var body: some View {
         CueCardsSurface(state: state)
             .padding(12)
             .frame(height: 160)
-            .activityBackgroundTint(AppColors.background(for: colorScheme).opacity(colorScheme == .dark ? 0.55 : 0.6))
-            .activitySystemActionForegroundColor(AppColors.textPrimary(for: colorScheme))
     }
 }
