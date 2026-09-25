@@ -69,6 +69,19 @@ extension View {
     }
 }
 
+extension View {
+    /// Leaves the top of a scroll view to `scriptEdgeFade`, without the bar's
+    /// own edge effect drawn over it on iOS 26.
+    @ViewBuilder
+    func topScrollEdgeEffectHidden() -> some View {
+        if #available(iOS 26.0, *) {
+            scrollEdgeEffectHidden(true, for: .top)
+        } else {
+            self
+        }
+    }
+}
+
 /// One end of the fade: solid against its edge, gone by the far side.
 private struct EdgeFade: View {
     let color: Color

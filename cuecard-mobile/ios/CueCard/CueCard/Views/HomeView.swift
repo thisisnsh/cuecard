@@ -36,6 +36,13 @@ struct HomeView: View {
     /// much room clear so its last line never rests underneath them.
     private static let controlsHeight: CGFloat = 52 + 24
 
+    /// How far the editor reaches up under the top bar: to its middle, so the
+    /// script fades out from there down, as gently as it does at the bottom.
+    /// Not while a banner sits between the two.
+    private var editorTopOverlap: CGFloat {
+        notifications.notification(for: .homeBanner) == nil ? 22 : 0
+    }
+
     private var hasNotes: Bool {
         !settingsService.notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
@@ -299,7 +306,8 @@ struct HomeView: View {
                             colorScheme: colorScheme,
                             fontSize: CGFloat(settingsService.settings.cards.editorFontSize),
                             cardLimit: settingsService.settings.cards.characterLimit,
-                            bottomInset: isEditorFocused ? CueBar.height : Self.controlsHeight
+                            bottomInset: isEditorFocused ? CueBar.height : Self.controlsHeight,
+                            topOverlap: editorTopOverlap
                         )
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                     } else {
@@ -312,7 +320,8 @@ struct HomeView: View {
                             colorScheme: colorScheme,
                             fontSize: CGFloat(settingsService.settings.editorFontSize),
                             keyboardOverlayHeight: CueBar.height,
-                            restingOverlayHeight: Self.controlsHeight
+                            restingOverlayHeight: Self.controlsHeight,
+                            topOverlap: editorTopOverlap
                         )
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         // The editor makes its own room for the keyboard, as scroll
@@ -384,8 +393,8 @@ struct HomeView: View {
             .animation(.easeInOut(duration: 0.2), value: isEditorFocused)
             .navigationTitle("CueCard")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(AppColors.background(for: colorScheme), for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
+            // No bar background: the script's fade shows through its lower half.
+            .toolbarBackground(.hidden, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     modeMenu
@@ -556,6 +565,10 @@ struct NotesEditorView: View {
     var keyboardOverlayHeight: CGFloat = 0
     /// Room the home controls take at the bottom once the keyboard has gone.
     var restingOverlayHeight: CGFloat = 0
+    /// How far the editor reaches up under the top bar, for the fade to start there.
+    var topOverlap: CGFloat = 0
+
+    private var topFade: CGFloat { CueTextEditor.edgeFade + topOverlap }
 
     var body: some View {
         ZStack(alignment: .topLeading) {
@@ -567,7 +580,7 @@ struct NotesEditorView: View {
                     .font(.system(size: fontSize, weight: .medium))
                     .foregroundStyle(AppColors.textSecondary(for: colorScheme).opacity(0.6))
                     .padding(.horizontal, 20)
-                    .padding(.top, CueTextEditor.edgeFade)
+                    .padding(.top, topFade)
                     .allowsHitTesting(false)
             }
 
@@ -579,13 +592,15 @@ struct NotesEditorView: View {
                 colorScheme: colorScheme,
                 fontSize: fontSize,
                 keyboardOverlayHeight: keyboardOverlayHeight,
-                restingOverlayHeight: restingOverlayHeight
+                restingOverlayHeight: restingOverlayHeight,
+                topInset: topFade
             )
             .padding(.horizontal, 4)
         }
         // Lines arrive and leave through a fade instead of being cut off against
         // the toolbar above and the controls below.
-        .scriptEdgeFade(for: colorScheme, top: CueTextEditor.edgeFade, bottom: Self.bottomFade)
+        .scriptEdgeFade(for: colorScheme, top: topFade, bottom: Self.bottomFade)
+        .padding(.top, -topOverlap)
     }
 
     /// The bottom fade reaches up past the floating controls, so a line is gone
@@ -609,6 +624,8 @@ struct CardsEditorView: View {
     let cardLimit: Int
     /// Room kept clear below the last card for what floats over the list.
     let bottomInset: CGFloat
+    /// How far the list reaches up under the top bar, for the fade to start there.
+    var topOverlap: CGFloat = 0
 
     private struct EditableCard: Identifiable {
         let id = UUID()
@@ -670,7 +687,8 @@ struct CardsEditorView: View {
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
             .scrollDismissesKeyboard(.interactively)
-            .contentMargins(.top, Self.topFade - 8, for: .scrollContent)
+            .topScrollEdgeEffectHidden()
+            .contentMargins(.top, topOverlap + Self.topFade - 8, for: .scrollContent)
             .contentMargins(.bottom, bottomInset + 16, for: .scrollContent)
         }
         // A list draws on past its frame into the home indicator's strip, below
@@ -679,7 +697,8 @@ struct CardsEditorView: View {
         .clipped()
         // The bottom fade reaches up past what floats over the list, so a card
         // is gone before it passes behind the controls or the cue bar.
-        .scriptEdgeFade(for: colorScheme, top: Self.topFade, bottom: bottomInset)
+        .scriptEdgeFade(for: colorScheme, top: topOverlap + Self.topFade, bottom: bottomInset)
+        .padding(.top, -topOverlap)
         .onAppear(perform: loadCards)
         .onChange(of: text) {
             guard text != writtenText else { return }

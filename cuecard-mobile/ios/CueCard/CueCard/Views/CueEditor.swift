@@ -278,6 +278,9 @@ struct CueTextEditor: UIViewRepresentable {
     var keyboardOverlayHeight: CGFloat = 0
     /// Height of whatever floats over the bottom of the editor with the keyboard away.
     var restingOverlayHeight: CGFloat = 0
+    /// How far down the script starts. More than `edgeFade` where the editor
+    /// reaches up under the top bar and the fade starts inside it.
+    var topInset: CGFloat = Self.edgeFade
 
     /// How far the script fades into the background at the top and bottom edges.
     /// The text starts and ends this far in, so no line sits inside a fade.
@@ -294,9 +297,15 @@ struct CueTextEditor: UIViewRepresentable {
             textView.textContainerInset = .zero
             textView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         } else {
-            textView.textContainerInset = UIEdgeInsets(top: Self.edgeFade, left: 16, bottom: Self.edgeFade, right: 16)
+            textView.textContainerInset = UIEdgeInsets(top: topInset, left: 16, bottom: Self.edgeFade, right: 16)
             textView.alwaysBounceVertical = true
             textView.keyboardDismissMode = .interactive
+            // The room under the top bar is in `topInset` already, and the
+            // fade stands in for the bar's own edge effect.
+            textView.contentInsetAdjustmentBehavior = .never
+            if #available(iOS 26.0, *) {
+                textView.topEdgeEffect.isHidden = true
+            }
         }
         textView.text = text
         applyHighlighting(to: textView)
@@ -313,6 +322,9 @@ struct CueTextEditor: UIViewRepresentable {
         }
         textView.keyboardOverlayHeight = keyboardOverlayHeight
         textView.restingOverlayHeight = restingOverlayHeight
+        if !growsWithText, textView.textContainerInset.top != topInset {
+            textView.textContainerInset.top = topInset
+        }
 
         let styleChanged = context.coordinator.appliedColorScheme != colorScheme
             || context.coordinator.appliedCueColor != cueColor
