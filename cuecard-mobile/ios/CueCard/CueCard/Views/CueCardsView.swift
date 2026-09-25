@@ -64,7 +64,7 @@ struct CueCardsView: View {
                             .padding(.top, 12)
 
                         controls
-                            .padding(.horizontal, 24)
+                            .padding(.horizontal, 20)
                             .padding(.top, 16)
                             .padding(.bottom, 16)
                     }
@@ -334,21 +334,25 @@ struct CueCardsView: View {
 
     // MARK: - Controls
 
+    /// Back and Next, each sized to its label like Read Cards on the editor.
     private var controls: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: 12) {
             Button(action: {
                 AnalyticsEvents.logButtonClick("previous_card", screen: "cards")
                 withAnimation(animation) { session.previous() }
             }) {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 20, weight: .semibold))
+                Label("Back", systemImage: "chevron.left")
+                    .font(.subheadline.weight(.semibold))
                     .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                    .frame(width: 52, height: 52)
-                    .glassedEffect(in: Circle())
+                    .padding(.horizontal, 16)
+                    .frame(height: 52)
+                    .glassedEffect(in: Capsule())
             }
             .disabled(session.index == 0)
             .opacity(session.index == 0 ? 0.4 : 1)
             .accessibilityLabel("Previous Card")
+
+            Spacer(minLength: 0)
 
             Button(action: {
                 if session.isFinished {
@@ -359,15 +363,16 @@ struct CueCardsView: View {
                     withAnimation(animation) { session.next() }
                 }
             }) {
-                HStack(spacing: 10) {
+                HStack(spacing: 8) {
                     Text(nextLabel)
                     Image(systemName: session.isFinished ? "arrow.counterclockwise" :
                             (session.index == session.cards.count - 1 ? "checkmark" : "arrow.right"))
                 }
-                .font(.headline)
+                .font(.subheadline.weight(.semibold))
+                .lineLimit(1)
                 .foregroundStyle(colorScheme == .dark ? .black : .white)
-                .frame(maxWidth: .infinity)
-                .frame(height: 56)
+                .padding(.horizontal, 16)
+                .frame(height: 52)
                 .background(Capsule().fill(AppColors.green(for: colorScheme)))
                 .glassedEffect(in: Capsule())
             }
