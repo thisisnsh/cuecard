@@ -437,7 +437,7 @@ struct HomeView: View {
                                 AnalyticsEvents.logButtonClick("saved_notes", screen: "home")
                                 showingSavedNotes = true
                             }) {
-                                Label("Saved Content", systemImage: "folder")
+                                Label("Open", systemImage: "folder")
                             }
 
                             Divider()
