@@ -62,7 +62,7 @@ final class WhatsNewService: ObservableObject {
     }
 
     /// Counts the people this version's features reached on their own. Opening the
-    /// card from Settings is a `button_click` instead, so this stays a clean
+    /// card from Help is a `button_click` instead, so this stays a clean
     /// impression count rather than one mixed with people going looking.
     private func logShown() {
         Analytics.logEvent("whats_new_shown", parameters: [

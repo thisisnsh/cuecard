@@ -20,7 +20,6 @@ struct EditorSettingsView: View {
 
     var body: some View {
         SettingsScreen(screen: Self.screen) {
-            WhatsNewSection(screen: Self.screen)
             remoteMessageSection
 
             let mode = settingsService.settings.scriptMode
@@ -237,35 +236,6 @@ private struct SettingsScreen<Content: View>: View {
                 AnalyticsParameterScreenName: screen,
                 AnalyticsParameterScreenClass: "SettingsView"
             ])
-        }
-    }
-}
-
-/// Opens this version's new features again. Left out when there are none for it.
-private struct WhatsNewSection: View {
-    @ObservedObject private var whatsNew = WhatsNewService.shared
-    @Environment(\.colorScheme) var colorScheme
-
-    let screen: String
-
-    var body: some View {
-        if whatsNew.release != nil {
-            Section {
-                Button {
-                    AnalyticsEvents.logButtonClick("whats_new", screen: screen)
-                    whatsNew.show()
-                } label: {
-                    HStack {
-                        Text("What's New in \(whatsNew.version)")
-                            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                        Spacer()
-                        Image(systemName: "sparkles")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                    }
-                    .contentShape(Rectangle())
-                }
-            }
         }
     }
 }

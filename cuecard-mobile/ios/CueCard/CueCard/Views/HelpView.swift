@@ -152,6 +152,7 @@ private enum SharedHelp {
 struct HelpView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
+    @ObservedObject private var whatsNew = WhatsNewService.shared
 
     let page: HelpPage
 
@@ -178,6 +179,25 @@ struct HelpView: View {
     var body: some View {
         NavigationStack {
             List {
+                if query.isEmpty && whatsNew.release != nil {
+                    Section {
+                        Button {
+                            AnalyticsEvents.logButtonClick("whats_new", screen: Self.screen)
+                            whatsNew.show()
+                        } label: {
+                            HStack {
+                                Text("What's New in \(whatsNew.version)")
+                                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                                Spacer()
+                                Image(systemName: "sparkles")
+                                    .font(.system(size: 13, weight: .semibold))
+                                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                            }
+                            .contentShape(Rectangle())
+                        }
+                    }
+                }
+
                 ForEach(sections) { section in
                     Section(section.title) {
                         ForEach(section.topics) { topic in
