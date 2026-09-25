@@ -701,6 +701,8 @@ struct CardsEditorView: View {
     private func cardRow(_ card: EditableCard, number: Int) -> some View {
         let measure = CueCards.measure(card: card.text, limit: cardLimit)
         let isOver = measure.overflow != nil
+        // The count only shows once a card is getting close to full.
+        let showsCount = measure.length * 5 >= cardLimit * 4
         let secondary = AppColors.textSecondary(for: colorScheme)
 
         return VStack(alignment: .leading, spacing: 10) {
@@ -708,8 +710,10 @@ struct CardsEditorView: View {
                 Text("Card \(number)")
                     .foregroundStyle(secondary)
                 Spacer()
-                Text("\(measure.length)/\(cardLimit)")
-                    .foregroundStyle(isOver ? AppColors.red(for: colorScheme) : secondary)
+                if showsCount {
+                    Text("\(measure.length)/\(cardLimit)")
+                        .foregroundStyle(isOver ? AppColors.red(for: colorScheme) : secondary)
+                }
             }
             .font(.caption.weight(.semibold).monospacedDigit())
             .accessibilityElement(children: .combine)
