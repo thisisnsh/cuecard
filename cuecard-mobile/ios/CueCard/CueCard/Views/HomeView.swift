@@ -48,19 +48,17 @@ struct HomeView: View {
     private var modeMenu: some View {
         let current = settingsService.settings.scriptMode
 
+        // Plain buttons rather than a picker, so the menu shows no checkmark:
+        // the icon in the bar already says which mode is on.
         return Menu {
-            Picker("Mode", selection: Binding(
-                get: { settingsService.settings.scriptMode },
-                set: { mode in
+            ForEach(ScriptMode.allCases) { mode in
+                Button {
                     AnalyticsEvents.logButtonClick("mode_\(mode.rawValue)", screen: "home")
                     if showingTimerPicker { closeTimerPicker() }
                     isEditorFocused = false
                     settingsService.settings.scriptMode = mode
-                }
-            )) {
-                ForEach(ScriptMode.allCases) { mode in
+                } label: {
                     Label(mode.displayName, systemImage: mode.systemImage)
-                        .tag(mode)
                 }
             }
         } label: {
