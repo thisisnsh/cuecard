@@ -441,14 +441,14 @@ struct HomeView: View {
                                 Label("New", systemImage: "square.and.pencil")
                             }
 
+                            Divider()
+
                             Button(action: {
                                 AnalyticsEvents.logButtonClick("saved_notes", screen: "home")
                                 showingSavedNotes = true
                             }) {
-                                Label("Open", systemImage: "folder")
+                                Label("Saved Content", systemImage: "folder")
                             }
-
-                            Divider()
 
                             Button(action: {
                                 AnalyticsEvents.logButtonClick("import_file", screen: "home")
