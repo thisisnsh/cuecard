@@ -206,7 +206,6 @@ struct EditorSettingsView: View {
 /// off the number pad, which has no return key.
 private struct SettingsScreen<Content: View>: View {
     @Environment(\.dismiss) var dismiss
-    @State private var showingHelp = false
 
     let screen: String
     @ViewBuilder let content: Content
@@ -226,9 +225,7 @@ private struct SettingsScreen<Content: View>: View {
                         dismiss()
                     }
                 }
-                HelpToolbarItem(page: .settings, isPresented: $showingHelp)
             }
-            .helpSheet(for: .settings, isPresented: $showingHelp)
             .numberPadDoneButton()
         }
         .onAppear {
