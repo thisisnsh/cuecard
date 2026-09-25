@@ -18,6 +18,7 @@ struct CueCardsView: View {
     @State private var hasOpenedDeck = false
     @State private var dragOffset: CGFloat = 0
     @State private var showingLockScreenHelp = false
+    @State private var showingHelp = false
     @Environment(\.openURL) private var openURL
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -102,7 +103,9 @@ struct CueCardsView: View {
                     .accessibilityElement(children: .combine)
                     .accessibilityValue(progress)
                 }
+                HelpToolbarItem(page: .cards, isPresented: $showingHelp)
             }
+            .helpSheet(for: .cards, isPresented: $showingHelp)
             .sheet(isPresented: $showingLockScreenHelp) {
                 NavigationStack {
                     List {

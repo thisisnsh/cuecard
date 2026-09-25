@@ -9,6 +9,7 @@ struct HomeView: View {
     @EnvironmentObject var notifications: RemoteNotificationService
     @Environment(\.colorScheme) var colorScheme
     @State private var showingSettings = false
+    @State private var showingHelp = false
     @State private var showingTeleprompter = false
     @State private var showingCards = false
     /// The cards showing were opened from the watch, not from the editor.
@@ -84,7 +85,7 @@ struct HomeView: View {
 
     private func showCardsOpenedOnWatch() {
         guard scenePhase == .active, !cardsSession.cards.isEmpty, !showingCards,
-              !showingTeleprompter, !showingSettings, !showingSavedNotes else { return }
+              !showingTeleprompter, !showingSettings, !showingSavedNotes, !showingHelp else { return }
         cardsOpenedOnWatch = true
         showingCards = true
     }
@@ -482,7 +483,10 @@ struct HomeView: View {
                         }
                     }
                 }
+
+                HelpToolbarItem(page: .home, isPresented: $showingHelp)
             }
+            .helpSheet(for: .home, isPresented: $showingHelp)
             .sheet(isPresented: $showingSettings) {
                 EditorSettingsView()
             }
@@ -858,6 +862,7 @@ struct SavedNotesView: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.colorScheme) var colorScheme
     @State private var noteToRename: SavedNote?
+    @State private var showingHelp = false
     @State private var renameTitle = ""
 
     private let dateFormatter: DateFormatter = {
@@ -959,7 +964,9 @@ struct SavedNotesView: View {
                         dismiss()
                     }
                 }
+                HelpToolbarItem(page: .savedContent, isPresented: $showingHelp)
             }
+            .helpSheet(for: .savedContent, isPresented: $showingHelp)
             .alert("Rename Note", isPresented: Binding(
                 get: { noteToRename != nil },
                 set: { if !$0 { noteToRename = nil } }

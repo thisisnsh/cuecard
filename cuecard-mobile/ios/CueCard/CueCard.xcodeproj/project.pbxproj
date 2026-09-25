@@ -29,6 +29,7 @@
 		026 /* NotificationViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 120 /* NotificationViews.swift */; };
 		027 /* WhatsNewService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 121 /* WhatsNewService.swift */; };
 		028 /* WhatsNewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 122 /* WhatsNewView.swift */; };
+		078 /* HelpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 158 /* HelpView.swift */; };
 		029 /* WhatsNew.json in Resources */ = {isa = PBXBuildFile; fileRef = 202 /* WhatsNew.json */; };
 		032 /* CueCardWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 502 /* CueCardWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		033 /* CueCardWidgetsBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130 /* CueCardWidgetsBundle.swift */; };
@@ -139,6 +140,7 @@
 		120 /* NotificationViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationViews.swift; sourceTree = "<group>"; };
 		121 /* WhatsNewService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhatsNewService.swift; sourceTree = "<group>"; };
 		122 /* WhatsNewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhatsNewView.swift; sourceTree = "<group>"; };
+		158 /* HelpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpView.swift; sourceTree = "<group>"; };
 		125 /* TeleprompterPlaybackIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeleprompterPlaybackIntents.swift; sourceTree = "<group>"; };
 		126 /* TeleprompterRemoteCommand+App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TeleprompterRemoteCommand+App.swift"; sourceTree = "<group>"; };
 		128 /* DeviceModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceModel.swift; sourceTree = "<group>"; };
@@ -243,6 +245,7 @@
 				110 /* TeleprompterView.swift */,
 				120 /* NotificationViews.swift */,
 				122 /* WhatsNewView.swift */,
+				158 /* HelpView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -524,6 +527,7 @@
 				026 /* NotificationViews.swift in Sources */,
 				027 /* WhatsNewService.swift in Sources */,
 				028 /* WhatsNewView.swift in Sources */,
+				078 /* HelpView.swift in Sources */,
 				037 /* TeleprompterPlaybackIntents.swift in Sources */,
 				039 /* TeleprompterRemoteCommand+App.swift in Sources */,
 				043 /* DeviceModel.swift in Sources */,

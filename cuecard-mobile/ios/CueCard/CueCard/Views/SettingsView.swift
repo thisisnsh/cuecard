@@ -47,7 +47,6 @@ struct EditorSettingsView: View {
             case .cards: cardsSections
             }
 
-            HowToSection(mode: mode)
             AboutSection(screen: Self.screen)
             diagnosticsSection
         }
@@ -208,6 +207,7 @@ struct EditorSettingsView: View {
 /// off the number pad, which has no return key.
 private struct SettingsScreen<Content: View>: View {
     @Environment(\.dismiss) var dismiss
+    @State private var showingHelp = false
 
     let screen: String
     @ViewBuilder let content: Content
@@ -227,7 +227,9 @@ private struct SettingsScreen<Content: View>: View {
                         dismiss()
                     }
                 }
+                HelpToolbarItem(page: .settings, isPresented: $showingHelp)
             }
+            .helpSheet(for: .settings, isPresented: $showingHelp)
             .numberPadDoneButton()
         }
         .onAppear {
@@ -265,64 +267,6 @@ private struct WhatsNewSection: View {
                 }
             }
         }
-    }
-}
-
-/// How to use what isn't set here: the Action button, the Lock Screen and
-/// the watch app. Last in Settings, after everything that is a setting.
-private struct HowToSection: View {
-    @EnvironmentObject var settingsService: SettingsService
-    @ObservedObject private var watch = WatchSessionService.shared
-    @Environment(\.colorScheme) var colorScheme
-
-    let mode: ScriptMode
-
-    /// The Action button control needs iOS 18, and an iPhone with the button.
-    private var showsActionButton: Bool {
-        guard mode == .teleprompter else { return false }
-        if #available(iOS 18.0, *) { return DeviceModel.hasActionButton }
-        return false
-    }
-
-    private var showsLockScreen: Bool { mode == .cards && settingsService.settings.cards.showOnLockScreen }
-    private var showsWatchInstall: Bool { watch.isPaired && !watch.isWatchAppInstalled }
-
-    var body: some View {
-        if showsActionButton || showsLockScreen || showsWatchInstall {
-            Section("How To") {
-                if showsActionButton {
-                    row("Play or Pause with the Action Button", systemImage: "button.vertical.left.press",
-                        detail: "In the Settings app, go to Action Button, choose Controls, and pick Play or Pause "
-                            + "under CueCard. It works while a script is open in the teleprompter.")
-                }
-                if showsLockScreen {
-                    row("Read from the Lock Screen", systemImage: "lock",
-                        detail: "Lock your iPhone while reading, and turn cards from the Lock Screen.")
-                }
-                if showsWatchInstall {
-                    row("Get CueCard on Apple Watch", systemImage: "applewatch",
-                        detail: "Open the Watch app. Under Available Apps, tap Install next to CueCard.")
-                }
-            }
-        }
-    }
-
-    private func row(_ title: String, systemImage: String, detail: String) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: systemImage)
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                .frame(width: 22)
-                .padding(.top, 2)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                Text(detail)
-                    .font(.footnote)
-                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-            }
-        }
-        .padding(.vertical, 2)
     }
 }
 

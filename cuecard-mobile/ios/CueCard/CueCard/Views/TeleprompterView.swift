@@ -23,6 +23,7 @@ struct TeleprompterView: View {
     @State private var referenceLineStarts: [Int] = []
     @State private var hasConfiguredSession = false
     @State private var showControls = true
+    @State private var showingHelp = false
     @State private var controlsTimer: Timer?
     @Environment(\.scenePhase) private var scenePhase
 
@@ -221,6 +222,7 @@ struct TeleprompterView: View {
                         }
                         .accessibilityLabel("Close")
                     }
+                    HelpToolbarItem(page: .teleprompter, isPresented: $showingHelp)
                 }
                 ToolbarItem(placement: .principal) {
                     Text(timeDisplay)
@@ -228,6 +230,7 @@ struct TeleprompterView: View {
                         .foregroundStyle(timerColor)
                 }
             }
+            .helpSheet(for: .teleprompter, isPresented: $showingHelp)
         }
         .persistentSystemOverlays(.hidden)
         .onDisappear {
