@@ -29,7 +29,6 @@
 		026 /* NotificationViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 120 /* NotificationViews.swift */; };
 		027 /* WhatsNewService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 121 /* WhatsNewService.swift */; };
 		028 /* WhatsNewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 122 /* WhatsNewView.swift */; };
-		078 /* HelpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 158 /* HelpView.swift */; };
 		029 /* WhatsNew.json in Resources */ = {isa = PBXBuildFile; fileRef = 202 /* WhatsNew.json */; };
 		032 /* CueCardWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 502 /* CueCardWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		033 /* CueCardWidgetsBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 130 /* CueCardWidgetsBundle.swift */; };
@@ -67,6 +66,7 @@
 		075 /* TeleprompterParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 111 /* TeleprompterParser.swift */; };
 		076 /* DeckStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 156 /* DeckStore.swift */; };
 		077 /* SavedDeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 157 /* SavedDeckView.swift */; };
+		078 /* HelpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 158 /* HelpView.swift */; };
 		AA7130F62F04E5BC00F5C366 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = AA7130F52F04E5BC00F5C366 /* GoogleService-Info.plist */; };
 		AA856D562F060DFC00B0CBC6 /* GlassEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA856D542F060DFC00B0CBC6 /* GlassEffect.swift */; };
 		C0CA4D5100000000000000A1 /* CueCardsLockScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CA4D5100000000000000A2 /* CueCardsLockScreen.swift */; };
@@ -140,7 +140,6 @@
 		120 /* NotificationViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationViews.swift; sourceTree = "<group>"; };
 		121 /* WhatsNewService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhatsNewService.swift; sourceTree = "<group>"; };
 		122 /* WhatsNewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhatsNewView.swift; sourceTree = "<group>"; };
-		158 /* HelpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpView.swift; sourceTree = "<group>"; };
 		125 /* TeleprompterPlaybackIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeleprompterPlaybackIntents.swift; sourceTree = "<group>"; };
 		126 /* TeleprompterRemoteCommand+App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TeleprompterRemoteCommand+App.swift"; sourceTree = "<group>"; };
 		128 /* DeviceModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceModel.swift; sourceTree = "<group>"; };
@@ -163,6 +162,7 @@
 		155 /* PhoneDeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhoneDeckView.swift; sourceTree = "<group>"; };
 		156 /* DeckStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckStore.swift; sourceTree = "<group>"; };
 		157 /* SavedDeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedDeckView.swift; sourceTree = "<group>"; };
+		158 /* HelpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpView.swift; sourceTree = "<group>"; };
 		201 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		202 /* WhatsNew.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = WhatsNew.json; sourceTree = "<group>"; };
 		203 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
