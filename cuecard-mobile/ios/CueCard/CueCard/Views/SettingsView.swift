@@ -111,13 +111,21 @@ struct EditorSettingsView: View {
     @ViewBuilder
     private var cardsSections: some View {
         // Whether a deck being read is on the Lock Screen too. That keeps cards
-        // short enough to fit there, which the footer says only while it's on.
+        // short enough to fit there, which the note above the toggle says only
+        // while it's on.
         Section {
             SizePresetPicker(
                 title: "Text Size",
                 value: $settingsService.settings.cards.fontSize,
                 presets: TeleprompterSettings.fontSizePresets
             )
+
+            if settingsService.settings.cards.showOnLockScreen {
+                Text("Cards longer than \(CueCards.characterLimit(onLockScreen: true)) characters "
+                     + "will be truncated on the Lock Screen.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            }
 
             Toggle("Show on Lock Screen", isOn: Binding(
                 get: { settingsService.settings.cards.showOnLockScreen },
@@ -129,11 +137,6 @@ struct EditorSettingsView: View {
             ))
         } header: {
             Text("Cards")
-        } footer: {
-            if settingsService.settings.cards.showOnLockScreen {
-                Text("Cards longer than \(CueCards.characterLimit(onLockScreen: true)) characters "
-                     + "will be truncated on the Lock Screen.")
-            }
         }
 
         AppleWatchSection(screen: Self.screen, mode: .cards)
