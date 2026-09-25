@@ -53,9 +53,16 @@ private struct CueCardsButtons: View {
             .disabled(state.index == 0)
             Spacer(minLength: 8)
             Button(intent: MoveCueCardIntent(state: state, targetIndex: state.isFinished ? 0 : state.index + 1)) {
-                Label(state.isFinished ? "Start Over" : (state.index == state.count - 1 ? "Finish" : "Next"),
-                      systemImage: state.isFinished ? "arrow.counterclockwise" : "chevron.right")
-                    .frame(minHeight: 28)
+                // The hidden labels hold the button at its widest, so it keeps
+                // its size, and the system has nothing to animate, as the
+                // label changes.
+                ZStack {
+                    Label("Start Over", systemImage: "arrow.counterclockwise").hidden()
+                    Label("Finish", systemImage: "chevron.right").hidden()
+                    Label(state.isFinished ? "Start Over" : (state.index == state.count - 1 ? "Finish" : "Next"),
+                          systemImage: state.isFinished ? "arrow.counterclockwise" : "chevron.right")
+                }
+                .frame(minHeight: 28)
             }
         }
         .font(.caption.weight(.semibold))
