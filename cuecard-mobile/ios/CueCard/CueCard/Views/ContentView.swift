@@ -12,7 +12,6 @@ struct ContentView: View {
                 WelcomeView()
             }
         }
-        .whatsNewCover(isPresented: $whatsNew.isPresented, release: whatsNew.release, version: whatsNew.version)
         .task {
             // Let the first screen settle before floating anything over it.
             try? await Task.sleep(nanoseconds: 500_000_000)

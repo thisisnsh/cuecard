@@ -22,9 +22,6 @@ final class WhatsNewService: ObservableObject {
     /// The version as people see it, e.g. "1.5.0".
     let version: String
 
-    /// Whether the launch presentation is up. Settings shows its own copy.
-    @Published var isPresented = false
-
     private let userDefaults = UserDefaults.standard
     private let seenKey: String
 
@@ -54,8 +51,14 @@ final class WhatsNewService: ObservableObject {
         userDefaults.set(true, forKey: seenKey)
         guard hasSeenWelcome else { return }
 
-        withoutPresentationAnimation { isPresented = true }
+        show()
         logShown()
+    }
+
+    /// Float this version's features over whatever is on screen.
+    func show() {
+        guard let release else { return }
+        WhatsNewPresenter.show(release: release, version: version)
     }
 
     /// Counts the people this version's features reached on their own. Opening the

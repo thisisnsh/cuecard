@@ -236,16 +236,15 @@ private struct SettingsScreen<Content: View>: View {
 private struct WhatsNewSection: View {
     @ObservedObject private var whatsNew = WhatsNewService.shared
     @Environment(\.colorScheme) var colorScheme
-    @State private var isPresented = false
 
     let screen: String
 
     var body: some View {
-        if let release = whatsNew.release {
+        if whatsNew.release != nil {
             Section {
                 Button {
                     AnalyticsEvents.logButtonClick("whats_new", screen: screen)
-                    withoutPresentationAnimation { isPresented = true }
+                    whatsNew.show()
                 } label: {
                     HStack {
                         Text("What's New")
@@ -257,7 +256,6 @@ private struct WhatsNewSection: View {
                     }
                     .contentShape(Rectangle())
                 }
-                .whatsNewCover(isPresented: $isPresented, release: release, version: whatsNew.version)
             }
         }
     }

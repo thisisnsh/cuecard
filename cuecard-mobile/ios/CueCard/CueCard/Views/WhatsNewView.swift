@@ -149,7 +149,7 @@ struct WhatsNewView: View {
         .padding(.bottom, 28)
     }
 
-    /// Let the card leave before the cover underneath it goes.
+    /// Let the card leave before the window it's in goes.
     private func close() {
         withAnimation(.easeIn(duration: 0.2)) {
             isShowing = false
@@ -244,25 +244,40 @@ private struct StarfieldGradient: View {
     }
 }
 
-/// Covers and sheets slide up by default. The What's New card animates itself,
-/// so its cover goes on and off without that slide.
-func withoutPresentationAnimation(_ body: () -> Void) {
-    var transaction = Transaction()
-    transaction.disablesAnimations = true
-    withTransaction(transaction, body)
-}
+/// Floats the What's New card in a window of its own, above the app's.
+///
+/// Presented from a view instead, it can only go up when nothing else is:
+/// a cover from the root fails while cards or Settings are open, and one from
+/// a screen goes when that screen does. A window sits over whatever is on
+/// screen now, and whatever opens after.
+@MainActor
+enum WhatsNewPresenter {
+    private static var window: UIWindow?
 
-extension View {
-    /// Present the What's New card over everything, from wherever this is.
-    func whatsNewCover(isPresented: Binding<Bool>, release: WhatsNewService.Release?, version: String) -> some View {
-        fullScreenCover(isPresented: isPresented) {
-            if let release {
-                WhatsNewView(release: release, version: version) {
-                    withoutPresentationAnimation { isPresented.wrappedValue = false }
-                }
-                .presentationBackground(.clear)
-            }
+    static func show(release: WhatsNewService.Release, version: String) {
+        guard window == nil else { return }
+        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        guard let scene = scenes.first(where: { $0.activationState == .foregroundActive }) ?? scenes.first else {
+            return
         }
+
+        let card = WhatsNewView(release: release, version: version, onClose: hide)
+            // A window of its own doesn't inherit the theme set on the app's.
+            .preferredColorScheme(SettingsService.shared.settings.themePreference.colorScheme)
+        let host = UIHostingController(rootView: card)
+        host.view.backgroundColor = .clear
+
+        let window = UIWindow(windowScene: scene)
+        window.windowLevel = .alert
+        window.backgroundColor = .clear
+        window.rootViewController = host
+        window.makeKeyAndVisible()
+        self.window = window
+    }
+
+    private static func hide() {
+        window?.isHidden = true
+        window = nil
     }
 }
 
