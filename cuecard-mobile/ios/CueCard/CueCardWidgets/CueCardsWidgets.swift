@@ -16,7 +16,9 @@ private struct CueCardsSurface: View {
                     CueCardsTimer(timer: timer)
                     Text("·")
                 }
-                Text(state.progress).monospacedDigit()
+                Text(state.progress)
+                    .monospacedDigit()
+                    .contentTransition(.identity)
             }
             .font(.caption.weight(.semibold))
             .foregroundStyle(.secondary)
@@ -59,6 +61,7 @@ private struct CueCardsButtons: View {
         .font(.caption.weight(.semibold))
         .buttonStyle(.bordered)
         .tint(.green)
+        .contentTransition(.identity)
     }
 }
 
@@ -77,8 +80,8 @@ private struct CueCardsTimer: View {
     }
 }
 
-/// The card's text, cues in the cue color as the app draws them. It fades
-/// between cards rather than blurring, and ends in an ellipsis when cut off.
+/// The card's text, cues in the cue color as the app draws them. It changes
+/// between cards at once, with no fade, and ends in an ellipsis when cut off.
 private struct CueCardsText: View {
     @Environment(\.colorScheme) private var colorScheme
     let state: CueCardsWidgetState
@@ -91,7 +94,7 @@ private struct CueCardsText: View {
             .text(primary: AppColors.textPrimary(for: colorScheme),
                   cue: state.cueColor.color(for: colorScheme))
             .truncationMode(.tail)
-            .contentTransition(.opacity)
+            .contentTransition(.identity)
     }
 }
 
@@ -111,6 +114,7 @@ struct CueCardsLiveActivity: Widget {
                             CueCardsTimer(timer: timer)
                         }
                         Text(context.state.progress)
+                            .contentTransition(.identity)
                     }
                     .font(.caption.monospacedDigit())
                 }
@@ -127,6 +131,7 @@ struct CueCardsLiveActivity: Widget {
             } compactTrailing: {
                 Text(context.state.isFinished ? "✓" : "\(context.state.index + 1)/\(context.state.count)")
                     .font(.caption2.monospacedDigit())
+                    .contentTransition(.identity)
             } minimal: {
                 Image(systemName: "rectangle.stack")
             }
