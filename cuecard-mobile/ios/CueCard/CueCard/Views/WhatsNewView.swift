@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// This build's new features, on a card floating over whatever is on screen.
-/// Shown once per build on launch, and again from Settings.
+/// This build's new features, on a glass card floating over whatever is on
+/// screen, which shows through blurred. Shown once per build on launch, and
+/// again from Settings.
 struct WhatsNewView: View {
     let release: WhatsNewService.Release
     let version: String
@@ -10,22 +11,34 @@ struct WhatsNewView: View {
     @Environment(\.colorScheme) var colorScheme
     @State private var isShowing = false
     @State private var isFloating = false
+    @State private var isCardFloating = false
+
+    private static let cornerRadius: CGFloat = 32
 
     var body: some View {
         ZStack {
-            Color.black
-                .opacity(isShowing ? 0.45 : 0)
+            // What's underneath stays in view, softened, so the card reads as
+            // hovering over it rather than replacing it.
+            Rectangle()
+                .fill(.ultraThinMaterial)
+                .overlay(Color.black.opacity(colorScheme == .dark ? 0.25 : 0.12))
+                .opacity(isShowing ? 1 : 0)
                 .ignoresSafeArea()
 
             if isShowing {
                 card
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 40)
-                    .transition(.scale(scale: 0.92).combined(with: .opacity))
+                    // A slow drift, out of step with the icon's, so the two
+                    // never move as one.
+                    .offset(y: isCardFloating ? -4 : 4)
+                    .animation(.easeInOut(duration: 3.6).repeatForever(autoreverses: true), value: isCardFloating)
+                    .onAppear { isCardFloating = true }
+                    .padding(.horizontal, 28)
+                    .padding(.vertical, 48)
+                    .transition(.scale(scale: 0.92).combined(with: .opacity).combined(with: .offset(y: 24)))
             }
         }
         .onAppear {
-            withAnimation(.spring(response: 0.45, dampingFraction: 0.82)) {
+            withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
                 isShowing = true
             }
         }
@@ -40,25 +53,40 @@ struct WhatsNewView: View {
             }
         }
         .frame(maxWidth: 380)
-        .background { StarfieldGradient() }
-        .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
+        // The stars show faintly through the glass rather than filling it.
+        .background { StarfieldGradient().opacity(colorScheme == .dark ? 0.55 : 0.45) }
+        .clipShape(shape)
+        .glassedEffect(in: shape)
         .overlay(alignment: .topTrailing) {
             Button(action: close) {
                 Image(systemName: "xmark")
                     .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(primary)
                     .frame(width: 32, height: 32)
-                    .background(Circle().fill(primary.opacity(0.08)))
+                    .glassedEffect(in: Circle(), interactive: true)
             }
             .buttonStyle(.plain)
             .padding(14)
             .accessibilityLabel("Close")
         }
+        // Light catching the top edge of the glass.
         .overlay(
-            RoundedRectangle(cornerRadius: 32, style: .continuous)
-                .stroke(primary.opacity(0.1), lineWidth: 1)
+            shape.stroke(
+                LinearGradient(
+                    colors: [.white.opacity(colorScheme == .dark ? 0.35 : 0.8), .white.opacity(0.05)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                ),
+                lineWidth: 1
+            )
         )
-        .shadow(color: .black.opacity(colorScheme == .dark ? 0.5 : 0.15), radius: 30, y: 12)
+        // A wide, soft shadow well below the card, so it sits high off the page.
+        .shadow(color: .black.opacity(colorScheme == .dark ? 0.45 : 0.12), radius: 40, y: 24)
+        .shadow(color: .black.opacity(colorScheme == .dark ? 0.25 : 0.06), radius: 8, y: 4)
+    }
+
+    private var shape: RoundedRectangle {
+        RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous)
     }
 
     private var primary: Color { AppColors.textPrimary(for: colorScheme) }
@@ -109,7 +137,11 @@ struct WhatsNewView: View {
             .padding(18)
             .background(
                 RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(primary.opacity(0.05))
+                    .fill(.white.opacity(colorScheme == .dark ? 0.06 : 0.35))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .stroke(.white.opacity(colorScheme == .dark ? 0.1 : 0.6), lineWidth: 0.7)
             )
         }
         .padding(.horizontal, 24)
