@@ -53,7 +53,6 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
     private var renderer: TeleprompterOverlayRenderer?
     private var possibilityObservation: NSKeyValueObservation?
     private var isStartingPiP = false
-    private var minimizeWhenStarted = false
     private var lastFrameTime: CFTimeInterval = 0
     /// What the watch was last told, so it is only told again on a change.
     private var watchTimer: TeleprompterTimerState?
@@ -450,9 +449,16 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
     func startPiP(minimizeApp: Bool = false) -> Bool {
         guard !isPiPActive, !isStartingPiP,
               let controller = pipController, controller.isPictureInPicturePossible else { return false }
+        if minimizeApp && UIApplication.shared.applicationState == .active {
+            // Use the same automatic PiP entry as swiping Home. Starting PiP
+            // first and suspending in didStart stacks two system transitions,
+            // which can briefly change the content's corner mask on iOS 27.
+            // The scene's background handler also requests PiP if needed.
+            UIApplication.shared.perform(#selector(NSXPCConnection.suspend))
+            return true
+        }
         switchDriver()
         renderFrame(force: true)
-        minimizeWhenStarted = minimizeApp
         isStartingPiP = true
         reanchorPlayback()
         controller.startPictureInPicture()
@@ -510,7 +516,6 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         isPiPActive = false
         isPiPPossible = false
         isStartingPiP = false
-        minimizeWhenStarted = false
         lastFrameTime = 0
         syncWatch()
     }
@@ -582,10 +587,6 @@ extension TeleprompterPiPManager: @preconcurrency AVPictureInPictureControllerDe
         // The window is now this app's to keep painting, paused or not.
         syncClock()
         renderFrame(force: true)
-        if minimizeWhenStarted {
-            minimizeWhenStarted = false
-            UIApplication.shared.perform(#selector(NSXPCConnection.suspend))
-        }
     }
 
     func pictureInPictureControllerDidStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
@@ -594,7 +595,6 @@ extension TeleprompterPiPManager: @preconcurrency AVPictureInPictureControllerDe
         if let request = restorationRequest { completeRestoration(request, restored: false) }
         isPiPActive = false
         isStartingPiP = false
-        minimizeWhenStarted = false
         reanchorPlayback()
         syncClock()
         refreshPresentation()
@@ -613,7 +613,6 @@ extension TeleprompterPiPManager: @preconcurrency AVPictureInPictureControllerDe
         switchDriver()
         isStartingPiP = false
         isPiPActive = false
-        minimizeWhenStarted = false
         isRestoringToReader = false
         reanchorPlayback()
         syncClock()
