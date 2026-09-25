@@ -3,8 +3,8 @@ import FirebaseAnalytics
 
 // MARK: - Pages
 
-/// The screens with a help button. Each one's help leads with its own topics,
-/// then the Apple Watch and the Action button as they work there.
+/// The screens with a help button. Every one shows the same help; the page
+/// only tells analytics where it was opened.
 enum HelpPage: String {
     case writingTeleprompter = "home_teleprompter"
     case writingCards = "home_cards"
@@ -17,119 +17,6 @@ enum HelpPage: String {
     static func writing(_ mode: ScriptMode) -> HelpPage {
         mode == .cards ? .writingCards : .writingTeleprompter
     }
-
-    var title: String {
-        switch self {
-        case .writingTeleprompter: return "Writing a Script"
-        case .writingCards: return "Writing Cards"
-        case .settings: return "Settings"
-        case .savedContent: return "Saved Content"
-        case .teleprompter: return "Teleprompter"
-        case .cards: return "Cards"
-        }
-    }
-
-    /// Which mode the page is about, if only one.
-    private var mode: ScriptMode? {
-        switch self {
-        case .writingTeleprompter, .teleprompter: return .teleprompter
-        case .writingCards, .cards: return .cards
-        case .settings, .savedContent: return nil
-        }
-    }
-
-    var topics: [HelpTopic] {
-        switch self {
-        case .writingTeleprompter:
-            return [
-                WritingHelp.pickMode,
-                HelpTopic("Add Cues",
-                          detail: "Type [ or tap + above the keyboard to add a cue, like [cue pause]. "
-                              + "Cues show in color, as reminders rather than words to say."),
-                HelpTopic("Set a Timer",
-                          detail: "Tap the timer beside Play to set how long you have. "
-                              + "It turns yellow near the end and red once you're over."),
-                HelpTopic("Save and Open",
-                          detail: "The ••• menu saves your script, opens saved ones, "
-                              + "and imports or exports text files.")
-            ]
-        case .writingCards:
-            return [
-                WritingHelp.pickMode,
-                HelpTopic("Write Cards",
-                          detail: "Each box is one card. Tap Create New Card for another."),
-                HelpTopic("Add Cues",
-                          detail: "Type [ or tap + above the keyboard to add a cue, like [cue pause]. "
-                              + "Cues show in color, as reminders rather than words to say."),
-                HelpTopic("Set a Timer",
-                          detail: "Tap the timer beside Play to set how long you have. "
-                              + "The time on your cards counts it down."),
-                HelpTopic("Save and Open",
-                          detail: "The ••• menu saves your deck, opens saved ones, "
-                              + "and imports or exports text files.")
-            ]
-        case .settings:
-            return [
-                HelpTopic("Settings for Each Mode",
-                          detail: "Settings show the mode you're writing in. "
-                              + "Teleprompter and Cards each keep their own sizes and colors."),
-                HelpTopic("Start Delay and Scroll Speed",
-                          detail: "Start Delay counts down before the script moves. "
-                              + "Scroll Speed is how many lines pass each minute."),
-                HelpTopic("Exact Sizes",
-                          detail: "Tap Show Advanced Settings to type a text size the presets don't offer.")
-            ]
-        case .savedContent:
-            return [
-                HelpTopic("Open",
-                          detail: "Tap a script or deck to open it in the editor."),
-                HelpTopic("Rename or Delete",
-                          detail: "Swipe right to rename, or swipe left to delete.")
-            ]
-        case .teleprompter:
-            return [
-                HelpTopic("Play and Pause",
-                          detail: "The buttons fade while the script scrolls. Tap the screen to bring them back."),
-                HelpTopic("Scroll by Hand",
-                          detail: "Drag the script to go back or ahead. It carries on from where you leave it."),
-                HelpTopic("Floating Window",
-                          detail: "Keeps your script over other apps, like a video call. "
-                              + "It opens by itself when you leave CueCard.")
-            ]
-        case .cards:
-            return [
-                HelpTopic("Turn Cards",
-                          detail: "Swipe, or tap Back and Next. The dots at the top show where you are."),
-                HelpTopic("Read from the Lock Screen",
-                          detail: "With Show on Lock Screen on in Settings, lock your iPhone "
-                              + "and turn cards from the Live Activity."),
-                HelpTopic("Timer",
-                          detail: "The time at the top counts down your timer, "
-                              + "or up from when the deck opened.")
-            ]
-        }
-    }
-
-    /// The watch topics for this page's mode, or all of them on a page for both.
-    fileprivate var appleWatch: HelpSection {
-        switch mode {
-        case .teleprompter: return SharedHelp.appleWatchTeleprompter
-        case .cards: return SharedHelp.appleWatchCards
-        case nil: return SharedHelp.appleWatch
-        }
-    }
-
-    /// The Action button plays and pauses the teleprompter, so only its pages
-    /// bring it up.
-    fileprivate var controls: HelpSection? {
-        mode == .cards ? nil : SharedHelp.actionButton
-    }
-}
-
-private enum WritingHelp {
-    static let pickMode = HelpTopic("Pick a Mode",
-                                    detail: "Tap the mode's name at the top left. Teleprompter scrolls your script; "
-                                        + "Cards shows it one card at a time.")
 }
 
 struct HelpTopic: Identifiable {
@@ -155,45 +42,99 @@ private struct HelpSection: Identifiable {
     var id: String { title }
 }
 
-// MARK: - Topics Across the App
+// MARK: - Topics
 
-private enum SharedHelp {
-    private static let install = HelpTopic("Install on Apple Watch",
-                                           detail: "Open the Watch app on your iPhone. Under Available Apps, tap Install next to CueCard.")
-    private static let remote = HelpTopic("Teleprompter Remote",
-                                          detail: "While a script is open on your iPhone, the watch shows its timer "
-                                              + "and can play, pause or go back 10 seconds.")
-    private static let cardsOnWrist = HelpTopic("Cards on Your Wrist",
-                                                detail: "A deck open on your iPhone shows on the watch too, "
-                                                    + "and turning a card on either moves both.")
-    private static let keepDecks = HelpTopic("Keep Decks on the Watch",
-                                             detail: "Open a saved deck and choose Keep on Apple Watch from the ••• menu "
-                                                 + "to read it even without your iPhone.")
-    private static let stayOnScreen = HelpTopic("Stay on Screen",
-                                                detail: WatchTips.returnToClock)
+private enum AllHelp {
+    static let general = HelpSection(title: "General", topics: [
+        HelpTopic("Pick a Mode",
+                  detail: "Tap the mode name at the top left. Teleprompter scrolls your whole script. "
+                      + "Cards shows it one card at a time."),
+        HelpTopic("Add Cues",
+                  detail: "Cues are reminders like [cue pause], shown in color and not meant to be read out. "
+                      + "Type [ (square bracket) or tap + above the keyboard to add one."),
+        HelpTopic("Set a Timer",
+                  detail: "Tap the timer next to Play and choose how long you have to speak. "
+                      + "It shows while you present."),
+        HelpTopic("Save and Open",
+                  detail: "Use the ••• menu to save your script or deck, or open one you saved. "
+                      + "Import or export text files there too."),
+        HelpTopic("Rename or Delete",
+                  detail: "Everything you save is in Saved Content. "
+                      + "Swipe right on one to rename it, or swipe left to delete it."),
+        HelpTopic("Change Text Size",
+                  detail: "Each mode keeps its own text size and colors in Settings. "
+                      + "Tap Show Advanced Settings to type an exact size.")
+    ])
 
-    static let appleWatch = HelpSection(title: "Apple Watch",
-                                        topics: [install, remote, cardsOnWrist, keepDecks, stayOnScreen])
-    static let appleWatchTeleprompter = HelpSection(title: "Apple Watch",
-                                                    topics: [install, remote, stayOnScreen])
-    static let appleWatchCards = HelpSection(title: "Apple Watch",
-                                             topics: [install, cardsOnWrist, keepDecks, stayOnScreen])
+    static let teleprompter = HelpSection(title: "Teleprompter", topics: [
+        HelpTopic("Play and Pause",
+                  detail: "The buttons fade while the script scrolls so they stay out of the way. "
+                      + "Tap the screen to show them again."),
+        HelpTopic("Scroll by Hand",
+                  detail: "Drag the script to go back or skip ahead. "
+                      + "It keeps scrolling from where you leave it."),
+        HelpTopic("Change Speed",
+                  detail: "Scroll Speed in Settings sets how many lines pass each minute. "
+                      + "Start Delay gives you a countdown before it starts."),
+        HelpTopic("Use Over Other Apps",
+                  detail: "Leave CueCard while the teleprompter is open and your script keeps going "
+                      + "in a floating window, handy on video calls."),
+        HelpTopic("Watch the Timer",
+                  detail: "The timer turns yellow when you're near the end "
+                      + "and red once you're over time.")
+    ])
+
+    static let cards = HelpSection(title: "Cards", topics: [
+        HelpTopic("Add Cards",
+                  detail: "Each box in the editor is one card. "
+                      + "Tap Create New Card to add another."),
+        HelpTopic("Turn Cards",
+                  detail: "Swipe, or tap Back and Next. "
+                      + "The dots at the top show which card you're on."),
+        HelpTopic("Read from the Lock Screen",
+                  detail: "Turn on Show on Lock Screen in Settings. "
+                      + "Then lock your iPhone and turn cards right from the Lock Screen."),
+        HelpTopic("Watch the Timer",
+                  detail: "The time at the top counts down your timer. "
+                      + "With no timer set, it counts up from when you started.")
+    ])
+
+    static let appleWatch = HelpSection(title: "Apple Watch", topics: [
+        HelpTopic("Install on Apple Watch",
+                  detail: "Open the Watch app on your iPhone. "
+                      + "Under Available Apps, tap Install next to CueCard."),
+        HelpTopic("Control the Teleprompter",
+                  detail: "Open a script on your iPhone. The watch shows its timer "
+                      + "and can play, pause or go back 10 seconds."),
+        HelpTopic("Read Cards on Your Wrist",
+                  detail: "Open a deck on your iPhone and it shows on the watch too. "
+                      + "Turning a card on either one moves both."),
+        HelpTopic("Keep Decks on the Watch",
+                  detail: "Open a saved deck and choose Keep on Apple Watch from the ••• menu. "
+                      + "Then you can read it without your iPhone."),
+        HelpTopic("Stay on Screen",
+                  detail: "The watch goes back to the clock after a while. In the Watch app, go to "
+                      + "General › Return to Clock › CueCard and set it to 1 hour.")
+    ])
 
     /// The Play or Pause control needs iOS 18 and an iPhone with an Action button.
     static var actionButton: HelpSection? {
         guard #available(iOS 18.0, *), DeviceModel.hasActionButton else { return nil }
         return HelpSection(title: "Action Button", topics: [
-            HelpTopic("Play or Pause with the Action Button",
-                      detail: "In the Settings app, go to Action Button, choose Controls, "
-                          + "and pick Play or Pause under CueCard.")
+            HelpTopic("Play or Pause the Teleprompter",
+                      detail: "Start and stop scrolling without touching the screen. In the Settings app, "
+                          + "go to Action Button › Controls and pick Play or Pause under CueCard.")
         ])
+    }
+
+    static var sections: [HelpSection] {
+        [general, teleprompter, cards, appleWatch] + (actionButton.map { [$0] } ?? [])
     }
 }
 
 // MARK: - Help Sheet
 
-/// A few lines on the page it was opened from and on what works across the
-/// app. Searching looks through every page's help, not only this one's.
+/// The same help on every page, grouped by part of the app.
 struct HelpView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
@@ -205,29 +146,12 @@ struct HelpView: View {
 
     private static let screen = "help"
 
-    private static let allPages: [HelpPage] = [
-        .writingTeleprompter, .writingCards, .teleprompter, .cards, .savedContent, .settings
-    ]
-
     private var sections: [HelpSection] {
         let trimmed = query.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return AllHelp.sections }
 
-        guard !trimmed.isEmpty else {
-            return [HelpSection(title: page.title, topics: page.topics), page.appleWatch]
-                + (page.controls.map { [$0] } ?? [])
-        }
-
-        // Every topic once: the watch and Action button in full, not per page.
-        let pages = [page] + Self.allPages.filter { $0 != page }
-        let shared = [SharedHelp.appleWatch] + (SharedHelp.actionButton.map { [$0] } ?? [])
-        // Both editors share some topics; list each under the first page with it.
-        var seen = Set<String>()
-        return (pages.map { HelpSection(title: $0.title, topics: $0.topics) } + shared)
-            .map { section in
-                HelpSection(title: section.title, topics: section.topics.filter {
-                    $0.matches(trimmed) && seen.insert($0.title).inserted
-                })
-            }
+        return AllHelp.sections
+            .map { HelpSection(title: $0.title, topics: $0.topics.filter { $0.matches(trimmed) }) }
             .filter { !$0.topics.isEmpty }
     }
 
