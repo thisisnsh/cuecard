@@ -247,7 +247,7 @@ private struct WhatsNewSection: View {
                     whatsNew.show()
                 } label: {
                     HStack {
-                        Text("What's New")
+                        Text("What's New in \(whatsNew.version)")
                             .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                         Spacer()
                         Image(systemName: "sparkles")
