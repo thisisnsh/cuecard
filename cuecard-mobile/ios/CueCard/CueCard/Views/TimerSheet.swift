@@ -82,7 +82,7 @@ struct TimerSheet: View {
                 if style.warningSeconds > 0 {
                     stage("Warning", seconds: style.warningSeconds, tint: .init(style.warningColor))
                 }
-                stage("Time's Up", seconds: 0, tint: .init(style.overtimeColor))
+                stage("Overtime", seconds: 0, tint: .init(style.overtimeColor))
             }
         }
         .frame(maxWidth: .infinity)
@@ -214,7 +214,7 @@ private struct TimerColorsSection: View {
                 if style.warningSeconds > 0 {
                     ColorSwatchRow(title: "Warning", selection: $style.warningColor)
                 }
-                ColorSwatchRow(title: "Time's Up", selection: $style.overtimeColor)
+                ColorSwatchRow(title: "Overtime", selection: $style.overtimeColor)
             }
 
             if style != defaultColors {
