@@ -49,7 +49,7 @@ struct TimerSheet: View {
                 TimerColorsSection(screen: Self.screen, style: style, showsCountdown: isTeleprompter && settings.countdownSeconds > 0,
                                    isTimed: duration > 0)
             }
-            .navigationTitle("Timer")
+            .navigationTitle(isTeleprompter ? "Teleprompter Timer" : "Cards Timer")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
