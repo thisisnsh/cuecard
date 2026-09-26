@@ -53,8 +53,8 @@ private enum AllHelp {
                   detail: "Cues are reminders like [cue pause], shown in color and not meant to be read out. "
                       + "Type [ (square bracket) or tap + above the keyboard to add one."),
         HelpTopic("Set a Timer",
-                  detail: "Tap the timer next to Play and choose how long you have to speak. "
-                      + "It shows while you present."),
+                  detail: "Tap the timer next to Play and choose how long you have to speak, "
+                      + "when it warns you, and its colors. It shows while you present."),
         HelpTopic("Save and Open",
                   detail: "Use the ••• menu to save your script or deck, or open one you saved. "
                       + "Import or export text files there too."),
@@ -75,13 +75,13 @@ private enum AllHelp {
                       + "It keeps scrolling from where you leave it."),
         HelpTopic("Change Speed",
                   detail: "Scroll Speed in Settings sets how many lines pass each minute. "
-                      + "Start Delay gives you a countdown before it starts."),
+                      + "Set a Countdown in the timer to get a few seconds before it starts."),
         HelpTopic("Use Over Other Apps",
                   detail: "Leave CueCard while the teleprompter is open and your script keeps going "
                       + "in a floating window, handy on video calls."),
         HelpTopic("Watch the Timer",
-                  detail: "The timer turns yellow when you're near the end "
-                      + "and red once you're over time.")
+                  detail: "The timer changes color when you're near the end "
+                      + "and again once you're over time. Pick the colors in the timer.")
     ])
 
     static let cards = HelpSection(title: "Cards", topics: [

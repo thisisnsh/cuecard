@@ -75,6 +75,7 @@
 		C0CA4D530000000000000010 /* CueCardsRemoteCommand+App.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CA4D520000000000000002 /* CueCardsRemoteCommand+App.swift */; };
 		C0CA4D530000000000000020 /* CueCardsRemoteCommand+Widget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CA4D520000000000000003 /* CueCardsRemoteCommand+Widget.swift */; };
 		C0CA4D530000000000000030 /* CueCardsWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CA4D520000000000000004 /* CueCardsWidgets.swift */; };
+		D1E000000000000000000001 /* TimerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1E000000000000000000002 /* TimerSheet.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -177,6 +178,7 @@
 		C0CA4D520000000000000002 /* CueCardsRemoteCommand+App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CueCardsRemoteCommand+App.swift"; sourceTree = "<group>"; };
 		C0CA4D520000000000000003 /* CueCardsRemoteCommand+Widget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CueCardsRemoteCommand+Widget.swift"; sourceTree = "<group>"; };
 		C0CA4D520000000000000004 /* CueCardsWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardsWidgets.swift; sourceTree = "<group>"; };
+		D1E000000000000000000002 /* TimerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerSheet.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -237,6 +239,7 @@
 			isa = PBXGroup;
 			children = (
 				140 /* CueCardsView.swift */,
+				D1E000000000000000000002 /* TimerSheet.swift */,
 				102 /* ContentView.swift */,
 				103 /* WelcomeView.swift */,
 				104 /* HomeView.swift */,
@@ -504,6 +507,7 @@
 				057 /* TeleprompterTimerState.swift in Sources */,
 				055 /* CueCardRun.swift in Sources */,
 				051 /* CueCardsView.swift in Sources */,
+				D1E000000000000000000001 /* TimerSheet.swift in Sources */,
 				049 /* CueCardsSession.swift in Sources */,
 				C0CA4D5100000000000000A1 /* CueCardsLockScreen.swift in Sources */,
 				044 /* CueCards.swift in Sources */,

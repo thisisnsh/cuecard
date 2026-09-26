@@ -55,13 +55,6 @@ struct EditorSettingsView: View {
     private var teleprompterSections: some View {
         Section("Teleprompter") {
             AdvancedNumberRow(
-                title: "Start Delay",
-                value: $settingsService.settings.countdownSeconds,
-                range: TeleprompterSettings.countdownRange,
-                unit: "seconds"
-            )
-
-            AdvancedNumberRow(
                 title: "Scroll Speed",
                 value: $settingsService.settings.linesPerMinute,
                 range: TeleprompterSettings.lpmRange,

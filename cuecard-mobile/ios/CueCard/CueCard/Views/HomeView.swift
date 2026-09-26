@@ -14,8 +14,7 @@ struct HomeView: View {
     @State private var showingCards = false
     /// The cards showing were opened from the watch, not from the editor.
     @State private var cardsOpenedOnWatch = false
-    @State private var showingTimerPicker = false
-    @State private var timerPickerContentVisible = false
+    @State private var showingTimer = false
     @State private var showingSavedNotes = false
     @State private var showingSaveDialog = false
     @State private var saveNoteTitle = ""
@@ -24,7 +23,6 @@ struct HomeView: View {
     @State private var exportDocument: ScriptDocument?
     @State private var exportFileName = "Speech"
     @State private var fileErrorMessage: String?
-    @State private var timerPickerTransitionTask: Task<Void, Never>?
     @State private var isEditorFocused = false
     @StateObject private var editorController = CueEditorController()
     @ObservedObject private var watch = WatchSessionService.shared
@@ -61,7 +59,6 @@ struct HomeView: View {
             ForEach(ScriptMode.allCases) { mode in
                 Button {
                     AnalyticsEvents.logButtonClick("mode_\(mode.rawValue)", screen: "home")
-                    if showingTimerPicker { closeTimerPicker() }
                     isEditorFocused = false
                     settingsService.settings.scriptMode = mode
                 } label: {
@@ -84,28 +81,10 @@ struct HomeView: View {
 
     private func showCardsOpenedOnWatch() {
         guard scenePhase == .active, !cardsSession.cards.isEmpty, !showingCards,
-              !showingTeleprompter, !showingSettings, !showingSavedNotes, !showingHelp else { return }
+              !showingTeleprompter, !showingSettings, !showingSavedNotes, !showingHelp,
+              !showingTimer else { return }
         cardsOpenedOnWatch = true
         showingCards = true
-    }
-
-    private func openTimerPicker() {
-        timerPickerTransitionTask?.cancel()
-
-        AnalyticsEvents.logButtonClick("set_timer", screen: "home")
-
-        withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) {
-            showingTimerPicker = true
-        }
-
-        timerPickerTransitionTask = Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 120_000_000)
-            guard !Task.isCancelled else { return }
-
-            withAnimation(.easeInOut(duration: 0.18)) {
-                timerPickerContentVisible = true
-            }
-        }
     }
 
     /// Ask for a review once the teleprompter has closed and the user is back on a
@@ -121,100 +100,35 @@ struct HomeView: View {
         }
     }
 
-    private func closeTimerPicker() {
-        timerPickerTransitionTask?.cancel()
-
-        AnalyticsEvents.logButtonClick("close_timer_picker", screen: "home")
-
-        withAnimation(.easeInOut(duration: 0.18)) {
-            timerPickerContentVisible = false
-        }
-
-        timerPickerTransitionTask = Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 180_000_000)
-            guard !Task.isCancelled else { return }
-
-            withAnimation(.spring(response: 0.32, dampingFraction: 0.86)) {
-                showingTimerPicker = false
-            }
-        }
-    }
-
+    /// The timer's length, or that none is set, with its clock drawn in the
+    /// color it starts in. Opens the timer sheet.
     @ViewBuilder
     private var timerControl: some View {
-        if hasNotes || showingTimerPicker {
-            VStack(alignment: .leading, spacing: 0) {
-                if showingTimerPicker {
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Text("Timer")
-                                .font(.headline)
-                                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-
-                            Spacer()
-
-                            Button(action: closeTimerPicker) {
-                                Image(systemName: "xmark")
-                                    .font(.system(size: 12, weight: .semibold))
-                                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                                    .padding(6)
-                                    .background(
-                                        Circle()
-                                            .fill(AppColors.background(for: colorScheme).opacity(0.85))
-                                    )
-                            }
-                        }
-
-                        HStack(spacing: 12) {
-                            Text("Duration")
-                                .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-
-                            Spacer()
-
-                            Picker("Minutes", selection: $settingsService.settings.activeTimerMinutes) {
-                                ForEach(0..<60) { minute in
-                                    Text("\(minute)").tag(minute)
-                                }
-                            }
-                            .pickerStyle(.wheel)
-                            .frame(width: 60, height: 88)
-                            .clipped()
-
-                            Text(":")
-                                .font(.headline)
-                                .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-
-                            Picker("Seconds", selection: $settingsService.settings.activeTimerSeconds) {
-                                ForEach(0..<60) { second in
-                                    Text(String(format: "%02d", second)).tag(second)
-                                }
-                            }
-                            .pickerStyle(.wheel)
-                            .frame(width: 60, height: 88)
-                            .clipped()
-                        }
-                    }
-                    .opacity(timerPickerContentVisible ? 1 : 0)
-                    .allowsHitTesting(timerPickerContentVisible)
-                } else {
-                    Button(action: openTimerPicker) {
-                        Text("Set Timer")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                            .padding(.horizontal, 16)
-                            .frame(height: 52)
-                    }
-                    .buttonStyle(.plain)
+        if hasNotes {
+            let settings = settingsService.settings
+            let duration = settings.activeTimerMinutes * 60 + settings.activeTimerSeconds
+            Button {
+                AnalyticsEvents.logButtonClick("set_timer", screen: "home")
+                isEditorFocused = false
+                showingTimer = true
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "timer")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(duration > 0
+                            ? settings.activeTimerStyle.normalColor.color(for: colorScheme)
+                            : AppColors.textSecondary(for: colorScheme))
+                    Text(duration > 0 ? TimerSheet.format(duration) : "No Timer")
+                        .font(.subheadline.weight(.semibold).monospacedDigit())
+                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                 }
+                .padding(.horizontal, 16)
+                .frame(height: 52)
+                .glassedEffect(in: Capsule())
+                .shadow(color: Color.black.opacity(0.1), radius: 10)
             }
-            .padding(showingTimerPicker ? 12 : 0)
-            .glassedEffect(
-                in: RoundedRectangle(
-                    cornerRadius: showingTimerPicker ? 16 : 26,
-                    style: .continuous
-                )
-            )
-            .shadow(color: Color.black.opacity(0.1), radius: 10)
+            .buttonStyle(.plain)
+            .accessibilityLabel(duration > 0 ? "Timer, \(TimerSheet.format(duration))" : "Timer, not set")
         } else {
             Button(action: {
                 AnalyticsEvents.logButtonClick("add_sample_text", screen: "home")
@@ -490,6 +404,9 @@ struct HomeView: View {
             }
             .sheet(isPresented: $showingSavedNotes) {
                 SavedNotesView()
+            }
+            .sheet(isPresented: $showingTimer) {
+                TimerSheet()
             }
             .alert("Save Note", isPresented: $showingSaveDialog) {
                 TextField("Note title", text: $saveNoteTitle)
