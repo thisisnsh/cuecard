@@ -1,8 +1,8 @@
 import SwiftUI
 import FirebaseAnalytics
 
-/// The timer for the mode being written in: how long it runs, and the colors
-/// it turns as it nears and passes the end.
+/// The timer for the mode being written in: how long it runs, when it warns,
+/// and the countdown before it. Its colors are in Settings.
 struct TimerSheet: View {
     @EnvironmentObject var settingsService: SettingsService
     @Environment(\.colorScheme) var colorScheme
@@ -32,6 +32,8 @@ struct TimerSheet: View {
                 Section {
                     preview
                         .listRowInsets(EdgeInsets(top: 16, leading: 12, bottom: 16, trailing: 12))
+                } footer: {
+                    Text("Change the timer's colors in Settings.")
                 }
 
                 Section {
@@ -46,36 +48,6 @@ struct TimerSheet: View {
                     Text(timeFooter)
                 }
 
-                Section {
-                    if isTeleprompter && settings.countdownSeconds > 0 {
-                        ColorSwatchRow(title: "Countdown", selection: style.countdownColor)
-                    }
-                    if duration == 0 {
-                        ColorSwatchRow(title: "Count Up", selection: style.countUpColor)
-                    } else {
-                        ColorSwatchRow(title: "Running", selection: style.normalColor)
-                        if style.wrappedValue.warningSeconds > 0 {
-                            ColorSwatchRow(title: "Warning", selection: style.warningColor)
-                        }
-                        ColorSwatchRow(title: "Time's Up", selection: style.overtimeColor)
-                    }
-                } header: {
-                    Text("Colors")
-                } footer: {
-                    if duration > 0 {
-                        Text("Time's Up is the color at 0:00, and it stays that color if you go over time.")
-                    }
-                }
-
-                if style.wrappedValue != .default {
-                    Section {
-                        Button("Reset Colors") {
-                            AnalyticsEvents.logButtonClick("reset_timer_colors", screen: Self.screen)
-                            style.wrappedValue = .default
-                            clampWarning()
-                        }
-                    }
-                }
             }
             .navigationTitle("Timer")
             .navigationBarTitleDisplayMode(.inline)
@@ -87,8 +59,6 @@ struct TimerSheet: View {
                     }
                 }
             }
-            .animation(.easeInOut(duration: 0.2), value: style.wrappedValue.warningSeconds == 0)
-            .animation(.easeInOut(duration: 0.2), value: settings.countdownSeconds == 0)
             .animation(.easeInOut(duration: 0.2), value: duration == 0)
             .onChange(of: duration) { _, _ in clampWarning() }
         }
@@ -214,48 +184,5 @@ struct TimerSheet: View {
     /// Time the way the timer button shows it: 1:00, 0:10.
     static func format(_ seconds: Int) -> String {
         String(format: "%d:%02d", seconds / 60, seconds % 60)
-    }
-}
-
-/// A row of the app's colors to pick one from.
-private struct ColorSwatchRow: View {
-    @Environment(\.colorScheme) var colorScheme
-
-    let title: String
-    @Binding var selection: CueColor
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(title)
-
-            HStack(spacing: 14) {
-                ForEach(CueColor.allCases) { option in
-                    Button {
-                        selection = option
-                    } label: {
-                        Circle()
-                            .fill(option.color(for: colorScheme))
-                            .frame(width: 28, height: 28)
-                            .overlay {
-                                if option == selection {
-                                    Image(systemName: "checkmark")
-                                        .font(.system(size: 12, weight: .bold))
-                                        .foregroundStyle(AppColors.background(for: colorScheme))
-                                }
-                            }
-                            .overlay(
-                                Circle()
-                                    .stroke(AppColors.textPrimary(for: colorScheme),
-                                            lineWidth: option == selection ? 2 : 0)
-                                    .padding(-4)
-                            )
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("\(title): \(option.displayName)")
-                    .accessibilityAddTraits(option == selection ? .isSelected : [])
-                }
-            }
-            .padding(.vertical, 4)
-        }
     }
 }
