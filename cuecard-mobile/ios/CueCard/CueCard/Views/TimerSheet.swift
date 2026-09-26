@@ -2,7 +2,7 @@ import SwiftUI
 import FirebaseAnalytics
 
 /// The timer for the mode being written in: how long it runs, when it warns,
-/// and the countdown before it. Its colors are in Settings.
+/// the countdown before it, and the colors it turns.
 struct TimerSheet: View {
     @EnvironmentObject var settingsService: SettingsService
     @Environment(\.colorScheme) var colorScheme
@@ -32,8 +32,6 @@ struct TimerSheet: View {
                 Section {
                     preview
                         .listRowInsets(EdgeInsets(top: 16, leading: 12, bottom: 16, trailing: 12))
-                } footer: {
-                    Text("Change the timer's colors in Settings.")
                 }
 
                 Section {
@@ -48,6 +46,7 @@ struct TimerSheet: View {
                     Text(timeFooter)
                 }
 
+                TimerColorsSection(screen: Self.screen, style: style, showsCountdown: isTeleprompter)
             }
             .navigationTitle("Timer")
             .navigationBarTitleDisplayMode(.inline)
@@ -184,5 +183,44 @@ struct TimerSheet: View {
     /// Time the way the timer button shows it: 1:00, 0:10.
     static func format(_ seconds: Int) -> String {
         String(format: "%d:%02d", seconds / 60, seconds % 60)
+    }
+}
+
+/// The colors the mode's timer turns, from the countdown before it to
+/// running over.
+private struct TimerColorsSection: View {
+    let screen: String
+    @Binding var style: TimerStyle
+    /// Only the teleprompter counts down before it starts.
+    let showsCountdown: Bool
+
+    /// The colors as they come, keeping the warning time.
+    private var defaultColors: TimerStyle {
+        var colors = TimerStyle.default
+        colors.warningSeconds = style.warningSeconds
+        return colors
+    }
+
+    var body: some View {
+        Section {
+            if showsCountdown {
+                ColorSwatchRow(title: "Countdown", selection: $style.countdownColor)
+            }
+            ColorSwatchRow(title: "Running", selection: $style.normalColor)
+            ColorSwatchRow(title: "Warning", selection: $style.warningColor)
+            ColorSwatchRow(title: "Time's Up", selection: $style.overtimeColor)
+
+            if style != defaultColors {
+                Button("Reset Timer Colors") {
+                    AnalyticsEvents.logButtonClick("reset_timer_colors", screen: screen)
+                    style = defaultColors
+                }
+            }
+        } header: {
+            Text("Timer Colors")
+        } footer: {
+            Text("Time's Up is the color at 0:00, and it stays that color if you go over time. "
+                 + "With no time set, the timer counts up in Running.")
+        }
     }
 }

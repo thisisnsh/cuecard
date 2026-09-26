@@ -82,9 +82,6 @@ struct EditorSettingsView: View {
 
         AppearanceSection(cueColor: $settingsService.settings.cueColor)
 
-        TimerColorsSection(screen: Self.screen, style: $settingsService.settings.timerStyle,
-                           showsCountdown: true)
-
         AdvancedSection(screen: Self.screen, footer: teleprompterAdvancedFooter) {
             AdvancedNumberRow(
                 title: "Teleprompter Text Size",
@@ -141,9 +138,6 @@ struct EditorSettingsView: View {
         AppleWatchSection(screen: Self.screen, mode: .cards)
 
         AppearanceSection(cueColor: $settingsService.settings.cards.cueColor)
-
-        TimerColorsSection(screen: Self.screen, style: $settingsService.settings.cards.timerStyle,
-                           showsCountdown: false)
 
         AdvancedSection(screen: Self.screen, footer: cardsAdvancedFooter) {
             AdvancedNumberRow(
@@ -318,47 +312,8 @@ private struct AppearanceSection: View {
     }
 }
 
-/// The colors the mode's timer turns, from the countdown before it to
-/// running over. When it changes is set in the timer itself.
-private struct TimerColorsSection: View {
-    let screen: String
-    @Binding var style: TimerStyle
-    /// Only the teleprompter counts down before it starts.
-    let showsCountdown: Bool
-
-    /// The colors as they come, keeping the warning time.
-    private var defaultColors: TimerStyle {
-        var colors = TimerStyle.default
-        colors.warningSeconds = style.warningSeconds
-        return colors
-    }
-
-    var body: some View {
-        Section {
-            if showsCountdown {
-                ColorSwatchRow(title: "Countdown", selection: $style.countdownColor)
-            }
-            ColorSwatchRow(title: "Running", selection: $style.normalColor)
-            ColorSwatchRow(title: "Warning", selection: $style.warningColor)
-            ColorSwatchRow(title: "Time's Up", selection: $style.overtimeColor)
-
-            if style != defaultColors {
-                Button("Reset Timer Colors") {
-                    AnalyticsEvents.logButtonClick("reset_timer_colors", screen: screen)
-                    style = defaultColors
-                }
-            }
-        } header: {
-            Text("Timer Colors")
-        } footer: {
-            Text("Time's Up is the color at 0:00, and it stays that color if you go over time. "
-                 + "With no time set, the timer counts up in Running.")
-        }
-    }
-}
-
 /// A row of the app's colors to pick one from.
-private struct ColorSwatchRow: View {
+struct ColorSwatchRow: View {
     @Environment(\.colorScheme) var colorScheme
 
     let title: String
