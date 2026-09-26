@@ -19,10 +19,10 @@ struct EditorSettingsView: View {
     }
 
     var body: some View {
-        SettingsScreen(screen: Self.screen) {
-            remoteMessageSection
+        let mode = settingsService.settings.scriptMode
 
-            let mode = settingsService.settings.scriptMode
+        SettingsScreen(screen: Self.screen, title: mode == .cards ? "Cards Settings" : "Teleprompter Settings") {
+            remoteMessageSection
 
             Section("Editor") {
                 switch mode {
@@ -213,6 +213,7 @@ private struct SettingsScreen<Content: View>: View {
     @Environment(\.dismiss) var dismiss
 
     let screen: String
+    let title: String
     @ViewBuilder let content: Content
 
     var body: some View {
@@ -221,7 +222,7 @@ private struct SettingsScreen<Content: View>: View {
                 content
             }
             .scrollDismissesKeyboard(.immediately)
-            .navigationTitle("Settings")
+            .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
