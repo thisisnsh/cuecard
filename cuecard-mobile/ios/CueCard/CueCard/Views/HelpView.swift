@@ -141,6 +141,7 @@ private enum AllHelp {
 struct HelpView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.openURL) private var openURL
     @ObservedObject private var whatsNew = WhatsNewService.shared
 
     let page: HelpPage
@@ -161,21 +162,22 @@ struct HelpView: View {
     var body: some View {
         NavigationStack {
             List {
-                if query.isEmpty && whatsNew.release != nil {
+                if query.isEmpty {
                     Section {
-                        Button {
-                            AnalyticsEvents.logButtonClick("whats_new", screen: Self.screen)
-                            whatsNew.show()
-                        } label: {
-                            HStack {
-                                Text("What's New in \(whatsNew.version)")
-                                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                                Spacer()
-                                Image(systemName: "sparkles")
-                                    .font(.system(size: 13, weight: .semibold))
-                                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                        if whatsNew.release != nil {
+                            Button {
+                                AnalyticsEvents.logButtonClick("whats_new", screen: Self.screen)
+                                whatsNew.show()
+                            } label: {
+                                linkRow("What's New in \(whatsNew.version)", systemImage: "sparkles")
                             }
-                            .contentShape(Rectangle())
+                        }
+
+                        Button {
+                            AnalyticsEvents.logButtonClick("email_support", screen: Self.screen)
+                            openURL(AppLinks.supportEmail)
+                        } label: {
+                            linkRow("Email Support", systemImage: "envelope")
                         }
                     }
                 }
@@ -212,6 +214,18 @@ struct HelpView: View {
                 "page": page.rawValue
             ])
         }
+    }
+
+    private func linkRow(_ title: String, systemImage: String) -> some View {
+        HStack {
+            Text(title)
+                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+            Spacer()
+            Image(systemName: systemImage)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+        }
+        .contentShape(Rectangle())
     }
 
     private func row(_ topic: HelpTopic) -> some View {
