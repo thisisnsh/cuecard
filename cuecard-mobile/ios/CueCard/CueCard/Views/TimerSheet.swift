@@ -121,7 +121,7 @@ struct TimerSheet: View {
             set: { style.wrappedValue.warningSeconds = min(warning / 60 * 60 + $0, latest) }
         )
         let secondsRange = warning / 60 == latest / 60 ? 0...(latest % 60) : 0...59
-        return timeRow("Warn Before End", minutes: minutes, minuteRange: 0...(latest / 60),
+        return timeRow("Warn in Last", minutes: minutes, minuteRange: 0...(latest / 60),
                        seconds: seconds, secondRange: secondsRange)
     }
 
