@@ -66,7 +66,7 @@ private enum AllHelp {
                       + "Tap Show Advanced Settings to type an exact size."),
         HelpTopic("Change Colors",
                   detail: "Pick colors that are easy for you to tell apart. "
-                      + "Set the cue and timer colors in Settings.")
+                      + "Set the cue color in Settings, and the timer colors in the timer.")
     ])
 
     static let teleprompter = HelpSection(title: "Teleprompter", topics: [
@@ -84,7 +84,7 @@ private enum AllHelp {
                       + "in a floating window, handy on video calls."),
         HelpTopic("Watch the Timer",
                   detail: "The timer changes color when you're near the end "
-                      + "and again once you're over time. Pick the colors in Settings.")
+                      + "and again once you're over time. Pick the colors in the timer.")
     ])
 
     static let cards = HelpSection(title: "Cards", topics: [
