@@ -1,12 +1,8 @@
 {
-  "1.6.0": {
-    "title": "Cards and Apple Watch",
+  "1.7.0": {
+    "title": "Improved Timer",
     "features": [
-        "Cards Mode: Swipe through cue cards, one thought each, with a timer.",
-        "Cards on Lock Screen: See your cards with the timer and turn them from the Lock Screen.",
-        "Apple Watch: Run the teleprompter, turn cards, or keep decks on your wrist.",
-        "Action Button: Play or pause the teleprompter without touching the screen.",
-        "Help: Tap ? on any screen for tips."
+        "Improved Timer: More ways to customize it."
     ]
   }
 }
