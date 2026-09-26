@@ -112,6 +112,8 @@ extension TeleprompterTimerState.Tint {
         case .green: return AppColors.Dark.green
         case .yellow: return AppColors.Dark.yellow
         case .red: return AppColors.Dark.red
+        case .blue: return AppColors.Dark.blue
+        case .purple: return AppColors.Dark.purple
         }
     }
 }

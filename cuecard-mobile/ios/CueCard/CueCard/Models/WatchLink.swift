@@ -86,6 +86,8 @@ struct WatchCardsState: Codable, Equatable {
     var startedAt: Date?
     /// The timer set when it was opened, in seconds. Zero counts up.
     var timerDuration: Int?
+    /// The timer's colors when it was opened.
+    var timerStyle: TimerStyle?
 }
 
 /// Everything the watch shows of the iPhone.
@@ -98,6 +100,8 @@ struct WatchPhoneState: Codable, Equatable {
     var settings: WatchSettings
     /// The cards timer, in seconds, for a deck read on the watch alone.
     var cardsTimerDuration: Int?
+    /// The cards timer's colors, for a deck read on the watch alone.
+    var cardsTimerStyle: TimerStyle?
     /// When the iPhone sent it. A push and an application context can arrive
     /// out of turn, and the older of the two is dropped.
     var sentAt: Date

@@ -8,7 +8,18 @@ struct TeleprompterTimerState: Codable, Hashable {
 
     /// Which color the time is drawn in, matching the in-app timer.
     enum Tint: String, Codable {
-        case primary, pink, green, yellow, red
+        case primary, pink, green, yellow, red, blue, purple
+
+        init(_ color: CueColor) {
+            switch color {
+            case .pink: self = .pink
+            case .yellow: self = .yellow
+            case .green: self = .green
+            case .blue: self = .blue
+            case .purple: self = .purple
+            case .red: self = .red
+            }
+        }
     }
 
     var phase: Phase
@@ -34,21 +45,11 @@ struct TeleprompterTimerState: Codable, Hashable {
 extension TeleprompterTimerState {
     /// A timer that has been running since `start` without a pause, as a deck
     /// of cards has: counting down from `duration`, or up when it is zero.
-    /// Green, yellow for the last fifth, red once it's over, like the
-    /// teleprompter's.
-    static func running(since start: Date, duration: Int, at now: Date = Date()) -> TeleprompterTimerState {
+    /// Colored by `style`, like the teleprompter's.
+    static func running(since start: Date, duration: Int, style: TimerStyle,
+                        at now: Date = Date()) -> TeleprompterTimerState {
         let remaining = duration - Int(now.timeIntervalSince(start))
-        let tint: Tint
-        if duration == 0 {
-            tint = .primary
-        } else if remaining < 0 {
-            tint = .red
-        } else if Double(remaining) / Double(duration) <= 0.2 {
-            tint = .yellow
-        } else {
-            tint = .green
-        }
-        return TeleprompterTimerState(phase: .playing, tint: tint,
+        return TeleprompterTimerState(phase: .playing, tint: style.tint(remaining: remaining, duration: duration),
                                       zeroDate: start.addingTimeInterval(Double(duration)),
                                       pausedSeconds: 0, isOvertime: duration > 0 && remaining < 0)
     }
@@ -63,8 +64,44 @@ extension TeleprompterTimerState {
     }
 }
 
+/// How a set timer is colored: one color while there's time, another from
+/// `warningSeconds` left, and a third from zero on into overtime. With no
+/// timer set it counts up in a color of its own, and the teleprompter's start
+/// delay counts down in another.
+struct TimerStyle: Codable, Hashable {
+    /// Time left when the warning color starts. Zero skips the warning.
+    var warningSeconds: Int
+    var normalColor: CueColor
+    var warningColor: CueColor
+    var overtimeColor: CueColor
+    var countdownColor: CueColor
+    /// With no timer set.
+    var countUpColor: CueColor
+
+    static let `default` = TimerStyle(warningSeconds: 10, normalColor: .green,
+                                      warningColor: .yellow, overtimeColor: .red,
+                                      countdownColor: .pink, countUpColor: .green)
+
+    /// The color for `remaining` seconds left of `duration`. With no timer
+    /// set, the time counts up instead.
+    func tint(remaining: Int, duration: Int) -> TeleprompterTimerState.Tint {
+        guard duration > 0 else { return .init(countUpColor) }
+        if remaining <= 0 { return .init(overtimeColor) }
+        if remaining <= warningSeconds { return .init(warningColor) }
+        return .init(normalColor)
+    }
+
+    /// Seconds into a `duration` timer at which its color changes.
+    func colorChanges(duration: Int) -> [Int] {
+        guard duration > 0 else { return [] }
+        let warning = duration - warningSeconds
+        return (warningSeconds > 0 && warning > 0 ? [warning] : []) + [duration]
+    }
+}
+
 #if os(iOS)
 import SwiftUI
+import UIKit
 
 extension TeleprompterTimerState.Tint {
     /// The app's color for this tint.
@@ -75,6 +112,20 @@ extension TeleprompterTimerState.Tint {
         case .green: return AppColors.green(for: colorScheme)
         case .yellow: return AppColors.yellow(for: colorScheme)
         case .red: return AppColors.red(for: colorScheme)
+        case .blue: return AppColors.blue(for: colorScheme)
+        case .purple: return AppColors.purple(for: colorScheme)
+        }
+    }
+
+    func uiColor(isDarkMode: Bool) -> UIColor {
+        switch self {
+        case .primary: return isDarkMode ? AppColors.UIColors.Dark.textPrimary : AppColors.UIColors.Light.textPrimary
+        case .pink: return CueColor.pink.uiColor(isDarkMode: isDarkMode)
+        case .green: return CueColor.green.uiColor(isDarkMode: isDarkMode)
+        case .yellow: return CueColor.yellow.uiColor(isDarkMode: isDarkMode)
+        case .red: return CueColor.red.uiColor(isDarkMode: isDarkMode)
+        case .blue: return CueColor.blue.uiColor(isDarkMode: isDarkMode)
+        case .purple: return CueColor.purple.uiColor(isDarkMode: isDarkMode)
         }
     }
 }

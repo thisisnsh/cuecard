@@ -9,7 +9,8 @@ struct PhoneDeckView: View {
     var body: some View {
         if let phone = connector.phone, let deck = phone.cards {
             CardPager(cards: deck.cards, index: $index, cueColor: phone.cueColor,
-                      timerStart: deck.startedAt, timerDuration: deck.timerDuration ?? 0)
+                      timerStart: deck.startedAt, timerDuration: deck.timerDuration ?? 0,
+                      timerStyle: deck.timerStyle ?? .default)
                 .navigationTitle(cardProgress(index: index, count: deck.cards.count))
                 .onAppear { index = deck.index }
                 .onChange(of: deck) { _, deck in

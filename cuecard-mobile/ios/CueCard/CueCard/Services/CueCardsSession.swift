@@ -26,6 +26,8 @@ final class CueCardsSession: ObservableObject {
     /// The cards timer as it was set when the deck was opened, in seconds.
     /// Zero counts up instead.
     private(set) var timerDuration = 0
+    /// The cards timer's colors as they were set when the deck was opened.
+    private(set) var timerStyle = TimerStyle.default
 
     var isFinished: Bool { index >= cards.count }
 
@@ -45,6 +47,7 @@ final class CueCardsSession: ObservableObject {
         var isOnLockScreen: Bool?
         var startedAt: Date?
         var timerDuration: Int?
+        var timerStyle: TimerStyle?
     }
 
     private var cueColorSubscription: AnyCancellable?
@@ -72,6 +75,7 @@ final class CueCardsSession: ObservableObject {
         sessionID = UUID()
         startedAt = Date()
         timerDuration = SettingsService.shared.settings.cards.timerDurationSeconds
+        timerStyle = SettingsService.shared.settings.cards.timerStyle
         isOnLockScreen = false
         lockScreenUnavailable = false
         save()
@@ -169,6 +173,7 @@ final class CueCardsSession: ObservableObject {
         deckID = stored.deckID
         startedAt = stored.startedAt ?? Date()
         timerDuration = stored.timerDuration ?? 0
+        timerStyle = stored.timerStyle ?? .default
         isOnLockScreen = CueCardsLockScreen.isActive(session: sessionID)
         scheduleTimerColorUpdate()
         return true
@@ -181,12 +186,11 @@ final class CueCardsSession: ObservableObject {
         updateLockScreen()
     }
 
-    /// The deck's timer at `now`, colored the way the teleprompter's is:
-    /// green, yellow for the last fifth, red and counting up once it's over.
-    /// Nil while no deck is open.
+    /// The deck's timer at `now`, colored by its timer style, counting up
+    /// once it's over. Nil while no deck is open.
     func timerState(at now: Date = Date()) -> TeleprompterTimerState? {
         guard !cards.isEmpty else { return nil }
-        return .running(since: startedAt, duration: timerDuration, at: now)
+        return .running(since: startedAt, duration: timerDuration, style: timerStyle, at: now)
     }
 
     /// Wait for the Lock Screen to catch up with the last move, so the app
@@ -204,14 +208,13 @@ final class CueCardsSession: ObservableObject {
     }
 
     /// The Live Activity ticks the time itself but can't recolor it, so it
-    /// is redrawn as the timer turns yellow and again as it runs over.
+    /// is redrawn as the timer reaches its warning and again as it runs out.
     private func scheduleTimerColorUpdate() {
         timerColorUpdate?.cancel()
         guard !cards.isEmpty, timerDuration > 0 else { return }
-        let duration = Double(timerDuration)
         let now = Date()
-        let changes = [duration * 0.8, duration + 1]
-            .map { startedAt.addingTimeInterval($0 + 0.2) }
+        let changes = timerStyle.colorChanges(duration: timerDuration)
+            .map { startedAt.addingTimeInterval(Double($0) + 0.2) }
             .filter { $0 > now }
         guard let next = changes.first else { return }
         let sessionID = sessionID
@@ -278,7 +281,8 @@ final class CueCardsSession: ObservableObject {
         let stored = Stored(cards: cards, index: index,
                             sessionID: sessionID, title: title, deckID: deckID,
                             isOnLockScreen: isOnLockScreen,
-                            startedAt: startedAt, timerDuration: timerDuration)
+                            startedAt: startedAt, timerDuration: timerDuration,
+                            timerStyle: timerStyle)
         if let data = try? JSONEncoder().encode(stored) {
             UserDefaults.standard.set(data, forKey: Self.storageKey)
         }

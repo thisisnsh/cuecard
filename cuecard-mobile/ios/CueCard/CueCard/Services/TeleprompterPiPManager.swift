@@ -125,6 +125,7 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
             || newSettings.overlayAspectRatio != settings.overlayAspectRatio
             || newSettings.cueColor != settings.cueColor
             || newSettings.timerDurationSeconds != settings.timerDurationSeconds
+            || newSettings.timerStyle != settings.timerStyle
             || newIsDarkMode != isDarkMode
         let speedChanged = newSettings.linesPerMinute != settings.linesPerMinute
         settings = newSettings
@@ -253,17 +254,19 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         return Self.timerState(
             for: playback,
             countdownRemaining: countdownDeadline.map { max(0, $0 - CACurrentMediaTime()) },
-            timerDuration: settings.timerDurationSeconds
+            timerDuration: settings.timerDurationSeconds,
+            style: settings.timerStyle
         )
     }
 
     /// The same time and color as the in-app timer.
     private static func timerState(for playback: TeleprompterPlaybackState,
                                    countdownRemaining: Double?,
-                                   timerDuration: Int) -> TeleprompterTimerState {
+                                   timerDuration: Int,
+                                   style: TimerStyle) -> TeleprompterTimerState {
         let now = Date()
         if playback.isCountingDown {
-            return TeleprompterTimerState(phase: .countingDown, tint: .pink,
+            return TeleprompterTimerState(phase: .countingDown, tint: .init(style.countdownColor),
                                           zeroDate: now.addingTimeInterval(countdownRemaining ?? Double(playback.countdownValue)),
                                           pausedSeconds: 0, isOvertime: false)
         }
@@ -271,16 +274,7 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         let elapsed = playback.elapsedTime
         let remaining = timerDuration - Int(elapsed)
         let isOvertime = timerDuration > 0 && remaining < 0
-        let tint: TeleprompterTimerState.Tint
-        if timerDuration == 0 {
-            tint = .primary
-        } else if remaining < 0 {
-            tint = .red
-        } else if Double(remaining) / Double(timerDuration) <= 0.2 {
-            tint = .yellow
-        } else {
-            tint = .green
-        }
+        let tint = style.tint(remaining: remaining, duration: timerDuration)
 
         if playback.isPlaying {
             return TeleprompterTimerState(phase: .playing, tint: tint,
@@ -767,6 +761,7 @@ private final class TeleprompterOverlayRenderer {
     private var lineOffsets: [CGFloat] = []
     var lineCount: Int { lineStarts.count }
     private let timerDuration: Int
+    private let timerStyle: TimerStyle
     private let timerFont: UIFont
     private let isDarkMode: Bool
     /// The in-app timer is 16 pt over 28 pt text by default. The overlay keeps
@@ -775,6 +770,7 @@ private final class TeleprompterOverlayRenderer {
 
     init(text: String, settings: TeleprompterSettings, timerDuration: Int, isDarkMode: Bool) {
         self.timerDuration = timerDuration
+        timerStyle = settings.timerStyle
         // The same face as the in-app timer: SF Mono, bold.
         timerFont = UIFont.monospacedSystemFont(
             ofSize: CGFloat(settings.pipFontSize) * Self.timerToTextRatio, weight: .bold
@@ -825,8 +821,8 @@ private final class TeleprompterOverlayRenderer {
         let remaining = timerDuration > 0 ? timerDuration - Int(state.elapsedTime) : Int(state.elapsedTime)
         let time = TeleprompterParser.formatTime(state.isCountingDown ? state.countdownValue : remaining)
         let color = state.isCountingDown
-            ? (isDarkMode ? AppColors.UIColors.Dark.pink : AppColors.UIColors.Light.pink)
-            : AppColors.timerUIColor(remainingSeconds: remaining, totalSeconds: timerDuration, isDarkMode: isDarkMode)
+            ? timerStyle.countdownColor.uiColor(isDarkMode: isDarkMode)
+            : timerStyle.tint(remaining: remaining, duration: timerDuration).uiColor(isDarkMode: isDarkMode)
         let style = NSMutableParagraphStyle()
         style.alignment = .center
         let timerHeight = ceil(timerFont.lineHeight)

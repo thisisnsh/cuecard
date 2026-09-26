@@ -23,7 +23,8 @@ struct SavedDeckView: View {
             let cards = linked?.cards ?? deck.cards
             CardPager(cards: cards, index: $index, cueColor: connector.phone?.cueColor ?? .default,
                       timerStart: linked?.startedAt ?? openedAt,
-                      timerDuration: linked?.timerDuration ?? connector.phone?.cardsTimerDuration ?? 0)
+                      timerDuration: linked?.timerDuration ?? connector.phone?.cardsTimerDuration ?? 0,
+                      timerStyle: linked?.timerStyle ?? connector.phone?.cardsTimerStyle ?? .default)
                 .navigationTitle(cardProgress(index: index, count: cards.count))
                 .onAppear {
                     if let linked {

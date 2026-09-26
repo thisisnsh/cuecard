@@ -14,6 +14,8 @@ struct CardPager: View {
     var timerStart: Date?
     /// The timer's length in seconds. Zero counts up.
     var timerDuration = 0
+    /// When and how the timer changes color.
+    var timerStyle = TimerStyle.default
 
     @EnvironmentObject var connector: WatchConnector
     /// Wrist down with Always On: the card stays up, dimmed.
@@ -49,7 +51,7 @@ struct CardPager: View {
         .toolbar {
             if let timerStart, !isFinished {
                 ToolbarItem(placement: .topBarTrailing) {
-                    CardsTimerText(start: timerStart, duration: timerDuration)
+                    CardsTimerText(start: timerStart, duration: timerDuration, style: timerStyle)
                 }
             }
             ToolbarItemGroup(placement: .bottomBar) {
@@ -86,10 +88,11 @@ struct CardPager: View {
 struct CardsTimerText: View {
     let start: Date
     let duration: Int
+    let style: TimerStyle
 
     var body: some View {
         TimelineView(.periodic(from: start, by: 1)) { context in
-            let state = TeleprompterTimerState.running(since: start, duration: duration, at: context.date)
+            let state = TeleprompterTimerState.running(since: start, duration: duration, style: style, at: context.date)
             TimerText(state: state)
                 .font(.caption.weight(.semibold).monospacedDigit())
                 .foregroundStyle(state.tint.color)

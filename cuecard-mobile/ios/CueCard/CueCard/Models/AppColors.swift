@@ -104,46 +104,6 @@ extension AppColors {
     }
 }
 
-// MARK: - Timer color helper
-extension AppColors {
-    /// Get timer color based on remaining time and total duration
-    /// - Green: > 50% time remaining
-    /// - Yellow: 20-50% time remaining
-    /// - Red: < 20% time remaining or overtime
-    static func timerColor(remainingSeconds: Int, totalSeconds: Int, colorScheme: ColorScheme) -> Color {
-        guard totalSeconds > 0 else {
-            return green(for: colorScheme)
-        }
-
-        let percentage = Double(remainingSeconds) / Double(totalSeconds)
-
-        if remainingSeconds < 0 {
-            return red(for: colorScheme) // Overtime
-        } else if percentage <= 0.2 {
-            return yellow(for: colorScheme)
-        } else {
-            return green(for: colorScheme)
-        }
-    }
-
-    /// UIColor version for UIKit
-    static func timerUIColor(remainingSeconds: Int, totalSeconds: Int, isDarkMode: Bool) -> UIColor {
-        guard totalSeconds > 0 else {
-            return isDarkMode ? UIColors.Dark.green : UIColors.Light.green
-        }
-
-        let percentage = Double(remainingSeconds) / Double(totalSeconds)
-
-        if remainingSeconds < 0 {
-            return isDarkMode ? UIColors.Dark.red : UIColors.Light.red
-        } else if percentage <= 0.2 {
-            return isDarkMode ? UIColors.Dark.yellow : UIColors.Light.yellow
-        } else {
-            return isDarkMode ? UIColors.Dark.green : UIColors.Light.green
-        }
-    }
-}
-
 // MARK: - Color hex initializer
 extension Color {
     init(hex: String) {

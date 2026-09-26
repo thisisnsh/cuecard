@@ -40,18 +40,12 @@ struct TeleprompterView: View {
     }
 
     private var timerColor: Color {
-        // Show pink color during countdown
         if isCountingDown {
-            return AppColors.pink(for: colorScheme)
+            return settings.timerStyle.countdownColor.color(for: colorScheme)
         }
-        guard timerDuration > 0 else {
-            return AppColors.textPrimary(for: colorScheme)
-        }
-        return AppColors.timerColor(
-            remainingSeconds: timerDuration - Int(elapsedTime),
-            totalSeconds: timerDuration,
-            colorScheme: colorScheme
-        )
+        return settings.timerStyle
+            .tint(remaining: timerDuration - Int(elapsedTime), duration: timerDuration)
+            .color(for: colorScheme)
     }
 
     private var timeDisplay: String {
@@ -167,7 +161,7 @@ struct TeleprompterView: View {
                                 .background(
                                     Circle()
                                         .fill(showsCountdownNumber
-                                              ? settings.cueColor.color(for: colorScheme)
+                                              ? settings.timerStyle.countdownColor.color(for: colorScheme)
                                               : AppColors.green(for: colorScheme))
                                 )
                                 .glassedEffect(in: Circle())

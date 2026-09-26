@@ -116,6 +116,8 @@ struct CardsSettings: Codable, Equatable {
     var cueColor: CueColor
     var timerMinutes: Int
     var timerSeconds: Int
+    /// When and how the cards timer changes color.
+    var timerStyle: TimerStyle
     /// A deck being read is on the Lock Screen too, as a Live Activity. It
     /// keeps cards short enough to read there.
     var showOnLockScreen: Bool
@@ -130,17 +132,19 @@ struct CardsSettings: Codable, Equatable {
     }
 
     init(editorFontSize: Int, fontSize: Int, cueColor: CueColor,
-         timerMinutes: Int, timerSeconds: Int, showOnLockScreen: Bool = true) {
+         timerMinutes: Int, timerSeconds: Int, timerStyle: TimerStyle = .default,
+         showOnLockScreen: Bool = true) {
         self.editorFontSize = editorFontSize
         self.fontSize = fontSize
         self.cueColor = cueColor
         self.timerMinutes = timerMinutes
         self.timerSeconds = timerSeconds
+        self.timerStyle = timerStyle
         self.showOnLockScreen = showOnLockScreen
     }
 
     private enum CodingKeys: String, CodingKey {
-        case editorFontSize, fontSize, cueColor, timerMinutes, timerSeconds, showOnLockScreen
+        case editorFontSize, fontSize, cueColor, timerMinutes, timerSeconds, timerStyle, showOnLockScreen
     }
 
     init(from decoder: Decoder) throws {
@@ -150,6 +154,7 @@ struct CardsSettings: Codable, Equatable {
         cueColor = try container.decode(CueColor.self, forKey: .cueColor)
         timerMinutes = try container.decode(Int.self, forKey: .timerMinutes)
         timerSeconds = try container.decode(Int.self, forKey: .timerSeconds)
+        timerStyle = try container.decodeIfPresent(TimerStyle.self, forKey: .timerStyle) ?? .default
         showOnLockScreen = try container.decodeIfPresent(Bool.self, forKey: .showOnLockScreen) ?? true
     }
 }
@@ -168,6 +173,8 @@ struct TeleprompterSettings: Codable, Equatable {
     var linesPerMinute: Int
     var timerMinutes: Int
     var timerSeconds: Int
+    /// When and how the teleprompter's timer changes color.
+    var timerStyle: TimerStyle
     var themePreference: ThemePreference
     var countdownSeconds: Int
     /// The color every `[cue …]` in every script is drawn in.
@@ -189,6 +196,7 @@ struct TeleprompterSettings: Codable, Equatable {
         linesPerMinute: 34,
         timerMinutes: 1,
         timerSeconds: 0,
+        timerStyle: .default,
         themePreference: .system,
         countdownSeconds: 5,
         cueColor: .default,
@@ -286,6 +294,12 @@ struct TeleprompterSettings: Codable, Equatable {
         set { if scriptMode == .cards { cards.timerSeconds = newValue } else { timerSeconds = newValue } }
     }
 
+    /// The timer colors for the mode being written in.
+    var activeTimerStyle: TimerStyle {
+        get { scriptMode == .cards ? cards.timerStyle : timerStyle }
+        set { if scriptMode == .cards { cards.timerStyle = newValue } else { timerStyle = newValue } }
+    }
+
     enum CodingKeys: String, CodingKey {
         case editorFontSize
         /// Only read, and only to carry an older size setting over. See `init(from:)`.
@@ -300,6 +314,7 @@ struct TeleprompterSettings: Codable, Equatable {
         case linesPerMinute
         case timerMinutes
         case timerSeconds
+        case timerStyle
         case themePreference
         case countdownSeconds
         case cueColor
@@ -320,6 +335,7 @@ struct TeleprompterSettings: Codable, Equatable {
         linesPerMinute: Int,
         timerMinutes: Int,
         timerSeconds: Int,
+        timerStyle: TimerStyle,
         themePreference: ThemePreference,
         countdownSeconds: Int,
         cueColor: CueColor,
@@ -335,6 +351,7 @@ struct TeleprompterSettings: Codable, Equatable {
         self.linesPerMinute = linesPerMinute
         self.timerMinutes = timerMinutes
         self.timerSeconds = timerSeconds
+        self.timerStyle = timerStyle
         self.themePreference = themePreference
         self.countdownSeconds = countdownSeconds
         self.cueColor = cueColor
@@ -376,6 +393,7 @@ struct TeleprompterSettings: Codable, Equatable {
         }
         timerMinutes = try container.decode(Int.self, forKey: .timerMinutes)
         timerSeconds = try container.decode(Int.self, forKey: .timerSeconds)
+        timerStyle = try container.decodeIfPresent(TimerStyle.self, forKey: .timerStyle) ?? .default
         themePreference = try container.decode(ThemePreference.self, forKey: .themePreference)
         countdownSeconds = try container.decodeIfPresent(Int.self, forKey: .countdownSeconds) ?? 5
         cueColor = try container.decodeIfPresent(CueColor.self, forKey: .cueColor) ?? .default
@@ -409,6 +427,7 @@ struct TeleprompterSettings: Codable, Equatable {
         try container.encode(linesPerMinute, forKey: .linesPerMinute)
         try container.encode(timerMinutes, forKey: .timerMinutes)
         try container.encode(timerSeconds, forKey: .timerSeconds)
+        try container.encode(timerStyle, forKey: .timerStyle)
         try container.encode(themePreference, forKey: .themePreference)
         try container.encode(countdownSeconds, forKey: .countdownSeconds)
         try container.encode(cueColor, forKey: .cueColor)
