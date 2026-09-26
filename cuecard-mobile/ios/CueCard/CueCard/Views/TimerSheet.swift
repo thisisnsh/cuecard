@@ -46,7 +46,7 @@ struct TimerSheet: View {
                     }
                 }
 
-                TimerColorsSection(screen: Self.screen, style: style, showsCountdown: isTeleprompter,
+                TimerColorsSection(screen: Self.screen, style: style, showsCountdown: isTeleprompter && settings.countdownSeconds > 0,
                                    isTimed: duration > 0)
             }
             .navigationTitle("Timer")
@@ -188,12 +188,13 @@ struct TimerSheet: View {
 }
 
 /// The colors the mode's timer turns, from the countdown before it to
-/// running over. Only the ones it will use are shown: untimed, it's just
-/// Running, and with the warning off there's no Warning.
+/// running over. Only the ones it will use are shown: untimed, there's no
+/// Warning or Overtime, and each of Countdown and Warning goes when it's off.
 private struct TimerColorsSection: View {
     let screen: String
     @Binding var style: TimerStyle
-    /// Only the teleprompter counts down before it starts.
+    /// Only the teleprompter counts down before it starts, and only when
+    /// its countdown is set.
     let showsCountdown: Bool
     let isTimed: Bool
 
