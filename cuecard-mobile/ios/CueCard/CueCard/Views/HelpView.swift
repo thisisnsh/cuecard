@@ -63,7 +63,10 @@ private enum AllHelp {
                       + "Swipe right on one to rename it, or swipe left to delete it."),
         HelpTopic("Change Text Size",
                   detail: "Each mode keeps its own text size and colors in Settings. "
-                      + "Tap Show Advanced Settings to type an exact size.")
+                      + "Tap Show Advanced Settings to type an exact size."),
+        HelpTopic("Change Colors",
+                  detail: "Pick colors that are easy for you to tell apart. "
+                      + "Set the cue color in Settings, and the timer's colors by tapping the timer.")
     ])
 
     static let teleprompter = HelpSection(title: "Teleprompter", topics: [
