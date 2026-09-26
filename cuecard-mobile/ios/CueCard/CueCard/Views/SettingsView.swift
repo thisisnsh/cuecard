@@ -341,7 +341,6 @@ private struct TimerColorsSection: View {
             ColorSwatchRow(title: "Running", selection: $style.normalColor)
             ColorSwatchRow(title: "Warning", selection: $style.warningColor)
             ColorSwatchRow(title: "Time's Up", selection: $style.overtimeColor)
-            ColorSwatchRow(title: "Count Up", selection: $style.countUpColor)
 
             if style != defaultColors {
                 Button("Reset Timer Colors") {
@@ -353,7 +352,7 @@ private struct TimerColorsSection: View {
             Text("Timer Colors")
         } footer: {
             Text("Time's Up is the color at 0:00, and it stays that color if you go over time. "
-                 + "Count Up is used when no time is set.")
+                 + "With no time set, the timer counts up in Running.")
         }
     }
 }
