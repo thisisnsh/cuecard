@@ -17,9 +17,7 @@ struct TimerSheet: View {
     private var isTeleprompter: Bool { settings.scriptMode == .teleprompter }
 
     private var timeFooter: String {
-        var lines = [duration == 0
-            ? "0:00 turns off the timer and starts the clock."
-            : "Warn At is the time left when the timer turns the warning color. 0:00 turns it off."]
+        var lines = duration > 0 ? ["0:00 turns off the timer."] : []
         if isTeleprompter {
             lines.append("Countdown is the time before the script starts scrolling.")
         }
@@ -43,7 +41,9 @@ struct TimerSheet: View {
                         countdownRow
                     }
                 } footer: {
-                    Text(timeFooter)
+                    if !timeFooter.isEmpty {
+                        Text(timeFooter)
+                    }
                 }
 
                 TimerColorsSection(screen: Self.screen, style: style, showsCountdown: isTeleprompter,
