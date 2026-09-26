@@ -66,7 +66,7 @@ extension TeleprompterTimerState {
 
 /// How a set timer is colored: one color while there's time, another from
 /// `warningSeconds` left, and a third from zero on into overtime. With no
-/// timer set it counts up in the running color, and the teleprompter's start
+/// timer set it counts up in the normal color, and the teleprompter's start
 /// delay counts down in another.
 struct TimerStyle: Codable, Hashable {
     /// Time left when the warning color starts. Zero skips the warning.
@@ -81,7 +81,7 @@ struct TimerStyle: Codable, Hashable {
                                       countdownColor: .pink)
 
     /// The color for `remaining` seconds left of `duration`. With no timer
-    /// set, the time counts up in the running color.
+    /// set, the time counts up in the normal color.
     func tint(remaining: Int, duration: Int) -> TeleprompterTimerState.Tint {
         guard duration > 0 else { return .init(normalColor) }
         if remaining <= 0 { return .init(overtimeColor) }

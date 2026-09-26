@@ -210,7 +210,7 @@ private struct TimerColorsSection: View {
             if showsCountdown {
                 ColorSwatchRow(title: "Countdown", selection: $style.countdownColor)
             }
-            ColorSwatchRow(title: "Running", selection: $style.normalColor)
+            ColorSwatchRow(title: "Normal", selection: $style.normalColor)
             if isTimed {
                 if style.warningSeconds > 0 {
                     ColorSwatchRow(title: "Warning", selection: $style.warningColor)
