@@ -18,7 +18,7 @@ struct TimerSheet: View {
 
     private var timeFooter: String {
         var lines = [duration == 0
-            ? "With no time set, the timer counts up from 0:00."
+            ? "0:00 turns off the timer and starts the clock."
             : "Warn At is the time left when the timer turns the warning color. 0:00 turns it off."]
         if isTeleprompter {
             lines.append("Countdown is the time before the script starts scrolling.")
@@ -46,7 +46,8 @@ struct TimerSheet: View {
                     Text(timeFooter)
                 }
 
-                TimerColorsSection(screen: Self.screen, style: style, showsCountdown: isTeleprompter)
+                TimerColorsSection(screen: Self.screen, style: style, showsCountdown: isTeleprompter,
+                                   isTimed: duration > 0)
             }
             .navigationTitle("Timer")
             .navigationBarTitleDisplayMode(.inline)
@@ -187,12 +188,14 @@ struct TimerSheet: View {
 }
 
 /// The colors the mode's timer turns, from the countdown before it to
-/// running over.
+/// running over. Only the ones it will use are shown: untimed, it's just
+/// Running, and with the warning off there's no Warning.
 private struct TimerColorsSection: View {
     let screen: String
     @Binding var style: TimerStyle
     /// Only the teleprompter counts down before it starts.
     let showsCountdown: Bool
+    let isTimed: Bool
 
     /// The colors as they come, keeping the warning time.
     private var defaultColors: TimerStyle {
@@ -207,8 +210,12 @@ private struct TimerColorsSection: View {
                 ColorSwatchRow(title: "Countdown", selection: $style.countdownColor)
             }
             ColorSwatchRow(title: "Running", selection: $style.normalColor)
-            ColorSwatchRow(title: "Warning", selection: $style.warningColor)
-            ColorSwatchRow(title: "Time's Up", selection: $style.overtimeColor)
+            if isTimed {
+                if style.warningSeconds > 0 {
+                    ColorSwatchRow(title: "Warning", selection: $style.warningColor)
+                }
+                ColorSwatchRow(title: "Time's Up", selection: $style.overtimeColor)
+            }
 
             if style != defaultColors {
                 Button("Reset Timer Colors") {
@@ -218,9 +225,6 @@ private struct TimerColorsSection: View {
             }
         } header: {
             Text("Timer Colors")
-        } footer: {
-            Text("Time's Up is the color at 0:00, and it stays that color if you go over time. "
-                 + "With no time set, the timer counts up in Running.")
         }
     }
 }
