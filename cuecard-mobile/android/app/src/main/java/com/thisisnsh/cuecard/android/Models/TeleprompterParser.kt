@@ -72,7 +72,8 @@ object TeleprompterParser {
 
     /** Parse script content for teleprompter display */
     fun parseNotes(notes: String): TeleprompterContent {
-        val cleanedNotes = cleanText(notes)
+        // A script written as cards reads straight through, a card to a line.
+        val cleanedNotes = cleanText(CueCards.removingSeparators(notes))
 
         return TeleprompterContent(
             fullText = cleanedNotes,
@@ -86,16 +87,18 @@ object TeleprompterParser {
         text.replace("\r\n", "\n").replace("\r", "\n").trim()
 
     /**
-     * Rewrite every cue tag into the canonical `[cue …]` spelling.
+     * Rewrite every cue tag into the canonical `[cue …]` spelling, and every
+     * card separator into `[separator]`.
      *
      * Used at the file boundary, so a script that leaves the app carries the
      * current syntax and one that arrives is brought up to it.
      */
     fun normalizingTags(text: String): String {
-        val result = StringBuilder(text)
+        val separated = CueCards.normalizingSeparators(text)
+        val result = StringBuilder(separated)
 
         // Back to front, so replacing a tag doesn't shift the ones still to come.
-        for (match in cueMatches(text).reversed()) {
+        for (match in cueMatches(separated).reversed()) {
             result.replace(match.range.first, match.range.last + 1, cueTag(match.content))
         }
 

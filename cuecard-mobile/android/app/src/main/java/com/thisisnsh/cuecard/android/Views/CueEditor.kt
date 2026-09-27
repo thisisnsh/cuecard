@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.thisisnsh.cuecard.android.models.AppColors
+import com.thisisnsh.cuecard.android.models.CueCards
 import com.thisisnsh.cuecard.android.models.CueColor
 import com.thisisnsh.cuecard.android.models.TeleprompterParser
 import com.thisisnsh.cuecard.android.modifiers.Capsule
@@ -92,6 +93,9 @@ class CueEditorController {
  * writes the brackets for you: pressing `[` drops in a whole empty cue with the
  * caret inside it, so a cue is never left half-open — except inside a cue, where
  * there is nothing left for it to open.
+ *
+ * A card's editor is given the card's limit, and whatever runs past it is
+ * marked in red.
  */
 @Composable
 fun CueTextEditor(
@@ -106,7 +110,11 @@ fun CueTextEditor(
     fontSize: TextUnit,
     modifier: Modifier = Modifier,
     /** Room whatever floats over the bottom of the editor needs kept clear. */
-    bottomOverlayHeight: androidx.compose.ui.unit.Dp = 0.dp
+    bottomOverlayHeight: androidx.compose.ui.unit.Dp = 0.dp,
+    /** In a card, the characters it holds before the rest is marked. */
+    cardLimit: Int? = null,
+    /** Sized to its text, without scrolling, for a card in a list of them. */
+    growsWithText: Boolean = false
 ) {
     var value by remember { mutableStateOf(TextFieldValue(text)) }
     /**
@@ -119,6 +127,11 @@ fun CueTextEditor(
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
+    /**
+     * Whether this field holds focus right now. Only the field that has it gives
+     * it up, so a card losing focus to another card doesn't take it off that one.
+     */
+    var hasFocus by remember { mutableStateOf(false) }
 
     // The text can change from outside the editor — loading a note, importing a
     // file, adding the sample script.
@@ -132,7 +145,7 @@ fun CueTextEditor(
     LaunchedEffect(isFocused) {
         if (isFocused) {
             focusRequester.requestFocus()
-        } else {
+        } else if (hasFocus) {
             focusManager.clearFocus()
             keyboard?.hide()
         }
@@ -146,7 +159,75 @@ fun CueTextEditor(
         }
     }
 
+    // With a card editor for every card, the cue bar writes into the one being
+    // typed in.
+    if (isFocused || controller.onInsertCue == null) {
+        bindController(controller, { value }, ::apply, isFocused, onFocusChange) { value = it }
+    }
+
+    val baseStyle = TextStyle(
+        fontSize = fontSize,
+        fontWeight = FontWeight.Medium,
+        color = AppColors.textPrimary(isDark)
+    )
+
+    val field: @Composable (Modifier) -> Unit = { fieldModifier ->
+        BasicTextField(
+            value = value,
+            onValueChange = { candidate -> apply(rewritingBrackets(value, candidate)) },
+            modifier = fieldModifier
+                .fillMaxWidth()
+                .focusRequester(focusRequester)
+                .onFocusChanged { state ->
+                    hasFocus = state.isFocused
+                    if (state.isFocused != isFocused) {
+                        onFocusChange(state.isFocused)
+                    }
+                },
+            textStyle = baseStyle,
+            cursorBrush = SolidColor(AppColors.textPrimary(isDark)),
+            visualTransformation = { original ->
+                androidx.compose.ui.text.input.TransformedText(
+                    highlighted(original.text, cueColor, isDark, fontSize, cardLimit),
+                    androidx.compose.ui.text.input.OffsetMapping.Identity
+                )
+            }
+        )
+    }
+
+    // A card's editor grows with its text and leaves scrolling to the list it
+    // sits in.
+    if (growsWithText) {
+        field(modifier)
+        return
+    }
+
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .imePadding()
+            .padding(bottom = bottomOverlayHeight)
+            .verticalScroll(rememberScrollState())
+    ) {
+        Spacer(modifier = Modifier.height(CUE_EDITOR_EDGE_FADE))
+
+        field(Modifier.padding(horizontal = 20.dp))
+
+        Spacer(modifier = Modifier.height(CUE_EDITOR_EDGE_FADE))
+    }
+}
+
+/** Point the cue bar's buttons at this editor. */
+private fun bindController(
+    controller: CueEditorController,
+    currentValue: () -> TextFieldValue,
+    apply: (TextFieldValue) -> Unit,
+    isFocused: Boolean,
+    onFocusChange: (Boolean) -> Unit,
+    setValue: (TextFieldValue) -> Unit
+) {
     controller.onInsertCue = {
+        val value = currentValue()
         // Past the end of a selection, so a cue never eats the words it's next
         // to — and past the end of the cue the caret is in, since cues don't nest.
         var location = value.selection.max
@@ -168,50 +249,11 @@ fun CueTextEditor(
     }
 
     controller.onSelectAll = {
-        value = value.copy(selection = TextRange(0, value.text.length))
+        val value = currentValue()
+        setValue(value.copy(selection = TextRange(0, value.text.length)))
         if (!isFocused) {
             onFocusChange(true)
         }
-    }
-
-    val baseStyle = TextStyle(
-        fontSize = fontSize,
-        fontWeight = FontWeight.Medium,
-        color = AppColors.textPrimary(isDark)
-    )
-
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .imePadding()
-            .padding(bottom = bottomOverlayHeight)
-            .verticalScroll(rememberScrollState())
-    ) {
-        Spacer(modifier = Modifier.height(CUE_EDITOR_EDGE_FADE))
-
-        BasicTextField(
-            value = value,
-            onValueChange = { candidate -> apply(rewritingBrackets(value, candidate)) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 20.dp)
-                .focusRequester(focusRequester)
-                .onFocusChanged { state ->
-                    if (state.isFocused != isFocused) {
-                        onFocusChange(state.isFocused)
-                    }
-                },
-            textStyle = baseStyle,
-            cursorBrush = SolidColor(AppColors.textPrimary(isDark)),
-            visualTransformation = { original ->
-                androidx.compose.ui.text.input.TransformedText(
-                    highlighted(original.text, cueColor, isDark),
-                    androidx.compose.ui.text.input.OffsetMapping.Identity
-                )
-            }
-        )
-
-        Spacer(modifier = Modifier.height(CUE_EDITOR_EDGE_FADE))
     }
 }
 
@@ -219,13 +261,34 @@ fun CueTextEditor(
  * Color the closed cue tags. A cue being typed stays plain text until its
  * bracket lands.
  */
-private fun highlighted(text: String, cueColor: CueColor, isDark: Boolean): AnnotatedString {
+private fun highlighted(
+    text: String,
+    cueColor: CueColor,
+    isDark: Boolean,
+    fontSize: TextUnit,
+    cardLimit: Int?
+): AnnotatedString {
     val tagColor = cueColor.color(isDark)
+    val cues = TeleprompterParser.cueMatches(text)
 
     return androidx.compose.ui.text.buildAnnotatedString {
         append(text)
 
-        for (match in TeleprompterParser.cueMatches(text)) {
+        // Separators show in either mode, quieter than the words, so a script
+        // written as cards reads as one in the teleprompter's editor too.
+        for (separator in CueCards.separatorRanges(text)) {
+            addStyle(
+                SpanStyle(
+                    color = AppColors.textSecondary(isDark),
+                    fontSize = fontSize * 0.8f,
+                    fontWeight = FontWeight.Bold
+                ),
+                separator.first,
+                separator.last + 1
+            )
+        }
+
+        for (match in cues) {
             // The tag syntax stays visible — and editable — but recedes.
             addStyle(
                 SpanStyle(color = tagColor.copy(alpha = 0.45f), fontWeight = FontWeight.Medium),
@@ -240,6 +303,20 @@ private fun highlighted(text: String, cueColor: CueColor, isDark: Boolean): Anno
                     SpanStyle(color = tagColor, fontWeight = FontWeight.SemiBold),
                     contentStart,
                     contentEnd
+                )
+            }
+        }
+
+        // What a card holds past its limit, marked so it's plain where the card
+        // has to end and a new one begin.
+        if (cardLimit != null) {
+            val red = AppColors.red(isDark)
+            for (card in CueCards.cardRanges(text)) {
+                val overflow = CueCards.measure(card, text, cues, cardLimit).overflow ?: continue
+                addStyle(
+                    SpanStyle(color = red, background = red.copy(alpha = 0.14f)),
+                    overflow.first,
+                    overflow.last + 1
                 )
             }
         }

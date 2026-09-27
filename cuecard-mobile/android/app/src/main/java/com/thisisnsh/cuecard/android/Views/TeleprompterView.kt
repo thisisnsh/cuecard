@@ -11,8 +11,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -39,7 +37,6 @@ import androidx.compose.material.icons.filled.PictureInPicture
 import androidx.compose.material.icons.filled.PictureInPictureAlt
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -90,7 +87,6 @@ import com.thisisnsh.cuecard.android.models.TeleprompterParser
 import com.thisisnsh.cuecard.android.modifiers.scriptEdgeFade
 import com.thisisnsh.cuecard.android.modifiers.glassed
 import com.thisisnsh.cuecard.android.services.ReviewPromptService
-import com.thisisnsh.cuecard.android.services.SettingsService
 import com.thisisnsh.cuecard.android.services.TeleprompterPiPManager
 import com.thisisnsh.cuecard.android.services.TeleprompterSettings
 import androidx.compose.ui.platform.LocalContext
@@ -145,7 +141,6 @@ private fun <T> controlsFade() = tween<T>(durationMillis = 300, easing = FastOut
 fun TeleprompterView(
     content: TeleprompterContent,
     settings: TeleprompterSettings,
-    settingsService: SettingsService,
     onDismiss: () -> Unit
 ) {
     val isDark = LocalIsDarkTheme.current
@@ -169,7 +164,7 @@ fun TeleprompterView(
      */
     val scriptClock = remember { mutableDoubleStateOf(0.0) }
     var showControls by remember { mutableStateOf(true) }
-    var showingSettings by remember { mutableStateOf(false) }
+    var showingHelp by remember { mutableStateOf(false) }
     var countdownValue by remember { mutableIntStateOf(0) }
     var isCountingDown by remember { mutableStateOf(false) }
     /**
@@ -257,14 +252,10 @@ fun TeleprompterView(
 
     // MARK: - Timer readout
 
-    val timerColor = when {
-        isCountingDown -> AppColors.pink(isDark)
-        timerDuration <= 0 -> AppColors.textPrimary(isDark)
-        else -> AppColors.timerColor(
-            remainingSeconds = timerDuration - elapsedSeconds,
-            totalSeconds = timerDuration,
-            isDark = isDark
-        )
+    val timerColor = if (isCountingDown) {
+        settings.timerStyle.countdownColor.color(isDark)
+    } else {
+        settings.timerStyle.color(remaining = timerDuration - elapsedSeconds, duration = timerDuration).color(isDark)
     }
 
     val timeDisplay = when {
@@ -524,10 +515,7 @@ fun TeleprompterView(
         return
     }
 
-    BackHandler(enabled = showingSettings) { showingSettings = false }
-
-    /** Playing or counting down to it. Settings is only offered while neither. */
-    val isRunning = isPlaying || isCountingDown
+    BackHandler(enabled = showingHelp) { showingHelp = false }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
@@ -565,25 +553,12 @@ fun TeleprompterView(
                         }
                     },
                     actions = {
-                        // Only offered while paused, even when a tap has brought the
-                        // other controls back mid-run.
                         AnimatedVisibility(
-                            visible = !isRunning,
+                            visible = showControls,
                             enter = fadeIn(controlsFade()),
                             exit = fadeOut(controlsFade())
                         ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Settings,
-                                contentDescription = "Settings",
-                                tint = AppColors.textPrimary(isDark),
-                                modifier = Modifier
-                                    .padding(horizontal = 16.dp)
-                                    .size(20.dp)
-                                    .clickableWithoutRipple {
-                                        AnalyticsEvents.logButtonClick("settings", "teleprompter")
-                                        showingSettings = true
-                                    }
-                            )
+                            HelpButton(page = HelpPage.TELEPROMPTER, isDark = isDark) { showingHelp = true }
                         }
                     },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -700,7 +675,7 @@ fun TeleprompterView(
                         }
 
                         // During the countdown the button shows the seconds left, on
-                        // the cue color, and switches to the pause icon once playback
+                        // the countdown color, and switches to the pause icon once playback
                         // starts. It still pauses while showing a number.
                         Box(
                             modifier = Modifier
@@ -708,7 +683,11 @@ fun TeleprompterView(
                                 .glassed(
                                     CircleShape,
                                     isDark,
-                                    tint = if (isCountingDown) settings.cueColor.color(isDark) else AppColors.green(isDark)
+                                    tint = if (isCountingDown) {
+                                        settings.timerStyle.countdownColor.color(isDark)
+                                    } else {
+                                        AppColors.green(isDark)
+                                    }
                                 )
                                 .clickableWithoutRipple {
                                     AnalyticsEvents.logButtonClick(
@@ -767,16 +746,7 @@ fun TeleprompterView(
             }
         }
 
-        AnimatedVisibility(
-            visible = showingSettings,
-            enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
-            exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
-        ) {
-            TeleprompterSettingsView(
-                settingsService = settingsService,
-                onDismiss = { showingSettings = false }
-            )
-        }
+        HelpOverlay(page = HelpPage.TELEPROMPTER, visible = showingHelp, onDismiss = { showingHelp = false })
     }
 }
 
