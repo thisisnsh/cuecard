@@ -53,22 +53,4 @@ object AppColors {
     fun blue(isDark: Boolean): Color = if (isDark) Dark.blue else Light.blue
 
     fun purple(isDark: Boolean): Color = if (isDark) Dark.purple else Light.purple
-
-    /**
-     * Timer color based on remaining time and total duration
-     * - Green: > 20% time remaining (or when no timer is set)
-     * - Yellow: <= 20% time remaining
-     * - Red: overtime
-     */
-    fun timerColor(remainingSeconds: Int, totalSeconds: Int, isDark: Boolean): Color {
-        if (totalSeconds <= 0) return green(isDark)
-
-        val percentage = remainingSeconds.toDouble() / totalSeconds.toDouble()
-
-        return when {
-            remainingSeconds < 0 -> red(isDark)
-            percentage <= 0.2 -> yellow(isDark)
-            else -> green(isDark)
-        }
-    }
 }
