@@ -10,7 +10,8 @@
   Set `heroDeck` and the hero becomes two columns: the argument on the left,
   and on the right the app actually running - the live prompter in
   partials/deck.njk. That is the only thing on this site that moves of its own
-  accord, and it is not a video.
+  accord, and it is not a video. Set `heroDemo` to "cards" or "watch" (with
+  `demoCards`) and it is Cards mode instead, from partials/cardsdemo.njk.
 #}
 <section class="hero{% if heroClass %} {{ heroClass }}{% endif %}" aria-labelledby="hero-h">
     <div class="wrap">
@@ -71,7 +72,7 @@
             </div>
 
             {% if heroDeck %}
-            <div class="hero-deck">{% include "partials/deck.njk" %}</div>
+            <div class="hero-deck">{% if heroDemo == "cards" or heroDemo == "watch" %}{% set demoKind = heroDemo %}{% include "partials/cardsdemo.njk" %}{% else %}{% include "partials/deck.njk" %}{% endif %}</div>
             {% endif %}
         </div>
 

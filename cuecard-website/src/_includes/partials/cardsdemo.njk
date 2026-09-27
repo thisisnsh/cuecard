@@ -1,0 +1,40 @@
+{#
+  Cards mode, running in the page: the deck.njk of Cards.
+
+  A real deck, one card at a time, turned with a swipe or Back and Next, the
+  dots and the clock counting up the way the app does with no timer set. Pass
+  the cards as `demoCards` (strings, with [cue ...] drawn in the cue color).
+  Set `demoKind` to "watch" and the same deck is drawn as the watch shows it.
+
+  script.js drives it. With no JavaScript it shows the first card, which is
+  still a fair picture of the app.
+#}
+{% set onWatch = demoKind == "watch" %}
+<div class="cardsdemo{% if onWatch %} cardsdemo-watch{% endif %} reveal d2" data-cards>
+    <div class="cardsdemo-bar">
+        {% if not onWatch %}<span class="deck-close" aria-hidden="true">✕</span>{% endif %}
+        <span class="deck-clock cardsdemo-clock" data-cards-clock>00:00</span>
+        <span class="cardsdemo-count" data-cards-count>1 of {{ demoCards | length }}</span>
+    </div>
+
+    {% if not onWatch %}
+    <div class="cardsdemo-dots" aria-hidden="true">
+        {% for c in demoCards %}<span class="cardsdemo-dot{% if loop.first %} is-on{% endif %}"></span>{% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="cardsdemo-stage" data-cards-stage tabindex="0" role="group" aria-roledescription="deck" aria-label="Sample cue cards. Swipe, or use the arrow keys.">
+        {% for c in demoCards %}
+        <p class="cardsdemo-card{% if loop.first %} is-current{% elif loop.index == 2 %} is-next{% else %} is-later{% endif %}" data-card{% if not loop.first %} aria-hidden="true"{% endif %}>{{ c | cueHtml | safe }}</p>
+        {% endfor %}
+    </div>
+
+    <div class="cardsdemo-controls">
+        <button class="deck-btn" type="button" data-cards-back disabled>‹ Back</button>
+        <button class="deck-btn deck-btn-main" type="button" data-cards-next>Next ›</button>
+    </div>
+</div>
+<p class="deck-legend reveal d3">
+    {% if onWatch %}The same cards as on your iPhone: turn one on either and both move. The <b>pink words are cues</b>, reminders you never say out loud.
+    {% else %}Swipe the card or tap Next. The <b>pink words are cues</b>, reminders you never say out loud, and the clock counts up from when you started.{% endif %}
+</p>

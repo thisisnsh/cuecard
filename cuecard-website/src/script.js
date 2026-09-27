@@ -7,7 +7,7 @@ function trackProductDownload(event) {
     const link = event.target.closest?.('a[data-product-platform]');
     if (!link) return;
     const { productPlatform, ctaLocation, destinationType } = link.dataset;
-    if (!['ios', 'macos', 'windows'].includes(productPlatform) ||
+    if (!['ios', 'watchos', 'macos', 'windows'].includes(productPlatform) ||
         !['hero', 'navigation', 'download_section', 'article'].includes(ctaLocation) ||
         !['app_store', 'installer', 'releases'].includes(destinationType)) return;
     const destination = new URL(link.href, window.location.href);
@@ -26,6 +26,8 @@ function trackProductDownload(event) {
 document.addEventListener('DOMContentLoaded', () => {
     // The live prompter in the hero: the app, running, in the page
     initDeck();
+    // ...or Cards mode, on the pages about cards and the watch
+    initCardsDemo();
 
     // The menu on narrow screens, and the header's download menu
     initNavToggle();
@@ -201,6 +203,92 @@ function initDeck() {
     setRunning(running);
     reset();
     requestAnimationFrame(frame);
+}
+
+/* Cards mode in the hero (partials/cardsdemo.njk).
+
+   One card at a time, turned by a swipe, the arrow keys, or Back and Next,
+   with the clock counting up from the start the way the app does when no
+   timer is set. Next on the last card starts the deck over. */
+function initCardsDemo() {
+    document.querySelectorAll('[data-cards]').forEach((demo) => {
+        const cards = Array.from(demo.querySelectorAll('[data-card]'));
+        const dots = Array.from(demo.querySelectorAll('.cardsdemo-dot'));
+        const back = demo.querySelector('[data-cards-back]');
+        const next = demo.querySelector('[data-cards-next]');
+        const count = demo.querySelector('[data-cards-count]');
+        const clock = demo.querySelector('[data-cards-clock]');
+        const stage = demo.querySelector('[data-cards-stage]');
+        if (!cards.length || !stage) return;
+
+        let index = 0;
+        let elapsed = 0;
+        let visible = true;
+
+        const paintClock = () => {
+            if (!clock) return;
+            const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+            const s = String(elapsed % 60).padStart(2, '0');
+            clock.textContent = `${m}:${s}`;
+        };
+
+        const paint = () => {
+            cards.forEach((card, i) => {
+                card.classList.toggle('is-past', i < index);
+                card.classList.toggle('is-current', i === index);
+                card.classList.toggle('is-next', i === index + 1);
+                card.classList.toggle('is-later', i > index + 1);
+                card.setAttribute('aria-hidden', i === index ? 'false' : 'true');
+            });
+            dots.forEach((dot, i) => dot.classList.toggle('is-on', i === index));
+            if (count) count.textContent = `${index + 1} of ${cards.length}`;
+            if (back) back.disabled = index === 0;
+            if (next) next.textContent = index === cards.length - 1 ? 'Start Over' : 'Next \u203A';
+        };
+
+        const go = (step) => {
+            if (step > 0 && index === cards.length - 1) {
+                index = 0;
+                elapsed = 0;
+                paintClock();
+            } else {
+                index = Math.max(0, Math.min(cards.length - 1, index + step));
+            }
+            paint();
+        };
+
+        if (back) back.addEventListener('click', () => go(-1));
+        if (next) next.addEventListener('click', () => go(1));
+
+        let startX = null;
+        stage.addEventListener('pointerdown', (e) => { startX = e.clientX; });
+        stage.addEventListener('pointerup', (e) => {
+            if (startX === null) return;
+            const dx = e.clientX - startX;
+            startX = null;
+            if (Math.abs(dx) > 36) go(dx < 0 ? 1 : -1);
+        });
+        stage.addEventListener('pointercancel', () => { startX = null; });
+        stage.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight') { e.preventDefault(); go(1); }
+            if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1); }
+        });
+
+        // The clock only runs while the deck is on screen.
+        if ('IntersectionObserver' in window) {
+            new IntersectionObserver(([entry]) => {
+                if (entry) visible = entry.isIntersecting;
+            }, { threshold: 0.15 }).observe(demo);
+        }
+        setInterval(() => {
+            if (!visible || document.hidden) return;
+            elapsed += 1;
+            paintClock();
+        }, 1000);
+
+        paint();
+        paintClock();
+    });
 }
 
 /* The menu on narrow screens. The links are a plain block that is hidden by a

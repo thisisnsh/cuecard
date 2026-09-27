@@ -1,0 +1,27 @@
+{% from "partials/icons.njk" import icon %}
+{#
+  The phone app's three parts, one tile each: Teleprompter, Cards and Apple
+  Watch. On the home page and /mobile/ it is the map of the app; on one part's
+  own page, set `modesCurrent` to its slug and that tile says so instead of
+  linking to itself.
+#}
+<section class="modes" id="{{ modesId or 'modes' }}" aria-labelledby="{{ modesId or 'modes' }}-h">
+    <div class="wrap">
+        <p class="micro">{{ icon("grid", 13) }}{{ modesMicro or "One app, three ways to use it" }}</p>
+        <h2 class="section-h" id="{{ modesId or 'modes' }}-h">{{ (modesHeading or "Read a script, speak from cards, or glance at your wrist.") | safe }}</h2>
+        {% if modesNote %}<p class="body">{{ modesNote | safe }}</p>{% endif %}
+        <ul class="modes-grid">
+            {% for m in speaking.modes %}
+            {% set here = m.slug == modesCurrent %}
+            <li class="reveal">
+                {% if here %}<div class="modes-card is-current" aria-current="page">{% else %}<a class="modes-card" href="{{ m.href }}">{% endif %}
+                    <span class="modes-icon">{{ icon(m.icon, 20) }}</span>
+                    <span class="modes-name">{{ m.name }}</span>
+                    <span class="modes-blurb">{{ m.blurb }}</span>
+                    <span class="modes-go">{% if here %}You are here{% else %}See how it works {{ icon("arrow", 14) }}{% endif %}</span>
+                {% if here %}</div>{% else %}</a>{% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>

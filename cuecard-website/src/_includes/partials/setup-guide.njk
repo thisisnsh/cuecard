@@ -19,9 +19,9 @@
     </ol>
     {% if guide.sample %}
     <details class="sample-script">
-      <summary>A short script to try {{ icon("chevron", 15) }}</summary>
-      <p>Select and copy this into CueCard. The <code>[cue ...]</code> tags are reminders to yourself; you leave the pause when you speak.</p>
-      <pre tabindex="0" aria-label="Example script">{{ guide.sample }}</pre>
+      <summary>{{ "A short deck to try" if guide.sampleIntro else "A short script to try" }} {{ icon("chevron", 15) }}</summary>
+      <p>{% if guide.sampleIntro %}{{ guide.sampleIntro }}{% else %}Select and copy this into CueCard. The <code>[cue ...]</code> tags are reminders to yourself; you leave the pause when you speak.{% endif %}</p>
+      <pre tabindex="0" aria-label="Example {{ 'deck' if guide.sampleIntro else 'script' }}">{{ guide.sample }}</pre>
     </details>
     {% endif %}
     {% if guide.sourceUrl %}<p class="backline"><a href="{{ guide.sourceUrl }}" target="_blank" rel="noopener">{{ guide.sourceLabel }}</a></p>{% endif %}

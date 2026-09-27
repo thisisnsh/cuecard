@@ -25,6 +25,11 @@ permalink: "sitemap.xml"
   <url><loc>https://cuecard.dev/support/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://cuecard.dev/blog/</loc>{% if blogs and blogs.length %}<lastmod>{{ blogs | latestModified }}</lastmod>{% endif %}<changefreq>weekly</changefreq><priority>0.7</priority></url>
 
+  {# The phone app's three parts, and the speaking pages under /cards/. #}
+  {%- for p in speaking.pages %}
+  <url><loc>https://cuecard.dev/{{ p.slug }}/</loc><changefreq>monthly</changefreq><priority>{% if p.kind == "mode" %}0.9{% else %}0.7{% endif %}</priority></url>
+  {%- endfor %}
+
   {# The mobile app: its own page, the two platforms, and one page per app it
      is read over. #}
   {%- for app in apps %}

@@ -33,4 +33,11 @@ function softwareSchema(product, platformKey) {
   };
 }
 
-module.exports = { jsonLd, tutorialUrl, softwareSchema };
+// A card as the app draws it: its text, with each [cue ...] in the cue color
+// and without the brackets. Escaped first, so a card is never HTML.
+function cueHtml(value) {
+  const escaped = String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  return escaped.replace(/\[cue\s+([^\]]+)\]/gi, (_, cue) => `<span class="cue">${cue.trim()}</span>`);
+}
+
+module.exports = { jsonLd, tutorialUrl, softwareSchema, cueHtml };

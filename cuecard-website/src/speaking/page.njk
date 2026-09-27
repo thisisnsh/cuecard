@@ -1,0 +1,145 @@
+---
+pagination:
+  data: speaking.pages
+  size: 1
+  alias: speakingPage
+permalink: "{{ speakingPage.slug }}/index.html"
+layout: layouts/base.njk
+eleventyComputed:
+  title: "{{ speakingPage.title | safe }}"
+  description: "{{ speakingPage.description | safe }}"
+  keywords: "{{ speakingPage.keywords | safe }}"
+  canonical: "https://cuecard.dev/{{ speakingPage.slug }}/"
+  pageName: "{{ speakingPage.title | safe }}"
+  ogTitle: "{{ speakingPage.title | safe }}"
+  ogDescription: "{{ speakingPage.description | safe }}"
+  ogLocale: "en_US"
+---
+{#
+  /teleprompter/, /cards/, /watch/ and the speaking pages under /cards/. The
+  words are all in _data/speaking.js; this is the order they are read in.
+#}
+{% set p = speakingPage %}
+{% set pageUrl = "https://cuecard.dev/" + p.slug + "/" %}
+{% set pageFaq = faq.withGeneral(p.faq) %}
+{% block jsonld %}
+<script type="application/ld+json">
+{{ site.products.mobile | softwareSchema | jsonLd | safe }}
+</script>
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "HowTo",
+    "@id": {{ (pageUrl + "#how-to") | jsonLd | safe }},
+    "name": {{ p.guide.heading | jsonLd | safe }},
+    "description": {{ p.guide.intro | jsonLd | safe }},
+    "tool": { "@id": {{ site.products.mobile.id | jsonLd | safe }} },
+    "step": [
+        {% for step in p.guide.steps %}
+        {
+            "@type": "HowToStep",
+            "position": {{ loop.index }},
+            "name": {{ step.title | jsonLd | safe }},
+            "text": {{ step.body | jsonLd | safe }},
+            "url": {{ (pageUrl + "#how-to") | jsonLd | safe }}
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ]
+}
+</script>
+<script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "@id": {{ (pageUrl + "#faq") | jsonLd | safe }},
+    "isPartOf": { "@id": {{ (pageUrl + "#webpage") | jsonLd | safe }} },
+    "inLanguage": "en",
+    "mainEntity": [
+        {% for item in pageFaq %}
+        {
+            "@type": "Question",
+            "name": {{ item.question | jsonLd | safe }},
+            "acceptedAnswer": { "@type": "Answer", "text": {{ item.answer | striptags | jsonLd | safe }} }
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ]
+}
+</script>
+{% endblock %}
+
+{% block body %}
+{% from "partials/icons.njk" import icon %}
+{% include "partials/nav.njk" %}
+
+<main>
+    {% set heroClass = "hero-app" %}
+    {% set heroTitle = p.h1 %}
+    {% set heroBody = p.lede %}
+    {% set heroButtons = [
+        { text: "Get it free on the App Store", href: site.ios, icon: "apple", style: "primary", external: true },
+        { text: "How it works", href: "#how-to", icon: "arrow", style: "ghost" }
+    ] %}
+    {% set heroNote = "Free · No account required · " + (site.requiresWatchShort if p.slug == "watch" else site.requiresMobileShort) %}
+    {% set heroStrip = "social" if p.slug == "teleprompter" else "none" %}
+    {% set stripMore = "and every other app you record in" %}
+    {% set heroDeck = true %}
+    {% set heroDemo = p.demo or "cards" %}
+    {% set deckScript = p.deck %}
+    {% set demoCards = p.cards %}
+    {% include "partials/hero.njk" %}
+
+    {% set featureRows = p.rows %}
+    {% set rowsMicro = "What you get" %}
+    {% set rowsHeading = p.rowsHeading %}
+    {% set rowsIcon = p.icon %}
+    {% set rowsId = "features" %}
+    {% include "partials/rows.njk" %}
+
+    {% set shots = p.shotIds if p.shotIds else (["cards"] if p.kind == "speech" else []) %}
+    {% if shots | length %}
+    {% set shotIds = shots %}
+    {% set shotsHeading = "What it looks like." %}
+    {% set shotsNote = p.shotsNote or "Swiping to the next card in the app, and the same deck on the Lock Screen with Back and Next." %}
+    {% include "partials/shots.njk" %}
+    {% endif %}
+
+    {% set modesCurrent = p.slug %}
+    {% if p.kind == "speech" %}
+    {% set modesMicro = "The rest of CueCard" %}
+    {% set modesHeading = "Need every word instead? There is a teleprompter too." %}
+    {% else %}
+    {% set modesMicro = "One app, three ways to use it" %}
+    {% endif %}
+    {% include "partials/modes.njk" %}
+
+    {% if p.slug == "cards" or p.kind == "speech" %}
+    <section class="workflow-section" id="speeches" aria-labelledby="speeches-h">
+        <div class="wrap">
+            <p class="micro">{{ icon("cards", 13) }}Cue cards for</p>
+            <h2 class="section-h" id="speeches-h">Whatever it is you have to stand up and say</h2>
+            <ul class="guide-link-grid">
+                {% for s in speaking.speeches %}{% if s.slug != p.slug %}
+                <li><a href="/{{ s.slug }}/"><span>{{ s.name }}</span>{{ icon("arrow", 14) }}</a></li>
+                {% endif %}{% endfor %}
+                {% if p.kind == "speech" %}<li><a href="/cards/"><span>Everything Cards does</span>{{ icon("arrow", 14) }}</a></li>{% endif %}
+                <li><a href="/watch/"><span>Cue cards on Apple Watch</span>{{ icon("arrow", 14) }}</a></li>
+            </ul>
+        </div>
+    </section>
+    {% endif %}
+
+    {% set getGroups = [site.downloadGroups[0]] %}
+    {% set getHeading = "On your phone in under a minute" %}
+    {% set getBody = "Free, with no account required, no subscription and nothing to cancel." %}
+    {% include "partials/getcuecard.njk" %}
+
+    {% set guide = p.guide %}
+    {% include "partials/setup-guide.njk" %}
+
+    {% set faqItems = pageFaq %}
+    {% set faqHeading = ("Questions about " + p.name) if p.kind == "mode" else "Questions, answered." %}
+    {% include "partials/faq.njk" %}
+</main>
+
+{% include "partials/footer.njk" %}
+{% endblock %}

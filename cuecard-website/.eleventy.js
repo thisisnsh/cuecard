@@ -1,7 +1,8 @@
 const markdownIt = require("markdown-it");
 
 module.exports = function(eleventyConfig) {
-  const { jsonLd, tutorialUrl, softwareSchema } = require('./lib/content');
+  const { jsonLd, tutorialUrl, softwareSchema, cueHtml } = require('./lib/content');
+  eleventyConfig.addFilter('cueHtml', cueHtml);
   eleventyConfig.addFilter('jsonLd', jsonLd);
   eleventyConfig.addFilter('tutorialUrl', tutorialUrl);
   eleventyConfig.addFilter('softwareSchema', softwareSchema);
