@@ -26,7 +26,6 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowOutward
-import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.UnfoldMore
@@ -65,6 +64,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.firebase.crashlytics.ktx.crashlytics
@@ -75,21 +77,25 @@ import com.thisisnsh.cuecard.android.BuildConfig
 import com.thisisnsh.cuecard.android.LocalIsDarkTheme
 import com.thisisnsh.cuecard.android.models.AppColors
 import com.thisisnsh.cuecard.android.models.CueColor
+import com.thisisnsh.cuecard.android.models.ScriptMode
 import com.thisisnsh.cuecard.android.models.RemoteNotification
+import com.thisisnsh.cuecard.android.services.CardsSettings
 import com.thisisnsh.cuecard.android.services.OverlayAspectRatio
 import com.thisisnsh.cuecard.android.services.RemoteNotificationService
 import com.thisisnsh.cuecard.android.services.SettingPreset
 import com.thisisnsh.cuecard.android.services.SettingsService
 import com.thisisnsh.cuecard.android.services.TeleprompterSettings
 import com.thisisnsh.cuecard.android.services.ThemePreference
-import com.thisisnsh.cuecard.android.services.WhatsNewService
 import kotlinx.coroutines.launch
 
-// MARK: - Editor Settings
+// MARK: - Settings
+
+private const val SETTINGS_SCREEN = "settings"
 
 /**
- * Settings opened from the editor: how the script is set while writing it, plus
- * everything the two Settings screens share.
+ * The one Settings screen, opened from the editor. It shows the settings for the
+ * mode being written in: the teleprompter's, or the cards'. Each mode keeps its
+ * own values, so nothing set for one changes the other.
  */
 @Composable
 fun EditorSettingsView(
@@ -108,9 +114,17 @@ fun EditorSettingsView(
         notifications.notification(RemoteNotification.Surface.SETTINGS_ROW)
     }
 
-    SettingsScreen(screen = "settings", onDismiss = onDismiss) {
-        WhatsNewSection(screen = "settings", isDark = isDark)
+    fun update(change: (TeleprompterSettings) -> TeleprompterSettings) {
+        scope.launch { settingsService.update(change) }
+    }
 
+    val isCards = settings.scriptMode == ScriptMode.CARDS
+
+    SettingsScreen(
+        screen = SETTINGS_SCREEN,
+        title = if (isCards) "Cards Settings" else "Teleprompter Settings",
+        onDismiss = onDismiss
+    ) {
         // A notice from the worker, if there's one meant for Settings.
         settingsNotification?.let { notification ->
             SettingsSection(isDark = isDark) {
@@ -124,32 +138,21 @@ fun EditorSettingsView(
 
         SettingsSection(title = "Editor", isDark = isDark) {
             SizePresetPicker(
-                label = "Text Size",
-                value = settings.editorFontSize,
+                label = "Editor Text Size",
+                value = settings.activeEditorFontSize,
                 presets = TeleprompterSettings.EDITOR_FONT_SIZE_PRESETS,
                 isDark = isDark,
-                onSelect = { scope.launch { settingsService.updateEditorFontSize(it) } }
+                onSelect = { size -> update { it.withActiveEditorFontSize(size) } }
             )
         }
 
-        AppearanceSection(settingsService = settingsService, isDark = isDark)
-
-        val range = TeleprompterSettings.EDITOR_FONT_SIZE_RANGE
-        AdvancedSection(
-            screen = "settings",
-            footer = "Text size can be set from ${range.first} to ${range.last}.",
-            isDark = isDark
-        ) {
-            NumberRow(
-                label = "Text Size",
-                value = settings.editorFontSize,
-                range = range,
-                isDark = isDark,
-                onCommit = { scope.launch { settingsService.updateEditorFontSize(it) } }
-            )
+        if (isCards) {
+            CardsSections(settings = settings, isDark = isDark, update = ::update)
+        } else {
+            TeleprompterSections(settings = settings, isDark = isDark, update = ::update)
         }
 
-        AboutSection(settingsService = settingsService, screen = "settings", isDark = isDark)
+        AboutSection(settingsService = settingsService, screen = SETTINGS_SCREEN, isDark = isDark)
 
         if (BuildConfig.DIAGNOSTICS) {
             SettingsSection(
@@ -163,7 +166,7 @@ fun EditorSettingsView(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickableWithoutRipple {
-                            AnalyticsEvents.logButtonClick("test_crash", "settings")
+                            AnalyticsEvents.logButtonClick("test_crash", SETTINGS_SCREEN)
                             Firebase.crashlytics.log("Manually triggered test crash")
                             throw RuntimeException("Crashlytics test crash")
                         }
@@ -174,114 +177,153 @@ fun EditorSettingsView(
     }
 }
 
-// MARK: - Teleprompter Settings
-
-private const val TELEPROMPTER_SETTINGS_SCREEN = "teleprompter_settings"
-
-/**
- * Settings opened from the teleprompter: everything that shapes a run, plus
- * everything the two Settings screens share.
- */
 @Composable
-fun TeleprompterSettingsView(
-    settingsService: SettingsService,
-    onDismiss: () -> Unit
+private fun TeleprompterSections(
+    settings: TeleprompterSettings,
+    isDark: Boolean,
+    update: ((TeleprompterSettings) -> TeleprompterSettings) -> Unit
 ) {
-    val isDark = LocalIsDarkTheme.current
-    val scope = rememberCoroutineScope()
-    val settings by settingsService.settings.collectAsState()
+    SettingsSection(title = "Teleprompter", isDark = isDark) {
+        NumberRow(
+            label = "Scroll Speed",
+            unit = "lines/min",
+            value = settings.linesPerMinute,
+            range = TeleprompterSettings.LPM_RANGE,
+            isDark = isDark,
+            onCommit = { lines -> update { it.copy(linesPerMinute = lines) } }
+        )
 
-    SettingsScreen(screen = TELEPROMPTER_SETTINGS_SCREEN, onDismiss = onDismiss) {
-        WhatsNewSection(screen = TELEPROMPTER_SETTINGS_SCREEN, isDark = isDark)
+        SizePresetPicker(
+            label = "Text Size",
+            value = settings.fontSize,
+            presets = TeleprompterSettings.FONT_SIZE_PRESETS,
+            isDark = isDark,
+            onSelect = { size -> update { it.copy(fontSize = size) } }
+        )
+    }
 
-        SettingsSection(title = "Teleprompter", isDark = isDark) {
-            NumberRow(
-                label = "Start Delay",
-                unit = "seconds",
-                value = settings.countdownSeconds,
-                range = TeleprompterSettings.COUNTDOWN_RANGE,
-                isDark = isDark,
-                onCommit = { scope.launch { settingsService.updateCountdownSeconds(it) } }
-            )
+    SettingsSection(title = "Floating Window", isDark = isDark) {
+        SizePresetPicker(
+            label = "Text Size",
+            value = settings.pipFontSize,
+            presets = TeleprompterSettings.PIP_FONT_SIZE_PRESETS,
+            isDark = isDark,
+            onSelect = { size -> update { it.copy(pipFontSize = size) } }
+        )
 
-            NumberRow(
-                label = "Scroll Speed",
-                unit = "lines/min",
-                value = settings.linesPerMinute,
-                range = TeleprompterSettings.LPM_RANGE,
-                isDark = isDark,
-                onCommit = { scope.launch { settingsService.updateLinesPerMinute(it) } }
-            )
+        MenuPickerRow(
+            label = "Layout",
+            options = OverlayAspectRatio.entries,
+            selected = settings.overlayAspectRatio,
+            optionLabel = { it.label },
+            isDark = isDark,
+            onSelect = { ratio -> update { it.copy(overlayAspectRatio = ratio) } }
+        )
+    }
 
-            SizePresetPicker(
-                label = "Text Size",
-                value = settings.fontSize,
-                presets = TeleprompterSettings.FONT_SIZE_PRESETS,
-                isDark = isDark,
-                onSelect = { scope.launch { settingsService.updateFontSize(it) } }
-            )
-        }
+    AppearanceSection(
+        settings = settings,
+        cueColor = settings.cueColor,
+        isDark = isDark,
+        update = update,
+        onCueColor = { color -> update { it.copy(cueColor = color) } }
+    )
 
-        SettingsSection(title = "Floating Window", isDark = isDark) {
-            SizePresetPicker(
-                label = "Text Size",
-                value = settings.pipFontSize,
-                presets = TeleprompterSettings.PIP_FONT_SIZE_PRESETS,
-                isDark = isDark,
-                onSelect = { scope.launch { settingsService.updatePipFontSize(it) } }
-            )
-
-            MenuPickerRow(
-                label = "Layout",
-                options = OverlayAspectRatio.entries,
-                selected = settings.overlayAspectRatio,
-                optionLabel = { it.label },
-                isDark = isDark,
-                onSelect = { scope.launch { settingsService.updateOverlayAspectRatio(it) } }
-            )
-        }
-
-        AppearanceSection(settingsService = settingsService, isDark = isDark)
-
-        AdvancedSection(
-            screen = TELEPROMPTER_SETTINGS_SCREEN,
-            footer = teleprompterAdvancedFooter(),
-            isDark = isDark
-        ) {
-            NumberRow(
-                label = "Teleprompter Text Size",
-                value = settings.fontSize,
-                range = TeleprompterSettings.FONT_SIZE_RANGE,
-                isDark = isDark,
-                onCommit = { scope.launch { settingsService.updateFontSize(it) } }
-            )
-            NumberRow(
-                label = "Floating Window Text Size",
-                value = settings.pipFontSize,
-                range = TeleprompterSettings.PIP_FONT_SIZE_RANGE,
-                isDark = isDark,
-                onCommit = { scope.launch { settingsService.updatePipFontSize(it) } }
-            )
-        }
-
-        AboutSection(settingsService = settingsService, screen = TELEPROMPTER_SETTINGS_SCREEN, isDark = isDark)
+    val prompter = TeleprompterSettings.FONT_SIZE_RANGE
+    val pip = TeleprompterSettings.PIP_FONT_SIZE_RANGE
+    val editor = TeleprompterSettings.EDITOR_FONT_SIZE_RANGE
+    AdvancedSection(
+        screen = SETTINGS_SCREEN,
+        footer = "Teleprompter text can be set from ${prompter.first} to ${prompter.last}, " +
+            "floating window text from ${pip.first} to ${pip.last}, " +
+            "and editor text from ${editor.first} to ${editor.last}.",
+        isDark = isDark
+    ) {
+        NumberRow(
+            label = "Teleprompter Text Size",
+            value = settings.fontSize,
+            range = prompter,
+            isDark = isDark,
+            onCommit = { size -> update { it.copy(fontSize = size) } }
+        )
+        NumberRow(
+            label = "Floating Window Text Size",
+            value = settings.pipFontSize,
+            range = pip,
+            isDark = isDark,
+            onCommit = { size -> update { it.copy(pipFontSize = size) } }
+        )
+        NumberRow(
+            label = "Editor Text Size",
+            value = settings.editorFontSize,
+            range = editor,
+            isDark = isDark,
+            onCommit = { size -> update { it.copy(editorFontSize = size) } }
+        )
     }
 }
 
-private fun teleprompterAdvancedFooter(): String {
-    val prompter = TeleprompterSettings.FONT_SIZE_RANGE
-    val pip = TeleprompterSettings.PIP_FONT_SIZE_RANGE
-    return "Teleprompter text can be set from ${prompter.first} to ${prompter.last}, " +
-        "and floating window text from ${pip.first} to ${pip.last}."
+@Composable
+private fun CardsSections(
+    settings: TeleprompterSettings,
+    isDark: Boolean,
+    update: ((TeleprompterSettings) -> TeleprompterSettings) -> Unit
+) {
+    fun updateCards(change: (CardsSettings) -> CardsSettings) {
+        update { it.copy(cards = change(it.cards)) }
+    }
+
+    SettingsSection(title = "Cards", isDark = isDark) {
+        SizePresetPicker(
+            label = "Text Size",
+            value = settings.cards.fontSize,
+            presets = TeleprompterSettings.FONT_SIZE_PRESETS,
+            isDark = isDark,
+            onSelect = { size -> updateCards { it.copy(fontSize = size) } }
+        )
+    }
+
+    AppearanceSection(
+        settings = settings,
+        cueColor = settings.cards.cueColor,
+        isDark = isDark,
+        update = update,
+        onCueColor = { color -> updateCards { it.copy(cueColor = color) } }
+    )
+
+    val card = TeleprompterSettings.FONT_SIZE_RANGE
+    val editor = TeleprompterSettings.EDITOR_FONT_SIZE_RANGE
+    AdvancedSection(
+        screen = SETTINGS_SCREEN,
+        footer = "Card text can be set from ${card.first} to ${card.last}, " +
+            "and editor text from ${editor.first} to ${editor.last}.",
+        isDark = isDark
+    ) {
+        NumberRow(
+            label = "Card Text Size",
+            value = settings.cards.fontSize,
+            range = card,
+            isDark = isDark,
+            onCommit = { size -> updateCards { it.copy(fontSize = size) } }
+        )
+        NumberRow(
+            label = "Editor Text Size",
+            value = settings.cards.editorFontSize,
+            range = editor,
+            isDark = isDark,
+            onCommit = { size -> updateCards { it.copy(editorFontSize = size) } }
+        )
+    }
 }
 
 // MARK: - Shared Sections
 
-/** The list both Settings screens are built on, with a Done button. */
+/** The list Settings and the timer are built on, with a Done button. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SettingsScreen(
+internal fun SettingsScreen(
     screen: String,
+    title: String,
     onDismiss: () -> Unit,
     content: @Composable () -> Unit
 ) {
@@ -298,7 +340,7 @@ private fun SettingsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Settings",
+                        text = title,
                         fontSize = 17.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = AppColors.textPrimary(isDark)
@@ -340,35 +382,18 @@ private fun SettingsScreen(
     }
 }
 
-/** Opens this version's new features again. Left out when there are none for it. */
-@Composable
-private fun WhatsNewSection(screen: String, isDark: Boolean) {
-    val context = LocalContext.current
-    val whatsNew = remember { WhatsNewService.getInstance(context) }
-    val release = whatsNew.release ?: return
-    var showing by remember { mutableStateOf(false) }
-
-    SettingsSection(isDark = isDark) {
-        LinkRow(title = "What's New", icon = Icons.Filled.AutoAwesome, isDark = isDark) {
-            AnalyticsEvents.logButtonClick("whats_new", screen)
-            showing = true
-        }
-    }
-
-    if (showing) {
-        WhatsNewDialog(release = release, version = whatsNew.version, onDismiss = { showing = false })
-    }
-}
-
 /**
- * Theme and cue color. Both are one setting for the whole app, so either
- * Settings screen changes them everywhere.
+ * Theme and cue color. The theme is one setting for the whole app; the cue
+ * color is the one for the mode these settings belong to.
  */
 @Composable
-private fun AppearanceSection(settingsService: SettingsService, isDark: Boolean) {
-    val scope = rememberCoroutineScope()
-    val settings by settingsService.settings.collectAsState()
-
+private fun AppearanceSection(
+    settings: TeleprompterSettings,
+    cueColor: CueColor,
+    isDark: Boolean,
+    update: ((TeleprompterSettings) -> TeleprompterSettings) -> Unit,
+    onCueColor: (CueColor) -> Unit
+) {
     SettingsSection(title = "Appearance", isDark = isDark) {
         MenuPickerRow(
             label = "Theme",
@@ -376,18 +401,19 @@ private fun AppearanceSection(settingsService: SettingsService, isDark: Boolean)
             selected = settings.themePreference,
             optionLabel = { it.displayName },
             isDark = isDark,
-            onSelect = { scope.launch { settingsService.updateThemePreference(it) } }
+            onSelect = { theme -> update { it.copy(themePreference = theme) } }
         )
 
-        CueColorRow(
-            selected = settings.cueColor,
+        ColorSwatchRow(
+            title = "Cue Color",
+            selected = cueColor,
             isDark = isDark,
-            onSelect = { scope.launch { settingsService.updateCueColor(it) } }
+            onSelect = onCueColor
         )
     }
 }
 
-/** Share, review and reset, the same on both Settings screens. */
+/** Share, review and reset, the same in both modes. */
 @Composable
 private fun AboutSection(settingsService: SettingsService, screen: String, isDark: Boolean) {
     val context = LocalContext.current
@@ -428,7 +454,7 @@ private fun AboutSection(settingsService: SettingsService, screen: String, isDar
 
 /** A row that leaves Settings for something else, with an icon saying where. */
 @Composable
-private fun LinkRow(title: String, icon: ImageVector, isDark: Boolean, onClick: () -> Unit) {
+internal fun LinkRow(title: String, icon: ImageVector, isDark: Boolean, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -461,7 +487,7 @@ private fun shareApp(context: Context) {
 
 /** One grouped section of the settings list, with its heading and footnote. */
 @Composable
-private fun SettingsSection(
+internal fun SettingsSection(
     isDark: Boolean,
     title: String? = null,
     footer: String? = null,
@@ -589,15 +615,15 @@ private fun NumberRow(
     }
 }
 
-/** The color every cue is drawn in, picked from a row of swatches. */
+/** A row of the app's colors to pick one from. */
 @Composable
-private fun CueColorRow(selected: CueColor, isDark: Boolean, onSelect: (CueColor) -> Unit) {
+internal fun ColorSwatchRow(title: String, selected: CueColor, isDark: Boolean, onSelect: (CueColor) -> Unit) {
     Column(
         modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Text(
-            text = "Cue Color",
+            text = title,
             fontSize = 17.sp,
             color = AppColors.textPrimary(isDark)
         )
@@ -611,7 +637,11 @@ private fun CueColorRow(selected: CueColor, isDark: Boolean, onSelect: (CueColor
                 Box(
                     modifier = Modifier
                         .size(36.dp)
-                        .clickableWithoutRipple { onSelect(option) },
+                        .clickableWithoutRipple { onSelect(option) }
+                        .semantics {
+                            contentDescription = "$title: ${option.displayName}"
+                            this.selected = isSelected
+                        },
                     contentAlignment = Alignment.Center
                 ) {
                     Box(
@@ -633,7 +663,7 @@ private fun CueColorRow(selected: CueColor, isDark: Boolean, onSelect: (CueColor
                         if (isSelected) {
                             Icon(
                                 imageVector = Icons.Filled.Check,
-                                contentDescription = option.displayName,
+                                contentDescription = null,
                                 tint = AppColors.background(isDark),
                                 modifier = Modifier.size(12.dp)
                             )
@@ -642,12 +672,6 @@ private fun CueColorRow(selected: CueColor, isDark: Boolean, onSelect: (CueColor
                 }
             }
         }
-
-        Text(
-            text = "Every cue is shown in this color.",
-            fontSize = 13.sp,
-            color = AppColors.textSecondary(isDark)
-        )
     }
 }
 
@@ -757,7 +781,7 @@ private fun SizePresetPicker(
 
 /**
  * Typed sizes for anyone who wants one the presets don't offer. Hidden until
- * asked for, and the choice to show it is remembered across both screens.
+ * asked for, and the choice to show it is remembered across both modes.
  */
 @Composable
 private fun AdvancedSection(
