@@ -45,28 +45,28 @@ const teleprompter = {
   rowsHeading: "Everything the teleprompter does",
   rows: [
     {
-      h: "Scrolls at the speed you set",
-      p: "Set Scroll Speed in lines per minute and the script moves on its own. It keeps the pace you set rather than listening to your voice, so a pause never makes it jump. Drag it back or ahead and it carries on from where you leave it.",
+      h: "Scrolls at your pace",
+      p: "Set the speed once and the script moves on its own. Pause, or drag it back or ahead, whenever you need.",
     },
     {
       h: "Floats over the app you film in",
-      p: "Leave CueCard while the teleprompter is open and your script keeps going in a floating window above the camera, Instagram, TikTok, YouTube or a video call. The camera records you, not the window. A screen recording does include it.",
+      p: "Your script stays on screen over the camera, Instagram, TikTok or a video call, and the camera never records it.",
     },
     {
       h: "A window shaped to fit your shot",
-      p: "Choose a 16:9, 4:3 or square layout and give the floating window its own text size, apart from the full-screen one. Drag it up under the front camera so your eyes barely move.",
+      p: "Rectangular or square, with its own text size, and it goes wherever you drag it.",
     },
     {
-      h: "A countdown, a timer and a warning",
-      p: "A countdown gives you a few seconds before the script starts to move. The timer runs while you talk, changes color when you are near the end and again when you run over, in colors you pick.",
+      h: "A countdown and a timer that warns you",
+      p: "A few seconds to get ready before it moves, and a timer that changes color near the end and when you run over.",
     },
     {
-      h: "Play and pause from your watch or the Action Button",
-      p: "The Apple Watch app plays, pauses and skips back ten seconds, and shows the timer. On an iPhone with an Action Button and iOS 18, set it to Play or Pause and start the script without touching the screen.",
+      h: "Hands-free play and pause",
+      p: "Start and stop the script from your Apple Watch or the Action Button.",
     },
     {
       h: "Cues you read but never say",
-      p: "Write [cue smile] or [cue pause] into the script and it shows in color as it passes, a reminder of how to say the next line rather than another line to read.",
+      p: "Reminders like [cue smile] show in color as they pass, telling you how to say the next line.",
     },
   ],
   shotIds: ["teleprompter"],
@@ -165,31 +165,31 @@ const cards = {
   rows: [
     {
       h: "One card, one thought",
-      p: `Each box in the editor is one card; tap Create New Card to add the next. A card holds up to ${cardLimit} characters, and as you near the limit a count appears and anything over it is marked, so every card stays short enough to take in at a glance.`,
+      p: "Short cards you take in at a glance, with a gentle nudge when one gets too long.",
     },
     {
-      h: "Swipe, or tap Back and Next",
-      p: "Read Cards opens the deck one card at a time. Swipe to turn, or tap Back and Next, and the dots at the top show where you are. At the end, swipe back for the last card or start over.",
+      h: "Swipe to turn",
+      p: "Swipe or tap to move through the deck, with dots showing where you are.",
     },
     {
       h: "On your Lock Screen",
-      p: `Turn on Show on Lock Screen and the card you are on, the timer and Back and Next sit on your Lock Screen as a Live Activity, so you can put the phone down, lock it and keep going. Cards longer than ${lockScreenLimit} characters are cut short there.`,
+      p: "Turn cards and watch the timer with your phone locked.",
     },
     {
       h: "On your Apple Watch",
-      p: "Open a deck on your iPhone and it shows on the watch too; turning a card on either moves both. Keep a saved deck on the watch and you can speak from your wrist with the iPhone in your pocket, or not with you at all.",
+      p: "Read your cards on your wrist, in step with your iPhone or without it.",
     },
     {
       h: "A timer that warns you",
-      p: "Set how long you have and when to be warned. The time at the top counts down and changes color at the warning and when you run over, on the phone, the Lock Screen and the watch. With no timer set, it counts up from when you started.",
+      p: "It changes color near the end and when you run over, or simply counts up.",
     },
     {
       h: "Cues on every card",
-      p: "Add [cue pause] or [cue smile] and it shows in color on the card, wherever you are reading it. Cards has its own cue color and text size, apart from the teleprompter's.",
+      p: "Reminders like [cue pause] show in color wherever you read the card.",
     },
     {
-      h: "Decks you save and share as text",
-      p: "Save a deck and open it again from Saved Content. Export it as a text file, or import one: a [separator] line between cards splits it into a deck.",
+      h: "Saved decks, as plain text",
+      p: "Keep every deck, and import or export it as a text file.",
     },
   ],
   shotIds: ["cards"],
@@ -292,27 +292,23 @@ const watch = {
   rows: [
     {
       h: "A remote for the teleprompter",
-      p: "Open a script on your iPhone and the watch shows its timer, with buttons to play, pause and go back ten seconds. Start the script from across the room without walking back to the phone.",
+      p: "Play, pause and skip back from your wrist, with the timer in view.",
     },
     {
-      h: "Cue cards on your wrist, in step with the iPhone",
-      p: "Open a deck on the iPhone and it shows on the watch too. Turn a card on either one and both move, so the phone on the lectern and the watch on your wrist never disagree.",
+      h: "Cue cards on your wrist",
+      p: "Your deck on the watch, turning in step with your iPhone.",
     },
     {
-      h: "Decks kept on the watch",
-      p: "Choose Keep on Apple Watch from the ••• menu on a saved deck, and it stays on the watch to read with no iPhone nearby. Remove it the same way when you are done.",
+      h: "Decks without your iPhone",
+      p: "Keep a deck on the watch and leave the phone behind.",
     },
     {
       h: "Easy to read at a glance",
-      p: "Cues show in color and the timer runs at the top. Set the watch's Card Text Size from the iPhone's Cards Settings, and turn the Digital Crown to scroll a longer card.",
+      p: "Large text, cues in color, and the timer at the top.",
     },
     {
-      h: "Stays up while you talk",
-      p: "Your watch goes back to the clock after a while. In the Watch app, set General › Return to Clock › CueCard to 1 hour and your notes stay on screen.",
-    },
-    {
-      h: "Free, with the iPhone app",
-      p: `There is nothing extra to buy. The watch app comes with CueCard for iPhone and needs ${site.requiresWatch}.`,
+      h: "Free with the iPhone app",
+      p: "Nothing extra to buy or sign up for.",
     },
   ],
   shotIds: [],
@@ -430,19 +426,19 @@ const speeches = [
     rows: [
       {
         h: "One story per card",
-        p: "A card holds the one line that gets you into each story: the hamster, the bike, the first dance. You tell the rest from memory, looking at the room rather than a sheet of A4.",
+        p: "A few words start each story; you tell the rest looking at the room.",
       },
       {
-        h: "Nothing to drop, fold or lose",
-        p: "The deck is on the phone already in your jacket. Turn cards from the Lock Screen, or keep them on your Apple Watch and keep both hands for the microphone and the glass.",
+        h: "Nothing to drop or lose",
+        p: "Your cards are on your phone, your Lock Screen or your watch, so your hands stay free.",
       },
       {
-        h: "A timer for a speech that stays short",
-        p: "Set four minutes with a warning at one minute left. The time changes color when it is time to move to the toast, which is the part everyone is waiting for.",
+        h: "A timer for a short speech",
+        p: "It warns you when it is time to head for the toast.",
       },
       {
-        h: "Cues for the moments that matter",
-        p: "Mark where to pause for the laugh, where to look at the couple and when to raise your glass. They show in color, so you catch them without reading them out.",
+        h: "Cues for the big moments",
+        p: "Where to pause for the laugh, look at the couple and raise your glass.",
       },
     ],
     guide: {
@@ -503,20 +499,20 @@ const speeches = [
     rowsHeading: "Why cards work for a presentation",
     rows: [
       {
-        h: "One card for each slide",
-        p: "Write a card per slide with the point you need to make, and turn the card when you change the slide. You glance down for the point and look up to explain it.",
+        h: "A card for each slide",
+        p: "The point to make, one card at a time, in step with your slides.",
       },
       {
-        h: "A timer for a set slot",
-        p: "Set five minutes, or whatever you have, with a warning a minute before the end. The time turns color so you know to skip to your conclusion.",
+        h: "A timer for your slot",
+        p: "It warns you when it is time to wrap up.",
       },
       {
         h: "Cues for eye contact and pace",
-        p: "Add [cue look up] or [cue slow down] where you tend to rush. They show in color on the card, so you notice them without saying them.",
+        p: "Reminders to look up or slow down, in color.",
       },
       {
-        h: "Free, with nothing to sign up for",
-        p: "No account, no ads and no subscription. Your cards stay on your phone, and you can export them as a text file to hand in or keep.",
+        h: "Free, no sign-up",
+        p: "No account, no ads and no subscription.",
       },
     ],
     guide: {
@@ -578,19 +574,19 @@ const speeches = [
     rows: [
       {
         h: "The next point, not the whole talk",
-        p: "A card holds the one line that starts each section. You speak the rest, which is what makes it sound like a talk rather than a reading.",
+        p: "A few words per card, so you speak rather than read.",
       },
       {
         h: "A timer that keeps you in your slot",
-        p: "Set your slot with a warning a few minutes before the end. The time changes color at the warning and again if you run over, so the next speaker never has to wave at you.",
+        p: "It warns you before the end and shows when you run over.",
       },
       {
-        h: "On the lectern, on the Lock Screen, or on your wrist",
-        p: "Put the phone on the lectern and swipe, lock it and turn cards from the Lock Screen, or keep the deck on your Apple Watch and walk the stage.",
+        h: "Phone, Lock Screen or wrist",
+        p: "Read from the lectern, a locked phone or your Apple Watch.",
       },
       {
         h: "Cues for delivery",
-        p: "Mark where to pause, slow down or look at the audience. Cues show in color, so they guide how you speak without being spoken.",
+        p: "Where to pause, slow down or look at the audience.",
       },
     ],
     guide: {
@@ -652,19 +648,19 @@ const speeches = [
     rows: [
       {
         h: "A card for each point",
-        p: "The passage, each point, each illustration and the close, one to a card. You see only what comes next, in large text you can read from the pulpit.",
+        p: "The reading, each point and each illustration, one at a time in large text.",
       },
       {
-        h: "On the iPad, the phone or your wrist",
-        p: "Put your iPhone or an iPad on the pulpit and swipe, or keep the deck on your Apple Watch and step away from it. The watch and iPhone stay in step, so turning a card on one moves the other.",
+        h: "On iPhone, iPad or your wrist",
+        p: "Read from the pulpit or from your Apple Watch.",
       },
       {
         h: "A timer for the service",
-        p: "Set the length of the sermon with a warning before the end. It changes color when it is time to close, and again if you run over.",
+        p: "It warns you when it is time to close.",
       },
       {
         h: "Cues for the pauses",
-        p: "Mark where to pause, slow down or look up. Cues show in color, so they guide the delivery without being read out.",
+        p: "Where to pause, slow down or look up, in color.",
       },
     ],
     guide: {
