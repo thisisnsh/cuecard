@@ -67,7 +67,7 @@ import kotlin.math.sin
 
 /**
  * This build's new features, on a card floating over whatever is on screen.
- * Shown once per build on launch, and again from Settings.
+ * Shown once per build on launch, and again from Help.
  */
 @Composable
 fun WhatsNewDialog(

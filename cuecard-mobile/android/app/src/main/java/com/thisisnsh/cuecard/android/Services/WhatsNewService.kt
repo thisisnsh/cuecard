@@ -34,7 +34,7 @@ class WhatsNewService private constructor(private val context: Context) {
     /** This version's entry, or null when the file has none for it. */
     val release: Release? by lazy { loadRelease() }
 
-    /** Whether the launch presentation is up. Settings shows its own copy. */
+    /** Whether the launch presentation is up. Help shows its own copy. */
     private val _isPresented = MutableStateFlow(false)
     val isPresented: StateFlow<Boolean> = _isPresented.asStateFlow()
 
@@ -69,7 +69,7 @@ class WhatsNewService private constructor(private val context: Context) {
 
     /**
      * Counts the people this version's features reached on their own. Opening the
-     * card from Settings is a `button_click` instead, so this stays a clean
+     * card from Help is a `button_click` instead, so this stays a clean
      * impression count rather than one mixed with people going looking.
      */
     private fun logShown() {
