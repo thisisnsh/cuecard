@@ -106,4 +106,38 @@ function forDesktopRole(name, audience, firstUse) {
   ];
 }
 
-module.exports = { standard, forApp, forMeeting, forMobileRole, forDesktopRole };
+/** The stock script again, as the home page's cards: one thought a card. */
+const standardCards = [
+  "Here is one small idea to try today. [cue look up and pause]",
+  "Write down the one thing you want people to remember. [cue slow down]",
+  "Give it a short example. Leave room for a breath. [cue smile]",
+  "Then finish with a clear next step. [cue pause]",
+  "A few useful words can be enough.",
+];
+
+/**
+ * A page's prompter script as cards, for the Cards side of the hero demo: each
+ * spoken line is a card, carrying the cue that follows it.
+ */
+function toCards(lines) {
+  const cards = [];
+  for (const line of lines || []) {
+    if (line.t) cards.push(line.t);
+    else if (line.cue && cards.length) cards[cards.length - 1] += ` [cue ${line.cue}]`;
+  }
+  return cards;
+}
+
+/** The other way round: a page's cards as a script for the prompter. */
+function fromCards(cards) {
+  const lines = [];
+  for (const card of cards || []) {
+    const cues = [];
+    const text = card.replace(/\[cue\s+([^\]]+)\]/gi, (_, cue) => { cues.push(cue.trim()); return ""; }).trim();
+    if (text) lines.push({ t: text });
+    for (const cue of cues) lines.push({ cue });
+  }
+  return lines;
+}
+
+module.exports = { standard, standardCards, toCards, fromCards, forApp, forMeeting, forMobileRole, forDesktopRole };

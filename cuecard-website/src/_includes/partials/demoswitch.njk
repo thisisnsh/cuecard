@@ -1,0 +1,15 @@
+{#
+  The mode switch in a demo's title bar, where the app puts its mode menu.
+  `demoModes` lists the modes the page has: both on the phone pages, only the
+  teleprompter on the desktop ones, which get a plain title instead of a
+  switch. `switchActive` is the mode of the demo this bar sits on.
+#}
+{% set switchModes = demoModes or ["prompter"] %}
+{% if switchModes | length > 1 %}
+<span class="demo-switch" role="group" aria-label="Mode">
+    <button class="demo-tab" type="button" data-demo-tab="prompter" aria-pressed="{{ 'true' if switchActive == 'prompter' else 'false' }}">Teleprompter</button>
+    <button class="demo-tab" type="button" data-demo-tab="cards" aria-pressed="{{ 'true' if switchActive == 'cards' else 'false' }}">Cards</button>
+</span>
+{% else %}
+<span class="deck-title">Teleprompter</span>
+{% endif %}

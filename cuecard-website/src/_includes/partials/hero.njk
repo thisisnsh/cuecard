@@ -10,8 +10,11 @@
   Set `heroDeck` and the hero becomes two columns: the argument on the left,
   and on the right the app actually running - the live prompter in
   partials/deck.njk. That is the only thing on this site that moves of its own
-  accord, and it is not a video. Set `heroDemo` to "cards" or "watch" (with
-  `demoCards`) and it is Cards mode instead, from partials/cardsdemo.njk.
+  accord, and it is not a video. Cards mode sits beside it
+  (partials/cardsdemo.njk), with a Teleprompter / Cards switch in the title
+  bar. Set `heroDemo` to "cards" to open on Cards, or to "watch" for the watch
+  alone. Desktop pages set `demoModes` to ["prompter"]: the desktop app has
+  no cards.
 #}
 <section class="hero{% if heroClass %} {{ heroClass }}{% endif %}" aria-labelledby="hero-h">
     <div class="wrap">
@@ -72,7 +75,23 @@
             </div>
 
             {% if heroDeck %}
-            <div class="hero-deck">{% if heroDemo == "cards" or heroDemo == "watch" %}{% set demoKind = heroDemo %}{% include "partials/cardsdemo.njk" %}{% else %}{% include "partials/deck.njk" %}{% endif %}</div>
+            <div class="hero-deck">
+                {% if heroDemo == "watch" %}
+                {% set demoKind = "watch" %}{% include "partials/cardsdemo.njk" %}
+                {% else %}
+                {# Teleprompter and Cards, one at a time, swapped by the switch in
+                   each demo's title bar. A page passes whichever of deckScript
+                   and demoCards it wrote, and the other is made from it. #}
+                {% set demoModes = demoModes or ["prompter", "cards"] %}
+                {% set demoStart = heroDemo if heroDemo == "cards" else "prompter" %}
+                {% set deckScript = deckScript or (deck.fromCards(demoCards) if demoCards else deck.standard) %}
+                {% set demoCards = demoCards or deck.toCards(deckScript) %}
+                <div data-demo-panel="prompter"{% if demoStart != "prompter" %} hidden{% endif %}>{% include "partials/deck.njk" %}</div>
+                {% if "cards" in demoModes %}
+                <div data-demo-panel="cards"{% if demoStart != "cards" %} hidden{% endif %}>{% set demoKind = "cards" %}{% include "partials/cardsdemo.njk" %}</div>
+                {% endif %}
+                {% endif %}
+            </div>
             {% endif %}
         </div>
 

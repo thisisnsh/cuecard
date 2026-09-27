@@ -28,6 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initDeck();
     // ...or Cards mode, on the pages about cards and the watch
     initCardsDemo();
+    // ...and on the home page, a switch between the two
+    initDemoSwitch();
 
     // The menu on narrow screens, and the header's download menu
     initNavToggle();
@@ -105,6 +107,9 @@ function initDeck() {
     const lines = Array.from(script.querySelectorAll('.deck-line'));
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+    // A deck that starts hidden (the Cards pages open on Cards) has no size
+    // yet, so it is laid out the first time it comes into view.
+    let laidOut = screen.offsetHeight > 0;
     let offset = 0;          // pixels the script has travelled
     let elapsed = 0;         // seconds on the clock
     let running = !reduced;
@@ -194,6 +199,7 @@ function initDeck() {
         let seen = true;
         const io = new IntersectionObserver(([entry]) => {
             if (!entry) return;
+            if (entry.isIntersecting && !laidOut) { laidOut = true; reset(); }
             if (entry.isIntersecting && !seen && !reduced) { seen = true; setRunning(true); }
             else if (!entry.isIntersecting && seen) { seen = false; running = false; }
         }, { threshold: 0.15 });
@@ -203,6 +209,26 @@ function initDeck() {
     setRunning(running);
     reset();
     requestAnimationFrame(frame);
+}
+
+/* The Teleprompter / Cards switch in the demos' title bars. Each demo has
+   its own copy of the switch, so pressing one shows the other demo and
+   updates both. A hidden demo pauses itself, because a hidden element never
+   intersects the viewport. */
+function initDemoSwitch() {
+    const tabs = Array.from(document.querySelectorAll('[data-demo-tab]'));
+    const panels = Array.from(document.querySelectorAll('[data-demo-panel]'));
+    if (!tabs.length || panels.length < 2) return;
+
+    tabs.forEach((tab) => tab.addEventListener('click', () => {
+        const mode = tab.dataset.demoTab;
+        panels.forEach((p) => { p.hidden = p.dataset.demoPanel !== mode; });
+        tabs.forEach((t) => t.setAttribute('aria-pressed', t.dataset.demoTab === mode ? 'true' : 'false'));
+        // Keep focus on the switch, which is now the one in the shown demo.
+        const shown = panels.find((p) => !p.hidden);
+        const same = shown && shown.querySelector(`[data-demo-tab="${mode}"]`);
+        if (same && document.activeElement === tab) same.focus();
+    }));
 }
 
 /* Cards mode in the hero (partials/cardsdemo.njk).

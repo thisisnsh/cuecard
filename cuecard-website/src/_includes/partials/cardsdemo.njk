@@ -12,9 +12,14 @@
 {% set onWatch = demoKind == "watch" %}
 <div class="cardsdemo{% if onWatch %} cardsdemo-watch{% endif %} reveal d2" data-cards>
     <div class="cardsdemo-bar">
-        {% if not onWatch %}<span class="deck-close" aria-hidden="true">✕</span>{% endif %}
+        {% if onWatch %}
         <span class="deck-clock cardsdemo-clock" data-cards-clock>00:00</span>
         <span class="cardsdemo-count" data-cards-count>1 of {{ demoCards | length }}</span>
+        {% else %}
+        <span class="deck-close" aria-hidden="true">✕</span>
+        {% set switchActive = "cards" %}{% include "partials/demoswitch.njk" %}
+        <span class="deck-clock" data-cards-clock>00:00</span>
+        {% endif %}
     </div>
 
     {% if not onWatch %}

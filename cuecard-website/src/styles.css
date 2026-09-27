@@ -609,6 +609,30 @@ code, .notes-content { font-family: var(--mono); font-size: 0.92em; }
   .deck-speed input { width: 70px; }
 }
 
+/* The Teleprompter / Cards switch, in the demo's title bar where the app
+   keeps its mode menu. Both demos carry one; script.js keeps them in step. */
+.demo-switch {
+  justify-self: center;
+  display: inline-flex; gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--hairline); border-radius: 999px;
+  background: var(--paper);
+}
+.demo-tab {
+  height: 26px; padding: 0 12px; border: 0; border-radius: 999px;
+  background: transparent;
+  font-family: var(--display); font-size: 12.5px; font-weight: 700;
+  letter-spacing: -0.012em; color: var(--ash);
+  cursor: pointer;
+  transition: background .2s var(--ease), color .2s var(--ease);
+}
+.demo-tab:hover { color: var(--ink); }
+.demo-tab[aria-pressed="true"] { background: var(--ink); color: #fff; }
+.demo-tab:focus-visible { outline: 2px solid var(--cue); outline-offset: 2px; }
+/* The cards panel matches the prompter's height, so switching does not move
+   the page: the prompter's screen, less the row of dots. */
+[data-demo-panel="cards"] .cardsdemo-stage { height: calc(clamp(260px, 42vh, 340px) - 20px); }
+
 /* ════════════════════════ THE LIVE DECK OF CARDS ════════════════════════ */
 /* Cards mode, in the same frame as the live prompter: one card on top, the
    next peeking out behind it, turned with a swipe or Back and Next. The
