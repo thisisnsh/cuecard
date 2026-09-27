@@ -31,7 +31,7 @@
     <meta property="og:image:width" content="{{ ogImageWidth or '1200' }}">
     <meta property="og:image:height" content="{{ ogImageHeight or '630' }}">
     <meta property="og:image:type" content="image/png">
-    <meta property="og:image:alt" content="{{ ogImageAlt or 'CueCard - a teleprompter that floats over every other app.' }}">
+    <meta property="og:image:alt" content="{{ ogImageAlt or 'CueCard - a free teleprompter and cue cards app.' }}">
     <meta property="og:site_name" content="CueCard">
     <meta property="og:locale" content="{{ ogLocale or 'en_US' }}">
 
@@ -41,7 +41,7 @@
     <meta name="twitter:title" content="{{ twitterTitle or ogTitle or title }}">
     <meta name="twitter:description" content="{{ twitterDescription or ogDescription or description }}">
     <meta name="twitter:image" content="https://cuecard.dev/assets/og-image.png">
-    <meta name="twitter:image:alt" content="{{ ogImageAlt or 'CueCard - a teleprompter that floats over every other app.' }}">
+    <meta name="twitter:image:alt" content="{{ ogImageAlt or 'CueCard - a free teleprompter and cue cards app.' }}">
 
     <!-- Own stylesheet first: it is render-blocking by necessity, the webfont is not -->
     <link rel="stylesheet" href="/styles.css">
@@ -104,7 +104,7 @@
           "url": {{ ((site.url) + "/") | jsonLd | safe }},
           "name": "CueCard Teleprompter",
           "alternateName": "CueCard",
-          "description": "CueCard Teleprompter is a free teleprompter app for iPhone and iPad. Your script floats over the camera, Instagram, TikTok or Snapchat while you film — and on a Mac or PC the same notes stay out of the screen share on Zoom, Google Meet and Teams.",
+          "description": "CueCard Teleprompter is a free teleprompter and cue cards app for iPhone, iPad and Apple Watch. Your script floats over the camera, Instagram or TikTok while you film, or sits on cards you turn in the app, on the Lock Screen or on your wrist — and on a Mac or PC your notes stay out of the screen share on Zoom, Google Meet and Teams.",
           "publisher": { "@id": {{ ((site.url) + "/#org") | jsonLd | safe }} },
           "inLanguage": "en"
         },
@@ -116,7 +116,7 @@
           "description": {{ description | jsonLd | safe }},
           "isPartOf": { "@id": {{ ((site.url) + "/#website") | jsonLd | safe }} },
           {% if crumbs %}"breadcrumb": { "@id": {{ ((canonical or (site.url + page.url)) + "#breadcrumb") | jsonLd | safe }} },{% endif %}
-          {% if app or mobileProfession %}"about": { "@id": {{ ((site.products.mobile.id)) | jsonLd | safe }} },
+          {% if app or mobileProfession or speakingPage %}"about": { "@id": {{ ((site.products.mobile.id)) | jsonLd | safe }} },
           {% elif page.url == '/' %}"about": [{ "@id": {{ ((site.products.mobile.id)) | jsonLd | safe }} }, { "@id": {{ ((site.products.desktop.id)) | jsonLd | safe }} }],
           {% elif page.url == '/desktop/' or platform or profession %}"about": { "@id": {{ ((site.products.desktop.id)) | jsonLd | safe }} },{% endif %}
           "inLanguage": "en"

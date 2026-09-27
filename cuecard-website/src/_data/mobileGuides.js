@@ -177,8 +177,8 @@ const ipadSteps = [
     body: "Place the iPad beside the camera and choose a text size you can read from where you will speak.",
   },
   {
-    title: "Set the pace and start delay",
-    body: "Choose a comfortable scroll speed and add a short delay so you have time to face the lens.",
+    title: "Set the pace and countdown",
+    body: "Choose a comfortable scroll speed, then tap the timer and set a short Countdown so you have time to face the lens.",
   },
   {
     title: "Rehearse from your mark",
@@ -190,11 +190,39 @@ const ipadSteps = [
   },
 ];
 
+// /mobile/ covers the whole app, so its guide starts with choosing a mode.
+const hubSteps = [
+  {
+    title: "Choose Teleprompter or Cards",
+    body: "Tap the mode name at the top left of the editor. Teleprompter scrolls a whole script; Cards shows it one card at a time. Each keeps its own script and settings.",
+  },
+  {
+    title: "Write, then save",
+    body: "Type or paste your script, or tap Create New Card for each card of a deck. Type [ or tap Add Cue for reminders, and choose Save as New in the ••• menu.",
+  },
+  {
+    title: "Set the timer",
+    body: "Tap the timer beside the play button. Set a Duration and a Warn in Last time, and for the teleprompter a Countdown before it starts to scroll.",
+  },
+  {
+    title: "Press play, or Read Cards",
+    body: "In Teleprompter, the green play button opens the script full screen; tap Start Overlay or leave CueCard to float it over your camera app. In Cards, Read Cards opens the deck to swipe through.",
+  },
+  {
+    title: "Take it to the Lock Screen or your watch",
+    body: "Turn on Show on Lock Screen in Cards Settings to turn cards with the phone locked. With the Apple Watch app installed, the teleprompter's controls and your cards are on your wrist too.",
+  },
+  {
+    title: "Rehearse and adjust",
+    body: "Run it once out loud. Slow the Scroll Speed if you rush, shorten any card you have to squint at, and move the floating window closer to the lens.",
+  },
+];
+
 function forApp(app) {
   if (!app || !app.guide) return null;
 
   const steps = appSteps[app.slug]
-    || (app.slug === "mobile/ipad" ? ipadSteps : cameraSteps("iPhone"));
+    || (app.slug === "mobile" ? hubSteps : app.slug === "mobile/ipad" ? ipadSteps : cameraSteps("iPhone"));
 
   const intro = app.subject
     ? `Use CueCard with ${app.subject} in six short steps, from the saved script to the final take.`

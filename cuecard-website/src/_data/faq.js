@@ -18,9 +18,9 @@ const mobile = [
   {
     question: "What is CueCard Teleprompter?",
     answer:
-      'CueCard Teleprompter is a free teleprompter app for iPhone and iPad that floats on top of every other app. Your script sits in a small window above the camera, Instagram, TikTok, a video call or anything else, auto-scrolling while you speak, so you never have to switch away from what you are recording in. It is on <a href="' +
+      'CueCard Teleprompter is a free teleprompter and cue cards app for iPhone, iPad and Apple Watch. The <a href="/teleprompter/">teleprompter</a> scrolls your script while you speak, full screen or in a small window above the camera, Instagram, TikTok or a video call. <a href="/cards/">Cards</a> shows a talk one card at a time, in the app, on the Lock Screen or on your <a href="/watch/">Apple Watch</a>. It is on <a href="' +
       store +
-      '">iPhone and iPad</a> today, and the Android app is still being built.'
+      '">the App Store</a> today, and the Android app is still being built.'
   },
   {
     question: "How does the floating teleprompter work?",
@@ -57,7 +57,7 @@ const mobile = [
   {
     question: "Which iPhones and iPads does CueCard support?",
     answer:
-      "An iPhone or iPad running " + site.requiresMobile + "."
+      "An iPhone or iPad running " + site.requiresMobile + ". The Apple Watch app needs " + site.requiresWatch + "."
   },
   {
     question: "Can I use it while live streaming or on a video call?",
@@ -82,12 +82,12 @@ const mobile = [
   {
     question: "Is there a countdown before the script starts moving?",
     answer:
-      "Yes. Set a start delay and CueCard counts you in before the script begins to scroll, so the first line is not the one you fumble while reaching for the record button."
+      "Yes. Tap the timer beside the play button and set a Countdown in seconds. CueCard counts you in before the script begins to scroll, so the first line is not the one you fumble while reaching for the record button."
   },
   {
     question: "Is there a timer?",
     answer:
-      "Yes. Set a length in minutes and seconds and the timer runs while you speak, so you find out a take is running long while you can still do something about it, rather than in the edit."
+      "Yes, in both modes. Tap the timer beside the play button, set a Duration, and choose when to be warned with Warn in Last. The timer changes color at the warning and again once you run over, in colors you pick. With no timer set, it counts up from when you started."
   },
   {
     question: "Can I change the size of the floating window?",
@@ -97,7 +97,7 @@ const mobile = [
   {
     question: "Can I change the text size on mobile?",
     answer:
-      "Yes. Small, medium and large presets are available for both the in-app prompter and the floating one, so you can read comfortably at whatever distance you have set your phone up at."
+      "Yes. The teleprompter, the floating window, cards and the editor each have their own text size, from presets in Settings. Tap Show Advanced Settings to type an exact size."
   },
   {
     question: "How do I keep my eyes on the camera while reading?",
@@ -107,12 +107,32 @@ const mobile = [
   {
     question: "Can I save scripts and come back to them?",
     answer:
-      "Yes. Save a script with a name and it stays in your library, ready to open, rename or run again."
+      "Yes. Save a script or a deck with a name and it stays in Saved Content, ready to open, rename or run again. You can also import and export plain text files from the ••• menu."
   },
   {
     question: "Does the phone app have a dark mode?",
     answer:
       "Yes. You can set the app to light, set it to dark, or let it follow whatever your phone is already set to."
+  },
+  {
+    question: "What is Cards mode?",
+    answer:
+      'Cue cards on your phone. Tap the mode name at the top left of the editor and choose Cards, write one short point per card, and tap Read Cards to swipe through them one at a time. It suits a speech, a toast or a class presentation, where you want reminders rather than a script. <a href="/cards/">See Cards</a>.'
+  },
+  {
+    question: "Can I read cue cards on the Lock Screen?",
+    answer:
+      "Yes. In Cards Settings, turn on Show on Lock Screen. When a deck is open, the card you are on, the timer and Back and Next sit on the Lock Screen, so you can lock the phone and keep going. The Lock Screen shows up to 120 characters of a card."
+  },
+  {
+    question: "Is there an Apple Watch app?",
+    answer:
+      'Yes, and it comes with the iPhone app. It plays, pauses and skips back ten seconds in the teleprompter, and shows your cards on your wrist in step with the iPhone. Keep a deck on the watch to read it without your iPhone. <a href="/watch/">See CueCard on Apple Watch</a>.'
+  },
+  {
+    question: "Can I start the teleprompter with the Action Button?",
+    answer:
+      "Yes, on an iPhone with an Action Button and iOS 18. In the Settings app, go to Action Button › Controls and pick Play or Pause under CueCard."
   },
   {
     question: "How is this different from a hardware teleprompter?",
@@ -209,7 +229,7 @@ const desktop = [
     answer:
       'Yes. CueCard for <a href="' +
       store +
-      '">iPhone and iPad</a> is a teleprompter that sits on top of the camera, Instagram, TikTok or any other app while you record, so you never have to switch apps in the middle of a take. Android is still being built. <a href="/">See the phone app</a>.'
+      '">iPhone, iPad and Apple Watch</a> is a teleprompter that sits on top of the camera, Instagram, TikTok or any other app while you record, and cue cards you can turn from the Lock Screen or your wrist. Android is still being built. <a href="/mobile/">See the phone app</a>.'
   }
 ];
 
@@ -248,7 +268,7 @@ const everywhere = [
 
 /** Everything, grouped, for /faq/. */
 const groups = [
-  { id: "mobile", title: "The teleprompter on iPhone and iPad", intro: "Filming, recording and going live.", items: mobile },
+  { id: "mobile", title: "The app for iPhone, iPad and Apple Watch", intro: "Filming, speaking from cue cards and going live.", items: mobile },
   { id: "desktop", title: "Speaker notes on Mac and Windows", intro: "Hidden from a screen share.", items: desktop },
   { id: "general", title: "Price, privacy and the project", intro: "The questions that apply wherever you run it.", items: everywhere }
 ];
@@ -290,14 +310,14 @@ function pick(...questions) {
  */
 const home = pick(
   "What is CueCard Teleprompter?",
+  "What is Cards mode?",
+  "Is there an Apple Watch app?",
   "Does the teleprompter show up in my recorded video?",
-  "Can I use CueCard while recording an Instagram Reel or a TikTok?",
   "Is CueCard a free teleprompter app?",
   "Do I need an account to use CueCard?",
   "Is there a teleprompter for iPad?",
   "Is CueCard available on Android?",
-  "Is CueCard invisible on Zoom, Google Meet and Microsoft Teams?",
-  "How is this different from a hardware teleprompter?"
+  "Is CueCard invisible on Zoom, Google Meet and Microsoft Teams?"
 );
 
 /** The trim for the desktop pages: what gets asked before downloading. */

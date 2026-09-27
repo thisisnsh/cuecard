@@ -1,13 +1,13 @@
 ---
 layout: layouts/base.njk
 permalink: /
-title: "Free Teleprompter for Mobile, Mac & Windows | CueCard"
-description: "Read your script over the apps you film in on iPhone and iPad. On Mac and Windows, keep speaker notes visible to you and out of your screen share."
-keywords: "cuecard teleprompter, teleprompter app, free teleprompter, teleprompter iphone, ipad teleprompter, teleprompter app for iphone, floating teleprompter, open source teleprompter, tiktok teleprompter, instagram reels teleprompter, snapchat teleprompter, youtube teleprompter, auto scroll teleprompter, script reader app, on camera notes, teleprompter android, teleprompter mac, teleprompter windows, zoom speaker notes, google meet notes, microsoft teams notes, invisible speaker notes"
+title: "Free Teleprompter & Cue Cards App | CueCard"
+description: "A free teleprompter and cue cards app for iPhone, iPad and Apple Watch. Read a script over the app you film in, or speak from cards on your Lock Screen."
+keywords: "cuecard teleprompter, teleprompter app, cue cards app, free teleprompter, digital cue cards, teleprompter iphone, ipad teleprompter, apple watch teleprompter, apple watch cue cards, floating teleprompter, speech notes app, cue cards on lock screen, open source teleprompter, tiktok teleprompter, instagram reels teleprompter, teleprompter mac, teleprompter windows, zoom speaker notes, invisible speaker notes"
 canonical: "https://cuecard.dev/"
-pageName: "Free Teleprompter for Mobile, Mac & Windows | CueCard"
-ogTitle: "Free Teleprompter for Mobile, Mac & Windows | CueCard"
-ogDescription: "Read your script over the apps you film in on iPhone and iPad. On Mac and Windows, keep speaker notes visible to you and out of your screen share."
+pageName: "Free Teleprompter & Cue Cards App | CueCard"
+ogTitle: "Free Teleprompter & Cue Cards App | CueCard"
+ogDescription: "A free teleprompter and cue cards app for iPhone, iPad and Apple Watch. Read a script over the app you film in, or speak from cards on your Lock Screen."
 ogLocale: "en_US"
 ---
 {% block jsonld %}
@@ -64,18 +64,22 @@ ogLocale: "en_US"
 {% include "partials/nav.njk" %}
 
 <main>
-    {% set heroTitle = 'A free teleprompter that stays <em>on top.</em>' %}
-    {% set heroBody = description %}
+    {% set heroTitle = 'A teleprompter and cue cards, <em>free.</em>' %}
+    {% set heroBody = 'Read a script that scrolls over the camera, TikTok or a call, or speak from cards you turn in the app, on your Lock Screen or on your Apple Watch. On Mac and Windows, your speaker notes stay out of your screen share.' %}
     {% set heroButtons = [
-      { text: "For iPhone & iPad", href: "/mobile/", icon: "phone", style: "primary" },
+      { text: "Get it free on the App Store", href: site.ios, icon: "apple", style: "primary", external: true },
       { text: "For Mac & Windows", href: "/desktop/", icon: "monitor", style: "ghost" }
     ] %}
-    {% set heroNote = 'Free · No account required · <a href="#download">Get CueCard</a>' %}
+    {% set heroNote = 'Free · No account required · iPhone, iPad &amp; <a href="/watch/">Apple Watch</a>' %}
     {% set heroStrip = "none" %}
     {% set faqLink = "#faq" %}
     {% set heroDeck = true %}
     {% set deckScript = deck.standard %}
     {% include "partials/hero.njk" %}
+
+    {% set modesMicro = "One app, three ways to use it" %}
+    {% set modesNote = "Film with the teleprompter, give a talk from cards, and keep either one in reach on your Apple Watch." %}
+    {% include "partials/modes.njk" %}
 
     {% set featureRows = features.mobile %}
     {% set rowsMicro = "What you get" %}
@@ -84,7 +88,7 @@ ogLocale: "en_US"
     {% include "partials/rows.njk" %}
 
     {% set shotsHeading = 'What it looks like.' %}
-    {% set shotsNote = "Read your script from the full screen, or shrink it into a small window that stays on top of whatever else you open." %}
+    {% set shotsNote = "The script floating over another app, the teleprompter, a card being swiped, cards on the Lock Screen, and the settings." %}
     {% set shotsFoot = 'Looking for the computer app instead? <a href="/desktop/">CueCard for Mac and Windows</a> keeps your speaker notes on your screen and out of your screen share.' %}
     {% include "partials/shots.njk" %}
 
@@ -112,9 +116,9 @@ ogLocale: "en_US"
 
     <section class="workflow-section" id="mobile-product" aria-labelledby="mobile-product-h">
       <div class="wrap">
-        <p class="micro">For iPhone &amp; iPad</p>
-        <h2 class="section-h" id="mobile-product-h">Set up once. Stay natural on camera.</h2>
-        <p class="body">Start with the device in your hand, then choose the recording app or delivery guide that fits your next take.</p>
+        <p class="micro">For iPhone, iPad &amp; Apple Watch</p>
+        <h2 class="section-h" id="mobile-product-h">Set up once. Stay natural on camera and on stage.</h2>
+        <p class="body">Start with what you are doing next, filming or giving a talk, then pick the guide that fits.</p>
 
         <div class="guide-link-group">
           <h3 class="guide-group-title">Quick setup</h3>
@@ -124,7 +128,18 @@ ogLocale: "en_US"
             <li><a href="/mobile/tiktok/#how-to"><span>Record a TikTok</span>{{ icon("arrow", 14) }}</a></li>
             <li><a href="/mobile/instagram/#how-to"><span>Record an Instagram Reel</span>{{ icon("arrow", 14) }}</a></li>
             <li><a href="/mobile/snapchat/#how-to"><span>Record a Snap</span>{{ icon("arrow", 14) }}</a></li>
-            <li><a href="/mobile/"><span>Explore the mobile teleprompter</span>{{ icon("arrow", 14) }}</a></li>
+            <li><a href="/mobile/"><span>Explore the mobile app</span>{{ icon("arrow", 14) }}</a></li>
+          </ul>
+        </div>
+
+        <div class="guide-link-group">
+          <h3 class="guide-group-title">Speak from cue cards</h3>
+          <ul class="guide-link-grid">
+            <li><a href="/cards/#how-to"><span>Make cue cards on iPhone</span>{{ icon("arrow", 14) }}</a></li>
+            <li><a href="/watch/#how-to"><span>Set up Apple Watch</span>{{ icon("arrow", 14) }}</a></li>
+            {% for sp in speaking.speeches %}
+            <li><a href="/{{ sp.slug }}/"><span>{{ sp.name }}</span>{{ icon("arrow", 14) }}</a></li>
+            {% endfor %}
           </ul>
         </div>
 
@@ -133,6 +148,8 @@ ogLocale: "en_US"
           <ul class="guide-link-grid guide-link-grid-short">
             <li><a href="/blog/instagram-reels-teleprompter-stop-looking-like-reading/"><span>Keep a natural eye-line</span>{{ icon("arrow", 14) }}</a></li>
             <li><a href="/blog/tiktok-teleprompter-one-script-every-app/"><span>Reuse one script across recording apps</span>{{ icon("arrow", 14) }}</a></li>
+            <li><a href="/blog/cue-cards-vs-teleprompter/"><span>Cue cards or a teleprompter?</span>{{ icon("arrow", 14) }}</a></li>
+            <li><a href="/blog/how-to-time-a-speech/"><span>Time a speech with a warning</span>{{ icon("arrow", 14) }}</a></li>
           </ul>
         </div>
       </div>

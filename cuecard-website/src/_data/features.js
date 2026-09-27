@@ -1,7 +1,8 @@
 // What the apps actually do, read out of the app source rather than guessed:
-// the iOS app's TeleprompterPiPManager, SettingsService, TeleprompterParser and
-// HomeView, and the desktop app's screen-capture, shortcuts and Google Slides
-// sync.
+// the iOS app's HelpView, SettingsView, TimerSheet, CueCards, the watch app
+// and TeleprompterPiPManager, and the desktop app's screen-capture, shortcuts
+// and Google Slides sync. Every row is something the app does today; nothing
+// is here to fill a row.
 //
 // Written for someone who has never used a teleprompter. Plain words, whole
 // sentences, no clipped phrases the reader has to unpack. One or two sentences
@@ -16,34 +17,48 @@
 //   * Google Slides sync is one way of using the desktop app, not the whole of
 //     it. The desktop app also works on its own with notes you paste in.
 //
-// The home page carries the mobile set, /desktop/ and the meeting pages carry
-// the desktop set, and the role and app pages reword the same capabilities
-// around their subject so no two feature sections on the site read alike.
+// The home page and /mobile/ carry the mobile set, /desktop/ and the meeting
+// pages carry the desktop set, and the role and app pages reword the same
+// capabilities around their subject so no two feature sections on the site
+// read alike. The /teleprompter/, /cards/ and /watch/ pages carry their own
+// rows in _data/speaking.js. site.products.mobile.features is this list in a
+// line each.
 
+// `appleOnly` rows are left off the Android page, which lists what is planned.
 const mobile = [
   {
-    h: "Floats on top of every other app",
-    p: "Your script stays on screen while you record in the camera app, Instagram, TikTok or anything else, so you never have to switch apps in the middle of a take to check your next line.",
+    h: "Two ways to read: Teleprompter and Cards",
+    p: "Teleprompter scrolls your whole script. Cards shows it one card at a time, for talks you give from notes rather than read word for word. Switch between them from the mode name at the top of the editor; each keeps its own script and settings.",
   },
   {
-    h: "Scrolls on its own, at your pace",
-    p: "Set how fast the script moves and it scrolls by itself while you talk. Speed it up or slow it down at any time, and pause it whenever you need a moment.",
+    h: "A teleprompter that scrolls at your pace",
+    p: "Set the speed in lines per minute and the script moves on its own. Pause when you need a moment, or drag it back or ahead and it carries on from wherever you leave it.",
+  },
+  {
+    h: "Floats on top of the app you film in",
+    p: "Leave CueCard while the teleprompter is open and the script keeps going in a floating window over the camera, Instagram, TikTok or a video call. Pick a 16:9, 4:3 or square layout, give it its own text size and drag it up under the lens.",
+  },
+  {
+    h: "Cards you swipe through, in the app or on the Lock Screen",
+    p: "Swipe, or tap Back and Next, and dots show where you are in the deck. Turn on Show on Lock Screen and the card, the timer and the Back and Next buttons sit on your Lock Screen too.",
+    appleOnly: true,
+  },
+  {
+    h: "An Apple Watch app",
+    p: "The watch plays, pauses and skips back ten seconds in the teleprompter, and shows your cards on your wrist in step with the iPhone. Keep a deck on the watch and you can speak from it with the iPhone left behind.",
+    appleOnly: true,
+  },
+  {
+    h: "A timer that warns you before time runs out",
+    p: "Set how long you have and when to be warned, and the timer changes color at the warning and again once you run over. Pick colors that are easy for you to tell apart, and give the teleprompter a countdown before it starts to move.",
   },
   {
     h: "Cues you read but never say out loud",
-    p: "Type something like [cue smile] or [cue slow down] in the middle of your script and it appears in colour — pink, yellow, green, blue, purple or red, whichever you pick. It is a reminder about how to say the next line, not a line to read.",
+    p: "Type [ or tap Add Cue to write a reminder like [cue smile] or [cue slow down]. It shows in the color you pick, in the teleprompter, on cards, on the Lock Screen and on the watch.",
   },
   {
-    h: "A countdown to start, and a timer while you talk",
-    p: "CueCard counts you in before the script starts moving, so you have a few seconds to get ready. A timer then runs while you speak, so you know whether the take is running long.",
-  },
-  {
-    h: "A floating window you can shape and move",
-    p: "Drag the window anywhere on screen, make it wide, square or tall, and set the text size inside it. Put it just under the camera lens and your eyes stay close to the lens instead of drifting down.",
-  },
-  {
-    h: "Scripts you save and come back to",
-    p: "Give a script a name, save it, and open it again next time. You can also import one from a file. The app follows your phone's light or dark appearance, or you can set it to stay light or stay dark.",
+    h: "Scripts and decks you save, and nothing to sign up for",
+    p: "Save what you write, rename it or open it again from Saved Content, and import or export plain text files. There is no account, no ads and no subscription, and your scripts stay on your phone.",
   },
 ];
 
@@ -184,4 +199,7 @@ function forRole(name, audience, kind) {
   ];
 }
 
-module.exports = { mobile, desktop, forApp, forRole };
+/** The phone rows that could apply to an app that is not out yet. */
+const mobilePlanned = mobile.filter((row) => !row.appleOnly);
+
+module.exports = { mobile, mobilePlanned, desktop, forApp, forRole };

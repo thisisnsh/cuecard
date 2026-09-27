@@ -2,6 +2,8 @@
 // be a bug to get out of step lives here, so a change lands everywhere at once.
 //
 // The homepage introduces both products; /mobile/ and /desktop/ own their workflows.
+// The phone app has two modes, Teleprompter and Cards, and an Apple Watch app;
+// /teleprompter/, /cards/ and /watch/ each own one of them.
 
 const year = new Date().getFullYear();
 
@@ -9,12 +11,27 @@ const products = {
   mobile: {
     id: "https://cuecard.dev/#mobileapp", name: "CueCard Teleprompter",
     url: "https://cuecard.dev/mobile/", price: "0", currency: "USD",
-    description: "A free mobile teleprompter with a floating script, adjustable scrolling, saved scripts, colored cues and timing controls.",
+    alternateName: "CueCard",
+    description: "A free teleprompter and cue cards app for iPhone, iPad and Apple Watch. Float a scrolling script over the app you film in, or speak from cards you turn on the screen, the Lock Screen or your wrist.",
     image: "https://cuecard.dev/assets/promo-mobile.jpg",
-    screenshots: ["https://cuecard.dev/assets/promo-mobile.jpg", "https://cuecard.dev/assets/promo-ipad.jpg"],
-    features: ["Movable floating window", "Adjustable scroll speed in lines per minute", "Saved scripts", "Colored [cue ...] reminders", "Start delay and timer", "Separate full-screen and floating text sizes"],
+    screenshots: ["https://cuecard.dev/assets/promo-mobile.jpg", "https://cuecard.dev/assets/promo-teleprompter.jpg", "https://cuecard.dev/assets/promo-cards.jpg", "https://cuecard.dev/assets/promo-ipad.jpg"],
+    // The same list as features.mobile, in a line each. Keep the two in step.
+    features: [
+      "Teleprompter mode: a script that scrolls at a speed you set, in lines per minute",
+      "Floating window over other apps, in a 16:9, 4:3 or 1:1 layout",
+      "Cards mode: one card at a time, turned by swiping or with Back and Next",
+      "Cards on the Lock Screen in a Live Activity",
+      "Apple Watch app: teleprompter remote, cards on the wrist, decks kept on the watch",
+      "Timer with a warning time, overtime and colors you choose",
+      "Countdown before the script starts scrolling",
+      "Colored [cue ...] reminders",
+      "Play or pause from the Action Button or Control Center",
+      "Saved scripts and decks, import and export as text files"
+    ],
     platforms: [
-      { key: "ios", shipping: true, os: "iOS 16.6 or later, iPadOS 16.6 or later", short: "iOS / iPadOS 16.6+", storeUrl: "https://apps.apple.com/app/cuecard-teleprompter/id6757321325" },
+      { key: "ios", shipping: true, os: "iOS 17 or later, iPadOS 17 or later", short: "iOS / iPadOS 17+", storeUrl: "https://apps.apple.com/app/cuecard-teleprompter/id6757321325" },
+      // The watch app ships inside the iPhone app, so it has the same store link.
+      { key: "watchos", shipping: true, os: "watchOS 10 or later", short: "watchOS 10+", storeUrl: "https://apps.apple.com/app/cuecard-teleprompter/id6757321325" },
       { key: "android", shipping: false, os: "Android", storeUrl: null }
     ]
   },
@@ -31,6 +48,7 @@ const products = {
   }
 };
 const mobilePlatform = products.mobile.platforms[0];
+const watchPlatform = products.mobile.platforms[1];
 const site = {
   products,
   name: "CueCard",
@@ -38,7 +56,7 @@ const site = {
   // wants the full product name rather than the short one.
   productName: "CueCard Teleprompter",
   shortName: "CueCard",
-  tagline: "The teleprompter that floats over every app you film in",
+  tagline: "A teleprompter and cue cards for iPhone, iPad and Apple Watch",
   url: "https://cuecard.dev",
   email: "support@cuecard.dev",
   github: "https://github.com/thisisnsh/cuecard",
@@ -51,7 +69,7 @@ const site = {
   // rather than linked as if it were shipping, and never as a beta.
   ios: mobilePlatform.storeUrl,
   android: "https://play.google.com/apps/testing/com.thisisnsh.cuecard.android",
-  androidComingSoon: !products.mobile.platforms[1].shipping,
+  androidComingSoon: !products.mobile.platforms[2].shipping,
 
   // Who writes the posts. A name on its own is a string; this is an entity
   // Google can resolve and tie to the same person elsewhere, which is what
@@ -65,26 +83,55 @@ const site = {
 
   requiresMobile: mobilePlatform.os,
   requiresMobileShort: mobilePlatform.short,
+  requiresWatch: watchPlatform.os,
+  requiresWatchShort: watchPlatform.short,
   requiresDesktop: products.desktop.platforms.map(p => p.os).join(", "),
   requiresDesktopShort: "macOS · Windows",
 
   // ── The App Store artwork ───────────────────────────────────────────────
-  // The one place on the site that shows the app itself. Two strips, one per
-  // device, shown at full width under the hero.
+  // The one place on the site that shows the app itself. The phone strip is
+  // the whole App Store set; `teleprompter` and `cards` are two phones each
+  // cut from it, for the pages about one mode.
   shots: [
     {
       id: "phone",
+      icon: "phone",
       src: "/assets/promo-mobile.jpg",
       small: "/assets/promo-mobile-1100.jpg",
       width: 2200,
-      height: 1192,
+      height: 794,
       label: "On iPhone",
-      alt: "CueCard Teleprompter on iPhone: the script scrolling with cues in pink and a timer running, the floating prompter window sitting on top of the home screen, and the settings for start delay, scroll speed, cue colour and text size.",
+      alt: "CueCard on iPhone: the floating script over the home screen, the teleprompter scrolling with cues in pink, a card being swiped in Cards mode, cards on the Lock Screen with Back and Next, and the settings for scroll speed, text size, layout and cue color.",
       caption:
-        "The script scrolling, the floating window sitting on top of another app, and the settings behind both.",
+        "The floating script, the teleprompter, cards in the app and on the Lock Screen, and the settings.",
+    },
+    {
+      id: "teleprompter",
+      icon: "phone",
+      src: "/assets/promo-teleprompter.jpg",
+      small: "/assets/promo-teleprompter-1100.jpg",
+      width: 2200,
+      height: 1350,
+      label: "Teleprompter",
+      alt: "CueCard's teleprompter on iPhone: the script in a floating window over the home screen with a timer, and the full-screen teleprompter with cues such as smile and pause in pink.",
+      caption:
+        "Floating over another app, and full screen with the timer running.",
+    },
+    {
+      id: "cards",
+      icon: "phone",
+      src: "/assets/promo-cards.jpg",
+      small: "/assets/promo-cards-1100.jpg",
+      width: 2200,
+      height: 1350,
+      label: "Cards",
+      alt: "CueCard's Cards mode on iPhone: a card being swiped away with the next one behind it and a timer at the top, and a card on the Lock Screen with the timer, 4 of 7, and Back and Next buttons.",
+      caption:
+        "Swipe through cards in the app, or turn them from the Lock Screen.",
     },
     {
       id: "ipad",
+      icon: "tablet",
       src: "/assets/promo-ipad.jpg",
       small: "/assets/promo-ipad-1100.jpg",
       width: 2200,
@@ -206,9 +253,9 @@ const site = {
   downloadGroups: [
     {
       id: "phone",
-      label: "On your phone and iPad",
+      label: "On your phone, iPad and watch",
       icon: "phone",
-      note: "Your script floats on top of whatever app you record in.",
+      note: "A teleprompter that floats over the app you film in, and cue cards for when you speak.",
       items: [
         {
           name: "iPhone and iPad",
@@ -218,6 +265,17 @@ const site = {
           href: mobilePlatform.storeUrl,
           productPlatform: "ios", destinationType: "app_store",
           more: "/mobile/ios/",
+        },
+        {
+          // Not a separate download: it comes with the iPhone app and
+          // installs from the Watch app on the iPhone.
+          name: "Apple Watch",
+          icon: "watch",
+          meta: watchPlatform.os,
+          cta: "App Store",
+          href: watchPlatform.storeUrl,
+          productPlatform: "watchos", destinationType: "app_store",
+          more: "/watch/",
         },
         {
           // Android is not out. It is listed so the page is honest about what

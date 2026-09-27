@@ -4,15 +4,17 @@ Eleventy/Nunjucks static site for [cuecard.dev](https://cuecard.dev).
 
 ## Page responsibilities
 
-- `/` introduces the free floating teleprompter and offers equally clear mobile and desktop paths.
-- `/mobile/` explains choosing and setting up a mobile recording workflow.
+- `/` introduces the free teleprompter and cue cards app, leads with the phone app's three parts, and keeps a clear desktop path.
+- `/teleprompter/`, `/cards/` and `/watch/` each cover one part of the phone app: the scrolling and floating teleprompter, Cards mode (in the app and on the Lock Screen), and the Apple Watch app. Their copy lives in `src/_data/speaking.js`, rendered by `src/speaking/page.njk`.
+- Speaking pages under `/cards/` (wedding speech, class presentations, public speaking, sermons) give a Cards workflow, a sample deck and FAQs for talks given from cue cards.
+- `/mobile/` is the hub for the phone app: both modes, the watch, and the setup guides.
 - `/mobile/ios/` covers the iPhone overlay, controls, positioning and troubleshooting.
 - `/mobile/ipad/` covers full-screen reading beside a camera and floating notes on iPad.
 - Social-app pages under `/mobile/` provide written setup, a sample script and troubleshooting. TikTok, Instagram, Snapchat, YouTube, LinkedIn, Facebook, X and Twitch have distinct workflows. Camera-roll recording is described where it provides the reusable video workflow.
 - `/desktop/` covers private speaker notes on Mac and Windows. `/zoom/`, `/google-meet/`, `/microsoft-teams/` and `/google-slides/` retain their dedicated meeting and Slides content.
 - Mobile audience pages include a role-specific filming workflow and usable example script. Articles focus on delivery, eye-line and reusing scripts, with links to setup instructions.
 
-All 59 existing sitemap URLs and the `/ios/` and `/android/` shortlinks remain.
+All earlier sitemap URLs and the `/ios/` and `/android/` shortlinks remain. The nav is Mobile, Watch, Desktop, Blog and FAQ; Google Slides is reached from the download menu, the footer and the desktop pages.
 
 ## Develop and build
 
@@ -30,13 +32,16 @@ npm run build      # write the production site to _site/
 
 `lib/content.js` builds software entities from shipping platforms and serializes JSON-LD safely, including feature strings containing quotes or HTML delimiters. Mobile device, social and audience pages describe the same `https://cuecard.dev/#mobileapp` entity. Desktop pages use `https://cuecard.dev/#desktopapp`. Android has no shipping OS, install URL or InStock offer. Breadcrumbs and page-specific FAQs remain separate.
 
-The released iOS/iPadOS minimum was checked on 2026-09-08: the [App Store listing](https://apps.apple.com/us/app/cuecard-teleprompter/id6757321325) and the iOS app target's Debug/Release settings both say 16.6. Project-level settings say 17.0; the app target overrides them. Desktop requirements refer to the separate desktop app, not the iOS app's compatibility on Apple Silicon Macs.
+The iOS/iPadOS minimum was checked on 2026-09-26 against the iOS app target for 1.7.0: 17.0. The watch app targets watchOS 10. Both ship on the App Store under the same listing. Desktop requirements refer to the separate desktop app, not the iOS app's compatibility on Apple Silicon Macs.
 
 Current CueCard guide labels were checked against sibling app source:
 
-- `cuecard-mobile/ios/CueCard/CueCard/Views/HomeView.swift`: New Note, Import from File, Save as New, green play button.
-- `Views/SettingsView.swift`: Start Delay, Scroll Speed (lines/min), Text Size under In-App Prompter and Floating Prompter, Dimension Ratio.
-- `Views/TeleprompterView.swift` and `Services/TeleprompterPiPManager.swift`: Start Overlay, play/pause, restart and floating-window behavior. Start Delay begins from fresh full-screen playback; floating play/pause resumes directly.
+- `cuecard-mobile/ios/CueCard/CueCard/Views/HomeView.swift`: the mode menu (Teleprompter, Cards) at the top left; the ••• menu with New, Saved Content, Save, Save as New, Keep on Apple Watch, Import from File and Export to File; Create New Card; the timer button beside the green play button (Read Cards in Cards mode).
+- `Views/SettingsView.swift` (Teleprompter Settings / Cards Settings): Scroll Speed (lines/min), Text Size, Floating Window Text Size and Layout (Rectangle 16:9, Rectangle 4:3, Square 1:1), Show on Lock Screen, Apple Watch Card Text Size, Show Advanced Settings.
+- `Views/TimerSheet.swift`: Duration, Warn in Last, Countdown (teleprompter only) and Timer Colors (Countdown, Normal, Warning, Overtime).
+- `Models/CueCards.swift`: 280 characters a card, 120 with Show on Lock Screen; `[separator]` between cards in imported and exported files.
+- `Views/HelpView.swift` and `CueCardWatch/`: watch install, play/pause/back 10 seconds, cards in sync, Keep on Apple Watch, Return to Clock; Action Button Play or Pause on iOS 18.
+- `Views/TeleprompterView.swift` and `Services/TeleprompterPiPManager.swift`: Start Overlay, play/pause, restart and floating-window behavior. The Countdown runs from fresh full-screen playback; floating play/pause resumes directly.
 
 These are source-verified instructions, not a claim of device testing. Cue tags are visual reminders; they do not pause playback. Scrolling uses a set speed, not speech recognition. A camera recording excludes the screen overlay; a screen recording or screen broadcast can include it.
 

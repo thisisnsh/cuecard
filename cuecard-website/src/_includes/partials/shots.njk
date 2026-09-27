@@ -24,7 +24,7 @@
                      width="{{ s.width }}" height="{{ s.height }}"
                      alt="{{ s.alt }}" loading="lazy" decoding="async">
                 <figcaption class="shot-foot">
-                    <span class="shot-label">{{ icon("phone" if s.id == "phone" else "tablet", 15) }}{{ s.label }}</span>
+                    <span class="shot-label">{{ icon(s.icon, 15) }}{{ s.label }}</span>
                     <span class="shot-cap">{{ s.caption }}</span>
                 </figcaption>
             </figure>

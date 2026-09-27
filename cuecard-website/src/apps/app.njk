@@ -84,15 +84,22 @@ layout: layouts/mobile-app.njk
     {% set deckScript = deck.forApp(app.subject, "my iPad" if app.slug == "mobile/ipad" else "my phone") %}
     {% include "partials/hero.njk" %}
 
-    {% set featureRows = features.forApp(app.subject, "social") if app.subject else features.mobile %}
+    {% set featureRows = features.forApp(app.subject, "social") if app.subject else (features.mobile if app.showIos else features.mobilePlanned) %}
     {% set rowsMicro = "What you get" %}
-    {% set rowsHeading = (("Reading a script over " + app.subject) if app.subject else "Free features for your next take") if app.showIos else "Planned for Android" %}
+    {% set rowsHeading = (("Reading a script over " + app.subject) if app.subject else "Everything in the app, free") if app.showIos else "Planned for Android" %}
     {% set rowsId = "features" %}
     {% include "partials/rows.njk" %}
 
-    {% if app.shotId %}{% set shotIds = [app.shotId] %}{% endif %}
+    {# The pages about the app itself map its three parts before the pictures;
+       the social-app pages are about the teleprompter alone. #}
+    {% if not app.subject and app.showIos %}
+    {% set modesNote = "Film with the teleprompter, give a talk from cards, and keep either one in reach on your Apple Watch." %}
+    {% include "partials/modes.njk" %}
+    {% endif %}
+
+    {% if app.shotId %}{% set shotIds = [app.shotId] %}{% elif app.subject %}{% set shotIds = ["teleprompter"] %}{% endif %}
     {% set shotsHeading = "What it looks like." if app.showIos else "Available now on iPhone and iPad" %}
-    {% set shotsNote = "Read your script from the full screen, or shrink it into a small window that stays on top of whatever else you open." %}
+    {% set shotsNote = "Read your script from the full screen, or shrink it into a small window that stays on top of whatever else you open." if (app.subject or app.shotId == "ipad") else "The script floating over another app, the teleprompter, a card being swiped, cards on the Lock Screen, and the settings." %}
     {% set shotsFoot = 'Looking for the computer app instead? <a href="/desktop/">CueCard for Mac and Windows</a> keeps your speaker notes on your screen and out of your screen share.' %}
     {% include "partials/shots.njk" %}
 

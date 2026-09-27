@@ -1,5 +1,5 @@
-# CueCard Teleprompter — a free teleprompter for iPhone and iPad that floats
-# over every other app, and speaker notes that stay invisible while you share
+# CueCard Teleprompter — a free teleprompter and cue cards app for iPhone,
+# iPad and Apple Watch, and speaker notes that stay invisible while you share
 # your screen on a Mac or PC.
 # https://cuecard.dev
 

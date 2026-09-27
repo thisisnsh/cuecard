@@ -20,13 +20,13 @@
                 <span class="brand-text">Cue<b>Card</b></span>
             </a>
             <p class="footer-blurb">
-                CueCard Teleprompter is a free teleprompter that comes in two parts. The app for
-                iPhone and iPad keeps your script on top of whatever you record in. The app for
-                Mac and Windows keeps your speaker notes on your screen and out of your screen
-                share. Both are free, open source and MIT licensed.
+                CueCard is a free teleprompter and cue cards app. On iPhone, iPad and Apple Watch
+                it scrolls your script over whatever you record in, or puts your talk on cards you
+                turn in the app, on the Lock Screen or on your wrist. On Mac and Windows it keeps
+                your speaker notes out of your screen share. Free, open source and MIT licensed.
             </p>
             <ul class="footer-list">
-                <li><a href="/mobile/">The app for iPhone and iPad</a></li>
+                <li><a href="/mobile/">The app for iPhone, iPad and Apple Watch</a></li>
                 <li><a href="/desktop/">The app for Mac and Windows</a></li>
                 <li><a href="/google-slides/">The Google Slides extension</a></li>
                 <li><a href="/blog/">Blog</a></li>
@@ -51,7 +51,21 @@
             <ul class="footer-list footer-list-lead">
                 <li><a href="/mobile/ios/">{{ icon("apple", 15) }} iPhone</a></li>
                 <li><a href="/mobile/ipad/">{{ icon("tablet", 15) }} iPad</a></li>
+                <li><a href="/watch/">{{ icon("watch", 15) }} Apple Watch</a></li>
                 <li><a href="/mobile/android/">{{ icon("android", 15) }} Android — coming soon</a></li>
+            </ul>
+
+            <p class="micro footer-micro-2">{{ icon("sparkle", 13) }}Two modes</p>
+            <ul class="footer-list footer-list-2">
+                <li><a href="/teleprompter/">{{ icon("scroll", 14) }} Teleprompter</a></li>
+                <li><a href="/cards/">{{ icon("cards", 14) }} Cue cards</a></li>
+            </ul>
+
+            <p class="micro footer-micro-2">{{ icon("cards", 13) }}Cue cards for</p>
+            <ul class="footer-list footer-list-2">
+                {% for s in speaking.speeches %}
+                <li><a href="/{{ s.slug }}/">{{ s.name }}</a></li>
+                {% endfor %}
             </ul>
 
             <p class="micro footer-micro-2">{{ icon("grid", 13) }}Record your video in</p>
@@ -96,7 +110,7 @@
             </ul>
 
             <p class="footer-cross">
-                <a href="/mobile/">Filming a video on your phone as well? The floating teleprompter is here {{ icon("arrow", 14) }}</a>
+                <a href="/mobile/">Filming or giving a talk as well? The teleprompter and cue cards are here {{ icon("arrow", 14) }}</a>
             </p>
         </div>
 
