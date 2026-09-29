@@ -77,18 +77,6 @@ struct WelcomeView: View {
                             .simultaneousGesture(TapGesture().onEnded {
                                 AnalyticsEvents.logButtonClick("privacy_policy", screen: "welcome")
                             })
-
-                            Link(destination: AppLinks.sourceCode) {
-                                HStack(spacing: 4) {
-                                    Text("View code")
-                                        .underline()
-                                    Image(systemName: "arrow.up.right")
-                                        .font(.system(size: 9, weight: .semibold))
-                                }
-                            }
-                            .simultaneousGesture(TapGesture().onEnded {
-                                AnalyticsEvents.logButtonClick("source_code", screen: "welcome")
-                            })
                         }
                     }
                     .font(.caption)
