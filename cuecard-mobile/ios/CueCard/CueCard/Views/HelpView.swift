@@ -164,12 +164,12 @@ struct HelpView: View {
             List {
                 if query.isEmpty {
                     Section {
-                        if whatsNew.release != nil {
+                        if !whatsNew.releases.isEmpty {
                             Button {
-                                AnalyticsEvents.logButtonClick("whats_new", screen: Self.screen)
+                                AnalyticsEvents.logButtonClick("whats_changed", screen: Self.screen)
                                 whatsNew.show()
                             } label: {
-                                linkRow("What's New in \(whatsNew.version)", systemImage: "sparkles")
+                                linkRow("What's Changed", systemImage: "sparkles")
                             }
                         }
 

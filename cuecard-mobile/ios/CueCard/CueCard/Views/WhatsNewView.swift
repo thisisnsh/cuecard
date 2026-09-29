@@ -1,44 +1,98 @@
 import SwiftUI
 
-/// This build's new features, on a glass card floating over whatever is on
-/// screen. Shown once per build on launch, and
-/// again from Settings.
+/// What changed in each version, one glass card per version floating over
+/// whatever is on screen, swiped sideways from newest to oldest. Shown once per
+/// version on launch, and again from Help.
 struct WhatsNewView: View {
-    let release: WhatsNewService.Release
-    let version: String
+    let releases: [WhatsNewService.Release]
     let onClose: () -> Void
 
     @Environment(\.colorScheme) var colorScheme
     @State private var isShowing = false
+    @State private var currentVersion: String?
+
+    var body: some View {
+        ZStack {
+            if isShowing {
+                // A slight dimming of the app, so the cards stand out from it.
+                Color.black.opacity(0.25)
+                    .ignoresSafeArea()
+                    .transition(.opacity)
+
+                VStack(spacing: 16) {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        LazyHStack(spacing: 16) {
+                            ForEach(releases) { release in
+                                ReleaseCard(release: release, onClose: close)
+                                    .containerRelativeFrame([.horizontal, .vertical])
+                            }
+                        }
+                        .scrollTargetLayout()
+                    }
+                    .scrollTargetBehavior(.viewAligned)
+                    .scrollPosition(id: $currentVersion)
+                    .contentMargins(.horizontal, 28, for: .scrollContent)
+                    // Room for the cards' shadows, which the scroll view would clip.
+                    .scrollClipDisabled()
+
+                    if releases.count > 1 {
+                        pageDots
+                    }
+                }
+                .padding(.vertical, 48)
+                .transition(.scale(scale: 0.92).combined(with: .opacity).combined(with: .offset(y: 24)))
+            }
+        }
+        .onAppear {
+            currentVersion = releases.first?.version
+            withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
+                isShowing = true
+            }
+        }
+    }
+
+    /// Which version's card is showing, and how many more there are to swipe to.
+    private var pageDots: some View {
+        HStack(spacing: 8) {
+            ForEach(releases) { release in
+                Circle()
+                    .fill(AppColors.textPrimary(for: colorScheme).opacity(release.version == currentVersion ? 0.9 : 0.3))
+                    .frame(width: 7, height: 7)
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: currentVersion)
+        .accessibilityHidden(true)
+    }
+
+    /// Let the cards leave before the window they're in goes.
+    private func close() {
+        withAnimation(.easeIn(duration: 0.2)) {
+            isShowing = false
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            onClose()
+        }
+    }
+}
+
+/// One version's features, on a glass card.
+private struct ReleaseCard: View {
+    let release: WhatsNewService.Release
+    let onClose: () -> Void
+
+    @Environment(\.colorScheme) var colorScheme
     @State private var isFloating = false
     @State private var isCardFloating = false
 
     private static let cornerRadius: CGFloat = 32
 
     var body: some View {
-        ZStack {
-            if isShowing {
-                // A slight dimming of the app, so the card stands out from it.
-                Color.black.opacity(0.25)
-                    .ignoresSafeArea()
-                    .transition(.opacity)
-
-                card
-                    // A slow drift, out of step with the icon's, so the two
-                    // never move as one.
-                    .offset(y: isCardFloating ? -4 : 4)
-                    .animation(.easeInOut(duration: 3.6).repeatForever(autoreverses: true), value: isCardFloating)
-                    .onAppear { isCardFloating = true }
-                    .padding(.horizontal, 28)
-                    .padding(.vertical, 48)
-                    .transition(.scale(scale: 0.92).combined(with: .opacity).combined(with: .offset(y: 24)))
-            }
-        }
-        .onAppear {
-            withAnimation(.spring(response: 0.5, dampingFraction: 0.8)) {
-                isShowing = true
-            }
-        }
+        card
+            // A slow drift, out of step with the icon's, so the two
+            // never move as one.
+            .offset(y: isCardFloating ? -4 : 4)
+            .animation(.easeInOut(duration: 3.6).repeatForever(autoreverses: true), value: isCardFloating)
+            .onAppear { isCardFloating = true }
     }
 
     private var card: some View {
@@ -55,7 +109,7 @@ struct WhatsNewView: View {
         .clipShape(shape)
         .glassedEffect(in: shape)
         .overlay(alignment: .topTrailing) {
-            Button(action: close) {
+            Button(action: onClose) {
                 Image(systemName: "xmark")
                     .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(primary)
@@ -91,7 +145,7 @@ struct WhatsNewView: View {
 
     private var content: some View {
         VStack(spacing: 24) {
-            Text(release.title ?? "What's New")
+            Text(release.title ?? "What's Changed")
                 .font(.system(size: 30, weight: .bold))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(primary)
@@ -112,7 +166,7 @@ struct WhatsNewView: View {
                 Text("CueCard")
                     .font(.headline)
                     .foregroundStyle(primary)
-                Text("Version \(version)")
+                Text("Version \(release.version)")
                     .font(.subheadline)
                     .foregroundStyle(secondary)
             }
@@ -144,16 +198,6 @@ struct WhatsNewView: View {
         .padding(.horizontal, 24)
         .padding(.top, 56)
         .padding(.bottom, 28)
-    }
-
-    /// Let the card leave before the window it's in goes.
-    private func close() {
-        withAnimation(.easeIn(duration: 0.2)) {
-            isShowing = false
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
-            onClose()
-        }
     }
 }
 
@@ -241,7 +285,7 @@ private struct StarfieldGradient: View {
     }
 }
 
-/// Floats the What's New card in a window of its own, above the app's.
+/// Floats the What's Changed cards in a window of its own, above the app's.
 ///
 /// Presented from a view instead, it can only go up when nothing else is:
 /// a cover from the root fails while cards or Settings are open, and one from
@@ -251,14 +295,14 @@ private struct StarfieldGradient: View {
 enum WhatsNewPresenter {
     private static var window: UIWindow?
 
-    static func show(release: WhatsNewService.Release, version: String) {
+    static func show(releases: [WhatsNewService.Release]) {
         guard window == nil else { return }
         let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
         guard let scene = scenes.first(where: { $0.activationState == .foregroundActive }) ?? scenes.first else {
             return
         }
 
-        let card = WhatsNewView(release: release, version: version, onClose: hide)
+        let card = WhatsNewView(releases: releases, onClose: hide)
             // A window of its own doesn't inherit the theme set on the app's.
             .preferredColorScheme(SettingsService.shared.settings.themePreference.colorScheme)
         let host = UIHostingController(rootView: card)
@@ -280,11 +324,18 @@ enum WhatsNewPresenter {
 
 #Preview {
     WhatsNewView(
-        release: WhatsNewService.Release(
-            title: "Improved with New Features",
-            features: ["A rebuilt floating window.", "Select All in the cue bar."]
-        ),
-        version: "1.5.0",
+        releases: [
+            WhatsNewService.Release(
+                title: "Improved Timer",
+                features: ["More ways to customize it."],
+                version: "1.7.0"
+            ),
+            WhatsNewService.Release(
+                title: "Improved with New Features",
+                features: ["A rebuilt floating window.", "Select All in the cue bar."],
+                version: "1.5.0"
+            )
+        ],
         onClose: {}
     )
 }
