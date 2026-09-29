@@ -314,7 +314,7 @@ struct HomeView: View {
                 }
 
                 // What's written since the last save is kept on this device,
-                // but isn't in Saved Content or iCloud until it's saved.
+                // but isn't in Saved Content until it's saved.
                 ToolbarItem(placement: .principal) {
                     if settingsService.hasUnsavedChanges {
                         Text("Unsaved")
@@ -882,7 +882,7 @@ struct SavedNotesView: View {
             }
             // Where saved notes are kept, shown whether or not there are any.
             .safeAreaInset(edge: .bottom) {
-                Label("Stored on this device and synced with your iCloud. To turn off syncing, go to Settings › iCloud › CueCard.",
+                Label("Stored only on this device.",
                       systemImage: "lock.fill")
                     .font(.caption)
                     .foregroundStyle(AppColors.textSecondary(for: colorScheme))

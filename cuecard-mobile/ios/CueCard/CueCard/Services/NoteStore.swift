@@ -1,13 +1,10 @@
 import Foundation
-import CoreData
 import SwiftData
 
-/// A saved note as it's kept on disk and in iCloud. CloudKit needs every
-/// property to have a default, and can't hold a unique constraint, so the same
-/// note can arrive twice; `NoteStore` keeps the newest copy.
+/// A saved note as it's kept on disk.
 @Model
 final class StoredNote {
-    var id: UUID = UUID()
+    @Attribute(.unique) var id: UUID = UUID()
     var title: String = ""
     var content: String = ""
     var mode: String = ScriptMode.teleprompter.rawValue
@@ -34,82 +31,37 @@ final class StoredNote {
     }
 }
 
-/// Saved notes, kept with SwiftData and synced through the user's iCloud.
-/// Only what the user saves lands here; the script being written stays in
-/// UserDefaults until then.
+/// Saved notes, kept with SwiftData on this device only. Only what the user
+/// saves lands here; the script being written stays in UserDefaults until then.
 @MainActor
 final class NoteStore {
-    static let cloudKitContainer = "iCloud.com.thisisnsh.cuecard.ios"
-
     private let container: ModelContainer?
-    private var remoteChangeObserver: NSObjectProtocol?
-
-    /// Called when notes saved on another device have come in.
-    var onRemoteChange: (() -> Void)?
 
     init() {
-        let synced = ModelConfiguration("Notes", cloudKitDatabase: .private(Self.cloudKitContainer))
-        let local = ModelConfiguration("Notes", cloudKitDatabase: .none)
-        // Without iCloud the notes are still kept, just on this device.
-        container = (try? ModelContainer(for: StoredNote.self, configurations: synced))
-            ?? (try? ModelContainer(for: StoredNote.self, configurations: local))
-
-        remoteChangeObserver = NotificationCenter.default.addObserver(
-            forName: .NSPersistentStoreRemoteChange, object: nil, queue: .main
-        ) { [weak self] _ in
-            MainActor.assumeIsolated { self?.onRemoteChange?() }
-        }
+        container = try? ModelContainer(for: StoredNote.self,
+                                        configurations: ModelConfiguration("Notes", cloudKitDatabase: .none))
     }
 
-    var isAvailable: Bool { container != nil }
+    private var context: ModelContext? { container?.mainContext }
 
-    /// A fresh context each time, so what's read is what's in the store now,
-    /// including anything iCloud has just brought in.
-    private func makeContext() -> ModelContext? {
-        guard let container else { return nil }
-        let context = ModelContext(container)
-        context.autosaveEnabled = false
-        return context
-    }
-
-    /// Every saved note, with any copies of the same one folded into the newest.
     func fetchAll() -> [SavedNote] {
-        guard let context = makeContext(),
+        guard let context,
               let stored = try? context.fetch(FetchDescriptor<StoredNote>()) else { return [] }
-
-        var newest: [UUID: StoredNote] = [:]
-        var copies: [StoredNote] = []
-        for note in stored {
-            if let kept = newest[note.id] {
-                if note.updatedAt > kept.updatedAt {
-                    copies.append(kept)
-                    newest[note.id] = note
-                } else {
-                    copies.append(note)
-                }
-            } else {
-                newest[note.id] = note
-            }
-        }
-        if !copies.isEmpty {
-            copies.forEach(context.delete)
-            try? context.save()
-        }
-        return newest.values.map(\.savedNote)
+        return stored.map(\.savedNote)
     }
 
     /// Write notes in, adding them or replacing what's saved under their IDs.
     @discardableResult
     func save(_ notes: [SavedNote]) -> Bool {
-        guard let context = makeContext() else { return false }
+        guard let context else { return false }
         for note in notes {
             let id = note.id
             let existing = (try? context.fetch(FetchDescriptor<StoredNote>(
                 predicate: #Predicate { $0.id == id }))) ?? []
-            if existing.isEmpty {
-                context.insert(StoredNote(note))
+            if let stored = existing.first {
+                stored.update(from: note)
             } else {
-                existing.forEach { $0.update(from: note) }
+                context.insert(StoredNote(note))
             }
         }
         do {
@@ -121,13 +73,13 @@ final class NoteStore {
     }
 
     func delete(id: UUID) {
-        guard let context = makeContext() else { return }
+        guard let context else { return }
         try? context.delete(model: StoredNote.self, where: #Predicate { $0.id == id })
         try? context.save()
     }
 
     func deleteAll() {
-        guard let context = makeContext() else { return }
+        guard let context else { return }
         try? context.delete(model: StoredNote.self)
         try? context.save()
     }

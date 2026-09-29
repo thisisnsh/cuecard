@@ -511,7 +511,7 @@ class SettingsService: ObservableObject {
 
     /// The script for the mode the editor is in. Kept in UserDefaults as it's
     /// written, so it survives the app closing; it only goes into the saved
-    /// note, and to iCloud, when the user saves.
+    /// note when the user saves.
     var notes: String {
         get { notes(for: settings.scriptMode) }
         set { setNotes(newValue, for: settings.scriptMode) }
@@ -673,16 +673,6 @@ Thanks for listening. Questions?
         // Notes start empty - users can add sample text via the button
         if needsSave {
             saveSettings()
-        }
-
-        noteStore.onRemoteChange = { [weak self] in self?.reloadSavedNotes() }
-    }
-
-    /// Read the saved notes again, to pick up any saved on another device.
-    func reloadSavedNotes() {
-        let latest = noteStore.fetchAll()
-        if latest != savedNotes {
-            savedNotes = latest
         }
     }
 
