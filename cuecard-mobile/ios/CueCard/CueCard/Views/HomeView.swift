@@ -880,6 +880,16 @@ struct SavedNotesView: View {
                     }
                 }
             }
+            // Where saved notes are kept, shown whether or not there are any.
+            .safeAreaInset(edge: .bottom) {
+                Label("Stored on this device and synced with your iCloud. To turn off syncing, go to Settings › iCloud › CueCard.",
+                      systemImage: "lock.fill")
+                    .font(.caption)
+                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 8)
+            }
             .navigationTitle("Saved Content")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
