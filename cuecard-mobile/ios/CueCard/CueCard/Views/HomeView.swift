@@ -825,6 +825,15 @@ struct SavedNotesView: View {
             .replacingOccurrences(of: "\n", with: " ")
     }
 
+    /// Where saved notes are kept, shown whether or not there are any.
+    private var storageNote: some View {
+        Label("Stored only on this device, and deleted if the app is removed.",
+              systemImage: "lock.fill")
+            .font(.caption)
+            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+            .multilineTextAlignment(.center)
+    }
+
     var body: some View {
         NavigationStack {
             Group {
@@ -845,72 +854,75 @@ struct SavedNotesView: View {
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(AppColors.background(for: colorScheme))
+                    .safeAreaInset(edge: .bottom) {
+                        storageNote
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 8)
+                    }
                 } else {
                     List {
-                        ForEach(settingsService.savedNotes.sorted { $0.updatedAt > $1.updatedAt }) { note in
-                            Button(action: {
-                                AnalyticsEvents.logButtonClick("load_note", screen: "saved_notes", parameters: ["note_id": note.id.uuidString])
-                                settingsService.loadNote(note)
-                                dismiss()
-                            }) {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    HStack(spacing: 8) {
-                                        Text(note.title)
-                                            .font(.headline)
-                                            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                        Section {
+                            ForEach(settingsService.savedNotes.sorted { $0.updatedAt > $1.updatedAt }) { note in
+                                Button(action: {
+                                    AnalyticsEvents.logButtonClick("load_note", screen: "saved_notes", parameters: ["note_id": note.id.uuidString])
+                                    settingsService.loadNote(note)
+                                    dismiss()
+                                }) {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        HStack(spacing: 8) {
+                                            Text(note.title)
+                                                .font(.headline)
+                                                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
 
-                                        if note.mode == .cards {
-                                            Text("Cards")
-                                                .font(.caption2.weight(.semibold))
-                                                .foregroundStyle(AppColors.green(for: colorScheme))
-                                                .padding(.horizontal, 8)
-                                                .padding(.vertical, 3)
-                                                .background(Capsule().fill(AppColors.green(for: colorScheme).opacity(0.15)))
+                                            if note.mode == .cards {
+                                                Text("Cards")
+                                                    .font(.caption2.weight(.semibold))
+                                                    .foregroundStyle(AppColors.green(for: colorScheme))
+                                                    .padding(.horizontal, 8)
+                                                    .padding(.vertical, 3)
+                                                    .background(Capsule().fill(AppColors.green(for: colorScheme).opacity(0.15)))
+                                            }
                                         }
+
+                                        Text(preview(of: note))
+                                            .font(.subheadline)
+                                            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                                            .lineLimit(2)
+
+                                        Text(dateFormatter.string(from: note.updatedAt))
+                                            .font(.caption)
+                                            .foregroundStyle(AppColors.textSecondary(for: colorScheme).opacity(0.7))
                                     }
-
-                                    Text(preview(of: note))
-                                        .font(.subheadline)
-                                        .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                                        .lineLimit(2)
-
-                                    Text(dateFormatter.string(from: note.updatedAt))
-                                        .font(.caption)
-                                        .foregroundStyle(AppColors.textSecondary(for: colorScheme).opacity(0.7))
+                                    .padding(.vertical, 4)
                                 }
-                                .padding(.vertical, 4)
-                            }
-                            .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                Button(role: .destructive) {
-                                    AnalyticsEvents.logButtonClick("delete_note", screen: "saved_notes", parameters: ["note_id": note.id.uuidString])
-                                    settingsService.deleteNote(id: note.id)
-                                } label: {
-                                    Label("Delete", systemImage: "trash")
+                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                    Button(role: .destructive) {
+                                        AnalyticsEvents.logButtonClick("delete_note", screen: "saved_notes", parameters: ["note_id": note.id.uuidString])
+                                        settingsService.deleteNote(id: note.id)
+                                    } label: {
+                                        Label("Delete", systemImage: "trash")
+                                    }
+                                }
+                                .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                                    Button {
+                                        AnalyticsEvents.logButtonClick("rename_note", screen: "saved_notes", parameters: ["note_id": note.id.uuidString])
+                                        renameTitle = note.title
+                                        noteToRename = note
+                                    } label: {
+                                        Label("Rename", systemImage: "pencil")
+                                    }
+                                    .tint(.orange)
                                 }
                             }
-                            .swipeActions(edge: .leading, allowsFullSwipe: false) {
-                                Button {
-                                    AnalyticsEvents.logButtonClick("rename_note", screen: "saved_notes", parameters: ["note_id": note.id.uuidString])
-                                    renameTitle = note.title
-                                    noteToRename = note
-                                } label: {
-                                    Label("Rename", systemImage: "pencil")
-                                }
-                                .tint(.orange)
-                            }
+                        } footer: {
+                            // At the end of the list, so it never covers a note.
+                            storageNote
+                                .frame(maxWidth: .infinity)
+                                .padding(.top, 24)
+                                .listRowInsets(EdgeInsets())
                         }
                     }
                 }
-            }
-            // Where saved notes are kept, shown whether or not there are any.
-            .safeAreaInset(edge: .bottom) {
-                Label("Stored only on this device, and deleted if the app is removed.",
-                      systemImage: "lock.fill")
-                    .font(.caption)
-                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 8)
             }
             .navigationTitle("Saved Content")
             .navigationBarTitleDisplayMode(.inline)
