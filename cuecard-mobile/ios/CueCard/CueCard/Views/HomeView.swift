@@ -313,6 +313,16 @@ struct HomeView: View {
                     modeMenu
                 }
 
+                // What's written since the last save is kept on this device,
+                // but isn't in Saved Content or iCloud until it's saved.
+                ToolbarItem(placement: .principal) {
+                    if settingsService.hasUnsavedChanges {
+                        Text("Unsaved")
+                            .font(.caption)
+                            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                    }
+                }
+
                 ToolbarItem(placement: .topBarTrailing) {
                     HStack(spacing: 16) {
                         Menu {
