@@ -481,6 +481,7 @@ class SettingsService: ObservableObject {
     /// The teleprompter's script. Named from when it was the only one.
     private let notesKey = "cuecard_notes"
     private let cardsNotesKey = "cuecard_cards_notes"
+    /// Where saved notes were kept before they moved to `NoteStore`.
     private let savedNotesKey = "cuecard_saved_notes"
     /// The teleprompter's open note. Named from when it was the only one.
     private let currentNoteIdKey = "cuecard_current_note_id"
@@ -490,7 +491,7 @@ class SettingsService: ObservableObject {
     /// Cues used to be saved in a library. They're written straight into the
     /// script now, so the stored library is cleared out on the way past.
     private let retiredCuesKey = "cuecard_cues"
-    private var isLoadingNote = false
+    private let noteStore = NoteStore()
 
     @Published var settings: TeleprompterSettings {
         didSet {
@@ -508,18 +509,12 @@ class SettingsService: ObservableObject {
         didSet { userDefaults.set(cardsNotes, forKey: cardsNotesKey) }
     }
 
-    /// The script for the mode the editor is in.
+    /// The script for the mode the editor is in. Kept in UserDefaults as it's
+    /// written, so it survives the app closing; it only goes into the saved
+    /// note, and to iCloud, when the user saves.
     var notes: String {
         get { notes(for: settings.scriptMode) }
-        set {
-            setNotes(newValue, for: settings.scriptMode)
-            // Update the timestamp on the current note when content changes (but not when loading)
-            if !isLoadingNote,
-               let id = currentNoteId,
-               let index = savedNotes.firstIndex(where: { $0.id == id }) {
-                savedNotes[index].updatedAt = Date()
-            }
-        }
+        set { setNotes(newValue, for: settings.scriptMode) }
     }
 
     func notes(for mode: ScriptMode) -> String {
@@ -534,11 +529,8 @@ class SettingsService: ObservableObject {
         }
     }
 
-    @Published var savedNotes: [SavedNote] = [] {
-        didSet {
-            saveSavedNotes()
-        }
-    }
+    /// What's in `noteStore`, for the views and the watch to read.
+    @Published private(set) var savedNotes: [SavedNote] = []
 
     /// The saved note open in each mode.
     @Published private var teleprompterNoteId: UUID? {
@@ -663,11 +655,14 @@ Thanks for listening. Questions?
             self.cardsNoteId = userDefaults.string(forKey: cardsNoteIdKey).flatMap(UUID.init(uuidString:))
         }
 
-        // Load saved notes from UserDefaults
+        // Saved notes used to be kept in UserDefaults. Move them into the
+        // store, and let go of the old copy once they're safely there.
         if let data = userDefaults.data(forKey: savedNotesKey),
-           let decoded = try? JSONDecoder().decode([SavedNote].self, from: data) {
-            self.savedNotes = decoded
+           let decoded = try? JSONDecoder().decode([SavedNote].self, from: data),
+           noteStore.save(decoded) {
+            userDefaults.removeObject(forKey: savedNotesKey)
         }
+        self.savedNotes = noteStore.fetchAll()
 
         if let strings = userDefaults.stringArray(forKey: watchNoteIDsKey) {
             self.watchNoteIDs = Set(strings.compactMap(UUID.init(uuidString:)))
@@ -679,17 +674,31 @@ Thanks for listening. Questions?
         if needsSave {
             saveSettings()
         }
+
+        noteStore.onRemoteChange = { [weak self] in self?.reloadSavedNotes() }
+    }
+
+    /// Read the saved notes again, to pick up any saved on another device.
+    func reloadSavedNotes() {
+        let latest = noteStore.fetchAll()
+        if latest != savedNotes {
+            savedNotes = latest
+        }
+    }
+
+    /// Keep a note in the store, and in the list the views read.
+    private func store(_ note: SavedNote) {
+        noteStore.save([note])
+        if let index = savedNotes.firstIndex(where: { $0.id == note.id }) {
+            savedNotes[index] = note
+        } else {
+            savedNotes.insert(note, at: 0)
+        }
     }
 
     private func saveSettings() {
         if let encoded = try? JSONEncoder().encode(settings) {
             userDefaults.set(encoded, forKey: settingsKey)
-        }
-    }
-
-    private func saveSavedNotes() {
-        if let encoded = try? JSONEncoder().encode(savedNotes) {
-            userDefaults.set(encoded, forKey: savedNotesKey)
         }
     }
 
@@ -740,20 +749,21 @@ Thanks for listening. Questions?
         guard !trimmedContent.isEmpty else { return }
 
         let note = SavedNote(title: title, content: notes, mode: settings.scriptMode)
-        savedNotes.insert(note, at: 0)
+        store(note)
         currentNoteId = note.id
     }
 
     /// Update an existing saved note
     func updateNote(id: UUID, title: String? = nil, content: String? = nil) {
-        guard let index = savedNotes.firstIndex(where: { $0.id == id }) else { return }
+        guard var note = savedNotes.first(where: { $0.id == id }) else { return }
         if let title = title {
-            savedNotes[index].title = title
+            note.title = title
         }
         if let content = content {
-            savedNotes[index].content = content
+            note.content = content
         }
-        savedNotes[index].updatedAt = Date()
+        note.updatedAt = Date()
+        store(note)
     }
 
     /// Save current changes to the currently loaded note
@@ -765,14 +775,13 @@ Thanks for listening. Questions?
     /// Load a saved note into the editor, switching to the mode it was written in.
     func loadNote(_ note: SavedNote) {
         settings.scriptMode = note.mode
-        isLoadingNote = true
         notes = note.content
         currentNoteId = note.id
-        isLoadingNote = false
     }
 
     /// Delete a saved note
     func deleteNote(id: UUID) {
+        noteStore.delete(id: id)
         savedNotes.removeAll { $0.id == id }
         watchNoteIDs.remove(id)
         if teleprompterNoteId == id { teleprompterNoteId = nil }
@@ -781,19 +790,15 @@ Thanks for listening. Questions?
 
     /// Create a new empty note
     func createNewNote() {
-        isLoadingNote = true
         notes = ""
         currentNoteId = nil
-        isLoadingNote = false
     }
 
     /// Load imported file content into the editor and keep it as a saved note.
     /// The file already carries a name, so there's nothing to prompt the user for.
     func importNote(title: String, content: String) {
-        isLoadingNote = true
         notes = content
         currentNoteId = nil
-        isLoadingNote = false
         saveCurrentNote(title: title)
     }
 
@@ -830,6 +835,7 @@ Thanks for listening. Questions?
         settings = .default
         teleprompterNotes = ""
         cardsNotes = ""
+        noteStore.deleteAll()
         savedNotes = []
         teleprompterNoteId = nil
         cardsNoteId = nil

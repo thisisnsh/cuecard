@@ -13,6 +13,7 @@
 		004 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 104 /* HomeView.swift */; };
 		007 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 201 /* Assets.xcassets */; };
 		008 /* SettingsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 108 /* SettingsService.swift */; };
+		5A7ED0000000000000000001 /* NoteStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A7ED0000000000000000002 /* NoteStore.swift */; };
 		009 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 301 /* FirebaseAnalytics */; };
 		013 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 109 /* SettingsView.swift */; };
 		014 /* TeleprompterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110 /* TeleprompterView.swift */; };
@@ -126,6 +127,7 @@
 		103 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
 		104 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		107 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		5A7ED0000000000000000002 /* NoteStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteStore.swift; sourceTree = "<group>"; };
 		108 /* SettingsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsService.swift; sourceTree = "<group>"; };
 		109 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		110 /* TeleprompterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeleprompterView.swift; sourceTree = "<group>"; };
@@ -261,6 +263,7 @@
 				138 /* CueCardsSession.swift */,
 				C0CA4D5100000000000000A2 /* CueCardsLockScreen.swift */,
 				108 /* SettingsService.swift */,
+				5A7ED0000000000000000002 /* NoteStore.swift */,
 				114 /* ReviewPromptService.swift */,
 				112 /* TeleprompterPiPManager.swift */,
 				126 /* TeleprompterRemoteCommand+App.swift */,
@@ -517,6 +520,7 @@
 				003 /* WelcomeView.swift in Sources */,
 				004 /* HomeView.swift in Sources */,
 				008 /* SettingsService.swift in Sources */,
+				5A7ED0000000000000000001 /* NoteStore.swift in Sources */,
 				019 /* ReviewPromptService.swift in Sources */,
 				013 /* SettingsView.swift in Sources */,
 				AA856D562F060DFC00B0CBC6 /* GlassEffect.swift in Sources */,
