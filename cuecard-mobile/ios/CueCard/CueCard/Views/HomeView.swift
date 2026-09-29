@@ -882,7 +882,7 @@ struct SavedNotesView: View {
             }
             // Where saved notes are kept, shown whether or not there are any.
             .safeAreaInset(edge: .bottom) {
-                Label("Stored only on this device.",
+                Label("Stored only on this device, and deleted if the app is removed.",
                       systemImage: "lock.fill")
                     .font(.caption)
                     .foregroundStyle(AppColors.textSecondary(for: colorScheme))
