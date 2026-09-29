@@ -9,7 +9,6 @@ enum HelpPage: String {
     case writingTeleprompter = "home_teleprompter"
     case writingCards = "home_cards"
     case settings
-    case savedContent = "saved_notes"
     case teleprompter
     case cards
 

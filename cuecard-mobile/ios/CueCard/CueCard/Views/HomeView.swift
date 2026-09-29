@@ -310,16 +310,17 @@ struct HomeView: View {
             .toolbarBackground(.hidden, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    modeMenu
-                }
+                    HStack(spacing: 8) {
+                        modeMenu
 
-                // What's written since the last save is kept on this device,
-                // but isn't in Saved Content until it's saved.
-                ToolbarItem(placement: .principal) {
-                    if settingsService.hasUnsavedChanges {
-                        Text("Unsaved")
-                            .font(.caption)
-                            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                        // What's written since the last save is kept on this
+                        // device, but isn't in Saved Content until it's saved.
+                        if settingsService.hasUnsavedChanges {
+                            Text("Unsaved")
+                                .font(.caption)
+                                .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                                .fixedSize()
+                        }
                     }
                 }
 
@@ -787,7 +788,6 @@ struct SavedNotesView: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.colorScheme) var colorScheme
     @State private var noteToRename: SavedNote?
-    @State private var showingHelp = false
     @State private var renameTitle = ""
 
     private let dateFormatter: DateFormatter = {
@@ -899,9 +899,7 @@ struct SavedNotesView: View {
                         dismiss()
                     }
                 }
-                HelpToolbarItem(page: .savedContent, isPresented: $showingHelp)
             }
-            .helpSheet(for: .savedContent, isPresented: $showingHelp)
             .alert("Rename Note", isPresented: Binding(
                 get: { noteToRename != nil },
                 set: { if !$0 { noteToRename = nil } }
