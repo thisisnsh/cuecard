@@ -356,6 +356,8 @@ struct HomeView: View {
                                 Label("Saved Content", systemImage: "folder")
                             }
 
+                            Divider()
+
                             Button(action: {
                                 AnalyticsEvents.logButtonClick("import_file", screen: "home")
                                 showingImporter = true
