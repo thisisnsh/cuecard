@@ -310,19 +310,12 @@ struct HomeView: View {
             .toolbarBackground(.hidden, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    HStack(spacing: 8) {
-                        modeMenu
-
-                        // What's written since the last save is kept on this
-                        // device, but isn't in Saved Content until it's saved.
-                        if settingsService.hasUnsavedChanges {
-                            Text("Unsaved")
-                                .font(.caption)
-                                .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                                .fixedSize()
-                        }
-                    }
+                    modeMenu
                 }
+
+                // What's written since the last save is kept on this device,
+                // but isn't in Saved Content until it's saved.
+                UnsavedToolbarItem(isShown: settingsService.hasUnsavedChanges)
 
                 ToolbarItem(placement: .topBarTrailing) {
                     HStack(spacing: 16) {
@@ -779,6 +772,32 @@ struct CardsEditorView: View {
         let script = CueCards.script(for: cards.map(\.text))
         writtenText = script
         if text != script { text = script }
+    }
+}
+
+/// "Unsaved", beside the mode menu but outside its glass, so it reads as a
+/// note about the script rather than part of the button.
+private struct UnsavedToolbarItem: ToolbarContent {
+    let isShown: Bool
+    @Environment(\.colorScheme) private var colorScheme
+
+    var body: some ToolbarContent {
+        if #available(iOS 26.0, *) {
+            item.sharedBackgroundVisibility(.hidden)
+        } else {
+            item
+        }
+    }
+
+    private var item: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            if isShown {
+                Text("Unsaved")
+                    .font(.caption)
+                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                    .fixedSize()
+            }
+        }
     }
 }
 
