@@ -43,7 +43,11 @@ struct WelcomeView: View {
 
                 // Get started section
                 VStack(spacing: 16) {
-                    
+                    // Privacy note
+                    Text("No account needed. Scripts stay on this device.")
+                        .font(.caption)
+                        .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+
                     Button(action: {
                         AnalyticsEvents.logButtonClick("get_started", screen: "welcome")
                         settingsService.completeWelcome()
@@ -60,10 +64,7 @@ struct WelcomeView: View {
                             .shadow(color: .black.opacity(0.1), radius: 4, y: 2)
                     }
 
-                    // Privacy note
                     VStack(spacing: 6) {
-                        Text("No account needed. Scripts stay on this device.")
-
                         HStack(spacing: 16) {
                             Link(destination: AppLinks.privacyPolicy) {
                                 HStack(spacing: 4) {
