@@ -13,7 +13,6 @@
 		004 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 104 /* HomeView.swift */; };
 		007 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 201 /* Assets.xcassets */; };
 		008 /* SettingsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 108 /* SettingsService.swift */; };
-		5A7ED0000000000000000001 /* NoteStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A7ED0000000000000000002 /* NoteStore.swift */; };
 		009 /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 301 /* FirebaseAnalytics */; };
 		013 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 109 /* SettingsView.swift */; };
 		014 /* TeleprompterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 110 /* TeleprompterView.swift */; };
@@ -68,6 +67,7 @@
 		076 /* DeckStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 156 /* DeckStore.swift */; };
 		077 /* SavedDeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 157 /* SavedDeckView.swift */; };
 		078 /* HelpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 158 /* HelpView.swift */; };
+		5A7ED0000000000000000001 /* NoteStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A7ED0000000000000000002 /* NoteStore.swift */; };
 		AA7130F62F04E5BC00F5C366 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = AA7130F52F04E5BC00F5C366 /* GoogleService-Info.plist */; };
 		AA856D562F060DFC00B0CBC6 /* GlassEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA856D542F060DFC00B0CBC6 /* GlassEffect.swift */; };
 		C0CA4D5100000000000000A1 /* CueCardsLockScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CA4D5100000000000000A2 /* CueCardsLockScreen.swift */; };
@@ -127,7 +127,6 @@
 		103 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
 		104 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		107 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		5A7ED0000000000000000002 /* NoteStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteStore.swift; sourceTree = "<group>"; };
 		108 /* SettingsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsService.swift; sourceTree = "<group>"; };
 		109 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		110 /* TeleprompterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeleprompterView.swift; sourceTree = "<group>"; };
@@ -172,6 +171,7 @@
 		501 /* CueCard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CueCard.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		502 /* CueCardWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = CueCardWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		503 /* CueCardWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CueCardWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		5A7ED0000000000000000002 /* NoteStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteStore.swift; sourceTree = "<group>"; };
 		AA2E5C0E2F0F38B500E1D079 /* CueCard.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CueCard.entitlements; sourceTree = "<group>"; };
 		AA7130F52F04E5BC00F5C366 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		AA856D542F060DFC00B0CBC6 /* GlassEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassEffect.swift; sourceTree = "<group>"; };
@@ -728,7 +728,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = CueCard/CueCard.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 20;
+				CURRENT_PROJECT_VERSION = 21;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -743,7 +743,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.7.0;
+				MARKETING_VERSION = 1.7.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.thisisnsh.cuecard.ios;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -763,7 +763,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = CueCard/CueCard.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 20;
+				CURRENT_PROJECT_VERSION = 21;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -778,7 +778,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.7.0;
+				MARKETING_VERSION = 1.7.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.thisisnsh.cuecard.ios;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
