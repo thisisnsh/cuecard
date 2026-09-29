@@ -338,18 +338,6 @@ struct HomeView: View {
                             }
                             .disabled(!hasNotes)
 
-                            if watch.isWatchAppInstalled, let note = settingsService.currentNote {
-                                let isOnWatch = settingsService.watchNoteIDs.contains(note.id)
-                                Button(action: {
-                                    AnalyticsEvents.logButtonClick(isOnWatch ? "watch_remove_note" : "watch_add_note",
-                                                                   screen: "home")
-                                    settingsService.setOnWatch(!isOnWatch, noteID: note.id)
-                                }) {
-                                    Label(isOnWatch ? "Remove from Apple Watch" : "Keep on Apple Watch",
-                                          systemImage: isOnWatch ? "applewatch.slash" : "applewatch")
-                                }
-                            }
-
                             Divider()
 
                             Button(action: {
@@ -382,6 +370,19 @@ struct HomeView: View {
                                 Label("Export to File", systemImage: "arrow.up.doc")
                             }
                             .disabled(!hasNotes)
+
+                            if watch.isWatchAppInstalled, let note = settingsService.currentNote {
+                                let isOnWatch = settingsService.watchNoteIDs.contains(note.id)
+                                Divider()
+                                Button(action: {
+                                    AnalyticsEvents.logButtonClick(isOnWatch ? "watch_remove_note" : "watch_add_note",
+                                                                   screen: "home")
+                                    settingsService.setOnWatch(!isOnWatch, noteID: note.id)
+                                }) {
+                                    Label(isOnWatch ? "Remove from Apple Watch" : "Keep on Apple Watch",
+                                          systemImage: isOnWatch ? "applewatch.slash" : "applewatch")
+                                }
+                            }
                         } label: {
                             Image(systemName: "ellipsis.circle")
                                 .font(.title3)
