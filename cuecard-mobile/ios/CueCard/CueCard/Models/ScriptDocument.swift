@@ -1,29 +1,6 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// Plain-text document used by the file exporter to write a script to disk.
-struct ScriptDocument: FileDocument {
-    static var readableContentTypes: [UTType] { [.plainText] }
-
-    var text: String
-
-    init(text: String) {
-        self.text = text
-    }
-
-    init(configuration: ReadConfiguration) throws {
-        guard let data = configuration.file.regularFileContents,
-              let decoded = String(data: data, encoding: .utf8) else {
-            throw CocoaError(.fileReadCorruptFile)
-        }
-        text = decoded
-    }
-
-    func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
-        FileWrapper(regularFileWithContents: Data(text.utf8))
-    }
-}
-
 /// Helpers for moving scripts between the editor and files on disk.
 enum ScriptFile {
     /// Types the importer accepts. `.plainText` also covers Markdown and other
@@ -65,7 +42,7 @@ enum ScriptFile {
         return name.isEmpty ? "Imported Script" : name
     }
 
-    /// File name suggested when exporting, preferring the saved note's title and
+    /// File name suggested for a script, preferring the saved note's title and
     /// falling back to the script's first line.
     static func suggestedFileName(title: String?, content: String) -> String {
         let candidates = [

@@ -56,7 +56,7 @@ private enum AllHelp {
                       + "and when it warns you. It shows while you present."),
         HelpTopic("Save and Open",
                   detail: "Use the ••• menu to save your script or deck, or open one you saved. "
-                      + "Import or export text files there too."),
+                      + "Import a text file or share your script there too."),
         HelpTopic("Rename or Delete",
                   detail: "Everything you save is in Saved Content. "
                       + "Swipe right on one to rename it, or swipe left to delete it."),

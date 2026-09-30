@@ -20,9 +20,6 @@ struct HomeView: View {
     @State private var showingSaveDialog = false
     @State private var saveNoteTitle = ""
     @State private var showingImporter = false
-    @State private var showingExporter = false
-    @State private var exportDocument: ScriptDocument?
-    @State private var exportFileName = "Speech"
     @State private var fileErrorMessage: String?
     @State private var isEditorFocused = false
     @StateObject private var editorController = CueEditorController()
@@ -152,13 +149,9 @@ struct HomeView: View {
         }
     }
 
-    private func startExport() {
-        exportDocument = ScriptDocument(text: TeleprompterParser.normalizingTags(in: settingsService.notes))
-        exportFileName = ScriptFile.suggestedFileName(
-            title: settingsService.currentNote?.title,
-            content: settingsService.notes
-        )
-        showingExporter = true
+    /// The script as it would be written to a file, with cues in `[cue …]` form.
+    private var shareText: String {
+        TeleprompterParser.normalizingTags(in: settingsService.notes)
     }
 
     private func handleImport(_ result: Result<URL, Error>) {
@@ -178,13 +171,6 @@ struct HomeView: View {
                 fileErrorMessage = "This file couldn't be read as text."
             }
         case .failure(let error):
-            fileErrorMessage = error.localizedDescription
-        }
-    }
-
-    private func handleExport(_ result: Result<URL, Error>) {
-        exportDocument = nil
-        if case .failure(let error) = result {
             fileErrorMessage = error.localizedDescription
         }
     }
@@ -386,11 +372,11 @@ struct HomeView: View {
                                 Label("Import from File", systemImage: "arrow.down.doc")
                             }
 
-                            Button(action: {
-                                AnalyticsEvents.logButtonClick("export_file", screen: "home")
-                                startExport()
-                            }) {
-                                Label("Export to File", systemImage: "arrow.up.doc")
+                            ShareLink(
+                                item: shareText,
+                                subject: Text(settingsService.currentNote?.title ?? "Speech")
+                            ) {
+                                Label("Share", systemImage: "square.and.arrow.up")
                             }
                             .disabled(!hasNotes)
 
@@ -458,14 +444,6 @@ struct HomeView: View {
                 allowedContentTypes: ScriptFile.importableContentTypes
             ) { result in
                 handleImport(result)
-            }
-            .fileExporter(
-                isPresented: $showingExporter,
-                document: exportDocument,
-                contentType: .plainText,
-                defaultFilename: exportFileName
-            ) { result in
-                handleExport(result)
             }
             .alert("Something Went Wrong", isPresented: Binding(
                 get: { fileErrorMessage != nil },
