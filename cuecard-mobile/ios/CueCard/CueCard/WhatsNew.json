@@ -1,1 +1,8 @@
-{}
+{
+  "1.8.0": {
+    "title": "Version History",
+    "features": [
+        "Version History: See what changed in a note and restore older versions."
+    ]
+  }
+}
