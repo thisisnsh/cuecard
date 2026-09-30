@@ -26,6 +26,41 @@ final class RemoteNotificationService: ObservableObject {
     private static let minimumRefreshInterval: TimeInterval = 15 * 60
     #endif
 
+    #if DEBUG
+    /// A stand-in for the worker's response, for seeing the notification design
+    /// without deploying anything. It goes through the same decoding and checks
+    /// as the real thing. Set to nil to hit the worker again.
+    ///
+    /// Dismissing one remembers its id, so change the id to see it again.
+    private static let fakeResponse: String? = """
+    {
+      "notifications": [
+        {
+          "id": "debug-home-banner",
+          "surface": "homeBanner",
+          "severity": "info",
+          "title": "CueCard 1.9 is here",
+          "body": "Cards now sync with the watch, and the editor is faster with long scripts.",
+          "actions": [
+            { "kind": "appStore", "label": "Update" },
+            { "kind": "openURL", "label": "What's new", "url": "https://cuecard.dev" }
+          ]
+        },
+        {
+          "id": "debug-settings-row",
+          "surface": "settingsRow",
+          "severity": "warning",
+          "title": "iOS 16 support is ending",
+          "body": "The next update will need iOS 17 or later.",
+          "actions": [
+            { "kind": "openURL", "label": "Learn more", "url": "https://cuecard.dev" }
+          ]
+        }
+      ]
+    }
+    """
+    #endif
+
     @Published private(set) var payload: RemoteNotifications = .empty
     @Published private(set) var dismissedIDs: Set<String> = []
 
@@ -73,9 +108,21 @@ final class RemoteNotificationService: ObservableObject {
         request.setValue("application/json", forHTTPHeaderField: "Accept")
 
         do {
+            #if DEBUG
+            let data: Data
+
+            if let fake = Self.fakeResponse {
+                data = Data(fake.utf8)
+            } else {
+                let (fetched, response) = try await session.data(for: request)
+                guard let http = response as? HTTPURLResponse, http.statusCode == 200 else { return }
+                data = fetched
+            }
+            #else
             let (data, response) = try await session.data(for: request)
 
             guard let http = response as? HTTPURLResponse, http.statusCode == 200 else { return }
+            #endif
 
             let fetched = try JSONDecoder().decode(RemoteNotifications.self, from: data)
 
