@@ -49,23 +49,28 @@ private enum AllHelp {
                   detail: "Tap the mode name at the top left. Teleprompter scrolls your whole script. "
                       + "Cards shows it one card at a time."),
         HelpTopic("Add Cues",
-                  detail: "Cues are reminders like [cue pause], shown in color and not meant to be read out. "
-                      + "Type [ (square bracket) or tap + above the keyboard to add one."),
+                  detail: "Cues are reminders like [cue pause], shown in color and not read out. "
+                      + "Type [ or tap Add Cue above the keyboard."),
         HelpTopic("Set a Timer",
-                  detail: "Tap the timer next to Play and choose how long you have to speak "
-                      + "and when it warns you. It shows while you present."),
-        HelpTopic("Save and Open",
-                  detail: "Use the ••• menu to save your script or deck, or open one you saved. "
-                      + "Import a text file or share your script there too."),
-        HelpTopic("Rename or Delete",
-                  detail: "Everything you save is in Saved Content. "
-                      + "Swipe right on one to rename it, or swipe left to delete it."),
-        HelpTopic("Change Text Size",
-                  detail: "Each mode keeps its own text size and colors in Settings. "
-                      + "Tap Show Advanced Settings to type an exact size."),
-        HelpTopic("Change Colors",
-                  detail: "Pick colors that are easy for you to tell apart. "
-                      + "Set the cue color in Settings, and the timer colors in the timer.")
+                  detail: "Tap the timer next to Play to set how long you have "
+                      + "and when it warns you."),
+        HelpTopic("Save Your Work",
+                  detail: "Unsaved below the top bar means there are changes to save. "
+                      + "Tap ••• › Save, or Save as New to keep a copy."),
+        HelpTopic("Open or Import",
+                  detail: "Tap ••• › Open to see everything you saved. Swipe to rename or delete. "
+                      + "Import a text file from the ••• menu there."),
+        HelpTopic("Go Back to an Older Version",
+                  detail: "Every save is a new version. Tap Version History below the top bar "
+                      + "to compare changes and restore one."),
+        HelpTopic("Keep Notes if the App Is Removed",
+                  detail: "Notes stay on this device and are deleted with the app. "
+                      + "In Open, choose a notes folder from ••• to keep them as files."),
+        HelpTopic("Share a Script",
+                  detail: "Tap ••• › Share to send it as text, cues included."),
+        HelpTopic("Change Text Size and Colors",
+                  detail: "Tap the gear. Each mode keeps its own sizes and cue color. "
+                      + "Timer colors are set in the timer.")
     ])
 
     static let teleprompter = HelpSection(title: "Teleprompter", topics: [
@@ -112,7 +117,7 @@ private enum AllHelp {
                   detail: "Open a deck on your iPhone and it shows on the watch too. "
                       + "Turning a card on either one moves both."),
         HelpTopic("Keep Decks on the Watch",
-                  detail: "Open a saved deck and choose Keep on Apple Watch from the ••• menu. "
+                  detail: "Open a saved deck and tap ••• › Keep on Apple Watch. "
                       + "Then you can read it without your iPhone."),
         HelpTopic("Stay on Screen",
                   detail: "The watch goes back to the clock after a while. In the Watch app, go to "
