@@ -6,7 +6,13 @@
 
 # iOS
 ios/**/build/
-ios/**/*.xcworkspace
+ios/**/*.xcworkspace/*
+# Share resolved dependency versions, while ignoring other workspace state.
+!ios/**/*.xcodeproj/project.xcworkspace/xcshareddata/
+ios/**/*.xcodeproj/project.xcworkspace/xcshareddata/*
+!ios/**/*.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/
+ios/**/*.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/*
+!ios/**/*.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
 ios/**/xcuserdata/
 ios/**/*.xccheckout
 ios/**/*.moved-aside
