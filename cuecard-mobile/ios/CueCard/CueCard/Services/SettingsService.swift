@@ -493,6 +493,7 @@ class SettingsService: ObservableObject {
     private let retiredCuesKey = "cuecard_cues"
     private let noteStore = NoteStore()
     private let noteFolder = NoteFolder()
+    private let noteVersions = NoteVersions()
 
     @Published var settings: TeleprompterSettings {
         didSet {
@@ -532,6 +533,9 @@ class SettingsService: ObservableObject {
 
     /// What's in `noteStore`, for the views and the watch to read.
     @Published private(set) var savedNotes: [SavedNote] = []
+
+    /// How many versions each saved note has, for notes that have any.
+    @Published private(set) var versionCounts: [UUID: Int] = [:]
 
     /// Whether saved notes are also kept in a folder the user picked.
     @Published private(set) var hasNotesFolder = false
@@ -669,6 +673,7 @@ Thanks for listening. Questions?
             userDefaults.removeObject(forKey: savedNotesKey)
         }
         self.savedNotes = noteStore.fetchAll()
+        self.versionCounts = noteVersions.counts()
 
         if let strings = userDefaults.stringArray(forKey: watchNoteIDsKey) {
             self.watchNoteIDs = Set(strings.compactMap(UUID.init(uuidString:)))
@@ -685,13 +690,17 @@ Thanks for listening. Questions?
     }
 
     /// Keep a note in the store, the notes folder, and the list the views read.
-    private func store(_ note: SavedNote) {
+    private func store(_ note: SavedNote, restoredFrom: Int? = nil) {
         noteStore.save([note])
         noteFolder.write(note)
-        keep(note)
+        keep(note, restoredFrom: restoredFrom)
     }
 
-    private func keep(_ note: SavedNote) {
+    /// Put `note` in the list the views read, and keep its text as a new
+    /// version if it changed.
+    private func keep(_ note: SavedNote, restoredFrom: Int? = nil) {
+        let previous = savedNotes.first { $0.id == note.id }
+        versionCounts[note.id] = noteVersions.record(note, previous: previous, restoredFrom: restoredFrom)
         if let index = savedNotes.firstIndex(where: { $0.id == note.id }) {
             savedNotes[index] = note
         } else {
@@ -790,6 +799,8 @@ Thanks for listening. Questions?
 
     private func forget(_ id: UUID) {
         noteStore.delete(id: id)
+        noteVersions.remove(id: id)
+        versionCounts[id] = nil
         savedNotes.removeAll { $0.id == id }
         watchNoteIDs.remove(id)
         if teleprompterNoteId == id { teleprompterNoteId = nil }
@@ -799,6 +810,8 @@ Thanks for listening. Questions?
     /// Delete every saved note, and its file in the notes folder.
     func deleteAllNotes() {
         noteStore.deleteAll()
+        noteVersions.removeAll()
+        versionCounts = [:]
         noteFolder.removeAll()
         savedNotes = []
         watchNoteIDs = []
@@ -897,6 +910,8 @@ Thanks for listening. Questions?
         teleprompterNotes = ""
         cardsNotes = ""
         noteStore.deleteAll()
+        noteVersions.removeAll()
+        versionCounts = [:]
         savedNotes = []
         teleprompterNoteId = nil
         cardsNoteId = nil
