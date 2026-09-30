@@ -68,6 +68,7 @@
 		077 /* SavedDeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 157 /* SavedDeckView.swift */; };
 		078 /* HelpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 158 /* HelpView.swift */; };
 		5A7ED0000000000000000001 /* NoteStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A7ED0000000000000000002 /* NoteStore.swift */; };
+		5A7ED0000000000000000003 /* NoteFolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A7ED0000000000000000004 /* NoteFolder.swift */; };
 		AA7130F62F04E5BC00F5C366 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = AA7130F52F04E5BC00F5C366 /* GoogleService-Info.plist */; };
 		AA856D562F060DFC00B0CBC6 /* GlassEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA856D542F060DFC00B0CBC6 /* GlassEffect.swift */; };
 		C0CA4D5100000000000000A1 /* CueCardsLockScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CA4D5100000000000000A2 /* CueCardsLockScreen.swift */; };
@@ -172,6 +173,7 @@
 		502 /* CueCardWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = CueCardWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		503 /* CueCardWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CueCardWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5A7ED0000000000000000002 /* NoteStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteStore.swift; sourceTree = "<group>"; };
+		5A7ED0000000000000000004 /* NoteFolder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteFolder.swift; sourceTree = "<group>"; };
 		AA2E5C0E2F0F38B500E1D079 /* CueCard.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CueCard.entitlements; sourceTree = "<group>"; };
 		AA7130F52F04E5BC00F5C366 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		AA856D542F060DFC00B0CBC6 /* GlassEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassEffect.swift; sourceTree = "<group>"; };
@@ -264,6 +266,7 @@
 				C0CA4D5100000000000000A2 /* CueCardsLockScreen.swift */,
 				108 /* SettingsService.swift */,
 				5A7ED0000000000000000002 /* NoteStore.swift */,
+				5A7ED0000000000000000004 /* NoteFolder.swift */,
 				114 /* ReviewPromptService.swift */,
 				112 /* TeleprompterPiPManager.swift */,
 				126 /* TeleprompterRemoteCommand+App.swift */,
@@ -521,6 +524,7 @@
 				004 /* HomeView.swift in Sources */,
 				008 /* SettingsService.swift in Sources */,
 				5A7ED0000000000000000001 /* NoteStore.swift in Sources */,
+				5A7ED0000000000000000003 /* NoteFolder.swift in Sources */,
 				019 /* ReviewPromptService.swift in Sources */,
 				013 /* SettingsView.swift in Sources */,
 				AA856D562F060DFC00B0CBC6 /* GlassEffect.swift in Sources */,

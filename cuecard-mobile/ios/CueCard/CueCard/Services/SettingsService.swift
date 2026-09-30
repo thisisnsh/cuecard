@@ -492,6 +492,7 @@ class SettingsService: ObservableObject {
     /// script now, so the stored library is cleared out on the way past.
     private let retiredCuesKey = "cuecard_cues"
     private let noteStore = NoteStore()
+    private let noteFolder = NoteFolder()
 
     @Published var settings: TeleprompterSettings {
         didSet {
@@ -531,6 +532,11 @@ class SettingsService: ObservableObject {
 
     /// What's in `noteStore`, for the views and the watch to read.
     @Published private(set) var savedNotes: [SavedNote] = []
+
+    /// Whether saved notes are also kept in a folder the user picked.
+    @Published private(set) var hasNotesFolder = false
+    /// That folder's name, or nil while it can't be reached.
+    @Published private(set) var notesFolderName: String?
 
     /// The saved note open in each mode.
     @Published private var teleprompterNoteId: UUID? {
@@ -674,11 +680,18 @@ Thanks for listening. Questions?
         if needsSave {
             saveSettings()
         }
+
+        syncNotesFolder()
     }
 
-    /// Keep a note in the store, and in the list the views read.
+    /// Keep a note in the store, the notes folder, and the list the views read.
     private func store(_ note: SavedNote) {
         noteStore.save([note])
+        noteFolder.write(note)
+        keep(note)
+    }
+
+    private func keep(_ note: SavedNote) {
         if let index = savedNotes.firstIndex(where: { $0.id == note.id }) {
             savedNotes[index] = note
         } else {
@@ -771,11 +784,69 @@ Thanks for listening. Questions?
 
     /// Delete a saved note
     func deleteNote(id: UUID) {
+        noteFolder.remove(id: id)
+        forget(id)
+    }
+
+    private func forget(_ id: UUID) {
         noteStore.delete(id: id)
         savedNotes.removeAll { $0.id == id }
         watchNoteIDs.remove(id)
         if teleprompterNoteId == id { teleprompterNoteId = nil }
         if cardsNoteId == id { cardsNoteId = nil }
+    }
+
+    /// Delete every saved note, and its file in the notes folder.
+    func deleteAllNotes() {
+        noteStore.deleteAll()
+        noteFolder.removeAll()
+        savedNotes = []
+        watchNoteIDs = []
+        teleprompterNoteId = nil
+        cardsNoteId = nil
+    }
+
+    /// Keep saved notes in `url` too, a folder picked in Files, and take in
+    /// any notes already there.
+    func chooseNotesFolder(_ url: URL) throws {
+        try noteFolder.choose(url)
+        syncNotesFolder()
+    }
+
+    /// Stop keeping notes in the folder. The files already there stay.
+    func stopUsingNotesFolder() {
+        noteFolder.forget()
+        hasNotesFolder = false
+        notesFolderName = nil
+    }
+
+    /// Take in what changed in the notes folder outside the app, and write
+    /// out any notes it's missing.
+    func syncNotesFolder() {
+        hasNotesFolder = noteFolder.isChosen
+        notesFolderName = noteFolder.name
+        guard hasNotesFolder else { return }
+
+        let changes = noteFolder.sync(savedNotes)
+        if !changes.updated.isEmpty {
+            noteStore.save(changes.updated)
+        }
+        for note in changes.updated {
+            // A note open in the editor with nothing unsaved follows its file.
+            for mode in ScriptMode.allCases where noteId(for: mode) == note.id {
+                if let old = savedNotes.first(where: { $0.id == note.id }), notes(for: mode) == old.content {
+                    setNotes(note.content, for: mode)
+                }
+            }
+            keep(note)
+        }
+        for id in changes.deleted {
+            forget(id)
+        }
+    }
+
+    private func noteId(for mode: ScriptMode) -> UUID? {
+        mode == .cards ? cardsNoteId : teleprompterNoteId
     }
 
     /// Create a new empty note

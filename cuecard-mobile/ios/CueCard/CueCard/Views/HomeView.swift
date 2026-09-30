@@ -811,6 +811,9 @@ struct SavedNotesView: View {
     @Environment(\.colorScheme) var colorScheme
     @State private var noteToRename: SavedNote?
     @State private var renameTitle = ""
+    @State private var showingFolderPicker = false
+    @State private var showingDeleteAll = false
+    @State private var folderErrorMessage: String?
 
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -827,11 +830,37 @@ struct SavedNotesView: View {
 
     /// Where saved notes are kept, shown whether or not there are any.
     private var storageNote: some View {
-        Label("Stored only on this device, and deleted if the app is removed.",
-              systemImage: "lock.fill")
+        storageLabel
             .font(.caption)
             .foregroundStyle(AppColors.textSecondary(for: colorScheme))
             .multilineTextAlignment(.center)
+    }
+
+    @ViewBuilder
+    private var storageLabel: some View {
+        if let folder = settingsService.notesFolderName {
+            Label("Also kept as files in “\(folder)”, which stay if the app is deleted.",
+                  systemImage: "folder.fill")
+        } else if settingsService.hasNotesFolder {
+            Label("The notes folder can't be reached. Notes are kept on this device until it's back.",
+                  systemImage: "exclamationmark.triangle.fill")
+        } else {
+            Label("Stored only on this device, and deleted if the app is removed. Choose a notes folder in ••• to keep them.",
+                  systemImage: "lock.fill")
+        }
+    }
+
+    private func handleFolderPick(_ result: Result<URL, Error>) {
+        switch result {
+        case .success(let url):
+            do {
+                try settingsService.chooseNotesFolder(url)
+            } catch {
+                folderErrorMessage = "This folder can't be used for notes."
+            }
+        case .failure(let error):
+            folderErrorMessage = error.localizedDescription
+        }
     }
 
     var body: some View {
@@ -927,12 +956,71 @@ struct SavedNotesView: View {
             .navigationTitle("Saved Content")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Menu {
+                        Button(action: {
+                            AnalyticsEvents.logButtonClick("choose_notes_folder", screen: "saved_notes")
+                            showingFolderPicker = true
+                        }) {
+                            Label(settingsService.hasNotesFolder ? "Change Notes Folder" : "Choose Notes Folder",
+                                  systemImage: "folder.badge.plus")
+                        }
+
+                        if settingsService.hasNotesFolder {
+                            Button(action: {
+                                AnalyticsEvents.logButtonClick("stop_notes_folder", screen: "saved_notes")
+                                settingsService.stopUsingNotesFolder()
+                            }) {
+                                Label("Stop Using Folder", systemImage: "folder.badge.minus")
+                            }
+                        }
+
+                        Divider()
+
+                        Button(role: .destructive, action: {
+                            AnalyticsEvents.logButtonClick("delete_all_notes", screen: "saved_notes")
+                            showingDeleteAll = true
+                        }) {
+                            Label("Delete All", systemImage: "trash")
+                        }
+                        .disabled(settingsService.savedNotes.isEmpty)
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                    }
+                }
+
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") {
                         AnalyticsEvents.logButtonClick("done", screen: "saved_notes")
                         dismiss()
                     }
                 }
+            }
+            .onAppear {
+                settingsService.syncNotesFolder()
+            }
+            .fileImporter(isPresented: $showingFolderPicker, allowedContentTypes: [.folder]) { result in
+                handleFolderPick(result)
+            }
+            .confirmationDialog("Delete All Saved Content?", isPresented: $showingDeleteAll,
+                                titleVisibility: .visible) {
+                Button("Delete All", role: .destructive) {
+                    settingsService.deleteAllNotes()
+                }
+            } message: {
+                if let folder = settingsService.notesFolderName {
+                    Text("Every saved note and its file in “\(folder)” will be deleted. This can't be undone.")
+                } else {
+                    Text("Every saved note will be deleted. This can't be undone.")
+                }
+            }
+            .alert("Something Went Wrong", isPresented: Binding(
+                get: { folderErrorMessage != nil },
+                set: { if !$0 { folderErrorMessage = nil } }
+            )) {
+                Button("OK", role: .cancel) { folderErrorMessage = nil }
+            } message: {
+                Text(folderErrorMessage ?? "")
             }
             .alert("Rename Note", isPresented: Binding(
                 get: { noteToRename != nil },

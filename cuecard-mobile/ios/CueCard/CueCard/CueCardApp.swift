@@ -24,6 +24,8 @@ struct CueCardApp: App {
                     // new notice. The service throttles itself, so this is cheap.
                     guard phase == .active else { return }
                     CueCardsSession.shared.refreshLockScreen()
+                    // Notes in the notes folder may have been edited elsewhere.
+                    settingsService.syncNotesFolder()
                     Task { await notifications.refresh() }
                 }
         }
