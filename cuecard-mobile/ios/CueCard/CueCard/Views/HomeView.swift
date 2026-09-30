@@ -854,6 +854,7 @@ struct SavedNotesView: View {
     @State private var showingDeleteAll = false
     @State private var folderErrorMessage: String?
     @State private var query = ""
+    @State private var size: Int64 = 0
 
     /// Saved notes, newest first, narrowed to those whose title or text match the search.
     private var notes: [SavedNote] {
@@ -878,6 +879,13 @@ struct SavedNotesView: View {
     private func preview(of note: SavedNote) -> String {
         String(CueCards.removingSeparators(from: note.content).prefix(120))
             .replacingOccurrences(of: "\n", with: " ")
+    }
+
+    /// How many notes there are and the space they take, versions included.
+    private var sizeLabel: String {
+        let count = settingsService.savedNotes.count
+        let bytes = ByteCountFormatter.string(fromByteCount: size, countStyle: .file)
+        return "\(count) \(count == 1 ? "note" : "notes") · \(bytes)"
     }
 
     /// Where saved notes are kept, shown whether or not there are any.
@@ -1014,6 +1022,19 @@ struct SavedNotesView: View {
             .navigationTitle("Saved Content")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    VStack(spacing: 1) {
+                        Text("Saved Content")
+                            .font(.headline)
+                            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                        if !settingsService.savedNotes.isEmpty {
+                            Text(sizeLabel)
+                                .font(.caption2)
+                                .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                        }
+                    }
+                }
+
                 ToolbarItem(placement: .topBarLeading) {
                     Menu {
                         Button(action: {
@@ -1056,6 +1077,10 @@ struct SavedNotesView: View {
             }
             .onAppear {
                 settingsService.syncNotesFolder()
+                size = settingsService.savedNotesSize()
+            }
+            .onChange(of: settingsService.savedNotes) {
+                size = settingsService.savedNotesSize()
             }
             .fileImporter(isPresented: $showingFolderPicker, allowedContentTypes: [.folder]) { result in
                 handleFolderPick(result)

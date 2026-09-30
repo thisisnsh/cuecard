@@ -784,6 +784,11 @@ Thanks for listening. Questions?
         updateNote(id: id, content: notes)
     }
 
+    /// Bytes saved notes take on this device: their text and every version.
+    func savedNotesSize() -> Int64 {
+        savedNotes.reduce(noteVersions.totalSize()) { $0 + Int64($1.content.utf8.count) }
+    }
+
     /// A saved note's versions, oldest first.
     func versions(of id: UUID) -> [NoteVersion] {
         noteVersions.versions(of: id)
