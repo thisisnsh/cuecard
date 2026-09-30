@@ -16,6 +16,7 @@ struct HomeView: View {
     @State private var cardsOpenedOnWatch = false
     @State private var showingTimer = false
     @State private var showingSavedNotes = false
+    @State private var showingVersions = false
     @State private var showingSaveDialog = false
     @State private var saveNoteTitle = ""
     @State private var showingImporter = false
@@ -47,6 +48,13 @@ struct HomeView: View {
     }
 
     private var isCardsMode: Bool { settingsService.settings.scriptMode == .cards }
+
+    /// How many versions the open note has, once it has more than one.
+    private var versionCount: Int? {
+        guard let id = settingsService.currentNoteId,
+              let count = settingsService.versionCounts[id], count > 1 else { return nil }
+        return count
+    }
 
     /// Teleprompter or cards: what the editor writes and the Play button opens.
     /// The bar shows the chosen mode's name.
@@ -315,7 +323,11 @@ struct HomeView: View {
 
                 // What's written since the last save is kept on this device,
                 // but isn't in Saved Content until it's saved.
-                UnsavedToolbarItem(isShown: settingsService.hasUnsavedChanges)
+                NoteStatusToolbarItem(version: versionCount,
+                                      isUnsaved: settingsService.hasUnsavedChanges) {
+                    AnalyticsEvents.logButtonClick("version_badge", screen: "home")
+                    showingVersions = true
+                }
 
                 ToolbarItem(placement: .topBarTrailing) {
                     HStack(spacing: 16) {
@@ -337,6 +349,15 @@ struct HomeView: View {
                                 Label("Save as New", systemImage: "doc.badge.plus")
                             }
                             .disabled(!hasNotes)
+
+                            if versionCount != nil {
+                                Button(action: {
+                                    AnalyticsEvents.logButtonClick("version_history", screen: "home")
+                                    showingVersions = true
+                                }) {
+                                    Label("Version History", systemImage: "clock.arrow.circlepath")
+                                }
+                            }
 
                             Divider()
 
@@ -411,6 +432,11 @@ struct HomeView: View {
             }
             .sheet(isPresented: $showingSavedNotes) {
                 SavedNotesView()
+            }
+            .sheet(isPresented: $showingVersions) {
+                if let id = settingsService.currentNoteId {
+                    NoteVersionsView(noteID: id)
+                }
             }
             .sheet(isPresented: $showingTimer) {
                 TimerSheet()
@@ -778,10 +804,13 @@ struct CardsEditorView: View {
     }
 }
 
-/// "Unsaved", beside the mode menu but outside its glass, so it reads as a
-/// note about the script rather than part of the button.
-private struct UnsavedToolbarItem: ToolbarContent {
-    let isShown: Bool
+/// The open note's version and "Unsaved", beside the mode menu but outside
+/// its glass, so they read as notes about the script rather than part of the
+/// button. The version opens its history.
+private struct NoteStatusToolbarItem: ToolbarContent {
+    let version: Int?
+    let isUnsaved: Bool
+    let showVersions: () -> Void
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some ToolbarContent {
@@ -794,11 +823,21 @@ private struct UnsavedToolbarItem: ToolbarContent {
 
     private var item: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
-            if isShown {
-                Text("Unsaved")
-                    .font(.caption)
-                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                    .fixedSize()
+            if version != nil || isUnsaved {
+                HStack(spacing: 8) {
+                    if let version {
+                        Button(action: showVersions) {
+                            Text("v\(version)")
+                        }
+                        .accessibilityLabel("Version \(version), show history")
+                    }
+                    if isUnsaved {
+                        Text("Unsaved")
+                    }
+                }
+                .font(.caption)
+                .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                .fixedSize()
             }
         }
     }

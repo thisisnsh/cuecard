@@ -784,6 +784,23 @@ Thanks for listening. Questions?
         updateNote(id: id, content: notes)
     }
 
+    /// A saved note's versions, oldest first.
+    func versions(of id: UUID) -> [NoteVersion] {
+        noteVersions.versions(of: id)
+    }
+
+    /// Bring back an old version as the note's newest, and into the editor
+    /// wherever the note is open. Anything unsaved there is replaced.
+    func restoreVersion(_ version: NoteVersion, of id: UUID) {
+        guard var note = savedNotes.first(where: { $0.id == id }) else { return }
+        note.content = version.content
+        note.updatedAt = Date()
+        store(note, restoredFrom: version.number)
+        for mode in ScriptMode.allCases where noteId(for: mode) == id {
+            setNotes(version.content, for: mode)
+        }
+    }
+
     /// Load a saved note into the editor, switching to the mode it was written in.
     func loadNote(_ note: SavedNote) {
         settings.scriptMode = note.mode
