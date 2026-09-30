@@ -242,15 +242,30 @@ struct HelpView: View {
 // MARK: - Help Button
 
 /// The question mark at the top right of a page, in a glass of its own rather
-/// than grouped with the buttons beside it. Put last among the page's trailing
-/// items, so it sits at the edge.
+/// than grouped with the buttons beside it, or shared only with a settings
+/// button when the page has one. Put last among the page's trailing items, so
+/// it sits at the edge.
 struct HelpToolbarItem: ToolbarContent {
     let page: HelpPage
     @Binding var isPresented: Bool
+    /// Shows a settings button beside the question mark, which calls this.
+    var openSettings: (() -> Void)? = nil
+
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some ToolbarContent {
         if #available(iOS 26.0, *) {
             ToolbarSpacer(.fixed, placement: .topBarTrailing)
+        }
+        if let openSettings {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(action: openSettings) {
+                    Image(systemName: "gearshape")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                }
+                .accessibilityLabel("Settings")
+            }
         }
         ToolbarItem(placement: .topBarTrailing) {
             HelpButton(page: page, isPresented: $isPresented)
