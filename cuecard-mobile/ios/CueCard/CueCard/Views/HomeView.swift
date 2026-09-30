@@ -814,6 +814,19 @@ struct SavedNotesView: View {
     @State private var showingFolderPicker = false
     @State private var showingDeleteAll = false
     @State private var folderErrorMessage: String?
+    @State private var query = ""
+
+    /// Saved notes, newest first, narrowed to those whose title or text match the search.
+    private var notes: [SavedNote] {
+        let sorted = settingsService.savedNotes.sorted { $0.updatedAt > $1.updatedAt }
+        let trimmed = query.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty else { return sorted }
+
+        return sorted.filter {
+            $0.title.localizedStandardContains(trimmed)
+                || CueCards.removingSeparators(from: $0.content).localizedStandardContains(trimmed)
+        }
+    }
 
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -891,7 +904,7 @@ struct SavedNotesView: View {
                 } else {
                     List {
                         Section {
-                            ForEach(settingsService.savedNotes.sorted { $0.updatedAt > $1.updatedAt }) { note in
+                            ForEach(notes) { note in
                                 Button(action: {
                                     AnalyticsEvents.logButtonClick("load_note", screen: "saved_notes", parameters: ["note_id": note.id.uuidString])
                                     settingsService.loadNote(note)
@@ -951,6 +964,12 @@ struct SavedNotesView: View {
                                 .listRowInsets(EdgeInsets())
                         }
                     }
+                    .overlay {
+                        if notes.isEmpty {
+                            ContentUnavailableView.search(text: query)
+                        }
+                    }
+                    .searchable(text: $query, prompt: "Search Saved Content")
                 }
             }
             .navigationTitle("Saved Content")
