@@ -19,8 +19,6 @@ struct HomeView: View {
     @State private var showingVersions = false
     @State private var showingSaveDialog = false
     @State private var saveNoteTitle = ""
-    @State private var showingImporter = false
-    @State private var fileErrorMessage: String?
     @State private var isEditorFocused = false
     @StateObject private var editorController = CueEditorController()
     @ObservedObject private var watch = WatchSessionService.shared
@@ -152,27 +150,6 @@ struct HomeView: View {
     /// The script as it would be written to a file, with cues in `[cue …]` form.
     private var shareText: String {
         TeleprompterParser.normalizingTags(in: settingsService.notes)
-    }
-
-    private func handleImport(_ result: Result<URL, Error>) {
-        switch result {
-        case .success(let url):
-            do {
-                let text = try ScriptFile.readText(from: url)
-                guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                    fileErrorMessage = "That file is empty."
-                    return
-                }
-                settingsService.importNote(
-                    title: ScriptFile.title(for: url),
-                    content: TeleprompterParser.normalizingTags(in: text)
-                )
-            } catch {
-                fileErrorMessage = "This file couldn't be read as text."
-            }
-        case .failure(let error):
-            fileErrorMessage = error.localizedDescription
-        }
     }
 
     /// Drop an empty cue in at the caret and leave the caret inside it, so the user
@@ -308,7 +285,7 @@ struct HomeView: View {
                 }
 
                 // What's written since the last save is kept on this device,
-                // but isn't in Saved Content until it's saved.
+                // but isn't in Open until it's saved.
                 NoteStatusToolbarItem(version: versionCount,
                                       isUnsaved: settingsService.hasUnsavedChanges) {
                     AnalyticsEvents.logButtonClick("version_badge", screen: "home")
@@ -360,17 +337,10 @@ struct HomeView: View {
                                 AnalyticsEvents.logButtonClick("saved_notes", screen: "home")
                                 showingSavedNotes = true
                             }) {
-                                Label("Saved Content", systemImage: "folder")
+                                Label("Open", systemImage: "folder")
                             }
 
                             Divider()
-
-                            Button(action: {
-                                AnalyticsEvents.logButtonClick("import_file", screen: "home")
-                                showingImporter = true
-                            }) {
-                                Label("Import from File", systemImage: "arrow.down.doc")
-                            }
 
                             ShareLink(
                                 item: shareText,
@@ -438,20 +408,6 @@ struct HomeView: View {
                 }
             } message: {
                 Text("Enter a title for your note")
-            }
-            .fileImporter(
-                isPresented: $showingImporter,
-                allowedContentTypes: ScriptFile.importableContentTypes
-            ) { result in
-                handleImport(result)
-            }
-            .alert("Something Went Wrong", isPresented: Binding(
-                get: { fileErrorMessage != nil },
-                set: { if !$0 { fileErrorMessage = nil } }
-            )) {
-                Button("OK", role: .cancel) { fileErrorMessage = nil }
-            } message: {
-                Text(fileErrorMessage ?? "")
             }
             .fullScreenCover(isPresented: $showingTeleprompter, onDismiss: requestReviewIfEarned) {
                 TeleprompterView(content: TeleprompterParser.parseNotes(settingsService.notes))
@@ -830,7 +786,8 @@ struct SavedNotesView: View {
     @State private var renameTitle = ""
     @State private var showingFolderPicker = false
     @State private var showingDeleteAll = false
-    @State private var folderErrorMessage: String?
+    @State private var showingImporter = false
+    @State private var errorMessage: String?
     @State private var query = ""
     @State private var size: Int64 = 0
 
@@ -874,17 +831,18 @@ struct SavedNotesView: View {
             .multilineTextAlignment(.center)
     }
 
-    @ViewBuilder
+    /// Notes never leave the device, so the lock stays whatever the folder.
     private var storageLabel: some View {
+        Label(storageText, systemImage: "lock.fill")
+    }
+
+    private var storageText: String {
         if let folder = settingsService.notesFolderName {
-            Label("Also kept as files in “\(folder)”, which stay if the app is deleted.",
-                  systemImage: "folder.fill")
+            "Notes stay on this device, also as files in “\(folder)”, so they're kept even if the app is removed."
         } else if settingsService.hasNotesFolder {
-            Label("The notes folder can't be reached. Notes are kept on this device until it's back.",
-                  systemImage: "exclamationmark.triangle.fill")
+            "Notes stay on this device. The notes folder can't be reached, so they're only kept here until it's back."
         } else {
-            Label("Stored only on this device, and deleted if the app is removed. Choose a notes folder in ••• to keep them.",
-                  systemImage: "lock.fill")
+            "Notes stay on this device and are deleted if the app is removed. Choose a notes folder in ••• to keep them."
         }
     }
 
@@ -894,10 +852,33 @@ struct SavedNotesView: View {
             do {
                 try settingsService.chooseNotesFolder(url)
             } catch {
-                folderErrorMessage = "This folder can't be used for notes."
+                errorMessage = "This folder can't be used for notes."
             }
         case .failure(let error):
-            folderErrorMessage = error.localizedDescription
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    /// Open a text file as a new saved note, then go back to the editor with it.
+    private func handleImport(_ result: Result<URL, Error>) {
+        switch result {
+        case .success(let url):
+            do {
+                let text = try ScriptFile.readText(from: url)
+                guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                    errorMessage = "That file is empty."
+                    return
+                }
+                settingsService.importNote(
+                    title: ScriptFile.title(for: url),
+                    content: TeleprompterParser.normalizingTags(in: text)
+                )
+                dismiss()
+            } catch {
+                errorMessage = "This file couldn't be read as text."
+            }
+        case .failure(let error):
+            errorMessage = error.localizedDescription
         }
     }
 
@@ -910,11 +891,11 @@ struct SavedNotesView: View {
                             .font(.system(size: 48))
                             .foregroundStyle(AppColors.textSecondary(for: colorScheme))
 
-                        Text("No Saved Content")
+                        Text("Nothing Saved Yet")
                             .font(.headline)
                             .foregroundStyle(AppColors.textPrimary(for: colorScheme))
 
-                        Text("Save your scripts and cards to open them later")
+                        Text("Save your scripts and cards to open them later, or import a text file from •••")
                             .font(.subheadline)
                             .foregroundStyle(AppColors.textSecondary(for: colorScheme))
                             .multilineTextAlignment(.center)
@@ -924,7 +905,8 @@ struct SavedNotesView: View {
                     .safeAreaInset(edge: .bottom) {
                         storageNote
                             .padding(.horizontal, 24)
-                            .padding(.vertical, 8)
+                            .padding(.top, 8)
+                            .padding(.bottom, 16)
                     }
                 } else {
                     List {
@@ -985,7 +967,9 @@ struct SavedNotesView: View {
                             // At the end of the list, so it never covers a note.
                             storageNote
                                 .frame(maxWidth: .infinity)
+                                .padding(.horizontal, 8)
                                 .padding(.top, 24)
+                                .padding(.bottom, 16)
                                 .listRowInsets(EdgeInsets())
                         }
                     }
@@ -994,15 +978,15 @@ struct SavedNotesView: View {
                             ContentUnavailableView.search(text: query)
                         }
                     }
-                    .searchable(text: $query, prompt: "Search Saved Content")
+                    .searchable(text: $query, prompt: "Search")
                 }
             }
-            .navigationTitle("Saved Content")
+            .navigationTitle("Open")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     VStack(spacing: 1) {
-                        Text("Saved Content")
+                        Text("Open")
                             .font(.headline)
                             .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                         if !settingsService.savedNotes.isEmpty {
@@ -1015,6 +999,15 @@ struct SavedNotesView: View {
 
                 ToolbarItem(placement: .topBarLeading) {
                     Menu {
+                        Button(action: {
+                            AnalyticsEvents.logButtonClick("import_file", screen: "saved_notes")
+                            showingImporter = true
+                        }) {
+                            Label("Import from File", systemImage: "arrow.down.doc")
+                        }
+
+                        Divider()
+
                         Button(action: {
                             AnalyticsEvents.logButtonClick("choose_notes_folder", screen: "saved_notes")
                             showingFolderPicker = true
@@ -1063,7 +1056,15 @@ struct SavedNotesView: View {
             .fileImporter(isPresented: $showingFolderPicker, allowedContentTypes: [.folder]) { result in
                 handleFolderPick(result)
             }
-            .confirmationDialog("Delete All Saved Content?", isPresented: $showingDeleteAll,
+            // Only one file importer works per view, so the other sits a level out.
+            .background {
+                Color.clear
+                    .fileImporter(isPresented: $showingImporter,
+                                  allowedContentTypes: ScriptFile.importableContentTypes) { result in
+                        handleImport(result)
+                    }
+            }
+            .confirmationDialog("Delete All Saved Notes?", isPresented: $showingDeleteAll,
                                 titleVisibility: .visible) {
                 Button("Delete All", role: .destructive) {
                     settingsService.deleteAllNotes()
@@ -1076,12 +1077,12 @@ struct SavedNotesView: View {
                 }
             }
             .alert("Something Went Wrong", isPresented: Binding(
-                get: { folderErrorMessage != nil },
-                set: { if !$0 { folderErrorMessage = nil } }
+                get: { errorMessage != nil },
+                set: { if !$0 { errorMessage = nil } }
             )) {
-                Button("OK", role: .cancel) { folderErrorMessage = nil }
+                Button("OK", role: .cancel) { errorMessage = nil }
             } message: {
-                Text(folderErrorMessage ?? "")
+                Text(errorMessage ?? "")
             }
             .alert("Rename Note", isPresented: Binding(
                 get: { noteToRename != nil },
