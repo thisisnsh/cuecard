@@ -121,7 +121,7 @@ struct NoteVersionsView: View {
     private func row(for version: NoteVersion) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 8) {
-                Text("v\(version.number)")
+                Text("Version \(version.number)")
                     .font(.headline)
                     .foregroundStyle(AppColors.textPrimary(for: colorScheme))
 
@@ -152,7 +152,7 @@ struct NoteVersionsView: View {
                 .foregroundStyle(AppColors.textSecondary(for: colorScheme))
 
             if let restored = version.restoredFrom {
-                Text("Restored from v\(restored)")
+                Text("Restored from Version \(restored)")
                     .font(.caption)
                     .foregroundStyle(AppColors.textSecondary(for: colorScheme).opacity(0.7))
             }
@@ -232,8 +232,8 @@ private struct VersionDiffView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 Picker("Compare With", selection: $comparison) {
-                    Text(previous.map { "v\($0.number)" } ?? "Nothing Before").tag(Comparison.previous)
-                    Text("Editor").tag(Comparison.editor)
+                    Text(previous.map { "Version \($0.number)" } ?? "Nothing Before").tag(Comparison.previous)
+                    Text("Current Edit").tag(Comparison.editor)
                 }
                 .pickerStyle(.segmented)
                 .padding(.horizontal, 16)
@@ -256,8 +256,20 @@ private struct VersionDiffView: View {
             .padding(.vertical, 12)
         }
         .background(AppColors.background(for: colorScheme))
-        .navigationTitle("v\(version.number)")
+        .navigationTitle("Compare Changes")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                VStack(spacing: 1) {
+                    Text("Compare Changes")
+                        .font(.headline)
+                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                    Text("Version \(version.number)")
+                        .font(.caption2)
+                        .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                }
+            }
+        }
         .onChange(of: comparison) {
             expanded = []
         }
@@ -285,7 +297,7 @@ private struct VersionDiffView: View {
         }
         .confirmationDialog("Discard Unsaved Changes?", isPresented: $confirmingRestore,
                             titleVisibility: .visible) {
-            Button("Restore v\(version.number)", role: .destructive, action: onRestore)
+            Button("Restore Version \(version.number)", role: .destructive, action: onRestore)
         } message: {
             Text("The editor has changes that aren't saved. Restoring replaces them with this version.")
         }
