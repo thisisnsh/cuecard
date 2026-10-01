@@ -406,12 +406,14 @@ struct HomeView: View {
                     }
                 }
 
-                // ••• and Settings share a glass of their own, at the edge.
+                // ••• and Settings share a glass of their own; Help has the edge.
+                // One item, so the two sit as close as a pair: as items of their
+                // own, each takes a full button's width inside the glass.
                 if #available(iOS 26.0, *) {
                     ToolbarSpacer(.fixed, placement: .topBarTrailing)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    HStack(spacing: 16) {
+                    HStack(spacing: 8) {
                         Menu {
                             if settingsService.hasUnsavedChanges {
                                 Button(action: save) {
@@ -457,16 +459,6 @@ struct HomeView: View {
                                           systemImage: isOnWatch ? "applewatch.slash" : "applewatch")
                                 }
                             }
-
-                            Divider()
-
-                            Button(action: {
-                                AnalyticsEvents.logButtonClick(
-                                    "help", screen: HelpPage.writing(settingsService.settings.scriptMode).rawValue)
-                                showingHelp = true
-                            }) {
-                                Label("Help", systemImage: "questionmark.circle")
-                            }
                         } label: {
                             Image(systemName: "ellipsis.circle")
                                 .font(.title3)
@@ -486,6 +478,8 @@ struct HomeView: View {
                         .accessibilityLabel("Settings")
                     }
                 }
+
+                HelpToolbarItem(page: .writing(settingsService.settings.scriptMode), isPresented: $showingHelp)
             }
             .helpSheet(for: .writing(settingsService.settings.scriptMode), isPresented: $showingHelp)
             .sheet(isPresented: $showingSettings) {

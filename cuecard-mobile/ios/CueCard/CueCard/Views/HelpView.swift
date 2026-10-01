@@ -250,7 +250,7 @@ struct HelpView: View {
 
 /// The question mark at the top right of a page, in a glass of its own rather
 /// than grouped with the buttons beside it. Put last among the page's trailing
-/// items, so it sits at the edge. The editor has Help in its ••• menu instead.
+/// items, so it sits at the edge.
 struct HelpToolbarItem: ToolbarContent {
     let page: HelpPage
     @Binding var isPresented: Bool
@@ -285,7 +285,7 @@ private struct HelpButton: View {
 }
 
 extension View {
-    /// The help sheet for `page`, opened by its `HelpToolbarItem` or menu. Kept on the
+    /// The help sheet for `page`, opened by its `HelpToolbarItem`. Kept on the
     /// page rather than the button, so the sheet stays up if the button fades.
     func helpSheet(for page: HelpPage, isPresented: Binding<Bool>) -> some View {
         sheet(isPresented: isPresented) {
