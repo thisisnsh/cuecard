@@ -66,18 +66,34 @@ struct HomeView: View {
             isEditorFocused = false
             settingsService.settings.scriptMode = next
         } label: {
-            HStack(spacing: 6) {
-                Text(current.displayName)
-                    .font(.headline)
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+            // Sized for the longest name, so the bar never resizes the item (and
+            // springs it) on a switch: the name swaps, the chevron slides.
+            ZStack(alignment: .leading) {
+                ForEach(ScriptMode.allCases) { mode in
+                    modeLabel(mode.displayName).hidden()
+                }
+                modeLabel(current.displayName)
             }
             .foregroundStyle(AppColors.textPrimary(for: colorScheme))
             .fixedSize()
         }
+        // The bar's own button style scales the label on a press.
+        .buttonStyle(.plain)
         .accessibilityLabel("Mode: \(current.displayName)")
         .accessibilityHint("Switches to \(next.displayName)")
+    }
+
+    private func modeLabel(_ name: String) -> some View {
+        HStack(spacing: 6) {
+            Text(name)
+                .font(.headline)
+                .contentTransition(.identity)
+                .transaction { $0.animation = nil }
+            Image(systemName: "chevron.down")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                .animation(.easeInOut(duration: 0.2), value: name)
+        }
     }
 
     private func showCardsOpenedOnWatch() {
