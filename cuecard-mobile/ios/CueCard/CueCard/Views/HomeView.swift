@@ -780,6 +780,7 @@ struct SavedNotesView: View {
     @State private var renameTitle = ""
     @State private var showingFolderPicker = false
     @State private var showingDeleteAll = false
+    @State private var showingStopFolder = false
     @State private var errorMessage: String?
     @State private var query = ""
 
@@ -987,7 +988,7 @@ struct SavedNotesView: View {
                         if settingsService.hasNotesFolder {
                             Button(action: {
                                 AnalyticsEvents.logButtonClick("stop_notes_folder", screen: "saved_notes")
-                                settingsService.stopUsingNotesFolder()
+                                showingStopFolder = true
                             }) {
                                 Label("Stop Using Folder", systemImage: "folder.badge.minus")
                             }
@@ -1020,8 +1021,22 @@ struct SavedNotesView: View {
             .fileImporter(isPresented: $showingFolderPicker, allowedContentTypes: [.folder]) { result in
                 handleFolderPick(result)
             }
-            .confirmationDialog("Delete All Saved Notes?", isPresented: $showingDeleteAll,
-                                titleVisibility: .visible) {
+            // Alerts rather than confirmation dialogs, which leave Cancel out
+            // where they open as a popover.
+            .alert("Stop Using Notes Folder?", isPresented: $showingStopFolder) {
+                Button("Cancel", role: .cancel) { }
+                Button("Stop Using Folder", role: .destructive) {
+                    settingsService.stopUsingNotesFolder()
+                }
+            } message: {
+                if let folder = settingsService.notesFolderName {
+                    Text("The note files in “\(folder)” folder will be deleted. Your notes stay on this device.")
+                } else {
+                    Text("Your notes stay on this device.")
+                }
+            }
+            .alert("Delete All Saved Notes?", isPresented: $showingDeleteAll) {
+                Button("Cancel", role: .cancel) { }
                 Button("Delete All", role: .destructive) {
                     settingsService.deleteAllNotes()
                 }

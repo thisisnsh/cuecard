@@ -296,8 +296,8 @@ private struct VersionDiffView: View {
                 .padding(.bottom, 12)
             }
         }
-        .confirmationDialog("Discard Unsaved Changes?", isPresented: $confirmingRestore,
-                            titleVisibility: .visible) {
+        .alert("Discard Unsaved Changes?", isPresented: $confirmingRestore) {
+            Button("Cancel", role: .cancel) { }
             Button("Restore Version \(version.number)", role: .destructive, action: onRestore)
         } message: {
             Text("The editor has changes that aren't saved. Restoring replaces them with this version.")

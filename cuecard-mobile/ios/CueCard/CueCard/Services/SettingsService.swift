@@ -843,8 +843,10 @@ Thanks for listening. Questions?
         syncNotesFolder()
     }
 
-    /// Stop keeping notes in the folder. The files already there stay.
+    /// Stop keeping notes in the folder, and delete their files from it.
+    /// The notes themselves stay on the device.
     func stopUsingNotesFolder() {
+        noteFolder.removeAll()
         noteFolder.forget()
         hasNotesFolder = false
         notesFolderName = nil
