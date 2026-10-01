@@ -373,19 +373,6 @@ struct HomeView: View {
             // No bar background: the script's fade shows through its lower half.
             .toolbarBackground(.hidden, for: .navigationBar)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button(action: {
-                        AnalyticsEvents.logButtonClick("saved_notes", screen: "home")
-                        isEditorFocused = false
-                        showingSavedNotes = true
-                    }) {
-                        Image(systemName: "list.bullet")
-                            .font(.headline)
-                            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                    }
-                    .accessibilityLabel("Saved Notes")
-                }
-
                 GlasslessToolbarItem {
                     modeToggle
                 }
@@ -428,6 +415,14 @@ struct HomeView: View {
                                 settingsService.createNewNote()
                             }) {
                                 Label("New", systemImage: "square.and.pencil")
+                            }
+
+                            Button(action: {
+                                AnalyticsEvents.logButtonClick("saved_notes", screen: "home")
+                                isEditorFocused = false
+                                showingSavedNotes = true
+                            }) {
+                                Label("Open", systemImage: "folder")
                             }
 
                             Divider()

@@ -58,7 +58,7 @@ private enum AllHelp {
                   detail: "Unsaved below the top bar means there are changes to save. "
                       + "Tap it to save, or tap ••• › Save."),
         HelpTopic("Open Saved Notes",
-                  detail: "Tap the list at the top left to see everything you saved. "
+                  detail: "Tap ••• › Open to see everything you saved. "
                       + "Swipe to rename or delete."),
         HelpTopic("Import a Text File",
                   detail: "Tap ••• › Import. The file opens in the editor and is kept as a saved note."),
