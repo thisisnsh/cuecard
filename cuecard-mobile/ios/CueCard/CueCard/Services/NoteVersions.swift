@@ -73,17 +73,6 @@ final class NoteVersions {
         try? fileManager.removeItem(at: root)
     }
 
-    /// Bytes taken by every version file.
-    func totalSize() -> Int64 {
-        guard let root,
-              let files = fileManager.enumerator(at: root, includingPropertiesForKeys: [.fileSizeKey]) else { return 0 }
-        var total: Int64 = 0
-        for case let url as URL in files {
-            total += Int64((try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0)
-        }
-        return total
-    }
-
     // MARK: - Files
 
     private func folder(of id: UUID) -> URL? {

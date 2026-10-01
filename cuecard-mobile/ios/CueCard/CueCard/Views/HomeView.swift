@@ -780,10 +780,8 @@ struct SavedNotesView: View {
     @State private var renameTitle = ""
     @State private var showingFolderPicker = false
     @State private var showingDeleteAll = false
-    @State private var showingImporter = false
     @State private var errorMessage: String?
     @State private var query = ""
-    @State private var size: Int64 = 0
 
     /// Saved notes, newest first, narrowed to those whose title or text match the search.
     private var notes: [SavedNote] {
@@ -810,11 +808,15 @@ struct SavedNotesView: View {
             .replacingOccurrences(of: "\n", with: " ")
     }
 
-    /// How many notes there are and the space they take, versions included.
-    private var sizeLabel: String {
+    /// When a note was last saved, and how many versions it has.
+    private func detail(of note: SavedNote) -> String {
+        let versions = settingsService.versionCounts[note.id] ?? 1
+        return "\(dateFormatter.string(from: note.updatedAt)) · \(versions) \(versions == 1 ? "Version" : "Versions")"
+    }
+
+    private var countLabel: String {
         let count = settingsService.savedNotes.count
-        let bytes = ByteCountFormatter.string(fromByteCount: size, countStyle: .file)
-        return "\(count) \(count == 1 ? "note" : "notes") · \(bytes)"
+        return "\(count) \(count == 1 ? "note" : "notes")"
     }
 
     /// Where saved notes are kept, shown whether or not there are any.
@@ -827,16 +829,20 @@ struct SavedNotesView: View {
 
     /// Notes never leave the device, so the lock stays whatever the folder.
     private var storageLabel: some View {
-        Label(storageText, systemImage: "lock.fill")
+        Label {
+            storageText
+        } icon: {
+            Image(systemName: "lock.fill")
+        }
     }
 
-    private var storageText: String {
+    private var storageText: Text {
         if let folder = settingsService.notesFolderName {
-            "Notes stay on this device, also as files in “\(folder)”, so they're kept even if the app is removed."
+            Text("Notes stay on this device, also as files in “\(folder)” folder, so they're kept even if the app is removed.")
         } else if settingsService.hasNotesFolder {
-            "Notes stay on this device. The notes folder can't be reached, so they're only kept here until it's back."
+            Text("Notes stay on this device. The notes folder can't be reached, so they're only kept here until it's back.")
         } else {
-            "Notes stay on this device and are deleted if the app is removed. Choose a notes folder in ••• to keep them."
+            Text("Notes stay on this device and are deleted if the app is removed. Choose a notes folder in \(Image(systemName: "ellipsis.circle")) to keep them.")
         }
     }
 
@@ -847,29 +853,6 @@ struct SavedNotesView: View {
                 try settingsService.chooseNotesFolder(url)
             } catch {
                 errorMessage = "This folder can't be used for notes."
-            }
-        case .failure(let error):
-            errorMessage = error.localizedDescription
-        }
-    }
-
-    /// Open a text file as a new saved note, then go back to the editor with it.
-    private func handleImport(_ result: Result<URL, Error>) {
-        switch result {
-        case .success(let url):
-            do {
-                let text = try ScriptFile.readText(from: url)
-                guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                    errorMessage = "That file is empty."
-                    return
-                }
-                settingsService.importNote(
-                    title: ScriptFile.title(for: url),
-                    content: TeleprompterParser.normalizingTags(in: text)
-                )
-                dismiss()
-            } catch {
-                errorMessage = "This file couldn't be read as text."
             }
         case .failure(let error):
             errorMessage = error.localizedDescription
@@ -889,7 +872,7 @@ struct SavedNotesView: View {
                             .font(.headline)
                             .foregroundStyle(AppColors.textPrimary(for: colorScheme))
 
-                        Text("Save your scripts and cards to open them later, or import a text file from •••")
+                        Text("Save your scripts and cards to open them later.")
                             .font(.subheadline)
                             .foregroundStyle(AppColors.textSecondary(for: colorScheme))
                             .multilineTextAlignment(.center)
@@ -932,7 +915,7 @@ struct SavedNotesView: View {
                                             .foregroundStyle(AppColors.textSecondary(for: colorScheme))
                                             .lineLimit(2)
 
-                                        Text(dateFormatter.string(from: note.updatedAt))
+                                        Text(detail(of: note))
                                             .font(.caption)
                                             .foregroundStyle(AppColors.textSecondary(for: colorScheme).opacity(0.7))
                                     }
@@ -975,16 +958,16 @@ struct SavedNotesView: View {
                     .searchable(text: $query, prompt: "Search")
                 }
             }
-            .navigationTitle("Open")
+            .navigationTitle("Saved Notes")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     VStack(spacing: 1) {
-                        Text("Open")
+                        Text("Saved Notes")
                             .font(.headline)
                             .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                         if !settingsService.savedNotes.isEmpty {
-                            Text(sizeLabel)
+                            Text(countLabel)
                                 .font(.caption2)
                                 .foregroundStyle(AppColors.textSecondary(for: colorScheme))
                         }
@@ -993,15 +976,6 @@ struct SavedNotesView: View {
 
                 ToolbarItem(placement: .topBarLeading) {
                     Menu {
-                        Button(action: {
-                            AnalyticsEvents.logButtonClick("import_file", screen: "saved_notes")
-                            showingImporter = true
-                        }) {
-                            Label("Import from File", systemImage: "arrow.down.doc")
-                        }
-
-                        Divider()
-
                         Button(action: {
                             AnalyticsEvents.logButtonClick("choose_notes_folder", screen: "saved_notes")
                             showingFolderPicker = true
@@ -1042,21 +1016,9 @@ struct SavedNotesView: View {
             }
             .onAppear {
                 settingsService.syncNotesFolder()
-                size = settingsService.savedNotesSize()
-            }
-            .onChange(of: settingsService.savedNotes) {
-                size = settingsService.savedNotesSize()
             }
             .fileImporter(isPresented: $showingFolderPicker, allowedContentTypes: [.folder]) { result in
                 handleFolderPick(result)
-            }
-            // Only one file importer works per view, so the other sits a level out.
-            .background {
-                Color.clear
-                    .fileImporter(isPresented: $showingImporter,
-                                  allowedContentTypes: ScriptFile.importableContentTypes) { result in
-                        handleImport(result)
-                    }
             }
             .confirmationDialog("Delete All Saved Notes?", isPresented: $showingDeleteAll,
                                 titleVisibility: .visible) {
@@ -1065,7 +1027,7 @@ struct SavedNotesView: View {
                 }
             } message: {
                 if let folder = settingsService.notesFolderName {
-                    Text("Every saved note and its file in “\(folder)” will be deleted. This can't be undone.")
+                    Text("Every saved note and its file in “\(folder)” folder will be deleted. This can't be undone.")
                 } else {
                     Text("Every saved note will be deleted. This can't be undone.")
                 }
