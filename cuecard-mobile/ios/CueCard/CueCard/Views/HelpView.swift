@@ -249,30 +249,15 @@ struct HelpView: View {
 // MARK: - Help Button
 
 /// The question mark at the top right of a page, in a glass of its own rather
-/// than grouped with the buttons beside it, or shared only with a settings
-/// button when the page has one. Put last among the page's trailing items, so
-/// it sits at the edge.
+/// than grouped with the buttons beside it. Put last among the page's trailing
+/// items, so it sits at the edge. The editor has Help in its ••• menu instead.
 struct HelpToolbarItem: ToolbarContent {
     let page: HelpPage
     @Binding var isPresented: Bool
-    /// Shows a settings button beside the question mark, which calls this.
-    var openSettings: (() -> Void)? = nil
-
-    @Environment(\.colorScheme) private var colorScheme
 
     var body: some ToolbarContent {
         if #available(iOS 26.0, *) {
             ToolbarSpacer(.fixed, placement: .topBarTrailing)
-        }
-        if let openSettings {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button(action: openSettings) {
-                    Image(systemName: "gearshape")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                }
-                .accessibilityLabel("Settings")
-            }
         }
         ToolbarItem(placement: .topBarTrailing) {
             HelpButton(page: page, isPresented: $isPresented)
@@ -300,7 +285,7 @@ private struct HelpButton: View {
 }
 
 extension View {
-    /// The help sheet for `page`, opened by its `HelpToolbarItem`. Kept on the
+    /// The help sheet for `page`, opened by its `HelpToolbarItem` or menu. Kept on the
     /// page rather than the button, so the sheet stays up if the button fades.
     func helpSheet(for page: HelpPage, isPresented: Binding<Bool>) -> some View {
         sheet(isPresented: isPresented) {

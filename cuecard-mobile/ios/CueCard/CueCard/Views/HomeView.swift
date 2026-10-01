@@ -19,6 +19,11 @@ struct HomeView: View {
     @State private var showingVersions = false
     @State private var showingSaveDialog = false
     @State private var saveNoteTitle = ""
+    @State private var showingImporter = false
+    /// "Saved" shows for a moment after a save, where "Unsaved" was.
+    @State private var showsSaved = false
+    @State private var savedTask: Task<Void, Never>?
+    @State private var importError: String?
     @State private var isEditorFocused = false
     @StateObject private var editorController = CueEditorController()
     @ObservedObject private var watch = WatchSessionService.shared
@@ -33,20 +38,9 @@ struct HomeView: View {
 
     /// How far the editor reaches up under the top bar: to its middle, so the
     /// script fades out from there down, as gently as it does at the bottom.
-    /// Not while a banner or the note's status sits between the two.
+    /// Not while a banner sits between the two.
     private var editorTopOverlap: CGFloat {
-        notifications.notification(for: .homeBanner) == nil && !showsNoteStatus ? 22 : 0
-    }
-
-    /// The ••• menu's symbol. iOS 26 draws the glass circle around it itself.
-    private static var menuSymbol: String {
-        if #available(iOS 26.0, *) { "ellipsis" } else { "ellipsis.circle" }
-    }
-
-    /// A saved note shows its version, and any script shows when it has
-    /// changes that aren't saved.
-    private var showsNoteStatus: Bool {
-        settingsService.currentNoteId != nil || settingsService.hasUnsavedChanges
+        notifications.notification(for: .homeBanner) == nil ? 22 : 0
     }
 
     private var hasNotes: Bool {
@@ -55,10 +49,10 @@ struct HomeView: View {
 
     private var isCardsMode: Bool { settingsService.settings.scriptMode == .cards }
 
-    /// How many versions the open note has.
-    private var versionCount: Int? {
-        guard let id = settingsService.currentNoteId else { return nil }
-        return settingsService.versionCounts[id] ?? 1
+    /// The open note has older versions to go back to.
+    private var hasVersionHistory: Bool {
+        guard let id = settingsService.currentNoteId else { return false }
+        return (settingsService.versionCounts[id] ?? 1) > 1
     }
 
     /// Teleprompter or cards: what the editor writes and the Play button opens.
@@ -162,6 +156,72 @@ struct HomeView: View {
         TeleprompterParser.normalizingTags(in: settingsService.notes)
     }
 
+    /// Save to the open note, or ask for a title if the script isn't one yet.
+    private func save() {
+        AnalyticsEvents.logButtonClick("save_note", screen: "home")
+        if settingsService.currentNoteId != nil {
+            settingsService.saveChangesToCurrentNote()
+            flashSaved()
+        } else {
+            saveNoteTitle = ""
+            showingSaveDialog = true
+        }
+    }
+
+    private func flashSaved() {
+        showsSaved = true
+        savedTask?.cancel()
+        savedTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 1_000_000_000)
+            guard !Task.isCancelled else { return }
+            showsSaved = false
+        }
+    }
+
+    /// "Unsaved" while there are changes to save, which a tap saves, then
+    /// "Saved" for a moment once they are.
+    @ViewBuilder
+    private var saveStatus: some View {
+        let isUnsaved = settingsService.hasUnsavedChanges
+        if isUnsaved || showsSaved {
+            Button(action: save) {
+                Text(isUnsaved ? "Unsaved" : "Saved")
+                    .font(.caption.weight(.medium))
+                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .glassedEffect(in: Capsule(), interactive: isUnsaved)
+                    .contentShape(Capsule())
+            }
+            .buttonStyle(.plain)
+            .allowsHitTesting(isUnsaved)
+            .accessibilityHint(isUnsaved ? "Saves your changes" : "")
+            .transition(.opacity)
+        }
+    }
+
+    /// Open a text file in the editor, kept as a new saved note.
+    private func handleImport(_ result: Result<URL, Error>) {
+        switch result {
+        case .success(let url):
+            do {
+                let text = try ScriptFile.readText(from: url)
+                guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                    importError = "That file is empty."
+                    return
+                }
+                settingsService.importNote(
+                    title: ScriptFile.title(for: url),
+                    content: TeleprompterParser.normalizingTags(in: text)
+                )
+            } catch {
+                importError = "This file couldn't be read as text."
+            }
+        case .failure(let error):
+            importError = error.localizedDescription
+        }
+    }
+
     /// Drop an empty cue in at the caret and leave the caret inside it, so the user
     /// can write the cue without hunting for their place.
     private func insertCue() {
@@ -192,49 +252,51 @@ struct HomeView: View {
                             .transition(.move(edge: .top).combined(with: .opacity))
                     }
 
-                    if showsNoteStatus {
-                        NoteStatusRow(version: versionCount,
-                                      isUnsaved: settingsService.hasUnsavedChanges) {
-                            AnalyticsEvents.logButtonClick("version_history", screen: "home")
-                            isEditorFocused = false
-                            showingVersions = true
+                    Group {
+                        if isCardsMode {
+                            CardsEditorView(
+                                text: $settingsService.notes,
+                                isFocused: $isEditorFocused,
+                                controller: editorController,
+                                cueColor: settingsService.settings.cards.cueColor,
+                                colorScheme: colorScheme,
+                                fontSize: CGFloat(settingsService.settings.cards.editorFontSize),
+                                cardLimit: settingsService.settings.cards.characterLimit,
+                                bottomInset: isEditorFocused ? CueBar.height : Self.controlsHeight,
+                                topOverlap: editorTopOverlap
+                            )
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        } else {
+                            // Notes editor
+                            NotesEditorView(
+                                text: $settingsService.notes,
+                                isFocused: $isEditorFocused,
+                                controller: editorController,
+                                cueColor: settingsService.settings.cueColor,
+                                colorScheme: colorScheme,
+                                fontSize: CGFloat(settingsService.settings.editorFontSize),
+                                keyboardOverlayHeight: CueBar.height,
+                                restingOverlayHeight: Self.controlsHeight,
+                                topOverlap: editorTopOverlap
+                            )
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            // The editor makes its own room for the keyboard, as scroll
+                            // inset. SwiftUI's avoidance would resize it instead, and the
+                            // gap it leaves behind on dismissal cuts the script off.
+                            .ignoresSafeArea(.keyboard, edges: .bottom)
                         }
-                        .padding(.horizontal, 20)
-                        .padding(.top, 4)
                     }
-
-                    if isCardsMode {
-                        CardsEditorView(
-                            text: $settingsService.notes,
-                            isFocused: $isEditorFocused,
-                            controller: editorController,
-                            cueColor: settingsService.settings.cards.cueColor,
-                            colorScheme: colorScheme,
-                            fontSize: CGFloat(settingsService.settings.cards.editorFontSize),
-                            cardLimit: settingsService.settings.cards.characterLimit,
-                            bottomInset: isEditorFocused ? CueBar.height : Self.controlsHeight,
-                            topOverlap: editorTopOverlap
-                        )
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    } else {
-                        // Notes editor
-                        NotesEditorView(
-                            text: $settingsService.notes,
-                            isFocused: $isEditorFocused,
-                            controller: editorController,
-                            cueColor: settingsService.settings.cueColor,
-                            colorScheme: colorScheme,
-                            fontSize: CGFloat(settingsService.settings.editorFontSize),
-                            keyboardOverlayHeight: CueBar.height,
-                            restingOverlayHeight: Self.controlsHeight,
-                            topOverlap: editorTopOverlap
-                        )
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        // The editor makes its own room for the keyboard, as scroll
-                        // inset. SwiftUI's avoidance would resize it instead, and the
-                        // gap it leaves behind on dismissal cuts the script off.
-                        .ignoresSafeArea(.keyboard, edges: .bottom)
+                    // What's written since the last save is kept on this device,
+                    // but isn't in Saved Notes until it's saved. Laid over the top
+                    // of the script rather than above it, so the fade still starts
+                    // in the top bar and nothing moves when this comes or goes.
+                    .overlay(alignment: .top) {
+                        // Raised a little, to end above where the first card starts.
+                        saveStatus
+                            .offset(y: -6)
                     }
+                    .animation(.easeInOut(duration: 0.2), value: settingsService.hasUnsavedChanges)
+                    .animation(.easeInOut(duration: 0.2), value: showsSaved)
                 }
                 .animation(.easeInOut(duration: 0.25), value: notifications.dismissedIDs)
             }
@@ -302,80 +364,117 @@ struct HomeView: View {
             .toolbarBackground(.hidden, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    modeMenu
-                }
-
-                ToolbarItem(placement: .topBarTrailing) {
-                    Menu {
-                        if settingsService.currentNoteId != nil && settingsService.hasUnsavedChanges {
-                            Button(action: {
-                                AnalyticsEvents.logButtonClick("save_note", screen: "home")
-                                settingsService.saveChangesToCurrentNote()
-                            }) {
-                                Label("Save", systemImage: "square.and.arrow.down")
-                            }
-                        }
-
-                        Button(action: {
-                            AnalyticsEvents.logButtonClick("save_as_new", screen: "home")
-                            saveNoteTitle = ""
-                            showingSaveDialog = true
-                        }) {
-                            Label("Save as New", systemImage: "doc.badge.plus")
-                        }
-                        .disabled(!hasNotes)
-
-                        Button(action: {
-                            AnalyticsEvents.logButtonClick("saved_notes", screen: "home")
-                            showingSavedNotes = true
-                        }) {
-                            Label("Open", systemImage: "folder")
-                        }
-
-                        Divider()
-
-                        Button(action: {
-                            AnalyticsEvents.logButtonClick("new_note", screen: "home")
-                            settingsService.createNewNote()
-                        }) {
-                            Label("New", systemImage: "square.and.pencil")
-                        }
-
-                        Divider()
-
-                        ShareLink(
-                            item: shareText,
-                            subject: Text(settingsService.currentNote?.title ?? "Speech")
-                        ) {
-                            Label("Share", systemImage: "square.and.arrow.up")
-                        }
-                        .disabled(!hasNotes)
-
-                        if watch.isWatchAppInstalled, let note = settingsService.currentNote {
-                            let isOnWatch = settingsService.watchNoteIDs.contains(note.id)
-                            Divider()
-                            Button(action: {
-                                AnalyticsEvents.logButtonClick(isOnWatch ? "watch_remove_note" : "watch_add_note",
-                                                               screen: "home")
-                                settingsService.setOnWatch(!isOnWatch, noteID: note.id)
-                            }) {
-                                Label(isOnWatch ? "Remove from Apple Watch" : "Keep on Apple Watch",
-                                      systemImage: isOnWatch ? "applewatch.slash" : "applewatch")
-                            }
-                        }
-                    } label: {
-                        // On iOS 26 the button sits in a glass circle of its own.
-                        Image(systemName: Self.menuSymbol)
+                    Button(action: {
+                        AnalyticsEvents.logButtonClick("saved_notes", screen: "home")
+                        isEditorFocused = false
+                        showingSavedNotes = true
+                    }) {
+                        Image(systemName: "folder")
                             .font(.title3)
                             .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                     }
-                    .menuActionDismissBehavior(.enabled)
-                    .accessibilityLabel("More")
+                    .accessibilityLabel("Saved Notes")
                 }
 
-                HelpToolbarItem(page: .writing(settingsService.settings.scriptMode), isPresented: $showingHelp) {
-                    AnalyticsEvents.logButtonClick("settings", screen: "home")
-                    showingSettings = true
+                GlasslessToolbarItem {
+                    modeMenu
+                }
+
+                // Only once the note has an older version to go back to.
+                if hasVersionHistory {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button(action: {
+                            AnalyticsEvents.logButtonClick("version_history", screen: "home")
+                            isEditorFocused = false
+                            showingVersions = true
+                        }) {
+                            Image(systemName: "clock.arrow.circlepath")
+                                .font(.title3)
+                                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                        }
+                        .accessibilityLabel("Version History")
+                    }
+                }
+
+                // ••• and Settings share a glass of their own, at the edge.
+                if #available(iOS 26.0, *) {
+                    ToolbarSpacer(.fixed, placement: .topBarTrailing)
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    HStack(spacing: 16) {
+                        Menu {
+                            if settingsService.hasUnsavedChanges {
+                                Button(action: save) {
+                                    Label("Save", systemImage: "square.and.arrow.down")
+                                }
+
+                                Divider()
+                            }
+
+                            Button(action: {
+                                AnalyticsEvents.logButtonClick("new_note", screen: "home")
+                                settingsService.createNewNote()
+                            }) {
+                                Label("New", systemImage: "square.and.pencil")
+                            }
+
+                            Divider()
+
+                            Button(action: {
+                                AnalyticsEvents.logButtonClick("import_file", screen: "home")
+                                showingImporter = true
+                            }) {
+                                Label("Import", systemImage: "arrow.down.doc")
+                            }
+
+                            ShareLink(
+                                item: shareText,
+                                subject: Text(settingsService.currentNote?.title ?? "Speech")
+                            ) {
+                                Label("Share", systemImage: "square.and.arrow.up")
+                            }
+                            .disabled(!hasNotes)
+
+                            if watch.isWatchAppInstalled, let note = settingsService.currentNote {
+                                let isOnWatch = settingsService.watchNoteIDs.contains(note.id)
+                                Divider()
+                                Button(action: {
+                                    AnalyticsEvents.logButtonClick(isOnWatch ? "watch_remove_note" : "watch_add_note",
+                                                                   screen: "home")
+                                    settingsService.setOnWatch(!isOnWatch, noteID: note.id)
+                                }) {
+                                    Label(isOnWatch ? "Remove from Apple Watch" : "Keep on Apple Watch",
+                                          systemImage: isOnWatch ? "applewatch.slash" : "applewatch")
+                                }
+                            }
+
+                            Divider()
+
+                            Button(action: {
+                                AnalyticsEvents.logButtonClick(
+                                    "help", screen: HelpPage.writing(settingsService.settings.scriptMode).rawValue)
+                                showingHelp = true
+                            }) {
+                                Label("Help", systemImage: "questionmark.circle")
+                            }
+                        } label: {
+                            Image(systemName: "ellipsis.circle")
+                                .font(.title3)
+                                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                        }
+                        .menuActionDismissBehavior(.enabled)
+                        .accessibilityLabel("More")
+
+                        Button(action: {
+                            AnalyticsEvents.logButtonClick("settings", screen: "home")
+                            showingSettings = true
+                        }) {
+                            Image(systemName: "gearshape")
+                                .font(.title3)
+                                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                        }
+                        .accessibilityLabel("Settings")
+                    }
                 }
             }
             .helpSheet(for: .writing(settingsService.settings.scriptMode), isPresented: $showingHelp)
@@ -393,6 +492,18 @@ struct HomeView: View {
             .sheet(isPresented: $showingTimer) {
                 TimerSheet()
             }
+            .fileImporter(isPresented: $showingImporter,
+                          allowedContentTypes: ScriptFile.importableContentTypes) { result in
+                handleImport(result)
+            }
+            .alert("Something Went Wrong", isPresented: Binding(
+                get: { importError != nil },
+                set: { if !$0 { importError = nil } }
+            )) {
+                Button("OK", role: .cancel) { importError = nil }
+            } message: {
+                Text(importError ?? "")
+            }
             .alert("Save Note", isPresented: $showingSaveDialog) {
                 TextField("Note title", text: $saveNoteTitle)
                 Button("Cancel", role: .cancel) { }
@@ -400,6 +511,7 @@ struct HomeView: View {
                     let title = saveNoteTitle.trimmingCharacters(in: .whitespacesAndNewlines)
                     if !title.isEmpty {
                         settingsService.saveCurrentNote(title: title)
+                        flashSaved()
                     }
                 }
             } message: {
@@ -734,40 +846,21 @@ struct CardsEditorView: View {
     }
 }
 
-/// The open note's version and "Unsaved", in a row below the top bar, with
-/// the way into the note's version history once it has more than one.
-private struct NoteStatusRow: View {
-    let version: Int?
-    let isUnsaved: Bool
-    let showVersions: () -> Void
-    @Environment(\.colorScheme) private var colorScheme
+/// The mode menu's place in the top bar, without the glass iOS 26 draws
+/// behind bar buttons: it reads as the screen's title, not one more button.
+private struct GlasslessToolbarItem<Content: View>: ToolbarContent {
+    @ViewBuilder let content: () -> Content
 
-    var body: some View {
-        HStack(spacing: 8) {
-            if let version {
-                Text("Version \(version)")
-            }
-            if version != nil && isUnsaved {
-                Text("·")
-            }
-            if isUnsaved {
-                Text("Unsaved")
-            }
-
-            Spacer(minLength: 8)
-
-            if let version, version > 1 {
-                Button(action: showVersions) {
-                    Label("Version History", systemImage: "clock.arrow.circlepath")
-                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                }
-                .buttonStyle(.plain)
-            }
+    var body: some ToolbarContent {
+        if #available(iOS 26.0, *) {
+            item.sharedBackgroundVisibility(.hidden)
+        } else {
+            item
         }
-        .font(.caption)
-        .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-        .lineLimit(1)
-        .frame(minHeight: 24)
+    }
+
+    private var item: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading, content: content)
     }
 }
 
