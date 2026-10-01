@@ -56,22 +56,15 @@ struct HomeView: View {
     }
 
     /// Teleprompter or cards: what the editor writes and the Play button opens.
-    /// The bar shows the chosen mode's name.
-    private var modeMenu: some View {
+    /// The bar shows the chosen mode's name; a tap switches to the other one.
+    private var modeToggle: some View {
         let current = settingsService.settings.scriptMode
+        let next: ScriptMode = current == .teleprompter ? .cards : .teleprompter
 
-        // Plain buttons rather than a picker, so the menu shows no checkmark:
-        // the bar already says which mode is on.
-        return Menu {
-            ForEach(ScriptMode.allCases) { mode in
-                Button {
-                    AnalyticsEvents.logButtonClick("mode_\(mode.rawValue)", screen: "home")
-                    isEditorFocused = false
-                    settingsService.settings.scriptMode = mode
-                } label: {
-                    Text(mode.displayName)
-                }
-            }
+        return Button {
+            AnalyticsEvents.logButtonClick("mode_\(next.rawValue)", screen: "home")
+            isEditorFocused = false
+            settingsService.settings.scriptMode = next
         } label: {
             HStack(spacing: 6) {
                 Text(current.displayName)
@@ -84,6 +77,7 @@ struct HomeView: View {
             .fixedSize()
         }
         .accessibilityLabel("Mode: \(current.displayName)")
+        .accessibilityHint("Switches to \(next.displayName)")
     }
 
     private func showCardsOpenedOnWatch() {
@@ -377,7 +371,7 @@ struct HomeView: View {
                 }
 
                 GlasslessToolbarItem {
-                    modeMenu
+                    modeToggle
                 }
 
                 // Only once the note has an older version to go back to.
