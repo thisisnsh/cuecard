@@ -1,8 +1,10 @@
 {
   "1.8.0": {
-    "title": "Version History",
+    "title": "Improved Saved Notes",
     "features": [
-        "Version History: See what changed in a note and restore older versions."
+        "Version History: See what changed in a note and restore older versions.",
+        "Notes Folder: Keep notes as files that stay if the app is removed.",
+        "Search: Find a saved note by its title or text."
     ]
   }
 }
