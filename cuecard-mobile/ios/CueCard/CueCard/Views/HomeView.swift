@@ -287,7 +287,7 @@ struct HomeView: View {
                     .overlay(alignment: .top) {
                         // Raised a little, to end above where the first card starts.
                         saveStatus
-                            .offset(y: -6)
+                            .offset(y: -8)
                     }
                     .animation(.easeInOut(duration: 0.2), value: settingsService.hasUnsavedChanges)
                     .animation(.easeInOut(duration: 0.2), value: showsSaved)
