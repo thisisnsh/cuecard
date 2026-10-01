@@ -379,8 +379,8 @@ struct HomeView: View {
                         isEditorFocused = false
                         showingSavedNotes = true
                     }) {
-                        Image(systemName: "folder")
-                            .font(.title3)
+                        Image(systemName: "list.bullet")
+                            .font(.headline)
                             .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                     }
                     .accessibilityLabel("Saved Notes")
