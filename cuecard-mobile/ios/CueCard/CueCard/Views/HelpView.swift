@@ -46,7 +46,7 @@ private struct HelpSection: Identifiable {
 private enum AllHelp {
     static let general = HelpSection(title: "General", topics: [
         HelpTopic("Pick a Mode",
-                  detail: "Tap the mode name at the top left. Teleprompter scrolls your whole script. "
+                  detail: "Tap the mode name at the top. Teleprompter scrolls your whole script. "
                       + "Cards shows it one card at a time."),
         HelpTopic("Add Cues",
                   detail: "Cues are reminders like [cue pause], shown in color and not read out. "
@@ -56,20 +56,22 @@ private enum AllHelp {
                       + "and when it warns you."),
         HelpTopic("Save Your Work",
                   detail: "Unsaved below the top bar means there are changes to save. "
-                      + "Tap ••• › Save, or Save as New to keep a copy."),
-        HelpTopic("Open or Import",
-                  detail: "Tap ••• › Open to see everything you saved. Swipe to rename or delete. "
-                      + "Import a text file from the ••• menu there."),
+                      + "Tap it to save, or tap ••• › Save."),
+        HelpTopic("Open Saved Notes",
+                  detail: "Tap the folder at the top left to see everything you saved. "
+                      + "Swipe to rename or delete."),
+        HelpTopic("Import a Text File",
+                  detail: "Tap ••• › Import. The file opens in the editor and is kept as a saved note."),
         HelpTopic("Go Back to an Older Version",
-                  detail: "Every save is a new version. Tap Version History below the top bar "
-                      + "to compare changes and restore one."),
+                  detail: "Every save is a new version. Once a note has more than one, "
+                      + "tap the clock at the top to compare changes and restore one."),
         HelpTopic("Keep Notes if the App Is Removed",
                   detail: "Notes stay on this device and are deleted with the app. "
-                      + "In Open, choose a notes folder from ••• to keep them as files."),
+                      + "In Saved Notes, choose a notes folder from ••• to keep them as files."),
         HelpTopic("Share a Script",
                   detail: "Tap ••• › Share to send it as text, cues included."),
         HelpTopic("Change Text Size and Colors",
-                  detail: "Tap the gear. Each mode keeps its own sizes and cue color. "
+                  detail: "Tap the gear at the top. Each mode keeps its own sizes and cue color. "
                       + "Timer colors are set in the timer.")
     ])
 
