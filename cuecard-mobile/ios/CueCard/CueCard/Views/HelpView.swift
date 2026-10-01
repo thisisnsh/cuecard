@@ -46,7 +46,7 @@ private struct HelpSection: Identifiable {
 private enum AllHelp {
     static let general = HelpSection(title: "General", topics: [
         HelpTopic("Pick a Mode",
-                  detail: "Tap the mode name at the top to switch. Teleprompter scrolls your whole script. "
+                  detail: "Tap the mode name at the top. Teleprompter scrolls your whole script. "
                       + "Cards shows it one card at a time."),
         HelpTopic("Add Cues",
                   detail: "Cues are reminders like [cue pause], shown in color and not read out. "

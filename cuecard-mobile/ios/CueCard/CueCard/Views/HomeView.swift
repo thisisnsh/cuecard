@@ -56,44 +56,34 @@ struct HomeView: View {
     }
 
     /// Teleprompter or cards: what the editor writes and the Play button opens.
-    /// The bar shows the chosen mode's name; a tap switches to the other one.
-    private var modeToggle: some View {
+    /// The bar shows the chosen mode's name.
+    private var modeMenu: some View {
         let current = settingsService.settings.scriptMode
-        let next: ScriptMode = current == .teleprompter ? .cards : .teleprompter
 
-        return Button {
-            AnalyticsEvents.logButtonClick("mode_\(next.rawValue)", screen: "home")
-            isEditorFocused = false
-            settingsService.settings.scriptMode = next
-        } label: {
-            // Sized for the longest name, so the bar never resizes the item (and
-            // springs it) on a switch: the name swaps, the chevron slides.
-            ZStack(alignment: .leading) {
-                ForEach(ScriptMode.allCases) { mode in
-                    modeLabel(mode.displayName).hidden()
+        // Plain buttons rather than a picker, so the menu shows no checkmark:
+        // the bar already says which mode is on.
+        return Menu {
+            ForEach(ScriptMode.allCases) { mode in
+                Button {
+                    AnalyticsEvents.logButtonClick("mode_\(mode.rawValue)", screen: "home")
+                    isEditorFocused = false
+                    settingsService.settings.scriptMode = mode
+                } label: {
+                    Text(mode.displayName)
                 }
-                modeLabel(current.displayName)
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Text(current.displayName)
+                    .font(.headline)
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
             }
             .foregroundStyle(AppColors.textPrimary(for: colorScheme))
             .fixedSize()
         }
-        // The bar's own button style scales the label on a press.
-        .buttonStyle(.plain)
         .accessibilityLabel("Mode: \(current.displayName)")
-        .accessibilityHint("Switches to \(next.displayName)")
-    }
-
-    private func modeLabel(_ name: String) -> some View {
-        HStack(spacing: 6) {
-            Text(name)
-                .font(.headline)
-                .contentTransition(.identity)
-                .transaction { $0.animation = nil }
-            Image(systemName: "chevron.down")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                .animation(.easeInOut(duration: 0.2), value: name)
-        }
     }
 
     private func showCardsOpenedOnWatch() {
@@ -373,8 +363,8 @@ struct HomeView: View {
             // No bar background: the script's fade shows through its lower half.
             .toolbarBackground(.hidden, for: .navigationBar)
             .toolbar {
-                GlasslessToolbarItem {
-                    modeToggle
+                ToolbarItem(placement: .topBarLeading) {
+                    modeMenu
                 }
 
                 // Only once the note has an older version to go back to.
@@ -842,24 +832,6 @@ struct CardsEditorView: View {
         let script = CueCards.script(for: cards.map(\.text))
         writtenText = script
         if text != script { text = script }
-    }
-}
-
-/// The mode menu's place in the top bar, without the glass iOS 26 draws
-/// behind bar buttons: it reads as the screen's title, not one more button.
-private struct GlasslessToolbarItem<Content: View>: ToolbarContent {
-    @ViewBuilder let content: () -> Content
-
-    var body: some ToolbarContent {
-        if #available(iOS 26.0, *) {
-            item.sharedBackgroundVisibility(.hidden)
-        } else {
-            item
-        }
-    }
-
-    private var item: some ToolbarContent {
-        ToolbarItem(placement: .topBarLeading, content: content)
     }
 }
 
