@@ -255,7 +255,8 @@ private struct VersionDiffView: View {
             }
             .padding(.vertical, 12)
         }
-        .background(AppColors.background(for: colorScheme))
+        // The sheet's own color, as in the list of versions it's pushed from.
+        .background(Color(.systemGroupedBackground))
         .navigationTitle("Compare Changes")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
