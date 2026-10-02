@@ -187,8 +187,7 @@ data class RemoteNotification(
 
             for (action in actions.filter { it.kind == Action.Kind.OPEN_URL }) {
                 val url = action.url ?: return false
-                val host = runCatching { URI(url).host }.getOrNull() ?: return false
-                if (!allowedHosts.contains(host)) return false
+                if (!isAllowedLink(url)) return false
             }
 
             return dismissible || actions.isNotEmpty()
@@ -212,6 +211,17 @@ data class RemoteNotification(
         val allowedHosts = setOf(
             "cuecard.dev", "www.cuecard.dev", "play.google.com", "github.com"
         )
+
+        /**
+         * Whether a notification may link to `url`: over https, on a host we
+         * recognise.
+         */
+        fun isAllowedLink(url: String): Boolean {
+            val uri = runCatching { URI(url) }.getOrNull() ?: return false
+            if (!uri.scheme.equals("https", ignoreCase = true)) return false
+            val host = uri.host?.lowercase() ?: return false
+            return allowedHosts.contains(host)
+        }
     }
 }
 
