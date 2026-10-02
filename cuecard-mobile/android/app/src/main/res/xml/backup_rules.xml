@@ -2,4 +2,5 @@
 <!-- Android 11 and below. The same exclusion as data_extraction_rules.xml. -->
 <full-backup-content>
     <exclude domain="file" path="datastore/cuecard_onboarding.preferences_pb" />
+    <exclude domain="sharedpref" path="cuecard_notes_folder.xml" />
 </full-backup-content>

@@ -46,6 +46,8 @@ fun ContentView(
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
+                // Notes in the notes folder may have been edited elsewhere.
+                scope.launch { settingsService.syncNotesFolder() }
                 scope.launch { notifications.refresh() }
             }
         }

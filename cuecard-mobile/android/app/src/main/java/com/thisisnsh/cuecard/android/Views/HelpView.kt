@@ -64,7 +64,6 @@ import com.thisisnsh.cuecard.android.services.WhatsNewService
 enum class HelpPage(val rawValue: String) {
     WRITING_TELEPROMPTER("home_teleprompter"),
     WRITING_CARDS("home_cards"),
-    SAVED_CONTENT("saved_notes"),
     TELEPROMPTER("teleprompter"),
     CARDS("cards");
 
@@ -90,38 +89,51 @@ private object AllHelp {
         listOf(
             HelpTopic(
                 "Pick a Mode",
-                "Tap the mode name at the top left. Teleprompter scrolls your whole script. " +
+                "Tap the mode name at the top. Teleprompter scrolls your whole script. " +
                     "Cards shows it one card at a time."
             ),
             HelpTopic(
                 "Add Cues",
-                "Cues are reminders like [cue pause], shown in color and not meant to be read out. " +
-                    "Type [ (square bracket) or tap Add Cue above the keyboard to add one."
+                "Cues are reminders like [cue pause], shown in color and not read out. " +
+                    "Type [ or tap Add Cue above the keyboard."
             ),
             HelpTopic(
                 "Set a Timer",
-                "Tap the timer next to Play and choose how long you have to speak " +
-                    "and when it warns you. It shows while you present."
+                "Tap the timer next to Play to set how long you have " +
+                    "and when it warns you."
             ),
             HelpTopic(
-                "Save and Open",
-                "Use the ⋮ menu to save your script or deck, or open one you saved. " +
-                    "Import or export text files there too."
+                "Save Your Work",
+                "Unsaved below the top bar means there are changes to save. " +
+                    "Tap it to save, or tap ⋮ › Save."
             ),
             HelpTopic(
-                "Rename or Delete",
-                "Everything you save is in Saved Content. " +
-                    "Swipe right on one to rename it, or swipe left to delete it."
+                "Open Saved Notes",
+                "Tap ⋮ › Open to see everything you saved. " +
+                    "Swipe to rename or delete."
             ),
             HelpTopic(
-                "Change Text Size",
-                "Each mode keeps its own text size and colors in Settings. " +
-                    "Tap Show Advanced Settings to type an exact size."
+                "Import a Text File",
+                "Tap ⋮ › Import. The file opens in the editor and is kept as a saved note."
             ),
             HelpTopic(
-                "Change Colors",
-                "Pick colors that are easy for you to tell apart. " +
-                    "Set the cue color in Settings, and the timer colors in the timer."
+                "Go Back to an Older Version",
+                "Every save is a new version. Once a note has more than one, " +
+                    "tap the clock at the top to compare changes and restore one."
+            ),
+            HelpTopic(
+                "Keep Notes if the App Is Removed",
+                "Notes stay on this device and are deleted with the app. " +
+                    "In Saved Notes, choose a notes folder from ⋮ to keep them as files."
+            ),
+            HelpTopic(
+                "Share a Script",
+                "Tap ⋮ › Share to send it as text, cues included."
+            ),
+            HelpTopic(
+                "Change Text Size and Colors",
+                "Tap the gear at the top. Each mode keeps its own sizes and cue color. " +
+                    "Timer colors are set in the timer."
             )
         )
     )
@@ -319,7 +331,12 @@ fun HelpView(page: HelpPage, onDismiss: () -> Unit) {
 }
 
 @Composable
-private fun SearchField(query: String, onQueryChange: (String) -> Unit, isDark: Boolean) {
+internal fun SearchField(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    isDark: Boolean,
+    placeholder: String = "Search Help"
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -338,7 +355,7 @@ private fun SearchField(query: String, onQueryChange: (String) -> Unit, isDark: 
         Spacer(modifier = Modifier.width(8.dp))
         Box(modifier = Modifier.weight(1f)) {
             if (query.isEmpty()) {
-                Text(text = "Search Help", fontSize = 17.sp, color = AppColors.textSecondary(isDark))
+                Text(text = placeholder, fontSize = 17.sp, color = AppColors.textSecondary(isDark))
             }
             BasicTextField(
                 value = query,

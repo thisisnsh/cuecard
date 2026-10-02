@@ -2,13 +2,16 @@
 <!--
   Android 12 and up. Everything is carried over except the record of the welcome
   screen having been seen, so a reinstall opens on it the way a first install
-  does.
+  does, and which folder notes are kept in, since permission to use the folder
+  isn't carried over with it.
 -->
 <data-extraction-rules>
     <cloud-backup>
         <exclude domain="file" path="datastore/cuecard_onboarding.preferences_pb" />
+        <exclude domain="sharedpref" path="cuecard_notes_folder.xml" />
     </cloud-backup>
     <device-transfer>
         <exclude domain="file" path="datastore/cuecard_onboarding.preferences_pb" />
+        <exclude domain="sharedpref" path="cuecard_notes_folder.xml" />
     </device-transfer>
 </data-extraction-rules>

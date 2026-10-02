@@ -3,6 +3,8 @@ package com.thisisnsh.cuecard.android.models
 import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
 import java.nio.ByteBuffer
 import java.nio.charset.CodingErrorAction
 import java.nio.charset.StandardCharsets
@@ -20,15 +22,25 @@ object ScriptFile {
      */
     val importableMimeTypes = arrayOf("text/*", "application/rtf")
 
-    /** What an exported script is written as. */
-    const val EXPORT_MIME_TYPE = "text/plain"
+    /**
+     * The largest file read as a script, in bytes. Far more than any script runs
+     * to, and little enough to read into memory without trouble.
+     */
+    const val MAX_FILE_SIZE = 10L * 1024 * 1024
+
+    /** A file over `MAX_FILE_SIZE`, which is left unread. */
+    class FileTooLarge(val size: Long) : Exception()
 
     /**
      * Read a picked file as text, in UTF-8 where it decodes and the platform's
-     * own charset where it doesn't. Throws when the file can't be read at all.
+     * own charset where it doesn't. Throws when the file can't be read at all,
+     * and `FileTooLarge` rather than read a file over `MAX_FILE_SIZE`.
      */
     fun readText(context: Context, uri: Uri): String {
-        val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+        val size = fileSize(context, uri)
+        if (size != null && size > MAX_FILE_SIZE) throw FileTooLarge(size)
+
+        val bytes = context.contentResolver.openInputStream(uri)?.use { readBytes(it) }
             ?: throw IllegalStateException("Could not open $uri")
 
         val utf8 = StandardCharsets.UTF_8.newDecoder()
@@ -37,6 +49,32 @@ object ScriptFile {
 
         return runCatching { utf8.decode(ByteBuffer.wrap(bytes)).toString() }
             .getOrElse { String(bytes) }
+    }
+
+    /** A file's size, or null where whatever serves it doesn't say. */
+    private fun fileSize(context: Context, uri: Uri): Long? =
+        runCatching {
+            context.contentResolver
+                .query(uri, arrayOf(OpenableColumns.SIZE), null, null, null)
+                ?.use { cursor ->
+                    if (cursor.moveToFirst() && !cursor.isNull(0)) cursor.getLong(0) else null
+                }
+        }.getOrNull()
+
+    /**
+     * Not every file says how big it is up front, so the limit is held to while
+     * reading too.
+     */
+    private fun readBytes(stream: InputStream): ByteArray {
+        val bytes = ByteArrayOutputStream()
+        val buffer = ByteArray(64 * 1024)
+        while (true) {
+            val count = stream.read(buffer)
+            if (count < 0) break
+            bytes.write(buffer, 0, count)
+            if (bytes.size() > MAX_FILE_SIZE) throw FileTooLarge(bytes.size().toLong())
+        }
+        return bytes.toByteArray()
     }
 
     /** Title for an imported script, taken from the file name. */
@@ -48,12 +86,17 @@ object ScriptFile {
             }
             ?: uri.lastPathSegment
 
-        val name = displayName.orEmpty().substringAfterLast('/').substringBeforeLast('.').trim()
+        return title(displayName.orEmpty().substringAfterLast('/'))
+    }
+
+    /** Title for a script, taken from its file's name. */
+    fun title(fileName: String): String {
+        val name = (if (fileName.contains('.')) fileName.substringBeforeLast('.') else fileName).trim()
         return name.ifEmpty { "Imported Script" }
     }
 
     /**
-     * File name suggested when exporting, preferring the saved note's title and
+     * File name suggested for a script, preferring the saved note's title and
      * falling back to the script's first line.
      */
     fun suggestedFileName(title: String?, content: String): String {

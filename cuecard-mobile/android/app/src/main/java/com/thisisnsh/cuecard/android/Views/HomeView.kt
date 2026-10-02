@@ -3,10 +3,12 @@ package com.thisisnsh.cuecard.android.views
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import android.content.Intent
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -29,6 +31,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
@@ -36,6 +40,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -44,6 +49,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -93,13 +99,16 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.ViewCarousel
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.Dp
@@ -109,8 +118,11 @@ import com.thisisnsh.cuecard.android.models.CueColor
 import com.thisisnsh.cuecard.android.models.ScriptMode
 import com.thisisnsh.cuecard.android.services.TeleprompterSettings
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * How much of the editor's bottom the controls row covers: the play button and
@@ -139,6 +151,7 @@ fun HomeView(
     val settings by settingsService.settings.collectAsState()
     val savedNotes by settingsService.savedNotes.collectAsState()
     val currentNoteId by settingsService.currentNoteId.collectAsState()
+    val versionCounts by settingsService.versionCounts.collectAsState()
     val payload by notifications.payload.collectAsState()
     val dismissedIds by notifications.dismissedIds.collectAsState()
 
@@ -147,12 +160,16 @@ fun HomeView(
     var showingTeleprompter by remember { mutableStateOf(false) }
     var showingCards by remember { mutableStateOf(false) }
     var showingSavedNotes by remember { mutableStateOf(false) }
+    var showingVersions by remember { mutableStateOf(false) }
     var showingTimer by remember { mutableStateOf(false) }
     var showingSaveDialog by remember { mutableStateOf(false) }
     var saveNoteTitle by remember { mutableStateOf("") }
     var showingMenu by remember { mutableStateOf(false) }
     var showingModeMenu by remember { mutableStateOf(false) }
     var fileErrorMessage by remember { mutableStateOf<String?>(null) }
+    /** "Saved" shows for a moment after a save, where "Unsaved" was. */
+    var showsSaved by remember { mutableStateOf(false) }
+    var savedJob by remember { mutableStateOf<Job?>(null) }
     var isEditorFocused by remember { mutableStateOf(false) }
     val editorController = remember { CueEditorController() }
 
@@ -160,6 +177,11 @@ fun HomeView(
     val isCardsMode = settings.scriptMode == ScriptMode.CARDS
     val cards = remember(notes) { CueCards.cards(notes) }
     val canStart = if (isCardsMode) cards.isNotEmpty() else hasNotes
+
+    val currentNote = savedNotes.firstOrNull { it.id == currentNoteId }
+    val hasUnsavedChanges = if (currentNote != null) currentNote.content != notes else hasNotes
+    /** The open note has older versions to go back to. */
+    val hasVersionHistory = currentNoteId?.let { (versionCounts[it] ?: 1) > 1 } ?: false
 
     val banner = remember(payload, dismissedIds) {
         notifications.notification(RemoteNotification.Surface.HOME_BANNER)
@@ -177,15 +199,39 @@ fun HomeView(
         scope.launch(start = CoroutineStart.UNDISPATCHED) { settingsService.saveNotes(text) }
     }
 
+    fun flashSaved() {
+        showsSaved = true
+        savedJob?.cancel()
+        savedJob = scope.launch {
+            delay(1000)
+            showsSaved = false
+        }
+    }
+
+    /** Save to the open note, or ask for a title if the script isn't one yet. */
+    fun save() {
+        AnalyticsEvents.logButtonClick("save_note", "home")
+        if (currentNoteId != null) {
+            scope.launch {
+                settingsService.saveChangesToCurrentNote()
+                flashSaved()
+            }
+        } else {
+            saveNoteTitle = ""
+            showingSaveDialog = true
+        }
+    }
+
     // MARK: - Files
 
+    /** Open a text file in the editor, kept as a new saved note. */
     val importLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
     ) { uri ->
         uri ?: return@rememberLauncherForActivityResult
         scope.launch {
             try {
-                val text = ScriptFile.readText(context, uri)
+                val text = withContext(Dispatchers.IO) { ScriptFile.readText(context, uri) }
                 if (text.trim().isEmpty()) {
                     fileErrorMessage = "That file is empty."
                     return@launch
@@ -194,22 +240,32 @@ fun HomeView(
                     title = ScriptFile.title(context, uri),
                     content = TeleprompterParser.normalizingTags(text)
                 )
+            } catch (e: ScriptFile.FileTooLarge) {
+                fileErrorMessage = "That file is larger than 10 MB, so it can't be imported."
+                AnalyticsEvents.logEvent(
+                    "file_too_large",
+                    mapOf("source" to "import", "size_mb" to e.size / (1024 * 1024))
+                )
             } catch (e: Exception) {
                 fileErrorMessage = "This file couldn't be read as text."
             }
         }
     }
 
-    val exportLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.CreateDocument(ScriptFile.EXPORT_MIME_TYPE)
-    ) { uri ->
-        uri ?: return@rememberLauncherForActivityResult
+    /**
+     * Hand the script to the share sheet as it would be written to a file, with
+     * cues in `[cue …]` form.
+     */
+    fun shareScript() {
+        val send = Intent(Intent.ACTION_SEND)
+            .setType("text/plain")
+            .putExtra(Intent.EXTRA_SUBJECT, currentNote?.title ?: "Speech")
+            .putExtra(Intent.EXTRA_TEXT, TeleprompterParser.normalizingTags(notes))
         try {
-            context.contentResolver.openOutputStream(uri)?.use { stream ->
-                stream.write(TeleprompterParser.normalizingTags(notes).toByteArray())
-            } ?: throw IllegalStateException("Could not open $uri")
+            context.startActivity(Intent.createChooser(send, null))
         } catch (e: Exception) {
-            fileErrorMessage = e.message ?: "This file couldn't be written."
+            // More text than one app can hand to another.
+            fileErrorMessage = "This script is too long to share."
         }
     }
 
@@ -239,14 +295,15 @@ fun HomeView(
     }
 
     BackHandler(
-        enabled = showingSettings || showingSavedNotes || showingTeleprompter || showingTimer ||
-            showingHelp || isEditorFocused
+        enabled = showingSettings || showingSavedNotes || showingVersions || showingTeleprompter ||
+            showingTimer || showingHelp || isEditorFocused
     ) {
         when {
             showingHelp -> showingHelp = false
             showingTeleprompter -> showingTeleprompter = false
             showingSettings -> showingSettings = false
             showingTimer -> showingTimer = false
+            showingVersions -> showingVersions = false
             showingSavedNotes -> showingSavedNotes = false
             isEditorFocused -> isEditorFocused = false
         }
@@ -304,6 +361,23 @@ fun HomeView(
                         }
                     },
                     actions = {
+                        // Only once the note has an older version to go back to.
+                        if (hasVersionHistory) {
+                            Icon(
+                                imageVector = Icons.Filled.History,
+                                contentDescription = "Version History",
+                                tint = AppColors.textPrimary(isDark),
+                                modifier = Modifier
+                                    .padding(horizontal = 8.dp)
+                                    .size(20.dp)
+                                    .clickableWithoutRipple {
+                                        AnalyticsEvents.logButtonClick("version_history", "home")
+                                        isEditorFocused = false
+                                        showingVersions = true
+                                    }
+                            )
+                        }
+
                         Box {
                             Icon(
                                 imageVector = Icons.Filled.MoreVert,
@@ -320,29 +394,17 @@ fun HomeView(
                                 onDismissRequest = { showingMenu = false },
                                 containerColor = AppColors.background(isDark)
                             ) {
-                                if (currentNoteId != null && settingsService.hasUnsavedChanges) {
+                                if (hasUnsavedChanges) {
                                     DropdownMenuItem(
                                         text = { Text("Save") },
                                         onClick = {
                                             showingMenu = false
-                                            AnalyticsEvents.logButtonClick("save_note", "home")
-                                            scope.launch { settingsService.saveChangesToCurrentNote() }
+                                            save()
                                         }
                                     )
+
+                                    HorizontalDivider()
                                 }
-
-                                DropdownMenuItem(
-                                    text = { Text("Save as New") },
-                                    enabled = hasNotes,
-                                    onClick = {
-                                        showingMenu = false
-                                        AnalyticsEvents.logButtonClick("save_as_new", "home")
-                                        saveNoteTitle = ""
-                                        showingSaveDialog = true
-                                    }
-                                )
-
-                                androidx.compose.material3.HorizontalDivider()
 
                                 DropdownMenuItem(
                                     text = { Text("New") },
@@ -353,10 +415,8 @@ fun HomeView(
                                     }
                                 )
 
-                                androidx.compose.material3.HorizontalDivider()
-
                                 DropdownMenuItem(
-                                    text = { Text("Saved Content") },
+                                    text = { Text("Open") },
                                     onClick = {
                                         showingMenu = false
                                         AnalyticsEvents.logButtonClick("saved_notes", "home")
@@ -365,8 +425,10 @@ fun HomeView(
                                     }
                                 )
 
+                                HorizontalDivider()
+
                                 DropdownMenuItem(
-                                    text = { Text("Import from File") },
+                                    text = { Text("Import") },
                                     onClick = {
                                         showingMenu = false
                                         AnalyticsEvents.logButtonClick("import_file", "home")
@@ -375,17 +437,12 @@ fun HomeView(
                                 )
 
                                 DropdownMenuItem(
-                                    text = { Text("Export to File") },
+                                    text = { Text("Share") },
                                     enabled = hasNotes,
                                     onClick = {
                                         showingMenu = false
-                                        AnalyticsEvents.logButtonClick("export_file", "home")
-                                        exportLauncher.launch(
-                                            ScriptFile.suggestedFileName(
-                                                title = settingsService.currentNote?.title,
-                                                content = notes
-                                            )
-                                        )
+                                        AnalyticsEvents.logButtonClick("share", "home")
+                                        shareScript()
                                     }
                                 )
                             }
@@ -440,32 +497,44 @@ fun HomeView(
                     }
 
                     val bottomInset = if (isEditorFocused) CUE_BAR_HEIGHT else CONTROLS_HEIGHT
-                    if (isCardsMode) {
-                        CardsEditorView(
-                            text = notes,
-                            onTextChange = ::saveNotes,
-                            isFocused = isEditorFocused,
-                            onFocusChange = { isEditorFocused = it },
-                            controller = editorController,
-                            cueColor = settings.cards.cueColor,
+                    Box(modifier = Modifier.weight(1f)) {
+                        if (isCardsMode) {
+                            CardsEditorView(
+                                text = notes,
+                                onTextChange = ::saveNotes,
+                                isFocused = isEditorFocused,
+                                onFocusChange = { isEditorFocused = it },
+                                controller = editorController,
+                                cueColor = settings.cards.cueColor,
+                                isDark = isDark,
+                                fontSize = settings.cards.editorFontSize.sp,
+                                cardLimit = CueCards.CHARACTER_LIMIT,
+                                bottomInset = bottomInset
+                            )
+                        } else {
+                            NotesEditorView(
+                                text = notes,
+                                onTextChange = ::saveNotes,
+                                isFocused = isEditorFocused,
+                                onFocusChange = { isEditorFocused = it },
+                                controller = editorController,
+                                cueColor = settings.cueColor,
+                                isDark = isDark,
+                                fontSize = settings.editorFontSize.sp,
+                                bottomOverlayHeight = bottomInset
+                            )
+                        }
+
+                        // What's written since the last save is kept on this
+                        // device, but isn't in Saved Notes until it's saved. Laid
+                        // over the top of the script rather than above it, so
+                        // nothing moves when this comes or goes.
+                        SaveStatus(
+                            isUnsaved = hasUnsavedChanges,
+                            showsSaved = showsSaved,
                             isDark = isDark,
-                            fontSize = settings.cards.editorFontSize.sp,
-                            cardLimit = CueCards.CHARACTER_LIMIT,
-                            bottomInset = bottomInset,
-                            modifier = Modifier.weight(1f)
-                        )
-                    } else {
-                        NotesEditorView(
-                            text = notes,
-                            onTextChange = ::saveNotes,
-                            isFocused = isEditorFocused,
-                            onFocusChange = { isEditorFocused = it },
-                            controller = editorController,
-                            cueColor = settings.cueColor,
-                            isDark = isDark,
-                            fontSize = settings.editorFontSize.sp,
-                            bottomOverlayHeight = bottomInset,
-                            modifier = Modifier.weight(1f)
+                            onSave = ::save,
+                            modifier = Modifier.align(Alignment.TopCenter)
                         )
                     }
                 }
@@ -553,16 +622,30 @@ fun HomeView(
             exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
         ) {
             SavedNotesView(
-                savedNotes = savedNotes,
+                settingsService = settingsService,
                 isDark = isDark,
                 onDismiss = { showingSavedNotes = false },
                 onLoad = { note ->
                     scope.launch { settingsService.loadNote(note) }
                     showingSavedNotes = false
-                },
-                onRename = { note, title -> scope.launch { settingsService.updateNote(note.id, title = title) } },
-                onDelete = { note -> scope.launch { settingsService.deleteNote(note.id) } }
+                }
             )
+        }
+
+        AnimatedVisibility(
+            visible = showingVersions,
+            enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+            exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
+        ) {
+            // The note the history was opened for, kept while the sheet slides away.
+            val noteId = remember { currentNoteId }
+            if (noteId != null) {
+                NoteVersionsView(
+                    noteId = noteId,
+                    settingsService = settingsService,
+                    onDismiss = { showingVersions = false }
+                )
+            }
         }
 
         AnimatedVisibility(
@@ -613,7 +696,7 @@ fun HomeView(
             val deck = remember { cards }
             CueCardsView(
                 cards = deck,
-                title = settingsService.currentNote?.title ?: "Cards",
+                title = currentNote?.title ?: "Cards",
                 settings = settings,
                 onDismiss = { showingCards = false }
             )
@@ -639,7 +722,10 @@ fun HomeView(
             onConfirm = { title ->
                 showingSaveDialog = false
                 if (title.trim().isNotEmpty()) {
-                    scope.launch { settingsService.saveCurrentNote(title.trim()) }
+                    scope.launch {
+                        settingsService.saveCurrentNote(title.trim())
+                        flashSaved()
+                    }
                 }
             }
         )
@@ -656,6 +742,47 @@ fun HomeView(
                 }
             },
             containerColor = AppColors.background(isDark)
+        )
+    }
+}
+
+/**
+ * "Unsaved" while there are changes to save, which a tap saves, then "Saved"
+ * for a moment once they are.
+ */
+@Composable
+private fun SaveStatus(
+    isUnsaved: Boolean,
+    showsSaved: Boolean,
+    isDark: Boolean,
+    onSave: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    // What it last said, to go on saying it while it fades out.
+    var label by remember { mutableStateOf("Unsaved") }
+    val current = when {
+        isUnsaved -> "Unsaved"
+        showsSaved -> "Saved"
+        else -> null
+    }
+    if (current != null) SideEffect { label = current }
+
+    AnimatedVisibility(
+        visible = current != null,
+        enter = fadeIn(tween(200)),
+        exit = fadeOut(tween(200)),
+        modifier = modifier
+    ) {
+        Text(
+            text = current ?: label,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            color = AppColors.textSecondary(isDark),
+            modifier = Modifier
+                .glassed(Capsule, isDark)
+                .clickableWithoutRipple { if (isUnsaved) onSave() }
+                .semantics { if (isUnsaved) onClick(label = "Saves your changes", action = null) }
+                .padding(horizontal = 10.dp, vertical = 4.dp)
         )
     }
 }
@@ -1154,133 +1281,260 @@ internal fun Context.findActivity(): Activity? {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SavedNotesView(
-    savedNotes: List<SavedNote>,
+    settingsService: SettingsService,
     isDark: Boolean,
     onDismiss: () -> Unit,
-    onLoad: (SavedNote) -> Unit,
-    onRename: (SavedNote, String) -> Unit,
-    onDelete: (SavedNote) -> Unit
+    onLoad: (SavedNote) -> Unit
 ) {
+    val scope = rememberCoroutineScope()
+    val savedNotes by settingsService.savedNotes.collectAsState()
+    val versionCounts by settingsService.versionCounts.collectAsState()
+    val hasNotesFolder by settingsService.hasNotesFolder.collectAsState()
+    val notesFolderName by settingsService.notesFolderName.collectAsState()
+    val oversizedFiles by settingsService.notesFolderOversizedFiles.collectAsState()
+
     var noteToRename by remember { mutableStateOf<SavedNote?>(null) }
-    var showingHelp by remember { mutableStateOf(false) }
+    var showingMenu by remember { mutableStateOf(false) }
+    var showingDeleteAll by remember { mutableStateOf(false) }
+    var showingStopFolder by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var query by remember { mutableStateOf("") }
     val dateFormat = remember {
         DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT)
     }
 
-    LaunchedEffect(Unit) {
-        AnalyticsEvents.logScreenView("saved_notes")
+    // Saved notes, newest first, narrowed to those whose title or text match
+    // the search.
+    val trimmed = query.trim()
+    val notes = remember(savedNotes, trimmed) {
+        val sorted = savedNotes.sortedByDescending { it.updatedAt }
+        if (trimmed.isEmpty()) {
+            sorted
+        } else {
+            sorted.filter {
+                it.title.contains(trimmed, ignoreCase = true) ||
+                    CueCards.removingSeparators(it.content).contains(trimmed, ignoreCase = true)
+            }
+        }
     }
 
-    BackHandler(enabled = showingHelp) { showingHelp = false }
+    LaunchedEffect(Unit) {
+        AnalyticsEvents.logScreenView("saved_notes")
+        settingsService.syncNotesFolder()
+    }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Scaffold(
-            containerColor = AppColors.background(isDark),
-            topBar = {
-                TopAppBar(
-                    title = {
+    val folderPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocumentTree()
+    ) { uri ->
+        uri ?: return@rememberLauncherForActivityResult
+        scope.launch {
+            try {
+                settingsService.chooseNotesFolder(uri)
+            } catch (e: Exception) {
+                errorMessage = "This folder can't be used for notes."
+            }
+        }
+    }
+
+    val storageNote: @Composable (Modifier) -> Unit = { modifier ->
+        StorageNote(
+            folderName = notesFolderName,
+            hasFolder = hasNotesFolder,
+            oversizedFiles = oversizedFiles,
+            isDark = isDark,
+            modifier = modifier
+        )
+    }
+
+    Scaffold(
+        containerColor = AppColors.background(isDark),
+        topBar = {
+            TopAppBar(
+                navigationIcon = {
+                    Box {
+                        Icon(
+                            imageVector = Icons.Filled.MoreVert,
+                            contentDescription = "More",
+                            tint = AppColors.textPrimary(isDark),
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp)
+                                .size(20.dp)
+                                .clickableWithoutRipple { showingMenu = true }
+                        )
+
+                        DropdownMenu(
+                            expanded = showingMenu,
+                            onDismissRequest = { showingMenu = false },
+                            containerColor = AppColors.background(isDark)
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(if (hasNotesFolder) "Change Notes Folder" else "Choose Notes Folder") },
+                                onClick = {
+                                    showingMenu = false
+                                    AnalyticsEvents.logButtonClick("choose_notes_folder", "saved_notes")
+                                    folderPicker.launch(null)
+                                }
+                            )
+
+                            if (hasNotesFolder) {
+                                DropdownMenuItem(
+                                    text = { Text("Stop Using Folder") },
+                                    onClick = {
+                                        showingMenu = false
+                                        AnalyticsEvents.logButtonClick("stop_notes_folder", "saved_notes")
+                                        showingStopFolder = true
+                                    }
+                                )
+                            }
+
+                            HorizontalDivider()
+
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        text = "Delete All",
+                                        color = AppColors.red(isDark)
+                                            .copy(alpha = if (savedNotes.isEmpty()) 0.4f else 1f)
+                                    )
+                                },
+                                enabled = savedNotes.isNotEmpty(),
+                                onClick = {
+                                    showingMenu = false
+                                    AnalyticsEvents.logButtonClick("delete_all_notes", "saved_notes")
+                                    showingDeleteAll = true
+                                }
+                            )
+                        }
+                    }
+                },
+                title = {
+                    Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
                         Text(
-                            text = "Saved Content",
+                            text = "Saved Notes",
                             fontSize = 17.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = AppColors.textPrimary(isDark)
                         )
-                    },
-                    actions = {
-                        Text(
-                            text = "Done",
-                            fontSize = 17.sp,
-                            color = AppColors.blue(isDark),
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp)
-                                .clickableWithoutRipple {
-                                    AnalyticsEvents.logButtonClick("done", "saved_notes")
-                                    onDismiss()
-                                }
-                        )
-
-                        HelpButton(page = HelpPage.SAVED_CONTENT, isDark = isDark) { showingHelp = true }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = AppColors.background(isDark)
-                    )
-                )
-            }
-        ) { padding ->
-            if (savedNotes.isEmpty()) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Folder,
-                        contentDescription = null,
-                        tint = AppColors.textSecondary(isDark),
-                        modifier = Modifier.size(48.dp)
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
+                        if (savedNotes.isNotEmpty()) {
+                            Text(
+                                text = "${savedNotes.size} ${if (savedNotes.size == 1) "note" else "notes"}",
+                                fontSize = 11.sp,
+                                color = AppColors.textSecondary(isDark)
+                            )
+                        }
+                    }
+                },
+                actions = {
                     Text(
-                        text = "No Saved Content",
+                        text = "Done",
                         fontSize = 17.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = AppColors.textPrimary(isDark)
+                        color = AppColors.blue(isDark),
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp)
+                            .clickableWithoutRipple {
+                                AnalyticsEvents.logButtonClick("done", "saved_notes")
+                                onDismiss()
+                            }
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "Save your scripts and cards to open them later",
-                        fontSize = 15.sp,
-                        color = AppColors.textSecondary(isDark),
-                        textAlign = TextAlign.Center
-                    )
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = AppColors.background(isDark)
+                )
+            )
+        }
+    ) { padding ->
+        if (savedNotes.isEmpty()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.weight(1f))
+                Icon(
+                    imageVector = Icons.Filled.Folder,
+                    contentDescription = null,
+                    tint = AppColors.textSecondary(isDark),
+                    modifier = Modifier.size(48.dp)
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Nothing Saved Yet",
+                    fontSize = 17.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = AppColors.textPrimary(isDark)
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Save your scripts and cards to open them later.",
+                    fontSize = 15.sp,
+                    color = AppColors.textSecondary(isDark),
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                storageNote(Modifier.padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 16.dp))
+            }
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+            ) {
+                SearchField(
+                    query = query,
+                    onQueryChange = { query = it },
+                    isDark = isDark,
+                    placeholder = "Search"
+                )
+
+                if (notes.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No Results for “$trimmed”",
+                            fontSize = 17.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = AppColors.textPrimary(isDark)
+                        )
+                    }
+                    return@Column
                 }
-            } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding)
-                ) {
-                    items(
-                        items = savedNotes.sortedByDescending { it.updatedAt },
-                        key = { it.id }
-                    ) { note ->
+
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    items(items = notes, key = { it.id }) { note ->
+                        // When a note was last saved, and how many versions it has.
+                        val versions = versionCounts[note.id] ?: 1
                         SavedNoteRow(
                             note = note,
                             isDark = isDark,
-                            timestamp = dateFormat.format(Date(note.updatedAt)),
+                            detail = "${dateFormat.format(Date(note.updatedAt))} · " +
+                                "$versions ${if (versions == 1) "Version" else "Versions"}",
                             onLoad = {
-                                AnalyticsEvents.logButtonClick(
-                                    "load_note",
-                                    "saved_notes",
-                                    mapOf("note_id" to note.id)
-                                )
+                                AnalyticsEvents.logButtonClick("load_note", "saved_notes")
                                 onLoad(note)
                             },
                             onRename = {
-                                AnalyticsEvents.logButtonClick(
-                                    "rename_note",
-                                    "saved_notes",
-                                    mapOf("note_id" to note.id)
-                                )
+                                AnalyticsEvents.logButtonClick("rename_note", "saved_notes")
                                 noteToRename = note
                             },
                             onDelete = {
-                                AnalyticsEvents.logButtonClick(
-                                    "delete_note",
-                                    "saved_notes",
-                                    mapOf("note_id" to note.id)
-                                )
-                                onDelete(note)
+                                AnalyticsEvents.logButtonClick("delete_note", "saved_notes")
+                                scope.launch { settingsService.deleteNote(note.id) }
                             }
                         )
+                    }
+
+                    // At the end of the list, so it never covers a note.
+                    item(key = "storage-note") {
+                        storageNote(Modifier.padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 16.dp))
                     }
                 }
             }
         }
-
-        HelpOverlay(page = HelpPage.SAVED_CONTENT, visible = showingHelp, onDismiss = { showingHelp = false })
     }
 
     noteToRename?.let { note ->
@@ -1293,10 +1547,147 @@ fun SavedNotesView(
             onDismiss = { noteToRename = null },
             onConfirm = { title ->
                 if (title.trim().isNotEmpty()) {
-                    onRename(note, title.trim())
+                    scope.launch { settingsService.updateNote(note.id, title = title.trim()) }
                 }
                 noteToRename = null
             }
+        )
+    }
+
+    if (showingStopFolder) {
+        ConfirmDialog(
+            title = "Stop Using Notes Folder?",
+            message = notesFolderName?.let {
+                "The note files in “$it” folder will be deleted. Your notes stay on this device."
+            } ?: "Your notes stay on this device.",
+            confirmLabel = "Stop Using Folder",
+            isDark = isDark,
+            onDismiss = { showingStopFolder = false },
+            onConfirm = {
+                showingStopFolder = false
+                scope.launch { settingsService.stopUsingNotesFolder() }
+            }
+        )
+    }
+
+    if (showingDeleteAll) {
+        ConfirmDialog(
+            title = "Delete All Saved Notes?",
+            message = notesFolderName?.let {
+                "Every saved note and its file in “$it” folder will be deleted. This can't be undone."
+            } ?: "Every saved note will be deleted. This can't be undone.",
+            confirmLabel = "Delete All",
+            isDark = isDark,
+            onDismiss = { showingDeleteAll = false },
+            onConfirm = {
+                showingDeleteAll = false
+                scope.launch { settingsService.deleteAllNotes() }
+            }
+        )
+    }
+
+    errorMessage?.let { message ->
+        AlertDialog(
+            onDismissRequest = { errorMessage = null },
+            title = { Text("Something Went Wrong") },
+            text = { Text(message) },
+            confirmButton = {
+                TextButton(onClick = { errorMessage = null }) {
+                    Text("OK", color = AppColors.blue(isDark))
+                }
+            },
+            containerColor = AppColors.background(isDark)
+        )
+    }
+}
+
+/** A dialog asking before something that can't be taken back. */
+@Composable
+private fun ConfirmDialog(
+    title: String,
+    message: String,
+    confirmLabel: String,
+    isDark: Boolean,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = { Text(message) },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(confirmLabel, color = AppColors.red(isDark))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel", color = AppColors.blue(isDark))
+            }
+        },
+        containerColor = AppColors.background(isDark)
+    )
+}
+
+/** Where saved notes are kept, shown whether or not there are any. */
+@Composable
+private fun StorageNote(
+    folderName: String?,
+    hasFolder: Boolean,
+    oversizedFiles: List<String>,
+    isDark: Boolean,
+    modifier: Modifier = Modifier
+) {
+    // Files in the notes folder that were too large to bring in, if any.
+    val warning = when (oversizedFiles.size) {
+        0 -> null
+        1 -> "“${oversizedFiles.first()}” is larger than 10 MB, so it wasn't added to your notes."
+        else -> "${oversizedFiles.size} files in the notes folder are larger than 10 MB, " +
+            "so they weren't added to your notes."
+    }
+
+    // Notes never leave the device, so the lock stays whatever the folder.
+    val storage = when {
+        folderName != null ->
+            "Notes stay on this device, also as files in “$folderName” folder, " +
+                "so they're kept even if the app is removed."
+        hasFolder ->
+            "Notes stay on this device. The notes folder can't be reached, " +
+                "so they're only kept here until it's back."
+        else ->
+            "Notes stay on this device and are deleted if the app is removed. " +
+                "Choose a notes folder in ⋮ to keep them."
+    }
+
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        warning?.let {
+            StorageLine(text = it, icon = Icons.Filled.Warning, color = AppColors.yellow(isDark))
+        }
+        StorageLine(text = storage, icon = Icons.Filled.Lock, color = AppColors.textSecondary(isDark))
+    }
+}
+
+@Composable
+private fun StorageLine(text: String, icon: ImageVector, color: Color) {
+    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = color,
+            modifier = Modifier
+                .padding(top = 2.dp)
+                .size(12.dp)
+        )
+        Text(
+            text = text,
+            fontSize = 12.sp,
+            color = color,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.weight(1f, fill = false)
         )
     }
 }
@@ -1310,7 +1701,7 @@ fun SavedNotesView(
 private fun SavedNoteRow(
     note: SavedNote,
     isDark: Boolean,
-    timestamp: String,
+    detail: String,
     onLoad: () -> Unit,
     onRename: () -> Unit,
     onDelete: () -> Unit
@@ -1393,7 +1784,7 @@ private fun SavedNoteRow(
             )
 
             Text(
-                text = timestamp,
+                text = detail,
                 fontSize = 12.sp,
                 color = AppColors.textSecondary(isDark).copy(alpha = 0.7f)
             )

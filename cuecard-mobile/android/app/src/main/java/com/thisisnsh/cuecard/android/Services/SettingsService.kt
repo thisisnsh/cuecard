@@ -2,6 +2,7 @@ package com.thisisnsh.cuecard.android.services
 
 import android.content.Context
 import android.content.res.Resources
+import android.net.Uri
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -10,14 +11,20 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.thisisnsh.cuecard.android.AnalyticsEvents
 import com.thisisnsh.cuecard.android.models.CueCards
 import com.thisisnsh.cuecard.android.models.CueColor
 import com.thisisnsh.cuecard.android.models.ScriptMode
 import com.thisisnsh.cuecard.android.models.TimerStyle
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -274,7 +281,15 @@ data class SavedNote(
     val mode: ScriptMode,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
-)
+) {
+    companion object {
+        private val idPattern =
+            Regex("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
+
+        /** Whether `id` is the UUID every note is filed under, and nothing else. */
+        fun isValidId(id: String): Boolean = idPattern.matches(id)
+    }
+}
 
 /**
  * Service for persisting user settings using DataStore
@@ -391,13 +406,39 @@ Thanks for listening. Questions?
     private val _savedNotes = MutableStateFlow<List<SavedNote>>(emptyList())
     val savedNotes: StateFlow<List<SavedNote>> = _savedNotes.asStateFlow()
 
+    private val noteFolder = NoteFolder(context)
+    private val noteVersions = NoteVersions(context)
+
+    /** How many versions each saved note has, for notes that have any. */
+    private val _versionCounts = MutableStateFlow<Map<String, Int>>(emptyMap())
+    val versionCounts: StateFlow<Map<String, Int>> = _versionCounts.asStateFlow()
+
+    /** Whether saved notes are also kept in a folder the user picked. */
+    private val _hasNotesFolder = MutableStateFlow(false)
+    val hasNotesFolder: StateFlow<Boolean> = _hasNotesFolder.asStateFlow()
+
+    /** That folder's name, or null while it can't be reached. */
+    private val _notesFolderName = MutableStateFlow<String?>(null)
+    val notesFolderName: StateFlow<String?> = _notesFolderName.asStateFlow()
+
+    /** Files in the notes folder too large to read, by name. */
+    private val _notesFolderOversizedFiles = MutableStateFlow<List<String>>(emptyList())
+    val notesFolderOversizedFiles: StateFlow<List<String>> = _notesFolderOversizedFiles.asStateFlow()
+
+    /**
+     * Saved notes are written to files off the main thread, so a save and a
+     * sync of the notes folder take turns rather than crossing over.
+     */
+    private val notesLock = Mutex()
+
+    /** Done once the saved notes are read in, which a sync waits for. */
+    private val notesLoaded = CompletableDeferred<Unit>()
+
     /** The saved note open in each mode, and in the one the editor is in. */
     private var teleprompterNoteId: String? = null
     private var cardsNoteId: String? = null
     private val _currentNoteId = MutableStateFlow<String?>(null)
     val currentNoteId: StateFlow<String?> = _currentNoteId.asStateFlow()
-
-    private var isLoadingNote = false
 
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -481,6 +522,9 @@ Thanks for listening. Questions?
                 _savedNotes.value = emptyList()
             }
         }
+        _versionCounts.value = withContext(Dispatchers.IO) { noteVersions.counts() }
+        _hasNotesFolder.value = noteFolder.isChosen
+        notesLoaded.complete(Unit)
 
         // A speed or size carried over from an old setting is written back
         // straight away, so the retired keys are gone before anything else reads them.
@@ -525,27 +569,28 @@ Thanks for listening. Questions?
     }
 
     /**
-     * Save the script for the mode the editor is in. Editing the script bumps the
-     * timestamp on the note it belongs to, the way the iOS `notes` observer does.
+     * Save the script for the mode the editor is in. It's kept as it's written,
+     * so it survives the app closing; it only goes into the saved note when the
+     * user saves.
      */
     suspend fun saveNotes(newNotes: String) {
-        val isCards = _settings.value.scriptMode == ScriptMode.CARDS
-        if (isCards) cardsNotes = newNotes else teleprompterNotes = newNotes
-        _notes.value = newNotes
-        context.dataStore.edit { prefs ->
-            prefs[if (isCards) CARDS_NOTES else NOTES] = newNotes
-        }
-
-        if (isLoadingNote) return
-        val id = _currentNoteId.value ?: return
-        val index = _savedNotes.value.indexOfFirst { it.id == id }
-        if (index == -1) return
-
-        val updated = _savedNotes.value.toMutableList()
-        updated[index] = updated[index].copy(updatedAt = System.currentTimeMillis())
-        _savedNotes.value = updated
-        saveSavedNotes()
+        setNotes(newNotes, _settings.value.scriptMode)
     }
+
+    private suspend fun setNotes(text: String, mode: ScriptMode) {
+        val isCards = mode == ScriptMode.CARDS
+        if (isCards) cardsNotes = text else teleprompterNotes = text
+        if (_settings.value.scriptMode == mode) _notes.value = text
+        context.dataStore.edit { prefs ->
+            prefs[if (isCards) CARDS_NOTES else NOTES] = text
+        }
+    }
+
+    private fun notes(mode: ScriptMode): String =
+        if (mode == ScriptMode.CARDS) cardsNotes else teleprompterNotes
+
+    private fun noteId(mode: ScriptMode): String? =
+        if (mode == ScriptMode.CARDS) cardsNoteId else teleprompterNoteId
 
     /**
      * Put everything Settings shows back to its default. The timer's length and
@@ -576,13 +621,15 @@ Thanks for listening. Questions?
     /**
      * Clear all stored data
      */
-    suspend fun clearAllData() {
+    suspend fun clearAllData() = notesLock.withLock {
         _settings.value = TeleprompterSettings.DEFAULT
         teleprompterNotes = ""
         cardsNotes = ""
         teleprompterNoteId = null
         cardsNoteId = null
         _notes.value = ""
+        withContext(Dispatchers.IO) { noteVersions.removeAll() }
+        _versionCounts.value = emptyMap()
         _savedNotes.value = emptyList()
         _currentNoteId.value = null
         context.dataStore.edit { prefs ->
@@ -641,6 +688,28 @@ Thanks for listening. Questions?
 
     // ==================== Saved Notes Methods ====================
 
+    /** Keep a note in the store, the notes folder, and the list the views read. */
+    private suspend fun store(note: SavedNote, restoredFrom: Int? = null) {
+        withContext(Dispatchers.IO) { noteFolder.write(note) }
+        keep(note, restoredFrom)
+        saveSavedNotes()
+    }
+
+    /**
+     * Put `note` in the list the views read, and keep its text as a new
+     * version if it changed.
+     */
+    private suspend fun keep(note: SavedNote, restoredFrom: Int? = null) {
+        val previous = _savedNotes.value.find { it.id == note.id }
+        val count = withContext(Dispatchers.IO) { noteVersions.record(note, previous, restoredFrom) }
+        _versionCounts.value = _versionCounts.value + (note.id to count)
+        _savedNotes.value = if (previous != null) {
+            _savedNotes.value.map { if (it.id == note.id) note else it }
+        } else {
+            listOf(note) + _savedNotes.value
+        }
+    }
+
     /**
      * Save current notes as a new note
      */
@@ -653,29 +722,22 @@ Thanks for listening. Questions?
             content = _notes.value,
             mode = _settings.value.scriptMode
         )
-        _savedNotes.value = listOf(note) + _savedNotes.value
+        notesLock.withLock { store(note) }
         setCurrentNoteId(note.id)
-        saveSavedNotes()
     }
 
     /**
      * Update an existing saved note
      */
-    suspend fun updateNote(id: String, title: String? = null, content: String? = null) {
-        val index = _savedNotes.value.indexOfFirst { it.id == id }
-        if (index == -1) return
-
-        val currentNote = _savedNotes.value[index]
-        val updatedNote = currentNote.copy(
-            title = title ?: currentNote.title,
-            content = content ?: currentNote.content,
-            updatedAt = System.currentTimeMillis()
+    suspend fun updateNote(id: String, title: String? = null, content: String? = null) = notesLock.withLock {
+        val currentNote = _savedNotes.value.find { it.id == id } ?: return@withLock
+        store(
+            currentNote.copy(
+                title = title ?: currentNote.title,
+                content = content ?: currentNote.content,
+                updatedAt = System.currentTimeMillis()
+            )
         )
-
-        val updatedList = _savedNotes.value.toMutableList()
-        updatedList[index] = updatedNote
-        _savedNotes.value = updatedList
-        saveSavedNotes()
     }
 
     /**
@@ -686,21 +748,46 @@ Thanks for listening. Questions?
         updateNote(id, content = _notes.value)
     }
 
+    /** A saved note's versions, oldest first. */
+    suspend fun versions(id: String): List<NoteVersion> =
+        withContext(Dispatchers.IO) { noteVersions.versions(id) }
+
+    /**
+     * Bring back an old version as the note's newest, and into the editor
+     * wherever the note is open. Anything unsaved there is replaced.
+     */
+    suspend fun restoreVersion(version: NoteVersion, id: String) = notesLock.withLock {
+        val note = _savedNotes.value.find { it.id == id } ?: return@withLock
+        store(
+            note.copy(content = version.content, updatedAt = System.currentTimeMillis()),
+            restoredFrom = version.number
+        )
+        for (mode in ScriptMode.entries) {
+            if (noteId(mode) == id) setNotes(version.content, mode)
+        }
+    }
+
     /**
      * Load a saved note into the editor, switching to the mode it was written in.
      */
     suspend fun loadNote(note: SavedNote) {
         updateScriptMode(note.mode)
-        isLoadingNote = true
         setCurrentNoteId(note.id)
         saveNotes(note.content)
-        isLoadingNote = false
     }
 
     /**
      * Delete a saved note
      */
-    suspend fun deleteNote(id: String) {
+    suspend fun deleteNote(id: String) = notesLock.withLock {
+        withContext(Dispatchers.IO) { noteFolder.remove(id) }
+        forget(id)
+        saveSavedNotes()
+    }
+
+    private suspend fun forget(id: String) {
+        withContext(Dispatchers.IO) { noteVersions.remove(id) }
+        _versionCounts.value = _versionCounts.value - id
         _savedNotes.value = _savedNotes.value.filter { it.id != id }
         if (teleprompterNoteId == id || cardsNoteId == id) {
             context.dataStore.edit { prefs ->
@@ -711,17 +798,103 @@ Thanks for listening. Questions?
             if (cardsNoteId == id) cardsNoteId = null
             if (_currentNoteId.value == id) _currentNoteId.value = null
         }
+    }
+
+    /** Delete every saved note, and its file in the notes folder. */
+    suspend fun deleteAllNotes() = notesLock.withLock {
+        withContext(Dispatchers.IO) {
+            noteVersions.removeAll()
+            noteFolder.removeAll()
+        }
+        _versionCounts.value = emptyMap()
+        _savedNotes.value = emptyList()
+        teleprompterNoteId = null
+        cardsNoteId = null
+        _currentNoteId.value = null
+        context.dataStore.edit { prefs ->
+            prefs.remove(CURRENT_NOTE_ID)
+            prefs.remove(CARDS_NOTE_ID)
+        }
         saveSavedNotes()
+    }
+
+    /**
+     * Keep saved notes in `uri` too, a folder picked in Files, and take in any
+     * notes already there. Throws if the folder can't be used.
+     */
+    suspend fun chooseNotesFolder(uri: Uri) {
+        notesLock.withLock {
+            withContext(Dispatchers.IO) { noteFolder.choose(uri) }
+        }
+        syncNotesFolder()
+    }
+
+    /**
+     * Stop keeping notes in the folder, and delete their files from it.
+     * The notes themselves stay on the device.
+     */
+    suspend fun stopUsingNotesFolder() = notesLock.withLock {
+        withContext(Dispatchers.IO) {
+            noteFolder.removeAll()
+            noteFolder.forget()
+        }
+        _hasNotesFolder.value = false
+        _notesFolderName.value = null
+        _notesFolderOversizedFiles.value = emptyList()
+    }
+
+    /**
+     * Take in what changed in the notes folder outside the app, and write out
+     * any notes it's missing.
+     */
+    suspend fun syncNotesFolder() {
+        notesLoaded.await()
+        notesLock.withLock {
+            _hasNotesFolder.value = noteFolder.isChosen
+            if (!_hasNotesFolder.value) {
+                _notesFolderName.value = null
+                _notesFolderOversizedFiles.value = emptyList()
+                return@withLock
+            }
+
+            val saved = _savedNotes.value
+            val (name, changes) = withContext(Dispatchers.IO) { noteFolder.name to noteFolder.sync(saved) }
+            _notesFolderName.value = name
+            if (changes.tooLarge != _notesFolderOversizedFiles.value) {
+                _notesFolderOversizedFiles.value = changes.tooLarge
+                // Once for each set of files, not on every sync that finds them.
+                if (changes.tooLarge.isNotEmpty()) {
+                    AnalyticsEvents.logEvent(
+                        "file_too_large",
+                        mapOf("source" to "notes_folder", "count" to changes.tooLarge.size)
+                    )
+                }
+            }
+            for (note in changes.updated) {
+                // A note open in the editor with nothing unsaved follows its file.
+                val old = _savedNotes.value.find { it.id == note.id }
+                for (mode in ScriptMode.entries) {
+                    if (noteId(mode) == note.id && old != null && notes(mode) == old.content) {
+                        setNotes(note.content, mode)
+                    }
+                }
+                keep(note)
+            }
+            for (id in changes.deleted) {
+                forget(id)
+            }
+            if (changes.updated.isNotEmpty() || changes.deleted.isNotEmpty()) {
+                saveSavedNotes()
+            }
+        }
     }
 
     /**
      * Create a new empty note
      */
     suspend fun createNewNote() {
-        isLoadingNote = true
         setCurrentNoteId(null)
         saveNotes("")
-        isLoadingNote = false
     }
 
     /**
@@ -729,10 +902,8 @@ Thanks for listening. Questions?
      * The file already carries a name, so there's nothing to prompt the user for.
      */
     suspend fun importNote(title: String, content: String) {
-        isLoadingNote = true
         setCurrentNoteId(null)
         saveNotes(content)
-        isLoadingNote = false
         saveCurrentNote(title)
     }
 
