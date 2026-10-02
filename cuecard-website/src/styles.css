@@ -1216,10 +1216,15 @@ a.modes-card:hover .modes-go { color: var(--cue); }
 
 /* ════════════════════════ GET CUECARD ═══════════════════════════════════ */
 .getgroups { margin-top: clamp(20px, 2.8vw, 32px); display: grid; gap: clamp(26px, 3.4vw, 40px); }
-@media (min-width: 900px) { .getgroups-2 { grid-template-columns: 1fr 1fr; gap: clamp(28px, 4vw, 52px); } }
+/* Side by side, the two groups share their rows, so a note that wraps in one
+   column does not leave its rule lower than the other's. */
+@media (min-width: 900px) {
+  .getgroups-2 { grid-template-columns: 1fr 1fr; gap: clamp(28px, 4vw, 52px); }
+  .getgroups-2 .getgroup { display: grid; grid-row: span 2; grid-template-rows: subgrid; row-gap: 0; }
+}
 
 .getgroup-head {
-  display: flex; flex-wrap: wrap; align-items: baseline; gap: 5px 14px;
+  display: flex; flex-wrap: wrap; align-items: baseline; align-content: flex-start; gap: 5px 14px;
   padding-bottom: 12px; border-bottom: 1px solid var(--hair-hi);
 }
 .getgroup-title {
