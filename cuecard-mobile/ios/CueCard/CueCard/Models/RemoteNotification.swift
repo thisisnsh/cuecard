@@ -111,6 +111,14 @@ struct RemoteNotification: Identifiable, Equatable {
         "cuecard.dev", "www.cuecard.dev", "apps.apple.com", "github.com"
     ]
 
+    /// Whether a notification may link to `url`: over https, on a host we
+    /// recognise.
+    static func isAllowedLink(_ url: URL) -> Bool {
+        guard url.scheme?.lowercased() == "https",
+              let host = url.host?.lowercased() else { return false }
+        return allowedHosts.contains(host)
+    }
+
     /// Whether this is safe and sensible to draw: a title, no more than two
     /// actions, every link pointing somewhere we recognise, and some way out.
     var isRenderable: Bool {
@@ -118,7 +126,7 @@ struct RemoteNotification: Identifiable, Equatable {
         guard actions.count <= 2 else { return false }
 
         for action in actions where action.kind == .openURL {
-            guard let host = action.url?.host, Self.allowedHosts.contains(host) else { return false }
+            guard let url = action.url, Self.isAllowedLink(url) else { return false }
         }
 
         return dismissible || !actions.isEmpty
