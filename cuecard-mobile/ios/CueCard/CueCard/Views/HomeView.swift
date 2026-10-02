@@ -955,7 +955,7 @@ struct SavedNotesView: View {
                         Section {
                             ForEach(notes) { note in
                                 Button(action: {
-                                    AnalyticsEvents.logButtonClick("load_note", screen: "saved_notes", parameters: ["note_id": note.id.uuidString])
+                                    AnalyticsEvents.logButtonClick("load_note", screen: "saved_notes")
                                     settingsService.loadNote(note)
                                     dismiss()
                                 }) {
@@ -988,7 +988,7 @@ struct SavedNotesView: View {
                                 }
                                 .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                                     Button(role: .destructive) {
-                                        AnalyticsEvents.logButtonClick("delete_note", screen: "saved_notes", parameters: ["note_id": note.id.uuidString])
+                                        AnalyticsEvents.logButtonClick("delete_note", screen: "saved_notes")
                                         settingsService.deleteNote(id: note.id)
                                     } label: {
                                         Label("Delete", systemImage: "trash")
@@ -996,7 +996,7 @@ struct SavedNotesView: View {
                                 }
                                 .swipeActions(edge: .leading, allowsFullSwipe: false) {
                                     Button {
-                                        AnalyticsEvents.logButtonClick("rename_note", screen: "saved_notes", parameters: ["note_id": note.id.uuidString])
+                                        AnalyticsEvents.logButtonClick("rename_note", screen: "saved_notes")
                                         renameTitle = note.title
                                         noteToRename = note
                                     } label: {
