@@ -1687,9 +1687,6 @@ main:focus { outline: none; }
 .hero-eyebrow {
   margin-bottom: 16px; color: var(--cue); font-size: 14px; font-weight: 700;
 }
-.demo-invitation {
-  margin-bottom: 12px; font-size: 14px; font-weight: 600; color: var(--ash);
-}
 .hero-copy .display { line-height: 1.06; }
 .footer-list a, .backline a, .dlmenu-foot a, .statline a { min-height: 28px; }
 .demo-switch button { min-height: 36px; }
