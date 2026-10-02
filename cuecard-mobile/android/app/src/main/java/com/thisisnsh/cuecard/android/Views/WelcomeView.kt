@@ -103,6 +103,12 @@ fun WelcomeView(onGetStarted: () -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                // Privacy note
+                Text(
+                    text = "No account needed. Scripts stay on this device.",
+                    fontSize = 12.sp,
+                    color = AppColors.textSecondary(isDark)
+                )
 
                 Text(
                     text = "Get Started",
@@ -126,65 +132,26 @@ fun WelcomeView(onGetStarted: () -> Unit) {
                         .padding(vertical = 16.dp)
                 )
 
-                // Privacy note
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                Row(
+                    modifier = Modifier.clickableWithoutRipple {
+                        AnalyticsEvents.logButtonClick("privacy_policy", "welcome")
+                        openLink(context, AppLinks.PRIVACY_POLICY)
+                    },
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
-                        text = "No account needed. Scripts stay on this device.",
+                        text = "Privacy policy",
                         fontSize = 12.sp,
+                        textDecoration = TextDecoration.Underline,
                         color = AppColors.textSecondary(isDark)
                     )
-
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(
-                            modifier = Modifier.clickableWithoutRipple {
-                                AnalyticsEvents.logButtonClick("privacy_policy", "welcome")
-                                openLink(context, AppLinks.PRIVACY_POLICY)
-                            },
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Text(
-                                text = "Privacy policy",
-                                fontSize = 12.sp,
-                                textDecoration = TextDecoration.Underline,
-                                color = AppColors.textSecondary(isDark)
-                            )
-                            Icon(
-                                imageVector = Icons.Filled.ArrowOutward,
-                                contentDescription = null,
-                                tint = AppColors.textSecondary(isDark),
-                                modifier = Modifier.size(9.dp)
-                            )
-                        }
-
-                        Row(
-                            modifier = Modifier.clickableWithoutRipple {
-                                AnalyticsEvents.logButtonClick("source_code", "welcome")
-                                openLink(context, AppLinks.SOURCE_CODE)
-                            },
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Text(
-                                text = "View code",
-                                fontSize = 12.sp,
-                                textDecoration = TextDecoration.Underline,
-                                color = AppColors.textSecondary(isDark)
-                            )
-                            Icon(
-                                imageVector = Icons.Filled.ArrowOutward,
-                                contentDescription = null,
-                                tint = AppColors.textSecondary(isDark),
-                                modifier = Modifier.size(9.dp)
-                            )
-                        }
-                    }
+                    Icon(
+                        imageVector = Icons.Filled.ArrowOutward,
+                        contentDescription = null,
+                        tint = AppColors.textSecondary(isDark),
+                        modifier = Modifier.size(9.dp)
+                    )
                 }
             }
         }
