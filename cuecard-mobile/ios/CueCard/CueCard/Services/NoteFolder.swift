@@ -22,6 +22,8 @@ final class NoteFolder {
     struct Changes {
         var updated: [SavedNote] = []
         var deleted: [UUID] = []
+        /// Files over `ScriptFile.maxFileSize`, by name. They're left unread.
+        var tooLarge: [String] = []
     }
 
     private let bookmarkKey = "cuecard_notes_folder_bookmark"
@@ -100,6 +102,8 @@ final class NoteFolder {
         let originalIndex = index
         let appNotes = Dictionary(notes.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         let files = Set(names.filter { !$0.hasPrefix(".") && textExtensions.contains(fileExtension($0)) })
+        // Reading one of these fails, which leaves it and its note as they are.
+        changes.tooLarge = files.filter { ScriptFile.isTooLarge(folder.appendingPathComponent($0)) }.sorted()
 
         // Files in iCloud Drive that aren't downloaded show up as
         // ".Name.txt.icloud". They're still there, so they're asked for and

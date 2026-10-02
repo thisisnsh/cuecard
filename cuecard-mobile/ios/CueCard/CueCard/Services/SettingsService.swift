@@ -1,3 +1,4 @@
+import FirebaseAnalytics
 import Foundation
 import SwiftUI
 import UIKit
@@ -541,6 +542,8 @@ class SettingsService: ObservableObject {
     @Published private(set) var hasNotesFolder = false
     /// That folder's name, or nil while it can't be reached.
     @Published private(set) var notesFolderName: String?
+    /// Files in the notes folder too large to read, by name.
+    @Published private(set) var notesFolderOversizedFiles: [String] = []
 
     /// The saved note open in each mode.
     @Published private var teleprompterNoteId: UUID? {
@@ -850,6 +853,7 @@ Thanks for listening. Questions?
         noteFolder.forget()
         hasNotesFolder = false
         notesFolderName = nil
+        notesFolderOversizedFiles = []
     }
 
     /// Take in what changed in the notes folder outside the app, and write
@@ -857,9 +861,22 @@ Thanks for listening. Questions?
     func syncNotesFolder() {
         hasNotesFolder = noteFolder.isChosen
         notesFolderName = noteFolder.name
-        guard hasNotesFolder else { return }
+        guard hasNotesFolder else {
+            notesFolderOversizedFiles = []
+            return
+        }
 
         let changes = noteFolder.sync(savedNotes)
+        if changes.tooLarge != notesFolderOversizedFiles {
+            notesFolderOversizedFiles = changes.tooLarge
+            // Once for each set of files, not on every sync that finds them.
+            if !changes.tooLarge.isEmpty {
+                Analytics.logEvent("file_too_large", parameters: [
+                    "source": "notes_folder",
+                    "count": changes.tooLarge.count
+                ])
+            }
+        }
         if !changes.updated.isEmpty {
             noteStore.save(changes.updated)
         }

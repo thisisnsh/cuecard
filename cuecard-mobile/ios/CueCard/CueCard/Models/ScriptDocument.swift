@@ -7,14 +7,43 @@ enum ScriptFile {
     /// plain-text formats, so .txt and .md files both come through here.
     static let importableContentTypes: [UTType] = [.plainText, .rtf]
 
+    /// The largest file read as a script, in bytes. Far more than any script
+    /// runs to, and little enough to read into memory without trouble.
+    static let maxFileSize = 10 * 1024 * 1024
+
+    /// A file over `maxFileSize`, which is left unread.
+    struct FileTooLarge: Error {
+        let size: Int
+    }
+
+    /// Whether a file is over `maxFileSize`. False if its size can't be told.
+    static func isTooLarge(_ url: URL) -> Bool {
+        let needsScopedAccess = url.startAccessingSecurityScopedResource()
+        defer {
+            if needsScopedAccess {
+                url.stopAccessingSecurityScopedResource()
+            }
+        }
+        return (fileSize(of: url) ?? 0) > maxFileSize
+    }
+
+    private static func fileSize(of url: URL) -> Int? {
+        try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize
+    }
+
     /// Read a picked file as text. Files coming from the document picker live
     /// outside the sandbox, so access has to be scoped for the duration of the read.
+    /// Throws `FileTooLarge` rather than read a file over `maxFileSize`.
     static func readText(from url: URL) throws -> String {
         let needsScopedAccess = url.startAccessingSecurityScopedResource()
         defer {
             if needsScopedAccess {
                 url.stopAccessingSecurityScopedResource()
             }
+        }
+
+        if let size = fileSize(of: url), size > maxFileSize {
+            throw FileTooLarge(size: size)
         }
 
         if url.pathExtension.lowercased() == "rtf" {

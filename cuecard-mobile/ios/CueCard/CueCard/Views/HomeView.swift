@@ -214,6 +214,12 @@ struct HomeView: View {
                     title: ScriptFile.title(for: url),
                     content: TeleprompterParser.normalizingTags(in: text)
                 )
+            } catch let error as ScriptFile.FileTooLarge {
+                importError = "That file is larger than 10 MB, so it can't be imported."
+                Analytics.logEvent("file_too_large", parameters: [
+                    "source": "import",
+                    "size_mb": error.size / (1024 * 1024)
+                ])
             } catch {
                 importError = "This file couldn't be read as text."
             }
@@ -886,10 +892,26 @@ struct SavedNotesView: View {
 
     /// Where saved notes are kept, shown whether or not there are any.
     private var storageNote: some View {
-        storageLabel
-            .font(.caption)
-            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-            .multilineTextAlignment(.center)
+        VStack(spacing: 8) {
+            if let warning = oversizedFilesWarning {
+                Label(warning, systemImage: "exclamationmark.triangle.fill")
+                    .foregroundStyle(AppColors.yellow(for: colorScheme))
+            }
+            storageLabel
+                .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+        }
+        .font(.caption)
+        .multilineTextAlignment(.center)
+    }
+
+    /// Files in the notes folder that were too large to bring in, if any.
+    private var oversizedFilesWarning: String? {
+        let files = settingsService.notesFolderOversizedFiles
+        guard let first = files.first else { return nil }
+        if files.count == 1 {
+            return "“\(first)” is larger than 10 MB, so it wasn't added to your notes."
+        }
+        return "\(files.count) files in the notes folder are larger than 10 MB, so they weren't added to your notes."
     }
 
     /// Notes never leave the device, so the lock stays whatever the folder.
