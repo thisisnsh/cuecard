@@ -381,7 +381,7 @@ html { scroll-padding-top: 16px; }
 .shots-foot a { color: var(--ink); border-bottom: 1px solid var(--hair-hi); }
 .shots-foot a:hover { color: var(--cue); border-bottom-color: var(--cue); }
 
-/* Two facts and a licence, on one rule, on every page. */
+/* The download count and "free and open source", on one rule, on every page. */
 .statline {
   list-style: none;
   display: flex; flex-wrap: wrap; align-items: center;

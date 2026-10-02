@@ -14,5 +14,5 @@
 {% set statsDownloadHref = "/#download" if page.url in statsPagesWithoutDownload else "#download" %}
 <ul class="statline{% if statlineClass %} {{ statlineClass }}{% endif %}">
     <li><a href="{{ statsDownloadHref }}">{{ icon("download", 14) }}<b>{{ site.downloadTotal }}</b> downloads</a></li>
-    <li>{{ icon("shield", 14) }}Free and GPLv3 licensed</li>
+    <li>{{ icon("shield", 14) }}Free and open source</li>
 </ul>
