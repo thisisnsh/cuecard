@@ -272,7 +272,14 @@ final class NoteFolder {
     private func readIndex(in folder: URL) -> [UUID: Entry] {
         guard let data = try? Data(contentsOf: folder.appendingPathComponent(indexName)),
               let index = try? JSONDecoder().decode([UUID: Entry].self, from: data) else { return [:] }
-        return index
+        // The index sits in the folder, where anything else with access can
+        // rewrite it. An entry naming a path rather than a file in the folder
+        // could have files elsewhere moved or deleted, so it's dropped.
+        return index.filter { isPlainFileName($0.value.file) }
+    }
+
+    private func isPlainFileName(_ name: String) -> Bool {
+        !name.isEmpty && name != "." && name != ".." && !name.contains("/")
     }
 
     private func writeIndex(_ index: [UUID: Entry], in folder: URL) {
