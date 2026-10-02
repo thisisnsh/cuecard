@@ -5,11 +5,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -22,7 +21,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.net.toUri
@@ -59,76 +60,55 @@ fun NotificationBanner(
         }
     }
 
-    Box(modifier = modifier.glassed(RoundedCornerShape(16.dp), isDark)) {
-        Row(
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .glassed(RoundedCornerShape(20.dp), isDark)
+            .padding(14.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        NotificationIcon(severity = notification.severity, size = 30.dp, isDark = isDark)
+
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp)
-                .padding(start = 10.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                .weight(1f)
+                .padding(top = if (notification.body == null) 5.dp else 0.dp),
+            verticalArrangement = Arrangement.spacedBy(3.dp)
         ) {
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
+            Text(
+                text = notification.title,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = AppColors.textPrimary(isDark)
+            )
+
+            notification.body?.let { body ->
                 Text(
-                    text = notification.title,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = AppColors.textPrimary(isDark)
+                    text = body,
+                    fontSize = 13.sp,
+                    color = AppColors.textSecondary(isDark)
                 )
+            }
 
-                notification.body?.let { body ->
-                    Text(
-                        text = body,
-                        fontSize = 12.sp,
-                        color = AppColors.textSecondary(isDark)
-                    )
-                }
-
-                if (notification.actions.isNotEmpty()) {
-                    Row(
-                        modifier = Modifier.padding(top = 2.dp),
-                        horizontalArrangement = Arrangement.spacedBy(20.dp)
-                    ) {
-                        notification.actions.forEach { action ->
-                            Text(
-                                text = action.label,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = accent,
-                                modifier = Modifier.clickableWithoutRipple { perform(action) }
-                            )
-                        }
+            if (notification.actions.isNotEmpty()) {
+                Row(
+                    modifier = Modifier.padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    notification.actions.forEachIndexed { index, action ->
+                        NotificationAction(
+                            label = action.label,
+                            tint = accent,
+                            isPrimary = index == 0,
+                            isDark = isDark
+                        ) { perform(action) }
                     }
                 }
             }
-
-            if (notification.dismissible) {
-                Icon(
-                    imageVector = Icons.Filled.Close,
-                    contentDescription = "Dismiss",
-                    tint = AppColors.textSecondary(isDark),
-                    modifier = Modifier
-                        .clickableWithoutRipple { notifications.dismiss(notification) }
-                        .padding(6.dp)
-                        .size(11.dp)
-                )
-            }
         }
 
-        // The severity stripe runs down the leading edge of the card. It matches
-        // the card's own size rather than taking part in measuring it, so it
-        // can't stretch the card down the screen next to the editor.
-        Box(modifier = Modifier.matchParentSize().padding(10.dp)) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .width(3.dp)
-                    .fillMaxHeight()
-                    .clip(Capsule)
-                    .background(accent)
-            )
+        if (notification.dismissible) {
+            NotificationCloseButton(isDark = isDark) { notifications.dismiss(notification) }
         }
     }
 }
@@ -169,12 +149,16 @@ fun NotificationRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 6.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        NotificationIcon(severity = notification.severity, size = 28.dp, isDark = isDark)
+
         Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            modifier = Modifier
+                .weight(1f)
+                .padding(top = if (notification.body == null) 4.dp else 0.dp),
+            verticalArrangement = Arrangement.spacedBy(3.dp)
         ) {
             Text(
                 text = notification.title,
@@ -186,38 +170,102 @@ fun NotificationRow(
             notification.body?.let { body ->
                 Text(
                     text = body,
-                    fontSize = 12.sp,
+                    fontSize = 13.sp,
                     color = AppColors.textSecondary(isDark)
                 )
             }
 
             primaryAction?.let { action ->
-                Text(
-                    text = action.label,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = NotificationStyle.accent(notification.severity, isDark),
-                    modifier = Modifier
-                        .padding(top = 2.dp)
-                        .clickableWithoutRipple { perform(action) }
-                )
+                NotificationAction(
+                    label = action.label,
+                    tint = NotificationStyle.accent(notification.severity, isDark),
+                    isPrimary = true,
+                    isDark = isDark,
+                    modifier = Modifier.padding(top = 8.dp)
+                ) { perform(action) }
             }
         }
 
         if (notification.dismissible) {
-            Icon(
-                imageVector = Icons.Filled.Close,
-                contentDescription = "Dismiss",
-                tint = AppColors.textSecondary(isDark),
-                modifier = Modifier
-                    .clickableWithoutRipple { notifications.dismiss(notification) }
-                    .size(11.dp)
-            )
+            NotificationCloseButton(isDark = isDark) { notifications.dismiss(notification) }
         }
     }
 }
 
+/** The severity, as a symbol on a soft tint of its colour. */
+@Composable
+private fun NotificationIcon(severity: RemoteNotification.Severity, size: Dp, isDark: Boolean) {
+    val accent = NotificationStyle.accent(severity, isDark)
+
+    Box(
+        modifier = Modifier
+            .size(size)
+            .clip(CircleShape)
+            .background(accent.copy(alpha = 0.16f)),
+        contentAlignment = Alignment.Center
+    ) {
+        // Sized to the circle rather than to the reader's text size.
+        Text(
+            text = NotificationStyle.symbol(severity),
+            fontSize = with(LocalDensity.current) { (size * 0.5f).toSp() },
+            fontWeight = FontWeight.Bold,
+            color = accent
+        )
+    }
+}
+
+@Composable
+private fun NotificationCloseButton(isDark: Boolean, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(24.dp)
+            .clip(CircleShape)
+            .background(AppColors.textSecondary(isDark).copy(alpha = 0.14f))
+            .clickableWithoutRipple(onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Close,
+            contentDescription = "Dismiss",
+            tint = AppColors.textSecondary(isDark),
+            modifier = Modifier.size(12.dp)
+        )
+    }
+}
+
+/**
+ * A small capsule: filled with a tint of the severity colour for the first
+ * action, bare text for the second.
+ */
+@Composable
+private fun NotificationAction(
+    label: String,
+    tint: Color,
+    isPrimary: Boolean,
+    isDark: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Text(
+        text = label,
+        fontSize = 13.sp,
+        fontWeight = FontWeight.SemiBold,
+        color = if (isPrimary) tint else AppColors.textSecondary(isDark),
+        modifier = modifier
+            .clip(Capsule)
+            .background(if (isPrimary) tint.copy(alpha = 0.16f) else Color.Transparent)
+            .clickableWithoutRipple(onClick)
+            .padding(horizontal = if (isPrimary) 12.dp else 4.dp, vertical = 6.dp)
+    )
+}
+
 object NotificationStyle {
+    fun symbol(severity: RemoteNotification.Severity): String = when (severity) {
+        RemoteNotification.Severity.INFO -> "i"
+        RemoteNotification.Severity.WARNING -> "!"
+        RemoteNotification.Severity.CRITICAL -> "!!"
+    }
+
     fun accent(severity: RemoteNotification.Severity, isDark: Boolean): Color = when (severity) {
         RemoteNotification.Severity.INFO -> AppColors.blue(isDark)
         RemoteNotification.Severity.WARNING -> AppColors.yellow(isDark)
