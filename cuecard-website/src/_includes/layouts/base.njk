@@ -23,7 +23,12 @@
     {% endif %}
 
     <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
+    <meta property="og:type" content="{{ 'article' if blog else 'website' }}">
+    {% if blog %}
+    <meta property="article:published_time" content="{{ blog.datetime }}">
+    <meta property="article:modified_time" content="{{ blog.modified or blog.datetime }}">
+    <meta property="article:author" content="{{ site.author.url }}">
+    {% endif %}
     <meta property="og:url" content="{{ ogUrl or canonical or 'https://cuecard.dev/' }}">
     <meta property="og:title" content="{{ ogTitle or title }}">
     <meta property="og:description" content="{{ ogDescription or description }}">
@@ -115,6 +120,7 @@
           "name": {{ (pageName or title) | jsonLd | safe }},
           "description": {{ description | jsonLd | safe }},
           "isPartOf": { "@id": {{ ((site.url) + "/#website") | jsonLd | safe }} },
+          {% if blog %}"mainEntity": { "@id": {{ (canonical + "#post") | jsonLd | safe }} },{% endif %}
           {% if crumbs %}"breadcrumb": { "@id": {{ ((canonical or (site.url + page.url)) + "#breadcrumb") | jsonLd | safe }} },{% endif %}
           {% if app or mobileProfession or speakingPage %}"about": { "@id": {{ ((site.products.mobile.id)) | jsonLd | safe }} },
           {% elif page.url == '/' %}"about": [{ "@id": {{ ((site.products.mobile.id)) | jsonLd | safe }} }, { "@id": {{ ((site.products.desktop.id)) | jsonLd | safe }} }],

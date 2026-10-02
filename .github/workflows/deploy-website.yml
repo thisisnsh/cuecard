@@ -63,6 +63,10 @@ jobs:
         working-directory: cuecard-website
         run: npm run build
 
+      - name: Check SEO and internal links
+        working-directory: cuecard-website
+        run: python3 scripts/check-seo.py
+
       - name: Verify build output
         working-directory: cuecard-website
         run: |

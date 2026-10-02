@@ -4,6 +4,7 @@
   "description": "CueCard website built with 11ty",
   "scripts": {
     "build": "eleventy",
+    "check:seo": "npm run build && python3 scripts/check-seo.py",
     "serve": "eleventy --serve",
     "start": "eleventy --serve"
   },

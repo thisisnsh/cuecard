@@ -22,6 +22,7 @@ All earlier sitemap URLs and the `/ios/` and `/android/` shortlinks remain. The 
 npm ci
 npm start          # http://localhost:8080/
 npm run build      # write the production site to _site/
+npm run check:seo  # build and validate metadata, structured data, sitemap and links (Python 3)
 ```
 
 `src/` is the input; `_site/` is generated and ignored by Git. `.eleventy.js` configures filters and static assets. Shared layouts and partials live in `src/_includes/`; page content lives in `src/_data/`. The design uses existing typography, cards, ruled feature rows, device screenshots and an interactive demonstration.
@@ -65,6 +66,10 @@ Set `youtubeUrl` to the supplied HTTPS YouTube video URL and rebuild. Use “Wat
 ## Articles
 
 `src/_data/blogs.json` supports `description` and `modified`. Description falls back to the existing first-paragraph excerpt when omitted. Keep the original `datetime` (publication date); set `modified` only for substantive changes. The post's visible updated date, BlogPosting `dateModified`, and sitemap `lastmod` use it consistently. Article metadata and social descriptions use the explicit description when provided.
+
+Use `seoTitle` for a descriptive search title and `related` for an ordered list of relevant article slugs. Related articles render as ordinary HTML links, including without JavaScript; unknown or self-referencing slugs fail the build. Article breadcrumbs include the current post, and social metadata uses the same publication and modification dates as JSON-LD. Metadata-only edits do not reset article publication dates.
+
+`scripts/check-seo.py` runs in the deployment workflow before publishing. It verifies unique titles and descriptions, canonical URLs, one primary heading, parseable JSON-LD, complete breadcrumbs, article date consistency, sitemap coverage, noindex utility pages, internal links and fragments, and reachability from the homepage. It checks generated files locally; it does not measure rankings, live HTTP responses, or Google indexing.
 
 ## Download measurement
 

@@ -15,11 +15,6 @@ eleventyComputed:
   ogImageWidth: "1200"
   ogImageHeight: "630"
   ogLocale: "en_US"
-  crumbs:
-    - name: "CueCard"
-      url: "/"
-    - name: "Blog"
-      url: "/blog/"
 ---
 {% block jsonld %}
 <script type="application/ld+json">
@@ -62,7 +57,7 @@ eleventyComputed:
                 <time datetime="{{ blog.datetime }}">{{ blog.datetime }}</time>
                 <span class="blog-meta-separator">&middot;</span>
                 {% if blog.modified %}<span>Updated <time datetime="{{ blog.modified }}">{{ blog.modified }}</time></span>{% endif %}
-                <span class="blog-author">{{ blog.author }}</span>
+                <a class="blog-author" href="{{ site.author.url }}" rel="author">{{ blog.author }}</a>
             </p>
             <h1 class="display display-long" id="post-h">{{ blog.title }}</h1>
         </div>
@@ -80,6 +75,19 @@ eleventyComputed:
             </p>
         </div>
     </section>
+
+    {% if relatedPosts.length %}
+    <section class="workflow-section" aria-labelledby="related-posts-h">
+        <div class="wrap">
+            <h2 class="section-h" id="related-posts-h">Keep reading</h2>
+            <ul class="guide-link-grid guide-link-grid-short">
+                {% for related in relatedPosts %}
+                <li><a href="/blog/{{ related.slug }}/"><span>{{ related.seoTitle or related.title }}</span>{{ icon("arrow", 14) }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+    </section>
+    {% endif %}
 
     {% set getHeading = "Stop memorising. Start talking." %}
     {% set getBody = "A floating teleprompter on your phone, invisible speaker notes on your computer. Both free." %}
