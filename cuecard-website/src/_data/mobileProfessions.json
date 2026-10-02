@@ -31,6 +31,7 @@
         "answer": "Yes. Adjust the auto-scroll speed to match your natural reading pace."
       },
       {
+        "topic": "price",
         "question": "Is CueCard free?",
         "answer": "Yes. CueCard is completely free and open source. It is on the App Store for iOS now, and Android is coming soon."
       }
@@ -41,7 +42,7 @@
       "steps": [
         {
           "title": "Prepare a saved note",
-          "body": "Paste the example below into CueCard and adapt it to your own words. Use the ellipsis menu’s Save as New action to keep it for another take."
+          "body": "Paste the example below into CueCard and adapt it to your own words. Use the ellipsis menu’s Save action to keep it for another take."
         },
         {
           "title": "Rehearse before recording",
@@ -107,7 +108,7 @@
       "steps": [
         {
           "title": "Prepare a saved note",
-          "body": "Paste the example below into CueCard and adapt it to your own words. Use the ellipsis menu’s Save as New action to keep it for another take."
+          "body": "Paste the example below into CueCard and adapt it to your own words. Use the ellipsis menu’s Save action to keep it for another take."
         },
         {
           "title": "Rehearse before recording",
@@ -163,6 +164,7 @@
         "answer": "Yes. Use auto-scroll for longer scripts. CueCard scrolls at your preferred pace so you stay focused on delivery."
       },
       {
+        "topic": "price",
         "question": "Is CueCard free for YouTubers?",
         "answer": "Yes. CueCard is completely free. Perfect for creators at any subscriber count."
       }
@@ -173,7 +175,7 @@
       "steps": [
         {
           "title": "Prepare a saved note",
-          "body": "Paste the example below into CueCard and adapt it to your own words. Use the ellipsis menu’s Save as New action to keep it for another take."
+          "body": "Paste the example below into CueCard and adapt it to your own words. Use the ellipsis menu’s Save action to keep it for another take."
         },
         {
           "title": "Rehearse before recording",
@@ -221,8 +223,8 @@
         "answer": "Yes. CueCard floats above the TikTok app, so you can see your script while recording directly in TikTok."
       },
       {
-        "question": "Can it help me nail trending sounds?",
-        "answer": "Yes. Keep your lip-sync lyrics or talking points visible so you nail the timing on trending sounds."
+        "question": "Does CueCard sync with TikTok sounds?",
+        "answer": "No. The script scrolls at the speed you choose; it does not sync to music or follow your voice. Rehearse the timing before recording."
       },
       {
         "question": "Is the teleprompter visible in my TikToks?",
@@ -239,7 +241,7 @@
       "steps": [
         {
           "title": "Prepare a saved note",
-          "body": "Paste the example below into CueCard and adapt it to your own words. Use the ellipsis menu’s Save as New action to keep it for another take."
+          "body": "Paste the example below into CueCard and adapt it to your own words. Use the ellipsis menu’s Save action to keep it for another take."
         },
         {
           "title": "Rehearse before recording",
@@ -305,7 +307,7 @@
       "steps": [
         {
           "title": "Prepare a saved note",
-          "body": "Paste the example below into CueCard and adapt it to your own words. Use the ellipsis menu’s Save as New action to keep it for another take."
+          "body": "Paste the example below into CueCard and adapt it to your own words. Use the ellipsis menu’s Save action to keep it for another take."
         },
         {
           "title": "Rehearse before recording",
@@ -371,7 +373,7 @@
       "steps": [
         {
           "title": "Prepare a saved note",
-          "body": "Paste the example below into CueCard and adapt it to your own words. Use the ellipsis menu’s Save as New action to keep it for another take."
+          "body": "Paste the example below into CueCard and adapt it to your own words. Use the ellipsis menu’s Save action to keep it for another take."
         },
         {
           "title": "Rehearse before recording",
@@ -427,6 +429,7 @@
         "answer": "Yes. CueCard for Mac and Windows lets you keep your notes off the screen during live Zoom, Meet, or Teams classes. <a href=\"/teachers/\">Learn more about CueCard for Teachers on desktop</a>."
       },
       {
+        "topic": "price",
         "question": "Is CueCard free for educators?",
         "answer": "Yes. CueCard is completely free and open source. Perfect for teachers at any level."
       }
@@ -437,7 +440,7 @@
       "steps": [
         {
           "title": "Prepare a saved note",
-          "body": "Paste the example below into CueCard and adapt it to your own words. Use the ellipsis menu’s Save as New action to keep it for another take."
+          "body": "Paste the example below into CueCard and adapt it to your own words. Use the ellipsis menu’s Save action to keep it for another take."
         },
         {
           "title": "Rehearse before recording",
@@ -503,7 +506,7 @@
       "steps": [
         {
           "title": "Prepare a saved note",
-          "body": "Paste the example below into CueCard and adapt it to your own words. Use the ellipsis menu’s Save as New action to keep it for another take."
+          "body": "Paste the example below into CueCard and adapt it to your own words. Use the ellipsis menu’s Save action to keep it for another take."
         },
         {
           "title": "Rehearse before recording",
@@ -559,6 +562,7 @@
         "answer": "Yes. CueCard for Mac and Windows lets you keep your notes off the screen during screen recordings. <a href=\"/course-creators/\">Learn more about CueCard for Course Creators on desktop</a>."
       },
       {
+        "topic": "price",
         "question": "Is CueCard free for course creators?",
         "answer": "Yes. CueCard is completely free and open source."
       }
@@ -569,7 +573,7 @@
       "steps": [
         {
           "title": "Prepare a saved note",
-          "body": "Paste the example below into CueCard and adapt it to your own words. Use the ellipsis menu’s Save as New action to keep it for another take."
+          "body": "Paste the example below into CueCard and adapt it to your own words. Use the ellipsis menu’s Save action to keep it for another take."
         },
         {
           "title": "Rehearse before recording",
@@ -635,7 +639,7 @@
       "steps": [
         {
           "title": "Prepare a saved note",
-          "body": "Paste the example below into CueCard and adapt it to your own words. Use the ellipsis menu’s Save as New action to keep it for another take."
+          "body": "Paste the example below into CueCard and adapt it to your own words. Use the ellipsis menu’s Save action to keep it for another take."
         },
         {
           "title": "Rehearse before recording",
@@ -701,7 +705,7 @@
       "steps": [
         {
           "title": "Prepare a saved note",
-          "body": "Paste the example below into CueCard and adapt it to your own words. Use the ellipsis menu’s Save as New action to keep it for another take."
+          "body": "Paste the example below into CueCard and adapt it to your own words. Use the ellipsis menu’s Save action to keep it for another take."
         },
         {
           "title": "Rehearse before recording",
@@ -767,7 +771,7 @@
       "steps": [
         {
           "title": "Prepare a saved note",
-          "body": "Paste the example below into CueCard and adapt it to your own words. Use the ellipsis menu’s Save as New action to keep it for another take."
+          "body": "Paste the example below into CueCard and adapt it to your own words. Use the ellipsis menu’s Save action to keep it for another take."
         },
         {
           "title": "Rehearse before recording",

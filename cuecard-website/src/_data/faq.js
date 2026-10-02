@@ -1,8 +1,8 @@
 // The FAQ bank.
 //
 // One file, grouped into sections. /faq/ renders every group; the home page
-// carries the mobile bank, /desktop/ the desktop one, and each app and role
-// page carries its own questions followed by the small `everywhere` set, so
+// and product pages carry selected questions. App and role pages add only
+// price and account essentials where their own questions do not cover them, so
 // every page earns a complete FAQPage block of its own instead of pointing at
 // a shared one.
 //
@@ -92,7 +92,7 @@ const mobile = [
   {
     question: "Can I change the size of the floating window?",
     answer:
-      "Yes. You can make it wide, square or tall, set its own text size, and drag it anywhere on screen. Make it big enough to read at arm's length and small enough to leave your face and the rest of your shot clear."
+      "Yes. You can make it rectangular or square, set its own text size, and drag it anywhere on screen. Make it big enough to read at arm's length and small enough to leave your face and the rest of your shot clear."
   },
   {
     question: "Can I change the text size on mobile?",
@@ -107,7 +107,27 @@ const mobile = [
   {
     question: "Can I save scripts and come back to them?",
     answer:
-      "Yes. Save a script or a deck with a name and it stays in Saved Content, ready to open, rename or run again. You can also import and export plain text files from the ••• menu."
+      "Yes. Tap Unsaved below the top bar or choose ••• › Save to name and save a script or deck. Choose ••• › Open to see Saved Notes, search by title or text, and swipe a note to rename or delete it."
+  },
+  {
+    question: "Can I restore an older version of a script or deck?",
+    answer:
+      "Yes, on iPhone and iPad. Saving changed text adds a version. Once a note has more than one version, tap the clock at the top of the editor to compare changes and restore an earlier version. Restoring adds a new version, so the history stays available."
+  },
+  {
+    question: "How do I keep my notes if I delete the iPhone or iPad app?",
+    answer:
+      "Open Saved Notes with ••• › Open, then choose ••• › Choose Notes Folder. CueCard keeps the latest copy of each saved note as a text file in that folder, outside the app. Choose the same folder after reinstalling to bring the notes back. Without a notes folder, removing the app deletes its notes. Version history stays inside the app and is not included in the folder."
+  },
+  {
+    question: "Can I edit saved notes outside CueCard?",
+    answer:
+      "Yes. On iPhone and iPad, choose a Notes Folder in Saved Notes. Changes to its text files come back into CueCard when it next syncs the folder, and new .txt or .md files become saved notes. The latest change wins if both copies have been edited."
+  },
+  {
+    question: "Which files can I import on iPhone and iPad?",
+    answer:
+      "Choose ••• › Import to open plain text files, including .txt and .md, or an RTF file. Imported content becomes a saved note; RTF formatting is removed. Files larger than 10 MB are not imported. Use ••• › Share to send a script or deck as text, with its cues included."
   },
   {
     question: "Does the phone app have a dark mode?",
@@ -158,7 +178,7 @@ const desktop = [
   {
     question: "Can other people see my notes during screen sharing or a recording?",
     answer:
-      "No. On Mac and Windows the CueCard window is left out of screen shares and screen recordings by the operating system itself. If you want to be sure before a call, check that Ghost Mode is turned on in Settings and try one practice share."
+      "With Invisible to Screen Sharing turned on in Settings, the CueCard window is excluded from screen shares and screen recordings on Mac and Windows. The Invisible button in the toolbar controls the same setting. Try one practice share before your call to check your setup."
   },
   {
     question: "Which meeting apps does CueCard work with?",
@@ -183,7 +203,7 @@ const desktop = [
   {
     question: "How do I sync speaker notes from Google Slides?",
     answer:
-      "Two things have to be installed: the CueCard app for Mac or Windows, which is the window your notes appear in, and the CueCard browser extension, which reads the notes out of your deck. With both in place, open your presentation and the notes for the slide you are on show up in CueCard and change as you move through the deck."
+      "Install the CueCard desktop app and browser extension. In CueCard, choose Google Slides and click Connect Google Slides, then authorize read-only access to your presentations with Google. Open your deck in the browser and present; the notes in CueCard follow the current slide. You can read them in the editor or press play to scroll them in the prompter."
   },
   {
     question: "Which browsers support the Google Slides extension?",
@@ -197,12 +217,27 @@ const desktop = [
   {
     question: "Is there a timer for my slot?",
     answer:
-      "Yes. Set how long you have on the Set Timer pill and CueCard counts it down on screen while you talk, so you find out a slot is running long while there is still time to do something about it."
+      "Yes. Click Set Timer and choose a duration. The prompter counts down, warns you in the last fifth of the time and shows when you run over. With no duration set, it counts up. Changing slides does not reset the timer. Set the duration in the app; timing tags in the script are no longer used."
+  },
+  {
+    question: "Does the desktop app scroll my script automatically?",
+    answer:
+      "Yes. Press play to open the prompter. In Settings, choose Scroll Speed in lines per minute, a Start Delay before scrolling begins, and Small, Medium or Large text. You can pause, go back ten seconds, restart or scroll by hand. Google Slides notes can scroll too."
+  },
+  {
+    question: "Can I save, import and export scripts on desktop?",
+    answer:
+      "Yes. Choose Save as New from the ••• menu to name a script, then open it again from Scripts in the sidebar. Save updates the current script. Import from File and Export to File let you move scripts as text files, with cues included."
+  },
+  {
+    question: "Which desktop keyboard shortcuts work from another app?",
+    answer:
+      "Hold Control and Option on Mac, or Ctrl and Alt on Windows: C shows or hides CueCard, Space plays or pauses, 0 restarts, minus and equals change opacity, and the arrow keys move the window. See Settings › Keyboard Shortcuts for the full list, including saving scripts and moving a line in the prompter."
   },
   {
     question: "Can I show CueCard during a meeting on purpose?",
     answer:
-      "Yes. Turn Ghost Mode off in Settings and CueCard appears in the share like any other window, for when you want to walk people through the notes themselves."
+      "Yes. Turn Invisible to Screen Sharing off in Settings, or click the Invisible button in the toolbar. CueCard then appears in screen capture like any other window."
   },
   {
     question: "Can I change the window transparency?",
@@ -236,11 +271,13 @@ const desktop = [
 /** The handful worth repeating on every page, whichever product it is about. */
 const everywhere = [
   {
+    topic: "account",
     question: "Do I need an account to use CueCard?",
     answer:
       'No. There is nothing to sign up for on either app, and your scripts and settings live on your device. The one exception is Google Slides sync on the desktop app, which asks you to sign in with Google so it can read the notes out of your deck. See the <a href="/privacy/">privacy policy</a> for the details.'
   },
   {
+    topic: "price",
     question: "Is CueCard free?",
     answer:
       'Yes. CueCard is completely free on mobile and on desktop, and open source. Read the code on <a href="' +
@@ -257,7 +294,7 @@ const everywhere = [
   {
     question: "Where are my scripts stored?",
     answer:
-      'On your device. Your notes are not uploaded to us. The <a href="/privacy/">privacy policy</a> sets out exactly what is and is not kept.'
+      'Your notes are stored on your device and are not uploaded to CueCard. On iPhone and iPad, you can also keep note files in a folder you choose in Files. If you choose a cloud-backed folder, that provider handles its storage and sync. Version history stays inside the iPhone or iPad app. See the <a href="/privacy/">privacy policy</a> for details.'
   },
   {
     question: "How do I report a bug or ask for a feature?",
@@ -277,19 +314,82 @@ const groups = [
 const items = groups.reduce((all, g) => all.concat(g.items), []);
 
 /**
- * A page-sized bank: the page's own questions, then the general ones it has
- * not already asked. Keeps every FAQPage block complete without repeating a
- * question twice on one page.
+ * Add download essentials without repeating a topic covered by a page's own
+ * wording. Project and support questions remain in /faq/ and the FAQ footer.
  */
 function withGeneral(own) {
-  const asked = new Set((own || []).map((q) => q.question));
-  return (own || []).concat(everywhere.filter((q) => !asked.has(q.question)));
+  return merge(own, everywhere.filter((q) => q.topic === "price" || q.topic === "account"));
 }
 
-/** Concatenate two banks, dropping any question the first one already asks. */
+/** Keep the first answer for a question or explicitly identified topic. */
 function merge(first, second) {
-  const asked = new Set((first || []).map((q) => q.question));
-  return (first || []).concat((second || []).filter((q) => !asked.has(q.question)));
+  const asked = new Set();
+  const topics = new Set();
+  return (first || []).concat(second || []).filter((q) => {
+    if (asked.has(q.question) || (q.topic && topics.has(q.topic))) return false;
+    asked.add(q.question);
+    if (q.topic) topics.add(q.topic);
+    return true;
+  });
+}
+
+/** Platform FAQs cover their own setup; avoid repeating the desktop bank. */
+function forPlatform(platform) {
+  const own = platform.faqJsonLd || [];
+  if (platform.slug === "google-slides") {
+    return withGeneral(merge(own, pick(
+      "How do I sync speaker notes from Google Slides?",
+      "Is CueCard invisible on Zoom, Google Meet and Microsoft Teams?",
+      "Does the desktop app scroll my script automatically?",
+      "Is there a timer for my slot?"
+    )));
+  }
+  // The hero links here for the screen-sharing explanation.
+  const questions = own.map((q, i) => i === 0 ? { ...q, id: "faq-undetectable" } : q);
+  return withGeneral(merge(questions, pick(
+    "Does the desktop app scroll my script automatically?",
+    "Can I save, import and export scripts on desktop?",
+    "Which operating systems does the desktop app run on?"
+  )));
+}
+
+/** Product pages explain the app; recording pages answer recording questions. */
+function forApp(app) {
+  const selections = {
+    mobile: [
+      "What can the CueCard app do?",
+      "Is CueCard available for iPhone and Android?",
+      "Will the script appear in my video?",
+      "Can I read cue cards on my Lock Screen?",
+      "Is there an Apple Watch app?"
+    ],
+    "mobile/ios": [
+      "How does the floating teleprompter work on iOS?",
+      "Which iPhones does CueCard support?",
+      "Does it work on iPad too?",
+      "Can I use the Action Button to start the teleprompter?",
+      "Does CueCard have cue cards as well as a teleprompter?"
+    ],
+    "mobile/ipad": [
+      "Is there a teleprompter app for iPad?",
+      "Can the iPad prompter float over other apps?",
+      "Can I use an iPad as a teleprompter for a camera?",
+      "Will the script appear in my video?"
+    ]
+  };
+  if (selections[app.slug]) {
+    const own = selections[app.slug].map((question) => app.faq.find((q) => q.question === question));
+    return withGeneral(merge(own, pick(
+      "Can I save scripts and come back to them?",
+      "Can I restore an older version of a script or deck?"
+    )));
+  }
+  // Android has its own release-status questions, without shipping-app claims.
+  if (app.slug === "mobile/android") return app.faq;
+  return withGeneral((app.faq || []).filter((q) => ![
+    "What if the script moves too fast?",
+    "What if CueCard covers a camera control?"
+  ].includes(q.question)));
 }
 
 /** Pull named questions out of the bank, in the order asked for. */
@@ -323,10 +423,11 @@ const home = pick(
 /** The trim for the desktop pages: what gets asked before downloading. */
 const desktopShort = pick(
   "Is CueCard invisible on Zoom, Google Meet and Microsoft Teams?",
-  "Can other people see my notes during screen sharing or a recording?",
   "Do I need Google Slides to use CueCard?",
   "How do I sync speaker notes from Google Slides?",
   "How do cue tags work?",
+  "Does the desktop app scroll my script automatically?",
+  "Can I save, import and export scripts on desktop?",
   "Which operating systems does the desktop app run on?",
   "Do I need an account to use CueCard?",
   "Is CueCard free?"
@@ -335,5 +436,5 @@ const desktopShort = pick(
 module.exports = {
   items, groups, mobile, desktop, everywhere,
   home, desktopShort,
-  pick, withGeneral, merge
+  pick, withGeneral, merge, forApp, forPlatform
 };

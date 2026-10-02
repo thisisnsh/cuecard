@@ -57,12 +57,30 @@ const mobile = [
     p: "Reminders like [cue smile] show in color, telling you how to say the next line.",
   },
   {
+    h: "Find a script or bring back an earlier draft",
+    p: "Search saved notes by title or text. Compare versions and restore an earlier save.",
+    appleOnly: true,
+  },
+  {
+    h: "Keep notes as files",
+    p: "Choose a notes folder to keep the latest copy of every saved script and deck outside the app, even if you remove CueCard.",
+    appleOnly: true,
+  },
+  {
     h: "Free, private, no sign-up",
-    p: "No account, no ads and no subscription. Your scripts stay on your phone.",
+    p: "No account, no ads and no subscription. Your scripts are not uploaded to CueCard.",
   },
 ];
 
 const desktop = [
+  {
+    h: "A script that scrolls while you speak",
+    p: "Press play, with a speed, text size and start delay you choose. Pause, go back or restart whenever you need.",
+  },
+  {
+    h: "Saved scripts for the next presentation",
+    p: "Name a script and open it again from the sidebar. Import and export text files with your cues included.",
+  },
   {
     h: "Hidden from your screen share",
     p: "Your notes stay on your screen while Zoom, Google Meet and Teams show only your slides.",
@@ -73,7 +91,7 @@ const desktop = [
   },
   {
     h: "A timer for your slot",
-    p: "A countdown on screen keeps a thirty-minute slot to thirty minutes.",
+    p: "Set a duration for a countdown with warning and overtime colors, or leave it unset to count up. The timer keeps going across slides.",
   },
   {
     h: "Google Slides notes that follow your slides",
@@ -166,7 +184,7 @@ function forRole(name, audience, kind) {
       },
       {
         h: "Scripts saved for next time",
-        p: `The intro, the sign-off, the explanation ${who} give every week, ready to open again.`,
+        p: `Find the scripts ${who} reuse by title or text, and restore an earlier version when a rewrite needs undoing.`,
       },
     ];
   }

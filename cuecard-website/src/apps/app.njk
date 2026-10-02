@@ -16,7 +16,7 @@ eleventyComputed:
   ogLocale: "en_US"
 layout: layouts/mobile-app.njk
 ---
-{% set appFaq = faq.withGeneral(app.faq) %}
+{% set appFaq = faq.forApp(app) %}
 {% block jsonld %}
 <script type="application/ld+json">
 {{ site.products.mobile | softwareSchema("android" if app.slug == "mobile/android" else "") | jsonLd | safe }}

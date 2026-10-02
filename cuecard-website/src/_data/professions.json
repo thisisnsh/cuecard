@@ -68,6 +68,7 @@
         "answer": "CueCard works alongside any presentation software. For Google Slides, you can even sync your speaker notes automatically."
       },
       {
+        "topic": "price",
         "question": "Is CueCard free for students?",
         "answer": "Yes. CueCard is completely free and open source. Perfect for students on a budget."
       }
@@ -142,6 +143,7 @@
         "answer": "Yes. CueCard is perfect for long sessions. Keep your entire curriculum visible and scroll through as you progress."
       },
       {
+        "topic": "price",
         "question": "Is CueCard free for corporate use?",
         "answer": "Yes. CueCard is free and open source, suitable for personal and corporate use."
       }
@@ -216,6 +218,7 @@
         "answer": "Yes. Keep your key metrics, funding details, and Q&A prep notes visible during high-stakes investor meetings."
       },
       {
+        "topic": "price",
         "question": "Is CueCard free?",
         "answer": "Yes. CueCard is completely free and open source."
       }
@@ -253,6 +256,7 @@
         "answer": "Yes. Keep key data points, methodology notes, and talking points visible while presenting complex analyses."
       },
       {
+        "topic": "price",
         "question": "Is CueCard free for consulting firms?",
         "answer": "Yes. CueCard is free and open source, suitable for individual consultants and firms alike."
       }
@@ -290,6 +294,7 @@
         "answer": "Yes. Keep your questions, case facts, and key points visible during virtual depositions without anyone noticing."
       },
       {
+        "topic": "price",
         "question": "Is CueCard free for law firms?",
         "answer": "Yes. CueCard is completely free and open source."
       }
@@ -327,6 +332,7 @@
         "answer": "Yes. CueCard works with Zoom Webinars, GoToWebinar, Webex Events, and any platform that uses screen sharing."
       },
       {
+        "topic": "price",
         "question": "Is CueCard free?",
         "answer": "Yes. CueCard is completely free and open source."
       }

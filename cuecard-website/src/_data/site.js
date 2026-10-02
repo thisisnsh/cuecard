@@ -26,7 +26,9 @@ const products = {
       "Countdown before the script starts scrolling",
       "Colored [cue ...] reminders",
       "Play or pause from the Action Button or Control Center",
-      "Saved scripts and decks, import and export as text files"
+      "Saved scripts and decks with search by title or text, file import and text sharing",
+      "Version history to compare changes and restore earlier saves",
+      "Optional notes folder that keeps the latest note files outside the app"
     ],
     platforms: [
       { key: "ios", shipping: true, os: "iOS 17 or later, iPadOS 17 or later", short: "iOS / iPadOS 17+", storeUrl: "https://apps.apple.com/app/cuecard-teleprompter/id6757321325" },
@@ -40,9 +42,9 @@ const products = {
     url: "https://cuecard.dev/desktop/", price: "0", currency: "USD",
     description: "Free speaker notes that stay out of your screen share, with optional Google Slides note sync.",
     image: "https://cuecard.dev/assets/og-image.png",
-    features: ["Speaker notes excluded from screen capture", "Paste notes for any deck", "Google Slides note sync with the browser extension", "Colored cues and timing tags", "Keyboard shortcuts"],
+    features: ["Speaker notes excluded from screen capture", "Paste notes for any deck", "Google Slides note sync with the browser extension", "Automatic scrolling with adjustable speed, text size and start delay", "Colored cues and a countdown or elapsed timer", "Saved scripts with text file import and export", "Keyboard shortcuts"],
     platforms: [
-      { key: "macos", shipping: true, os: "macOS 13 or later", storeUrl: "https://github.com/thisisnsh/cuecard/releases" },
+      { key: "macos", shipping: true, os: "macOS 11 or later", storeUrl: "https://github.com/thisisnsh/cuecard/releases" },
       { key: "windows", shipping: true, os: "Windows 10 or later", storeUrl: "https://github.com/thisisnsh/cuecard/releases" }
     ]
   }

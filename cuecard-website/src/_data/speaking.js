@@ -4,12 +4,13 @@
 //
 // Every label here was checked against the iOS app source (HomeView,
 // SettingsView, TimerSheet, HelpView, CueCards and the watch app) on
-// 2026-09-26. Change a label in the app and change it here.
+// 2026-10-01. Change a label in the app and change it here.
 //
 // A card in `cards` is a string; [cue ...] in it is drawn in the cue color. A
 // line in `deck` is { t } or { cue }, as in _data/deck.js.
 
 const site = require("./site");
+const faq = require("./faq");
 const store = site.ios;
 
 const cardLimit = 280;
@@ -81,7 +82,7 @@ const teleprompter = {
       },
       {
         title: "Write, paste or import the script",
-        body: "Type or paste into the editor, or use Import from File in the ••• menu. Type [ or tap Add Cue for a reminder, and choose Save as New to keep a named copy in Saved Content.",
+        body: "Type or paste into the editor, or use Import in the ••• menu. Type [ or tap Add Cue for a reminder, and choose Save to keep a named copy in Saved Notes.",
       },
       {
         title: "Set the speed and text size",
@@ -189,7 +190,7 @@ const cards = {
     },
     {
       h: "Saved decks, as plain text",
-      p: "Keep every deck, and import or export it as a text file.",
+      p: "Save and search your decks, restore earlier versions, and keep text copies in a notes folder.",
     },
   ],
   shotIds: ["cards"],
@@ -208,7 +209,7 @@ const cards = {
       },
       {
         title: "Add cues and save the deck",
-        body: "Type [ or tap Add Cue for reminders like [cue pause]. Choose Save as New in the ••• menu to keep the deck in Saved Content.",
+        body: "Type [ or tap Add Cue for reminders like [cue pause]. Choose Save in the ••• menu to keep the deck in Saved Notes.",
       },
       {
         title: "Set a timer",
@@ -255,7 +256,7 @@ const cards = {
     {
       question: "Can I import cue cards from a text file?",
       answer:
-        "Yes. Use Import from File in the ••• menu. Put a [separator] line between cards and each part becomes its own card. Export to File writes a deck out the same way.",
+        "Yes. Use Import in the ••• menu. Put a [separator] line between cards and each part becomes its own card. Share sends the deck as text with the same separators.",
     },
   ],
   links: [
@@ -692,13 +693,23 @@ const speeches = [
           'Yes. Switch to the <a href="/teleprompter/">teleprompter</a>, which scrolls the whole manuscript at the speed you set. It works on iPad, and can be read from a few feet away.',
       },
       {
-        question: "Is CueCard free for churches?",
+        topic: "price",
+      question: "Is CueCard free for churches?",
         answer:
           "Yes. It is free for everyone, with no account, no ads and no subscription, and your notes stay on your device.",
       },
     ],
   },
 ];
+
+// Saved notes work the same way in both editor modes.
+for (const mode of [teleprompter, cards]) {
+  mode.faq = faq.merge(mode.faq, faq.pick(
+    "Can I save scripts and come back to them?",
+    "Can I restore an older version of a script or deck?",
+    "How do I keep my notes if I delete the iPhone or iPad app?"
+  ));
+}
 
 const pages = [teleprompter, cards, watch, ...speeches];
 

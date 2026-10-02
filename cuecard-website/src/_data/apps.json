@@ -70,7 +70,7 @@
       "steps": [
         {
           "title": "Write and save your script",
-          "body": "Open CueCard and paste or type into the editor. The ••• menu includes New and Import from File. Choose Save as New to keep a named copy in Saved Content."
+          "body": "Open CueCard and paste or type into the editor. The ••• menu includes New and Import. Choose Save to keep a named copy in Saved Notes."
         },
         {
           "title": "Choose a readable size and pace",
@@ -235,7 +235,7 @@
       "steps": [
         {
           "title": "Write and save your script",
-          "body": "Open CueCard and paste or type into the editor. The ••• menu includes New and Import from File. Choose Save as New to keep a named copy in Saved Content."
+          "body": "Open CueCard and paste or type into the editor. The ••• menu includes New and Import. Choose Save to keep a named copy in Saved Notes."
         },
         {
           "title": "Choose a readable size and pace",
@@ -341,6 +341,7 @@
         "answer": "Yes. The script can fill the screen for reading at a distance, or shrink into a floating window that stays above the camera, Instagram, TikTok or a video call while you record."
       },
       {
+        "topic": "price",
         "question": "Is CueCard free on iPad?",
         "answer": "Yes, completely. There is no subscription and no paid tier, and the source code is on GitHub for anyone to read."
       },
@@ -380,7 +381,7 @@
       "steps": [
         {
           "title": "Write and save your script",
-          "body": "Open CueCard and paste or type into the editor. The ••• menu includes New and Import from File. Choose Save as New to keep a named copy in Saved Content."
+          "body": "Open CueCard and paste or type into the editor. The ••• menu includes New and Import. Choose Save to keep a named copy in Saved Notes."
         },
         {
           "title": "Set up the full-screen reader",
@@ -463,16 +464,16 @@
     "showAndroid": true,
     "faq": [
       {
-        "question": "How does the floating teleprompter work on Android?",
-        "answer": "CueCard uses Android's overlay feature to create a floating window that stays on top of all your apps. You can record videos, go live, or present while your notes remain visible only to you."
+        "question": "What is planned for CueCard on Android?",
+        "answer": "A floating teleprompter for reading your script over other apps is planned. The Android app is still in development, so these features are not available to download yet."
       },
       {
         "question": "Is CueCard available on Google Play?",
         "answer": "Not yet. The Android app is still being built. The iPhone and iPad app is free and out now, and so is the Mac and Windows app."
       },
       {
-        "question": "Does it work with all Android phones?",
-        "answer": "CueCard works with most Android devices running Android 8.0 or later, including Samsung, Google Pixel, OnePlus, and more."
+        "question": "Which Android phones will be supported?",
+        "answer": "The Android app is not released yet. Check this page for device requirements when it becomes available."
       },
       {
         "question": "Is there a desktop version for Windows?",
@@ -538,7 +539,7 @@
       "steps": [
         {
           "title": "Write and save your script",
-          "body": "Open CueCard and paste or type into the editor. The ••• menu includes New and Import from File. Choose Save as New to keep a named copy in Saved Content."
+          "body": "Open CueCard and paste or type into the editor. The ••• menu includes New and Import. Choose Save to keep a named copy in Saved Notes."
         },
         {
           "title": "Choose a readable size and pace",
@@ -637,8 +638,8 @@
         "answer": "Yes. CueCard floats over the TikTok app, so you can see your script while recording directly in TikTok."
       },
       {
-        "question": "Can it help me nail trending sounds?",
-        "answer": "Yes. Keep your lip-sync lyrics or talking points visible so you nail the timing on trending sounds."
+        "question": "Does CueCard sync with TikTok sounds?",
+        "answer": "No. The script scrolls at the speed you choose; it does not sync to music or follow your voice. Rehearse the timing before recording."
       },
       {
         "question": "Can I resize the teleprompter window?",
@@ -673,7 +674,7 @@
       "steps": [
         {
           "title": "Write and save your script",
-          "body": "Open CueCard and paste or type into the editor. The ••• menu includes New and Import from File. Choose Save as New to keep a named copy in Saved Content."
+          "body": "Open CueCard and paste or type into the editor. The ••• menu includes New and Import. Choose Save to keep a named copy in Saved Notes."
         },
         {
           "title": "Choose a readable size and pace",
@@ -780,6 +781,7 @@
         "answer": "Yes. Use auto-scroll for longer scripts. CueCard scrolls at your preferred pace so you stay focused on delivery."
       },
       {
+        "topic": "price",
         "question": "Is CueCard free for YouTubers?",
         "answer": "Yes. CueCard is completely free. Perfect for creators at any subscriber count."
       },
@@ -812,7 +814,7 @@
       "steps": [
         {
           "title": "Write and save your script",
-          "body": "Open CueCard and paste or type into the editor. The ••• menu includes New and Import from File. Choose Save as New to keep a named copy in Saved Content."
+          "body": "Open CueCard and paste or type into the editor. The ••• menu includes New and Import. Choose Save to keep a named copy in Saved Notes."
         },
         {
           "title": "Choose a readable size and pace",
@@ -911,6 +913,7 @@
         "answer": "Yes. Float your talking points while recording company announcements, product updates, or team introductions."
       },
       {
+        "topic": "price",
         "question": "Is CueCard free for professionals?",
         "answer": "Yes. CueCard is completely free and perfect for business professionals."
       },
@@ -943,7 +946,7 @@
       "steps": [
         {
           "title": "Write and save your script",
-          "body": "Open CueCard and paste or type into the editor. The ••• menu includes New and Import from File. Choose Save as New to keep a named copy in Saved Content."
+          "body": "Open CueCard and paste or type into the editor. The ••• menu includes New and Import. Choose Save to keep a named copy in Saved Notes."
         },
         {
           "title": "Choose a readable size and pace",
@@ -1042,6 +1045,7 @@
         "answer": "Yes. Float your notes while going Live. Perfect for Q&A sessions, product demos, or community updates."
       },
       {
+        "topic": "price",
         "question": "Is CueCard free?",
         "answer": "Yes. CueCard is completely free and open source. It is free on the App Store for iPhone and iPad now, and the Android app is still being built."
       },
@@ -1074,7 +1078,7 @@
       "steps": [
         {
           "title": "Write and save your script",
-          "body": "Open CueCard and paste or type into the editor. The ••• menu includes New and Import from File. Choose Save as New to keep a named copy in Saved Content."
+          "body": "Open CueCard and paste or type into the editor. The ••• menu includes New and Import. Choose Save to keep a named copy in Saved Notes."
         },
         {
           "title": "Choose a readable size and pace",
@@ -1173,6 +1177,7 @@
         "answer": "Yes. Keep your talking points visible while creating Spotlight content that could go viral."
       },
       {
+        "topic": "price",
         "question": "Is CueCard free?",
         "answer": "Yes. CueCard is completely free and open source. It is free on the App Store for iPhone and iPad now, and the Android app is still being built."
       },
@@ -1205,7 +1210,7 @@
       "steps": [
         {
           "title": "Write and save your script",
-          "body": "Open CueCard and paste or type into the editor. The ••• menu includes New and Import from File. Choose Save as New to keep a named copy in Saved Content."
+          "body": "Open CueCard and paste or type into the editor. The ••• menu includes New and Import. Choose Save to keep a named copy in Saved Notes."
         },
         {
           "title": "Choose a readable size and pace",
@@ -1308,6 +1313,7 @@
         "answer": "Yes. Float your talking points while preparing for or participating in Twitter Spaces discussions."
       },
       {
+        "topic": "price",
         "question": "Is CueCard free?",
         "answer": "Yes. CueCard is completely free and open source. It is free on the App Store for iPhone and iPad now, and the Android app is still being built."
       },
@@ -1340,7 +1346,7 @@
       "steps": [
         {
           "title": "Write and save your script",
-          "body": "Open CueCard and paste or type into the editor. The ••• menu includes New and Import from File. Choose Save as New to keep a named copy in Saved Content."
+          "body": "Open CueCard and paste or type into the editor. The ••• menu includes New and Import. Choose Save to keep a named copy in Saved Notes."
         },
         {
           "title": "Choose a readable size and pace",
@@ -1472,7 +1478,7 @@
       "steps": [
         {
           "title": "Write and save your script",
-          "body": "Open CueCard and paste or type into the editor. The ••• menu includes New and Import from File. Choose Save as New to keep a named copy in Saved Content."
+          "body": "Open CueCard and paste or type into the editor. The ••• menu includes New and Import. Choose Save to keep a named copy in Saved Notes."
         },
         {
           "title": "Choose a readable size and pace",

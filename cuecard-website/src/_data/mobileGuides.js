@@ -198,7 +198,7 @@ const hubSteps = [
   },
   {
     title: "Write, then save",
-    body: "Type or paste your script, or tap Create New Card for each card of a deck. Type [ or tap Add Cue for reminders, and choose Save as New in the ••• menu.",
+    body: "Type or paste your script, or tap Create New Card for each card of a deck. Type [ or tap Add Cue for reminders, and choose Save in the ••• menu.",
   },
   {
     title: "Set the timer",
