@@ -23,7 +23,7 @@ function softwareSchema(product, platformKey) {
     applicationCategory: product.id.endsWith('#mobileapp') ? 'UtilitiesApplication' : 'BusinessApplication',
     description: product.description, isAccessibleForFree: product.price === '0',
     image: product.image, screenshot: product.screenshots, featureList: product.features,
-    license: 'https://opensource.org/licenses/MIT',
+    license: 'https://www.gnu.org/licenses/gpl-3.0.html',
     publisher: { '@id': 'https://cuecard.dev/#org' },
     ...(shipping.length ? {
       operatingSystem: shipping.map(p => p.os).join(', '),

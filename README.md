@@ -6,7 +6,7 @@
 
 Read your script over the apps you film in on iPhone and iPad. On Mac and Windows, keep speaker notes visible to you and out of your screen share.
 
-[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](https://choosealicense.com/licenses/mit/)
+[![GPLv3 License](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![iOS](https://img.shields.io/badge/iOS%20%26%20iPadOS-16.6%2B-000000?logo=apple&logoColor=white)](https://apps.apple.com/app/cuecard-teleprompter/id6757321325)
 ![Android Coming Soon](https://img.shields.io/badge/Android-Coming_Soon-3DDC84?logo=android&logoColor=white)
 [![macOS](https://img.shields.io/badge/macOS-13%2B-000000?logo=apple&logoColor=white)](https://cuecard.dev/desktop/#download)
@@ -74,7 +74,7 @@ CueCard is two apps that do the same job on different screens, both free, and op
 
 - **Free on every screen you speak from.** No subscription, no trial, no paid tier, nothing to cancel.
 - **No account required.** There is nothing to sign up for. Open the app and start writing. Google sign-in is only needed for Google Slides sync on desktop.
-- **Open source.** MIT licensed, and the code is right here. An app that can see your script is one worth being able to read the source of.
+- **Open source.** GPLv3 licensed, and the code is right here. An app that can see your script is one worth being able to read the source of.
 - **Your scripts stay on your device.** They are not uploaded to us. See the [privacy policy](https://cuecard.dev/privacy/) for the details.
 
 <br>
@@ -210,4 +210,4 @@ CueCard is open source, but it is not open to code contributions, so pull reques
 **Legal & Resources:**
 - [Privacy Policy](https://cuecard.dev/privacy/)
 - [Terms of Service](https://cuecard.dev/terms/)
-- [MIT License](LICENSE)
+- [GPLv3 License](LICENSE)

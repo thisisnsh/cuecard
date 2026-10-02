@@ -10,5 +10,5 @@
     "release": "node scripts/release.js"
   },
   "author": "",
-  "license": "MIT"
+  "license": "GPL-3.0-only"
 }

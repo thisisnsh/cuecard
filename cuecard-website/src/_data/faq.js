@@ -40,7 +40,7 @@ const mobile = [
   {
     question: "Is CueCard a free teleprompter app?",
     answer:
-      'Yes. CueCard is free on iPhone and iPad, with no subscription, no trial and no paid tier, and the project is open source under the MIT licence on <a href="' +
+      'Yes. CueCard is free on iPhone and iPad, with no subscription, no trial and no paid tier, and the project is open source under the GPLv3 licence on <a href="' +
       gh +
       '" target="_blank" rel="noopener">GitHub</a>.'
   },
@@ -243,14 +243,14 @@ const everywhere = [
   {
     question: "Is CueCard free?",
     answer:
-      'Yes. CueCard is completely free on mobile and on desktop, and open source under the MIT licence. Read the code on <a href="' +
+      'Yes. CueCard is completely free on mobile and on desktop, and open source under the GPLv3 licence. Read the code on <a href="' +
       gh +
       '" target="_blank" rel="noopener">GitHub</a> — and a star is always welcome.'
   },
   {
     question: "Is CueCard open source?",
     answer:
-      'Yes, MIT licensed, on <a href="' +
+      'Yes, GPLv3 licensed, on <a href="' +
       gh +
       '" target="_blank" rel="noopener">GitHub</a>. An app that can see your script is one worth being able to read the source of.'
   },
