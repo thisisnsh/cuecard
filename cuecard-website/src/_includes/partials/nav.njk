@@ -21,10 +21,6 @@
             <span class="brand-text">Cue<b>Card</b></span>
         </a>
 
-        <button class="nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links" aria-label="Menu">
-            <span></span><span></span>
-        </button>
-
         <div class="nav-links" id="nav-links">
             {% if showNavLinks !== false %}
             <a class="nav-link" href="/mobile/">Mobile</a>
@@ -33,7 +29,9 @@
             <a class="nav-link" href="/blog/">Blog</a>
             <a class="nav-link" href="/faq/">FAQ</a>
             {% endif %}
+        </div>
 
+        <div class="nav-actions">
             <details class="nav-get" id="nav-get">
                 <summary class="btn btn-primary nav-get-btn">
                     {{ icon("download", 15) }}
@@ -44,6 +42,9 @@
                     {% include "partials/downloadmenu.njk" %}
                 </div>
             </details>
+            <button class="nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links" aria-label="Open menu">
+                <span></span><span></span>
+            </button>
         </div>
     </nav>
 

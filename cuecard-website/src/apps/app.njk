@@ -53,7 +53,7 @@ layout: layouts/mobile-app.njk
    phone, so every page here has the same shape. #}
 {% set onIpad = app.slug == "mobile/ipad" %}
 
-<main>
+<main id="main-content" tabindex="-1">
     {% set heroClass = "hero-app" %}
     {% set heroTitle = app.heroSubtitle %}
     {% set heroBody = app.appDescription %}

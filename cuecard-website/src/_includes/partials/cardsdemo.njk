@@ -28,7 +28,7 @@
     </div>
     {% endif %}
 
-    <div class="cardsdemo-stage" data-cards-stage tabindex="0" role="group" aria-roledescription="deck" aria-label="Sample cue cards. Swipe, or use the arrow keys.">
+    <div class="cardsdemo-stage" data-cards-stage tabindex="0" role="group" aria-roledescription="deck" aria-label="Sample cue cards. Swipe, or use the arrow keys." aria-live="polite" aria-atomic="true">
         {% for c in demoCards %}
         <p class="cardsdemo-card{% if loop.first %} is-current{% elif loop.index == 2 %} is-next{% else %} is-later{% endif %}" data-card{% if not loop.first %} aria-hidden="true"{% endif %}>{{ c | cueHtml | safe }}</p>
         {% endfor %}
@@ -36,10 +36,11 @@
 
     <div class="cardsdemo-controls">
         <button class="deck-btn" type="button" data-cards-back disabled>‹ Back</button>
+        <button class="deck-btn" type="button" data-cards-timer aria-pressed="false">Start timer</button>
         <button class="deck-btn deck-btn-main" type="button" data-cards-next>Next ›</button>
     </div>
 </div>
 <p class="deck-legend reveal d3">
     {% if onWatch %}The same cards as on your iPhone: turn one on either and both move. The <b>pink words are cues</b>, reminders you never say out loud.
-    {% else %}Swipe the card or tap Next. The <b>pink words are cues</b>, reminders you never say out loud, and the clock counts up from when you started.{% endif %}
+    {% else %}Swipe or tap Next. Start the timer to practise your pace. <b>Pink words are reminders</b>, not part of your speech.{% endif %}
 </p>

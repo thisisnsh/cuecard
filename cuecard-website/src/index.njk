@@ -63,14 +63,15 @@ ogLocale: "en_US"
 {% from "partials/icons.njk" import icon %}
 {% include "partials/nav.njk" %}
 
-<main>
-    {% set heroTitle = 'A teleprompter and cue cards, <em>free.</em>' %}
-    {% set heroBody = 'Read a script that scrolls over the camera, TikTok or a call, or speak from cards you turn in the app, on your Lock Screen or on your Apple Watch. On Mac and Windows, your speaker notes stay out of your screen share.' %}
+<main id="main-content" tabindex="-1">
+    {% set heroEyebrow = 'Free teleprompter & cue cards app' %}
+    {% set heroTitle = 'Read your script.<br><em>Speak naturally.</em>' %}
+    {% set heroBody = 'Float your script over the app you film in, or speak from cue cards at a glance. Free on iPhone, iPad and Apple Watch, with private speaker notes for Mac and Windows too.' %}
     {% set heroButtons = [
-      { text: "Get it free on the App Store", href: site.ios, icon: "apple", style: "primary", external: true },
-      { text: "For Mac & Windows", href: "/desktop/", icon: "monitor", style: "ghost" }
+      { text: "Download for iPhone & iPad", href: site.ios, icon: "apple", style: "primary", external: true },
+      { text: "Mac & Windows", href: "/desktop/#download", icon: "monitor", style: "ghost" }
     ] %}
-    {% set heroNote = 'Free · No account required · iPhone, iPad &amp; <a href="/watch/">Apple Watch</a>' %}
+    {% set heroNote = 'No ads. No subscription. No account required.' %}
     {% set heroStrip = "none" %}
     {% set faqLink = "#faq" %}
     {% set heroDeck = true %}
@@ -78,42 +79,35 @@ ogLocale: "en_US"
     {% set demoCards = deck.standardCards %}
     {% include "partials/hero.njk" %}
 
-    {% set modesMicro = "One app, three ways to use it" %}
+    {% set modesMicro = "One free app" %}
+    {% set modesHeading = "Ready for your next video, speech or presentation." %}
     {% set modesNote = "Film with the teleprompter, give a talk from cards, and keep either one in reach on your Apple Watch." %}
     {% include "partials/modes.njk" %}
 
-    {% set featureRows = features.mobile %}
-    {% set rowsMicro = "What you get" %}
-    {% set rowsHeading = "Built to be read out of the corner of your eye" %}
-    {% set rowsId = "features" %}
-    {% include "partials/rows.njk" %}
+
 
     {% set shotsHeading = 'What it looks like.' %}
     {% set shotsNote = "The script floating over another app, the teleprompter, a card being swiped, cards on the Lock Screen, and the settings." %}
     {% set shotsFoot = 'Looking for the computer app instead? <a href="/desktop/">CueCard for Mac and Windows</a> keeps your speaker notes on your screen and out of your screen share.' %}
     {% include "partials/shots.njk" %}
 
+    {% set getHeading = "Your next take starts here." %}
+    {% set getBody = "Choose your device. Get the full app free, with no ads, subscription or required account." %}
+    {% include "partials/getcuecard.njk" %}
+
+    {% set featureRows = features.mobile %}
+    {% set rowsMicro = "What you get" %}
+    {% set rowsHeading = "Make the script fit you." %}
+    {% set rowsId = "features" %}
+    {% include "partials/rows.njk" %}
+
     {% set watchHeading = "A minute of it, on each screen" %}
     {% set watchNote = "One short film for the iPhone app, one for the same app on iPad, and one for the Mac and Windows app. Each opens on YouTube." %}
     {% include "partials/watch.njk" %}
 
-    {% include "partials/features.njk" %}
-
-    {% set gridRoles = site.mobileRoles %}
-    {% set gridBase = "/mobile/" %}
-    {% set gridId = "roles" %}
-    {% set gridMicro = "Made for" %}
-    {% set gridHeading = "Whatever it is you have to say on camera" %}
-    {% set gridSuffix = "teleprompter app" %}
-    {% include "partials/rolegrid.njk" %}
-
     {% set crossMicro = "For Mac & Windows" %}
     {% set crossHeading = "Private speaker notes for presentations and meetings." %}
     {% include "partials/crosspanel.njk" %}
-
-    {% set getHeading = "Stop memorising. Start talking." %}
-    {% set getBody = "Free on every screen you speak from. No account required, no subscription and nothing to cancel." %}
-    {% include "partials/getcuecard.njk" %}
 
     <section class="workflow-section" id="mobile-product" aria-labelledby="mobile-product-h">
       <div class="wrap">

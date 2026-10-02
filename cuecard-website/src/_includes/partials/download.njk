@@ -18,15 +18,15 @@
             <a href="{{ site.releases }}" data-product-platform="windows" data-cta-location="download_section" data-destination-type="releases">Find Windows installers on GitHub</a>
         </p>
         <div class="download-container">
-            <div class="release-selector">
+            <div class="release-selector" hidden>
                 <label for="release-select">Release</label>
                 <select id="release-select" class="release-dropdown">
                     <option value="">Loading releases…</option>
                 </select>
             </div>
 
-            <div class="download-grid" id="download-grid">
-                <div class="download-loading">Loading releases…</div>
+            <div class="download-grid" id="download-grid" aria-live="polite">
+                <div class="download-loading">Choose a macOS or Windows installer using the GitHub links above.</div>
             </div>
 
             <p class="backline release-notes-button-container">

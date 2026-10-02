@@ -35,8 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initNavToggle();
     initDownloadMenu();
 
-    // Reveal on scroll, smooth anchors, the sticky header's scrolled state
-    initScrollReveal();
+    // Native anchors and the sticky header's scrolled state
     initSmoothScroll();
     initNavbarScroll();
 
@@ -113,6 +112,7 @@ function initDeck() {
     let offset = 0;          // pixels the script has travelled
     let elapsed = 0;         // seconds on the clock
     let running = !reduced;
+    let visible = true;
     let last = null;
     let lit = null;
 
@@ -126,9 +126,8 @@ function initDeck() {
     const startingOffset = () => {
         const first = lines[0];
         if (!first) return 0;
-        // Start the first line in the middle of the window, then let it travel
-        // upward exactly as it would in the app.
-        return first.offsetTop + first.offsetHeight / 2 - screen.offsetHeight / 2;
+        // Keep the first line near the top so the preview opens with useful text.
+        return first.offsetTop + first.offsetHeight / 2 - screen.offsetHeight * 0.28;
     };
 
     const setRunning = (on) => {
@@ -177,7 +176,7 @@ function initDeck() {
         const dt = Math.min(0.1, (now - last) / 1000);
         last = now;
 
-        if (running) {
+        if (running && visible && !document.hidden) {
             offset += (linesPerMinute() / 60) * lineHeight() * dt;
             elapsed += dt;
             // Run off the bottom and start again, so it is always doing
@@ -196,12 +195,10 @@ function initDeck() {
 
     // Nothing should animate off-screen: it is a demo, not a background task.
     if ('IntersectionObserver' in window) {
-        let seen = true;
         const io = new IntersectionObserver(([entry]) => {
             if (!entry) return;
             if (entry.isIntersecting && !laidOut) { laidOut = true; reset(); }
-            if (entry.isIntersecting && !seen && !reduced) { seen = true; setRunning(true); }
-            else if (!entry.isIntersecting && seen) { seen = false; running = false; }
+            visible = entry.isIntersecting;
         }, { threshold: 0.15 });
         io.observe(deck);
     }
@@ -243,6 +240,7 @@ function initCardsDemo() {
         const back = demo.querySelector('[data-cards-back]');
         const next = demo.querySelector('[data-cards-next]');
         const count = demo.querySelector('[data-cards-count]');
+        const timer = demo.querySelector('[data-cards-timer]');
         const clock = demo.querySelector('[data-cards-clock]');
         const stage = demo.querySelector('[data-cards-stage]');
         if (!cards.length || !stage) return;
@@ -250,6 +248,7 @@ function initCardsDemo() {
         let index = 0;
         let elapsed = 0;
         let visible = true;
+        let running = false;
 
         const paintClock = () => {
             if (!clock) return;
@@ -283,6 +282,11 @@ function initCardsDemo() {
             paint();
         };
 
+        timer?.addEventListener('click', () => {
+            running = !running;
+            timer.textContent = running ? 'Pause timer' : 'Start timer';
+            timer.setAttribute('aria-pressed', String(running));
+        });
         if (back) back.addEventListener('click', () => go(-1));
         if (next) next.addEventListener('click', () => go(1));
 
@@ -307,7 +311,7 @@ function initCardsDemo() {
             }, { threshold: 0.15 }).observe(demo);
         }
         setInterval(() => {
-            if (!visible || document.hidden) return;
+            if (!running || !visible || document.hidden) return;
             elapsed += 1;
             paintClock();
         }, 1000);
@@ -324,18 +328,26 @@ function initNavToggle() {
     const toggle = document.getElementById('nav-toggle');
     const links = document.getElementById('nav-links');
     if (!toggle || !links) return;
+    document.documentElement.classList.add('nav-ready');
 
-    toggle.addEventListener('click', () => {
-        const open = links.classList.toggle('open');
+    const setOpen = (open, restoreFocus = false) => {
+        links.classList.toggle('open', open);
         toggle.setAttribute('aria-expanded', String(open));
+        toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+        if (restoreFocus) toggle.focus();
+    };
+    toggle.addEventListener('click', () => setOpen(!links.classList.contains('open')));
+    links.addEventListener('click', event => {
+        if (event.target.closest('a')) setOpen(false);
     });
-
-    // Following a link should close the menu behind you.
-    links.addEventListener('click', (event) => {
-        if (event.target.closest('a')) {
-            links.classList.remove('open');
-            toggle.setAttribute('aria-expanded', 'false');
-        }
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && links.classList.contains('open')) setOpen(false, true);
+    });
+    document.addEventListener('click', event => {
+        if (!links.contains(event.target) && !toggle.contains(event.target)) setOpen(false);
+    });
+    document.addEventListener('focusin', event => {
+        if (!links.contains(event.target) && !toggle.contains(event.target)) setOpen(false);
     });
 }
 
@@ -366,32 +378,6 @@ function initDownloadMenu() {
     });
 }
 
-/* Reveal on scroll.
-
-   Purely additive: the elements start at opacity 0 in the stylesheet, and a
-   <noscript> rule in the head undoes that, so a reader without JS sees the page
-   rather than a column of blanks. */
-function initScrollReveal() {
-    const items = document.querySelectorAll('.reveal, .feature-card, .faq-item');
-    if (!items.length) return;
-
-    if (!('IntersectionObserver' in window) ||
-        window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        items.forEach(el => el.classList.add('in', 'revealed'));
-        return;
-    }
-
-    const observer = new IntersectionObserver(entries => {
-        for (const entry of entries) {
-            if (!entry.isIntersecting) continue;
-            entry.target.classList.add('in', 'revealed');
-            observer.unobserve(entry.target);
-        }
-    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.05 });
-
-    items.forEach(el => observer.observe(el));
-}
-
 /* The desktop screenshots (partials/reel.njk): pressing one opens it full
    size in the section's dialog. The dialog closes on Escape, the close
    button, or a click anywhere on it. Without <dialog> support the link just
@@ -419,25 +405,13 @@ function initReelZoom() {
     });
 }
 
-// Smooth Scroll for Anchor Links
+// Native anchors preserve URL history and keyboard focus. Open a linked FAQ
+// before navigation; CSS handles scrolling and the sticky-header offset.
 function initSmoothScroll() {
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const href = this.getAttribute('href');
-            if (!href || href === '#') return;
-            const target = document.querySelector(href);
-            if (target) {
-                // If target is a details element, open it
-                if (target.tagName === 'DETAILS' && !target.open) {
-                    target.open = true;
-                }
-
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'center'
-                });
-            }
+        anchor.addEventListener('click', () => {
+            const target = document.getElementById(decodeURIComponent(anchor.hash.slice(1)));
+            if (target?.tagName === 'DETAILS') target.open = true;
         });
     });
 }
@@ -586,152 +560,28 @@ let allReleases = [];
    entirely and understate the real number by most of it. The line on the page
    is a hand-written string in _data/site.js instead - see partials/stats.njk. */
 async function initGitHubData() {
-    const hasDownloadSection = !!document.getElementById('download-grid');
-
+    // Stars must not hold up installers.
+    fetchGitHubStars().then(stars => { if (stars) updateStarsCount(stars); });
+    const grid = document.getElementById('download-grid');
+    if (!grid) return;
+    const selector = document.querySelector('.release-selector');
+    grid.textContent = 'Finding the latest installers…';
     try {
-        const [starsResult, releasesResult] = await Promise.all([
-            fetchGitHubStars(),
-            hasDownloadSection ? fetchGitHubReleases() : Promise.resolve([])
-        ]);
-
-        if (starsResult) {
-            updateStarsCount(starsResult);
-        }
-
-        if (!hasDownloadSection) return;
-
-        if (releasesResult && releasesResult.length > 0) {
-            allReleases = releasesResult;
-        } else {
-            console.log('No releases found, using sample data');
-            allReleases = getSampleReleaseData();
-        }
-
-        populateReleaseDropdown();
-        displayRelease(allReleases[0]); // Show latest release by default
-    } catch (error) {
-        console.error('Error fetching GitHub data:', error);
-        if (!hasDownloadSection) return;
-        // Fall back to sample data on error
-        allReleases = getSampleReleaseData();
+        const releases = await fetchGitHubReleases();
+        allReleases = releases.filter(release => !release.draft && Array.isArray(release.assets));
+        if (!allReleases.length) throw new Error('No releases available');
         populateReleaseDropdown();
         displayRelease(allReleases[0]);
+        if (selector) selector.hidden = false;
+    } catch {
+        if (selector) selector.hidden = true;
+        grid.textContent = 'The installer list is unavailable right now. You can still download CueCard using the macOS or Windows links above.';
     }
-}
-
-function getSampleReleaseData() {
-    return [];
-
-    const sampleVersion = '1.0.0';
-    const sampleDate = new Date().toISOString();
-
-    return [
-        {
-            tag_name: `v${sampleVersion}`,
-            name: `CueCard ${sampleVersion}`,
-            prerelease: false,
-            published_at: sampleDate,
-            body: `## What's New\n\n- Initial release of CueCard\n- Ghost mode for hiding from screen recordings\n- Google Slides sync support\n- Timer and note tags\n\n## Installation\n\nDownload the appropriate installer for your platform below.`,
-            assets: [
-                // macOS
-                {
-                    name: `CueCard_${sampleVersion}_universal.dmg`,
-                    size: 45 * 1024 * 1024,
-                    download_count: 1250,
-                    browser_download_url: '#'
-                },
-                // Windows x64
-                {
-                    name: `CueCard_${sampleVersion}_x64-setup.exe`,
-                    size: 38 * 1024 * 1024,
-                    download_count: 2340,
-                    browser_download_url: '#'
-                },
-                {
-                    name: `CueCard_${sampleVersion}_x64.msi`,
-                    size: 40 * 1024 * 1024,
-                    download_count: 890,
-                    browser_download_url: '#'
-                },
-                // Windows ARM64
-                {
-                    name: `CueCard_${sampleVersion}_arm64-setup.exe`,
-                    size: 36 * 1024 * 1024,
-                    download_count: 450,
-                    browser_download_url: '#'
-                },
-                {
-                    name: `CueCard_${sampleVersion}_arm64.msi`,
-                    size: 38 * 1024 * 1024,
-                    download_count: 220,
-                    browser_download_url: '#'
-                },
-                // Safari Extension
-                {
-                    name: `CueCard_${sampleVersion}_safari.dmg`,
-                    size: 12 * 1024 * 1024,
-                    download_count: 890,
-                    browser_download_url: '#'
-                },
-                // Chrome Extension
-                {
-                    name: `CueCard_${sampleVersion}_chrome.zip`,
-                    size: 2 * 1024 * 1024,
-                    download_count: 560,
-                    browser_download_url: '#'
-                },
-                // Firefox Extension
-                {
-                    name: `CueCard_${sampleVersion}_firefox.zip`,
-                    size: 2 * 1024 * 1024,
-                    download_count: 340,
-                    browser_download_url: '#'
-                },
-                // Files that should be filtered out
-                {
-                    name: `CueCard.app.tar.gz`,
-                    size: 42 * 1024 * 1024,
-                    download_count: 100,
-                    browser_download_url: '#'
-                },
-                {
-                    name: `CueCard.app.tar.gz.sig`,
-                    size: 1024,
-                    download_count: 50,
-                    browser_download_url: '#'
-                },
-                {
-                    name: `darwin-x86_64-latest.json`,
-                    size: 512,
-                    download_count: 200,
-                    browser_download_url: '#'
-                },
-                {
-                    name: `windows-x86_64-latest.json`,
-                    size: 512,
-                    download_count: 150,
-                    browser_download_url: '#'
-                },
-                {
-                    name: `CueCard_${sampleVersion}_x64-setup.exe.sig`,
-                    size: 1024,
-                    download_count: 30,
-                    browser_download_url: '#'
-                },
-                {
-                    name: `CueCard_${sampleVersion}_x64.msi.sig`,
-                    size: 1024,
-                    download_count: 25,
-                    browser_download_url: '#'
-                }
-            ]
-        }
-    ];
 }
 
 async function fetchGitHubStars() {
     try {
-        const response = await fetch(`${GITHUB_API_PROXY}/repos/${GITHUB_REPO}`);
+        const response = await fetch(`${GITHUB_API_PROXY}/repos/${GITHUB_REPO}`, { signal: AbortSignal.timeout(8000) });
         if (!response.ok) throw new Error('Failed to fetch repo data');
         const data = await response.json();
         return data.stargazers_count;
@@ -743,7 +593,7 @@ async function fetchGitHubStars() {
 
 async function fetchGitHubReleases() {
     try {
-        const response = await fetch(`${GITHUB_API_PROXY}/repos/${GITHUB_REPO}/releases`);
+        const response = await fetch(`${GITHUB_API_PROXY}/repos/${GITHUB_REPO}/releases`, { signal: AbortSignal.timeout(8000) });
         if (!response.ok) throw new Error('Failed to fetch releases');
         const releases = await response.json();
         return releases;

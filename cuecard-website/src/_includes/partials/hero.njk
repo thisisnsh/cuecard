@@ -22,6 +22,7 @@
 
         <div class="{% if heroDeck %}hero-grid{% endif %}">
             <div class="hero-copy">
+                {% if heroEyebrow %}<p class="hero-eyebrow">{{ heroEyebrow }}</p>{% endif %}
                 <h1 class="display hero-subtitle{% if heroLong %} display-long{% endif %} reveal" id="hero-h">
                     {{ (heroTitle or (platform.heroSubtitle if platform else heroSubtitle)) | safe }}
                 </h1>
@@ -76,6 +77,7 @@
 
             {% if heroDeck %}
             <div class="hero-deck">
+                <p class="demo-invitation">Try CueCard here. No download needed.</p>
                 {% if heroDemo == "watch" %}
                 {% set demoKind = "watch" %}{% include "partials/cardsdemo.njk" %}
                 {% else %}

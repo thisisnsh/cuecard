@@ -3,7 +3,7 @@
 {% block body %}
 {% include "partials/nav.njk" %}
 
-<main class="policy-page">
+<main id="main-content" tabindex="-1" class="policy-page">
     <div class="wrap">{% include "partials/breadcrumbs.njk" %}</div>
     {{ content | safe }}
 </main>

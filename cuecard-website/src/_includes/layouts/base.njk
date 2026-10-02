@@ -60,8 +60,8 @@
           href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap">
     <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap"></noscript>
 
-    {# reveal-on-scroll is an enhancement; with no JS the page must still read. #}
-    <noscript><style>.reveal{opacity:1;transform:none}</style></noscript>
+    {# Without scripting, the demo remains a static preview of the app. #}
+    <noscript><style>.deck-controls,.cardsdemo-controls,.demo-switch,.demo-invitation{display:none}</style></noscript>
 
     <link rel="icon" type="image/png" href="/assets/favicon-96x96.png" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
@@ -156,6 +156,7 @@
 </head>
 
 <body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
     {% include "partials/icon-sprite.njk" %}
 
     {% block body %}{{ content | safe }}{% endblock %}

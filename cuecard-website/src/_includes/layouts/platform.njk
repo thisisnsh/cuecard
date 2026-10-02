@@ -42,7 +42,7 @@
    desktop feature list rather than four rows reworded around a meeting app. #}
 {% set isSlides = true if platform.showExtension else false %}
 
-<main>
+<main id="main-content" tabindex="-1">
     {% set heroTitle = platform.heroSubtitle %}
     {% set heroBody = platform.jsonLdDescription %}
     {% set heroButtons = [
