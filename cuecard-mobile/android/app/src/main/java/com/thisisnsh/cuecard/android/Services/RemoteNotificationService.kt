@@ -57,7 +57,7 @@ class RemoteNotificationService private constructor(context: Context) {
             return
         }
 
-        val raw = withContext(Dispatchers.IO) {
+        val raw = FAKE_RESPONSE ?: withContext(Dispatchers.IO) {
             try {
                 (URL(ENDPOINT).openConnection() as HttpURLConnection).run {
                     connectTimeout = TIMEOUT_MS
@@ -171,6 +171,46 @@ class RemoteNotificationService private constructor(context: Context) {
         private val MINIMUM_REFRESH_INTERVAL_MS =
             if (BuildConfig.DEBUG) 5L * 1000L else 15L * 60L * 1000L
         private const val TIMEOUT_MS = 5000
+
+        /**
+         * A stand-in for the worker's response in Debug builds, for seeing the
+         * notification design without deploying anything. It goes through the
+         * same decoding and checks as the real thing. Set to null to hit the
+         * worker again.
+         *
+         * Dismissing one remembers its id, so change the id to see it again.
+         */
+        private val FAKE_RESPONSE: String? = if (BuildConfig.DEBUG) {
+            """
+            {
+              "notifications": [
+                {
+                  "id": "debug-home-banner",
+                  "surface": "homeBanner",
+                  "severity": "info",
+                  "title": "CueCard 1.1 is here",
+                  "body": "Saved notes keep every version now, and the editor is faster with long scripts.",
+                  "actions": [
+                    { "kind": "appStore", "label": "Update" },
+                    { "kind": "openURL", "label": "What's new", "url": "https://cuecard.dev" }
+                  ]
+                },
+                {
+                  "id": "debug-settings-row",
+                  "surface": "settingsRow",
+                  "severity": "warning",
+                  "title": "Android 8 support is ending",
+                  "body": "The next update will need Android 10 or later.",
+                  "actions": [
+                    { "kind": "openURL", "label": "Learn more", "url": "https://cuecard.dev" }
+                  ]
+                }
+              ]
+            }
+            """.trimIndent()
+        } else {
+            null
+        }
 
         private const val PREFS_NAME = "cuecard_remote_config"
 
