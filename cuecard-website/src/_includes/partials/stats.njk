@@ -5,8 +5,7 @@
   The download total is a hand-written string in _data/site.js - the GitHub API
   only ever sees desktop release assets, so a computed figure would undercount
   the App Store badly and it is more honest to state a number than to publish a
-  wrong one. The star count beside it is live, filled in by script.js; until it
-  arrives the item is simply absent rather than a flickering zero.
+  wrong one.
 #}
 {# The count sends a reader to the download section. Every page carries one
    except the five below - the legal and support pages, and the 404 - so on
@@ -15,10 +14,5 @@
 {% set statsDownloadHref = "/#download" if page.url in statsPagesWithoutDownload else "#download" %}
 <ul class="statline{% if statlineClass %} {{ statlineClass }}{% endif %}">
     <li><a href="{{ statsDownloadHref }}">{{ icon("download", 14) }}<b>{{ site.downloadTotal }}</b> downloads</a></li>
-    <li class="statline-stars" data-stars-item hidden>
-        <a href="{{ site.github }}" target="_blank" rel="noopener">
-            {{ icon("star", 14) }}<b data-github-stars>—</b> GitHub stars
-        </a>
-    </li>
     <li>{{ icon("shield", 14) }}Free and GPLv3 licensed</li>
 </ul>

@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // The Mac / Windows choice in a hero that offers both
     initOsButtons();
 
-    // GitHub stars, and the desktop release downloads
+    // The desktop release downloads
     initGitHubData();
 });
 
@@ -552,16 +552,14 @@ const GITHUB_REPO = 'thisisnsh/cuecard';
 const GITHUB_API_PROXY = 'https://cuecard.thisisnsh.workers.dev';
 let allReleases = [];
 
-/* Two things come from GitHub: the star count, which is on every page, and the
-   release list, which only the desktop download section uses.
+/* One thing comes from GitHub: the release list, which only the desktop
+   download section uses.
 
    The download *total* deliberately does not. GitHub only counts desktop
    release assets, so a figure computed here would leave out the App Store
    entirely and understate the real number by most of it. The line on the page
    is a hand-written string in _data/site.js instead - see partials/stats.njk. */
 async function initGitHubData() {
-    // Stars must not hold up installers.
-    fetchGitHubStars().then(stars => { if (stars) updateStarsCount(stars); });
     const grid = document.getElementById('download-grid');
     if (!grid) return;
     const selector = document.querySelector('.release-selector');
@@ -579,18 +577,6 @@ async function initGitHubData() {
     }
 }
 
-async function fetchGitHubStars() {
-    try {
-        const response = await fetch(`${GITHUB_API_PROXY}/repos/${GITHUB_REPO}`, { signal: AbortSignal.timeout(8000) });
-        if (!response.ok) throw new Error('Failed to fetch repo data');
-        const data = await response.json();
-        return data.stargazers_count;
-    } catch (error) {
-        console.error('Error fetching stars:', error);
-        return null;
-    }
-}
-
 async function fetchGitHubReleases() {
     try {
         const response = await fetch(`${GITHUB_API_PROXY}/repos/${GITHUB_REPO}/releases`, { signal: AbortSignal.timeout(8000) });
@@ -601,27 +587,6 @@ async function fetchGitHubReleases() {
         console.error('Error fetching releases:', error);
         return [];
     }
-}
-
-/* The star count, wherever it appears - the stat line runs on every page and
-   the footer carries it too, so this writes to all of them. Each one's list
-   item starts hidden and is only revealed here, so a page that never hears
-   back from GitHub shows nothing rather than a placeholder that jumps. */
-function updateStarsCount(count) {
-    document.querySelectorAll('[data-github-stars]').forEach((el) => {
-        el.textContent = formatNumber(count);
-        const item = el.closest('[data-stars-item]');
-        if (item) item.hidden = false;
-    });
-}
-
-function formatNumber(num) {
-    if (num >= 1000000) {
-        return (num / 1000000).toFixed(1) + 'M';
-    } else if (num >= 1000) {
-        return (num / 1000).toFixed(1) + 'k';
-    }
-    return num.toString();
 }
 
 function populateReleaseDropdown() {

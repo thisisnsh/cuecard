@@ -403,7 +403,6 @@ html { scroll-padding-top: 16px; }
 .statline a { display: inline-flex; align-items: center; gap: 8px; transition: color .2s var(--ease); }
 .statline a:hover { color: var(--ink); }
 .statline a:hover .icon { color: var(--cue); }
-.statline li[hidden] { display: none; }
 
 /* Headlines that come from a page's own sentence-shaped copy rather than a
    written headline. */
