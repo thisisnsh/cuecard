@@ -35,6 +35,9 @@ use uuid::Uuid;
 // CONSTANTS
 // =============================================================================
 
+/// Bundle identifier of the Mac App Store build (shared with the iOS app for universal purchase)
+const APP_STORE_IDENTIFIER: &str = "com.thisisnsh.cuecard.ios";
+
 // OAuth2 Configuration
 const GOOGLE_AUTH_URL: &str = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL: &str = "https://oauth2.googleapis.com/token";
@@ -1313,11 +1316,15 @@ fn init_nspanel(app_handle: &AppHandle) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    #[cfg_attr(not(target_os = "macos"), allow(unused_mut))]
+    let context = tauri::generate_context!();
+
+    // The Mac App Store build updates through the store, so it leaves the updater
+    // out; without the plugin the frontend never offers an update
+    let app_store_build = context.config().identifier == APP_STORE_IDENTIFIER;
+
     let mut builder = tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_store::Builder::default().build())
-        .plugin(tauri_plugin_updater::Builder::default().build())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
@@ -1344,6 +1351,10 @@ pub fn run() {
                 })
                 .build(),
         );
+
+    if !app_store_build {
+        builder = builder.plugin(tauri_plugin_updater::Builder::default().build());
+    }
 
     #[cfg(target_os = "macos")]
     {
@@ -1420,6 +1431,6 @@ pub fn run() {
             refresh_notes,
             set_screenshot_protection
         ])
-        .run(tauri::generate_context!())
+        .run(context)
         .expect("error while running tauri application");
 }
