@@ -41,6 +41,17 @@
                ReferencedContainer = "container:CueCard.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "7E5700000000000000000502"
+               BuildableName = "CueCardUITests.xctest"
+               BlueprintName = "CueCardUITests"
+               ReferencedContainer = "container:CueCard.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction
