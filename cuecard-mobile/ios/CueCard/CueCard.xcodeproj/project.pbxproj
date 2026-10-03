@@ -88,9 +88,6 @@
 		7E5700000000000000000206 /* RemoteNotificationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E5700000000000000000106 /* RemoteNotificationTests.swift */; };
 		7E5700000000000000000207 /* NoteVersionsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E5700000000000000000107 /* NoteVersionsTests.swift */; };
 		7E5700000000000000000208 /* WatchAndWidgetTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E5700000000000000000108 /* WatchAndWidgetTests.swift */; };
-		7E5700000000000000000221 /* CueCardUITestCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E5700000000000000000121 /* CueCardUITestCase.swift */; };
-		7E5700000000000000000222 /* EditorUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E5700000000000000000122 /* EditorUITests.swift */; };
-		7E5700000000000000000223 /* ScreensUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7E5700000000000000000123 /* ScreensUITests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -109,13 +106,6 @@
 			remoteInfo = CueCardWatch;
 		};
 		7E5700000000000000000601 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 1000 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 800;
-			remoteInfo = CueCard;
-		};
-		7E5700000000000000000602 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 1000 /* Project object */;
 			proxyType = 1;
@@ -220,11 +210,7 @@
 		7E5700000000000000000106 /* RemoteNotificationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteNotificationTests.swift; sourceTree = "<group>"; };
 		7E5700000000000000000107 /* NoteVersionsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteVersionsTests.swift; sourceTree = "<group>"; };
 		7E5700000000000000000108 /* WatchAndWidgetTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchAndWidgetTests.swift; sourceTree = "<group>"; };
-		7E5700000000000000000121 /* CueCardUITestCase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardUITestCase.swift; sourceTree = "<group>"; };
-		7E5700000000000000000122 /* EditorUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditorUITests.swift; sourceTree = "<group>"; };
-		7E5700000000000000000123 /* ScreensUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreensUITests.swift; sourceTree = "<group>"; };
 		7E5700000000000000000301 /* CueCardTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CueCardTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		7E5700000000000000000302 /* CueCardUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CueCardUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -258,13 +244,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		7E5700000000000000000522 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -275,7 +254,6 @@
 				730 /* CueCardWidgets */,
 				740 /* CueCardWatch */,
 				7E5700000000000000000401 /* CueCardTests */,
-				7E5700000000000000000402 /* CueCardUITests */,
 				720 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -362,7 +340,6 @@
 				502 /* CueCardWidgets.appex */,
 				503 /* CueCardWatch.app */,
 				7E5700000000000000000301 /* CueCardTests.xctest */,
-				7E5700000000000000000302 /* CueCardUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -417,16 +394,6 @@
 				7E5700000000000000000108 /* WatchAndWidgetTests.swift */,
 			);
 			path = CueCardTests;
-			sourceTree = "<group>";
-		};
-		7E5700000000000000000402 /* CueCardUITests */ = {
-			isa = PBXGroup;
-			children = (
-				7E5700000000000000000121 /* CueCardUITestCase.swift */,
-				7E5700000000000000000122 /* EditorUITests.swift */,
-				7E5700000000000000000123 /* ScreensUITests.swift */,
-			);
-			path = CueCardUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -510,24 +477,6 @@
 			productReference = 7E5700000000000000000301 /* CueCardTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		7E5700000000000000000502 /* CueCardUITests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 7E5700000000000000000702 /* Build configuration list for PBXNativeTarget "CueCardUITests" */;
-			buildPhases = (
-				7E5700000000000000000521 /* Sources */,
-				7E5700000000000000000522 /* Frameworks */,
-				7E5700000000000000000523 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				7E5700000000000000000612 /* PBXTargetDependency */,
-			);
-			name = CueCardUITests;
-			productName = CueCardUITests;
-			productReference = 7E5700000000000000000302 /* CueCardUITests.xctest */;
-			productType = "com.apple.product-type.bundle.ui-testing";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -548,10 +497,6 @@
 						CreatedOnToolsVersion = 26.0;
 					};
 					7E5700000000000000000501 = {
-						CreatedOnToolsVersion = 27.0;
-						TestTargetID = 800;
-					};
-					7E5700000000000000000502 = {
 						CreatedOnToolsVersion = 27.0;
 						TestTargetID = 800;
 					};
@@ -577,7 +522,6 @@
 				810 /* CueCardWidgets */,
 				820 /* CueCardWatch */,
 				7E5700000000000000000501 /* CueCardTests */,
-				7E5700000000000000000502 /* CueCardUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -609,13 +553,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		7E5700000000000000000513 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		7E5700000000000000000523 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -750,16 +687,6 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		7E5700000000000000000521 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				7E5700000000000000000221 /* CueCardUITestCase.swift in Sources */,
-				7E5700000000000000000222 /* EditorUITests.swift in Sources */,
-				7E5700000000000000000223 /* ScreensUITests.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -777,11 +704,6 @@
 			isa = PBXTargetDependency;
 			target = 800 /* CueCard */;
 			targetProxy = 7E5700000000000000000601 /* PBXContainerItemProxy */;
-		};
-		7E5700000000000000000612 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 800 /* CueCard */;
-			targetProxy = 7E5700000000000000000602 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1131,44 +1053,6 @@
 			};
 			name = Release;
 		};
-		7E5700000000000000000721 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.thisisnsh.cuecard.ios.uitests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SUPPORTS_MACCATALYST = NO;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = CueCard;
-			};
-			name = Debug;
-		};
-		7E5700000000000000000722 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.thisisnsh.cuecard.ios.uitests;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
-				SUPPORTS_MACCATALYST = NO;
-				SWIFT_EMIT_LOC_STRINGS = NO;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = CueCard;
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1213,15 +1097,6 @@
 			buildConfigurations = (
 				7E5700000000000000000711 /* Debug */,
 				7E5700000000000000000712 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		7E5700000000000000000702 /* Build configuration list for PBXNativeTarget "CueCardUITests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				7E5700000000000000000721 /* Debug */,
-				7E5700000000000000000722 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
