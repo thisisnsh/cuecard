@@ -68,6 +68,3 @@ cuecard-extension/dist/safari-xcode/
 
 # Claude
 .claude
-
-# Mac App Store provisioning profile (download from the developer portal)
-**/appstore/embedded.provisionprofile

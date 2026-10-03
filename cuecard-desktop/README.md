@@ -127,24 +127,6 @@ Note: 32-bit (x86) Windows builds are intentionally not supported.
       | `src-tauri/latest/darwin-x86_64-latest.json`                                                           | `darwin-x86_64-latest.json`       | macOS updater feed         |
 
 
-### Mac App Store
-
-The App Store build is the same app with `tauri.appstore.conf.json` merged on top. It uses the iOS app's bundle ID `com.thisisnsh.cuecard.ios`, so the Mac app is a platform of that App Store Connect record (universal purchase). It is sandboxed (`src-tauri/appstore/Entitlements.plist`) and leaves the updater out, since the App Store delivers updates. The DMG keeps `com.thisisnsh.cuecard`, so existing installs keep their data and updates.
-
-1. One-time setup:
-   - In Xcode → Settings → Accounts → Manage Certificates, add an **Apple Distribution** and a **Mac Installer Distribution** certificate.
-   - In the developer portal, create a **Mac App Store Connect** provisioning profile for `com.thisisnsh.cuecard.ios` and save it as `src-tauri/appstore/embedded.provisionprofile` (git-ignored).
-
-2. Build the signed package:
-   ```bash
-   scripts/build-appstore.sh
-   ```
-   The build number (`CFBundleVersion`) defaults to the date and time, so every upload is unique. The version comes from `tauri.conf.json`.
-
-3. Upload `src-tauri/target/universal-apple-darwin/release/bundle/appstore/CueCard_<version>_<build>.pkg` with the Transporter app, or run the script with `--upload` and an App Store Connect API key (`APPLE_API_KEY_ID`, `APPLE_API_ISSUER`).
-
-4. In App Store Connect, pick the build under the macOS platform of CueCard, then submit it for review or send it to TestFlight.
-
 ### Windows
 
 1. Generate signing keys (first time only):
