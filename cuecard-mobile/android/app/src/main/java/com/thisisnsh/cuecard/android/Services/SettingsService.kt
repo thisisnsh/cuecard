@@ -781,8 +781,19 @@ Thanks for listening. Questions?
      */
     suspend fun deleteNote(id: String) = notesLock.withLock {
         withContext(Dispatchers.IO) { noteFolder.remove(id) }
+        close(setOf(id))
         forget(id)
         saveSavedNotes()
+    }
+
+    /**
+     * Take deleted notes out of the editor, so their text isn't left behind
+     * in its saved draft.
+     */
+    private suspend fun close(ids: Set<String>) {
+        for (mode in ScriptMode.entries) {
+            if (noteId(mode)?.let { it in ids } == true) setNotes("", mode)
+        }
     }
 
     private suspend fun forget(id: String) {
@@ -802,6 +813,7 @@ Thanks for listening. Questions?
 
     /** Delete every saved note, and its file in the notes folder. */
     suspend fun deleteAllNotes() = notesLock.withLock {
+        close(_savedNotes.value.map { it.id }.toSet())
         withContext(Dispatchers.IO) {
             noteVersions.removeAll()
             noteFolder.removeAll()
