@@ -544,6 +544,9 @@ class SettingsService: ObservableObject {
     @Published private(set) var notesFolderName: String?
     /// Files in the notes folder too large to read, by name.
     @Published private(set) var notesFolderOversizedFiles: [String] = []
+    /// Files of deleted notes still in the notes folder, by name. Each sync
+    /// tries again to delete them.
+    @Published private(set) var notesFolderUndeletedFiles: [String] = []
 
     /// The saved note open in each mode.
     @Published private var teleprompterNoteId: UUID? {
@@ -811,11 +814,14 @@ Thanks for listening. Questions?
         currentNoteId = note.id
     }
 
-    /// Delete a saved note
-    func deleteNote(id: UUID) {
-        noteFolder.remove(id: id)
+    /// Delete a saved note. Returns false if its file in the notes folder
+    /// couldn't be deleted yet.
+    @discardableResult
+    func deleteNote(id: UUID) -> Bool {
+        let removed = noteFolder.remove([id])
         close([id])
         forget(id)
+        return removed
     }
 
     /// Take deleted notes out of the editor and close a deck read from one,
@@ -839,17 +845,21 @@ Thanks for listening. Questions?
         if cardsNoteId == id { cardsNoteId = nil }
     }
 
-    /// Delete every saved note, and its file in the notes folder.
-    func deleteAllNotes() {
-        close(Set(savedNotes.map(\.id)))
+    /// Delete every saved note, and its file in the notes folder. Returns
+    /// false if some of those files couldn't be deleted yet.
+    @discardableResult
+    func deleteAllNotes() -> Bool {
+        let ids = Set(savedNotes.map(\.id))
+        let removed = noteFolder.remove(ids)
+        close(ids)
         noteStore.deleteAll()
         noteVersions.removeAll()
         versionCounts = [:]
-        noteFolder.removeAll()
         savedNotes = []
         watchNoteIDs = []
         teleprompterNoteId = nil
         cardsNoteId = nil
+        return removed
     }
 
     /// Keep saved notes in `url` too, a folder picked in Files, and take in
@@ -860,13 +870,29 @@ Thanks for listening. Questions?
     }
 
     /// Stop keeping notes in the folder, and delete their files from it.
-    /// The notes themselves stay on the device.
-    func stopUsingNotesFolder() {
-        noteFolder.removeAll()
+    /// The notes themselves stay on the device. If a file can't be deleted,
+    /// the folder stays in use and false is returned.
+    @discardableResult
+    func stopUsingNotesFolder() -> Bool {
+        guard noteFolder.release() else {
+            syncNotesFolder()
+            return false
+        }
+        notesFolderStopped()
+        return true
+    }
+
+    /// Stop keeping notes in the folder, leaving whatever files are in it.
+    func stopUsingNotesFolderKeepingFiles() {
         noteFolder.forget()
+        notesFolderStopped()
+    }
+
+    private func notesFolderStopped() {
         hasNotesFolder = false
         notesFolderName = nil
         notesFolderOversizedFiles = []
+        notesFolderUndeletedFiles = []
     }
 
     /// Take in what changed in the notes folder outside the app, and write
@@ -876,10 +902,14 @@ Thanks for listening. Questions?
         notesFolderName = noteFolder.name
         guard hasNotesFolder else {
             notesFolderOversizedFiles = []
+            notesFolderUndeletedFiles = []
             return
         }
 
         let changes = noteFolder.sync(savedNotes)
+        if changes.undeletable != notesFolderUndeletedFiles {
+            notesFolderUndeletedFiles = changes.undeletable
+        }
         if changes.tooLarge != notesFolderOversizedFiles {
             notesFolderOversizedFiles = changes.tooLarge
             // Once for each set of files, not on every sync that finds them.

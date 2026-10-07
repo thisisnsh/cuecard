@@ -24,9 +24,12 @@ final class NoteFolder {
         var deleted: [UUID] = []
         /// Files over `ScriptFile.maxFileSize`, by name. They're left unread.
         var tooLarge: [String] = []
+        /// Files of notes deleted in the app that couldn't be deleted yet, by name.
+        var undeletable: [String] = []
     }
 
     private let bookmarkKey = "cuecard_notes_folder_bookmark"
+    private let pendingDeletionsKey = "cuecard_notes_folder_pending_deletions"
     private let indexName = ".cuecard.json"
     private let textExtensions: Set<String> = ["txt", "md"]
     private let fileManager = FileManager.default
@@ -40,17 +43,33 @@ final class NoteFolder {
         resolve()?.lastPathComponent
     }
 
+    /// Notes deleted in the app whose files couldn't be deleted from the
+    /// folder yet. Kept outside the folder, which may not take changes, so
+    /// the files aren't read back in as notes; each sync tries them again.
+    private var pendingDeletions: Set<UUID> {
+        get {
+            let ids = UserDefaults.standard.stringArray(forKey: pendingDeletionsKey) ?? []
+            return Set(ids.compactMap(UUID.init(uuidString:)))
+        }
+        set {
+            if newValue.isEmpty {
+                UserDefaults.standard.removeObject(forKey: pendingDeletionsKey)
+            } else {
+                UserDefaults.standard.set(newValue.map(\.uuidString), forKey: pendingDeletionsKey)
+            }
+        }
+    }
+
     /// Start keeping notes in `url`, a folder picked with the document picker.
     func choose(_ url: URL) throws {
-        let scoped = url.startAccessingSecurityScopedResource()
-        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
-        let bookmark = try url.bookmarkData()
-        UserDefaults.standard.set(bookmark, forKey: bookmarkKey)
+        try saveBookmark(for: url)
+        pendingDeletions = []
     }
 
     /// Stop using the folder. The files in it are left alone.
     func forget() {
         UserDefaults.standard.removeObject(forKey: bookmarkKey)
+        pendingDeletions = []
     }
 
     /// Write a note to its file, renaming the file if the title changed.
@@ -62,23 +81,36 @@ final class NoteFolder {
         }
     }
 
-    func remove(id: UUID) {
+    /// Delete the files of notes deleted in the app. Any that can't be, as
+    /// in a read-only folder or one out of reach, are tried again on each
+    /// sync and kept from coming back in as notes meanwhile. Returns whether
+    /// they're all gone.
+    @discardableResult
+    func remove(_ ids: Set<UUID>) -> Bool {
+        guard isChosen else { return true }
+        pendingDeletions.formUnion(ids)
         withFolder { folder in
             var index = readIndex(in: folder)
-            guard let entry = index.removeValue(forKey: id) else { return }
-            try? fileManager.removeItem(at: folder.appendingPathComponent(entry.file))
-            writeIndex(index, in: folder)
+            let original = index
+            deletePending(from: &index, in: folder)
+            if !sameIndex(index, original) { writeIndex(index, in: folder) }
         }
+        return pendingDeletions.isDisjoint(with: ids)
     }
 
-    /// Delete every file CueCard wrote. Anything else in the folder stays.
-    func removeAll() {
-        withFolder { folder in
-            for entry in readIndex(in: folder).values {
-                try? fileManager.removeItem(at: folder.appendingPathComponent(entry.file))
-            }
-            writeIndex([:], in: folder)
-        }
+    /// Delete every file CueCard wrote and stop using the folder. Anything
+    /// else in it stays. If a file can't be deleted, or the folder can't be
+    /// reached, the folder stays in use and false is returned.
+    func release() -> Bool {
+        let released = withFolder { folder -> Bool in
+            let index = readIndex(in: folder)
+            let kept = index.filter { !delete($0.value.file, in: folder) }
+            pendingDeletions.formIntersection(kept.keys)
+            writeIndex(kept, in: folder)
+            return kept.isEmpty
+        } ?? false
+        if released { forget() }
+        return released
     }
 
     /// Bring the folder and the app's notes in step: files edited, added,
@@ -100,6 +132,9 @@ final class NoteFolder {
         var changes = Changes()
         var index = readIndex(in: folder)
         let originalIndex = index
+        // Files of deleted notes still there are left alone, not read back in.
+        let undeletable = deletePending(from: &index, in: folder)
+        changes.undeletable = undeletable.values.map(\.file).sorted()
         let appNotes = Dictionary(notes.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
         let files = Set(names.filter { !$0.hasPrefix(".") && textExtensions.contains(fileExtension($0)) })
         // Reading one of these fails, which leaves it and its note as they are.
@@ -117,8 +152,8 @@ final class NoteFolder {
         var claimed = Set<String>()
         var missing: [UUID] = []
 
-        for (id, entry) in originalIndex {
-            if pending.contains(entry.file) {
+        for (id, entry) in index {
+            if pending.contains(entry.file) || undeletable[id] != nil {
                 claimed.insert(entry.file)
                 continue
             }
@@ -204,6 +239,32 @@ final class NoteFolder {
     }
 
     // MARK: - Files
+
+    /// Try again to delete the files of notes deleted in the app, dropping
+    /// each from the index once it's gone. Returns the entries still waiting.
+    @discardableResult
+    private func deletePending(from index: inout [UUID: Entry], in folder: URL) -> [UUID: Entry] {
+        var waiting: [UUID: Entry] = [:]
+        for id in pendingDeletions {
+            if let entry = index[id], !delete(entry.file, in: folder) {
+                waiting[id] = entry
+            } else {
+                index.removeValue(forKey: id)
+            }
+        }
+        pendingDeletions = Set(waiting.keys)
+        return waiting
+    }
+
+    /// Delete a file, and its placeholder if it's in iCloud Drive and not
+    /// downloaded. True once neither is there.
+    private func delete(_ file: String, in folder: URL) -> Bool {
+        [file, ".\(file).icloud"].allSatisfy { name in
+            let url = folder.appendingPathComponent(name)
+            guard fileManager.fileExists(atPath: url.path) else { return true }
+            return (try? fileManager.removeItem(at: url)) != nil
+        }
+    }
 
     private func write(_ note: SavedNote, into index: inout [UUID: Entry], in folder: URL) {
         let existing = index[note.id]
@@ -295,8 +356,15 @@ final class NoteFolder {
         guard let bookmark = UserDefaults.standard.data(forKey: bookmarkKey) else { return nil }
         var isStale = false
         guard let url = try? URL(resolvingBookmarkData: bookmark, bookmarkDataIsStale: &isStale) else { return nil }
-        if isStale { try? choose(url) }
+        if isStale { try? saveBookmark(for: url) }
         return url
+    }
+
+    private func saveBookmark(for url: URL) throws {
+        let scoped = url.startAccessingSecurityScopedResource()
+        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+        let bookmark = try url.bookmarkData()
+        UserDefaults.standard.set(bookmark, forKey: bookmarkKey)
     }
 
     /// Run `body` with the folder open, if there is one and it can be reached.

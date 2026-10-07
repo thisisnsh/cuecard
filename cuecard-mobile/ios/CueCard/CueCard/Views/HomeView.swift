@@ -851,6 +851,7 @@ struct SavedNotesView: View {
     @State private var showingFolderPicker = false
     @State private var showingDeleteAll = false
     @State private var showingStopFolder = false
+    @State private var showingStopFolderFailed = false
     @State private var errorMessage: String?
     @State private var query = ""
 
@@ -897,6 +898,10 @@ struct SavedNotesView: View {
                 Label(warning, systemImage: "exclamationmark.triangle.fill")
                     .foregroundStyle(AppColors.yellow(for: colorScheme))
             }
+            if let warning = undeletedFilesWarning {
+                Label(warning, systemImage: "exclamationmark.triangle.fill")
+                    .foregroundStyle(AppColors.yellow(for: colorScheme))
+            }
             storageLabel
                 .foregroundStyle(AppColors.textSecondary(for: colorScheme))
         }
@@ -912,6 +917,26 @@ struct SavedNotesView: View {
             return "“\(first)” is larger than 10 MB, so it wasn't added to your notes."
         }
         return "\(files.count) files in the notes folder are larger than 10 MB, so they weren't added to your notes."
+    }
+
+    /// Files of deleted notes still in the notes folder, if any.
+    private var undeletedFilesWarning: String? {
+        let files = settingsService.notesFolderUndeletedFiles
+        guard let first = files.first else { return nil }
+        if files.count == 1 {
+            return "“\(first)” couldn't be deleted from the notes folder. Its note stays deleted."
+        }
+        return "\(files.count) files couldn't be deleted from the notes folder. Their notes stay deleted."
+    }
+
+    /// Why deleting notes left files behind in the notes folder.
+    private func undeletedFilesMessage(count: Int) -> String {
+        let files = count == 1 ? "Its file" : "Their files"
+        if let folder = settingsService.notesFolderName {
+            return "\(files) in “\(folder)” folder couldn't be deleted. CueCard will try again, "
+                + "and won't bring \(count == 1 ? "it" : "them") back as notes."
+        }
+        return "\(files) will be deleted from the notes folder once it can be reached."
     }
 
     /// Notes never leave the device, so the lock stays whatever the folder.
@@ -1011,7 +1036,9 @@ struct SavedNotesView: View {
                                 .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                                     Button(role: .destructive) {
                                         AnalyticsEvents.logButtonClick("delete_note", screen: "saved_notes")
-                                        settingsService.deleteNote(id: note.id)
+                                        if !settingsService.deleteNote(id: note.id) {
+                                            errorMessage = "The note was deleted. " + undeletedFilesMessage(count: 1)
+                                        }
                                     } label: {
                                         Label("Delete", systemImage: "trash")
                                     }
@@ -1112,7 +1139,9 @@ struct SavedNotesView: View {
             .alert("Stop Using Notes Folder?", isPresented: $showingStopFolder) {
                 Button("Cancel", role: .cancel) { }
                 Button("Stop Using Folder", role: .destructive) {
-                    settingsService.stopUsingNotesFolder()
+                    if !settingsService.stopUsingNotesFolder() {
+                        showingStopFolderFailed = true
+                    }
                 }
             } message: {
                 if let folder = settingsService.notesFolderName {
@@ -1124,13 +1153,30 @@ struct SavedNotesView: View {
             .alert("Delete All Saved Notes?", isPresented: $showingDeleteAll) {
                 Button("Cancel", role: .cancel) { }
                 Button("Delete All", role: .destructive) {
-                    settingsService.deleteAllNotes()
+                    let count = settingsService.savedNotes.count
+                    if !settingsService.deleteAllNotes() {
+                        errorMessage = "Your notes were deleted. " + undeletedFilesMessage(count: count)
+                    }
                 }
             } message: {
                 if let folder = settingsService.notesFolderName {
                     Text("Every saved note and its file in “\(folder)” folder will be deleted. This can't be undone.")
                 } else {
                     Text("Every saved note will be deleted. This can't be undone.")
+                }
+            }
+            .alert("Couldn't Delete Note Files", isPresented: $showingStopFolderFailed) {
+                Button("Keep Using Folder", role: .cancel) { }
+                Button("Stop Anyway") {
+                    settingsService.stopUsingNotesFolderKeepingFiles()
+                }
+            } message: {
+                if let folder = settingsService.notesFolderName {
+                    Text("Some note files in “\(folder)” folder couldn't be deleted, so it's still in use. "
+                         + "You can stop using it anyway and leave the files there.")
+                } else {
+                    Text("The notes folder can't be reached, so its note files couldn't be deleted. "
+                         + "You can stop using it anyway and leave the files there.")
                 }
             }
             .alert("Something Went Wrong", isPresented: Binding(
