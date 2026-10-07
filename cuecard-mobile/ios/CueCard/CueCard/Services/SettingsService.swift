@@ -814,7 +814,19 @@ Thanks for listening. Questions?
     /// Delete a saved note
     func deleteNote(id: UUID) {
         noteFolder.remove(id: id)
+        close([id])
         forget(id)
+    }
+
+    /// Take deleted notes out of the editor and close a deck read from one,
+    /// so their text isn't left behind where it was open.
+    private func close(_ ids: Set<UUID>) {
+        for mode in ScriptMode.allCases {
+            if let id = noteId(for: mode), ids.contains(id) {
+                setNotes("", for: mode)
+            }
+        }
+        CueCardsSession.shared.end(ifFrom: ids)
     }
 
     private func forget(_ id: UUID) {
@@ -829,6 +841,7 @@ Thanks for listening. Questions?
 
     /// Delete every saved note, and its file in the notes folder.
     func deleteAllNotes() {
+        close(Set(savedNotes.map(\.id)))
         noteStore.deleteAll()
         noteVersions.removeAll()
         versionCounts = [:]

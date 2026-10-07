@@ -159,6 +159,13 @@ final class CueCardsSession: ObservableObject {
         WatchSessionService.shared.stateChanged()
     }
 
+    /// Close the deck if it was read from one of these saved notes, as when
+    /// they're deleted, whether it's open now or kept from an earlier run.
+    func end(ifFrom noteIDs: Set<UUID>) {
+        guard restoreIfNeeded(), let deckID, noteIDs.contains(deckID) else { return }
+        end()
+    }
+
     /// Restore a session for a Live Activity or Watch command.
     func restoreIfNeeded() -> Bool {
         if !cards.isEmpty { return true }
