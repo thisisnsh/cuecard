@@ -40,10 +40,9 @@ export default {
       });
     }
 
-    // Allowed endpoints (whitelist for security)
+    // Allowed endpoints (whitelist for security), limited to the CueCard repo
     const allowedPaths = [
-      /^\/repos\/[^/]+\/[^/]+$/,           // /repos/{owner}/{repo}
-      /^\/repos\/[^/]+\/[^/]+\/releases$/, // /repos/{owner}/{repo}/releases
+      /^\/repos\/thisisnsh\/cuecard\/releases$/, // used by the website's download section
     ];
 
     const isAllowed = allowedPaths.some(pattern => pattern.test(path));
