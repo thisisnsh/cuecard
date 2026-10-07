@@ -1298,11 +1298,13 @@ fun SavedNotesView(
     val hasNotesFolder by settingsService.hasNotesFolder.collectAsState()
     val notesFolderName by settingsService.notesFolderName.collectAsState()
     val oversizedFiles by settingsService.notesFolderOversizedFiles.collectAsState()
+    val undeletedFiles by settingsService.notesFolderUndeletedFiles.collectAsState()
 
     var noteToRename by remember { mutableStateOf<SavedNote?>(null) }
     var showingMenu by remember { mutableStateOf(false) }
     var showingDeleteAll by remember { mutableStateOf(false) }
     var showingStopFolder by remember { mutableStateOf(false) }
+    var showingStopFolderFailed by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var query by remember { mutableStateOf("") }
     val dateFormat = remember {
@@ -1322,6 +1324,15 @@ fun SavedNotesView(
                     CueCards.removingSeparators(it.content).contains(trimmed, ignoreCase = true)
             }
         }
+    }
+
+    // Why deleting notes left files behind in the notes folder.
+    fun undeletedFilesMessage(count: Int): String {
+        val files = if (count == 1) "Its file" else "Their files"
+        return notesFolderName?.let {
+            "$files in “$it” folder couldn't be deleted. CueCard will try again, " +
+                "and won't bring ${if (count == 1) "it" else "them"} back as notes."
+        } ?: "$files will be deleted from the notes folder once it can be reached."
     }
 
     LaunchedEffect(Unit) {
@@ -1347,6 +1358,7 @@ fun SavedNotesView(
             folderName = notesFolderName,
             hasFolder = hasNotesFolder,
             oversizedFiles = oversizedFiles,
+            undeletedFiles = undeletedFiles,
             isDark = isDark,
             modifier = modifier
         )
@@ -1529,7 +1541,11 @@ fun SavedNotesView(
                             },
                             onDelete = {
                                 AnalyticsEvents.logButtonClick("delete_note", "saved_notes")
-                                scope.launch { settingsService.deleteNote(note.id) }
+                                scope.launch {
+                                    if (!settingsService.deleteNote(note.id)) {
+                                        errorMessage = "The note was deleted. " + undeletedFilesMessage(1)
+                                    }
+                                }
                             }
                         )
                     }
@@ -1571,8 +1587,40 @@ fun SavedNotesView(
             onDismiss = { showingStopFolder = false },
             onConfirm = {
                 showingStopFolder = false
-                scope.launch { settingsService.stopUsingNotesFolder() }
+                scope.launch {
+                    if (!settingsService.stopUsingNotesFolder()) showingStopFolderFailed = true
+                }
             }
+        )
+    }
+
+    if (showingStopFolderFailed) {
+        AlertDialog(
+            onDismissRequest = { showingStopFolderFailed = false },
+            title = { Text("Couldn't Delete Note Files") },
+            text = {
+                Text(
+                    notesFolderName?.let {
+                        "Some note files in “$it” folder couldn't be deleted, so it's still in use. " +
+                            "You can stop using it anyway and leave the files there."
+                    } ?: ("The notes folder can't be reached, so its note files couldn't be deleted. " +
+                        "You can stop using it anyway and leave the files there.")
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showingStopFolderFailed = false
+                    scope.launch { settingsService.stopUsingNotesFolderKeepingFiles() }
+                }) {
+                    Text("Stop Anyway", color = AppColors.blue(isDark))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showingStopFolderFailed = false }) {
+                    Text("Keep Using Folder", color = AppColors.blue(isDark))
+                }
+            },
+            containerColor = AppColors.background(isDark)
         )
     }
 
@@ -1587,7 +1635,12 @@ fun SavedNotesView(
             onDismiss = { showingDeleteAll = false },
             onConfirm = {
                 showingDeleteAll = false
-                scope.launch { settingsService.deleteAllNotes() }
+                scope.launch {
+                    val count = savedNotes.size
+                    if (!settingsService.deleteAllNotes()) {
+                        errorMessage = "Your notes were deleted. " + undeletedFilesMessage(count)
+                    }
+                }
             }
         )
     }
@@ -1641,6 +1694,7 @@ private fun StorageNote(
     folderName: String?,
     hasFolder: Boolean,
     oversizedFiles: List<String>,
+    undeletedFiles: List<String>,
     isDark: Boolean,
     modifier: Modifier = Modifier
 ) {
@@ -1650,6 +1704,13 @@ private fun StorageNote(
         1 -> "“${oversizedFiles.first()}” is larger than 10 MB, so it wasn't added to your notes."
         else -> "${oversizedFiles.size} files in the notes folder are larger than 10 MB, " +
             "so they weren't added to your notes."
+    }
+
+    // Files of deleted notes still in the notes folder, if any.
+    val undeletedWarning = when (undeletedFiles.size) {
+        0 -> null
+        1 -> "“${undeletedFiles.first()}” couldn't be deleted from the notes folder. Its note stays deleted."
+        else -> "${undeletedFiles.size} files couldn't be deleted from the notes folder. Their notes stay deleted."
     }
 
     // Notes never leave the device, so the lock stays whatever the folder.
@@ -1670,7 +1731,7 @@ private fun StorageNote(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        warning?.let {
+        listOfNotNull(warning, undeletedWarning).forEach {
             StorageLine(text = it, icon = Icons.Filled.Warning, color = AppColors.yellow(isDark))
         }
         StorageLine(text = storage, icon = Icons.Filled.Lock, color = AppColors.textSecondary(isDark))

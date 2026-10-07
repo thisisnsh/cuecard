@@ -425,6 +425,10 @@ Thanks for listening. Questions?
     private val _notesFolderOversizedFiles = MutableStateFlow<List<String>>(emptyList())
     val notesFolderOversizedFiles: StateFlow<List<String>> = _notesFolderOversizedFiles.asStateFlow()
 
+    /** Files of deleted notes still in the notes folder, by name. Each sync tries again to delete them. */
+    private val _notesFolderUndeletedFiles = MutableStateFlow<List<String>>(emptyList())
+    val notesFolderUndeletedFiles: StateFlow<List<String>> = _notesFolderUndeletedFiles.asStateFlow()
+
     /**
      * Saved notes are written to files off the main thread, so a save and a
      * sync of the notes folder take turns rather than crossing over.
@@ -777,13 +781,15 @@ Thanks for listening. Questions?
     }
 
     /**
-     * Delete a saved note
+     * Delete a saved note. Returns false if its file in the notes folder
+     * couldn't be deleted yet.
      */
-    suspend fun deleteNote(id: String) = notesLock.withLock {
-        withContext(Dispatchers.IO) { noteFolder.remove(id) }
+    suspend fun deleteNote(id: String): Boolean = notesLock.withLock {
+        val removed = withContext(Dispatchers.IO) { noteFolder.remove(setOf(id)) }
         close(setOf(id))
         forget(id)
         saveSavedNotes()
+        removed
     }
 
     /**
@@ -811,13 +817,15 @@ Thanks for listening. Questions?
         }
     }
 
-    /** Delete every saved note, and its file in the notes folder. */
-    suspend fun deleteAllNotes() = notesLock.withLock {
-        close(_savedNotes.value.map { it.id }.toSet())
-        withContext(Dispatchers.IO) {
-            noteVersions.removeAll()
-            noteFolder.removeAll()
-        }
+    /**
+     * Delete every saved note, and its file in the notes folder. Returns false
+     * if some of those files couldn't be deleted yet.
+     */
+    suspend fun deleteAllNotes(): Boolean = notesLock.withLock {
+        val ids = _savedNotes.value.map { it.id }.toSet()
+        val removed = withContext(Dispatchers.IO) { noteFolder.remove(ids) }
+        close(ids)
+        withContext(Dispatchers.IO) { noteVersions.removeAll() }
         _versionCounts.value = emptyMap()
         _savedNotes.value = emptyList()
         teleprompterNoteId = null
@@ -828,6 +836,7 @@ Thanks for listening. Questions?
             prefs.remove(CARDS_NOTE_ID)
         }
         saveSavedNotes()
+        removed
     }
 
     /**
@@ -843,16 +852,28 @@ Thanks for listening. Questions?
 
     /**
      * Stop keeping notes in the folder, and delete their files from it.
-     * The notes themselves stay on the device.
+     * The notes themselves stay on the device. If a file can't be deleted,
+     * the folder stays in use and false is returned.
      */
-    suspend fun stopUsingNotesFolder() = notesLock.withLock {
-        withContext(Dispatchers.IO) {
-            noteFolder.removeAll()
-            noteFolder.forget()
+    suspend fun stopUsingNotesFolder(): Boolean {
+        val released = notesLock.withLock {
+            withContext(Dispatchers.IO) { noteFolder.release() }.also { if (it) notesFolderStopped() }
         }
+        if (!released) syncNotesFolder()
+        return released
+    }
+
+    /** Stop keeping notes in the folder, leaving whatever files are in it. */
+    suspend fun stopUsingNotesFolderKeepingFiles() = notesLock.withLock {
+        withContext(Dispatchers.IO) { noteFolder.forget() }
+        notesFolderStopped()
+    }
+
+    private fun notesFolderStopped() {
         _hasNotesFolder.value = false
         _notesFolderName.value = null
         _notesFolderOversizedFiles.value = emptyList()
+        _notesFolderUndeletedFiles.value = emptyList()
     }
 
     /**
@@ -866,12 +887,14 @@ Thanks for listening. Questions?
             if (!_hasNotesFolder.value) {
                 _notesFolderName.value = null
                 _notesFolderOversizedFiles.value = emptyList()
+                _notesFolderUndeletedFiles.value = emptyList()
                 return@withLock
             }
 
             val saved = _savedNotes.value
             val (name, changes) = withContext(Dispatchers.IO) { noteFolder.name to noteFolder.sync(saved) }
             _notesFolderName.value = name
+            _notesFolderUndeletedFiles.value = changes.undeletable
             if (changes.tooLarge != _notesFolderOversizedFiles.value) {
                 _notesFolderOversizedFiles.value = changes.tooLarge
                 // Once for each set of files, not on every sync that finds them.

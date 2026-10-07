@@ -47,7 +47,9 @@ class NoteFolder(private val context: Context) {
         val updated: List<SavedNote> = emptyList(),
         val deleted: List<String> = emptyList(),
         /** Files over `ScriptFile.MAX_FILE_SIZE`, by name. They're left unread. */
-        val tooLarge: List<String> = emptyList()
+        val tooLarge: List<String> = emptyList(),
+        /** Files of notes deleted in the app that couldn't be deleted yet, by name. */
+        val undeletable: List<String> = emptyList()
     )
 
     /** The folder couldn't be listed or written to when it was picked. */
@@ -91,11 +93,12 @@ class NoteFolder(private val context: Context) {
             }
         }.getOrNull()
 
-        fun delete(name: String) {
-            val item = file(name) ?: return
-            if (runCatching { DocumentsContract.deleteDocument(resolver, item.uri) }.getOrDefault(false)) {
-                items.remove(name)
-            }
+        /** Delete the file called `name`. True once it's not there. */
+        fun delete(name: String): Boolean {
+            val item = file(name) ?: return true
+            val deleted = runCatching { DocumentsContract.deleteDocument(resolver, item.uri) }.getOrDefault(false)
+            if (deleted) items.remove(name)
+            return deleted
         }
     }
 
@@ -105,6 +108,17 @@ class NoteFolder(private val context: Context) {
 
     val isChosen: Boolean
         get() = prefs.contains(FOLDER_KEY)
+
+    /**
+     * Notes deleted in the app whose files couldn't be deleted from the
+     * folder yet. Kept outside the folder, which may not take changes, so
+     * the files aren't read back in as notes; each sync tries them again.
+     */
+    private var pendingDeletions: Set<String>
+        get() = prefs.getStringSet(PENDING_DELETIONS_KEY, null).orEmpty().toSet()
+        set(value) = prefs.edit {
+            if (value.isEmpty()) remove(PENDING_DELETIONS_KEY) else putStringSet(PENDING_DELETIONS_KEY, value)
+        }
 
     /** The folder's name, or null if there's none or it can't be reached. */
     val name: String?
@@ -126,18 +140,20 @@ class NoteFolder(private val context: Context) {
         // can't hold one would be filled with new copies on every sync.
         val folder = open(uri)
         if (folder == null || (folder.file(INDEX_NAME) == null && !writeIndex(emptyMap(), folder))) {
-            if (uri != previous) release(uri)
+            if (uri != previous) releasePermission(uri)
             throw Unusable()
         }
 
         prefs.edit { putString(FOLDER_KEY, uri.toString()) }
-        if (previous != null && previous != uri) release(previous)
+        pendingDeletions = emptySet()
+        if (previous != null && previous != uri) releasePermission(previous)
     }
 
     /** Stop using the folder. The files in it are left alone. */
     fun forget() {
-        prefs.getString(FOLDER_KEY, null)?.toUri()?.let(::release)
+        prefs.getString(FOLDER_KEY, null)?.toUri()?.let(::releasePermission)
         prefs.edit { remove(FOLDER_KEY) }
+        pendingDeletions = emptySet()
     }
 
     /** Write a note to its file, renaming the file if the title changed. */
@@ -149,22 +165,40 @@ class NoteFolder(private val context: Context) {
         }
     }
 
-    fun remove(id: String) {
+    /**
+     * Delete the files of notes deleted in the app. Any that can't be, as in
+     * a read-only folder or one out of reach, are tried again on each sync and
+     * kept from coming back in as notes meanwhile. Returns whether they're all gone.
+     */
+    fun remove(ids: Set<String>): Boolean {
+        if (!isChosen) return true
+        pendingDeletions = pendingDeletions + ids
         withFolder { folder ->
             val index = readIndex(folder) ?: return@withFolder
-            val entry = index.remove(id) ?: return@withFolder
-            folder.delete(entry.file)
-            writeIndex(index, folder)
+            val original = index.toMap()
+            deletePending(index, folder)
+            if (index != original) writeIndex(index, folder)
         }
+        return pendingDeletions.none { it in ids }
     }
 
-    /** Delete every file CueCard wrote. Anything else in the folder stays. */
-    fun removeAll() {
-        withFolder { folder ->
-            val index = readIndex(folder) ?: return@withFolder
-            index.values.forEach { folder.delete(it.file) }
-            writeIndex(emptyMap(), folder)
-        }
+    /**
+     * Delete every file CueCard wrote and stop using the folder. Anything else
+     * in it stays. If a file can't be deleted, or the folder can't be reached,
+     * the folder stays in use and false is returned.
+     */
+    fun release(): Boolean {
+        val released = withFolder { folder ->
+            // No index means CueCard never wrote anything here.
+            if (folder.file(INDEX_NAME) == null) return@withFolder true
+            val index = readIndex(folder) ?: return@withFolder false
+            val kept = index.filterValues { !folder.delete(it.file) }
+            pendingDeletions = pendingDeletions intersect kept.keys
+            writeIndex(kept, folder)
+            kept.isEmpty()
+        } ?: false
+        if (released) forget()
+        return released
     }
 
     /**
@@ -187,6 +221,8 @@ class NoteFolder(private val context: Context) {
         val updated = mutableListOf<SavedNote>()
         val deleted = mutableListOf<String>()
         val originalIndex = index.toMap()
+        // Files of deleted notes still there are left alone, not read back in.
+        val undeletable = deletePending(index, folder)
         val appNotes = notes.associateBy { it.id }
         val files = folder.items.values
             .filter { !it.isDirectory && !it.name.startsWith(".") && fileExtension(it.name) in TEXT_EXTENSIONS }
@@ -200,7 +236,11 @@ class NoteFolder(private val context: Context) {
         val claimed = mutableSetOf<String>()
         val missing = mutableListOf<String>()
 
-        for ((id, entry) in originalIndex) {
+        for ((id, entry) in index.toMap()) {
+            if (id in undeletable) {
+                claimed.add(entry.file)
+                continue
+            }
             val item = if (entry.file in files) folder.file(entry.file) else null
             if (item == null) {
                 missing.add(id)
@@ -295,10 +335,28 @@ class NoteFolder(private val context: Context) {
         }
 
         if (index != originalIndex) writeIndex(index, folder)
-        return Changes(updated, deleted, tooLarge)
+        return Changes(updated, deleted, tooLarge, undeletable.values.map { it.file }.sorted())
     }
 
     // MARK: - Files
+
+    /**
+     * Try again to delete the files of notes deleted in the app, dropping each
+     * from the index once it's gone. Returns the entries still waiting.
+     */
+    private fun deletePending(index: MutableMap<String, Entry>, folder: Folder): Map<String, Entry> {
+        val waiting = mutableMapOf<String, Entry>()
+        for (id in pendingDeletions) {
+            val entry = index[id]
+            if (entry != null && !folder.delete(entry.file)) {
+                waiting[id] = entry
+            } else {
+                index.remove(id)
+            }
+        }
+        pendingDeletions = waiting.keys
+        return waiting
+    }
 
     private fun write(note: SavedNote, index: MutableMap<String, Entry>, folder: Folder) {
         val existing = index[note.id]
@@ -393,7 +451,7 @@ class NoteFolder(private val context: Context) {
         return false
     }
 
-    private fun release(uri: Uri) {
+    private fun releasePermission(uri: Uri) {
         runCatching { resolver.releasePersistableUriPermission(uri, PERMISSIONS) }
     }
 
@@ -422,6 +480,7 @@ class NoteFolder(private val context: Context) {
     private companion object {
         const val PREFS_NAME = "cuecard_notes_folder"
         const val FOLDER_KEY = "cuecard_notes_folder_uri"
+        const val PENDING_DELETIONS_KEY = "cuecard_notes_folder_pending_deletions"
         const val INDEX_NAME = ".cuecard.json"
         const val TEXT_MIME_TYPE = "text/plain"
 
