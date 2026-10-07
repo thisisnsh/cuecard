@@ -1249,7 +1249,13 @@ private fun TitleDialog(
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(8.dp))
                         .background(AppColors.textSecondary(isDark).copy(alpha = 0.12f))
-                        .padding(horizontal = 12.dp, vertical = 10.dp)
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    decorationBox = { field ->
+                        if (value.isEmpty()) {
+                            Text("Note title", fontSize = 16.sp, color = AppColors.textSecondary(isDark))
+                        }
+                        field()
+                    }
                 )
             }
         },
