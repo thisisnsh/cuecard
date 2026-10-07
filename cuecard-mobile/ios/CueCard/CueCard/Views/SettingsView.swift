@@ -14,6 +14,8 @@ struct EditorSettingsView: View {
 
     private static let screen = "settings"
 
+    @State private var confirmingLockScreen = false
+
     private var isCrashlyticsTestEnabled: Bool {
         ProcessInfo.processInfo.environment["CRASHLYTICS_TEST_CRASH"] == "1"
     }
@@ -105,7 +107,8 @@ struct EditorSettingsView: View {
     private var cardsSections: some View {
         // Whether a deck being read is on the Lock Screen too. That keeps cards
         // short enough to fit there, which the toggle's subtitle says only
-        // while it's on.
+        // while it's on. Turning it on asks first, since anyone who can see
+        // the phone can read the card there.
         Section {
             SizePresetPicker(
                 title: "Text Size",
@@ -116,20 +119,34 @@ struct EditorSettingsView: View {
             Toggle(isOn: Binding(
                 get: { settingsService.settings.cards.showOnLockScreen },
                 set: { isOn in
-                    AnalyticsEvents.logButtonClick(isOn ? "cards_lock_screen_on" : "cards_lock_screen_off",
-                                                   screen: Self.screen)
-                    settingsService.settings.cards.showOnLockScreen = isOn
+                    if isOn {
+                        confirmingLockScreen = true
+                    } else {
+                        AnalyticsEvents.logButtonClick("cards_lock_screen_off", screen: Self.screen)
+                        settingsService.settings.cards.showOnLockScreen = false
+                    }
                 }
             )) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Show on Lock Screen")
                     if settingsService.settings.cards.showOnLockScreen {
-                        Text("Cards longer than \(CueCards.characterLimit(onLockScreen: true)) characters "
-                             + "will be truncated on the Lock Screen.")
+                        Text("Anyone who can see your iPhone can read the current card. Cards longer than "
+                             + "\(CueCards.characterLimit(onLockScreen: true)) characters will be truncated "
+                             + "on the Lock Screen.")
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                     }
                 }
+            }
+            .alert("Show Cards on Lock Screen?", isPresented: $confirmingLockScreen) {
+                Button("Cancel", role: .cancel) { }
+                Button("Show on Lock Screen") {
+                    AnalyticsEvents.logButtonClick("cards_lock_screen_on", screen: Self.screen)
+                    settingsService.settings.cards.showOnLockScreen = true
+                }
+            } message: {
+                Text("While you read a deck, its title and the current card are shown on the Lock Screen, "
+                     + "where anyone who can see your iPhone can read them, even while it's locked.")
             }
         } header: {
             Text("Cards")

@@ -120,7 +120,8 @@ struct CardsSettings: Codable, Equatable {
     /// When and how the cards timer changes color.
     var timerStyle: TimerStyle
     /// A deck being read is on the Lock Screen too, as a Live Activity. It
-    /// keeps cards short enough to read there.
+    /// keeps cards short enough to read there. Off unless turned on, since
+    /// anyone who can see the phone can read the card there.
     var showOnLockScreen: Bool
 
     var timerDurationSeconds: Int {
@@ -134,7 +135,7 @@ struct CardsSettings: Codable, Equatable {
 
     init(editorFontSize: Int, fontSize: Int, cueColor: CueColor,
          timerMinutes: Int, timerSeconds: Int, timerStyle: TimerStyle = .default,
-         showOnLockScreen: Bool = true) {
+         showOnLockScreen: Bool = false) {
         self.editorFontSize = editorFontSize
         self.fontSize = fontSize
         self.cueColor = cueColor
@@ -156,7 +157,7 @@ struct CardsSettings: Codable, Equatable {
         timerMinutes = try container.decode(Int.self, forKey: .timerMinutes)
         timerSeconds = try container.decode(Int.self, forKey: .timerSeconds)
         timerStyle = try container.decodeIfPresent(TimerStyle.self, forKey: .timerStyle) ?? .default
-        showOnLockScreen = try container.decodeIfPresent(Bool.self, forKey: .showOnLockScreen) ?? true
+        showOnLockScreen = try container.decodeIfPresent(Bool.self, forKey: .showOnLockScreen) ?? false
     }
 }
 
