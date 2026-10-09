@@ -1,19 +1,7 @@
-/**
- * Cloudflare Worker - GitHub API Proxy
- *
- * This worker proxies requests to GitHub API with authentication,
- * avoiding rate limits and keeping your token secure.
- *
- * SETUP:
- * 1. Go to https://dash.cloudflare.com → Workers & Pages → Create Worker
- * 2. Paste this code
- * 3. Go to Settings → Variables → Add variable:
- *    - Name: GITHUB_TOKEN
- *    - Value: Your GitHub personal access token
- *    - Click "Encrypt" to secure it
- * 4. Deploy and note your worker URL (e.g., github-api.your-subdomain.workers.dev)
- * 5. (Optional) Add a custom domain like github-api.cuecard.live
- */
+// CueCard worker — cuecard.thisisnsh.workers.dev
+//
+// Proxies the website's GitHub releases request with GITHUB_TOKEN so visitors don't hit
+// GitHub's unauthenticated rate limit. See ../README.md.
 
 export default {
   async fetch(request, env) {

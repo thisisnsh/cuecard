@@ -1,0 +1,7 @@
+// cuecard-mobile.thisisnsh.workers.dev — notifications for the mobile and desktop apps.
+// The name is baked into released builds; never rename it.
+{
+  "name": "cuecard-mobile",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-08-30"
+}

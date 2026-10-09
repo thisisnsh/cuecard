@@ -1,0 +1,7 @@
+// cuecard.thisisnsh.workers.dev — GitHub releases proxy for the website.
+// GITHUB_TOKEN is a secret: npx wrangler secret put GITHUB_TOKEN
+{
+  "name": "cuecard",
+  "main": "src/index.js",
+  "compatibility_date": "2025-08-30"
+}

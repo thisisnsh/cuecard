@@ -213,7 +213,7 @@ To build CueCard yourself, see the guide for each part:
 | **Desktop App** | Tauri-based desktop application for macOS & Windows | [`cuecard-desktop/README.md`](cuecard-desktop/README.md) |
 | **Browser Extension** | Chrome, Firefox, and Safari extensions for Google Slides | [`cuecard-extension/README.md`](cuecard-extension/README.md) |
 | **Website** | Eleventy static site at cuecard.dev | [`cuecard-website/README.md`](cuecard-website/README.md) |
-| **Workers** | Cloudflare Worker that serves notifications to the mobile and desktop apps | [`cuecard-workers/README.md`](cuecard-workers/README.md) |
+| **Workers** | Cloudflare Workers for app notifications and the website's GitHub releases proxy | [`cuecard-workers/README.md`](cuecard-workers/README.md) |
 
 <br>
 

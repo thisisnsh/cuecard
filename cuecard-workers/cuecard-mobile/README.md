@@ -1,4 +1,4 @@
-# CueCard workers
+# cuecard-mobile worker
 
 Notifications for the CueCard mobile and desktop apps, served from
 `cuecard-mobile.thisisnsh.workers.dev`. The worker keeps the `cuecard-mobile`
@@ -36,8 +36,10 @@ src/
 Type-check with `npx tsc --noEmit`. Deploy from this directory with:
 
 ```
-npx wrangler deploy src/index.ts --name cuecard-mobile --compatibility-date 2025-08-30
+npx wrangler deploy
 ```
+
+`wrangler.jsonc` holds the name, entry point and compatibility date.
 
 Wrangler compiles the TypeScript on the way out; there is nothing to build first
 and no `node_modules` to install.

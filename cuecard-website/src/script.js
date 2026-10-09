@@ -548,7 +548,7 @@ function showToast(message) {
 // GitHub API Integration
 const GITHUB_REPO = 'thisisnsh/cuecard';
 // Proxy endpoint for authenticated GitHub API calls (avoids rate limiting)
-// Deploy the Cloudflare Worker from /api/github-proxy-worker.js and set this URL
+// Served by the worker in cuecard-workers/cuecard
 const GITHUB_API_PROXY = 'https://cuecard.thisisnsh.workers.dev';
 let allReleases = [];
 
