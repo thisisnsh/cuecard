@@ -3,5 +3,6 @@
 {
   "name": "cuecard",
   "main": "src/index.js",
-  "compatibility_date": "2025-08-30"
+  "compatibility_date": "2025-08-30",
+  "observability": { "enabled": true }
 }
