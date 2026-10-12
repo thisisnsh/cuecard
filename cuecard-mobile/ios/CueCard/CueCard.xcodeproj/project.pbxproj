@@ -40,6 +40,9 @@
 		042 /* TeleprompterControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134 /* TeleprompterControls.swift */; };
 		043 /* DeviceModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 128 /* DeviceModel.swift */; };
 		044 /* CueCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135 /* CueCards.swift */; };
+		B1C400000000000000000002 /* RichText.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C400000000000000000001 /* RichText.swift */; };
+		B1C400000000000000000003 /* RichText.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C400000000000000000001 /* RichText.swift */; };
+		B1C400000000000000000004 /* RichText.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C400000000000000000001 /* RichText.swift */; };
 		049 /* CueCardsSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138 /* CueCardsSession.swift */; };
 		051 /* CueCardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 140 /* CueCardsView.swift */; };
 		054 /* CueColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 116 /* CueColor.swift */; };
@@ -153,6 +156,7 @@
 		133 /* TeleprompterRemoteCommand+Widget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TeleprompterRemoteCommand+Widget.swift"; sourceTree = "<group>"; };
 		134 /* TeleprompterControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeleprompterControls.swift; sourceTree = "<group>"; };
 		135 /* CueCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCards.swift; sourceTree = "<group>"; };
+		B1C400000000000000000001 /* RichText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RichText.swift; sourceTree = "<group>"; };
 		138 /* CueCardsSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardsSession.swift; sourceTree = "<group>"; };
 		140 /* CueCardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardsView.swift; sourceTree = "<group>"; };
 		143 /* CueCardRun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardRun.swift; sourceTree = "<group>"; };
@@ -291,6 +295,7 @@
 				144 /* TeleprompterTimerState.swift */,
 				143 /* CueCardRun.swift */,
 				135 /* CueCards.swift */,
+				B1C400000000000000000001 /* RichText.swift */,
 				111 /* TeleprompterParser.swift */,
 				113 /* AppColors.swift */,
 				115 /* ScriptDocument.swift */,
@@ -512,6 +517,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B1C400000000000000000002 /* RichText.swift in Sources */,
 				C0CA4D530000000000000010 /* CueCardsRemoteCommand+App.swift in Sources */,
 				C0CA4D530000000000000000 /* CueCardsWidgetState.swift in Sources */,
 				068 /* WatchSessionService.swift in Sources */,
@@ -558,6 +564,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B1C400000000000000000003 /* RichText.swift in Sources */,
 				C0CA4D530000000000000030 /* CueCardsWidgets.swift in Sources */,
 				C0CA4D530000000000000020 /* CueCardsRemoteCommand+Widget.swift in Sources */,
 				C0CA4D530000000000000001 /* CueCardsWidgetState.swift in Sources */,
@@ -576,6 +583,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B1C400000000000000000004 /* RichText.swift in Sources */,
 				077 /* SavedDeckView.swift in Sources */,
 				076 /* DeckStore.swift in Sources */,
 				075 /* TeleprompterParser.swift in Sources */,
@@ -755,7 +763,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.8.0;
+				MARKETING_VERSION = 1.9.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.thisisnsh.cuecard.ios;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -790,7 +798,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.8.0;
+				MARKETING_VERSION = 1.9.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.thisisnsh.cuecard.ios;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";

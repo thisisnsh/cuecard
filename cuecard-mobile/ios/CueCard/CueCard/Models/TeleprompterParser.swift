@@ -195,7 +195,7 @@ enum TeleprompterParser {
                         words.append(WordInfo(text: String(word), isCue: true))
                     }
                 case .text(let textContent):
-                    for word in textContent.split(whereSeparator: \.isWhitespace) {
+                    for word in RichText.plain(textContent).split(whereSeparator: \.isWhitespace) {
                         words.append(WordInfo(text: String(word), isCue: false))
                     }
                 }

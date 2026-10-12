@@ -97,7 +97,7 @@ private struct CueCardsText: View {
         // Text cut off at a paragraph break gets no ellipsis, so break lines
         // within one paragraph instead.
         state.runs
-            .map { CueCardRun(text: $0.text.replacingOccurrences(of: "\n", with: "\u{2028}"), isCue: $0.isCue) }
+            .map { CueCardRun(text: $0.text.replacingOccurrences(of: "\n", with: "\u{2028}"), isCue: $0.isCue, style: $0.style) }
             .text(primary: AppColors.textPrimary(for: colorScheme),
                   cue: state.cueColor.color(for: colorScheme))
             .truncationMode(.tail)

@@ -689,9 +689,10 @@ private final class TeleprompterPiPContentView: UIView {
 enum TeleprompterTextLayout {
     static func attributedString(text: String, fontSize: CGFloat, cueColor: CueColor, isDarkMode: Bool) -> NSAttributedString {
         let result = NSMutableAttributedString()
+        let textColor = isDarkMode ? AppColors.UIColors.Dark.textPrimary : AppColors.UIColors.Light.textPrimary
         let textAttributes: [NSAttributedString.Key: Any] = [
-            .font: UIFont.systemFont(ofSize: fontSize, weight: .medium),
-            .foregroundColor: isDarkMode ? AppColors.UIColors.Dark.textPrimary : AppColors.UIColors.Light.textPrimary
+            .font: UIFont.script(ofSize: fontSize),
+            .foregroundColor: textColor
         ]
         let cueAttributes: [NSAttributedString.Key: Any] = [
             .font: UIFont.systemFont(ofSize: fontSize * 0.72, weight: .semibold),
@@ -706,7 +707,11 @@ enum TeleprompterTextLayout {
                     if index > 0 { result.append(NSAttributedString(string: " ", attributes: textAttributes)) }
                     switch segment {
                     case .text(let text):
-                        result.append(NSAttributedString(string: text, attributes: textAttributes))
+                        for run in RichText.styled(text).runs {
+                            var attributes = textAttributes
+                            attributes[.font] = UIFont.script(ofSize: fontSize, style: run.style)
+                            result.append(NSAttributedString(string: run.text, attributes: attributes))
+                        }
                     case .cue(let cue):
                         result.append(NSAttributedString(string: cue, attributes: cueAttributes))
                     }

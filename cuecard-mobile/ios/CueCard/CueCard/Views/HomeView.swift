@@ -235,6 +235,12 @@ struct HomeView: View {
         editorController.insertCue()
     }
 
+    /// Bold or italicize the selection, or the word at the caret.
+    private func format(_ style: EmphasisStyle) {
+        AnalyticsEvents.logButtonClick(style == .bold ? "format_bold" : "format_italic", screen: "home")
+        editorController.toggle(style)
+    }
+
     private func selectAllText() {
         AnalyticsEvents.logButtonClick("select_all", screen: "home")
         editorController.selectAll()
@@ -311,6 +317,7 @@ struct HomeView: View {
                     CueBar(
                         colorScheme: colorScheme,
                         onAddCue: insertCue,
+                        onFormat: format,
                         onSelectAll: selectAllText,
                         onDismissKeyboard: { isEditorFocused = false }
                     )
@@ -874,9 +881,10 @@ struct SavedNotesView: View {
         return formatter
     }()
 
-    /// The start of a note, with card breaks read as spaces.
+    /// The start of a note, with card breaks read as spaces and emphasis
+    /// markers left out.
     private func preview(of note: SavedNote) -> String {
-        String(CueCards.removingSeparators(from: note.content).prefix(120))
+        String(RichText.plain(CueCards.removingSeparators(from: note.content)).prefix(120))
             .replacingOccurrences(of: "\n", with: " ")
     }
 

@@ -270,7 +270,7 @@ final class CueCardsSession: ObservableObject {
             let text = bounded(run.text, bytes: budget)
             guard !text.isEmpty else { break }
             budget -= text.utf8.count
-            runs.append(CueCardRun(text: text, isCue: run.isCue))
+            runs.append(CueCardRun(text: text, isCue: run.isCue, style: run.style))
         }
         var state = CueCardsWidgetState(sessionID: sessionID, title: bounded(title, bytes: 160), runs: runs,
                                         cueColor: SettingsService.shared.settings.cards.cueColor,

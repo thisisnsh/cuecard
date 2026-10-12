@@ -103,8 +103,10 @@ enum CueCards {
     }
 
     /// Count what a card shows against `limit`. Cue text counts, the `[cue`
-    /// and `]` around it don't, and neither does blank space at either end.
-    static func measure(_ card: NSRange, in text: NSString, cues: [CueMatch], limit: Int) -> CardMeasure {
+    /// and `]` around it don't, nor do emphasis `markers`, and neither does
+    /// blank space at either end.
+    static func measure(_ card: NSRange, in text: NSString, cues: [CueMatch], markers: [NSRange] = [],
+                        limit: Int) -> CardMeasure {
         var count = 0
         var solidCount = 0
         var overflowStart: Int?
@@ -114,7 +116,7 @@ enum CueCards {
             let isTagSyntax = cues.contains {
                 NSLocationInRange(range.location, $0.range) && !NSLocationInRange(range.location, $0.contentRange)
             }
-            if isTagSyntax { return }
+            if isTagSyntax || markers.contains(where: { NSLocationInRange(range.location, $0) }) { return }
 
             let isBlank = character.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             if isBlank && count == 0 { return }
@@ -133,8 +135,9 @@ enum CueCards {
     /// How much of a single card shows against `limit`.
     static func measure(card: String, limit: Int) -> CardMeasure {
         let nsText = card as NSString
-        return measure(NSRange(location: 0, length: nsText.length), in: nsText,
-                       cues: TeleprompterParser.cueMatches(in: card), limit: limit)
+        let cues = TeleprompterParser.cueMatches(in: card)
+        return measure(NSRange(location: 0, length: nsText.length), in: nsText, cues: cues,
+                       markers: RichText.markerRanges(in: card, skipping: cues.map(\.range)), limit: limit)
     }
 
     /// The cards as the editor shows them: blank ones kept, so a card just
@@ -162,14 +165,14 @@ enum CueCards {
         var runs: [CueCardRun] = []
         var remaining = maxLength
 
-        func append(_ text: String, isCue: Bool) {
+        func append(_ text: String, isCue: Bool, style: EmphasisStyle = []) {
             guard remaining > 0, !text.isEmpty else { return }
             let piece = String(text.prefix(remaining))
             remaining -= piece.count
-            if let last = runs.last, last.isCue == isCue {
+            if let last = runs.last, last.isCue == isCue, last.style == style {
                 runs[runs.count - 1].text += piece
             } else {
-                runs.append(CueCardRun(text: piece, isCue: isCue))
+                runs.append(CueCardRun(text: piece, isCue: isCue, style: style))
             }
         }
 
@@ -182,7 +185,9 @@ enum CueCards {
                 case .text(let text):
                     guard !text.isEmpty else { continue }
                     if !isFirst { append(" ", isCue: false) }
-                    append(text, isCue: false)
+                    for run in RichText.styled(text).runs {
+                        append(run.text, isCue: false, style: run.style)
+                    }
                 case .cue(let cue):
                     let cue = cue.trimmingCharacters(in: .whitespaces)
                     guard !cue.isEmpty else { continue }
