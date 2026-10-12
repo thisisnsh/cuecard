@@ -115,7 +115,8 @@ private struct CardPage: View {
 
     var body: some View {
         ScrollView {
-            runs.text(primary: AppColors.Dark.textPrimary, cue: cueColor.color(for: .dark))
+            runs.text(primary: AppColors.Dark.textPrimary, cue: cueColor.color(for: .dark),
+                      cueFont: .system(size: textSize * 0.82, weight: .semibold))
                 .opacity(isLuminanceReduced ? 0.6 : 1)
                 .font(.system(size: textSize, weight: .semibold))
                 .lineSpacing(3)

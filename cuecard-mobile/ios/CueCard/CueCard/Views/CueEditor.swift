@@ -470,17 +470,18 @@ struct CueTextEditor: UIViewRepresentable {
         }
 
         // Only closed tags are colored, so a cue being typed stays plain text
-        // until its bracket lands.
+        // until its bracket lands. Cues are set smaller and narrower than the
+        // script, so they never read as part of it.
         for match in cues {
             // The tag syntax stays visible — and editable — but recedes.
             storage.addAttributes([
                 .foregroundColor: tagColor.withAlphaComponent(0.45),
-                .font: UIFont.systemFont(ofSize: fontSize, weight: .medium)
+                .font: UIFont.cue(ofSize: fontSize * 0.85, weight: .medium)
             ], range: match.range)
 
             storage.addAttributes([
                 .foregroundColor: tagColor,
-                .font: UIFont.systemFont(ofSize: fontSize, weight: .semibold)
+                .font: UIFont.cue(ofSize: fontSize * 0.85)
             ], range: match.contentRange)
         }
 
@@ -791,6 +792,11 @@ extension UIFont {
               let italic = font.fontDescriptor.withSymbolicTraits(font.fontDescriptor.symbolicTraits.union(.traitItalic))
         else { return font }
         return UIFont(descriptor: italic, size: size)
+    }
+
+    /// A cue's face: condensed, so it never reads as part of the script.
+    static func cue(ofSize size: CGFloat, weight: UIFont.Weight = .semibold) -> UIFont {
+        UIFont.systemFont(ofSize: size, weight: weight, width: .condensed)
     }
 }
 

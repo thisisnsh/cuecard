@@ -25,18 +25,23 @@ struct CueCardRun: Codable, Hashable {
 }
 
 extension Array where Element == CueCardRun {
-    /// The card as one text, cues in their color.
-    func text(primary: Color, cue: Color) -> Text {
+    /// The card as one text, cues in their color and set narrower than the
+    /// script so they never read as part of it. `cueFont`, if given, sets them
+    /// smaller as well.
+    func text(primary: Color, cue: Color, cueFont: Font? = nil) -> Text {
         reduce(Text("")) { result, run in
-            result + run.styledText(primary: primary, cue: cue)
+            result + run.styledText(primary: primary, cue: cue, cueFont: cueFont)
         }
     }
 }
 
 private extension CueCardRun {
-    func styledText(primary: Color, cue: Color) -> Text {
+    func styledText(primary: Color, cue: Color, cueFont: Font?) -> Text {
         var text = Text(self.text)
-        if isCue { return text.foregroundColor(cue) }
+        if isCue {
+            if let cueFont { text = text.font(cueFont) }
+            return text.fontWidth(.condensed).foregroundColor(cue)
+        }
         if style.contains(.bold) { text = text.fontWeight(.heavy) }
         if style.contains(.italic) { text = text.italic() }
         return text.foregroundColor(primary)

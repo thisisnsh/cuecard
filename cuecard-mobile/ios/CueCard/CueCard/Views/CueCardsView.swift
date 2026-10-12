@@ -439,7 +439,8 @@ private struct CueCardFace: View {
 
     var body: some View {
         ScrollView {
-            runs.text(primary: AppColors.textPrimary(for: colorScheme), cue: cueColor.color(for: colorScheme))
+            runs.text(primary: AppColors.textPrimary(for: colorScheme), cue: cueColor.color(for: colorScheme),
+                      cueFont: .system(size: fontSize * 0.82, weight: .semibold))
                 .font(.system(size: fontSize, weight: .semibold))
                 .lineSpacing(4)
                 .fixedSize(horizontal: false, vertical: true)

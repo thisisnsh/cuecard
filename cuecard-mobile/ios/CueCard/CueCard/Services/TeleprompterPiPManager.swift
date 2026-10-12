@@ -695,9 +695,8 @@ enum TeleprompterTextLayout {
             .foregroundColor: textColor
         ]
         let cueAttributes: [NSAttributedString.Key: Any] = [
-            .font: UIFont.systemFont(ofSize: fontSize * 0.72, weight: .semibold),
-            .foregroundColor: cueColor.uiColor(isDarkMode: isDarkMode),
-            .kern: fontSize * 0.05
+            .font: UIFont.cue(ofSize: fontSize * 0.72),
+            .foregroundColor: cueColor.uiColor(isDarkMode: isDarkMode)
         ]
         for (paragraphIndex, paragraph) in text.components(separatedBy: "\n\n").enumerated() {
             if paragraphIndex > 0 { result.append(NSAttributedString(string: "\n")) }
