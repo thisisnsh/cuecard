@@ -928,7 +928,7 @@ struct CueBar: View {
         .glassedEffect(in: Capsule())
     }
 
-    private func formatButton(_ systemImage: String, label: String, style: EmphasisStyle) -> some View {
+    private func formatButton(_ systemImage: String, label: LocalizedStringKey, style: EmphasisStyle) -> some View {
         Button { onFormat(style) } label: {
             Image(systemName: systemImage)
                 .font(.system(size: 14, weight: .semibold))
@@ -940,7 +940,7 @@ struct CueBar: View {
         .accessibilityLabel(label)
     }
 
-    private func addButton(_ title: String, accessibilityLabel: String, action: @escaping () -> Void) -> some View {
+    private func addButton(_ title: LocalizedStringKey, accessibilityLabel: LocalizedStringKey, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 6) {
                 Image(systemName: "plus")

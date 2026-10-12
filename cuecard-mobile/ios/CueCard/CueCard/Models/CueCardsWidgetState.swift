@@ -16,7 +16,9 @@ struct CueCardsWidgetState: Codable, Hashable {
     var timer: TeleprompterTimerState?
 
     var isFinished: Bool { index >= count }
-    var progress: String { isFinished ? "Done" : "\(index + 1) of \(count)" }
+    var progress: String {
+        isFinished ? String(localized: "Done") : String(localized: "\(index + 1) of \(count)", comment: "Card number out of the deck's total")
+    }
 }
 
 struct CueCardsActivityAttributes: ActivityAttributes {

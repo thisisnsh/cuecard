@@ -102,7 +102,7 @@ enum ScriptFile {
     static func title(for url: URL) -> String {
         let name = url.deletingPathExtension().lastPathComponent
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        return name.isEmpty ? "Imported Script" : name
+        return name.isEmpty ? String(localized: "Imported Script") : name
     }
 
     /// File name suggested for a script, preferring the saved note's title and
@@ -120,7 +120,7 @@ enum ScriptFile {
             }
         }
 
-        return "Speech"
+        return String(localized: "Speech")
     }
 
     private static func sanitized(_ name: String) -> String {

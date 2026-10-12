@@ -59,7 +59,7 @@ struct WatchHomeView: View {
                                     .lineLimit(2)
                                 Text(store.position(of: deck.id) > 0
                                      ? cardProgress(index: store.position(of: deck.id), count: deck.cards.count)
-                                     : (deck.cards.count == 1 ? "1 card" : "\(deck.cards.count) cards"))
+                                     : String(localized: "\(deck.cards.count) cards", comment: "How many cards a deck has"))
                                     .font(.footnote)
                                     .foregroundStyle(.secondary)
                             }

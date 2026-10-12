@@ -75,5 +75,5 @@ enum AppLinks {
     static let supportEmail = URL(string: "mailto:support@cuecard.dev?subject=CueCard%20Feedback")!
 
     /// What goes out when someone shares the app.
-    static let shareMessage = "Check out \(appStore.absoluteString)"
+    static let shareMessage = String(localized: "Check out \(appStore.absoluteString)", comment: "Shared with a link to CueCard on the App Store")
 }

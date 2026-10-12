@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1A10C0000000000000000013 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 1A10C0000000000000000003 /* Localizable.xcstrings */; };
+		1A10C0000000000000000012 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 1A10C0000000000000000002 /* Localizable.xcstrings */; };
+		1A10C0000000000000000011 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 1A10C0000000000000000001 /* Localizable.xcstrings */; };
 		001 /* CueCardApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101 /* CueCardApp.swift */; };
 		002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 102 /* ContentView.swift */; };
 		003 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 103 /* WelcomeView.swift */; };
@@ -128,6 +131,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1A10C0000000000000000003 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		1A10C0000000000000000002 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		1A10C0000000000000000001 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		101 /* CueCardApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardApp.swift; sourceTree = "<group>"; };
 		102 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		103 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
@@ -233,6 +239,7 @@
 		710 /* CueCard */ = {
 			isa = PBXGroup;
 			children = (
+				1A10C0000000000000000001 /* Localizable.xcstrings */,
 				AA2E5C0E2F0F38B500E1D079 /* CueCard.entitlements */,
 				101 /* CueCardApp.swift */,
 				AA856D552F060DFC00B0CBC6 /* Modifiers */,
@@ -319,6 +326,7 @@
 		730 /* CueCardWidgets */ = {
 			isa = PBXGroup;
 			children = (
+				1A10C0000000000000000002 /* Localizable.xcstrings */,
 				C0CA4D520000000000000004 /* CueCardsWidgets.swift */,
 				C0CA4D520000000000000003 /* CueCardsRemoteCommand+Widget.swift */,
 				130 /* CueCardWidgetsBundle.swift */,
@@ -332,6 +340,7 @@
 		740 /* CueCardWatch */ = {
 			isa = PBXGroup;
 			children = (
+				1A10C0000000000000000003 /* Localizable.xcstrings */,
 				157 /* SavedDeckView.swift */,
 				156 /* DeckStore.swift */,
 				155 /* PhoneDeckView.swift */,
@@ -444,6 +453,15 @@
 			knownRegions = (
 				en,
 				Base,
+				es,
+				fr,
+				de,
+				"pt-BR",
+				it,
+				ja,
+				ko,
+				"zh-Hans",
+				hi,
 			);
 			mainGroup = 700;
 			packageReferences = (
@@ -465,6 +483,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1A10C0000000000000000011 /* Localizable.xcstrings in Resources */,
 				007 /* Assets.xcassets in Resources */,
 				AA7130F62F04E5BC00F5C366 /* GoogleService-Info.plist in Resources */,
 				029 /* WhatsNew.json in Resources */,
@@ -475,6 +494,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1A10C0000000000000000012 /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -482,6 +502,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1A10C0000000000000000013 /* Localizable.xcstrings in Resources */,
 				069 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

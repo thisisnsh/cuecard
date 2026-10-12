@@ -24,9 +24,9 @@ struct HelpTopic: Identifiable {
 
     var id: String { title }
 
-    init(_ title: String, detail: String) {
-        self.title = title
-        self.detail = detail
+    init(_ title: LocalizedStringResource, detail: LocalizedStringResource) {
+        self.title = String(localized: title)
+        self.detail = String(localized: detail)
     }
 
     func matches(_ query: String) -> Bool {
@@ -44,98 +44,74 @@ private struct HelpSection: Identifiable {
 // MARK: - Topics
 
 private enum AllHelp {
-    static let general = HelpSection(title: "General", topics: [
+    static let general = HelpSection(title: String(localized: "General"), topics: [
         HelpTopic("Pick a Mode",
-                  detail: "Tap the mode name at the top. Teleprompter scrolls your whole script. "
-                      + "Cards shows it one card at a time."),
+                  detail: "Tap the mode name at the top. Teleprompter scrolls your whole script. Cards shows it one card at a time."),
         HelpTopic("Add Cues",
-                  detail: "Cues are reminders like [cue pause], shown in color and not read out. "
-                      + "Type [ or tap Add Cue above the keyboard."),
+                  detail: "Cues are reminders like [cue pause], shown in color and not read out. Type [ or tap Add Cue above the keyboard."),
         HelpTopic("Bold and Italic",
-                  detail: "Select words and tap B or I above the keyboard. "
-                      + "Or type *bold* or _italic_."),
+                  detail: "Select words and tap B or I above the keyboard. Or type *bold* or _italic_."),
         HelpTopic("Set a Timer",
-                  detail: "Tap the timer next to Play to set how long you have "
-                      + "and when it warns you."),
+                  detail: "Tap the timer next to Play to set how long you have and when it warns you."),
         HelpTopic("Save Your Work",
-                  detail: "Unsaved below the top bar means there are changes to save. "
-                      + "Tap it to save, or tap ••• › Save."),
+                  detail: "Unsaved below the top bar means there are changes to save. Tap it to save, or tap ••• › Save."),
         HelpTopic("Open Saved Notes",
-                  detail: "Tap ••• › Open to see everything you saved. "
-                      + "Swipe to rename or delete."),
+                  detail: "Tap ••• › Open to see everything you saved. Swipe to rename or delete."),
         HelpTopic("Import a Text File",
                   detail: "Tap ••• › Import. The file opens in the editor and is kept as a saved note."),
         HelpTopic("Go Back to an Older Version",
-                  detail: "Every save is a new version. Once a note has more than one, "
-                      + "tap the clock at the top to compare changes and restore one."),
+                  detail: "Every save is a new version. Once a note has more than one, tap the clock at the top to compare changes and restore one."),
         HelpTopic("Keep Notes if the App Is Removed",
-                  detail: "Notes stay on this device and are deleted with the app. "
-                      + "In Saved Notes, choose a notes folder from ••• to keep them as files."),
+                  detail: "Notes stay on this device and are deleted with the app. In Saved Notes, choose a notes folder from ••• to keep them as files."),
         HelpTopic("Share a Script",
                   detail: "Tap ••• › Share to send it as text, cues included."),
         HelpTopic("Change Text Size and Colors",
-                  detail: "Tap the gear at the top. Each mode keeps its own sizes and cue color. "
-                      + "Timer colors are set in the timer.")
+                  detail: "Tap the gear at the top. Each mode keeps its own sizes and cue color. Timer colors are set in the timer.")
     ])
 
-    static let teleprompter = HelpSection(title: "Teleprompter", topics: [
+    static let teleprompter = HelpSection(title: String(localized: "Teleprompter"), topics: [
         HelpTopic("Play and Pause",
-                  detail: "The buttons fade while the script scrolls so they stay out of the way. "
-                      + "Tap the screen to show them again."),
+                  detail: "The buttons fade while the script scrolls so they stay out of the way. Tap the screen to show them again."),
         HelpTopic("Scroll by Hand",
-                  detail: "Drag the script to go back or skip ahead. "
-                      + "It keeps scrolling from where you leave it."),
+                  detail: "Drag the script to go back or skip ahead. It keeps scrolling from where you leave it."),
         HelpTopic("Change Speed",
-                  detail: "Scroll Speed in Settings sets how many lines pass each minute. "
-                      + "Set a Countdown in the timer to get a few seconds before it starts."),
+                  detail: "Scroll Speed in Settings sets how many lines pass each minute. Set a Countdown in the timer to get a few seconds before it starts."),
         HelpTopic("Use Over Other Apps",
-                  detail: "Leave CueCard while the teleprompter is open and your script keeps going "
-                      + "in a floating window, handy on video calls."),
+                  detail: "Leave CueCard while the teleprompter is open and your script keeps going in a floating window, handy on video calls."),
         HelpTopic("Watch the Timer",
-                  detail: "The timer changes color when you're near the end "
-                      + "and again once you're over time. Pick the colors in the timer.")
+                  detail: "The timer changes color when you're near the end and again once you're over time. Pick the colors in the timer.")
     ])
 
-    static let cards = HelpSection(title: "Cards", topics: [
+    static let cards = HelpSection(title: String(localized: "Cards"), topics: [
         HelpTopic("Add Cards",
-                  detail: "Each box in the editor is one card. "
-                      + "Tap Create New Card to add another."),
+                  detail: "Each box in the editor is one card. Tap Create New Card to add another."),
         HelpTopic("Turn Cards",
-                  detail: "Swipe, or tap Back and Next. "
-                      + "The dots at the top show which card you're on."),
+                  detail: "Swipe, or tap Back and Next. The dots at the top show which card you're on."),
         HelpTopic("Read from the Lock Screen",
-                  detail: "Turn on Show on Lock Screen in Settings. "
-                      + "Then lock your iPhone and turn cards right from the Lock Screen."),
+                  detail: "Turn on Show on Lock Screen in Settings. Then lock your iPhone and turn cards right from the Lock Screen."),
         HelpTopic("Watch the Timer",
-                  detail: "The time at the top counts down your timer. "
-                      + "With no timer set, it counts up from when you started.")
+                  detail: "The time at the top counts down your timer. With no timer set, it counts up from when you started.")
     ])
 
-    static let appleWatch = HelpSection(title: "Apple Watch", topics: [
+    static let appleWatch = HelpSection(title: String(localized: "Apple Watch"), topics: [
         HelpTopic("Install on Apple Watch",
-                  detail: "Open the Watch app on your iPhone. "
-                      + "Under Available Apps, tap Install next to CueCard."),
+                  detail: "Open the Watch app on your iPhone. Under Available Apps, tap Install next to CueCard."),
         HelpTopic("Control the Teleprompter",
-                  detail: "Open a script on your iPhone. The watch shows its timer "
-                      + "and can play, pause or go back 10 seconds."),
+                  detail: "Open a script on your iPhone. The watch shows its timer and can play, pause or go back 10 seconds."),
         HelpTopic("Read Cards on Your Wrist",
-                  detail: "Open a deck on your iPhone and it shows on the watch too. "
-                      + "Turning a card on either one moves both."),
+                  detail: "Open a deck on your iPhone and it shows on the watch too. Turning a card on either one moves both."),
         HelpTopic("Keep Decks on the Watch",
-                  detail: "Open a saved deck and tap ••• › Keep on Apple Watch. "
-                      + "Then you can read it without your iPhone."),
+                  detail: "Open a saved deck and tap ••• › Keep on Apple Watch. Then you can read it without your iPhone."),
         HelpTopic("Stay on Screen",
-                  detail: "The watch goes back to the clock after a while. In the Watch app, go to "
-                      + "General › Return to Clock › CueCard and set it to 1 hour.")
+                  detail: "The watch goes back to the clock after a while. In the Watch app, go to General › Return to Clock › CueCard and set it to 1 hour.")
     ])
 
     /// The Play or Pause control needs iOS 18 and an iPhone with an Action button.
     static var actionButton: HelpSection? {
         guard #available(iOS 18.0, *), DeviceModel.hasActionButton else { return nil }
-        return HelpSection(title: "Action Button", topics: [
+        return HelpSection(title: String(localized: "Action Button"), topics: [
             HelpTopic("Play or Pause the Teleprompter",
-                      detail: "Start and stop scrolling without touching the screen. In the Settings app, "
-                          + "go to Action Button › Controls and pick Play or Pause under CueCard.")
+                      detail: "Start and stop scrolling without touching the screen. In the Settings app, go to Action Button › Controls and pick Play or Pause under CueCard.")
         ])
     }
 
@@ -225,7 +201,7 @@ struct HelpView: View {
         }
     }
 
-    private func linkRow(_ title: String, systemImage: String) -> some View {
+    private func linkRow(_ title: LocalizedStringKey, systemImage: String) -> some View {
         HStack {
             Text(title)
                 .foregroundStyle(AppColors.textPrimary(for: colorScheme))

@@ -24,8 +24,8 @@ struct CardPager: View {
     private var isFinished: Bool { index >= cards.count }
     private var settings: WatchSettings { connector.phone?.settings ?? .default }
     private var nextLabel: String {
-        if isFinished { return "Again" }
-        return index == cards.count - 1 ? "Finish" : "Next"
+        if isFinished { return String(localized: "Again") }
+        return index == cards.count - 1 ? String(localized: "Finish") : String(localized: "Next")
     }
 
     var body: some View {
@@ -102,7 +102,8 @@ struct CardsTimerText: View {
 
 /// "2 of 5", or "Done" once there's nothing left.
 func cardProgress(index: Int, count: Int) -> String {
-    index >= count ? "Done" : "\(index + 1) of \(count)"
+    index >= count ? String(localized: "Done")
+        : String(localized: "\(index + 1) of \(count)", comment: "Card number out of the deck's total")
 }
 
 /// One card, cues in their color.

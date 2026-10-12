@@ -39,7 +39,14 @@ final class WhatsNewService: ObservableObject {
               let data = try? Data(contentsOf: url),
               let releases = try? JSONDecoder().decode([String: Release].self, from: data)
         else { return [:] }
-        return releases
+        // Translations of the JSON's text are added to Localizable.xcstrings by
+        // hand, keyed by the English. Text without one shows in English.
+        func localized(_ text: String) -> String {
+            Bundle.main.localizedString(forKey: text, value: text, table: nil)
+        }
+        return releases.mapValues {
+            Release(title: $0.title.map(localized), features: $0.features.map(localized))
+        }
     }
 
     /// Show this version's features if they haven't been seen. A fresh install has

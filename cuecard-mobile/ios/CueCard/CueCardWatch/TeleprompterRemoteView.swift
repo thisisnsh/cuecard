@@ -96,9 +96,9 @@ extension TeleprompterTimerState {
 
     var statusTitle: String {
         switch phase {
-        case .countingDown: return "Starting"
-        case .playing: return isOvertime ? "Overtime" : "Reading"
-        case .paused: return "Paused"
+        case .countingDown: return String(localized: "Starting")
+        case .playing: return isOvertime ? String(localized: "Overtime") : String(localized: "Reading")
+        case .paused: return String(localized: "Paused")
         }
     }
 }

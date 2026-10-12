@@ -262,7 +262,7 @@ final class CueCardsSession: ObservableObject {
             return result
         }
         let allRuns = isFinished
-            ? [CueCardRun(text: "All cards done", isCue: false)]
+            ? [CueCardRun(text: String(localized: "All cards done"), isCue: false)]
             : CueCards.runs(for: cards[index])
         var runs: [CueCardRun] = []
         var budget = 1600

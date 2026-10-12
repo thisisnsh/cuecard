@@ -207,7 +207,7 @@ struct HomeView: View {
             do {
                 let text = try ScriptFile.readText(from: url)
                 guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                    importError = "That file is empty."
+                    importError = String(localized: "That file is empty.")
                     return
                 }
                 settingsService.importNote(
@@ -215,13 +215,13 @@ struct HomeView: View {
                     content: TeleprompterParser.normalizingTags(in: text)
                 )
             } catch let error as ScriptFile.FileTooLarge {
-                importError = "That file is larger than 10 MB, so it can't be imported."
+                importError = String(localized: "That file is larger than 10 MB, so it can't be imported.")
                 Analytics.logEvent("file_too_large", parameters: [
                     "source": "import",
                     "size_mb": error.size / (1024 * 1024)
                 ])
             } catch {
-                importError = "This file couldn't be read as text."
+                importError = String(localized: "This file couldn't be read as text.")
             }
         case .failure(let error):
             importError = error.localizedDescription
@@ -439,7 +439,7 @@ struct HomeView: View {
 
                             ShareLink(
                                 item: shareText,
-                                subject: Text(settingsService.currentNote?.title ?? "Speech")
+                                subject: Text(settingsService.currentNote?.title ?? String(localized: "Speech"))
                             ) {
                                 Label("Share", systemImage: "square.and.arrow.up")
                             }
@@ -527,7 +527,7 @@ struct HomeView: View {
             }
             .fullScreenCover(isPresented: $showingCards) {
                 CueCardsView(cards: cardsOpenedOnWatch ? nil : CueCards.cards(in: settingsService.notes),
-                             title: settingsService.currentNote?.title ?? "Cards",
+                             title: settingsService.currentNote?.title ?? String(localized: "Cards"),
                              deckID: settingsService.currentNoteId)
                     .environmentObject(settingsService)
             }
@@ -776,8 +776,9 @@ struct CardsEditorView: View {
     /// thought, since by then it's clear what a card is.
     private func placeholder(forCardNumber number: Int) -> String {
         number == 1
-            ? "One thought per card.\n\nType [ or tap Add Cue for reminders like [cue pause]."
-            : "Your next thought…"
+            ? String(localized: "One thought per card.\n\nType [ or tap Add Cue for reminders like [cue pause].",
+                     comment: "Keep [cue …] as written; translate the word after cue.")
+            : String(localized: "Your next thought…")
     }
 
     private func binding(for id: UUID) -> Binding<String> {
@@ -891,12 +892,13 @@ struct SavedNotesView: View {
     /// When a note was last saved, and how many versions it has.
     private func detail(of note: SavedNote) -> String {
         let versions = settingsService.versionCounts[note.id] ?? 1
-        return "\(dateFormatter.string(from: note.updatedAt)) · \(versions) \(versions == 1 ? "Version" : "Versions")"
+        let count = String(localized: "\(versions) Versions", comment: "How many versions a saved note has")
+        return "\(dateFormatter.string(from: note.updatedAt)) · \(count)"
     }
 
     private var countLabel: String {
         let count = settingsService.savedNotes.count
-        return "\(count) \(count == 1 ? "note" : "notes")"
+        return String(localized: "\(count) notes", comment: "How many saved notes there are")
     }
 
     /// Where saved notes are kept, shown whether or not there are any.
@@ -922,9 +924,9 @@ struct SavedNotesView: View {
         let files = settingsService.notesFolderOversizedFiles
         guard let first = files.first else { return nil }
         if files.count == 1 {
-            return "“\(first)” is larger than 10 MB, so it wasn't added to your notes."
+            return String(localized: "“\(first)” is larger than 10 MB, so it wasn't added to your notes.")
         }
-        return "\(files.count) files in the notes folder are larger than 10 MB, so they weren't added to your notes."
+        return String(localized: "\(files.count) files in the notes folder are larger than 10 MB, so they weren't added to your notes.")
     }
 
     /// Files of deleted notes still in the notes folder, if any.
@@ -932,19 +934,21 @@ struct SavedNotesView: View {
         let files = settingsService.notesFolderUndeletedFiles
         guard let first = files.first else { return nil }
         if files.count == 1 {
-            return "“\(first)” couldn't be deleted from the notes folder. Its note stays deleted."
+            return String(localized: "“\(first)” couldn't be deleted from the notes folder. Its note stays deleted.")
         }
-        return "\(files.count) files couldn't be deleted from the notes folder. Their notes stay deleted."
+        return String(localized: "\(files.count) files couldn't be deleted from the notes folder. Their notes stay deleted.")
     }
 
     /// Why deleting notes left files behind in the notes folder.
     private func undeletedFilesMessage(count: Int) -> String {
-        let files = count == 1 ? "Its file" : "Their files"
         if let folder = settingsService.notesFolderName {
-            return "\(files) in “\(folder)” folder couldn't be deleted. CueCard will try again, "
-                + "and won't bring \(count == 1 ? "it" : "them") back as notes."
+            return count == 1
+                ? String(localized: "Its file in “\(folder)” folder couldn't be deleted. CueCard will try again, and won't bring it back as notes.")
+                : String(localized: "Their files in “\(folder)” folder couldn't be deleted. CueCard will try again, and won't bring them back as notes.")
         }
-        return "\(files) will be deleted from the notes folder once it can be reached."
+        return count == 1
+            ? String(localized: "Its file will be deleted from the notes folder once it can be reached.")
+            : String(localized: "Their files will be deleted from the notes folder once it can be reached.")
     }
 
     /// Notes never leave the device, so the lock stays whatever the folder.
@@ -972,7 +976,7 @@ struct SavedNotesView: View {
             do {
                 try settingsService.chooseNotesFolder(url)
             } catch {
-                errorMessage = "This folder can't be used for notes."
+                errorMessage = String(localized: "This folder can't be used for notes.")
             }
         case .failure(let error):
             errorMessage = error.localizedDescription
@@ -1045,7 +1049,7 @@ struct SavedNotesView: View {
                                     Button(role: .destructive) {
                                         AnalyticsEvents.logButtonClick("delete_note", screen: "saved_notes")
                                         if !settingsService.deleteNote(id: note.id) {
-                                            errorMessage = "The note was deleted. " + undeletedFilesMessage(count: 1)
+                                            errorMessage = String(localized: "The note was deleted. \(undeletedFilesMessage(count: 1))")
                                         }
                                     } label: {
                                         Label("Delete", systemImage: "trash")
@@ -1163,7 +1167,7 @@ struct SavedNotesView: View {
                 Button("Delete All", role: .destructive) {
                     let count = settingsService.savedNotes.count
                     if !settingsService.deleteAllNotes() {
-                        errorMessage = "Your notes were deleted. " + undeletedFilesMessage(count: count)
+                        errorMessage = String(localized: "Your notes were deleted. \(undeletedFilesMessage(count: count))")
                     }
                 }
             } message: {
@@ -1180,11 +1184,9 @@ struct SavedNotesView: View {
                 }
             } message: {
                 if let folder = settingsService.notesFolderName {
-                    Text("Some note files in “\(folder)” folder couldn't be deleted, so it's still in use. "
-                         + "You can stop using it anyway and leave the files there.")
+                    Text("Some note files in “\(folder)” folder couldn't be deleted, so it's still in use. You can stop using it anyway and leave the files there.")
                 } else {
-                    Text("The notes folder can't be reached, so its note files couldn't be deleted. "
-                         + "You can stop using it anyway and leave the files there.")
+                    Text("The notes folder can't be reached, so its note files couldn't be deleted. You can stop using it anyway and leave the files there.")
                 }
             }
             .alert("Something Went Wrong", isPresented: Binding(

@@ -91,7 +91,7 @@ struct WhatsNewView: View {
 
     private var content: some View {
         VStack(spacing: 24) {
-            Text(release.title ?? "What's New")
+            Text(release.title ?? String(localized: "What's New"))
                 .font(.system(size: 30, weight: .bold))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(primary)

@@ -130,9 +130,7 @@ struct EditorSettingsView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Show on Lock Screen")
                     if settingsService.settings.cards.showOnLockScreen {
-                        Text("Anyone who can see your iPhone can read the current card. Cards longer than "
-                             + "\(CueCards.characterLimit(onLockScreen: true)) characters will be truncated "
-                             + "on the Lock Screen.")
+                        Text("Anyone who can see your iPhone can read the current card. Cards longer than \(CueCards.characterLimit(onLockScreen: true)) characters will be truncated on the Lock Screen.")
                             .font(.footnote)
                             .foregroundStyle(.secondary)
                     }
@@ -145,8 +143,7 @@ struct EditorSettingsView: View {
                     settingsService.settings.cards.showOnLockScreen = true
                 }
             } message: {
-                Text("While you read a deck, its title and the current card are shown on the Lock Screen, "
-                     + "where anyone who can see your iPhone can read them, even while it's locked.")
+                Text("While you read a deck, its title and the current card are shown on the Lock Screen, where anyone who can see your iPhone can read them, even while it's locked.")
             }
         } header: {
             Text("Cards")
@@ -170,20 +167,17 @@ struct EditorSettingsView: View {
         }
     }
 
-    private var teleprompterAdvancedFooter: String {
+    private var teleprompterAdvancedFooter: LocalizedStringKey {
         let prompter = TeleprompterSettings.fontSizeRange
         let pip = TeleprompterSettings.pipFontSizeRange
         let editor = TeleprompterSettings.editorFontSizeRange
-        return "Teleprompter text can be set from \(prompter.lowerBound) to \(prompter.upperBound), "
-            + "floating window text from \(pip.lowerBound) to \(pip.upperBound), "
-            + "and editor text from \(editor.lowerBound) to \(editor.upperBound)."
+        return "Teleprompter text can be set from \(prompter.lowerBound) to \(prompter.upperBound), floating window text from \(pip.lowerBound) to \(pip.upperBound), and editor text from \(editor.lowerBound) to \(editor.upperBound)."
     }
 
-    private var cardsAdvancedFooter: String {
+    private var cardsAdvancedFooter: LocalizedStringKey {
         let card = TeleprompterSettings.fontSizeRange
         let editor = TeleprompterSettings.editorFontSizeRange
-        return "Card text can be set from \(card.lowerBound) to \(card.upperBound), "
-            + "and editor text from \(editor.lowerBound) to \(editor.upperBound)."
+        return "Card text can be set from \(card.lowerBound) to \(card.upperBound), and editor text from \(editor.lowerBound) to \(editor.upperBound)."
     }
 
     /// A notice from the worker, if there's one meant for Settings. Quieter than
@@ -224,7 +218,7 @@ private struct SettingsScreen<Content: View>: View {
     @Environment(\.dismiss) var dismiss
 
     let screen: String
-    let title: String
+    let title: LocalizedStringKey
     @ViewBuilder let content: Content
 
     var body: some View {
@@ -281,7 +275,7 @@ private struct AppleWatchSection: View {
                 if showsCardTextSize {
                     Picker("Card Text Size", selection: $settingsService.settings.watch.cardTextSize) {
                         ForEach(WatchCardTextSize.allCases, id: \.self) { size in
-                            Text(size.rawValue).tag(size)
+                            Text(size.displayName).tag(size)
                         }
                     }
                 }
@@ -320,7 +314,7 @@ private struct AppearanceSection: View {
         Section("Appearance") {
             Picker("Theme", selection: $settingsService.settings.themePreference) {
                 ForEach(ThemePreference.allCases, id: \.self) { theme in
-                    Text(theme.rawValue).tag(theme)
+                    Text(theme.displayName).tag(theme)
                 }
             }
 
@@ -333,7 +327,7 @@ private struct AppearanceSection: View {
 struct ColorSwatchRow: View {
     @Environment(\.colorScheme) var colorScheme
 
-    let title: String
+    let title: LocalizedStringKey
     @Binding var selection: CueColor
 
     var body: some View {
@@ -363,7 +357,7 @@ struct ColorSwatchRow: View {
                             )
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("\(title): \(option.displayName)")
+                    .accessibilityLabel(Text("\(Text(title)): \(option.displayName)"))
                     .accessibilityAddTraits(option == selection ? .isSelected : [])
                 }
             }
@@ -378,7 +372,7 @@ private struct AdvancedSection<Fields: View>: View {
     @AppStorage("settings.showAdvancedSettings") private var showAdvanced = false
 
     let screen: String
-    let footer: String
+    let footer: LocalizedStringKey
     @ViewBuilder let fields: Fields
 
     var body: some View {
@@ -444,7 +438,7 @@ private struct AboutSection: View {
         }
     }
 
-    private func row(_ title: String, systemImage: String) -> some View {
+    private func row(_ title: LocalizedStringKey, systemImage: String) -> some View {
         HStack {
             Text(title)
                 .foregroundStyle(AppColors.textPrimary(for: colorScheme))
@@ -482,7 +476,7 @@ private struct AboutSection: View {
 /// A size typed in Advanced that matches no preset shows as its own entry, so
 /// the row never reads blank.
 struct SizePresetPicker: View {
-    let title: String
+    let title: LocalizedStringKey
     @Binding var value: Int
     let presets: [SettingPreset]
 
@@ -513,11 +507,11 @@ struct AspectRatioPicker: View {
 
 /// A title with its typed number field at the trailing edge.
 struct AdvancedNumberRow: View {
-    let title: String
+    let title: LocalizedStringKey
     @Binding var value: Int
     let range: ClosedRange<Int>
     /// Left out for text sizes, which read as bare numbers.
-    var unit: String? = nil
+    var unit: LocalizedStringKey? = nil
 
     var body: some View {
         HStack {
@@ -541,7 +535,7 @@ struct SettingNumberField: View {
 
     @Binding var value: Int
     let range: ClosedRange<Int>
-    var unit: String? = nil
+    var unit: LocalizedStringKey? = nil
 
     @State private var text = ""
     @FocusState private var isFocused: Bool

@@ -21,7 +21,14 @@ enum CueColor: String, Codable, CaseIterable, Identifiable {
     static let `default`: CueColor = .pink
 
     var displayName: String {
-        rawValue.capitalized
+        switch self {
+        case .pink: return String(localized: "Pink")
+        case .yellow: return String(localized: "Yellow")
+        case .green: return String(localized: "Green")
+        case .blue: return String(localized: "Blue")
+        case .purple: return String(localized: "Purple")
+        case .red: return String(localized: "Red")
+        }
     }
 
     func color(for colorScheme: ColorScheme) -> Color {

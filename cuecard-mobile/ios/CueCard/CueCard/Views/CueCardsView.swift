@@ -31,12 +31,13 @@ struct CueCardsView: View {
     private static let peek: CGFloat = 14
 
     private var progress: String {
-        session.isFinished ? "Done" : "\(session.index + 1) of \(session.cards.count)"
+        session.isFinished ? String(localized: "Done")
+            : String(localized: "\(session.index + 1) of \(session.cards.count)", comment: "Card number out of the deck's total")
     }
 
     private var nextLabel: String {
-        if session.isFinished { return "Start Over" }
-        return session.index == session.cards.count - 1 ? "Finish" : "Next Card"
+        if session.isFinished { return String(localized: "Start Over") }
+        return session.index == session.cards.count - 1 ? String(localized: "Finish") : String(localized: "Next Card")
     }
 
     private var animation: Animation? { reduceMotion ? nil : Self.deckAnimation }

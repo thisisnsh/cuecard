@@ -16,6 +16,15 @@ enum ThemePreference: String, Codable, CaseIterable {
         case .dark: return .dark
         }
     }
+
+    /// The name Settings shows. The raw value is what's saved, so it stays English.
+    var displayName: String {
+        switch self {
+        case .system: return String(localized: "System")
+        case .light: return String(localized: "Light")
+        case .dark: return String(localized: "Dark")
+        }
+    }
 }
 
 /// The Small / Medium / Large text sizes settings used to be saved as. Only
@@ -63,9 +72,9 @@ enum OverlayAspectRatio: String, Codable, CaseIterable {
     /// so it stays the bare ratio.
     var displayName: String {
         switch self {
-        case .ratio16x9: return "Rectangle 16:9"
-        case .ratio4x3: return "Rectangle 4:3"
-        case .ratio1x1: return "Square 1:1"
+        case .ratio16x9: return String(localized: "Rectangle 16:9")
+        case .ratio4x3: return String(localized: "Rectangle 4:3")
+        case .ratio1x1: return String(localized: "Square 1:1")
         }
     }
 }
@@ -584,7 +593,7 @@ class SettingsService: ObservableObject {
     @Published private(set) var hasSeenWelcome: Bool
 
     /// Sample text for teleprompter mode: a short talk about the teleprompter.
-    static let defaultNoteText = """
+    static let defaultNoteText = String(localized: """
 Hi everyone.
 
 I'm excited to be here today to talk about CueCard's teleprompter.
@@ -616,11 +625,11 @@ Those are your cues. Reminders to smile, pause, or not panic. They're never mean
 [cue pause]
 
 Try it out. I think you'll love it.
-"""
+""", comment: "Sample teleprompter script. Keep each [cue …] tag's brackets and the word cue; translate the words after it.")
 
     /// Sample text for cards mode: a short talk about cards, each card short
     /// enough for the Lock Screen.
-    static let defaultCardsText = """
+    static let defaultCardsText = String(localized: """
 Hi everyone. Introducing Cue Cards. [cue smile]
 [separator]
 One thought per card. Swipe to the next one when you're ready.
@@ -634,7 +643,7 @@ Or turn them from your Apple Watch. [cue pause]
 Colored words are cues, not lines. [cue emphasize]
 [separator]
 Thanks for listening. Questions?
-"""
+""", comment: "Sample cards. Keep [separator] and each [cue …] tag's brackets and the word cue; translate the words after it. Keep each card under 120 characters.")
 
     private init() {
         self.hasSeenWelcome = userDefaults.bool(forKey: hasSeenWelcomeKey)

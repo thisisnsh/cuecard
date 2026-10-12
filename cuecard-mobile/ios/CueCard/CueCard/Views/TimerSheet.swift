@@ -17,9 +17,9 @@ struct TimerSheet: View {
     private var isTeleprompter: Bool { settings.scriptMode == .teleprompter }
 
     private var timeFooter: String {
-        var lines = duration > 0 ? ["0:00 turns off the timer."] : []
+        var lines = duration > 0 ? [String(localized: "0:00 turns off the timer.")] : []
         if isTeleprompter {
-            lines.append("Countdown is the time before the script starts scrolling.")
+            lines.append(String(localized: "Countdown is the time before the script starts scrolling."))
         }
         return lines.joined(separator: " ")
     }
@@ -88,7 +88,7 @@ struct TimerSheet: View {
         .frame(maxWidth: .infinity)
     }
 
-    private func stage(_ title: String, seconds: Int, tint: TeleprompterTimerState.Tint) -> some View {
+    private func stage(_ title: LocalizedStringKey, seconds: Int, tint: TeleprompterTimerState.Tint) -> some View {
         VStack(spacing: 4) {
             Text(Self.format(seconds))
                 .font(.system(size: 28, weight: .bold, design: .monospaced))
@@ -130,7 +130,7 @@ struct TimerSheet: View {
         HStack(spacing: 4) {
             Text("Countdown")
             Spacer()
-            wheel("Countdown seconds", selection: $settingsService.settings.countdownSeconds,
+            wheel(String(localized: "Countdown seconds"), selection: $settingsService.settings.countdownSeconds,
                   range: TeleprompterSettings.countdownRange) { "\($0)" }
             unit("sec")
         }
@@ -146,22 +146,25 @@ struct TimerSheet: View {
     }
 
     /// A title, and small minute and second wheels beside it.
-    private func timeRow(_ title: String,
+    private func timeRow(_ title: LocalizedStringResource,
                          minutes: Binding<Int>, minuteRange: ClosedRange<Int>,
                          seconds: Binding<Int>, secondRange: ClosedRange<Int>) -> some View {
-        HStack(spacing: 4) {
+        let name = String(localized: title)
+        return HStack(spacing: 4) {
             Text(title)
             Spacer()
-            wheel(title + " minutes", selection: minutes, range: minuteRange) { "\($0)" }
+            wheel(String(localized: "\(name) minutes", comment: "A timer row's minute wheel, for VoiceOver"),
+                  selection: minutes, range: minuteRange) { "\($0)" }
             unit("min")
-            wheel(title + " seconds", selection: seconds, range: secondRange) { String(format: "%02d", $0) }
+            wheel(String(localized: "\(name) seconds", comment: "A timer row's second wheel, for VoiceOver"),
+                  selection: seconds, range: secondRange) { String(format: "%02d", $0) }
             unit("sec")
         }
         .frame(height: 88)
     }
 
     /// What a wheel beside it counts, lined up across the rows.
-    private func unit(_ text: String) -> some View {
+    private func unit(_ text: LocalizedStringKey) -> some View {
         Text(text)
             .font(.subheadline)
             .foregroundStyle(AppColors.textSecondary(for: colorScheme))

@@ -31,7 +31,7 @@ enum WatchLink {
 enum WatchTips {
     /// A watch goes back to its clock soon after the wrist drops, and an app
     /// can't keep itself up. The user can.
-    static let returnToClock = "To keep CueCard on screen through a talk, open the Watch app on your iPhone, go to General › Return to Clock, choose CueCard, and set it to return after 1 hour."
+    static let returnToClock = String(localized: "To keep CueCard on screen through a talk, open the Watch app on your iPhone, go to General › Return to Clock, choose CueCard, and set it to return after 1 hour.")
 }
 
 /// How the watch app shows cards, set in the iPhone's Settings.
@@ -54,6 +54,15 @@ enum WatchCardTextSize: String, Codable, CaseIterable {
         case .small: return 16
         case .medium: return 19
         case .large: return 23
+        }
+    }
+
+    /// The name Settings shows. The raw value is what's saved, so it stays English.
+    var displayName: String {
+        switch self {
+        case .small: return String(localized: "Small")
+        case .medium: return String(localized: "Medium")
+        case .large: return String(localized: "Large")
         }
     }
 }

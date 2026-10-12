@@ -12,8 +12,8 @@ enum ScriptMode: String, Codable, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .teleprompter: return "Teleprompter"
-        case .cards: return "Cards"
+        case .teleprompter: return String(localized: "Teleprompter")
+        case .cards: return String(localized: "Cards")
         }
     }
 

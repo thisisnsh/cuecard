@@ -9,7 +9,7 @@ private struct CueCardsSurface: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text(state.title.isEmpty ? "Cards" : state.title)
+                Text(state.title.isEmpty ? String(localized: "Cards") : state.title)
                     .lineLimit(1)
                 Spacer(minLength: 8)
                 if let timer = state.timer, !state.isFinished {
