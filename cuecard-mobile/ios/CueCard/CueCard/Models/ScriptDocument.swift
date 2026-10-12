@@ -52,7 +52,7 @@ enum ScriptFile {
                 options: [.documentType: NSAttributedString.DocumentType.rtf],
                 documentAttributes: nil
             )
-            return attributed.string
+            return markdown(from: attributed)
         }
 
         let data = try Data(contentsOf: url)
@@ -62,6 +62,40 @@ enum ScriptFile {
 
         var encoding: String.Encoding = .utf8
         return try String(contentsOf: url, usedEncoding: &encoding)
+    }
+
+    /// Rich text as the script would be written: bold and italic kept as
+    /// `*bold*` and `_italic_`, everything else dropped.
+    static func markdown(from attributed: NSAttributedString) -> String {
+        var pieces: [(text: String, style: EmphasisStyle)] = []
+        attributed.enumerateAttributes(in: NSRange(location: 0, length: attributed.length)) { attributes, range, _ in
+            var style = EmphasisStyle()
+            if let traits = (attributes[.font] as? UIFont)?.fontDescriptor.symbolicTraits {
+                if traits.contains(.traitBold) { style.insert(.bold) }
+                if traits.contains(.traitItalic) { style.insert(.italic) }
+            }
+
+            let text = attributed.attributedSubstring(from: range).string
+            // A change of color or size alone doesn't split a stretch of one style.
+            if let last = pieces.last, last.style == style {
+                pieces[pieces.count - 1].text += text
+            } else {
+                pieces.append((text, style))
+            }
+        }
+
+        return pieces.map { piece in
+            guard !piece.style.isEmpty else { return piece.text }
+            let open = (piece.style.contains(.bold) ? EmphasisStyle.bold.marker : "")
+                + (piece.style.contains(.italic) ? EmphasisStyle.italic.marker : "")
+            let close = String(open.reversed())
+            // Markers go around the words of each line, not the space around them.
+            return piece.text.components(separatedBy: "\n").map { line in
+                let words = line.trimmingCharacters(in: .whitespaces)
+                guard !words.isEmpty, let start = line.range(of: words) else { return line }
+                return line.replacingCharacters(in: start, with: open + words + close)
+            }.joined(separator: "\n")
+        }.joined()
     }
 
     /// Title for an imported script, taken from the file name.
