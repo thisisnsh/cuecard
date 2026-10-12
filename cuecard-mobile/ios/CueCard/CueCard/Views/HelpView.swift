@@ -51,6 +51,9 @@ private enum AllHelp {
         HelpTopic("Add Cues",
                   detail: "Cues are reminders like [cue pause], shown in color and not read out. "
                       + "Type [ or tap Add Cue above the keyboard."),
+        HelpTopic("Bold and Italic",
+                  detail: "Select words and tap B or I above the keyboard. "
+                      + "Or type *bold* or _italic_."),
         HelpTopic("Set a Timer",
                   detail: "Tap the timer next to Play to set how long you have "
                       + "and when it warns you."),

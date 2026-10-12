@@ -1,10 +1,8 @@
 {
-  "1.8.0": {
-    "title": "Improved Saved Notes",
+  "1.9.0": {
+    "title": "Rich Text",
     "features": [
-        "Version History: See what changed in a note and restore older versions.",
-        "Notes Folder: Keep notes as files that stay if the app is removed.",
-        "Search: Find a saved note by its title or text."
+        "Rich Text: Make words bold or italic in your script."
     ]
   }
 }
