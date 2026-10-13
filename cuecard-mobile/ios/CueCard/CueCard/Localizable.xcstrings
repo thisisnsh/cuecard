@@ -11387,7 +11387,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Einige Notizdateien im Ordner „%@“ konnten nicht gelöscht werden, daher wird er noch verwendet. Du kannst ihn trotzdem nicht mehr verwenden und die Dateien dort lassen."
+            "value" : "Einige Notizdateien im Ordner „%@“ konnten nicht gelöscht werden, daher wird er noch verwendet. Du kannst trotzdem aufhören, ihn zu verwenden, und die Dateien dort lassen."
           }
         },
         "es" : {
@@ -13417,7 +13417,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Der Notizordner ist nicht erreichbar, daher konnten seine Notizdateien nicht gelöscht werden. Du kannst ihn trotzdem nicht mehr verwenden und die Dateien dort lassen."
+            "value" : "Der Notizordner ist nicht erreichbar, daher konnten seine Notizdateien nicht gelöscht werden. Du kannst trotzdem aufhören, ihn zu verwenden, und die Dateien dort lassen."
           }
         },
         "es" : {
@@ -15221,13 +15221,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Novedades de la %@"
+            "value" : "Novedades de la versión %@"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nouveautés de la %@"
+            "value" : "Nouveautés de la version %@"
           }
         },
         "hi" : {
@@ -15239,7 +15239,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Novità della %@"
+            "value" : "Novità della versione %@"
           }
         },
         "ja" : {
@@ -15257,7 +15257,7 @@
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Novidades da %@"
+            "value" : "Novidades da versão %@"
           }
         },
         "zh-Hans" : {

@@ -2069,7 +2069,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "読み上げ中"
+            "value" : "閲覧中"
           }
         },
         "ko" : {
@@ -2087,7 +2087,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "朗读中"
+            "value" : "阅读中"
           }
         }
       }
