@@ -74,6 +74,19 @@ enum AppLinks {
     static let appStore = URL(string: "https://apps.apple.com/app/id6757321325")!
     static let supportEmail = URL(string: "mailto:support@cuecard.dev?subject=CueCard%20Feedback")!
 
+    /// An email to support about a translation. The subject stays English, with
+    /// the language's code, so reports sort together whatever the language.
+    static func translationReport(language: String) -> URL {
+        var components = URLComponents()
+        components.scheme = "mailto"
+        components.path = "support@cuecard.dev"
+        components.queryItems = [
+            URLQueryItem(name: "subject", value: "CueCard Translation Mistake (\(language))"),
+            URLQueryItem(name: "body", value: String(localized: "Where in the app:\n\nWhat it says:\n\nWhat it should say:\n"))
+        ]
+        return components.url ?? supportEmail
+    }
+
     /// What goes out when someone shares the app.
     static let shareMessage = String(localized: "Check out \(appStore.absoluteString)", comment: "Shared with a link to CueCard on the App Store")
 }

@@ -9466,6 +9466,64 @@
         }
       }
     },
+    "Report a Translation Mistake" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Übersetzungsfehler melden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informar de un error de traducción"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signaler une erreur de traduction"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अनुवाद की गलती बताएँ"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Segnala un errore di traduzione"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "翻訳の誤りを報告"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "번역 오류 신고"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informar erro de tradução"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "报告翻译错误"
+          }
+        }
+      }
+    },
     "Reset Timer Colors" : {
       "localizations" : {
         "de" : {
@@ -11387,7 +11445,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Einige Notizdateien im Ordner „%@“ konnten nicht gelöscht werden, daher wird er noch verwendet. Du kannst trotzdem aufhören, ihn zu verwenden, und die Dateien dort lassen."
+            "value" : "Einige Notizdateien im Ordner „%@“ konnten nicht gelöscht werden, daher wird er noch verwendet. Du kannst ihn trotzdem nicht mehr verwenden und die Dateien dort lassen."
           }
         },
         "es" : {
@@ -13417,7 +13475,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Der Notizordner ist nicht erreichbar, daher konnten seine Notizdateien nicht gelöscht werden. Du kannst trotzdem aufhören, ihn zu verwenden, und die Dateien dort lassen."
+            "value" : "Der Notizordner ist nicht erreichbar, daher konnten seine Notizdateien nicht gelöscht werden. Du kannst ihn trotzdem nicht mehr verwenden und die Dateien dort lassen."
           }
         },
         "es" : {
@@ -15221,13 +15279,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Novedades de la versión %@"
+            "value" : "Novedades de la %@"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nouveautés de la version %@"
+            "value" : "Nouveautés de la %@"
           }
         },
         "hi" : {
@@ -15239,7 +15297,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Novità della versione %@"
+            "value" : "Novità della %@"
           }
         },
         "ja" : {
@@ -15257,13 +15315,71 @@
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Novidades da versão %@"
+            "value" : "Novidades da %@"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%@ 新功能"
+          }
+        }
+      }
+    },
+    "Where in the app:\n\nWhat it says:\n\nWhat it should say:\n" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wo in der App:\n\nWas dort steht:\n\nWas dort stehen sollte:\n"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dónde en la app:\n\nQué dice:\n\nQué debería decir:\n"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Où dans l'app :\n\nCe qui est écrit :\n\nCe qui devrait être écrit :\n"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ऐप में कहाँ:\n\nक्या लिखा है:\n\nक्या लिखा होना चाहिए:\n"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dove nell'app:\n\nCosa c'è scritto:\n\nCosa dovrebbe esserci scritto:\n"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Appのどこか：\n\n表示されている内容：\n\n正しい内容：\n"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "앱의 위치:\n\n현재 표시된 내용:\n\n올바른 내용:\n"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Onde no app:\n\nO que está escrito:\n\nO que deveria estar escrito:\n"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "App 中的位置：\n\n当前显示：\n\n应改为：\n"
           }
         }
       }

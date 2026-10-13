@@ -312,10 +312,12 @@ private struct AppearanceSection: View {
     let screen: String
     @Binding var cueColor: CueColor
 
+    /// The language the app is showing, as its code.
+    private var languageCode: String { Bundle.main.preferredLocalizations.first ?? "en" }
+
     /// The language the app is showing, named in that language.
     private var languageName: String {
-        let code = Bundle.main.preferredLocalizations.first ?? "en"
-        return Locale(identifier: code).localizedString(forIdentifier: code)?.localizedCapitalized ?? code
+        Locale(identifier: languageCode).localizedString(forIdentifier: languageCode)?.localizedCapitalized ?? languageCode
     }
 
     var body: some View {
@@ -343,6 +345,24 @@ private struct AppearanceSection: View {
                         .foregroundStyle(AppColors.textSecondary(for: colorScheme))
                 }
                 .contentShape(Rectangle())
+            }
+
+            // English is the original, so there's no translation to get wrong.
+            if languageCode != "en" {
+                Button {
+                    AnalyticsEvents.logButtonClick("report_translation", screen: screen)
+                    openURL(AppLinks.translationReport(language: languageCode))
+                } label: {
+                    HStack {
+                        Text("Report a Translation Mistake")
+                            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                        Spacer()
+                        Image(systemName: "envelope")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                    }
+                    .contentShape(Rectangle())
+                }
             }
 
             ColorSwatchRow(title: "Cue Color", selection: $cueColor)
