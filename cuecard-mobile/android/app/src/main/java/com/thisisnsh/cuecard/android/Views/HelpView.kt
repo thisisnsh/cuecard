@@ -98,6 +98,11 @@ private object AllHelp {
                     "Type [ or tap Add Cue above the keyboard."
             ),
             HelpTopic(
+                "Bold and Italic",
+                "Select words and tap B or I above the keyboard. " +
+                    "Or type *bold* or _italic_."
+            ),
+            HelpTopic(
                 "Set a Timer",
                 "Tap the timer next to Play to set how long you have " +
                     "and when it warns you."
