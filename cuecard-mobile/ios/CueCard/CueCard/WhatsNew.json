@@ -1,8 +1,8 @@
 {
   "1.9.0": {
-    "title": "Rich Text",
     "features": [
-        "Rich Text: Make words bold or italic in your script."
+        "Rich Text: Make words bold or italic in your script.",
+        "Multiple Languages: Use CueCard in ten languages."
     ]
   }
 }

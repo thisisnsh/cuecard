@@ -6739,6 +6739,65 @@
         }
       }
     },
+    "Multiple Languages: Use CueCard in ten languages." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mehrere Sprachen: CueCard in zehn Sprachen nutzen."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Varios idiomas: usa CueCard en diez idiomas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plusieurs langues : utilisez CueCard en dix langues."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कई भाषाएँ: CueCard को दस भाषाओं में इस्तेमाल करें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Più lingue: usa CueCard in dieci lingue."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "多言語対応：CueCardを10の言語で使えます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다국어 지원: CueCard를 10개 언어로 사용하세요."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vários idiomas: use o CueCard em dez idiomas."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "多语言支持：CueCard 现支持十种语言。"
+          }
+        }
+      }
+    },
     "New" : {
       "localizations" : {
         "de" : {
