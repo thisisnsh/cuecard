@@ -115,6 +115,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import com.thisisnsh.cuecard.android.models.CueCards
 import com.thisisnsh.cuecard.android.models.CueColor
+import com.thisisnsh.cuecard.android.models.EmphasisStyle
+import com.thisisnsh.cuecard.android.models.RichText
 import com.thisisnsh.cuecard.android.models.ScriptMode
 import com.thisisnsh.cuecard.android.services.TeleprompterSettings
 import kotlinx.coroutines.CoroutineStart
@@ -547,6 +549,12 @@ fun HomeView(
                         onAddCue = {
                             AnalyticsEvents.logButtonClick("insert_cue", "home")
                             editorController.insertCue()
+                        },
+                        onFormat = { style ->
+                            AnalyticsEvents.logButtonClick(
+                                if (style == EmphasisStyle.BOLD) "format_bold" else "format_italic", "home"
+                            )
+                            editorController.toggle(style)
                         },
                         onSelectAll = {
                             AnalyticsEvents.logButtonClick("select_all", "home")
@@ -1841,9 +1849,10 @@ private fun SavedNoteRow(
                 }
             }
 
-            // The start of a note, with card breaks read as spaces.
+            // The start of a note, with card breaks read as spaces and emphasis
+            // markers left out.
             Text(
-                text = CueCards.removingSeparators(note.content).take(120).replace("\n", " "),
+                text = RichText.plain(CueCards.removingSeparators(note.content)).take(120).replace("\n", " "),
                 fontSize = 15.sp,
                 color = AppColors.textSecondary(isDark),
                 maxLines = 2,

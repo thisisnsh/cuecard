@@ -36,13 +36,24 @@ data class CardMeasure(
 )
 
 /** A stretch of a card: spoken text, or a cue drawn in the cue color. */
-data class CueCardRun(val text: String, val isCue: Boolean)
+data class CueCardRun(
+    val text: String,
+    val isCue: Boolean,
+    /** Bold or italic, as written in the script. */
+    val style: EmphasisStyle = EmphasisStyle.NONE
+)
 
 /** The card as one text, cues in their color. */
 fun List<CueCardRun>.annotated(primary: Color, cue: Color): AnnotatedString =
     buildAnnotatedString {
         for (run in this@annotated) {
-            pushStyle(SpanStyle(color = if (run.isCue) cue else primary))
+            pushStyle(
+                if (run.isCue) {
+                    SpanStyle(color = cue)
+                } else {
+                    run.style.spanStyle().copy(color = primary)
+                }
+            )
             append(run.text)
             pop()
         }
@@ -95,9 +106,16 @@ object CueCards {
 
     /**
      * Count what a card shows against `limit`. Cue text counts, the `[cue` and
-     * `]` around it don't, and neither does blank space at either end.
+     * `]` around it don't, nor do emphasis `markers`, and neither does blank
+     * space at either end.
      */
-    fun measure(card: IntRange, text: String, cues: List<CueMatch>, limit: Int): CardMeasure {
+    fun measure(
+        card: IntRange,
+        text: String,
+        cues: List<CueMatch>,
+        markers: List<IntRange> = emptyList(),
+        limit: Int
+    ): CardMeasure {
         var count = 0
         var solidCount = 0
         var overflowStart: Int? = null
@@ -113,7 +131,7 @@ object CueCards {
             start = end
 
             val isTagSyntax = cues.any { location in it.range && location !in it.contentRange }
-            if (isTagSyntax) continue
+            if (isTagSyntax || markers.any { location in it }) continue
 
             val isBlank = character.isBlank()
             if (isBlank && count == 0) continue
@@ -129,8 +147,14 @@ object CueCards {
     }
 
     /** How much of a single card shows against `limit`. */
-    fun measure(card: String, limit: Int): CardMeasure =
-        measure(card.indices, card, TeleprompterParser.cueMatches(card), limit)
+    fun measure(card: String, limit: Int): CardMeasure {
+        val cues = TeleprompterParser.cueMatches(card)
+        return measure(
+            card.indices, card, cues,
+            markers = RichText.markerRanges(card, skipping = cues.map { it.range }),
+            limit = limit
+        )
+    }
 
     /**
      * The cards as the editor shows them: blank ones kept, so a card just added
@@ -154,13 +178,13 @@ object CueCards {
     fun runs(card: String): List<CueCardRun> {
         val runs = mutableListOf<CueCardRun>()
 
-        fun append(text: String, isCue: Boolean) {
+        fun append(text: String, isCue: Boolean, style: EmphasisStyle = EmphasisStyle.NONE) {
             if (text.isEmpty()) return
             val last = runs.lastOrNull()
-            if (last != null && last.isCue == isCue) {
+            if (last != null && last.isCue == isCue && last.style == style) {
                 runs[runs.size - 1] = last.copy(text = last.text + text)
             } else {
-                runs.add(CueCardRun(text, isCue))
+                runs.add(CueCardRun(text, isCue, style))
             }
         }
 
@@ -173,7 +197,9 @@ object CueCards {
                     is CueSegment.Text -> {
                         if (segment.text.isEmpty()) continue
                         if (!isFirst) append(" ", isCue = false)
-                        append(segment.text, isCue = false)
+                        for (run in RichText.styled(segment.text).runs) {
+                            append(run.text, isCue = false, style = run.style)
+                        }
                     }
                     is CueSegment.Cue -> {
                         val cue = segment.text.trim(' ', '\t')

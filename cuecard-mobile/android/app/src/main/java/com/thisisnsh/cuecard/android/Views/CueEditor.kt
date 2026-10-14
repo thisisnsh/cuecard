@@ -21,6 +21,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.FormatBold
+import androidx.compose.material.icons.filled.FormatItalic
 import androidx.compose.material.icons.filled.KeyboardHide
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -37,7 +39,19 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.SubcomposeLayout
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.AnnotatedString
@@ -49,9 +63,14 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.thisisnsh.cuecard.android.R
 import com.thisisnsh.cuecard.android.models.AppColors
 import com.thisisnsh.cuecard.android.models.CueCards
 import com.thisisnsh.cuecard.android.models.CueColor
+import com.thisisnsh.cuecard.android.models.Emphasis
+import com.thisisnsh.cuecard.android.models.EmphasisStyle
+import com.thisisnsh.cuecard.android.models.RichText
+import com.thisisnsh.cuecard.android.models.spanStyle
 import com.thisisnsh.cuecard.android.models.TeleprompterParser
 import com.thisisnsh.cuecard.android.modifiers.Capsule
 import com.thisisnsh.cuecard.android.modifiers.glassed
@@ -72,6 +91,7 @@ val CUE_EDITOR_EDGE_FADE = 28.dp
 class CueEditorController {
     internal var onInsertCue: (() -> Unit)? = null
     internal var onSelectAll: (() -> Unit)? = null
+    internal var onToggleStyle: ((EmphasisStyle) -> Unit)? = null
 
     /** Drop an empty cue at the caret and leave the caret inside it. */
     fun insertCue() {
@@ -85,6 +105,14 @@ class CueEditorController {
      */
     fun selectAll() {
         onSelectAll?.invoke()
+    }
+
+    /**
+     * Bold or italicize the selection — or the word at the caret — or take
+     * that style back off if it has it.
+     */
+    fun toggle(style: EmphasisStyle) {
+        onToggleStyle?.invoke(style)
     }
 }
 
@@ -178,6 +206,17 @@ fun CueTextEditor(
             modifier = fieldModifier
                 .fillMaxWidth()
                 .focusRequester(focusRequester)
+                // Ctrl+B and Ctrl+I on a hardware keyboard write the markers too.
+                .onPreviewKeyEvent { event ->
+                    if (event.type != KeyEventType.KeyDown || !event.isCtrlPressed) return@onPreviewKeyEvent false
+                    val style = when (event.key) {
+                        Key.B -> EmphasisStyle.BOLD
+                        Key.I -> EmphasisStyle.ITALIC
+                        else -> return@onPreviewKeyEvent false
+                    }
+                    toggledEmphasis(value, style)?.let(::apply)
+                    true
+                }
                 .onFocusChanged { state ->
                     hasFocus = state.isFocused
                     if (state.isFocused != isFocused) {
@@ -248,6 +287,13 @@ private fun bindController(
         }
     }
 
+    controller.onToggleStyle = { style ->
+        toggledEmphasis(currentValue(), style)?.let(apply)
+        if (!isFocused) {
+            onFocusChange(true)
+        }
+    }
+
     controller.onSelectAll = {
         val value = currentValue()
         setValue(value.copy(selection = TextRange(0, value.text.length)))
@@ -258,8 +304,8 @@ private fun bindController(
 }
 
 /**
- * Color the closed cue tags. A cue being typed stays plain text until its
- * bracket lands.
+ * Style the script as it reads: cues apart from the words, and emphasis applied
+ * with its markers left showing, quieter, so they can be edited.
  */
 private fun highlighted(
     text: String,
@@ -269,7 +315,9 @@ private fun highlighted(
     cardLimit: Int?
 ): AnnotatedString {
     val tagColor = cueColor.color(isDark)
+    val secondary = AppColors.textSecondary(isDark)
     val cues = TeleprompterParser.cueMatches(text)
+    val emphases = RichText.emphases(text, skipping = cues.map { it.range })
 
     return androidx.compose.ui.text.buildAnnotatedString {
         append(text)
@@ -279,13 +327,24 @@ private fun highlighted(
         for (separator in CueCards.separatorRanges(text)) {
             addStyle(
                 SpanStyle(
-                    color = AppColors.textSecondary(isDark),
+                    color = secondary,
                     fontSize = fontSize * 0.8f,
                     fontWeight = FontWeight.Bold
                 ),
                 separator.first,
                 separator.last + 1
             )
+        }
+
+        // Each stretch takes every style written around it; an emphasis still
+        // open shows its style already, as far as it has been typed.
+        for (emphasis in emphases) {
+            if (!emphasis.content.isEmpty()) {
+                addStyle(emphasis.style.spanStyle(), emphasis.content.first, emphasis.content.last + 1)
+            }
+            for (marker in listOfNotNull(emphasis.open, emphasis.close)) {
+                addStyle(SpanStyle(color = secondary), marker.first, marker.last + 1)
+            }
         }
 
         for (match in cues) {
@@ -311,8 +370,9 @@ private fun highlighted(
         // has to end and a new one begin.
         if (cardLimit != null) {
             val red = AppColors.red(isDark)
+            val markers = emphases.filter { it.isClosed }.flatMap { listOf(it.open, it.close!!) }
             for (card in CueCards.cardRanges(text)) {
-                val overflow = CueCards.measure(card, text, cues, cardLimit).overflow ?: continue
+                val overflow = CueCards.measure(card, text, cues, markers, cardLimit).overflow ?: continue
                 addStyle(
                     SpanStyle(color = red, background = red.copy(alpha = 0.14f)),
                     overflow.first,
@@ -321,6 +381,95 @@ private fun highlighted(
             }
         }
     }
+}
+
+/**
+ * Wrap the selection — or the word at the caret — in `style`'s Markdown, or
+ * unwrap it if it's already set that way. With no word at the caret, the
+ * markers go in with the caret between them. Null where there's nothing it can
+ * do: across a cue, or across lines.
+ */
+private fun toggledEmphasis(value: TextFieldValue, style: EmphasisStyle): TextFieldValue? {
+    val text = value.text
+    val selectionStart = value.selection.min
+    val selectionEnd = value.selection.max
+    val hasSelection = selectionEnd > selectionStart
+    val cues = TeleprompterParser.cueMatches(text)
+    val styled = RichText.emphases(text, skipping = cues.map { it.range })
+        .filter { it.isClosed && it.style == style }
+
+    // Already set that way: take the markers back off.
+    styled.firstOrNull { it.isAround(selectionStart, selectionEnd) }?.let { existing ->
+        val content = existing.content
+        val start = maxOf(content.first, selectionStart) - existing.open.count()
+        val length = minOf(selectionEnd - selectionStart, content.count())
+        return TextFieldValue(
+            text = text.replaceRange(existing.range.first, existing.range.last + 1, text.substring(content)),
+            selection = TextRange(start, start + length)
+        )
+    }
+
+    var (targetStart, targetEnd) = if (hasSelection) selectionStart to selectionEnd else wordRange(text, selectionStart)
+    while (targetStart < targetEnd && text[targetStart].isWhitespace()) targetStart += 1
+    while (targetEnd > targetStart && text[targetEnd - 1].isWhitespace()) targetEnd -= 1
+    val marker = style.marker
+
+    if (targetEnd <= targetStart) {
+        // Nothing to wrap: open and close it at the caret, ready to type into.
+        return TextFieldValue(
+            text = text.replaceRange(selectionStart, selectionEnd, marker + marker),
+            selection = TextRange(selectionStart + marker.length)
+        )
+    }
+
+    // Cues are drawn apart from the script and take no emphasis, and emphasis
+    // doesn't run across lines.
+    fun overlaps(range: IntRange) = range.first < targetEnd && range.last + 1 > targetStart
+    if (cues.any { overlaps(it.range) } || text.substring(targetStart, targetEnd).contains('\n')) return null
+
+    // Partly set that way already: take that emphasis in and set the lot.
+    val overlapping = styled.filter { overlaps(it.range) }
+    val spanStart = overlapping.minOfOrNull { it.range.first }?.coerceAtMost(targetStart) ?: targetStart
+    val spanEnd = overlapping.maxOfOrNull { it.range.last + 1 }?.coerceAtLeast(targetEnd) ?: targetEnd
+    val inner = StringBuilder(text.substring(spanStart, spanEnd))
+    for (emphasis in overlapping.sortedByDescending { it.open.first }) {
+        val close = emphasis.close!!
+        inner.delete(close.first - spanStart, close.last + 1 - spanStart)
+        inner.delete(emphasis.open.first - spanStart, emphasis.open.last + 1 - spanStart)
+    }
+
+    // A selection stays on the words; a caret at the end of its word carries
+    // on after the closing marker, ready for plain text.
+    val wrapped = marker + inner + marker
+    val selection = when {
+        hasSelection -> TextRange(spanStart + marker.length, spanStart + marker.length + inner.length)
+        selectionStart >= targetEnd -> TextRange(spanStart + wrapped.length)
+        else -> TextRange(selectionStart + marker.length)
+    }
+    return TextFieldValue(text = text.replaceRange(spanStart, spanEnd, wrapped), selection = selection)
+}
+
+/** The word the caret is in or just after, as start and end; empty if none. */
+private fun wordRange(text: String, location: Int): Pair<Int, Int> {
+    fun isWordCharacter(character: Char) = character.isLetterOrDigit() || character == '\''
+    var start = location
+    while (start > 0 && isWordCharacter(text[start - 1])) start -= 1
+    var end = location
+    while (end < text.length && isWordCharacter(text[end])) end += 1
+    return start to end
+}
+
+/**
+ * Whether the selection sits within what this styles — a caret touching
+ * either end of the words counts.
+ */
+private fun Emphasis.isAround(selectionStart: Int, selectionEnd: Int): Boolean {
+    val contentEnd = content.last + 1
+    if (selectionStart == selectionEnd) {
+        return content.first <= selectionStart && selectionStart <= contentEnd
+    }
+    return range.first <= selectionStart && selectionEnd <= range.last + 1 &&
+        selectionStart < contentEnd && selectionEnd > content.first
 }
 
 /**
@@ -396,8 +545,8 @@ private fun emptyCueInsertion(text: String, location: Int): Pair<String, Int> {
 
 /**
  * The strip above the keyboard while a script is being written: buttons to drop
- * a cue in at the caret and to select the whole script, and one to get the
- * keyboard out of the way.
+ * a cue in at the caret, to bold or italicize, and to select the whole script,
+ * and one to get the keyboard out of the way.
  */
 val CUE_BAR_HEIGHT = 54.dp
 
@@ -405,6 +554,7 @@ val CUE_BAR_HEIGHT = 54.dp
 fun CueBar(
     isDark: Boolean,
     onAddCue: () -> Unit,
+    onFormat: (EmphasisStyle) -> Unit,
     onSelectAll: () -> Unit,
     onDismissKeyboard: () -> Unit,
     modifier: Modifier = Modifier
@@ -424,11 +574,51 @@ fun CueBar(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
+        // The buttons don't fit a small phone with their full names, so they
+        // shorten when they have to.
+        FirstThatFits(
+            modifier = Modifier.weight(1f),
+            full = { CueBarButtons(isDark, short = false, onAddCue, onFormat, onSelectAll) },
+            short = { CueBarButtons(isDark, short = true, onAddCue, onFormat, onSelectAll) }
+        )
+
+        Box(
+            modifier = Modifier
+                .size(34.dp)
+                .glassed(CircleShape, isDark)
+                .clickableWithoutRipple(onDismissKeyboard),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Filled.KeyboardHide,
+                contentDescription = stringResource(R.string.hide_keyboard),
+                tint = AppColors.textSecondary(isDark),
+                modifier = Modifier.size(15.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun CueBarButtons(
+    isDark: Boolean,
+    short: Boolean,
+    onAddCue: () -> Unit,
+    onFormat: (EmphasisStyle) -> Unit,
+    onSelectAll: () -> Unit
+) {
+    val addCue = stringResource(R.string.add_cue)
+    val selectAll = stringResource(R.string.select_all)
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
         Row(
             modifier = Modifier
                 .height(34.dp)
                 .glassed(Capsule, isDark)
                 .clickableWithoutRipple(onAddCue)
+                .semantics(mergeDescendants = true) { contentDescription = addCue }
                 .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -440,11 +630,29 @@ fun CueBar(
                 modifier = Modifier.size(13.dp)
             )
             Text(
-                text = "Add Cue",
+                text = if (short) stringResource(R.string.cue_short) else addCue,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = AppColors.textPrimary(isDark)
+                color = AppColors.textPrimary(isDark),
+                maxLines = 1,
+                softWrap = false
             )
+        }
+
+        // Bold and italic, sharing one capsule.
+        Row(
+            modifier = Modifier
+                .height(34.dp)
+                .glassed(Capsule, isDark)
+                .padding(horizontal = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            FormatButton(Icons.Filled.FormatBold, stringResource(R.string.bold), isDark) {
+                onFormat(EmphasisStyle.BOLD)
+            }
+            FormatButton(Icons.Filled.FormatItalic, stringResource(R.string.italic), isDark) {
+                onFormat(EmphasisStyle.ITALIC)
+            }
         }
 
         Box(
@@ -452,32 +660,57 @@ fun CueBar(
                 .height(34.dp)
                 .glassed(Capsule, isDark)
                 .clickableWithoutRipple(onSelectAll)
+                .semantics(mergeDescendants = true) { contentDescription = selectAll }
                 .padding(horizontal = 16.dp),
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "Select All",
+                text = if (short) stringResource(R.string.select_all_short) else selectAll,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = AppColors.textPrimary(isDark)
+                color = AppColors.textPrimary(isDark),
+                maxLines = 1,
+                softWrap = false
             )
         }
+    }
+}
 
-        Spacer(modifier = Modifier.weight(1f))
+@Composable
+private fun FormatButton(icon: ImageVector, label: String, isDark: Boolean, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .width(32.dp)
+            .height(34.dp)
+            .clickableWithoutRipple(onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = label,
+            tint = AppColors.textPrimary(isDark),
+            modifier = Modifier.size(18.dp)
+        )
+    }
+}
 
-        Box(
-            modifier = Modifier
-                .size(34.dp)
-                .glassed(CircleShape, isDark)
-                .clickableWithoutRipple(onDismissKeyboard),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Filled.KeyboardHide,
-                contentDescription = "Hide keyboard",
-                tint = AppColors.textSecondary(isDark),
-                modifier = Modifier.size(15.dp)
-            )
+/** `full` where it fits the width it's given, otherwise `short`. */
+@Composable
+private fun FirstThatFits(
+    modifier: Modifier = Modifier,
+    full: @Composable () -> Unit,
+    short: @Composable () -> Unit
+) {
+    SubcomposeLayout(modifier) { constraints ->
+        val loose = constraints.copy(minWidth = 0, maxWidth = Constraints.Infinity)
+        val fullPlaceable = subcompose("full", full).first().measure(loose)
+        val placeable = if (fullPlaceable.width <= constraints.maxWidth) {
+            fullPlaceable
+        } else {
+            subcompose("short", short).first().measure(constraints.copy(minWidth = 0))
+        }
+        layout(constraints.maxWidth, placeable.height) {
+            placeable.placeRelative(0, 0)
         }
     }
 }

@@ -80,6 +80,8 @@ import androidx.compose.ui.unit.sp
 import com.thisisnsh.cuecard.android.AnalyticsEvents
 import com.thisisnsh.cuecard.android.LocalIsDarkTheme
 import com.thisisnsh.cuecard.android.models.AppColors
+import com.thisisnsh.cuecard.android.models.RichText
+import com.thisisnsh.cuecard.android.models.spanStyle
 import com.thisisnsh.cuecard.android.models.CueColor
 import com.thisisnsh.cuecard.android.models.CueSegment
 import com.thisisnsh.cuecard.android.models.TeleprompterContent
@@ -918,7 +920,11 @@ private fun buildScript(
 
                         when (segment) {
                             is CueSegment.Cue -> withStyle(cueStyle) { append(segment.text) }
-                            is CueSegment.Text -> withStyle(textStyle) { append(segment.text) }
+                            is CueSegment.Text -> withStyle(textStyle) {
+                                for (run in RichText.styled(segment.text).runs) {
+                                    withStyle(run.style.spanStyle()) { append(run.text) }
+                                }
+                            }
                         }
                     }
                 }

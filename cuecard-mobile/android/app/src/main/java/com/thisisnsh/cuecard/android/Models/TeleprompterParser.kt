@@ -188,7 +188,7 @@ object TeleprompterParser {
                             words.add(WordInfo(text = it, isCue = true))
                         }
                     is CueSegment.Text ->
-                        segment.text.split(Regex("\\s+")).filter { it.isNotEmpty() }.forEach {
+                        RichText.plain(segment.text).split(Regex("\\s+")).filter { it.isNotEmpty() }.forEach {
                             words.add(WordInfo(text = it, isCue = false))
                         }
                 }
