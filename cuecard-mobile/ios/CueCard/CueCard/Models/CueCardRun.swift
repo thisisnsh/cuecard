@@ -42,8 +42,9 @@ private extension CueCardRun {
             if let cueFont { text = text.font(cueFont) }
             return text.fontWidth(.condensed).foregroundColor(cue)
         }
-        if style.contains(.bold) { text = text.fontWeight(.heavy) }
+        // Italic first: set after the weight, SwiftUI drops it.
         if style.contains(.italic) { text = text.italic() }
+        if style.contains(.bold) { text = text.fontWeight(.heavy) }
         return text.foregroundColor(primary)
     }
 }
