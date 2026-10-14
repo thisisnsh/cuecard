@@ -84,6 +84,8 @@ struct EditorSettingsView: View {
 
         AppearanceSection(screen: Self.screen, cueColor: $settingsService.settings.cueColor)
 
+        LanguageSection(screen: Self.screen)
+
         AdvancedSection(screen: Self.screen, footer: teleprompterAdvancedFooter) {
             AdvancedNumberRow(
                 title: "Teleprompter Text Size",
@@ -152,6 +154,8 @@ struct EditorSettingsView: View {
         AppleWatchSection(screen: Self.screen, mode: .cards)
 
         AppearanceSection(screen: Self.screen, cueColor: $settingsService.settings.cards.cueColor)
+
+        LanguageSection(screen: Self.screen)
 
         AdvancedSection(screen: Self.screen, footer: cardsAdvancedFooter) {
             AdvancedNumberRow(
@@ -303,14 +307,32 @@ private struct AppleWatchSection: View {
     }
 }
 
-/// Theme, language and cue color. The theme and language are one setting for
-/// the whole app; the cue color is the one for the mode these settings belong to.
+/// Theme and cue color. The theme is one setting for the whole app; the cue
+/// color is the one for the mode these settings belong to.
 private struct AppearanceSection: View {
     @EnvironmentObject var settingsService: SettingsService
+    let screen: String
+    @Binding var cueColor: CueColor
+
+    var body: some View {
+        Section("Appearance") {
+            Picker("Theme", selection: $settingsService.settings.themePreference) {
+                ForEach(ThemePreference.allCases, id: \.self) { theme in
+                    Text(theme.displayName).tag(theme)
+                }
+            }
+
+            ColorSwatchRow(title: "Cue Color", selection: $cueColor)
+        }
+    }
+}
+
+/// The app's language, which lives in the Settings app, and a way to report
+/// a mistake in its translation.
+private struct LanguageSection: View {
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.openURL) private var openURL
     let screen: String
-    @Binding var cueColor: CueColor
 
     /// The language the app is showing, as its code.
     private var languageCode: String { Bundle.main.preferredLocalizations.first ?? "en" }
@@ -321,13 +343,7 @@ private struct AppearanceSection: View {
     }
 
     var body: some View {
-        Section("Appearance") {
-            Picker("Theme", selection: $settingsService.settings.themePreference) {
-                ForEach(ThemePreference.allCases, id: \.self) { theme in
-                    Text(theme.displayName).tag(theme)
-                }
-            }
-
+        Section {
             // iOS keeps each app's language in the Settings app, which opens
             // on CueCard's page; choosing one there relaunches the app in it.
             Button {
@@ -364,8 +380,12 @@ private struct AppearanceSection: View {
                     .contentShape(Rectangle())
                 }
             }
-
-            ColorSwatchRow(title: "Cue Color", selection: $cueColor)
+        } header: {
+            Text("Language")
+        } footer: {
+            // iOS only offers the choice once there is more than one language
+            // to choose from, and doesn't tell the app whether it's offering it.
+            Text("CueCard's page in the Settings app only shows Language once you've added a second language under General › Language & Region.")
         }
     }
 }

@@ -3315,6 +3315,64 @@
     "CueCard" : {
       "shouldTranslate" : false
     },
+    "CueCard's page in the Settings app only shows Language once you've added a second language under General › Language & Region." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf der Seite von CueCard in der App „Einstellungen“ erscheint „Sprache“ erst, wenn du unter „Allgemein“ › „Sprache & Region“ eine zweite Sprache hinzugefügt hast."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La página de CueCard en la app Ajustes solo muestra Idioma cuando has añadido un segundo idioma en General › Idioma y región."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La page de CueCard dans l'app Réglages n'affiche Langue qu'une fois une deuxième langue ajoutée dans Général › Langue et région."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सेटिंग्स ऐप में CueCard के पेज पर भाषा तभी दिखती है जब आप सामान्य › भाषा और क्षेत्र में दूसरी भाषा जोड़ लेते हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La pagina di CueCard nell'app Impostazioni mostra Lingua solo dopo che hai aggiunto una seconda lingua in Generali › Lingua e area geografica."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "設定AppのCueCardのページに「言語」が表示されるのは、「一般」›「言語と地域」で2つ目の言語を追加したあとです。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "설정 앱의 CueCard 페이지에는 일반 › 언어 및 지역에서 두 번째 언어를 추가한 후에만 언어가 표시됩니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A página do CueCard no app Ajustes só mostra Idioma depois que você adiciona um segundo idioma em Geral › Idioma e Região."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "只有在“通用”›“语言与地区”中添加第二种语言后，“设置”App 中 CueCard 的页面才会显示“语言”。"
+          }
+        }
+      }
+    },
     "Cues are reminders like [cue pause], shown in color and not read out. Type [ or tap Add Cue above the keyboard." : {
       "localizations" : {
         "de" : {
