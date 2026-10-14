@@ -32,33 +32,7 @@ final class RemoteNotificationService: ObservableObject {
     /// as the real thing. Set to nil to hit the worker again.
     ///
     /// Dismissing one remembers its id, so change the id to see it again.
-    private static let fakeResponse: String? = """
-    {
-      "notifications": [
-        {
-          "id": "debug-home-banner",
-          "surface": "homeBanner",
-          "severity": "info",
-          "title": "CueCard 1.9 is here",
-          "body": "Cards now sync with the watch, and the editor is faster with long scripts.",
-          "actions": [
-            { "kind": "appStore", "label": "Update" },
-            { "kind": "openURL", "label": "What's new", "url": "https://cuecard.dev" }
-          ]
-        },
-        {
-          "id": "debug-settings-row",
-          "surface": "settingsRow",
-          "severity": "warning",
-          "title": "iOS 16 support is ending",
-          "body": "The next update will need iOS 17 or later.",
-          "actions": [
-            { "kind": "openURL", "label": "Learn more", "url": "https://cuecard.dev" }
-          ]
-        }
-      ]
-    }
-    """
+    private static let fakeResponse: String? = nil
     #endif
 
     @Published private(set) var payload: RemoteNotifications = .empty
