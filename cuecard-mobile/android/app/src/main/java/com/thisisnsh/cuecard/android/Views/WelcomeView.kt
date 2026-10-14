@@ -1,5 +1,6 @@
 package com.thisisnsh.cuecard.android.views
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -85,7 +86,7 @@ fun WelcomeView(onGetStarted: () -> Unit) {
                     )
 
                     Text(
-                        text = "Floating Teleprompter",
+                        text = stringResource(R.string.floating_teleprompter),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Medium,
                         color = AppColors.textSecondary(isDark)
@@ -105,13 +106,13 @@ fun WelcomeView(onGetStarted: () -> Unit) {
             ) {
                 // Privacy note
                 Text(
-                    text = "No account needed. Scripts stay on this device.",
+                    text = stringResource(R.string.no_account_needed),
                     fontSize = 12.sp,
                     color = AppColors.textSecondary(isDark)
                 )
 
                 Text(
-                    text = "Get Started",
+                    text = stringResource(R.string.get_started),
                     fontWeight = FontWeight.SemiBold,
                     textAlign = TextAlign.Center,
                     color = if (isDark) Color.Black else Color.White,
@@ -141,7 +142,7 @@ fun WelcomeView(onGetStarted: () -> Unit) {
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
-                        text = "Privacy policy",
+                        text = stringResource(R.string.privacy_policy),
                         fontSize = 12.sp,
                         textDecoration = TextDecoration.Underline,
                         color = AppColors.textSecondary(isDark)

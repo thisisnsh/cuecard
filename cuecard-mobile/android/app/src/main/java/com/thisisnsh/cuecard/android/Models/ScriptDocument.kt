@@ -1,5 +1,7 @@
 package com.thisisnsh.cuecard.android.models
 
+import com.thisisnsh.cuecard.android.R
+import com.thisisnsh.cuecard.android.AppStrings
 import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
@@ -120,7 +122,7 @@ object ScriptFile {
     /** Title for a script, taken from its file's name. */
     fun title(fileName: String): String {
         val name = (if (fileName.contains('.')) fileName.substringBeforeLast('.') else fileName).trim()
-        return name.ifEmpty { "Imported Script" }
+        return name.ifEmpty { AppStrings.get(R.string.imported_script) }
     }
 
     /**
@@ -137,7 +139,7 @@ object ScriptFile {
             }
         }
 
-        return "Speech"
+        return AppStrings.get(R.string.speech)
     }
 
     private fun sanitized(name: String): String {

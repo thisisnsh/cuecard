@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- What's New text as WhatsNew.json writes it. Each one's translation is
+         at the same place in whats_new_text, in strings.xml. -->
+    <string-array name="whats_new_english" translatable="false">
+        <item>More Languages Supported: Chinese, French, German, Hindi, Italian, Japanese, Korean, Portuguese, and Spanish.</item>
+        <item>Rich Text: Make words bold or italic in your script.</item>
+    </string-array>
+</resources>

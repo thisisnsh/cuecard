@@ -1,5 +1,7 @@
 package com.thisisnsh.cuecard.android.views
 
+import com.thisisnsh.cuecard.android.R
+import androidx.compose.ui.res.stringResource
 import android.app.Activity
 import android.view.WindowManager
 import androidx.activity.compose.BackHandler
@@ -542,7 +544,7 @@ fun TeleprompterView(
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Close,
-                                contentDescription = "Close",
+                                contentDescription = stringResource(R.string.close),
                                 tint = AppColors.textPrimary(isDark),
                                 modifier = Modifier
                                     .padding(horizontal = 16.dp)
@@ -667,9 +669,9 @@ fun TeleprompterView(
                                     Icons.Filled.PictureInPicture
                                 },
                                 contentDescription = if (pipManager.isPiPActive) {
-                                    "Close Overlay"
+                                    stringResource(R.string.close_overlay)
                                 } else {
-                                    "Start Overlay"
+                                    stringResource(R.string.start_overlay)
                                 },
                                 tint = AppColors.textPrimary(isDark),
                                 modifier = Modifier.size(20.dp)
@@ -706,19 +708,20 @@ fun TeleprompterView(
                                 label = "playButton"
                             ) { showsNumber ->
                                 if (showsNumber) {
+                                    val startingIn = stringResource(R.string.pause_starting_in, countdownValue)
                                     Text(
                                         text = "$countdownValue",
                                         fontSize = 30.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = if (isDark) Color.Black else Color.White,
                                         modifier = Modifier.semantics {
-                                            contentDescription = "Pause, starting in $countdownValue"
+                                            contentDescription = startingIn
                                         }
                                     )
                                 } else {
                                     Icon(
                                         imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                                        contentDescription = if (isPlaying) "Pause" else "Play",
+                                        contentDescription = if (isPlaying) stringResource(R.string.pause) else stringResource(R.string.play),
                                         tint = if (isDark) Color.Black else Color.White,
                                         modifier = Modifier.size(28.dp)
                                     )
@@ -738,7 +741,7 @@ fun TeleprompterView(
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Refresh,
-                                contentDescription = "Restart",
+                                contentDescription = stringResource(R.string.restart),
                                 tint = AppColors.textPrimary(isDark),
                                 modifier = Modifier.size(20.dp)
                             )

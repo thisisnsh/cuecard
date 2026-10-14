@@ -1,5 +1,7 @@
 package com.thisisnsh.cuecard.android.views
 
+import com.thisisnsh.cuecard.android.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -226,7 +228,7 @@ private fun NotificationCloseButton(isDark: Boolean, onClick: () -> Unit) {
     ) {
         Icon(
             imageVector = Icons.Filled.Close,
-            contentDescription = "Dismiss",
+            contentDescription = stringResource(R.string.dismiss),
             tint = AppColors.textSecondary(isDark),
             modifier = Modifier.size(12.dp)
         )

@@ -1,5 +1,8 @@
 package com.thisisnsh.cuecard.android.views
 
+import com.thisisnsh.cuecard.android.R
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -209,7 +212,7 @@ fun NoteVersionsView(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Version History",
+                        text = stringResource(R.string.version_history),
                         fontSize = 17.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = AppColors.textPrimary(isDark)
@@ -217,7 +220,7 @@ fun NoteVersionsView(
                 },
                 actions = {
                     Text(
-                        text = "Done",
+                        text = stringResource(R.string.done),
                         fontSize = 17.sp,
                         color = AppColors.blue(isDark),
                         modifier = Modifier
@@ -279,7 +282,7 @@ private fun VersionRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = "Version ${version.number}",
+                    text = stringResource(R.string.version_number, version.number),
                     fontSize = 17.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = AppColors.textPrimary(isDark)
@@ -287,7 +290,7 @@ private fun VersionRow(
 
                 if (isCurrent) {
                     Text(
-                        text = "Current",
+                        text = stringResource(R.string.current),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = AppColors.green(isDark),
@@ -324,7 +327,7 @@ private fun VersionRow(
 
             version.restoredFrom?.let { restored ->
                 Text(
-                    text = "Restored from Version $restored",
+                    text = stringResource(R.string.restored_from_version, restored),
                     fontSize = 12.sp,
                     color = AppColors.textSecondary(isDark).copy(alpha = 0.7f)
                 )
@@ -421,7 +424,7 @@ private fun VersionDiffView(
                 navigationIcon = {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
+                        contentDescription = stringResource(R.string.back),
                         tint = AppColors.textPrimary(isDark),
                         modifier = Modifier
                             .padding(horizontal = 16.dp)
@@ -432,13 +435,13 @@ private fun VersionDiffView(
                 title = {
                     Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
                         Text(
-                            text = "Compare Changes",
+                            text = stringResource(R.string.compare_changes),
                             fontSize = 17.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = AppColors.textPrimary(isDark)
                         )
                         Text(
-                            text = "Version ${version.number}",
+                            text = stringResource(R.string.version_number, version.number),
                             fontSize = 11.sp,
                             color = AppColors.textSecondary(isDark)
                         )
@@ -457,8 +460,9 @@ private fun VersionDiffView(
         ) {
             SegmentedPicker(
                 options = listOf(
-                    previous?.let { "Version ${it.number}" } ?: "Nothing Before",
-                    "Current Edit"
+                    previous?.let { stringResource(R.string.version_number, it.number) }
+                        ?: stringResource(R.string.nothing_before),
+                    stringResource(R.string.current_edit)
                 ),
                 selected = comparison.ordinal,
                 isDark = isDark,
@@ -478,7 +482,7 @@ private fun VersionDiffView(
                     contentAlignment = Alignment.TopCenter
                 ) {
                     Text(
-                        text = "No changes",
+                        text = stringResource(R.string.no_changes),
                         fontSize = 15.sp,
                         color = AppColors.textSecondary(isDark)
                     )
@@ -499,7 +503,7 @@ private fun VersionDiffView(
                             when (item) {
                                 is DiffItem.Shown -> DiffLine(item.line, isDark)
                                 is DiffItem.Folded -> Text(
-                                    text = "⋯ ${item.count} unchanged lines",
+                                    text = pluralStringResource(R.plurals.unchanged_lines, item.count, item.count),
                                     fontSize = 12.sp,
                                     color = AppColors.textSecondary(isDark),
                                     textAlign = TextAlign.Center,
@@ -516,7 +520,7 @@ private fun VersionDiffView(
 
             if (!isCurrent) {
                 Text(
-                    text = "Restore This Version",
+                    text = stringResource(R.string.restore_this_version),
                     fontSize = 17.sp,
                     fontWeight = FontWeight.SemiBold,
                     textAlign = TextAlign.Center,
@@ -543,21 +547,21 @@ private fun VersionDiffView(
     if (confirmingRestore) {
         AlertDialog(
             onDismissRequest = { confirmingRestore = false },
-            title = { Text("Discard Unsaved Changes?") },
+            title = { Text(stringResource(R.string.discard_unsaved_changes)) },
             text = {
-                Text("The editor has changes that aren't saved. Restoring replaces them with this version.")
+                Text(stringResource(R.string.discard_unsaved_message))
             },
             confirmButton = {
                 TextButton(onClick = {
                     confirmingRestore = false
                     onRestore()
                 }) {
-                    Text("Restore Version ${version.number}", color = AppColors.red(isDark))
+                    Text(stringResource(R.string.restore_version, version.number), color = AppColors.red(isDark))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { confirmingRestore = false }) {
-                    Text("Cancel", color = AppColors.blue(isDark))
+                    Text(stringResource(R.string.cancel), color = AppColors.blue(isDark))
                 }
             },
             containerColor = AppColors.background(isDark)

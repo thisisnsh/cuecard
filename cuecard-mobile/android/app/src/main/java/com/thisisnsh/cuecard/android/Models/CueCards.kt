@@ -1,5 +1,8 @@
 package com.thisisnsh.cuecard.android.models
 
+import com.thisisnsh.cuecard.android.R
+import com.thisisnsh.cuecard.android.AppStrings
+import androidx.annotation.StringRes
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -15,9 +18,11 @@ import kotlinx.serialization.Serializable
  * The raw value is persisted with the settings, so it has to stay stable.
  */
 @Serializable
-enum class ScriptMode(val rawValue: String, val displayName: String) {
-    TELEPROMPTER("teleprompter", "Teleprompter"),
-    CARDS("cards", "Cards");
+enum class ScriptMode(val rawValue: String, @StringRes private val displayNameRes: Int) {
+    TELEPROMPTER("teleprompter", R.string.teleprompter),
+    CARDS("cards", R.string.cards);
+
+    val displayName: String get() = AppStrings.get(displayNameRes)
 
     companion object {
         fun fromString(value: String?): ScriptMode =

@@ -1,5 +1,7 @@
 package com.thisisnsh.cuecard.android.views
 
+import com.thisisnsh.cuecard.android.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
@@ -79,14 +81,16 @@ fun TimerSheet(
         if (style.warningSeconds > latest) setStyle(style.copy(warningSeconds = latest))
     }
 
+    val turnsOff = stringResource(R.string.timer_footer_off)
+    val countdownFooter = stringResource(R.string.timer_footer_countdown)
     val footer = buildList {
-        if (duration > 0) add("0:00 turns off the timer.")
-        if (isTeleprompter) add("Countdown is the time before the script starts scrolling.")
+        if (duration > 0) add(turnsOff)
+        if (isTeleprompter) add(countdownFooter)
     }.joinToString(" ")
 
     SettingsScreen(
         screen = TIMER_SCREEN,
-        title = if (isTeleprompter) "Teleprompter Timer" else "Cards Timer",
+        title = if (isTeleprompter) stringResource(R.string.teleprompter_timer) else stringResource(R.string.cards_timer),
         onDismiss = onDismiss
     ) {
         SettingsSection(isDark = isDark) {
@@ -95,7 +99,7 @@ fun TimerSheet(
 
         SettingsSection(isDark = isDark, footer = footer.ifEmpty { null }) {
             TimeRow(
-                title = "Duration",
+                title = stringResource(R.string.duration),
                 minutes = duration / 60,
                 minuteRange = 0..59,
                 onMinutes = { minutes -> update { it.withActiveTimer(minutes, duration % 60) } },
@@ -140,13 +144,13 @@ private fun TimerPreview(duration: Int, style: TimerStyle, isDark: Boolean) {
             .padding(horizontal = 12.dp, vertical = 16.dp)
     ) {
         if (duration == 0) {
-            TimerStage("Counts Up", seconds = 0, color = style.normalColor, isDark = isDark)
+            TimerStage(stringResource(R.string.counts_up), seconds = 0, color = style.normalColor, isDark = isDark)
         } else {
-            TimerStage("Start", seconds = duration, color = style.normalColor, isDark = isDark)
+            TimerStage(stringResource(R.string.start), seconds = duration, color = style.normalColor, isDark = isDark)
             if (style.warningSeconds > 0) {
-                TimerStage("Warning", seconds = style.warningSeconds, color = style.warningColor, isDark = isDark)
+                TimerStage(stringResource(R.string.warning), seconds = style.warningSeconds, color = style.warningColor, isDark = isDark)
             }
-            TimerStage("Overtime", seconds = 0, color = style.overtimeColor, isDark = isDark)
+            TimerStage(stringResource(R.string.overtime), seconds = 0, color = style.overtimeColor, isDark = isDark)
         }
     }
 }
@@ -186,7 +190,7 @@ private fun WarningRow(duration: Int, style: TimerStyle, isDark: Boolean, onStyl
     val latest = maxOf(duration - 1, 0)
     val warning = style.warningSeconds
     TimeRow(
-        title = "Warn in Last",
+        title = stringResource(R.string.warn_in_last),
         minutes = warning / 60,
         minuteRange = 0..(latest / 60),
         onMinutes = { onStyle(style.copy(warningSeconds = minOf(it * 60 + warning % 60, latest))) },
@@ -208,17 +212,17 @@ private fun CountdownRow(seconds: Int, isDark: Boolean, onSeconds: (Int) -> Unit
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        RowTitle("Countdown", isDark)
+        RowTitle(stringResource(R.string.countdown), isDark)
         Spacer(modifier = Modifier.weight(1f))
         WheelPicker(
-            label = "Countdown seconds",
+            label = stringResource(R.string.countdown_seconds),
             range = TeleprompterSettings.COUNTDOWN_RANGE,
             selected = seconds,
             onSelect = onSeconds,
             format = { it.toString() },
             isDark = isDark
         )
-        WheelUnit("sec", isDark)
+        WheelUnit(stringResource(R.string.sec), isDark)
     }
 }
 
@@ -245,23 +249,23 @@ private fun TimeRow(
         RowTitle(title, isDark)
         Spacer(modifier = Modifier.weight(1f))
         WheelPicker(
-            label = "$title minutes",
+            label = stringResource(R.string.wheel_minutes, title),
             range = minuteRange,
             selected = minutes,
             onSelect = onMinutes,
             format = { it.toString() },
             isDark = isDark
         )
-        WheelUnit("min", isDark)
+        WheelUnit(stringResource(R.string.min), isDark)
         WheelPicker(
-            label = "$title seconds",
+            label = stringResource(R.string.wheel_seconds, title),
             range = secondRange,
             selected = seconds,
             onSelect = onSeconds,
             format = { String.format(Locale.US, "%02d", it) },
             isDark = isDark
         )
-        WheelUnit("sec", isDark)
+        WheelUnit(stringResource(R.string.sec), isDark)
     }
 }
 
@@ -297,21 +301,21 @@ private fun TimerColorsSection(
     // The colors as they come, keeping the warning time.
     val defaultColors = TimerStyle.DEFAULT.copy(warningSeconds = style.warningSeconds)
 
-    SettingsSection(title = "Timer Colors", isDark = isDark) {
+    SettingsSection(title = stringResource(R.string.timer_colors), isDark = isDark) {
         if (showsCountdown) {
-            ColorSwatchRow("Countdown", style.countdownColor, isDark) { onStyle(style.copy(countdownColor = it)) }
+            ColorSwatchRow(stringResource(R.string.countdown), style.countdownColor, isDark) { onStyle(style.copy(countdownColor = it)) }
         }
-        ColorSwatchRow("Normal", style.normalColor, isDark) { onStyle(style.copy(normalColor = it)) }
+        ColorSwatchRow(stringResource(R.string.normal), style.normalColor, isDark) { onStyle(style.copy(normalColor = it)) }
         if (isTimed) {
             if (style.warningSeconds > 0) {
-                ColorSwatchRow("Warning", style.warningColor, isDark) { onStyle(style.copy(warningColor = it)) }
+                ColorSwatchRow(stringResource(R.string.warning), style.warningColor, isDark) { onStyle(style.copy(warningColor = it)) }
             }
-            ColorSwatchRow("Overtime", style.overtimeColor, isDark) { onStyle(style.copy(overtimeColor = it)) }
+            ColorSwatchRow(stringResource(R.string.overtime), style.overtimeColor, isDark) { onStyle(style.copy(overtimeColor = it)) }
         }
 
         if (style != defaultColors) {
             Text(
-                text = "Reset Timer Colors",
+                text = stringResource(R.string.reset_timer_colors),
                 fontSize = 17.sp,
                 color = AppColors.blue(isDark),
                 modifier = Modifier
@@ -388,6 +392,7 @@ private fun RangeWheel(
         }
     }
 
+    val wheelDescription = stringResource(R.string.wheel_value, label, format(selected))
     LazyColumn(
         state = state,
         flingBehavior = flingBehavior,
@@ -395,7 +400,7 @@ private fun RangeWheel(
         modifier = Modifier
             .width(56.dp)
             .height(WHEEL_ROW_HEIGHT)
-            .semantics { contentDescription = "$label, ${format(selected)}" }
+            .semantics { contentDescription = wheelDescription }
     ) {
         items(range.count()) { index ->
             val value = range.first + index

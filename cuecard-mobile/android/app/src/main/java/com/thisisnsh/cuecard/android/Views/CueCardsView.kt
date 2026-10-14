@@ -1,5 +1,7 @@
 package com.thisisnsh.cuecard.android.views
 
+import com.thisisnsh.cuecard.android.R
+import androidx.compose.ui.res.stringResource
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
@@ -166,7 +168,7 @@ fun CueCardsView(
     val elapsed = ((now - startedAt) / 1000).toInt()
     val seconds = if (timerDuration > 0) timerDuration - elapsed else elapsed
     val timerColor = timerStyle.color(remaining = timerDuration - elapsed, duration = timerDuration).color(isDark)
-    val progress = if (isFinished) "Done" else "${index + 1} of ${cards.size}"
+    val progress = if (isFinished) stringResource(R.string.done) else stringResource(R.string.card_progress, index + 1, cards.size)
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
@@ -201,7 +203,7 @@ fun CueCardsView(
                     navigationIcon = {
                         Icon(
                             imageVector = Icons.Filled.Close,
-                            contentDescription = "Close",
+                            contentDescription = stringResource(R.string.close),
                             tint = AppColors.textPrimary(isDark),
                             modifier = Modifier
                                 .padding(horizontal = 16.dp)
@@ -314,7 +316,7 @@ fun CueCardsView(
                 ) {
                     if (!isFinished) {
                         Text(
-                            text = "Swipe to turn the card",
+                            text = stringResource(R.string.swipe_to_turn),
                             fontSize = 13.sp,
                             color = AppColors.textSecondary(isDark)
                         )
@@ -483,13 +485,13 @@ private fun FinishedCard(isDark: Boolean, modifier: Modifier = Modifier) {
             modifier = Modifier.size(44.dp)
         )
         Text(
-            text = "All cards done",
+            text = stringResource(R.string.all_cards_done),
             fontSize = 20.sp,
             fontWeight = FontWeight.SemiBold,
             color = AppColors.textPrimary(isDark)
         )
         Text(
-            text = "Swipe right to bring the last card back, or start over.",
+            text = stringResource(R.string.swipe_right_back),
             fontSize = 15.sp,
             color = AppColors.textSecondary(isDark),
             textAlign = TextAlign.Center
@@ -554,10 +556,12 @@ private fun Controls(
     val isFinished = index >= count
     val isLast = index == count - 1
     val nextLabel = when {
-        isFinished -> "Start Over"
-        isLast -> "Finish"
-        else -> "Next Card"
+        isFinished -> stringResource(R.string.start_over)
+        isLast -> stringResource(R.string.finish)
+        else -> stringResource(R.string.next_card)
     }
+
+    val previousCard = stringResource(R.string.previous_card)
 
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -569,7 +573,7 @@ private fun Controls(
                 .alpha(if (index == 0) 0.4f else 1f)
                 .glassed(Capsule, isDark)
                 .clickableWithoutRipple { if (index > 0) onBack() }
-                .semantics { contentDescription = "Previous Card" }
+                .semantics { contentDescription = previousCard }
                 .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -581,7 +585,7 @@ private fun Controls(
                 modifier = Modifier.size(18.dp)
             )
             Text(
-                text = "Back",
+                text = stringResource(R.string.back),
                 fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = AppColors.textPrimary(isDark)

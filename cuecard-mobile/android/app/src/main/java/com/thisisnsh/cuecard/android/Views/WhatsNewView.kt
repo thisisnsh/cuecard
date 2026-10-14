@@ -1,5 +1,6 @@
 package com.thisisnsh.cuecard.android.views
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.RepeatMode
@@ -134,7 +135,7 @@ private fun WhatsNewCard(
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             Text(
-                text = release.title ?: "What's New",
+                text = release.title ?: stringResource(R.string.whats_new),
                 fontSize = 30.sp,
                 lineHeight = 36.sp,
                 fontWeight = FontWeight.Bold,
@@ -152,7 +153,7 @@ private fun WhatsNewCard(
                     color = primary
                 )
                 Text(
-                    text = "Version $version",
+                    text = stringResource(R.string.version_string, version),
                     fontSize = 15.sp,
                     color = secondary
                 )
@@ -198,7 +199,7 @@ private fun WhatsNewCard(
         ) {
             Icon(
                 imageVector = Icons.Filled.Close,
-                contentDescription = "Close",
+                contentDescription = stringResource(R.string.close),
                 tint = primary,
                 modifier = Modifier.size(18.dp)
             )

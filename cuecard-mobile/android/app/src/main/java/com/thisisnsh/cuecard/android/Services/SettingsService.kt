@@ -1,5 +1,8 @@
 package com.thisisnsh.cuecard.android.services
 
+import com.thisisnsh.cuecard.android.R
+import com.thisisnsh.cuecard.android.AppStrings
+import androidx.annotation.StringRes
 import android.content.Context
 import android.content.res.Resources
 import android.net.Uri
@@ -35,14 +38,24 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 
 /** Theme preference for the app */
 @Serializable
-enum class ThemePreference(val displayName: String) {
+enum class ThemePreference(val rawValue: String) {
     SYSTEM("System"),
     LIGHT("Light"),
     DARK("Dark");
 
+    /** The name Settings shows. The raw value is what's saved, so it stays English. */
+    val displayName: String
+        get() = AppStrings.get(
+            when (this) {
+                SYSTEM -> R.string.theme_system
+                LIGHT -> R.string.theme_light
+                DARK -> R.string.theme_dark
+            }
+        )
+
     companion object {
         fun fromString(value: String): ThemePreference =
-            entries.find { it.displayName == value } ?: SYSTEM
+            entries.find { it.rawValue == value } ?: SYSTEM
     }
 }
 
@@ -66,10 +79,12 @@ private enum class LegacyFontSizePreset(val displayName: String, val fontSize: I
  * the bare ratio; `label` is what Settings shows.
  */
 @Serializable
-enum class OverlayAspectRatio(val displayName: String, val label: String, val ratio: Float) {
-    RATIO_16X9("16:9", "Rectangle 16:9", 16f / 9f),
-    RATIO_4X3("4:3", "Rectangle 4:3", 4f / 3f),
-    RATIO_1X1("1:1", "Square 1:1", 1f);
+enum class OverlayAspectRatio(val displayName: String, @StringRes private val labelRes: Int, val ratio: Float) {
+    RATIO_16X9("16:9", R.string.ratio_16x9, 16f / 9f),
+    RATIO_4X3("4:3", R.string.ratio_4x3, 4f / 3f),
+    RATIO_1X1("1:1", R.string.ratio_1x1, 1f);
+
+    val label: String get() = AppStrings.get(labelRes)
 
     companion object {
         fun fromString(value: String): OverlayAspectRatio =
@@ -298,50 +313,10 @@ class SettingsService(private val context: Context) {
 
     companion object {
         /** Sample text for teleprompter mode: a short talk about the teleprompter. */
-        val DEFAULT_NOTE_TEXT = """
-Hi everyone.
-
-I'm excited to be here today to talk about CueCard's teleprompter.
-
-[cue smile and pause]
-
-It scrolls your script at your pace, so your eyes stay up and your words stay on track.
-
-[cue pause]
-
-Leave the app and it keeps going in a floating window, right over your camera or your video call.
-
-[cue slow down]
-
-Lost your place? Drag the script back. Running long? Skip ahead.
-
-And the timer turns yellow near the end… and red if you get a little too passionate.
-
-[cue light chuckle]
-
-And these colored words?
-
-[cue emphasize]
-
-Those are your cues. Reminders to smile, pause, or not panic. They're never meant to be read out.
-
-[cue pause]
-
-Try it out. I think you'll love it.
-""".trimIndent()
+        val DEFAULT_NOTE_TEXT: String get() = AppStrings.get(R.string.sample_teleprompter)
 
         /** Sample text for cards mode: a short talk about cards. */
-        val DEFAULT_CARDS_TEXT = """
-Hi everyone. Introducing Cue Cards. [cue smile]
-[separator]
-One thought per card. Swipe to the next one when you're ready.
-[separator]
-The timer at the top keeps you honest. [cue light chuckle]
-[separator]
-Colored words are cues, not lines. [cue emphasize]
-[separator]
-Thanks for listening. Questions?
-""".trimIndent()
+        val DEFAULT_CARDS_TEXT: String get() = AppStrings.get(R.string.sample_cards)
 
         // Preference keys
         private val EDITOR_FONT_SIZE = intPreferencesKey("editor_font_size")
@@ -487,7 +462,7 @@ Thanks for listening. Questions?
             timerMinutes = timerMinutes,
             timerSeconds = timerSeconds,
             timerStyle = decodeOrNull<TimerStyle>(prefs[TIMER_STYLE]) ?: TimerStyle.DEFAULT,
-            themePreference = ThemePreference.fromString(prefs[THEME_PREFERENCE] ?: ThemePreference.SYSTEM.displayName),
+            themePreference = ThemePreference.fromString(prefs[THEME_PREFERENCE] ?: ThemePreference.SYSTEM.rawValue),
             countdownSeconds = prefs[COUNTDOWN_SECONDS] ?: 5,
             cueColor = cueColor,
             scriptMode = ScriptMode.fromString(prefs[SCRIPT_MODE]),
@@ -554,7 +529,7 @@ Thanks for listening. Questions?
             prefs[TIMER_MINUTES] = newSettings.timerMinutes
             prefs[TIMER_SECONDS] = newSettings.timerSeconds
             prefs[TIMER_STYLE] = json.encodeToString(newSettings.timerStyle)
-            prefs[THEME_PREFERENCE] = newSettings.themePreference.displayName
+            prefs[THEME_PREFERENCE] = newSettings.themePreference.rawValue
             prefs[COUNTDOWN_SECONDS] = newSettings.countdownSeconds
             prefs[CUE_COLOR] = newSettings.cueColor.rawValue
             prefs[SCRIPT_MODE] = newSettings.scriptMode.rawValue

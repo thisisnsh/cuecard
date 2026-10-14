@@ -1,5 +1,7 @@
 package com.thisisnsh.cuecard.android.views
 
+import com.thisisnsh.cuecard.android.R
+import androidx.compose.ui.res.stringResource
 import android.content.Context
 import android.content.Intent
 import androidx.compose.animation.AnimatedVisibility
@@ -122,7 +124,7 @@ fun EditorSettingsView(
 
     SettingsScreen(
         screen = SETTINGS_SCREEN,
-        title = if (isCards) "Cards Settings" else "Teleprompter Settings",
+        title = if (isCards) stringResource(R.string.cards_settings) else stringResource(R.string.teleprompter_settings),
         onDismiss = onDismiss
     ) {
         // A notice from the worker, if there's one meant for Settings.
@@ -136,9 +138,9 @@ fun EditorSettingsView(
             }
         }
 
-        SettingsSection(title = "Editor", isDark = isDark) {
+        SettingsSection(title = stringResource(R.string.editor), isDark = isDark) {
             SizePresetPicker(
-                label = "Editor Text Size",
+                label = stringResource(R.string.editor_text_size),
                 value = settings.activeEditorFontSize,
                 presets = TeleprompterSettings.EDITOR_FONT_SIZE_PRESETS,
                 isDark = isDark,
@@ -157,10 +159,10 @@ fun EditorSettingsView(
         if (BuildConfig.DIAGNOSTICS) {
             SettingsSection(
                 isDark = isDark,
-                footer = "This intentionally crashes the app to verify Crashlytics reporting."
+                footer = stringResource(R.string.test_crash_footer)
             ) {
                 Text(
-                    text = "Trigger Test Crash",
+                    text = stringResource(R.string.trigger_test_crash),
                     fontSize = 17.sp,
                     color = AppColors.red(isDark),
                     modifier = Modifier
@@ -183,10 +185,10 @@ private fun TeleprompterSections(
     isDark: Boolean,
     update: ((TeleprompterSettings) -> TeleprompterSettings) -> Unit
 ) {
-    SettingsSection(title = "Teleprompter", isDark = isDark) {
+    SettingsSection(title = stringResource(R.string.teleprompter), isDark = isDark) {
         NumberRow(
-            label = "Scroll Speed",
-            unit = "lines/min",
+            label = stringResource(R.string.scroll_speed),
+            unit = stringResource(R.string.lines_per_min),
             value = settings.linesPerMinute,
             range = TeleprompterSettings.LPM_RANGE,
             isDark = isDark,
@@ -194,7 +196,7 @@ private fun TeleprompterSections(
         )
 
         SizePresetPicker(
-            label = "Text Size",
+            label = stringResource(R.string.text_size),
             value = settings.fontSize,
             presets = TeleprompterSettings.FONT_SIZE_PRESETS,
             isDark = isDark,
@@ -202,9 +204,9 @@ private fun TeleprompterSections(
         )
     }
 
-    SettingsSection(title = "Floating Window", isDark = isDark) {
+    SettingsSection(title = stringResource(R.string.floating_window), isDark = isDark) {
         SizePresetPicker(
-            label = "Text Size",
+            label = stringResource(R.string.text_size),
             value = settings.pipFontSize,
             presets = TeleprompterSettings.PIP_FONT_SIZE_PRESETS,
             isDark = isDark,
@@ -212,7 +214,7 @@ private fun TeleprompterSections(
         )
 
         MenuPickerRow(
-            label = "Layout",
+            label = stringResource(R.string.layout),
             options = OverlayAspectRatio.entries,
             selected = settings.overlayAspectRatio,
             optionLabel = { it.label },
@@ -234,27 +236,28 @@ private fun TeleprompterSections(
     val editor = TeleprompterSettings.EDITOR_FONT_SIZE_RANGE
     AdvancedSection(
         screen = SETTINGS_SCREEN,
-        footer = "Teleprompter text can be set from ${prompter.first} to ${prompter.last}, " +
-            "floating window text from ${pip.first} to ${pip.last}, " +
-            "and editor text from ${editor.first} to ${editor.last}.",
+        footer = stringResource(
+            R.string.teleprompter_advanced_footer,
+            prompter.first, prompter.last, pip.first, pip.last, editor.first, editor.last
+        ),
         isDark = isDark
     ) {
         NumberRow(
-            label = "Teleprompter Text Size",
+            label = stringResource(R.string.teleprompter_text_size),
             value = settings.fontSize,
             range = prompter,
             isDark = isDark,
             onCommit = { size -> update { it.copy(fontSize = size) } }
         )
         NumberRow(
-            label = "Floating Window Text Size",
+            label = stringResource(R.string.floating_window_text_size),
             value = settings.pipFontSize,
             range = pip,
             isDark = isDark,
             onCommit = { size -> update { it.copy(pipFontSize = size) } }
         )
         NumberRow(
-            label = "Editor Text Size",
+            label = stringResource(R.string.editor_text_size),
             value = settings.editorFontSize,
             range = editor,
             isDark = isDark,
@@ -273,9 +276,9 @@ private fun CardsSections(
         update { it.copy(cards = change(it.cards)) }
     }
 
-    SettingsSection(title = "Cards", isDark = isDark) {
+    SettingsSection(title = stringResource(R.string.cards), isDark = isDark) {
         SizePresetPicker(
-            label = "Text Size",
+            label = stringResource(R.string.text_size),
             value = settings.cards.fontSize,
             presets = TeleprompterSettings.FONT_SIZE_PRESETS,
             isDark = isDark,
@@ -295,19 +298,18 @@ private fun CardsSections(
     val editor = TeleprompterSettings.EDITOR_FONT_SIZE_RANGE
     AdvancedSection(
         screen = SETTINGS_SCREEN,
-        footer = "Card text can be set from ${card.first} to ${card.last}, " +
-            "and editor text from ${editor.first} to ${editor.last}.",
+        footer = stringResource(R.string.cards_advanced_footer, card.first, card.last, editor.first, editor.last),
         isDark = isDark
     ) {
         NumberRow(
-            label = "Card Text Size",
+            label = stringResource(R.string.card_text_size),
             value = settings.cards.fontSize,
             range = card,
             isDark = isDark,
             onCommit = { size -> updateCards { it.copy(fontSize = size) } }
         )
         NumberRow(
-            label = "Editor Text Size",
+            label = stringResource(R.string.editor_text_size),
             value = settings.cards.editorFontSize,
             range = editor,
             isDark = isDark,
@@ -348,7 +350,7 @@ internal fun SettingsScreen(
                 },
                 actions = {
                     Text(
-                        text = "Done",
+                        text = stringResource(R.string.done),
                         fontSize = 17.sp,
                         color = AppColors.blue(isDark),
                         modifier = Modifier
@@ -394,9 +396,9 @@ private fun AppearanceSection(
     update: ((TeleprompterSettings) -> TeleprompterSettings) -> Unit,
     onCueColor: (CueColor) -> Unit
 ) {
-    SettingsSection(title = "Appearance", isDark = isDark) {
+    SettingsSection(title = stringResource(R.string.appearance), isDark = isDark) {
         MenuPickerRow(
-            label = "Theme",
+            label = stringResource(R.string.theme),
             options = ThemePreference.entries,
             selected = settings.themePreference,
             optionLabel = { it.displayName },
@@ -405,7 +407,7 @@ private fun AppearanceSection(
         )
 
         ColorSwatchRow(
-            title = "Cue Color",
+            title = stringResource(R.string.cue_color),
             selected = cueColor,
             isDark = isDark,
             onSelect = onCueColor
@@ -421,12 +423,12 @@ private fun AboutSection(settingsService: SettingsService, screen: String, isDar
     val settings by settingsService.settings.collectAsState()
 
     SettingsSection(isDark = isDark) {
-        LinkRow(title = "Share CueCard", icon = Icons.Filled.Share, isDark = isDark) {
+        LinkRow(title = stringResource(R.string.share_cuecard), icon = Icons.Filled.Share, isDark = isDark) {
             AnalyticsEvents.logButtonClick("share_app", screen)
             shareApp(context)
         }
 
-        LinkRow(title = "Review on Google Play", icon = Icons.Filled.ArrowOutward, isDark = isDark) {
+        LinkRow(title = stringResource(R.string.review_on_google_play), icon = Icons.Filled.ArrowOutward, isDark = isDark) {
             AnalyticsEvents.logButtonClick("rate_app", screen)
             openLink(context, AppLinks.PLAY_STORE)
         }
@@ -437,7 +439,7 @@ private fun AboutSection(settingsService: SettingsService, screen: String, isDar
         // changes nothing never looks like one that didn't register.
         val canReset = settingsService.canResetSettings(settings)
         Text(
-            text = "Reset to Defaults",
+            text = stringResource(R.string.reset_to_defaults),
             fontSize = 17.sp,
             color = if (canReset) AppColors.blue(isDark) else AppColors.textSecondary(isDark).copy(alpha = 0.5f),
             modifier = Modifier
@@ -481,7 +483,7 @@ internal fun LinkRow(title: String, icon: ImageVector, isDark: Boolean, onClick:
 private fun shareApp(context: Context) {
     val send = Intent(Intent.ACTION_SEND)
         .setType("text/plain")
-        .putExtra(Intent.EXTRA_TEXT, AppLinks.SHARE_MESSAGE)
+        .putExtra(Intent.EXTRA_TEXT, AppLinks.shareMessage)
     context.startActivity(Intent.createChooser(send, null))
 }
 
@@ -628,6 +630,9 @@ internal fun ColorSwatchRow(title: String, selected: CueColor, isDark: Boolean, 
             color = AppColors.textPrimary(isDark)
         )
 
+        val colorLabels = CueColor.entries.associateWith { stringResource(R.string.labeled_value, title, it.displayName) }
+        fun colorLabel(option: CueColor) = colorLabels.getValue(option)
+
         Row(
             modifier = Modifier.padding(vertical = 4.dp),
             horizontalArrangement = Arrangement.spacedBy(14.dp)
@@ -639,7 +644,7 @@ internal fun ColorSwatchRow(title: String, selected: CueColor, isDark: Boolean, 
                         .size(36.dp)
                         .clickableWithoutRipple { onSelect(option) }
                         .semantics {
-                            contentDescription = "$title: ${option.displayName}"
+                            contentDescription = colorLabel(option)
                             this.selected = isSelected
                         },
                     contentAlignment = Alignment.Center
@@ -769,11 +774,12 @@ private fun SizePresetPicker(
     onSelect: (Int) -> Unit
 ) {
     val sizes = presets.map { it.value }.let { if (value in it) it else it + value }
+    val customLabels = sizes.associateWith { stringResource(R.string.custom_size, it) }
     MenuPickerRow(
         label = label,
         options = sizes,
         selected = value,
-        optionLabel = { size -> presets.find { it.value == size }?.label ?: "Custom ($size)" },
+        optionLabel = { size -> presets.find { it.value == size }?.label ?: customLabels.getValue(size) },
         isDark = isDark,
         onSelect = onSelect
     )
@@ -801,7 +807,7 @@ private fun AdvancedSection(
         }
 
         Text(
-            text = if (showAdvanced) "Hide Advanced Settings" else "Show Advanced Settings",
+            text = if (showAdvanced) stringResource(R.string.hide_advanced_settings) else stringResource(R.string.show_advanced_settings),
             fontSize = 17.sp,
             color = AppColors.blue(isDark),
             modifier = Modifier

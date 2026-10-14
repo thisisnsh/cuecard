@@ -1,5 +1,8 @@
 package com.thisisnsh.cuecard.android.views
 
+import com.thisisnsh.cuecard.android.R
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
@@ -235,7 +238,7 @@ fun HomeView(
             try {
                 val text = withContext(Dispatchers.IO) { ScriptFile.readText(context, uri) }
                 if (text.trim().isEmpty()) {
-                    fileErrorMessage = "That file is empty."
+                    fileErrorMessage = context.getString(R.string.file_empty)
                     return@launch
                 }
                 settingsService.importNote(
@@ -243,13 +246,13 @@ fun HomeView(
                     content = TeleprompterParser.normalizingTags(text)
                 )
             } catch (e: ScriptFile.FileTooLarge) {
-                fileErrorMessage = "That file is larger than 10 MB, so it can't be imported."
+                fileErrorMessage = context.getString(R.string.file_too_large)
                 AnalyticsEvents.logEvent(
                     "file_too_large",
                     mapOf("source" to "import", "size_mb" to e.size / (1024 * 1024))
                 )
             } catch (e: Exception) {
-                fileErrorMessage = "This file couldn't be read as text."
+                fileErrorMessage = context.getString(R.string.file_unreadable)
             }
         }
     }
@@ -261,13 +264,13 @@ fun HomeView(
     fun shareScript() {
         val send = Intent(Intent.ACTION_SEND)
             .setType("text/plain")
-            .putExtra(Intent.EXTRA_SUBJECT, currentNote?.title ?: "Speech")
+            .putExtra(Intent.EXTRA_SUBJECT, currentNote?.title ?: context.getString(R.string.speech))
             .putExtra(Intent.EXTRA_TEXT, TeleprompterParser.normalizingTags(notes))
         try {
             context.startActivity(Intent.createChooser(send, null))
         } catch (e: Exception) {
             // More text than one app can hand to another.
-            fileErrorMessage = "This script is too long to share."
+            fileErrorMessage = context.getString(R.string.script_too_long_to_share)
         }
     }
 
@@ -311,6 +314,8 @@ fun HomeView(
         }
     }
 
+    val modeDescription = stringResource(R.string.mode_description, settings.scriptMode.displayName)
+
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             containerColor = AppColors.background(isDark),
@@ -325,7 +330,7 @@ fun HomeView(
                                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                                 modifier = Modifier
                                     .clickableWithoutRipple { showingModeMenu = true }
-                                    .semantics { contentDescription = "Mode: ${settings.scriptMode.displayName}" }
+                                    .semantics { contentDescription = modeDescription }
                             ) {
                                 Text(
                                     text = settings.scriptMode.displayName,
@@ -367,7 +372,7 @@ fun HomeView(
                         if (hasVersionHistory) {
                             Icon(
                                 imageVector = Icons.Filled.History,
-                                contentDescription = "Version History",
+                                contentDescription = stringResource(R.string.version_history),
                                 tint = AppColors.textPrimary(isDark),
                                 modifier = Modifier
                                     .padding(horizontal = 8.dp)
@@ -383,7 +388,7 @@ fun HomeView(
                         Box {
                             Icon(
                                 imageVector = Icons.Filled.MoreVert,
-                                contentDescription = "More",
+                                contentDescription = stringResource(R.string.more),
                                 tint = AppColors.textPrimary(isDark),
                                 modifier = Modifier
                                     .padding(horizontal = 8.dp)
@@ -398,7 +403,7 @@ fun HomeView(
                             ) {
                                 if (hasUnsavedChanges) {
                                     DropdownMenuItem(
-                                        text = { Text("Save") },
+                                        text = { Text(stringResource(R.string.save)) },
                                         onClick = {
                                             showingMenu = false
                                             save()
@@ -409,7 +414,7 @@ fun HomeView(
                                 }
 
                                 DropdownMenuItem(
-                                    text = { Text("New") },
+                                    text = { Text(stringResource(R.string.new_note)) },
                                     onClick = {
                                         showingMenu = false
                                         AnalyticsEvents.logButtonClick("new_note", "home")
@@ -418,7 +423,7 @@ fun HomeView(
                                 )
 
                                 DropdownMenuItem(
-                                    text = { Text("Open") },
+                                    text = { Text(stringResource(R.string.open)) },
                                     onClick = {
                                         showingMenu = false
                                         AnalyticsEvents.logButtonClick("saved_notes", "home")
@@ -430,7 +435,7 @@ fun HomeView(
                                 HorizontalDivider()
 
                                 DropdownMenuItem(
-                                    text = { Text("Import") },
+                                    text = { Text(stringResource(R.string.import_file)) },
                                     onClick = {
                                         showingMenu = false
                                         AnalyticsEvents.logButtonClick("import_file", "home")
@@ -439,7 +444,7 @@ fun HomeView(
                                 )
 
                                 DropdownMenuItem(
-                                    text = { Text("Share") },
+                                    text = { Text(stringResource(R.string.share)) },
                                     enabled = hasNotes,
                                     onClick = {
                                         showingMenu = false
@@ -452,7 +457,7 @@ fun HomeView(
 
                         Icon(
                             imageVector = Icons.Filled.Settings,
-                            contentDescription = "Settings",
+                            contentDescription = stringResource(R.string.settings),
                             tint = AppColors.textPrimary(isDark),
                             modifier = Modifier
                                 .padding(horizontal = 8.dp)
@@ -593,7 +598,7 @@ fun HomeView(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Text(
-                                    text = "Add Sample Text",
+                                    text = stringResource(R.string.add_sample_text),
                                     fontSize = 15.sp,
                                     fontWeight = FontWeight.SemiBold,
                                     color = AppColors.textPrimary(isDark)
@@ -704,7 +709,7 @@ fun HomeView(
             val deck = remember { cards }
             CueCardsView(
                 cards = deck,
-                title = currentNote?.title ?: "Cards",
+                title = currentNote?.title ?: stringResource(R.string.cards),
                 settings = settings,
                 onDismiss = { showingCards = false }
             )
@@ -721,9 +726,9 @@ fun HomeView(
 
     if (showingSaveDialog) {
         TitleDialog(
-            title = "Save Note",
-            message = "Enter a title for your note",
-            confirmLabel = "Save",
+            title = stringResource(R.string.save_note),
+            message = stringResource(R.string.enter_title),
+            confirmLabel = stringResource(R.string.save),
             initialValue = saveNoteTitle,
             isDark = isDark,
             onDismiss = { showingSaveDialog = false },
@@ -742,11 +747,11 @@ fun HomeView(
     fileErrorMessage?.let { message ->
         AlertDialog(
             onDismissRequest = { fileErrorMessage = null },
-            title = { Text("Something Went Wrong") },
+            title = { Text(stringResource(R.string.something_went_wrong)) },
             text = { Text(message) },
             confirmButton = {
                 TextButton(onClick = { fileErrorMessage = null }) {
-                    Text("OK", color = AppColors.blue(isDark))
+                    Text(stringResource(R.string.ok), color = AppColors.blue(isDark))
                 }
             },
             containerColor = AppColors.background(isDark)
@@ -767,10 +772,13 @@ private fun SaveStatus(
     modifier: Modifier = Modifier
 ) {
     // What it last said, to go on saying it while it fades out.
-    var label by remember { mutableStateOf("Unsaved") }
+    val unsaved = stringResource(R.string.unsaved)
+    val saved = stringResource(R.string.saved)
+    val savesChanges = stringResource(R.string.saves_your_changes)
+    var label by remember { mutableStateOf(unsaved) }
     val current = when {
-        isUnsaved -> "Unsaved"
-        showsSaved -> "Saved"
+        isUnsaved -> unsaved
+        showsSaved -> saved
         else -> null
     }
     if (current != null) SideEffect { label = current }
@@ -789,7 +797,7 @@ private fun SaveStatus(
             modifier = Modifier
                 .glassed(Capsule, isDark)
                 .clickableWithoutRipple { if (isUnsaved) onSave() }
-                .semantics { if (isUnsaved) onClick(label = "Saves your changes", action = null) }
+                .semantics { if (isUnsaved) onClick(label = savesChanges, action = null) }
                 .padding(horizontal = 10.dp, vertical = 4.dp)
         )
     }
@@ -802,13 +810,18 @@ private fun SaveStatus(
 @Composable
 private fun TimerButton(settings: TeleprompterSettings, isDark: Boolean, onClick: () -> Unit) {
     val duration = settings.activeTimerDurationSeconds
+    val timerDescription = if (duration > 0) {
+        stringResource(R.string.timer_description, formatTimer(duration))
+    } else {
+        stringResource(R.string.timer_not_set)
+    }
     Row(
         modifier = Modifier
             .height(52.dp)
             .glassed(Capsule, isDark)
             .clickableWithoutRipple(onClick)
             .semantics {
-                contentDescription = if (duration > 0) "Timer, ${formatTimer(duration)}" else "Timer, not set"
+                contentDescription = timerDescription
             }
             .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -825,7 +838,7 @@ private fun TimerButton(settings: TeleprompterSettings, isDark: Boolean, onClick
             modifier = Modifier.size(18.dp)
         )
         Text(
-            text = if (duration > 0) formatTimer(duration) else "No Timer",
+            text = if (duration > 0) formatTimer(duration) else stringResource(R.string.no_timer),
             fontSize = 15.sp,
             fontWeight = FontWeight.SemiBold,
             fontFamily = if (duration > 0) FontFamily.Monospace else null,
@@ -838,6 +851,7 @@ private fun TimerButton(settings: TeleprompterSettings, isDark: Boolean, onClick
 @Composable
 private fun StartButton(isCardsMode: Boolean, isEnabled: Boolean, isDark: Boolean, onClick: () -> Unit) {
     val onGreen = if (isDark) Color.Black else Color.White
+    val openCards = stringResource(R.string.open_cards)
     val modifier = Modifier
         .height(52.dp)
         .alpha(if (isEnabled) 1f else 0.6f)
@@ -847,7 +861,7 @@ private fun StartButton(isCardsMode: Boolean, isEnabled: Boolean, isDark: Boolea
         Row(
             modifier = modifier
                 .glassed(Capsule, isDark, tint = AppColors.green(isDark))
-                .semantics { contentDescription = "Open Cards" }
+                .semantics { contentDescription = openCards }
                 .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -859,7 +873,7 @@ private fun StartButton(isCardsMode: Boolean, isEnabled: Boolean, isDark: Boolea
                 modifier = Modifier.size(18.dp)
             )
             Text(
-                text = "Read Cards",
+                text = stringResource(R.string.read_cards),
                 fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = onGreen,
@@ -875,7 +889,7 @@ private fun StartButton(isCardsMode: Boolean, isEnabled: Boolean, isDark: Boolea
         ) {
             Icon(
                 imageVector = Icons.Filled.PlayArrow,
-                contentDescription = "Start Teleprompter",
+                contentDescription = stringResource(R.string.start_teleprompter),
                 tint = onGreen,
                 modifier = Modifier.size(20.dp)
             )
@@ -909,7 +923,7 @@ fun NotesEditorView(
             // Set on the editor's own font and insets, so the first line sits
             // exactly where the caret waiting in front of it does.
             Text(
-                text = "Add your script here...\n\nTap Add Cue to drop in a delivery reminder, or type [ to write one yourself.\n\nFor example: Welcome everyone [cue smile and pause]",
+                text = stringResource(R.string.editor_placeholder),
                 fontSize = fontSize,
                 fontWeight = FontWeight.Medium,
                 color = AppColors.textSecondary(isDark).copy(alpha = 0.6f),
@@ -1068,7 +1082,7 @@ fun CardsEditorView(
                             .padding(horizontal = 20.dp),
                         contentAlignment = Alignment.CenterEnd
                     ) {
-                        Text(text = "Remove", color = Color.White, fontWeight = FontWeight.SemiBold)
+                        Text(text = stringResource(R.string.remove), color = Color.White, fontWeight = FontWeight.SemiBold)
                     }
                 },
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
@@ -1132,7 +1146,7 @@ fun CardsEditorView(
                     modifier = Modifier.size(16.dp)
                 )
                 Text(
-                    text = "Create New Card",
+                    text = stringResource(R.string.create_new_card),
                     fontSize = 15.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = AppColors.textPrimary(isDark)
@@ -1179,7 +1193,7 @@ private fun CardEditorRow(
     ) {
         Row(modifier = Modifier.semantics(mergeDescendants = true) {}) {
             Text(
-                text = "Card $number",
+                text = stringResource(R.string.card_number, number),
                 fontSize = 12.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = secondary
@@ -1202,9 +1216,9 @@ private fun CardEditorRow(
                 // next thought, since by then it's clear what a card is.
                 Text(
                     text = if (number == 1) {
-                        "One thought per card.\n\nType [ or tap Add Cue for reminders like [cue pause]."
+                        stringResource(R.string.first_card_placeholder)
                     } else {
-                        "Your next thought…"
+                        stringResource(R.string.next_card_placeholder)
                     },
                     fontSize = fontSize,
                     fontWeight = FontWeight.Medium,
@@ -1260,7 +1274,7 @@ private fun TitleDialog(
                         .padding(horizontal = 12.dp, vertical = 10.dp),
                     decorationBox = { field ->
                         if (value.isEmpty()) {
-                            Text("Note title", fontSize = 16.sp, color = AppColors.textSecondary(isDark))
+                            Text(stringResource(R.string.note_title), fontSize = 16.sp, color = AppColors.textSecondary(isDark))
                         }
                         field()
                     }
@@ -1274,7 +1288,7 @@ private fun TitleDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = AppColors.blue(isDark))
+                Text(stringResource(R.string.cancel), color = AppColors.blue(isDark))
             }
         },
         containerColor = AppColors.background(isDark)
@@ -1300,6 +1314,7 @@ fun SavedNotesView(
     onDismiss: () -> Unit,
     onLoad: (SavedNote) -> Unit
 ) {
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val savedNotes by settingsService.savedNotes.collectAsState()
     val versionCounts by settingsService.versionCounts.collectAsState()
@@ -1335,13 +1350,10 @@ fun SavedNotesView(
     }
 
     // Why deleting notes left files behind in the notes folder.
-    fun undeletedFilesMessage(count: Int): String {
-        val files = if (count == 1) "Its file" else "Their files"
-        return notesFolderName?.let {
-            "$files in “$it” folder couldn't be deleted. CueCard will try again, " +
-                "and won't bring ${if (count == 1) "it" else "them"} back as notes."
-        } ?: "$files will be deleted from the notes folder once it can be reached."
-    }
+    fun undeletedFilesMessage(count: Int): String =
+        notesFolderName?.let {
+            context.getString(if (count == 1) R.string.undeleted_file_in_folder else R.string.undeleted_files_in_folder, it)
+        } ?: context.getString(if (count == 1) R.string.undeleted_file_later else R.string.undeleted_files_later)
 
     LaunchedEffect(Unit) {
         AnalyticsEvents.logScreenView("saved_notes")
@@ -1356,7 +1368,7 @@ fun SavedNotesView(
             try {
                 settingsService.chooseNotesFolder(uri)
             } catch (e: Exception) {
-                errorMessage = "This folder can't be used for notes."
+                errorMessage = context.getString(R.string.folder_unusable)
             }
         }
     }
@@ -1380,7 +1392,7 @@ fun SavedNotesView(
                     Box {
                         Icon(
                             imageVector = Icons.Filled.MoreVert,
-                            contentDescription = "More",
+                            contentDescription = stringResource(R.string.more),
                             tint = AppColors.textPrimary(isDark),
                             modifier = Modifier
                                 .padding(horizontal = 16.dp)
@@ -1394,7 +1406,7 @@ fun SavedNotesView(
                             containerColor = AppColors.background(isDark)
                         ) {
                             DropdownMenuItem(
-                                text = { Text(if (hasNotesFolder) "Change Notes Folder" else "Choose Notes Folder") },
+                                text = { Text(if (hasNotesFolder) stringResource(R.string.change_notes_folder) else stringResource(R.string.choose_notes_folder)) },
                                 onClick = {
                                     showingMenu = false
                                     AnalyticsEvents.logButtonClick("choose_notes_folder", "saved_notes")
@@ -1404,7 +1416,7 @@ fun SavedNotesView(
 
                             if (hasNotesFolder) {
                                 DropdownMenuItem(
-                                    text = { Text("Stop Using Folder") },
+                                    text = { Text(stringResource(R.string.stop_using_folder)) },
                                     onClick = {
                                         showingMenu = false
                                         AnalyticsEvents.logButtonClick("stop_notes_folder", "saved_notes")
@@ -1418,7 +1430,7 @@ fun SavedNotesView(
                             DropdownMenuItem(
                                 text = {
                                     Text(
-                                        text = "Delete All",
+                                        text = stringResource(R.string.delete_all),
                                         color = AppColors.red(isDark)
                                             .copy(alpha = if (savedNotes.isEmpty()) 0.4f else 1f)
                                     )
@@ -1436,14 +1448,14 @@ fun SavedNotesView(
                 title = {
                     Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
                         Text(
-                            text = "Saved Notes",
+                            text = stringResource(R.string.saved_notes),
                             fontSize = 17.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = AppColors.textPrimary(isDark)
                         )
                         if (savedNotes.isNotEmpty()) {
                             Text(
-                                text = "${savedNotes.size} ${if (savedNotes.size == 1) "note" else "notes"}",
+                                text = pluralStringResource(R.plurals.note_count, savedNotes.size, savedNotes.size),
                                 fontSize = 11.sp,
                                 color = AppColors.textSecondary(isDark)
                             )
@@ -1452,7 +1464,7 @@ fun SavedNotesView(
                 },
                 actions = {
                     Text(
-                        text = "Done",
+                        text = stringResource(R.string.done),
                         fontSize = 17.sp,
                         color = AppColors.blue(isDark),
                         modifier = Modifier
@@ -1485,14 +1497,14 @@ fun SavedNotesView(
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "Nothing Saved Yet",
+                    text = stringResource(R.string.nothing_saved_yet),
                     fontSize = 17.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = AppColors.textPrimary(isDark)
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "Save your scripts and cards to open them later.",
+                    text = stringResource(R.string.save_scripts_to_open_later),
                     fontSize = 15.sp,
                     color = AppColors.textSecondary(isDark),
                     textAlign = TextAlign.Center
@@ -1510,7 +1522,7 @@ fun SavedNotesView(
                     query = query,
                     onQueryChange = { query = it },
                     isDark = isDark,
-                    placeholder = "Search"
+                    placeholder = stringResource(R.string.search)
                 )
 
                 if (notes.isEmpty()) {
@@ -1521,7 +1533,7 @@ fun SavedNotesView(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "No Results for “$trimmed”",
+                            text = stringResource(R.string.no_results_for, trimmed),
                             fontSize = 17.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = AppColors.textPrimary(isDark)
@@ -1538,7 +1550,7 @@ fun SavedNotesView(
                             note = note,
                             isDark = isDark,
                             detail = "${dateFormat.format(Date(note.updatedAt))} · " +
-                                "$versions ${if (versions == 1) "Version" else "Versions"}",
+                                pluralStringResource(R.plurals.version_count, versions, versions),
                             onLoad = {
                                 AnalyticsEvents.logButtonClick("load_note", "saved_notes")
                                 onLoad(note)
@@ -1551,7 +1563,7 @@ fun SavedNotesView(
                                 AnalyticsEvents.logButtonClick("delete_note", "saved_notes")
                                 scope.launch {
                                     if (!settingsService.deleteNote(note.id)) {
-                                        errorMessage = "The note was deleted. " + undeletedFilesMessage(1)
+                                        errorMessage = context.getString(R.string.note_was_deleted, undeletedFilesMessage(1))
                                     }
                                 }
                             }
@@ -1569,9 +1581,9 @@ fun SavedNotesView(
 
     noteToRename?.let { note ->
         TitleDialog(
-            title = "Rename Note",
-            message = "Enter a new title for your note",
-            confirmLabel = "Rename",
+            title = stringResource(R.string.rename_note),
+            message = stringResource(R.string.enter_new_title),
+            confirmLabel = stringResource(R.string.rename),
             initialValue = note.title,
             isDark = isDark,
             onDismiss = { noteToRename = null },
@@ -1586,11 +1598,10 @@ fun SavedNotesView(
 
     if (showingStopFolder) {
         ConfirmDialog(
-            title = "Stop Using Notes Folder?",
-            message = notesFolderName?.let {
-                "The note files in “$it” folder will be deleted. Your notes stay on this device."
-            } ?: "Your notes stay on this device.",
-            confirmLabel = "Stop Using Folder",
+            title = stringResource(R.string.stop_using_notes_folder),
+            message = notesFolderName?.let { stringResource(R.string.stop_folder_message, it) }
+                ?: stringResource(R.string.notes_stay_on_device),
+            confirmLabel = stringResource(R.string.stop_using_folder),
             isDark = isDark,
             onDismiss = { showingStopFolder = false },
             onConfirm = {
@@ -1605,14 +1616,12 @@ fun SavedNotesView(
     if (showingStopFolderFailed) {
         AlertDialog(
             onDismissRequest = { showingStopFolderFailed = false },
-            title = { Text("Couldn't Delete Note Files") },
+            title = { Text(stringResource(R.string.couldnt_delete_note_files)) },
             text = {
                 Text(
                     notesFolderName?.let {
-                        "Some note files in “$it” folder couldn't be deleted, so it's still in use. " +
-                            "You can stop using it anyway and leave the files there."
-                    } ?: ("The notes folder can't be reached, so its note files couldn't be deleted. " +
-                        "You can stop using it anyway and leave the files there.")
+                        stringResource(R.string.stop_folder_failed, it)
+                    } ?: stringResource(R.string.stop_folder_unreachable)
                 )
             },
             confirmButton = {
@@ -1620,12 +1629,12 @@ fun SavedNotesView(
                     showingStopFolderFailed = false
                     scope.launch { settingsService.stopUsingNotesFolderKeepingFiles() }
                 }) {
-                    Text("Stop Anyway", color = AppColors.blue(isDark))
+                    Text(stringResource(R.string.stop_anyway), color = AppColors.blue(isDark))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showingStopFolderFailed = false }) {
-                    Text("Keep Using Folder", color = AppColors.blue(isDark))
+                    Text(stringResource(R.string.keep_using_folder), color = AppColors.blue(isDark))
                 }
             },
             containerColor = AppColors.background(isDark)
@@ -1634,11 +1643,10 @@ fun SavedNotesView(
 
     if (showingDeleteAll) {
         ConfirmDialog(
-            title = "Delete All Saved Notes?",
-            message = notesFolderName?.let {
-                "Every saved note and its file in “$it” folder will be deleted. This can't be undone."
-            } ?: "Every saved note will be deleted. This can't be undone.",
-            confirmLabel = "Delete All",
+            title = stringResource(R.string.delete_all_saved_notes),
+            message = notesFolderName?.let { stringResource(R.string.delete_all_message_folder, it) }
+                ?: stringResource(R.string.delete_all_message),
+            confirmLabel = stringResource(R.string.delete_all),
             isDark = isDark,
             onDismiss = { showingDeleteAll = false },
             onConfirm = {
@@ -1646,7 +1654,7 @@ fun SavedNotesView(
                 scope.launch {
                     val count = savedNotes.size
                     if (!settingsService.deleteAllNotes()) {
-                        errorMessage = "Your notes were deleted. " + undeletedFilesMessage(count)
+                        errorMessage = context.getString(R.string.notes_were_deleted, undeletedFilesMessage(count))
                     }
                 }
             }
@@ -1656,11 +1664,11 @@ fun SavedNotesView(
     errorMessage?.let { message ->
         AlertDialog(
             onDismissRequest = { errorMessage = null },
-            title = { Text("Something Went Wrong") },
+            title = { Text(stringResource(R.string.something_went_wrong)) },
             text = { Text(message) },
             confirmButton = {
                 TextButton(onClick = { errorMessage = null }) {
-                    Text("OK", color = AppColors.blue(isDark))
+                    Text(stringResource(R.string.ok), color = AppColors.blue(isDark))
                 }
             },
             containerColor = AppColors.background(isDark)
@@ -1689,7 +1697,7 @@ private fun ConfirmDialog(
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = AppColors.blue(isDark))
+                Text(stringResource(R.string.cancel), color = AppColors.blue(isDark))
             }
         },
         containerColor = AppColors.background(isDark)
@@ -1709,29 +1717,22 @@ private fun StorageNote(
     // Files in the notes folder that were too large to bring in, if any.
     val warning = when (oversizedFiles.size) {
         0 -> null
-        1 -> "“${oversizedFiles.first()}” is larger than 10 MB, so it wasn't added to your notes."
-        else -> "${oversizedFiles.size} files in the notes folder are larger than 10 MB, " +
-            "so they weren't added to your notes."
+        1 -> stringResource(R.string.oversized_file, oversizedFiles.first())
+        else -> stringResource(R.string.oversized_files, oversizedFiles.size)
     }
 
     // Files of deleted notes still in the notes folder, if any.
     val undeletedWarning = when (undeletedFiles.size) {
         0 -> null
-        1 -> "“${undeletedFiles.first()}” couldn't be deleted from the notes folder. Its note stays deleted."
-        else -> "${undeletedFiles.size} files couldn't be deleted from the notes folder. Their notes stay deleted."
+        1 -> stringResource(R.string.undeleted_file_warning, undeletedFiles.first())
+        else -> stringResource(R.string.undeleted_files_warning, undeletedFiles.size)
     }
 
     // Notes never leave the device, so the lock stays whatever the folder.
     val storage = when {
-        folderName != null ->
-            "Notes stay on this device, also as files in “$folderName” folder, " +
-                "so they're kept even if the app is removed."
-        hasFolder ->
-            "Notes stay on this device. The notes folder can't be reached, " +
-                "so they're only kept here until it's back."
-        else ->
-            "Notes stay on this device and are deleted if the app is removed. " +
-                "Choose a notes folder in ⋮ to keep them."
+        folderName != null -> stringResource(R.string.storage_folder, folderName)
+        hasFolder -> stringResource(R.string.storage_folder_unreachable)
+        else -> stringResource(R.string.storage_device, "⋮")
     }
 
     Column(
@@ -1809,7 +1810,7 @@ private fun SavedNoteRow(
                 contentAlignment = if (isRename) Alignment.CenterStart else Alignment.CenterEnd
             ) {
                 Text(
-                    text = if (isRename) "Rename" else "Delete",
+                    text = if (isRename) stringResource(R.string.rename) else stringResource(R.string.delete),
                     color = Color.White,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -1837,7 +1838,7 @@ private fun SavedNoteRow(
 
                 if (note.mode == ScriptMode.CARDS) {
                     Text(
-                        text = "Cards",
+                        text = stringResource(R.string.cards),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = AppColors.green(isDark),

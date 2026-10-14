@@ -1,5 +1,8 @@
 package com.thisisnsh.cuecard.android
 
+import androidx.annotation.StringRes
+import androidx.annotation.PluralsRes
+import android.content.Context
 import android.app.Activity
 import android.app.Application
 import android.os.Bundle
@@ -30,6 +33,7 @@ class CueCardApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        AppStrings.context = this
         FirebaseApp.initializeApp(this)
         analytics = Firebase.analytics
 
@@ -106,7 +110,23 @@ object AppLinks {
     const val SUPPORT_EMAIL = "mailto:support@cuecard.dev?subject=CueCard%20Feedback"
 
     /** What goes out when someone shares the app. */
-    val SHARE_MESSAGE = "Check out $PLAY_STORE"
+    val shareMessage: String get() = AppStrings.get(R.string.share_message, PLAY_STORE)
+}
+
+// MARK: - Strings
+
+/**
+ * The app's text for code that runs outside a composable, which has
+ * `stringResource` instead. Read from the application, which takes the app's
+ * language the same as its screens do.
+ */
+object AppStrings {
+    internal lateinit var context: Context
+
+    fun get(@StringRes id: Int, vararg args: Any): String = context.getString(id, *args)
+
+    fun plural(@PluralsRes id: Int, count: Int, vararg args: Any): String =
+        context.resources.getQuantityString(id, count, *args)
 }
 
 // MARK: - Theme

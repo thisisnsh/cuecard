@@ -176,7 +176,7 @@ class TeleprompterPiPManager private constructor() {
 
     /** Play/pause and restart, as the buttons inside the overlay window. */
     private fun remoteActions(activity: Activity): List<RemoteAction> {
-        val playPauseTitle = if (isPlaying) "Pause" else "Play"
+        val playPauseTitle = activity.getString(if (isPlaying) R.string.pause else R.string.play)
         val playPauseIcon = if (isPlaying) R.drawable.ic_pip_pause else R.drawable.ic_pip_play
 
         return listOf(
@@ -188,8 +188,8 @@ class TeleprompterPiPManager private constructor() {
             ),
             RemoteAction(
                 Icon.createWithResource(activity, R.drawable.ic_pip_restart),
-                "Restart",
-                "Restart",
+                activity.getString(R.string.restart),
+                activity.getString(R.string.restart),
                 controlIntent(activity, CONTROL_RESTART, REQUEST_RESTART)
             )
         )

@@ -1,5 +1,6 @@
 package com.thisisnsh.cuecard.android.services
 
+import com.thisisnsh.cuecard.android.R
 import android.content.Context
 import androidx.core.content.edit
 import com.thisisnsh.cuecard.android.AnalyticsEvents
@@ -31,8 +32,17 @@ class WhatsNewService private constructor(private val context: Context) {
     /** The version as people see it, e.g. "1.0.0". */
     val version: String = BuildConfig.VERSION_NAME
 
-    /** This version's entry, or null when the file has none for it. */
-    val release: Release? by lazy { loadRelease() }
+    /** This version's entry as the file writes it, in English. */
+    private val englishRelease: Release? by lazy { loadRelease() }
+
+    /**
+     * This version's entry, or null when the file has none for it. Translated
+     * as it's read, so it follows the app's language if that changes.
+     */
+    val release: Release?
+        get() = englishRelease?.let { release ->
+            Release(release.title?.let(::localized), release.features.map(::localized))
+        }
 
     /** Whether the launch presentation is up. Help shows its own copy. */
     private val _isPresented = MutableStateFlow(false)
@@ -47,6 +57,17 @@ class WhatsNewService private constructor(private val context: Context) {
         val title = (entry["title"] as? JsonPrimitive)?.contentOrNull
         if (features.isEmpty()) null else Release(title, features)
     }.getOrNull()
+
+    /**
+     * The JSON's text in the app's language. Translations are added to
+     * strings.xml by hand, as `whats_new_text`, in the same order as the
+     * English in `whats_new_english`. Text without one shows in English.
+     */
+    private fun localized(text: String): String {
+        val index = context.resources.getStringArray(R.array.whats_new_english).indexOf(text)
+        if (index < 0) return text
+        return context.resources.getStringArray(R.array.whats_new_text).getOrNull(index) ?: text
+    }
 
     /**
      * Show this version's features if they haven't been seen. A fresh install has

@@ -1,5 +1,9 @@
 package com.thisisnsh.cuecard.android.views
 
+import com.thisisnsh.cuecard.android.AppStrings
+import androidx.annotation.StringRes
+import com.thisisnsh.cuecard.android.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -74,124 +78,55 @@ enum class HelpPage(val rawValue: String) {
     }
 }
 
-private data class HelpTopic(val title: String, val detail: String) {
+private data class HelpTopic(@StringRes val titleRes: Int, @StringRes val detailRes: Int) {
+    val title: String get() = AppStrings.get(titleRes)
+    val detail: String get() = AppStrings.get(detailRes)
+
     fun matches(query: String): Boolean =
         title.contains(query, ignoreCase = true) || detail.contains(query, ignoreCase = true)
 }
 
-private data class HelpSection(val title: String, val topics: List<HelpTopic>)
+private data class HelpSection(@StringRes val titleRes: Int, val topics: List<HelpTopic>) {
+    val title: String get() = AppStrings.get(titleRes)
+}
 
 // MARK: - Topics
 
 private object AllHelp {
     val general = HelpSection(
-        "General",
+        R.string.help_general,
         listOf(
-            HelpTopic(
-                "Pick a Mode",
-                "Tap the mode name at the top. Teleprompter scrolls your whole script. " +
-                    "Cards shows it one card at a time."
-            ),
-            HelpTopic(
-                "Add Cues",
-                "Cues are reminders like [cue pause], shown in color and not read out. " +
-                    "Type [ or tap Add Cue above the keyboard."
-            ),
-            HelpTopic(
-                "Bold and Italic",
-                "Select words and tap B or I above the keyboard. " +
-                    "Or type *bold* or _italic_."
-            ),
-            HelpTopic(
-                "Set a Timer",
-                "Tap the timer next to Play to set how long you have " +
-                    "and when it warns you."
-            ),
-            HelpTopic(
-                "Save Your Work",
-                "Unsaved below the top bar means there are changes to save. " +
-                    "Tap it to save, or tap ⋮ › Save."
-            ),
-            HelpTopic(
-                "Open Saved Notes",
-                "Tap ⋮ › Open to see everything you saved. " +
-                    "Swipe to rename or delete."
-            ),
-            HelpTopic(
-                "Import a Text File",
-                "Tap ⋮ › Import. The file opens in the editor and is kept as a saved note."
-            ),
-            HelpTopic(
-                "Go Back to an Older Version",
-                "Every save is a new version. Once a note has more than one, " +
-                    "tap the clock at the top to compare changes and restore one."
-            ),
-            HelpTopic(
-                "Keep Notes if the App Is Removed",
-                "Notes stay on this device and are deleted with the app. " +
-                    "In Saved Notes, choose a notes folder from ⋮ to keep them as files."
-            ),
-            HelpTopic(
-                "Share a Script",
-                "Tap ⋮ › Share to send it as text, cues included."
-            ),
-            HelpTopic(
-                "Change Text Size and Colors",
-                "Tap the gear at the top. Each mode keeps its own sizes and cue color. " +
-                    "Timer colors are set in the timer."
-            )
+            HelpTopic(R.string.help_pick_a_mode_title, R.string.help_pick_a_mode_detail),
+            HelpTopic(R.string.help_add_cues_title, R.string.help_add_cues_detail),
+            HelpTopic(R.string.help_bold_and_italic_title, R.string.help_bold_and_italic_detail),
+            HelpTopic(R.string.help_set_a_timer_title, R.string.help_set_a_timer_detail),
+            HelpTopic(R.string.help_save_your_work_title, R.string.help_save_your_work_detail),
+            HelpTopic(R.string.help_open_saved_notes_title, R.string.help_open_saved_notes_detail),
+            HelpTopic(R.string.help_import_a_text_file_title, R.string.help_import_a_text_file_detail),
+            HelpTopic(R.string.help_go_back_to_an_older_version_title, R.string.help_go_back_to_an_older_version_detail),
+            HelpTopic(R.string.help_keep_notes_if_the_app_is_removed_title, R.string.help_keep_notes_if_the_app_is_removed_detail),
+            HelpTopic(R.string.help_share_a_script_title, R.string.help_share_a_script_detail),
+            HelpTopic(R.string.help_change_text_size_and_colors_title, R.string.help_change_text_size_and_colors_detail)
         )
     )
 
     val teleprompter = HelpSection(
-        "Teleprompter",
+        R.string.teleprompter,
         listOf(
-            HelpTopic(
-                "Play and Pause",
-                "The buttons fade while the script scrolls so they stay out of the way. " +
-                    "Tap the screen to show them again."
-            ),
-            HelpTopic(
-                "Scroll by Hand",
-                "Drag the script to go back or skip ahead. " +
-                    "It keeps scrolling from where you leave it."
-            ),
-            HelpTopic(
-                "Change Speed",
-                "Scroll Speed in Settings sets how many lines pass each minute. " +
-                    "Set a Countdown in the timer to get a few seconds before it starts."
-            ),
-            HelpTopic(
-                "Use Over Other Apps",
-                "Leave CueCard while the teleprompter is open and your script keeps going " +
-                    "in a floating window, handy on video calls."
-            ),
-            HelpTopic(
-                "Watch the Timer",
-                "The timer changes color when you're near the end " +
-                    "and again once you're over time. Pick the colors in the timer."
-            )
+            HelpTopic(R.string.help_play_and_pause_title, R.string.help_play_and_pause_detail),
+            HelpTopic(R.string.help_scroll_by_hand_title, R.string.help_scroll_by_hand_detail),
+            HelpTopic(R.string.help_change_speed_title, R.string.help_change_speed_detail),
+            HelpTopic(R.string.help_use_over_other_apps_title, R.string.help_use_over_other_apps_detail),
+            HelpTopic(R.string.help_watch_the_timer_title, R.string.help_watch_the_timer_detail)
         )
     )
 
     val cards = HelpSection(
-        "Cards",
+        R.string.cards,
         listOf(
-            HelpTopic(
-                "Add Cards",
-                "Each box in the editor is one card. " +
-                    "Tap Create New Card to add another."
-            ),
-            HelpTopic(
-                "Turn Cards",
-                "Swipe, or tap Back and Next. " +
-                    "The dots at the top show which card you're on."
-            ),
-            HelpTopic(
-                "Watch the Timer",
-                "The time at the top counts down your timer. " +
-                    "With no timer set, it counts up from when you started."
-            )
+            HelpTopic(R.string.help_add_cards_title, R.string.help_add_cards_detail),
+            HelpTopic(R.string.help_turn_cards_title, R.string.help_turn_cards_detail),
+            HelpTopic(R.string.help_watch_the_timer_title, R.string.help_watch_the_timer_cards_detail)
         )
     )
 
@@ -236,7 +171,7 @@ fun HelpView(page: HelpPage, onDismiss: () -> Unit) {
             TopAppBar(
                 title = {
                     Text(
-                        text = "Help",
+                        text = stringResource(R.string.help),
                         fontSize = 17.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = AppColors.textPrimary(isDark)
@@ -244,7 +179,7 @@ fun HelpView(page: HelpPage, onDismiss: () -> Unit) {
                 },
                 actions = {
                     Text(
-                        text = "Done",
+                        text = stringResource(R.string.done),
                         fontSize = 17.sp,
                         color = AppColors.blue(isDark),
                         modifier = Modifier
@@ -276,7 +211,7 @@ fun HelpView(page: HelpPage, onDismiss: () -> Unit) {
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "No Results for “$trimmed”",
+                        text = stringResource(R.string.no_results_for, trimmed),
                         fontSize = 17.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = AppColors.textPrimary(isDark)
@@ -291,7 +226,7 @@ fun HelpView(page: HelpPage, onDismiss: () -> Unit) {
                         Spacer(modifier = Modifier.height(8.dp))
                         if (release != null) {
                             LinkRow(
-                                title = "What's New in ${whatsNew.version}",
+                                title = stringResource(R.string.whats_new_in, whatsNew.version),
                                 icon = Icons.Filled.AutoAwesome,
                                 isDark = isDark
                             ) {
@@ -299,7 +234,7 @@ fun HelpView(page: HelpPage, onDismiss: () -> Unit) {
                                 showingWhatsNew = true
                             }
                         }
-                        LinkRow(title = "Email Support", icon = Icons.Filled.Email, isDark = isDark) {
+                        LinkRow(title = stringResource(R.string.email_support), icon = Icons.Filled.Email, isDark = isDark) {
                             AnalyticsEvents.logButtonClick("email_support", HELP_SCREEN)
                             openLink(context, AppLinks.SUPPORT_EMAIL)
                         }
@@ -340,7 +275,7 @@ internal fun SearchField(
     query: String,
     onQueryChange: (String) -> Unit,
     isDark: Boolean,
-    placeholder: String = "Search Help"
+    placeholder: String = stringResource(R.string.search_help)
 ) {
     Row(
         modifier = Modifier
@@ -394,7 +329,7 @@ private fun TopicRow(topic: HelpTopic, isDark: Boolean) {
 fun HelpButton(page: HelpPage, isDark: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
     Icon(
         imageVector = Icons.Filled.QuestionMark,
-        contentDescription = "Help",
+        contentDescription = stringResource(R.string.help),
         tint = AppColors.textPrimary(isDark),
         modifier = modifier
             .padding(horizontal = 12.dp)

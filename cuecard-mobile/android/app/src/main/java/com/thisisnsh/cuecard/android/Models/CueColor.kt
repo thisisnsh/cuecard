@@ -1,5 +1,7 @@
 package com.thisisnsh.cuecard.android.models
 
+import com.thisisnsh.cuecard.android.R
+import com.thisisnsh.cuecard.android.AppStrings
 import androidx.compose.ui.graphics.Color
 import kotlinx.serialization.Serializable
 
@@ -26,7 +28,16 @@ enum class CueColor {
         get() = name.lowercase()
 
     val displayName: String
-        get() = rawValue.replaceFirstChar { it.uppercase() }
+        get() = AppStrings.get(
+            when (this) {
+                PINK -> R.string.color_pink
+                YELLOW -> R.string.color_yellow
+                GREEN -> R.string.color_green
+                BLUE -> R.string.color_blue
+                PURPLE -> R.string.color_purple
+                RED -> R.string.color_red
+            }
+        )
 
     fun color(isDark: Boolean): Color = when (this) {
         PINK -> AppColors.pink(isDark)
