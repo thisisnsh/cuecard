@@ -180,37 +180,7 @@ class RemoteNotificationService private constructor(context: Context) {
          *
          * Dismissing one remembers its id, so change the id to see it again.
          */
-        private val FAKE_RESPONSE: String? = if (BuildConfig.DEBUG) {
-            """
-            {
-              "notifications": [
-                {
-                  "id": "debug-home-banner",
-                  "surface": "homeBanner",
-                  "severity": "info",
-                  "title": "CueCard 1.1 is here",
-                  "body": "Saved notes keep every version now, and the editor is faster with long scripts.",
-                  "actions": [
-                    { "kind": "appStore", "label": "Update" },
-                    { "kind": "openURL", "label": "What's new", "url": "https://cuecard.dev" }
-                  ]
-                },
-                {
-                  "id": "debug-settings-row",
-                  "surface": "settingsRow",
-                  "severity": "warning",
-                  "title": "Android 8 support is ending",
-                  "body": "The next update will need Android 10 or later.",
-                  "actions": [
-                    { "kind": "openURL", "label": "Learn more", "url": "https://cuecard.dev" }
-                  ]
-                }
-              ]
-            }
-            """.trimIndent()
-        } else {
-            null
-        }
+        private val FAKE_RESPONSE: String? = null
 
         private const val PREFS_NAME = "cuecard_remote_config"
 
