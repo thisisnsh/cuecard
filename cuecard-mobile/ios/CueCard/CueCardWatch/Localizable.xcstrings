@@ -2677,7 +2677,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Damit CueCard während eines Vortrags sichtbar bleibt, öffne die Watch-App auf deinem iPhone, gehe zu „Allgemein“ › „Zurück zur Uhr“, wähle CueCard und stelle die Rückkehr auf „Nach 1 Stunde“."
+            "value" : "Damit CueCard während eines Vortrags sichtbar bleibt, öffne die Watch-App auf deinem iPhone, gehe zu „Allgemein“ › „Zur Uhr zurück“, wähle CueCard und stelle die Rückkehr auf „Nach 1 Stunde“."
           }
         },
         "es" : {
@@ -2689,7 +2689,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pour garder CueCard à l'écran pendant une présentation, ouvrez l'app Watch sur votre iPhone, allez dans Général › Retour à l'horloge, choisissez CueCard et réglez le retour après 1 heure."
+            "value" : "Pour garder CueCard à l'écran pendant une présentation, ouvrez l'app Watch sur votre iPhone, allez dans Général › Revenir au cadran, choisissez CueCard et réglez le retour après 1 heure."
           }
         },
         "hi" : {
@@ -2701,7 +2701,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Per tenere CueCard sullo schermo durante un discorso, apri l'app Watch sull'iPhone, vai su Generali › Torna all'orologio, scegli CueCard e imposta il ritorno dopo 1 ora."
+            "value" : "Per tenere CueCard sullo schermo durante un discorso, apri l'app Watch sull'iPhone, vai su Generali › Torna al quadrante, scegli CueCard e imposta il ritorno dopo 1 ora."
           }
         },
         "ja" : {
@@ -2719,13 +2719,13 @@
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Para manter o CueCard na tela durante uma palestra, abra o app Watch no iPhone, vá em Geral › Voltar ao Relógio, escolha CueCard e defina para voltar após 1 hora."
+            "value" : "Para manter o CueCard na tela durante uma palestra, abra o app Watch no iPhone, vá em Geral › Retornar ao Relógio, escolha CueCard e defina para voltar após 1 hora."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "要在演讲期间让 CueCard 保持显示，请打开 iPhone 上的 Watch App，前往“通用”›“返回到时钟”，选择 CueCard，并设为 1 小时后返回。"
+            "value" : "要在演讲期间让 CueCard 保持显示，请打开 iPhone 上的 Watch App，前往“通用”›“返回表盘”，选择 CueCard，并设为 1 小时后返回。"
           }
         }
       }

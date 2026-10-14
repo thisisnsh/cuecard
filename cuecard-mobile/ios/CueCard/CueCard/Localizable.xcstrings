@@ -11562,7 +11562,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Einige Notizdateien im Ordner „%@“ konnten nicht gelöscht werden, daher wird er noch verwendet. Du kannst ihn trotzdem nicht mehr verwenden und die Dateien dort lassen."
+            "value" : "Einige Notizdateien im Ordner „%@“ konnten nicht gelöscht werden, daher wird er noch verwendet. Du kannst die Verwendung des Ordners trotzdem beenden und die Dateien dort lassen."
           }
         },
         "es" : {
@@ -13592,7 +13592,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Der Notizordner ist nicht erreichbar, daher konnten seine Notizdateien nicht gelöscht werden. Du kannst ihn trotzdem nicht mehr verwenden und die Dateien dort lassen."
+            "value" : "Der Notizordner ist nicht erreichbar, daher konnten seine Notizdateien nicht gelöscht werden. Du kannst die Verwendung des Ordners trotzdem beenden und die Dateien dort lassen."
           }
         },
         "es" : {
@@ -13824,7 +13824,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Die Watch kehrt nach einer Weile zur Uhr zurück. Gehe in der Watch-App zu „Allgemein“ › „Zurück zur Uhr“ › CueCard und stelle 1 Stunde ein."
+            "value" : "Die Watch kehrt nach einer Weile zur Uhr zurück. Gehe in der Watch-App zu „Allgemein“ › „Zur Uhr zurück“ › CueCard und stelle 1 Stunde ein."
           }
         },
         "es" : {
@@ -13836,7 +13836,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "La montre revient au cadran au bout d'un moment. Dans l'app Watch, allez dans Général › Retour à l'horloge › CueCard et choisissez 1 heure."
+            "value" : "La montre revient au cadran au bout d'un moment. Dans l'app Watch, allez dans Général › Revenir au cadran › CueCard et choisissez 1 heure."
           }
         },
         "hi" : {
@@ -13848,7 +13848,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dopo un po' l'orologio torna al quadrante. Nell'app Watch, vai su Generali › Torna all'orologio › CueCard e imposta 1 ora."
+            "value" : "Dopo un po' l'orologio torna al quadrante. Nell'app Watch, vai su Generali › Torna al quadrante › CueCard e imposta 1 ora."
           }
         },
         "ja" : {
@@ -13866,13 +13866,13 @@
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "O relógio volta ao mostrador depois de um tempo. No app Watch, vá em Geral › Voltar ao Relógio › CueCard e defina 1 hora."
+            "value" : "O relógio volta ao mostrador depois de um tempo. No app Watch, vá em Geral › Retornar ao Relógio › CueCard e defina 1 hora."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "手表过一会儿会返回到表盘。在 Watch App 中，前往“通用”›“返回到时钟”› CueCard，并设为 1 小时。"
+            "value" : "手表过一会儿会返回到表盘。在 Watch App 中，前往“通用”›“返回表盘”› CueCard，并设为 1 小时。"
           }
         }
       }
@@ -14404,7 +14404,7 @@
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Damit CueCard während eines Vortrags sichtbar bleibt, öffne die Watch-App auf deinem iPhone, gehe zu „Allgemein“ › „Zurück zur Uhr“, wähle CueCard und stelle die Rückkehr auf „Nach 1 Stunde“."
+            "value" : "Damit CueCard während eines Vortrags sichtbar bleibt, öffne die Watch-App auf deinem iPhone, gehe zu „Allgemein“ › „Zur Uhr zurück“, wähle CueCard und stelle die Rückkehr auf „Nach 1 Stunde“."
           }
         },
         "es" : {
@@ -14416,7 +14416,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pour garder CueCard à l'écran pendant une présentation, ouvrez l'app Watch sur votre iPhone, allez dans Général › Retour à l'horloge, choisissez CueCard et réglez le retour après 1 heure."
+            "value" : "Pour garder CueCard à l'écran pendant une présentation, ouvrez l'app Watch sur votre iPhone, allez dans Général › Revenir au cadran, choisissez CueCard et réglez le retour après 1 heure."
           }
         },
         "hi" : {
@@ -14428,7 +14428,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Per tenere CueCard sullo schermo durante un discorso, apri l'app Watch sull'iPhone, vai su Generali › Torna all'orologio, scegli CueCard e imposta il ritorno dopo 1 ora."
+            "value" : "Per tenere CueCard sullo schermo durante un discorso, apri l'app Watch sull'iPhone, vai su Generali › Torna al quadrante, scegli CueCard e imposta il ritorno dopo 1 ora."
           }
         },
         "ja" : {
@@ -14446,13 +14446,13 @@
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Para manter o CueCard na tela durante uma palestra, abra o app Watch no iPhone, vá em Geral › Voltar ao Relógio, escolha CueCard e defina para voltar após 1 hora."
+            "value" : "Para manter o CueCard na tela durante uma palestra, abra o app Watch no iPhone, vá em Geral › Retornar ao Relógio, escolha CueCard e defina para voltar após 1 hora."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "要在演讲期间让 CueCard 保持显示，请打开 iPhone 上的 Watch App，前往“通用”›“返回到时钟”，选择 CueCard，并设为 1 小时后返回。"
+            "value" : "要在演讲期间让 CueCard 保持显示，请打开 iPhone 上的 Watch App，前往“通用”›“返回表盘”，选择 CueCard，并设为 1 小时后返回。"
           }
         }
       }
@@ -15478,7 +15478,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Appのどこか：\n\n表示されている内容：\n\n正しい内容：\n"
+            "value" : "App内の場所：\n\n表示されている内容：\n\n正しい内容：\n"
           }
         },
         "ko" : {
