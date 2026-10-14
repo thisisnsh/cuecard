@@ -6797,61 +6797,61 @@
         }
       }
     },
-    "Multiple Languages: Use CueCard in ten languages." : {
+    "More Languages Supported: Chinese, French, German, Hindi, Italian, Japanese, Korean, Portuguese, and Spanish." : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mehrere Sprachen: CueCard in zehn Sprachen nutzen."
+            "value" : "Weitere unterstützte Sprachen: Chinesisch, Französisch, Deutsch, Hindi, Italienisch, Japanisch, Koreanisch, Portugiesisch und Spanisch."
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Varios idiomas: usa CueCard en diez idiomas."
+            "value" : "Más idiomas compatibles: chino, francés, alemán, hindi, italiano, japonés, coreano, portugués y español."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Plusieurs langues : utilisez CueCard en dix langues."
+            "value" : "Plus de langues prises en charge : chinois, français, allemand, hindi, italien, japonais, coréen, portugais et espagnol."
           }
         },
         "hi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "कई भाषाएँ: CueCard को दस भाषाओं में इस्तेमाल करें।"
+            "value" : "और भाषाओं का समर्थन: चीनी, फ़्रेंच, जर्मन, हिन्दी, इतालवी, जापानी, कोरियाई, पुर्तगाली और स्पेनिश।"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Più lingue: usa CueCard in dieci lingue."
+            "value" : "Più lingue supportate: cinese, francese, tedesco, hindi, italiano, giapponese, coreano, portoghese e spagnolo."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "多言語対応：CueCardを10の言語で使えます。"
+            "value" : "対応言語を追加：中国語、フランス語、ドイツ語、ヒンディー語、イタリア語、日本語、韓国語、ポルトガル語、スペイン語。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "다국어 지원: CueCard를 10개 언어로 사용하세요."
+            "value" : "더 많은 언어 지원: 중국어, 프랑스어, 독일어, 힌디어, 이탈리아어, 일본어, 한국어, 포르투갈어, 스페인어."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vários idiomas: use o CueCard em dez idiomas."
+            "value" : "Mais idiomas compatíveis: chinês, francês, alemão, hindi, italiano, japonês, coreano, português e espanhol."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "多语言支持：CueCard 现支持十种语言。"
+            "value" : "支持更多语言：中文、法语、德语、印地语、意大利语、日语、韩语、葡萄牙语和西班牙语。"
           }
         }
       }
