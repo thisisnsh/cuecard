@@ -2,6 +2,7 @@ package com.thisisnsh.cuecard.android
 
 import androidx.annotation.StringRes
 import androidx.annotation.PluralsRes
+import android.net.Uri
 import android.content.Context
 import android.app.Activity
 import android.app.Application
@@ -108,6 +109,15 @@ object AppLinks {
     const val PRIVACY_POLICY = "https://cuecard.dev/privacy/"
     val PLAY_STORE = "https://play.google.com/store/apps/details?id=${BuildConfig.APPLICATION_ID}"
     const val SUPPORT_EMAIL = "mailto:support@cuecard.dev?subject=CueCard%20Feedback"
+
+    /**
+     * An email to support about a translation. The subject stays English, with
+     * the language's code, so reports sort together whatever the language.
+     */
+    fun translationReport(language: String): String =
+        "mailto:support@cuecard.dev" +
+            "?subject=" + Uri.encode("CueCard Translation Mistake ($language)") +
+            "&body=" + Uri.encode(AppStrings.get(R.string.translation_report_body))
 
     /** What goes out when someone shares the app. */
     val shareMessage: String get() = AppStrings.get(R.string.share_message, PLAY_STORE)

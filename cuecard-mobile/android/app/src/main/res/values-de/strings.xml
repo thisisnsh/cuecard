@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="share_message">Schau dir das an: %1$s</string>
+    <string name="translation_report_body">Wo in der App:\n\nWas dort steht:\n\nWas dort stehen sollte:\n</string>
     <string name="sample_teleprompter">Hallo zusammen.\n\nIch freue mich, heute hier zu sein und euch den Teleprompter von CueCard vorzustellen.\n\n[cue lächeln und Pause]\n\nEr scrollt dein Skript in deinem Tempo, damit dein Blick oben bleibt und deine Worte auf Kurs.\n\n[cue Pause]\n\nVerlass die App und er läuft in einem schwebenden Fenster weiter, direkt über deiner Kamera oder deinem Videoanruf.\n\n[cue langsamer]\n\nDen Faden verloren? Zieh das Skript zurück. Zu lang? Spring nach vorne.\n\nUnd der Timer wird gegen Ende gelb … und rot, wenn du dich ein bisschen zu sehr hineinsteigerst.\n\n[cue leises Lachen]\n\nUnd diese farbigen Wörter?\n\n[cue betonen]\n\nDas sind deine Cues. Erinnerungen zu lächeln, Pause zu machen oder nicht in Panik zu geraten. Sie werden nie vorgelesen.\n\n[cue Pause]\n\nProbier es aus. Ich glaube, du wirst es lieben.</string>
     <string name="sample_cards">Hallo zusammen. Darf ich vorstellen: Cue Cards. [cue lächeln]\n[separator]\nEin Gedanke pro Karte. Wische weiter, wenn du bereit bist.\n[separator]\nDer Timer oben hält dich im Zeitplan. [cue leises Lachen]\n[separator]\nFarbige Wörter sind Cues, kein Text. [cue betonen]\n[separator]\nDanke fürs Zuhören. Fragen?</string>
     <string name="theme_system">System</string>
@@ -53,6 +54,11 @@
     <string name="custom_size">Eigene (%1$d)</string>
     <string name="hide_advanced_settings">Erweiterte Einstellungen ausblenden</string>
     <string name="show_advanced_settings">Erweiterte Einstellungen einblenden</string>
+    <string name="language">Sprache</string>
+    <string name="language_footer">Wenn du in der App „Einstellungen“ eine Sprache für CueCard auswählst, startet es in dieser Sprache neu.</string>
+    <string name="language_footer_phone">CueCard verwendet die Sprache deines Telefons, die du in der App „Einstellungen“ unter „System“ › „Sprachen“ festlegst.</string>
+    <string name="report_translation_mistake">Übersetzungsfehler melden</string>
+    <string name="language_code">de</string>
     <string name="timer_footer_off">0:00 schaltet den Timer aus.</string>
     <string name="timer_footer_countdown">Der Countdown ist die Zeit, bevor das Skript zu scrollen beginnt.</string>
     <string name="teleprompter_timer">Teleprompter-Timer</string>

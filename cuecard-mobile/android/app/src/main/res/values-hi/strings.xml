@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="share_message">इसे देखें: %1$s</string>
+    <string name="translation_report_body">ऐप में कहाँ:\n\nक्या लिखा है:\n\nक्या लिखा होना चाहिए:\n</string>
     <string name="sample_teleprompter">आप सभी को नमस्ते।\n\nआज यहाँ CueCard के टेलीप्रॉम्प्टर के बारे में बात करने को लेकर मैं बहुत उत्साहित हूँ।\n\n[cue मुस्कुराएँ और रुकें]\n\nयह आपकी स्क्रिप्ट को आपकी रफ़्तार से स्क्रॉल करता है, ताकि आपकी नज़र ऊपर रहे और आपकी बात सही दिशा में।\n\n[cue रुकें]\n\nऐप से बाहर जाएँ और यह फ़्लोटिंग विंडो में चलता रहता है, ठीक आपके कैमरे या वीडियो कॉल के ऊपर।\n\n[cue धीरे बोलें]\n\nजगह भूल गए? स्क्रिप्ट को पीछे खींचें। देर हो रही है? आगे बढ़ जाएँ।\n\nऔर आख़िर के पास टाइमर पीला हो जाता है… और अगर आप कुछ ज़्यादा ही जोश में आ जाएँ, तो लाल।\n\n[cue हल्की हँसी]\n\nऔर ये रंगीन शब्द?\n\n[cue ज़ोर दें]\n\nये आपके क्यू हैं। मुस्कुराने, रुकने या घबराने से बचने के रिमाइंडर। इन्हें कभी पढ़कर नहीं सुनाया जाता।\n\n[cue रुकें]\n\nआज़माकर देखें। मुझे लगता है आपको यह पसंद आएगा।</string>
     <string name="sample_cards">आप सभी को नमस्ते। पेश है Cue Cards। [cue मुस्कुराएँ]\n[separator]\nहर कार्ड पर एक बात। तैयार हों तो अगले पर स्वाइप करें।\n[separator]\nऊपर का टाइमर आपको समय पर रखता है। [cue हल्की हँसी]\n[separator]\nरंगीन शब्द क्यू हैं, बोलने की लाइनें नहीं। [cue ज़ोर दें]\n[separator]\nसुनने के लिए धन्यवाद। कोई सवाल?</string>
     <string name="theme_system">सिस्टम</string>
@@ -53,6 +54,11 @@
     <string name="custom_size">कस्टम (%1$d)</string>
     <string name="hide_advanced_settings">एडवांस्ड सेटिंग्स छिपाएँ</string>
     <string name="show_advanced_settings">एडवांस्ड सेटिंग्स दिखाएँ</string>
+    <string name="language">भाषा</string>
+    <string name="language_footer">सेटिंग्स ऐप में CueCard के लिए भाषा चुनने पर यह उसी भाषा में फिर से शुरू होता है।</string>
+    <string name="language_footer_phone">CueCard आपके फ़ोन की भाषा इस्तेमाल करता है, जो सेटिंग्स ऐप में सिस्टम › भाषाएं में सेट होती है।</string>
+    <string name="report_translation_mistake">अनुवाद की गलती बताएँ</string>
+    <string name="language_code">hi</string>
     <string name="timer_footer_off">0:00 टाइमर बंद कर देता है।</string>
     <string name="timer_footer_countdown">काउंटडाउन वह समय है जिसके बाद स्क्रिप्ट स्क्रॉल होना शुरू होती है।</string>
     <string name="teleprompter_timer">टेलीप्रॉम्प्टर टाइमर</string>

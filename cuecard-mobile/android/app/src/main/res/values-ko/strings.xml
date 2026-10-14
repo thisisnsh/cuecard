@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="share_message">확인해 보세요: %1$s</string>
+    <string name="translation_report_body">앱의 위치:\n\n현재 표시된 내용:\n\n올바른 내용:\n</string>
     <string name="sample_teleprompter">안녕하세요, 여러분.\n\n오늘 이 자리에서 CueCard의 프롬프터를 소개하게 되어 기쁩니다.\n\n[cue 미소 짓고 잠시 멈춤]\n\n원고를 내 속도에 맞춰 스크롤해 주니, 시선은 앞을 향하고 말은 흐름을 잃지 않습니다.\n\n[cue 잠시 멈춤]\n\n앱을 나가도 카메라나 영상 통화 바로 위에 뜨는 플로팅 윈도우에서 계속됩니다.\n\n[cue 천천히]\n\n어디까지 읽었는지 놓쳤나요? 원고를 끌어서 되돌리세요. 시간이 길어지나요? 앞으로 건너뛰세요.\n\n타이머는 끝 무렵에 노란색으로… 너무 열정적이 되면 빨간색으로 바뀝니다.\n\n[cue 가볍게 웃기]\n\n그럼 이 색깔 있는 단어들은요?\n\n[cue 강조]\n\n바로 큐입니다. 미소 짓기, 잠시 멈추기, 당황하지 않기를 위한 메모로, 소리 내어 읽는 부분이 아닙니다.\n\n[cue 잠시 멈춤]\n\n한번 써 보세요. 분명 마음에 드실 거예요.</string>
     <string name="sample_cards">안녕하세요, 여러분. Cue Cards를 소개합니다. [cue 미소]\n[separator]\n카드 한 장에 생각 하나. 준비되면 다음 카드로 쓸어 넘기세요.\n[separator]\n상단의 타이머가 시간을 지키게 해 줍니다. [cue 가볍게 웃기]\n[separator]\n색깔 있는 단어는 대사가 아니라 큐입니다. [cue 강조]\n[separator]\n들어 주셔서 감사합니다. 질문 있으신가요?</string>
     <string name="theme_system">시스템</string>
@@ -53,6 +54,11 @@
     <string name="custom_size">사용자화(%1$d)</string>
     <string name="hide_advanced_settings">고급 설정 가리기</string>
     <string name="show_advanced_settings">고급 설정 보기</string>
+    <string name="language">언어</string>
+    <string name="language_footer">설정 앱에서 CueCard의 언어를 선택하면 해당 언어로 다시 시작됩니다.</string>
+    <string name="language_footer_phone">CueCard는 휴대전화의 언어를 따릅니다. 언어는 설정 앱의 시스템 › 언어에서 설정합니다.</string>
+    <string name="report_translation_mistake">번역 오류 신고</string>
+    <string name="language_code">ko</string>
     <string name="timer_footer_off">0:00으로 설정하면 타이머가 꺼집니다.</string>
     <string name="timer_footer_countdown">카운트다운은 원고가 스크롤되기 시작하기 전까지의 시간입니다.</string>
     <string name="teleprompter_timer">프롬프터 타이머</string>

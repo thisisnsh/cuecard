@@ -1,5 +1,10 @@
 package com.thisisnsh.cuecard.android.views
 
+import androidx.compose.material.icons.filled.Email
+import java.util.Locale
+import android.provider.Settings
+import android.os.Build
+import android.net.Uri
 import com.thisisnsh.cuecard.android.R
 import androidx.compose.ui.res.stringResource
 import android.content.Context
@@ -231,6 +236,8 @@ private fun TeleprompterSections(
         onCueColor = { color -> update { it.copy(cueColor = color) } }
     )
 
+    LanguageSection(screen = SETTINGS_SCREEN, isDark = isDark)
+
     val prompter = TeleprompterSettings.FONT_SIZE_RANGE
     val pip = TeleprompterSettings.PIP_FONT_SIZE_RANGE
     val editor = TeleprompterSettings.EDITOR_FONT_SIZE_RANGE
@@ -293,6 +300,8 @@ private fun CardsSections(
         update = update,
         onCueColor = { color -> updateCards { it.copy(cueColor = color) } }
     )
+
+    LanguageSection(screen = SETTINGS_SCREEN, isDark = isDark)
 
     val card = TeleprompterSettings.FONT_SIZE_RANGE
     val editor = TeleprompterSettings.EDITOR_FONT_SIZE_RANGE
@@ -413,6 +422,80 @@ private fun AppearanceSection(
             onSelect = onCueColor
         )
     }
+}
+
+/**
+ * The app's language, which lives in the system Settings app, and a way to
+ * report a mistake in its translation.
+ */
+@Composable
+private fun LanguageSection(screen: String, isDark: Boolean) {
+    val context = LocalContext.current
+    // The language the app is showing, as its code: each translation names
+    // its own, so a phone in a language CueCard doesn't have reads "en".
+    val languageCode = stringResource(R.string.language_code)
+    val locale = Locale.forLanguageTag(languageCode)
+    val languageName = locale.getDisplayName(locale).replaceFirstChar { it.titlecase(locale) }
+    // Android 13 gave each app a language of its own. Before that, apps follow
+    // the phone's.
+    val hasAppLanguage = Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+
+    SettingsSection(
+        title = stringResource(R.string.language),
+        footer = stringResource(if (hasAppLanguage) R.string.language_footer else R.string.language_footer_phone),
+        isDark = isDark
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickableWithoutRipple {
+                    AnalyticsEvents.logButtonClick("language", screen)
+                    openLanguageSettings(context, hasAppLanguage)
+                }
+                .padding(horizontal = 20.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(R.string.language),
+                fontSize = 17.sp,
+                color = AppColors.textPrimary(isDark)
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Text(
+                text = languageName,
+                fontSize = 17.sp,
+                color = AppColors.textSecondary(isDark)
+            )
+            Icon(
+                imageVector = Icons.Filled.ArrowOutward,
+                contentDescription = null,
+                tint = AppColors.textSecondary(isDark),
+                modifier = Modifier
+                    .padding(start = 6.dp)
+                    .size(14.dp)
+            )
+        }
+
+        // English is the original, so there's no translation to get wrong.
+        if (languageCode != "en") {
+            LinkRow(title = stringResource(R.string.report_translation_mistake), icon = Icons.Filled.Email, isDark = isDark) {
+                AnalyticsEvents.logButtonClick("report_translation", screen)
+                openLink(context, AppLinks.translationReport(languageCode))
+            }
+        }
+    }
+}
+
+/**
+ * The system's page for CueCard's language where there is one, opened on
+ * CueCard; choosing one there restarts the app in it. Otherwise the phone's
+ * own languages.
+ */
+private fun openLanguageSettings(context: Context, hasAppLanguage: Boolean) {
+    val appLanguage = Intent(Settings.ACTION_APP_LOCALE_SETTINGS, Uri.fromParts("package", context.packageName, null))
+    val phoneLanguage = Intent(Settings.ACTION_LOCALE_SETTINGS)
+    runCatching { context.startActivity(if (hasAppLanguage) appLanguage else phoneLanguage) }
+        .recoverCatching { context.startActivity(phoneLanguage) }
 }
 
 /** Share, review and reset, the same in both modes. */

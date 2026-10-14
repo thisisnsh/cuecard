@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="share_message">推荐给你：%1$s</string>
+    <string name="translation_report_body">App 中的位置：\n\n当前显示：\n\n应改为：\n</string>
     <string name="sample_teleprompter">大家好。\n\n很高兴今天能在这里和大家聊聊 CueCard 的提词器。\n\n[cue 微笑并停顿]\n\n它按你的节奏滚动稿子，让你的目光始终向前，讲话不跑题。\n\n[cue 停顿]\n\n离开 App 后，它会在悬浮窗口中继续，就在你的摄像头或视频通话上方。\n\n[cue 放慢]\n\n读到哪儿找不到了？把稿子往回拖。时间超了？往前跳。\n\n计时器快到结尾时会变黄……要是讲得太投入，还会变红。\n\n[cue 轻笑]\n\n那这些彩色的字呢？\n\n[cue 强调]\n\n它们就是你的提示。提醒你微笑、停顿或者别慌张。它们从来不用念出来。\n\n[cue 停顿]\n\n试试看吧。我想你会爱上它的。</string>
     <string name="sample_cards">大家好。为你介绍 Cue Cards。[cue 微笑]\n[separator]\n每张卡片一个要点。准备好了就滑到下一张。\n[separator]\n顶部的计时器让你守时。[cue 轻笑]\n[separator]\n彩色的字是提示，不是台词。[cue 强调]\n[separator]\n感谢聆听。有问题吗？</string>
     <string name="theme_system">跟随系统</string>
@@ -53,6 +54,11 @@
     <string name="custom_size">自定义（%1$d）</string>
     <string name="hide_advanced_settings">隐藏高级设置</string>
     <string name="show_advanced_settings">显示高级设置</string>
+    <string name="language">语言</string>
+    <string name="language_footer">在“设置”应用中为 CueCard 选择语言后，它会以该语言重新启动。</string>
+    <string name="language_footer_phone">CueCard 使用手机的语言，可在“设置”应用的“系统”›“语言”中设置。</string>
+    <string name="report_translation_mistake">报告翻译错误</string>
+    <string name="language_code">zh-Hans</string>
     <string name="timer_footer_off">设为 0:00 即关闭计时器。</string>
     <string name="timer_footer_countdown">倒计时是稿子开始滚动之前的时间。</string>
     <string name="teleprompter_timer">提词器计时器</string>

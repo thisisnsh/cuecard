@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="share_message">Découvrez %1$s</string>
+    <string name="translation_report_body">Où dans l\'app :\n\nCe qui est écrit :\n\nCe qui devrait être écrit :\n</string>
     <string name="sample_teleprompter">Bonjour à tous.\n\nJe suis ravi d\'être ici aujourd\'hui pour vous parler du prompteur de CueCard.\n\n[cue sourire et pause]\n\nIl fait défiler votre script à votre rythme : vos yeux restent levés et votre discours reste sur les rails.\n\n[cue pause]\n\nQuittez l\'app et il continue dans une fenêtre flottante, juste au-dessus de votre caméra ou de votre visio.\n\n[cue ralentir]\n\nPerdu ? Faites glisser le script en arrière. Trop long ? Sautez un passage.\n\nEt le minuteur passe au jaune vers la fin… puis au rouge si vous vous emballez un peu trop.\n\n[cue petit rire]\n\nEt ces mots en couleur ?\n\n[cue insister]\n\nCe sont vos repères. Des rappels pour sourire, faire une pause ou ne pas paniquer. Ils ne sont jamais lus à voix haute.\n\n[cue pause]\n\nEssayez-le. Je pense que vous allez l\'adorer.</string>
     <string name="sample_cards">Bonjour à tous. Voici Cue Cards. [cue sourire]\n[separator]\nUne idée par fiche. Balayez vers la suivante quand vous êtes prêt.\n[separator]\nLe minuteur en haut vous garde dans les temps. [cue petit rire]\n[separator]\nLes mots en couleur sont des repères, pas du texte. [cue insister]\n[separator]\nMerci de votre attention. Des questions ?</string>
     <string name="theme_system">Système</string>
@@ -53,6 +54,11 @@
     <string name="custom_size">Personnalisé (%1$d)</string>
     <string name="hide_advanced_settings">Masquer les réglages avancés</string>
     <string name="show_advanced_settings">Afficher les réglages avancés</string>
+    <string name="language">Langue</string>
+    <string name="language_footer">Choisir une langue pour CueCard dans l\'app Paramètres le relance dans cette langue.</string>
+    <string name="language_footer_phone">CueCard suit la langue de votre téléphone, définie dans Système › Langues de l\'app Paramètres.</string>
+    <string name="report_translation_mistake">Signaler une erreur de traduction</string>
+    <string name="language_code">fr</string>
     <string name="timer_footer_off">0:00 désactive le minuteur.</string>
     <string name="timer_footer_countdown">Le compte à rebours est le délai avant que le script commence à défiler.</string>
     <string name="teleprompter_timer">Minuteur du prompteur</string>

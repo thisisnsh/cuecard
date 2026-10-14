@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="share_message">Dai un\'occhiata a %1$s</string>
+    <string name="translation_report_body">Dove nell\'app:\n\nCosa c\'è scritto:\n\nCosa dovrebbe esserci scritto:\n</string>
     <string name="sample_teleprompter">Ciao a tutti.\n\nSono felice di essere qui oggi per parlarvi del gobbo di CueCard.\n\n[cue sorridi e fai una pausa]\n\nFa scorrere il copione al tuo ritmo, così lo sguardo resta alto e le parole restano in carreggiata.\n\n[cue pausa]\n\nEsci dall\'app e continua in una finestra fluttuante, proprio sopra la fotocamera o la videochiamata.\n\n[cue rallenta]\n\nHai perso il segno? Trascina indietro il copione. Sei lungo? Salta avanti.\n\nE il timer diventa giallo verso la fine… e rosso se ti lasci prendere un po\' troppo.\n\n[cue risatina]\n\nE queste parole colorate?\n\n[cue enfatizza]\n\nSono i tuoi cue. Promemoria per sorridere, fare una pausa o non andare nel panico. Non vanno mai letti ad alta voce.\n\n[cue pausa]\n\nProvalo. Credo che ti piacerà.</string>
     <string name="sample_cards">Ciao a tutti. Vi presento Cue Cards. [cue sorridi]\n[separator]\nUn\'idea per scheda. Scorri alla prossima quando sei pronto.\n[separator]\nIl timer in alto ti tiene nei tempi. [cue risatina]\n[separator]\nLe parole colorate sono cue, non battute. [cue enfatizza]\n[separator]\nGrazie dell\'ascolto. Domande?</string>
     <string name="theme_system">Sistema</string>
@@ -53,6 +54,11 @@
     <string name="custom_size">Personalizzato (%1$d)</string>
     <string name="hide_advanced_settings">Nascondi impostazioni avanzate</string>
     <string name="show_advanced_settings">Mostra impostazioni avanzate</string>
+    <string name="language">Lingua</string>
+    <string name="language_footer">Scegliendo una lingua per CueCard nell\'app Impostazioni, l\'app si riavvia in quella lingua.</string>
+    <string name="language_footer_phone">CueCard usa la lingua del telefono, impostata in Sistema › Lingue nell\'app Impostazioni.</string>
+    <string name="report_translation_mistake">Segnala un errore di traduzione</string>
+    <string name="language_code">it</string>
     <string name="timer_footer_off">0:00 disattiva il timer.</string>
     <string name="timer_footer_countdown">Il conto alla rovescia è il tempo prima che il copione inizi a scorrere.</string>
     <string name="teleprompter_timer">Timer del gobbo</string>
