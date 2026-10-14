@@ -67,6 +67,7 @@ import com.thisisnsh.cuecard.android.R
 import com.thisisnsh.cuecard.android.models.AppColors
 import com.thisisnsh.cuecard.android.models.CueCards
 import com.thisisnsh.cuecard.android.models.CueColor
+import com.thisisnsh.cuecard.android.models.CueFontFamily
 import com.thisisnsh.cuecard.android.models.Emphasis
 import com.thisisnsh.cuecard.android.models.EmphasisStyle
 import com.thisisnsh.cuecard.android.models.RichText
@@ -347,10 +348,18 @@ private fun highlighted(
             }
         }
 
+        // Only closed tags are colored, so a cue being typed stays plain text
+        // until its bracket lands. Cues are set smaller and narrower than the
+        // script, so they never read as part of it.
         for (match in cues) {
             // The tag syntax stays visible — and editable — but recedes.
             addStyle(
-                SpanStyle(color = tagColor.copy(alpha = 0.45f), fontWeight = FontWeight.Medium),
+                SpanStyle(
+                    color = tagColor.copy(alpha = 0.45f),
+                    fontWeight = FontWeight.Medium,
+                    fontFamily = CueFontFamily,
+                    fontSize = fontSize * 0.85f
+                ),
                 match.range.first,
                 match.range.last + 1
             )
@@ -359,7 +368,7 @@ private fun highlighted(
             val contentEnd = match.contentRange.last + 1
             if (contentEnd > contentStart) {
                 addStyle(
-                    SpanStyle(color = tagColor, fontWeight = FontWeight.SemiBold),
+                    SpanStyle(color = tagColor, fontWeight = FontWeight.SemiBold, fontFamily = CueFontFamily),
                     contentStart,
                     contentEnd
                 )

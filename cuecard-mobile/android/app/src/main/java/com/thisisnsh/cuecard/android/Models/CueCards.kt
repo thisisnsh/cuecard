@@ -4,6 +4,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.unit.TextUnit
 import java.text.BreakIterator
 import kotlinx.serialization.Serializable
 
@@ -43,13 +44,17 @@ data class CueCardRun(
     val style: EmphasisStyle = EmphasisStyle.NONE
 )
 
-/** The card as one text, cues in their color. */
-fun List<CueCardRun>.annotated(primary: Color, cue: Color): AnnotatedString =
+/**
+ * The card as one text, cues in their color and set narrower than the script
+ * so they never read as part of it. `cueFontSize`, if given, sets them smaller
+ * as well.
+ */
+fun List<CueCardRun>.annotated(primary: Color, cue: Color, cueFontSize: TextUnit = TextUnit.Unspecified): AnnotatedString =
     buildAnnotatedString {
         for (run in this@annotated) {
             pushStyle(
                 if (run.isCue) {
-                    SpanStyle(color = cue)
+                    SpanStyle(color = cue, fontFamily = CueFontFamily, fontSize = cueFontSize)
                 } else {
                     run.style.spanStyle().copy(color = primary)
                 }

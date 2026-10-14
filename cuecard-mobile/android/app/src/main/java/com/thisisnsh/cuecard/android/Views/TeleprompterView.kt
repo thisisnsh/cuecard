@@ -75,11 +75,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.thisisnsh.cuecard.android.AnalyticsEvents
 import com.thisisnsh.cuecard.android.LocalIsDarkTheme
 import com.thisisnsh.cuecard.android.models.AppColors
+import com.thisisnsh.cuecard.android.models.CueFontFamily
 import com.thisisnsh.cuecard.android.models.RichText
 import com.thisisnsh.cuecard.android.models.spanStyle
 import com.thisisnsh.cuecard.android.models.CueColor
@@ -892,8 +892,8 @@ private fun buildScript(
     val cueStyle = SpanStyle(
         fontSize = (fontSize * 0.72f).sp,
         fontWeight = FontWeight.SemiBold,
-        color = cueColor.color(isDark),
-        letterSpacing = 0.05.em
+        fontFamily = CueFontFamily,
+        color = cueColor.color(isDark)
     )
     val bodyParagraph = ParagraphStyle(lineHeight = (fontSize * 1.18f).sp)
     // The gap between paragraphs, as its own short line — the nearest Compose has

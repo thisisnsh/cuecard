@@ -422,8 +422,12 @@ private fun Deck(
 private fun CardFace(card: String, settings: TeleprompterSettings, isDark: Boolean, modifier: Modifier = Modifier) {
     val shape = RoundedCornerShape(CARD_CORNER_RADIUS)
     val runs = remember(card) { CueCards.runs(card) }
-    val text = remember(runs, settings.cards.cueColor, isDark) {
-        runs.annotated(primary = AppColors.textPrimary(isDark), cue = settings.cards.cueColor.color(isDark))
+    val text = remember(runs, settings.cards.cueColor, settings.cards.fontSize, isDark) {
+        runs.annotated(
+            primary = AppColors.textPrimary(isDark),
+            cue = settings.cards.cueColor.color(isDark),
+            cueFontSize = (settings.cards.fontSize * 0.82f).sp
+        )
     }
     val fontSize = settings.cards.fontSize
 
