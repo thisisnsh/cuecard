@@ -7,9 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1A10C0000000000000000013 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 1A10C0000000000000000003 /* Localizable.xcstrings */; };
-		1A10C0000000000000000012 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 1A10C0000000000000000002 /* Localizable.xcstrings */; };
-		1A10C0000000000000000011 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 1A10C0000000000000000001 /* Localizable.xcstrings */; };
 		001 /* CueCardApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 101 /* CueCardApp.swift */; };
 		002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 102 /* ContentView.swift */; };
 		003 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 103 /* WelcomeView.swift */; };
@@ -43,9 +40,6 @@
 		042 /* TeleprompterControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134 /* TeleprompterControls.swift */; };
 		043 /* DeviceModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 128 /* DeviceModel.swift */; };
 		044 /* CueCards.swift in Sources */ = {isa = PBXBuildFile; fileRef = 135 /* CueCards.swift */; };
-		B1C400000000000000000002 /* RichText.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C400000000000000000001 /* RichText.swift */; };
-		B1C400000000000000000003 /* RichText.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C400000000000000000001 /* RichText.swift */; };
-		B1C400000000000000000004 /* RichText.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C400000000000000000001 /* RichText.swift */; };
 		049 /* CueCardsSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = 138 /* CueCardsSession.swift */; };
 		051 /* CueCardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 140 /* CueCardsView.swift */; };
 		054 /* CueColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 116 /* CueColor.swift */; };
@@ -73,12 +67,18 @@
 		076 /* DeckStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 156 /* DeckStore.swift */; };
 		077 /* SavedDeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 157 /* SavedDeckView.swift */; };
 		078 /* HelpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 158 /* HelpView.swift */; };
+		1A10C0000000000000000011 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 1A10C0000000000000000001 /* Localizable.xcstrings */; };
+		1A10C0000000000000000012 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 1A10C0000000000000000002 /* Localizable.xcstrings */; };
+		1A10C0000000000000000013 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 1A10C0000000000000000003 /* Localizable.xcstrings */; };
 		5A7ED0000000000000000001 /* NoteStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A7ED0000000000000000002 /* NoteStore.swift */; };
 		5A7ED0000000000000000003 /* NoteFolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A7ED0000000000000000004 /* NoteFolder.swift */; };
 		5A7ED0000000000000000005 /* NoteVersions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A7ED0000000000000000006 /* NoteVersions.swift */; };
 		5A7ED0000000000000000007 /* NoteVersionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A7ED0000000000000000008 /* NoteVersionsView.swift */; };
 		AA7130F62F04E5BC00F5C366 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = AA7130F52F04E5BC00F5C366 /* GoogleService-Info.plist */; };
 		AA856D562F060DFC00B0CBC6 /* GlassEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA856D542F060DFC00B0CBC6 /* GlassEffect.swift */; };
+		B1C400000000000000000002 /* RichText.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C400000000000000000001 /* RichText.swift */; };
+		B1C400000000000000000003 /* RichText.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C400000000000000000001 /* RichText.swift */; };
+		B1C400000000000000000004 /* RichText.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C400000000000000000001 /* RichText.swift */; };
 		C0CA4D5100000000000000A1 /* CueCardsLockScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CA4D5100000000000000A2 /* CueCardsLockScreen.swift */; };
 		C0CA4D530000000000000000 /* CueCardsWidgetState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CA4D520000000000000001 /* CueCardsWidgetState.swift */; };
 		C0CA4D530000000000000001 /* CueCardsWidgetState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CA4D520000000000000001 /* CueCardsWidgetState.swift */; };
@@ -131,9 +131,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		1A10C0000000000000000003 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
-		1A10C0000000000000000002 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
-		1A10C0000000000000000001 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		101 /* CueCardApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardApp.swift; sourceTree = "<group>"; };
 		102 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		103 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
@@ -162,7 +159,6 @@
 		133 /* TeleprompterRemoteCommand+Widget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TeleprompterRemoteCommand+Widget.swift"; sourceTree = "<group>"; };
 		134 /* TeleprompterControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeleprompterControls.swift; sourceTree = "<group>"; };
 		135 /* CueCards.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCards.swift; sourceTree = "<group>"; };
-		B1C400000000000000000001 /* RichText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RichText.swift; sourceTree = "<group>"; };
 		138 /* CueCardsSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardsSession.swift; sourceTree = "<group>"; };
 		140 /* CueCardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardsView.swift; sourceTree = "<group>"; };
 		143 /* CueCardRun.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardRun.swift; sourceTree = "<group>"; };
@@ -178,6 +174,9 @@
 		156 /* DeckStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckStore.swift; sourceTree = "<group>"; };
 		157 /* SavedDeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedDeckView.swift; sourceTree = "<group>"; };
 		158 /* HelpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpView.swift; sourceTree = "<group>"; };
+		1A10C0000000000000000001 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		1A10C0000000000000000002 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		1A10C0000000000000000003 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		201 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		202 /* WhatsNew.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = WhatsNew.json; sourceTree = "<group>"; };
 		203 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -191,6 +190,7 @@
 		AA2E5C0E2F0F38B500E1D079 /* CueCard.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CueCard.entitlements; sourceTree = "<group>"; };
 		AA7130F52F04E5BC00F5C366 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		AA856D542F060DFC00B0CBC6 /* GlassEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassEffect.swift; sourceTree = "<group>"; };
+		B1C400000000000000000001 /* RichText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RichText.swift; sourceTree = "<group>"; };
 		C0CA4D5100000000000000A2 /* CueCardsLockScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardsLockScreen.swift; sourceTree = "<group>"; };
 		C0CA4D520000000000000001 /* CueCardsWidgetState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardsWidgetState.swift; sourceTree = "<group>"; };
 		C0CA4D520000000000000002 /* CueCardsRemoteCommand+App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CueCardsRemoteCommand+App.swift"; sourceTree = "<group>"; };
@@ -769,7 +769,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = CueCard/CueCard.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 22;
+				CURRENT_PROJECT_VERSION = 23;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -804,7 +804,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = CueCard/CueCard.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 22;
+				CURRENT_PROJECT_VERSION = 23;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
