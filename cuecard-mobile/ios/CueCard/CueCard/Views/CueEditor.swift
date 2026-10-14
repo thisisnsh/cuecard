@@ -305,10 +305,8 @@ struct CueTextEditor: UIViewRepresentable {
     static let edgeFade: CGFloat = 28
 
     func makeUIView(context: Context) -> CueTextView {
-        // TextKit 1, for the layout manager that hides emphasis markers.
-        let textView = CueTextView(usingTextLayoutManager: false)
+        let textView = CueTextView()
         textView.delegate = context.coordinator
-        textView.layoutManager.delegate = context.coordinator
         // Puts Bold and Italic in the edit menu; they write markers.
         textView.allowsEditingTextAttributes = true
         textView.onToggleStyle = { [weak coordinator = context.coordinator] in coordinator?.toggle($0) }
@@ -400,22 +398,17 @@ struct CueTextEditor: UIViewRepresentable {
 
     // MARK: - Highlighting
 
-    @discardableResult
-    func applyHighlighting(to textView: UITextView) -> [NSRange] {
+    func applyHighlighting(to textView: UITextView) {
         Self.applyHighlighting(to: textView, cueColor: cueColor, colorScheme: colorScheme,
                                fontSize: fontSize, cardLimit: cardLimit)
     }
 
-    /// Styles the script as it reads: cues apart from the words, emphasis
-    /// applied, and the markers of closed emphasis hidden — unless the caret
-    /// is inside it, where they show so they can be edited. Returns the
-    /// emphasis left showing its markers, so a caret moving in or out of one
-    /// knows to style again.
-    @discardableResult
+    /// Styles the script as it reads: cues apart from the words, and emphasis
+    /// applied with its markers left showing, quieter, so they can be edited.
     static func applyHighlighting(to textView: UITextView, cueColor: CueColor, colorScheme: ColorScheme,
-                                  fontSize: CGFloat, cardLimit: Int?) -> [NSRange] {
+                                  fontSize: CGFloat, cardLimit: Int?) {
         // Recoloring mid-composition would drop the in-progress marked text.
-        guard textView.markedTextRange == nil else { return [] }
+        guard textView.markedTextRange == nil else { return }
 
         let isDarkMode = colorScheme == .dark
         let baseAttributes = baseAttributes(isDarkMode: isDarkMode, fontSize: fontSize)
@@ -425,7 +418,6 @@ struct CueTextEditor: UIViewRepresentable {
         let fullRange = NSRange(location: 0, length: storage.length)
         let cues = TeleprompterParser.cueMatches(in: textView.text)
         let emphases = RichText.emphases(in: textView.text, skipping: cues.map(\.range))
-        let revealed = revealedEmphases(emphases, selection: textView.selectedRange)
 
         storage.beginEditing()
         storage.setAttributes(baseAttributes, range: fullRange)
@@ -459,12 +451,8 @@ struct CueTextEditor: UIViewRepresentable {
             }
 
             for emphasis in emphases {
-                let hides = emphasis.isClosed && !revealed.contains(emphasis.range)
                 for marker in [emphasis.open, emphasis.close].compactMap({ $0 }) {
-                    storage.addAttributes(
-                        hides ? [.foregroundColor: UIColor.clear, .cueHidden: true] : [.foregroundColor: secondary],
-                        range: marker
-                    )
+                    storage.addAttribute(.foregroundColor, value: secondary, range: marker)
                 }
             }
         }
@@ -505,18 +493,6 @@ struct CueTextEditor: UIViewRepresentable {
         storage.endEditing()
 
         textView.typingAttributes = baseAttributes
-        return revealed
-    }
-
-    /// The closed emphasis the caret is in, whose markers show. A caret just
-    /// past the closing marker is outside it, so the markers go as soon as
-    /// it's closed. A selection shows none: the text would move under its
-    /// handles.
-    static func revealedEmphases(_ emphases: [Emphasis], selection: NSRange) -> [NSRange] {
-        guard selection.length == 0 else { return [] }
-        return emphases.filter(\.isClosed).map(\.range).filter {
-            $0.location < selection.location && selection.location < NSMaxRange($0)
-        }
     }
 
     private static func baseAttributes(isDarkMode: Bool, fontSize: CGFloat) -> [NSAttributedString.Key: Any] {
@@ -528,15 +504,13 @@ struct CueTextEditor: UIViewRepresentable {
 
     // MARK: - Coordinator
 
-    class Coordinator: NSObject, UITextViewDelegate, NSLayoutManagerDelegate {
+    class Coordinator: NSObject, UITextViewDelegate {
         var parent: CueTextEditor
         weak var textView: CueTextView?
         var appliedColorScheme: ColorScheme?
         var appliedCueColor: CueColor?
         var appliedFontSize: CGFloat?
         var appliedCardLimit: Int?
-        /// The emphasis showing its markers for the caret inside it.
-        private var revealed: [NSRange] = []
 
         init(parent: CueTextEditor) {
             self.parent = parent
@@ -634,7 +608,7 @@ struct CueTextEditor: UIViewRepresentable {
             textView.inputDelegate?.textWillChange(textView)
             textView.textStorage.replaceCharacters(in: range, with: replacement)
             textView.selectedRange = selection
-            revealed = parent.applyHighlighting(to: textView)
+            parent.applyHighlighting(to: textView)
             textView.inputDelegate?.textDidChange(textView)
 
             parent.text = textView.text
@@ -643,7 +617,7 @@ struct CueTextEditor: UIViewRepresentable {
 
         func textViewDidChange(_ textView: UITextView) {
             let selection = textView.selectedRange
-            revealed = parent.applyHighlighting(to: textView)
+            parent.applyHighlighting(to: textView)
             textView.selectedRange = selection
 
             parent.text = textView.text
@@ -651,42 +625,6 @@ struct CueTextEditor: UIViewRepresentable {
             // UITextView's own scroll-to-caret ignores the bottom inset, so the
             // last line would slide under the cue bar as it's typed.
             (textView as? CueTextView)?.scrollCaretIntoView()
-        }
-
-        /// Show the markers of the emphasis the caret moves into, and hide
-        /// those of the one it leaves.
-        func textViewDidChangeSelection(_ textView: UITextView) {
-            guard textView.markedTextRange == nil else { return }
-            let cues = TeleprompterParser.cueMatches(in: textView.text)
-            let emphases = RichText.emphases(in: textView.text, skipping: cues.map(\.range))
-            guard CueTextEditor.revealedEmphases(emphases, selection: textView.selectedRange) != revealed else {
-                return
-            }
-            revealed = parent.applyHighlighting(to: textView)
-        }
-
-        /// Hidden markers lay out as nothing at all, so the words close up
-        /// around them while the caret keeps the line's height.
-        func layoutManager(
-            _ layoutManager: NSLayoutManager,
-            shouldGenerateGlyphs glyphs: UnsafePointer<CGGlyph>,
-            properties: UnsafePointer<NSLayoutManager.GlyphProperty>,
-            characterIndexes: UnsafePointer<Int>,
-            font: UIFont,
-            forGlyphRange glyphRange: NSRange
-        ) -> Int {
-            guard let storage = layoutManager.textStorage else { return 0 }
-            var adjusted = Array(UnsafeBufferPointer(start: properties, count: glyphRange.length))
-            var hidesAny = false
-            for index in adjusted.indices
-            where storage.attribute(.cueHidden, at: characterIndexes[index], effectiveRange: nil) != nil {
-                adjusted[index] = .null
-                hidesAny = true
-            }
-            guard hidesAny else { return 0 }
-            layoutManager.setGlyphs(glyphs, properties: adjusted, characterIndexes: characterIndexes,
-                                    font: font, forGlyphRange: glyphRange)
-            return glyphRange.length
         }
 
         /// Wrap the selection — or the word at the caret — in `style`'s
@@ -798,11 +736,6 @@ extension UIFont {
     static func cue(ofSize size: CGFloat, weight: UIFont.Weight = .semibold) -> UIFont {
         UIFont.systemFont(ofSize: size, weight: weight, width: .condensed)
     }
-}
-
-extension NSAttributedString.Key {
-    /// Marks an emphasis marker the editor lays out as nothing.
-    static let cueHidden = NSAttributedString.Key("CueCardHidden")
 }
 
 private extension Emphasis {
