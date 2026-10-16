@@ -24,6 +24,8 @@ struct HomeView: View {
     @State private var showsSaved = false
     @State private var savedTask: Task<Void, Never>?
     @State private var errorMessage: String?
+    /// What's waiting on the user to agree to lose the unsaved script.
+    @State private var confirmingDiscard: Discarding?
     @State private var isEditorFocused = false
     @StateObject private var editorController = CueEditorController()
     @ObservedObject private var watch = WatchSessionService.shared
@@ -213,12 +215,12 @@ struct HomeView: View {
                     errorMessage = String(localized: "That file is empty.")
                     return
                 }
-                let saved = settingsService.importNote(
-                    title: ScriptFile.title(for: url),
-                    content: TeleprompterParser.normalizingTags(in: text)
-                )
-                if !saved {
-                    errorMessage = String(localized: "The file was opened but couldn't be saved as a note. Try saving it again.")
+                let title = ScriptFile.title(for: url)
+                let content = TeleprompterParser.normalizingTags(in: text)
+                if settingsService.hasUnsavedChanges {
+                    confirmingDiscard = .import(title: title, content: content)
+                } else {
+                    importNote(title: title, content: content)
                 }
             } catch let error as ScriptFile.FileTooLarge {
                 errorMessage = String(localized: "That file is larger than 10 MB, so it can't be imported.")
@@ -231,6 +233,12 @@ struct HomeView: View {
             }
         case .failure(let error):
             errorMessage = error.localizedDescription
+        }
+    }
+
+    private func importNote(title: String, content: String) {
+        if !settingsService.importNote(title: title, content: content) {
+            errorMessage = String(localized: "The file was opened but couldn't be saved as a note. Try saving it again.")
         }
     }
 
@@ -419,7 +427,11 @@ struct HomeView: View {
 
                             Button(action: {
                                 AnalyticsEvents.logButtonClick("new_note", screen: "home")
-                                settingsService.createNewNote()
+                                if settingsService.hasUnsavedChanges {
+                                    confirmingDiscard = .new
+                                } else {
+                                    settingsService.createNewNote()
+                                }
                             }) {
                                 Label("New", systemImage: "square.and.pencil")
                             }
@@ -509,6 +521,22 @@ struct HomeView: View {
                 Button("OK", role: .cancel) { errorMessage = nil }
             } message: {
                 Text(errorMessage ?? "")
+            }
+            .alert("Discard Unsaved Changes?", isPresented: Binding(
+                get: { confirmingDiscard != nil },
+                set: { if !$0 { confirmingDiscard = nil } }
+            ), presenting: confirmingDiscard) { discarding in
+                Button("Cancel", role: .cancel) { }
+                Button("Discard Changes", role: .destructive) {
+                    switch discarding {
+                    case .new:
+                        settingsService.createNewNote()
+                    case .import(let title, let content):
+                        importNote(title: title, content: content)
+                    }
+                }
+            } message: { _ in
+                Text("The editor has changes that aren't saved. They'll be lost.")
             }
             .alert("Save Note", isPresented: $showingSaveDialog) {
                 TextField("Note title", text: $saveNoteTitle)
@@ -856,6 +884,12 @@ struct CardsEditorView: View {
     }
 }
 
+/// What replaces the script in the editor once its unsaved changes are let go.
+private enum Discarding {
+    case new
+    case `import`(title: String, content: String)
+}
+
 /// View for displaying and managing saved notes
 struct SavedNotesView: View {
     @EnvironmentObject var settingsService: SettingsService
@@ -868,6 +902,8 @@ struct SavedNotesView: View {
     @State private var showingStopFolder = false
     @State private var showingStopFolderFailed = false
     @State private var errorMessage: String?
+    /// A note waiting on the user to agree to lose the unsaved script it replaces.
+    @State private var noteToOpen: SavedNote?
     @State private var query = ""
 
     /// Saved notes, newest first, narrowed to those whose title or text match the search.
@@ -1022,8 +1058,12 @@ struct SavedNotesView: View {
                             ForEach(notes) { note in
                                 Button(action: {
                                     AnalyticsEvents.logButtonClick("load_note", screen: "saved_notes")
-                                    settingsService.loadNote(note)
-                                    dismiss()
+                                    // Opening replaces the script of the note's own mode.
+                                    if settingsService.hasUnsavedChanges(in: note.mode) {
+                                        noteToOpen = note
+                                    } else {
+                                        open(note)
+                                    }
                                 }) {
                                     VStack(alignment: .leading, spacing: 4) {
                                         HStack(spacing: 8) {
@@ -1204,6 +1244,15 @@ struct SavedNotesView: View {
             } message: {
                 Text(errorMessage ?? "")
             }
+            .alert("Discard Unsaved Changes?", isPresented: Binding(
+                get: { noteToOpen != nil },
+                set: { if !$0 { noteToOpen = nil } }
+            ), presenting: noteToOpen) { note in
+                Button("Cancel", role: .cancel) { }
+                Button("Discard Changes", role: .destructive) { open(note) }
+            } message: { _ in
+                Text("The editor has changes that aren't saved. They'll be lost.")
+            }
             .alert("Rename Note", isPresented: Binding(
                 get: { noteToRename != nil },
                 set: { if !$0 { noteToRename = nil } }
@@ -1225,6 +1274,11 @@ struct SavedNotesView: View {
                 Text("Enter a new title for your note")
             }
         }
+    }
+
+    private func open(_ note: SavedNote) {
+        settingsService.loadNote(note)
+        dismiss()
     }
 }
 

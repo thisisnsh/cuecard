@@ -999,10 +999,16 @@ Thanks for listening. Questions?
 
     /// Check if current notes have unsaved changes
     var hasUnsavedChanges: Bool {
-        guard let current = currentNote else {
-            return !notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        hasUnsavedChanges(in: settings.scriptMode)
+    }
+
+    /// Whether the script being written in `mode` has changes not saved.
+    func hasUnsavedChanges(in mode: ScriptMode) -> Bool {
+        let text = notes(for: mode)
+        guard let id = noteId(for: mode), let saved = savedNotes.first(where: { $0.id == id }) else {
+            return !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
-        return current.content != notes
+        return saved.content != text
     }
 
     /// Clear all stored data
