@@ -271,7 +271,7 @@ final class NoteFolder {
         var file = existing?.file
         if let current = file, existing?.title != note.title {
             // Renamed in the app, so the file follows, keeping its extension.
-            let taken = takenNames(in: folder, index: index).subtracting([current])
+            let taken = takenNames(in: folder, index: index).subtracting([current.lowercased()])
             let renamed = uniqueName(for: note, extension: fileExtension(current), taken: taken)
             if renamed != current,
                (try? fileManager.moveItem(at: folder.appendingPathComponent(current),
