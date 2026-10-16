@@ -7,6 +7,122 @@
     " %@ " : {
       "shouldTranslate" : false
     },
+    "“%@” couldn't be deleted from the notes folder. Its note stays deleted." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ konnte nicht aus dem Notizordner gelöscht werden. Die Notiz bleibt gelöscht."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” no se ha podido eliminar de la carpeta de notas. Su nota sigue eliminada."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "« %@ » n'a pas pu être supprimé du dossier de notes. Sa note reste supprimée."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” को नोट फ़ोल्डर से डिलीट नहीं किया जा सका। इसका नोट डिलीट ही रहेगा।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” non è stato eliminato dalla cartella delle note. La nota resta eliminata."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@”をメモのフォルダから削除できませんでした。メモは削除されたままです。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‘%@’ 파일을 메모 폴더에서 삭제할 수 없었습니다. 메모는 삭제된 상태로 유지됩니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” não pôde ser apagado da pasta de notas. A nota continua apagada."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法从笔记文件夹中删除“%@”。其笔记仍保持删除状态。"
+          }
+        }
+      }
+    },
+    "“%@” is larger than 10 MB, so it wasn't added to your notes." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "„%@“ ist größer als 10 MB und wurde daher nicht zu deinen Notizen hinzugefügt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” ocupa más de 10 MB, así que no se ha añadido a tus notas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "« %@ » dépasse 10 Mo et n'a donc pas été ajouté à vos notes."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” 10 MB से बड़ी है, इसलिए इसे आपके नोट में नहीं जोड़ा गया।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” supera i 10 MB, quindi non è stato aggiunto alle note."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@”は10 MBを超えているため、メモに追加されませんでした。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "‘%@’ 파일이 10MB보다 커서 메모에 추가되지 않았습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@” tem mais de 10 MB, então não foi adicionado às suas notas."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "“%@”大于 10 MB，因此未添加到你的笔记。"
+          }
+        }
+      }
+    },
     "%@ minutes" : {
       "comment" : "A timer row's minute wheel, for VoiceOver",
       "localizations" : {
@@ -185,173 +301,6 @@
     },
     "%lld" : {
       "shouldTranslate" : false
-    },
-    "%lld Versions" : {
-      "comment" : "How many versions a saved note has",
-      "localizations" : {
-        "de" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld Version"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld Versionen"
-                }
-              }
-            }
-          }
-        },
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld Version"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld Versions"
-                }
-              }
-            }
-          }
-        },
-        "es" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld versión"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld versiones"
-                }
-              }
-            }
-          }
-        },
-        "fr" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld version"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld versions"
-                }
-              }
-            }
-          }
-        },
-        "hi" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld वर्शन"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld वर्शन"
-                }
-              }
-            }
-          }
-        },
-        "it" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld versione"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld versioni"
-                }
-              }
-            }
-          }
-        },
-        "ja" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld個のバージョン"
-                }
-              }
-            }
-          }
-        },
-        "ko" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "버전 %lld개"
-                }
-              }
-            }
-          }
-        },
-        "pt-BR" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld versão"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld versões"
-                }
-              }
-            }
-          }
-        },
-        "zh-Hans" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "%lld 个版本"
-                }
-              }
-            }
-          }
-        }
-      }
     },
     "%lld files couldn't be deleted from the notes folder. Their notes stay deleted." : {
       "localizations" : {
@@ -695,11 +644,347 @@
         }
       }
     },
+    "%lld Versions" : {
+      "comment" : "How many versions a saved note has",
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Version"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Versionen"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Version"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld Versions"
+                }
+              }
+            }
+          }
+        },
+        "es" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld versión"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld versiones"
+                }
+              }
+            }
+          }
+        },
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld version"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld versions"
+                }
+              }
+            }
+          }
+        },
+        "hi" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld वर्शन"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld वर्शन"
+                }
+              }
+            }
+          }
+        },
+        "it" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld versione"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld versioni"
+                }
+              }
+            }
+          }
+        },
+        "ja" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld個のバージョン"
+                }
+              }
+            }
+          }
+        },
+        "ko" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "버전 %lld개"
+                }
+              }
+            }
+          }
+        },
+        "pt-BR" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld versão"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld versões"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld 个版本"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld/%lld" : {
       "shouldTranslate" : false
     },
     "+%lld" : {
       "shouldTranslate" : false
+    },
+    "−%lld" : {
+      "shouldTranslate" : false
+    },
+    "⋯ %lld unchanged lines" : {
+      "localizations" : {
+        "de" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "⋯ %lld unveränderte Zeile"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "⋯ %lld unveränderte Zeilen"
+                }
+              }
+            }
+          }
+        },
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "⋯ %lld unchanged line"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "⋯ %lld unchanged lines"
+                }
+              }
+            }
+          }
+        },
+        "es" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "⋯ %lld línea sin cambios"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "⋯ %lld líneas sin cambios"
+                }
+              }
+            }
+          }
+        },
+        "fr" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "⋯ %lld ligne inchangée"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "⋯ %lld lignes inchangées"
+                }
+              }
+            }
+          }
+        },
+        "hi" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "⋯ %lld पंक्ति में बदलाव नहीं"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "⋯ %lld पंक्तियों में बदलाव नहीं"
+                }
+              }
+            }
+          }
+        },
+        "it" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "⋯ %lld riga invariata"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "⋯ %lld righe invariate"
+                }
+              }
+            }
+          }
+        },
+        "ja" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "⋯ 変更のない%lld行"
+                }
+              }
+            }
+          }
+        },
+        "ko" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "⋯ 변경 없는 줄 %lld개"
+                }
+              }
+            }
+          }
+        },
+        "pt-BR" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "⋯ %lld linha sem alterações"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "⋯ %lld linhas sem alterações"
+                }
+              }
+            }
+          }
+        },
+        "zh-Hans" : {
+          "variations" : {
+            "plural" : {
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "⋯ %lld 行未更改"
+                }
+              }
+            }
+          }
+        }
+      }
     },
     "0:00 turns off the timer." : {
       "localizations" : {
@@ -1919,64 +2204,6 @@
         }
       }
     },
-    "Card Text Size" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Textgröße der Karten"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tamaño del texto de tarjeta"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Taille du texte des fiches"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "कार्ड टेक्स्ट साइज़"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dimensione testo schede"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "カードの文字サイズ"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "카드 텍스트 크기"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tamanho do texto do cartão"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "卡片文字大小"
-          }
-        }
-      }
-    },
     "Card text can be set from %lld to %lld, and editor text from %lld to %lld." : {
       "localizations" : {
         "de" : {
@@ -2031,6 +2258,64 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "卡片文字可设为 %lld 到 %lld，编辑器文字为 %lld 到 %lld。"
+          }
+        }
+      }
+    },
+    "Card Text Size" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Textgröße der Karten"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamaño del texto de tarjeta"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Taille du texte des fiches"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कार्ड टेक्स्ट साइज़"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dimensione testo schede"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "カードの文字サイズ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "카드 텍스트 크기"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamanho do texto do cartão"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "卡片文字大小"
           }
         }
       }
@@ -3489,64 +3774,6 @@
         }
       }
     },
-    "Current Edit" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aktuelle Bearbeitung"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Edición actual"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Modification actuelle"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "मौजूदा बदलाव"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Modifica attuale"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "現在の編集内容"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "현재 편집 내용"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Edição atual"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "当前编辑"
-          }
-        }
-      }
-    },
     "Current card" : {
       "localizations" : {
         "de" : {
@@ -3601,6 +3828,64 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "当前卡片"
+          }
+        }
+      }
+    },
+    "Current Edit" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktuelle Bearbeitung"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edición actual"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modification actuelle"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मौजूदा बदलाव"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifica attuale"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "現在の編集内容"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "현재 편집 내용"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edição atual"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前编辑"
           }
         }
       }
@@ -3952,6 +4237,9 @@
           }
         }
       }
+    },
+    "Discard Changes" : {
+
     },
     "Discard Unsaved Changes?" : {
       "localizations" : {
@@ -6101,64 +6389,6 @@
         }
       }
     },
-    "Keep Using Folder" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ordner weiter verwenden"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Seguir usando la carpeta"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Continuer à utiliser le dossier"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "फ़ोल्डर इस्तेमाल करते रहें"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Continua a usare la cartella"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "フォルダを使い続ける"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "폴더 계속 사용"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Continuar usando a pasta"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "继续使用文件夹"
-          }
-        }
-      }
-    },
     "Keep on Apple Watch" : {
       "localizations" : {
         "de" : {
@@ -6213,6 +6443,64 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "保留在 Apple Watch 上"
+          }
+        }
+      }
+    },
+    "Keep Using Folder" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ordner weiter verwenden"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seguir usando la carpeta"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continuer à utiliser le dossier"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "फ़ोल्डर इस्तेमाल करते रहें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continua a usare la cartella"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "フォルダを使い続ける"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "폴더 계속 사용"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continuar usando a pasta"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "继续使用文件夹"
           }
         }
       }
@@ -6507,6 +6795,64 @@
         }
       }
     },
+    "lines/min" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeilen/Min."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "líneas/min"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "lignes/min"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "पंक्ति/मि."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "righe/min"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "行/分"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "줄/분"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "linhas/min"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "行/分"
+          }
+        }
+      }
+    },
     "Lock Screen" : {
       "localizations" : {
         "de" : {
@@ -6619,6 +6965,64 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "中"
+          }
+        }
+      }
+    },
+    "min" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Min."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "min"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "min"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "मि."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "min"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "분"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "min"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分"
           }
         }
       }
@@ -6739,64 +7143,6 @@
         }
       }
     },
-    "Moves through the open deck of cue cards." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Blättert durch den geöffneten Kartenstapel."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Avanza por el mazo de tarjetas abierto."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Parcourt le jeu de fiches ouvert."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "खुले कार्ड डेक में आगे-पीछे जाता है।"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Scorre il mazzo di schede aperto."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "開いているカードのデッキを進めます。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "열려 있는 카드 묶음을 넘깁니다."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Avança pelo conjunto de cartões aberto."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "在打开的卡组中翻页。"
-          }
-        }
-      }
-    },
     "More Languages Supported: Chinese, French, German, Hindi, Italian, Japanese, Korean, Portuguese, and Spanish." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6852,6 +7198,64 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "支持更多语言：中文、法语、德语、印地语、意大利语、日语、韩语、葡萄牙语和西班牙语。"
+          }
+        }
+      }
+    },
+    "Moves through the open deck of cue cards." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Blättert durch den geöffneten Kartenstapel."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avanza por el mazo de tarjetas abierto."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Parcourt le jeu de fiches ouvert."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "खुले कार्ड डेक में आगे-पीछे जाता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scorre il mazzo di schede aperto."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "開いているカードのデッキを進めます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "열려 있는 카드 묶음을 넘깁니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avança pelo conjunto de cartões aberto."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在打开的卡组中翻页。"
           }
         }
       }
@@ -7727,180 +8131,6 @@
         }
       }
     },
-    "Open Cards" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Karten öffnen"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Abrir tarjetas"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ouvrir les fiches"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "कार्ड खोलें"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Apri schede"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "カードを開く"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "카드 열기"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Abrir cartões"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "打开卡片"
-          }
-        }
-      }
-    },
-    "Open Saved Notes" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gesicherte Notizen öffnen"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Abre notas guardadas"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ouvrir les notes enregistrées"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "सहेजे गए नोट खोलें"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aprire le note salvate"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "保存したメモを開く"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "저장된 메모 열기"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Abrir notas salvas"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "打开已存笔记"
-          }
-        }
-      }
-    },
-    "Open Settings" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Einstellungen öffnen"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Abrir Ajustes"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ouvrir Réglages"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "सेटिंग्स खोलें"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Apri Impostazioni"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "設定を開く"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "설정 열기"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Abrir Ajustes"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "打开设置"
-          }
-        }
-      }
-    },
     "Open a deck on your iPhone and it shows on the watch too. Turning a card on either one moves both." : {
       "localizations" : {
         "de" : {
@@ -8129,6 +8359,180 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "在 iPhone 上打开稿子。手表会显示计时器，并可播放、暂停或后退 10 秒。"
+          }
+        }
+      }
+    },
+    "Open Cards" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Karten öffnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir tarjetas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir les fiches"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "कार्ड खोलें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apri schede"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "カードを開く"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "카드 열기"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir cartões"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开卡片"
+          }
+        }
+      }
+    },
+    "Open Saved Notes" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gesicherte Notizen öffnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre notas guardadas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir les notes enregistrées"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सहेजे गए नोट खोलें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aprire le note salvate"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存したメモを開く"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "저장된 메모 열기"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir notas salvas"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开已存笔记"
+          }
+        }
+      }
+    },
+    "Open Settings" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Einstellungen öffnen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir Ajustes"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrir Réglages"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "सेटिंग्स खोलें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apri Impostazioni"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "設定を開く"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "설정 열기"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abrir Ajustes"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开设置"
           }
         }
       }
@@ -9177,64 +9581,6 @@
         }
       }
     },
-    "Rectangle 16:9" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rechteck 16:9"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rectángulo 16:9"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rectangle 16:9"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "आयत 16:9"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rettangolo 16:9"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "長方形 16:9"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "직사각형 16:9"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retângulo 16:9"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "矩形 16:9"
-          }
-        }
-      }
-    },
     "Rectangle 4:3" : {
       "localizations" : {
         "de" : {
@@ -9289,6 +9635,64 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "矩形 4:3"
+          }
+        }
+      }
+    },
+    "Rectangle 16:9" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechteck 16:9"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rectángulo 16:9"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rectangle 16:9"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आयत 16:9"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rettangolo 16:9"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "長方形 16:9"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "직사각형 16:9"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retângulo 16:9"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "矩形 16:9"
           }
         }
       }
@@ -10223,64 +10627,6 @@
         }
       }
     },
-    "Save Your Work" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Arbeit sichern"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Guarda tu trabajo"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enregistrer votre travail"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "अपना काम सहेजें"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Salvare il lavoro"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "作業を保存する"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "작업 저장"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Salve seu trabalho"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "保存你的内容"
-          }
-        }
-      }
-    },
     "Save your scripts and cards to open them later." : {
       "localizations" : {
         "de" : {
@@ -10335,6 +10681,64 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "保存稿子和卡片，以便稍后打开。"
+          }
+        }
+      }
+    },
+    "Save Your Work" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arbeit sichern"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guarda tu trabajo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistrer votre travail"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "अपना काम सहेजें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salvare il lavoro"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "作業を保存する"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "작업 저장"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salve seu trabalho"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存你的内容"
           }
         }
       }
@@ -10513,6 +10917,64 @@
         }
       }
     },
+    "Scroll by Hand" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Von Hand scrollen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desplaza a mano"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Défiler à la main"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "हाथ से स्क्रॉल करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Scorrere a mano"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手動でスクロールする"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "직접 스크롤하기"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rolar manualmente"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手动滚动"
+          }
+        }
+      }
+    },
     "Scroll Speed" : {
       "localizations" : {
         "de" : {
@@ -10629,64 +11091,6 @@
         }
       }
     },
-    "Scroll by Hand" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Von Hand scrollen"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Desplaza a mano"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Défiler à la main"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "हाथ से स्क्रॉल करें"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Scorrere a mano"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "手動でスクロールする"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "직접 스크롤하기"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rolar manualmente"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "手动滚动"
-          }
-        }
-      }
-    },
     "Search" : {
       "localizations" : {
         "de" : {
@@ -10799,6 +11203,64 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "搜索帮助"
+          }
+        }
+      }
+    },
+    "sec" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sek."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "s"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "s"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "से."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "s"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "秒"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "초"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "s"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "秒"
           }
         }
       }
@@ -11151,64 +11613,6 @@
         }
       }
     },
-    "Share CueCard" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "CueCard teilen"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Compartir CueCard"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Partager CueCard"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "CueCard शेयर करें"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Condividi CueCard"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "CueCardを共有"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "CueCard 공유"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Compartilhar CueCard"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "分享 CueCard"
-          }
-        }
-      }
-    },
     "Share a Script" : {
       "localizations" : {
         "de" : {
@@ -11263,6 +11667,64 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "共享稿子"
+          }
+        }
+      }
+    },
+    "Share CueCard" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CueCard teilen"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compartir CueCard"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Partager CueCard"
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CueCard शेयर करें"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Condividi CueCard"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CueCardを共有"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CueCard 공유"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compartilhar CueCard"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "分享 CueCard"
           }
         }
       }
@@ -11847,6 +12309,64 @@
         }
       }
     },
+    "Start and stop scrolling without touching the screen. In the Settings app, go to Action Button › Controls and pick Play or Pause under CueCard." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starte und stoppe das Scrollen, ohne den Bildschirm zu berühren. Gehe in der App „Einstellungen“ zu „Aktionstaste“ › „Steuerelemente“ und wähle unter CueCard „Abspielen oder Pause“."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicia y detén el desplazamiento sin tocar la pantalla. En la app Ajustes, ve a Botón de acción › Controles y elige Reproducir o pausar en CueCard."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lancez et arrêtez le défilement sans toucher l'écran. Dans l'app Réglages, allez dans Bouton Action › Commandes et choisissez Lire ou mettre en pause sous CueCard."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "स्क्रीन को छुए बिना स्क्रॉल शुरू और बंद करें। सेटिंग्स ऐप में, ऐक्शन बटन › कंट्रोल में जाएँ और CueCard के नीचे चलाएँ या रोकें चुनें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avvia e ferma lo scorrimento senza toccare lo schermo. Nell'app Impostazioni, vai su Tasto Azione › Controlli e scegli Riproduci o metti in pausa sotto CueCard."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "画面に触れずにスクロールを開始・停止できます。設定Appで「アクションボタン」›「コントロール」に進み、CueCardの「再生／一時停止」を選びます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "화면을 건드리지 않고 스크롤을 시작하고 멈추세요. 설정 앱에서 동작 버튼 › 제어기로 이동해 CueCard 아래의 재생 또는 일시 정지를 선택하세요."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicie e pare a rolagem sem tocar na tela. No app Ajustes, vá em Botão de Ação › Controles e escolha Reproduzir ou pausar em CueCard."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无需触碰屏幕即可开始和停止滚动。在“设置”App 中，前往“操作按钮”›“控制”，然后在 CueCard 下选择“播放或暂停”。"
+          }
+        }
+      }
+    },
     "Start Over" : {
       "localizations" : {
         "de" : {
@@ -12017,64 +12537,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "开始提词"
-          }
-        }
-      }
-    },
-    "Start and stop scrolling without touching the screen. In the Settings app, go to Action Button › Controls and pick Play or Pause under CueCard." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Starte und stoppe das Scrollen, ohne den Bildschirm zu berühren. Gehe in der App „Einstellungen“ zu „Aktionstaste“ › „Steuerelemente“ und wähle unter CueCard „Abspielen oder Pause“."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Inicia y detén el desplazamiento sin tocar la pantalla. En la app Ajustes, ve a Botón de acción › Controles y elige Reproducir o pausar en CueCard."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lancez et arrêtez le défilement sans toucher l'écran. Dans l'app Réglages, allez dans Bouton Action › Commandes et choisissez Lire ou mettre en pause sous CueCard."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "स्क्रीन को छुए बिना स्क्रॉल शुरू और बंद करें। सेटिंग्स ऐप में, ऐक्शन बटन › कंट्रोल में जाएँ और CueCard के नीचे चलाएँ या रोकें चुनें।"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Avvia e ferma lo scorrimento senza toccare lo schermo. Nell'app Impostazioni, vai su Tasto Azione › Controlli e scegli Riproduci o metti in pausa sotto CueCard."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "画面に触れずにスクロールを開始・停止できます。設定Appで「アクションボタン」›「コントロール」に進み、CueCardの「再生／一時停止」を選びます。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "화면을 건드리지 않고 스크롤을 시작하고 멈추세요. 설정 앱에서 동작 버튼 › 제어기로 이동해 CueCard 아래의 재생 또는 일시 정지를 선택하세요."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Inicie e pare a rolagem sem tocar na tela. No app Ajustes, vá em Botão de Ação › Controles e escolha Reproduzir ou pausar em CueCard."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "无需触碰屏幕即可开始和停止滚动。在“设置”App 中，前往“操作按钮”›“控制”，然后在 CueCard 下选择“播放或暂停”。"
           }
         }
       }
@@ -12543,180 +13005,6 @@
         }
       }
     },
-    "Tap the gear at the top. Each mode keeps its own sizes and cue color. Timer colors are set in the timer." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tippe oben auf das Zahnrad. Jeder Modus hat eigene Größen und eine eigene Cue-Farbe. Die Timer-Farben stellst du im Timer ein."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toca el engranaje arriba. Cada modo tiene sus propios tamaños y color de indicaciones. Los colores del temporizador se ajustan en el temporizador."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Touchez l'engrenage en haut. Chaque mode a ses propres tailles et couleur de repère. Les couleurs du minuteur se règlent dans le minuteur."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ऊपर गियर पर टैप करें। हर मोड के अपने साइज़ और क्यू का रंग होते हैं। टाइमर के रंग टाइमर में सेट होते हैं।"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tocca l'ingranaggio in alto. Ogni modalità ha dimensioni e colore dei cue propri. I colori del timer si impostano nel timer."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "上部の歯車をタップします。サイズとキューの色はモードごとに保存されます。タイマーの色はタイマーで設定します。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "상단의 톱니바퀴를 탭하세요. 모드마다 크기와 큐 색상이 따로 저장됩니다. 타이머 색상은 타이머에서 설정합니다."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toque na engrenagem no topo. Cada modo tem seus próprios tamanhos e cor de deixa. As cores do timer são definidas no timer."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "轻点顶部的齿轮。每种模式都有各自的大小和提示颜色。计时器颜色在计时器中设置。"
-          }
-        }
-      }
-    },
-    "Tap the mode name at the top. Teleprompter scrolls your whole script. Cards shows it one card at a time." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tippe oben auf den Namen des Modus. Teleprompter scrollt dein ganzes Skript. Karten zeigt es Karte für Karte."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toca el nombre del modo arriba. Teleprompter desplaza todo tu guion. Tarjetas lo muestra tarjeta a tarjeta."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Touchez le nom du mode en haut. Prompteur fait défiler tout votre script. Fiches l'affiche une fiche à la fois."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ऊपर मोड के नाम पर टैप करें। टेलीप्रॉम्प्टर आपकी पूरी स्क्रिप्ट स्क्रॉल करता है। कार्ड इसे एक बार में एक कार्ड दिखाता है।"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tocca il nome della modalità in alto. Gobbo fa scorrere tutto il copione. Schede lo mostra una scheda alla volta."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "上部のモード名をタップします。「プロンプター」は原稿全体をスクロールし、「カード」は1枚ずつ表示します。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "상단의 모드 이름을 탭하세요. 프롬프터는 원고 전체를 스크롤하고, 카드는 한 장씩 보여 줍니다."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toque no nome do modo no topo. Teleprompter rola o roteiro inteiro. Cartões mostra um cartão por vez."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "轻点顶部的模式名称。“提词器”会滚动整篇稿子，“卡片”则一次显示一张。"
-          }
-        }
-      }
-    },
-    "Tap the timer next to Play to set how long you have and when it warns you." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tippe auf den Timer neben „Abspielen“, um festzulegen, wie viel Zeit du hast und wann er dich warnt."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toca el temporizador junto a Reproducir para indicar cuánto tiempo tienes y cuándo avisarte."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Touchez le minuteur à côté de Lire pour définir votre durée et le moment de l'alerte."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "आपके पास कितना समय है और कब चेतावनी मिले, यह सेट करने के लिए चलाएँ के पास वाले टाइमर पर टैप करें।"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tocca il timer accanto a Riproduci per impostare quanto tempo hai e quando avvisarti."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "再生ボタンの横のタイマーをタップして、持ち時間と警告のタイミングを設定します。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "재생 옆의 타이머를 탭하여 주어진 시간과 경고 시점을 설정하세요."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toque no timer ao lado de Reproduzir para definir quanto tempo você tem e quando ele avisa."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "轻点“播放”旁边的计时器，设置可用时长和提醒时间。"
-          }
-        }
-      }
-    },
     "Tap ••• › Import. The file opens in the editor and is kept as a saved note." : {
       "localizations" : {
         "de" : {
@@ -12891,6 +13179,180 @@
         }
       }
     },
+    "Tap the gear at the top. Each mode keeps its own sizes and cue color. Timer colors are set in the timer." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tippe oben auf das Zahnrad. Jeder Modus hat eigene Größen und eine eigene Cue-Farbe. Die Timer-Farben stellst du im Timer ein."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toca el engranaje arriba. Cada modo tiene sus propios tamaños y color de indicaciones. Los colores del temporizador se ajustan en el temporizador."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touchez l'engrenage en haut. Chaque mode a ses propres tailles et couleur de repère. Les couleurs du minuteur se règlent dans le minuteur."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ऊपर गियर पर टैप करें। हर मोड के अपने साइज़ और क्यू का रंग होते हैं। टाइमर के रंग टाइमर में सेट होते हैं।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tocca l'ingranaggio in alto. Ogni modalità ha dimensioni e colore dei cue propri. I colori del timer si impostano nel timer."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上部の歯車をタップします。サイズとキューの色はモードごとに保存されます。タイマーの色はタイマーで設定します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "상단의 톱니바퀴를 탭하세요. 모드마다 크기와 큐 색상이 따로 저장됩니다. 타이머 색상은 타이머에서 설정합니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toque na engrenagem no topo. Cada modo tem seus próprios tamanhos e cor de deixa. As cores do timer são definidas no timer."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "轻点顶部的齿轮。每种模式都有各自的大小和提示颜色。计时器颜色在计时器中设置。"
+          }
+        }
+      }
+    },
+    "Tap the mode name at the top. Teleprompter scrolls your whole script. Cards shows it one card at a time." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tippe oben auf den Namen des Modus. Teleprompter scrollt dein ganzes Skript. Karten zeigt es Karte für Karte."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toca el nombre del modo arriba. Teleprompter desplaza todo tu guion. Tarjetas lo muestra tarjeta a tarjeta."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touchez le nom du mode en haut. Prompteur fait défiler tout votre script. Fiches l'affiche une fiche à la fois."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ऊपर मोड के नाम पर टैप करें। टेलीप्रॉम्प्टर आपकी पूरी स्क्रिप्ट स्क्रॉल करता है। कार्ड इसे एक बार में एक कार्ड दिखाता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tocca il nome della modalità in alto. Gobbo fa scorrere tutto il copione. Schede lo mostra una scheda alla volta."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "上部のモード名をタップします。「プロンプター」は原稿全体をスクロールし、「カード」は1枚ずつ表示します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "상단의 모드 이름을 탭하세요. 프롬프터는 원고 전체를 스크롤하고, 카드는 한 장씩 보여 줍니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toque no nome do modo no topo. Teleprompter rola o roteiro inteiro. Cartões mostra um cartão por vez."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "轻点顶部的模式名称。“提词器”会滚动整篇稿子，“卡片”则一次显示一张。"
+          }
+        }
+      }
+    },
+    "Tap the timer next to Play to set how long you have and when it warns you." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tippe auf den Timer neben „Abspielen“, um festzulegen, wie viel Zeit du hast und wann er dich warnt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toca el temporizador junto a Reproducir para indicar cuánto tiempo tienes y cuándo avisarte."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touchez le minuteur à côté de Lire pour définir votre durée et le moment de l'alerte."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "आपके पास कितना समय है और कब चेतावनी मिले, यह सेट करने के लिए चलाएँ के पास वाले टाइमर पर टैप करें।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tocca il timer accanto a Riproduci per impostare quanto tempo hai e quando avvisarti."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "再生ボタンの横のタイマーをタップして、持ち時間と警告のタイミングを設定します。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "재생 옆의 타이머를 탭하여 주어진 시간과 경고 시점을 설정하세요."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toque no timer ao lado de Reproduzir para definir quanto tempo você tem e quando ele avisa."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "轻点“播放”旁边的计时器，设置可用时长和提醒时间。"
+          }
+        }
+      }
+    },
     "Teleprompter" : {
       "localizations" : {
         "de" : {
@@ -13007,6 +13469,64 @@
         }
       }
     },
+    "Teleprompter text can be set from %lld to %lld, floating window text from %lld to %lld, and editor text from %lld to %lld." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teleprompter-Text kann von %lld bis %lld, Text im schwebenden Fenster von %lld bis %lld und Editor-Text von %lld bis %lld eingestellt werden."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El texto del teleprompter puede ir de %lld a %lld, el de la ventana flotante de %lld a %lld y el del editor de %lld a %lld."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le texte du prompteur peut aller de %lld à %lld, celui de la fenêtre flottante de %lld à %lld et celui de l'éditeur de %lld à %lld."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "टेलीप्रॉम्प्टर टेक्स्ट %lld से %lld, फ़्लोटिंग विंडो टेक्स्ट %lld से %lld, और एडिटर टेक्स्ट %lld से %lld तक सेट किया जा सकता है।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Il testo del gobbo va da %lld a %lld, quello della finestra fluttuante da %lld a %lld e quello dell'editor da %lld a %lld."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "プロンプターの文字は%lld〜%lld、フローティングウインドウの文字は%lld〜%lld、エディタの文字は%lld〜%lldに設定できます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "프롬프터 텍스트는 %lld~%lld, 플로팅 윈도우 텍스트는 %lld~%lld, 편집기 텍스트는 %lld~%lld로 설정할 수 있습니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O texto do teleprompter pode ir de %lld a %lld, o da janela flutuante de %lld a %lld e o do editor de %lld a %lld."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "提词器文字可设为 %lld 到 %lld，悬浮窗口文字为 %lld 到 %lld，编辑器文字为 %lld 到 %lld。"
+          }
+        }
+      }
+    },
     "Teleprompter Text Size" : {
       "localizations" : {
         "de" : {
@@ -13119,64 +13639,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "提词器计时器"
-          }
-        }
-      }
-    },
-    "Teleprompter text can be set from %lld to %lld, floating window text from %lld to %lld, and editor text from %lld to %lld." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Teleprompter-Text kann von %lld bis %lld, Text im schwebenden Fenster von %lld bis %lld und Editor-Text von %lld bis %lld eingestellt werden."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "El texto del teleprompter puede ir de %lld a %lld, el de la ventana flotante de %lld a %lld y el del editor de %lld a %lld."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Le texte du prompteur peut aller de %lld à %lld, celui de la fenêtre flottante de %lld à %lld et celui de l'éditeur de %lld à %lld."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "टेलीप्रॉम्प्टर टेक्स्ट %lld से %lld, फ़्लोटिंग विंडो टेक्स्ट %lld से %lld, और एडिटर टेक्स्ट %lld से %lld तक सेट किया जा सकता है।"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Il testo del gobbo va da %lld a %lld, quello della finestra fluttuante da %lld a %lld e quello dell'editor da %lld a %lld."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "プロンプターの文字は%lld〜%lld、フローティングウインドウの文字は%lld〜%lld、エディタの文字は%lld〜%lldに設定できます。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "프롬프터 텍스트는 %lld~%lld, 플로팅 윈도우 텍스트는 %lld~%lld, 편집기 텍스트는 %lld~%lld로 설정할 수 있습니다."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "O texto do teleprompter pode ir de %lld a %lld, o da janela flutuante de %lld a %lld e o do editor de %lld a %lld."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "提词器文字可设为 %lld 到 %lld，悬浮窗口文字为 %lld 到 %lld，编辑器文字为 %lld 到 %lld。"
           }
         }
       }
@@ -13470,6 +13932,16 @@
           }
         }
       }
+    },
+    "The editor has changes that aren't saved. They'll be lost." : {
+
+    },
+    "The file was opened but couldn't be saved as a note. Try saving it again." : {
+      "comment" : "A message that appears when a file is opened but can't be saved as a note.",
+      "isCommentAutoGenerated" : true
+    },
+    "The note couldn't be renamed. Try again." : {
+
     },
     "The note files in “%@” folder will be deleted. Your notes stay on this device." : {
       "localizations" : {
@@ -14224,6 +14696,10 @@
           }
         }
       }
+    },
+    "This version couldn't be restored. Try again." : {
+      "comment" : "A message displayed when a note version can't be restored.",
+      "isCommentAutoGenerated" : true
     },
     "Timer Colors" : {
       "localizations" : {
@@ -15675,6 +16151,10 @@
         }
       }
     },
+    "Your note couldn't be saved. Try again." : {
+      "comment" : "A message displayed when a note can't be saved.",
+      "isCommentAutoGenerated" : true
+    },
     "Your notes stay on this device." : {
       "localizations" : {
         "de" : {
@@ -15848,466 +16328,7 @@
           }
         }
       }
-    },
-    "lines/min" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zeilen/Min."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "líneas/min"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "lignes/min"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "पंक्ति/मि."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "righe/min"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "行/分"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "줄/분"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "linhas/min"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "行/分"
-          }
-        }
-      }
-    },
-    "min" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Min."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "min"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "min"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "मि."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "min"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "分"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "분"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "min"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "分"
-          }
-        }
-      }
-    },
-    "sec" : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sek."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "s"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "s"
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "से."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "s"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "秒"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "초"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "s"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "秒"
-          }
-        }
-      }
-    },
-    "“%@” couldn't be deleted from the notes folder. Its note stays deleted." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "„%@“ konnte nicht aus dem Notizordner gelöscht werden. Die Notiz bleibt gelöscht."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "“%@” no se ha podido eliminar de la carpeta de notas. Su nota sigue eliminada."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "« %@ » n'a pas pu être supprimé du dossier de notes. Sa note reste supprimée."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "“%@” को नोट फ़ोल्डर से डिलीट नहीं किया जा सका। इसका नोट डिलीट ही रहेगा।"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "“%@” non è stato eliminato dalla cartella delle note. La nota resta eliminata."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "“%@”をメモのフォルダから削除できませんでした。メモは削除されたままです。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "‘%@’ 파일을 메모 폴더에서 삭제할 수 없었습니다. 메모는 삭제된 상태로 유지됩니다."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "“%@” não pôde ser apagado da pasta de notas. A nota continua apagada."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "无法从笔记文件夹中删除“%@”。其笔记仍保持删除状态。"
-          }
-        }
-      }
-    },
-    "“%@” is larger than 10 MB, so it wasn't added to your notes." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "„%@“ ist größer als 10 MB und wurde daher nicht zu deinen Notizen hinzugefügt."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "“%@” ocupa más de 10 MB, así que no se ha añadido a tus notas."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "« %@ » dépasse 10 Mo et n'a donc pas été ajouté à vos notes."
-          }
-        },
-        "hi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "“%@” 10 MB से बड़ी है, इसलिए इसे आपके नोट में नहीं जोड़ा गया।"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "“%@” supera i 10 MB, quindi non è stato aggiunto alle note."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "“%@”は10 MBを超えているため、メモに追加されませんでした。"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "‘%@’ 파일이 10MB보다 커서 메모에 추가되지 않았습니다."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "“%@” tem mais de 10 MB, então não foi adicionado às suas notas."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "“%@”大于 10 MB，因此未添加到你的笔记。"
-          }
-        }
-      }
-    },
-    "−%lld" : {
-      "shouldTranslate" : false
-    },
-    "⋯ %lld unchanged lines" : {
-      "localizations" : {
-        "de" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "⋯ %lld unveränderte Zeile"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "⋯ %lld unveränderte Zeilen"
-                }
-              }
-            }
-          }
-        },
-        "en" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "⋯ %lld unchanged line"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "⋯ %lld unchanged lines"
-                }
-              }
-            }
-          }
-        },
-        "es" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "⋯ %lld línea sin cambios"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "⋯ %lld líneas sin cambios"
-                }
-              }
-            }
-          }
-        },
-        "fr" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "⋯ %lld ligne inchangée"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "⋯ %lld lignes inchangées"
-                }
-              }
-            }
-          }
-        },
-        "hi" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "⋯ %lld पंक्ति में बदलाव नहीं"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "⋯ %lld पंक्तियों में बदलाव नहीं"
-                }
-              }
-            }
-          }
-        },
-        "it" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "⋯ %lld riga invariata"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "⋯ %lld righe invariate"
-                }
-              }
-            }
-          }
-        },
-        "ja" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "⋯ 変更のない%lld行"
-                }
-              }
-            }
-          }
-        },
-        "ko" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "⋯ 변경 없는 줄 %lld개"
-                }
-              }
-            }
-          }
-        },
-        "pt-BR" : {
-          "variations" : {
-            "plural" : {
-              "one" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "⋯ %lld linha sem alterações"
-                }
-              },
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "⋯ %lld linhas sem alterações"
-                }
-              }
-            }
-          }
-        },
-        "zh-Hans" : {
-          "variations" : {
-            "plural" : {
-              "other" : {
-                "stringUnit" : {
-                  "state" : "translated",
-                  "value" : "⋯ %lld 行未更改"
-                }
-              }
-            }
-          }
-        }
-      }
     }
   },
-  "version" : "1.0"
+  "version" : "1.1"
 }
