@@ -1028,140 +1028,118 @@ struct SavedNotesView: View {
 
     var body: some View {
         NavigationStack {
-            withNoteAlerts(withFolderAlerts(content))
-        }
-    }
+            Group {
+                if settingsService.savedNotes.isEmpty {
+                    VStack(spacing: 16) {
+                        Image(systemName: "folder")
+                            .font(.system(size: 48))
+                            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
 
-    // The body is split into pieces so the compiler can type-check each one
-    // in time.
-    private var content: some View {
-        Group {
-            if settingsService.savedNotes.isEmpty {
-                emptyState
-            } else {
-                notesList
-            }
-        }
-        .navigationTitle("Saved Notes")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar { toolbarContent }
-        .onAppear {
-            settingsService.syncNotesFolder()
-        }
-        .fileImporter(isPresented: $showingFolderPicker, allowedContentTypes: [.folder]) { result in
-            handleFolderPick(result)
-        }
-    }
+                        Text("Nothing Saved Yet")
+                            .font(.headline)
+                            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
 
-    private var emptyState: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "folder")
-                .font(.system(size: 48))
-                .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-
-            Text("Nothing Saved Yet")
-                .font(.headline)
-                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-
-            Text("Save your scripts and cards to open them later.")
-                .font(.subheadline)
-                .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(AppColors.background(for: colorScheme))
-        .safeAreaInset(edge: .bottom) {
-            storageNote
-                .padding(.horizontal, 24)
-                .padding(.top, 8)
-                .padding(.bottom, 16)
-        }
-    }
-
-    private var notesList: some View {
-        List {
-            Section {
-                ForEach(notes) { note in
-                    noteRow(note)
-                }
-            } footer: {
-                // At the end of the list, so it never covers a note.
-                storageNote
-                    .frame(maxWidth: .infinity)
-                    .padding(.horizontal, 8)
-                    .padding(.top, 24)
-                    .padding(.bottom, 16)
-                    .listRowInsets(EdgeInsets())
-            }
-        }
-        .overlay {
-            if notes.isEmpty {
-                ContentUnavailableView.search(text: query)
-            }
-        }
-        .searchable(text: $query, prompt: "Search")
-    }
-
-    @ToolbarContentBuilder
-    private var toolbarContent: some ToolbarContent {
-        ToolbarItem(placement: .principal) {
-            VStack(spacing: 1) {
-                Text("Saved Notes")
-                    .font(.headline)
-                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                if !settingsService.savedNotes.isEmpty {
-                    Text(countLabel)
-                        .font(.caption2)
-                        .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                        Text("Save your scripts and cards to open them later.")
+                            .font(.subheadline)
+                            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                            .multilineTextAlignment(.center)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(AppColors.background(for: colorScheme))
+                    .safeAreaInset(edge: .bottom) {
+                        storageNote
+                            .padding(.horizontal, 24)
+                            .padding(.top, 8)
+                            .padding(.bottom, 16)
+                    }
+                } else {
+                    List {
+                        Section {
+                            ForEach(notes) { note in
+                                noteRow(note)
+                            }
+                        } footer: {
+                            // At the end of the list, so it never covers a note.
+                            storageNote
+                                .frame(maxWidth: .infinity)
+                                .padding(.horizontal, 8)
+                                .padding(.top, 24)
+                                .padding(.bottom, 16)
+                                .listRowInsets(EdgeInsets())
+                        }
+                    }
+                    .overlay {
+                        if notes.isEmpty {
+                            ContentUnavailableView.search(text: query)
+                        }
+                    }
+                    .searchable(text: $query, prompt: "Search")
                 }
             }
-        }
-
-        ToolbarItem(placement: .topBarLeading) {
-            Menu {
-                Button(action: {
-                    AnalyticsEvents.logButtonClick("choose_notes_folder", screen: "saved_notes")
-                    showingFolderPicker = true
-                }) {
-                    Label(settingsService.hasNotesFolder ? "Change Notes Folder" : "Choose Notes Folder",
-                          systemImage: "folder.badge.plus")
-                }
-
-                if settingsService.hasNotesFolder {
-                    Button(action: {
-                        AnalyticsEvents.logButtonClick("stop_notes_folder", screen: "saved_notes")
-                        showingStopFolder = true
-                    }) {
-                        Label("Stop Using Folder", systemImage: "folder.badge.minus")
+            .navigationTitle("Saved Notes")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    VStack(spacing: 1) {
+                        Text("Saved Notes")
+                            .font(.headline)
+                            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                        if !settingsService.savedNotes.isEmpty {
+                            Text(countLabel)
+                                .font(.caption2)
+                                .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                        }
                     }
                 }
 
-                Divider()
+                ToolbarItem(placement: .topBarLeading) {
+                    Menu {
+                        Button(action: {
+                            AnalyticsEvents.logButtonClick("choose_notes_folder", screen: "saved_notes")
+                            showingFolderPicker = true
+                        }) {
+                            Label(settingsService.hasNotesFolder ? "Change Notes Folder" : "Choose Notes Folder",
+                                  systemImage: "folder.badge.plus")
+                        }
 
-                Button(role: .destructive, action: {
-                    AnalyticsEvents.logButtonClick("delete_all_notes", screen: "saved_notes")
-                    showingDeleteAll = true
-                }) {
-                    Label("Delete All", systemImage: "trash")
+                        if settingsService.hasNotesFolder {
+                            Button(action: {
+                                AnalyticsEvents.logButtonClick("stop_notes_folder", screen: "saved_notes")
+                                showingStopFolder = true
+                            }) {
+                                Label("Stop Using Folder", systemImage: "folder.badge.minus")
+                            }
+                        }
+
+                        Divider()
+
+                        Button(role: .destructive, action: {
+                            AnalyticsEvents.logButtonClick("delete_all_notes", screen: "saved_notes")
+                            showingDeleteAll = true
+                        }) {
+                            Label("Delete All", systemImage: "trash")
+                        }
+                        .disabled(settingsService.savedNotes.isEmpty)
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                    }
                 }
-                .disabled(settingsService.savedNotes.isEmpty)
-            } label: {
-                Image(systemName: "ellipsis.circle")
-            }
-        }
 
-        ToolbarItem(placement: .topBarTrailing) {
-            Button("Done") {
-                AnalyticsEvents.logButtonClick("done", screen: "saved_notes")
-                dismiss()
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") {
+                        AnalyticsEvents.logButtonClick("done", screen: "saved_notes")
+                        dismiss()
+                    }
+                }
             }
-        }
-    }
-
-    // Alerts rather than confirmation dialogs, which leave Cancel out
-    // where they open as a popover.
-    private func withFolderAlerts(_ view: some View) -> some View {
-        view
+            .onAppear {
+                settingsService.syncNotesFolder()
+            }
+            .fileImporter(isPresented: $showingFolderPicker, allowedContentTypes: [.folder]) { result in
+                handleFolderPick(result)
+            }
+            // Alerts rather than confirmation dialogs, which leave Cancel out
+            // where they open as a popover.
             .alert("Stop Using Notes Folder?", isPresented: $showingStopFolder) {
                 Button("Cancel", role: .cancel) { }
                 Button("Stop Using Folder", role: .destructive) {
@@ -1203,10 +1181,6 @@ struct SavedNotesView: View {
                     Text("The notes folder can't be reached, so its note files couldn't be deleted. You can stop using it anyway and leave the files there.")
                 }
             }
-    }
-
-    private func withNoteAlerts(_ view: some View) -> some View {
-        view
             .alert("Something Went Wrong", isPresented: Binding(
                 get: { errorMessage != nil },
                 set: { if !$0 { errorMessage = nil } }
@@ -1244,6 +1218,7 @@ struct SavedNotesView: View {
             } message: {
                 Text("Enter a new title for your note")
             }
+        }
     }
 
     private func open(_ note: SavedNote) {
