@@ -23,7 +23,7 @@ struct HomeView: View {
     /// "Saved" shows for a moment after a save, where "Unsaved" was.
     @State private var showsSaved = false
     @State private var savedTask: Task<Void, Never>?
-    @State private var importError: String?
+    @State private var errorMessage: String?
     @State private var isEditorFocused = false
     @StateObject private var editorController = CueEditorController()
     @ObservedObject private var watch = WatchSessionService.shared
@@ -160,8 +160,11 @@ struct HomeView: View {
     private func save() {
         AnalyticsEvents.logButtonClick("save_note", screen: "home")
         if settingsService.currentNoteId != nil {
-            settingsService.saveChangesToCurrentNote()
-            flashSaved()
+            if settingsService.saveChangesToCurrentNote() {
+                flashSaved()
+            } else {
+                errorMessage = String(localized: "Your note couldn't be saved. Try again.")
+            }
         } else {
             saveNoteTitle = ""
             showingSaveDialog = true
@@ -207,24 +210,27 @@ struct HomeView: View {
             do {
                 let text = try ScriptFile.readText(from: url)
                 guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                    importError = String(localized: "That file is empty.")
+                    errorMessage = String(localized: "That file is empty.")
                     return
                 }
-                settingsService.importNote(
+                let saved = settingsService.importNote(
                     title: ScriptFile.title(for: url),
                     content: TeleprompterParser.normalizingTags(in: text)
                 )
+                if !saved {
+                    errorMessage = String(localized: "The file was opened but couldn't be saved as a note. Try saving it again.")
+                }
             } catch let error as ScriptFile.FileTooLarge {
-                importError = String(localized: "That file is larger than 10 MB, so it can't be imported.")
+                errorMessage = String(localized: "That file is larger than 10 MB, so it can't be imported.")
                 Analytics.logEvent("file_too_large", parameters: [
                     "source": "import",
                     "size_mb": error.size / (1024 * 1024)
                 ])
             } catch {
-                importError = String(localized: "This file couldn't be read as text.")
+                errorMessage = String(localized: "This file couldn't be read as text.")
             }
         case .failure(let error):
-            importError = error.localizedDescription
+            errorMessage = error.localizedDescription
         }
     }
 
@@ -497,12 +503,12 @@ struct HomeView: View {
                 handleImport(result)
             }
             .alert("Something Went Wrong", isPresented: Binding(
-                get: { importError != nil },
-                set: { if !$0 { importError = nil } }
+                get: { errorMessage != nil },
+                set: { if !$0 { errorMessage = nil } }
             )) {
-                Button("OK", role: .cancel) { importError = nil }
+                Button("OK", role: .cancel) { errorMessage = nil }
             } message: {
-                Text(importError ?? "")
+                Text(errorMessage ?? "")
             }
             .alert("Save Note", isPresented: $showingSaveDialog) {
                 TextField("Note title", text: $saveNoteTitle)
@@ -510,8 +516,11 @@ struct HomeView: View {
                 Button("Save") {
                     let title = saveNoteTitle.trimmingCharacters(in: .whitespacesAndNewlines)
                     if !title.isEmpty {
-                        settingsService.saveCurrentNote(title: title)
-                        flashSaved()
+                        if settingsService.saveCurrentNote(title: title) {
+                            flashSaved()
+                        } else {
+                            errorMessage = String(localized: "Your note couldn't be saved. Try again.")
+                        }
                     }
                 }
             } message: {
@@ -1206,8 +1215,8 @@ struct SavedNotesView: View {
                 Button("Rename") {
                     if let note = noteToRename {
                         let title = renameTitle.trimmingCharacters(in: .whitespacesAndNewlines)
-                        if !title.isEmpty {
-                            settingsService.updateNote(id: note.id, title: title)
+                        if !title.isEmpty, !settingsService.updateNote(id: note.id, title: title) {
+                            errorMessage = String(localized: "The note couldn't be renamed. Try again.")
                         }
                     }
                     noteToRename = nil

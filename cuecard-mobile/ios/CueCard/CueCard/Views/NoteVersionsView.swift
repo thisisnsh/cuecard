@@ -62,6 +62,7 @@ struct NoteVersionsView: View {
     @Environment(\.colorScheme) var colorScheme
     @State private var versions: [NoteVersion] = []
     @State private var changes: [Int: (added: Int, removed: Int)] = [:]
+    @State private var restoreFailed = false
 
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -98,8 +99,11 @@ struct NoteVersionsView: View {
                                     previous: previous(of: version),
                                     isCurrent: version.number == versions.last?.number,
                                     onRestore: {
-                                        settingsService.restoreVersion(version, of: noteID)
-                                        dismiss()
+                                        if settingsService.restoreVersion(version, of: noteID) {
+                                            dismiss()
+                                        } else {
+                                            restoreFailed = true
+                                        }
                                     })
                 }
             }
@@ -114,6 +118,11 @@ struct NoteVersionsView: View {
             .onAppear(perform: reload)
             .onChange(of: settingsService.versionCounts[noteID]) {
                 reload()
+            }
+            .alert("Something Went Wrong", isPresented: $restoreFailed) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text("This version couldn't be restored. Try again.")
             }
         }
     }

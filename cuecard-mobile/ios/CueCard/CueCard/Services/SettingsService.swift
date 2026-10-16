@@ -706,10 +706,12 @@ Thanks for listening. Questions?
     }
 
     /// Keep a note in the store, the notes folder, and the list the views read.
-    private func store(_ note: SavedNote, restoredFrom: Int? = nil) {
-        noteStore.save([note])
+    /// If the store can't take it, nothing changes and false is returned.
+    private func store(_ note: SavedNote, restoredFrom: Int? = nil) -> Bool {
+        guard noteStore.save([note]) else { return false }
         noteFolder.write(note)
         keep(note, restoredFrom: restoredFrom)
+        return true
     }
 
     /// Put `note` in the list the views read, and keep its text as a new
@@ -771,19 +773,22 @@ Thanks for listening. Questions?
         return defaults
     }
 
-    /// Save current notes as a new note
-    func saveCurrentNote(title: String) {
+    /// Save current notes as a new note. Returns false if it couldn't be saved.
+    @discardableResult
+    func saveCurrentNote(title: String) -> Bool {
         let trimmedContent = notes.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmedContent.isEmpty else { return }
+        guard !trimmedContent.isEmpty else { return true }
 
         let note = SavedNote(title: title, content: notes, mode: settings.scriptMode)
-        store(note)
+        guard store(note) else { return false }
         currentNoteId = note.id
+        return true
     }
 
-    /// Update an existing saved note
-    func updateNote(id: UUID, title: String? = nil, content: String? = nil) {
-        guard var note = savedNotes.first(where: { $0.id == id }) else { return }
+    /// Update an existing saved note. Returns false if it couldn't be saved.
+    @discardableResult
+    func updateNote(id: UUID, title: String? = nil, content: String? = nil) -> Bool {
+        guard var note = savedNotes.first(where: { $0.id == id }) else { return false }
         if let title = title {
             note.title = title
         }
@@ -791,13 +796,15 @@ Thanks for listening. Questions?
             note.content = content
         }
         note.updatedAt = Date()
-        store(note)
+        return store(note)
     }
 
-    /// Save current changes to the currently loaded note
-    func saveChangesToCurrentNote() {
-        guard let id = currentNoteId else { return }
-        updateNote(id: id, content: notes)
+    /// Save current changes to the currently loaded note. Returns false if
+    /// they couldn't be saved.
+    @discardableResult
+    func saveChangesToCurrentNote() -> Bool {
+        guard let id = currentNoteId else { return false }
+        return updateNote(id: id, content: notes)
     }
 
     /// A saved note's versions, oldest first.
@@ -807,14 +814,17 @@ Thanks for listening. Questions?
 
     /// Bring back an old version as the note's newest, and into the editor
     /// wherever the note is open. Anything unsaved there is replaced.
-    func restoreVersion(_ version: NoteVersion, of id: UUID) {
-        guard var note = savedNotes.first(where: { $0.id == id }) else { return }
+    /// Returns false if it couldn't be saved, leaving everything as it was.
+    @discardableResult
+    func restoreVersion(_ version: NoteVersion, of id: UUID) -> Bool {
+        guard var note = savedNotes.first(where: { $0.id == id }) else { return false }
         note.content = version.content
         note.updatedAt = Date()
-        store(note, restoredFrom: version.number)
+        guard store(note, restoredFrom: version.number) else { return false }
         for mode in ScriptMode.allCases where noteId(for: mode) == id {
             setNotes(version.content, for: mode)
         }
+        return true
     }
 
     /// Load a saved note into the editor, switching to the mode it was written in.
@@ -959,10 +969,12 @@ Thanks for listening. Questions?
 
     /// Load imported file content into the editor and keep it as a saved note.
     /// The file already carries a name, so there's nothing to prompt the user for.
-    func importNote(title: String, content: String) {
+    /// Returns false if it couldn't be saved; it's left in the editor unsaved.
+    @discardableResult
+    func importNote(title: String, content: String) -> Bool {
         notes = content
         currentNoteId = nil
-        saveCurrentNote(title: title)
+        return saveCurrentNote(title: title)
     }
 
     /// Add sample text to current note, written for the mode the editor is in.
