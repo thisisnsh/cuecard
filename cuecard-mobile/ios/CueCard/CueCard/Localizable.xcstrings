@@ -4267,7 +4267,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Annulla modifiche"
+            "value" : "Scarta modifiche"
           }
         },
         "ja" : {
@@ -4325,7 +4325,7 @@
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Annullare le modifiche non salvate?"
+            "value" : "Scartare le modifiche non salvate?"
           }
         },
         "ja" : {
@@ -14083,13 +14083,13 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ファイルは開きましたが、ノートとして保存できませんでした。もう一度保存してみてください。"
+            "value" : "ファイルは開きましたが、メモとして保存できませんでした。もう一度保存してみてください。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "파일을 열었지만 노트로 저장할 수 없습니다. 다시 저장해 보세요."
+            "value" : "파일을 열었지만 메모로 저장할 수 없습니다. 다시 저장해 보세요."
           }
         },
         "pt-BR" : {
@@ -14101,7 +14101,7 @@
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "文件已打开，但无法存储为笔记。请再次尝试存储。"
+            "value" : "文件已打开，但无法保存为笔记。请再次尝试保存。"
           }
         }
       }
@@ -14141,13 +14141,13 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ノートの名前を変更できませんでした。もう一度お試しください。"
+            "value" : "メモの名前を変更できませんでした。もう一度お試しください。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "노트 이름을 변경할 수 없습니다. 다시 시도하세요."
+            "value" : "메모 이름을 변경할 수 없습니다. 다시 시도하세요."
           }
         },
         "pt-BR" : {
@@ -16465,13 +16465,13 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ノートを保存できませんでした。もう一度お試しください。"
+            "value" : "メモを保存できませんでした。もう一度お試しください。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "노트를 저장할 수 없습니다. 다시 시도하세요."
+            "value" : "메모를 저장할 수 없습니다. 다시 시도하세요."
           }
         },
         "pt-BR" : {
