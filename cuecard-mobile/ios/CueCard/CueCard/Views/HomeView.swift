@@ -1056,62 +1056,7 @@ struct SavedNotesView: View {
                     List {
                         Section {
                             ForEach(notes) { note in
-                                Button(action: {
-                                    AnalyticsEvents.logButtonClick("load_note", screen: "saved_notes")
-                                    // Opening replaces the script of the note's own mode.
-                                    if settingsService.hasUnsavedChanges(in: note.mode) {
-                                        noteToOpen = note
-                                    } else {
-                                        open(note)
-                                    }
-                                }) {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        HStack(spacing: 8) {
-                                            Text(note.title)
-                                                .font(.headline)
-                                                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-
-                                            if note.mode == .cards {
-                                                Text("Cards")
-                                                    .font(.caption2.weight(.semibold))
-                                                    .foregroundStyle(AppColors.green(for: colorScheme))
-                                                    .padding(.horizontal, 8)
-                                                    .padding(.vertical, 3)
-                                                    .background(Capsule().fill(AppColors.green(for: colorScheme).opacity(0.15)))
-                                            }
-                                        }
-
-                                        Text(preview(of: note))
-                                            .font(.subheadline)
-                                            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                                            .lineLimit(2)
-
-                                        Text(detail(of: note))
-                                            .font(.caption)
-                                            .foregroundStyle(AppColors.textSecondary(for: colorScheme).opacity(0.7))
-                                    }
-                                    .padding(.vertical, 4)
-                                }
-                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                    Button(role: .destructive) {
-                                        AnalyticsEvents.logButtonClick("delete_note", screen: "saved_notes")
-                                        if !settingsService.deleteNote(id: note.id) {
-                                            errorMessage = String(localized: "The note was deleted. \(undeletedFilesMessage(count: 1))")
-                                        }
-                                    } label: {
-                                        Label("Delete", systemImage: "trash")
-                                    }
-                                }
-                                .swipeActions(edge: .leading, allowsFullSwipe: false) {
-                                    Button {
-                                        AnalyticsEvents.logButtonClick("rename_note", screen: "saved_notes")
-                                        renameTitle = note.title
-                                        noteToRename = note
-                                    } label: {
-                                        Label("Rename", systemImage: "pencil")
-                                    }
-                                    .tint(.orange)
-                                }
+                                noteRow(note)
                             }
                         } footer: {
                             // At the end of the list, so it never covers a note.
@@ -1279,6 +1224,83 @@ struct SavedNotesView: View {
     private func open(_ note: SavedNote) {
         settingsService.loadNote(note)
         dismiss()
+    }
+
+    /// Opening replaces the script of the note's own mode, so ask first when
+    /// that script has unsaved changes.
+    private func select(_ note: SavedNote) {
+        AnalyticsEvents.logButtonClick("load_note", screen: "saved_notes")
+        if settingsService.hasUnsavedChanges(in: note.mode) {
+            noteToOpen = note
+        } else {
+            open(note)
+        }
+    }
+
+    private func delete(_ note: SavedNote) {
+        AnalyticsEvents.logButtonClick("delete_note", screen: "saved_notes")
+        if !settingsService.deleteNote(id: note.id) {
+            errorMessage = String(localized: "The note was deleted. \(undeletedFilesMessage(count: 1))")
+        }
+    }
+
+    private func rename(_ note: SavedNote) {
+        AnalyticsEvents.logButtonClick("rename_note", screen: "saved_notes")
+        renameTitle = note.title
+        noteToRename = note
+    }
+
+    // Kept out of the list body so the compiler can type-check it in time.
+    private func noteRow(_ note: SavedNote) -> some View {
+        Button {
+            select(note)
+        } label: {
+            noteLabel(note)
+        }
+        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+            Button(role: .destructive) {
+                delete(note)
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
+        }
+        .swipeActions(edge: .leading, allowsFullSwipe: false) {
+            Button {
+                rename(note)
+            } label: {
+                Label("Rename", systemImage: "pencil")
+            }
+            .tint(.orange)
+        }
+    }
+
+    private func noteLabel(_ note: SavedNote) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 8) {
+                Text(note.title)
+                    .font(.headline)
+                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+
+                if note.mode == .cards {
+                    Text("Cards")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(AppColors.green(for: colorScheme))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Capsule().fill(AppColors.green(for: colorScheme).opacity(0.15)))
+                }
+            }
+
+            Text(preview(of: note))
+                .font(.subheadline)
+                .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                .lineLimit(2)
+
+            Text(detail(of: note))
+                .font(.caption)
+                .foregroundStyle(AppColors.textSecondary(for: colorScheme).opacity(0.7))
+        }
+        .padding(.vertical, 4)
     }
 }
 
