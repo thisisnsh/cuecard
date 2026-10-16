@@ -223,7 +223,7 @@ enum TeleprompterParser {
     ) -> Int {
         let wordsPerSecond = wordsPerMinute / 60.0
         let wordIndex = Int(elapsedTime * wordsPerSecond)
-        return min(wordIndex, totalWords - 1)
+        return max(0, min(wordIndex, totalWords - 1))
     }
 
     /// Calculate line index based on elapsed time and lines per minute
@@ -234,6 +234,6 @@ enum TeleprompterParser {
     ) -> Int {
         let linesPerSecond = linesPerMinute / 60.0
         let lineIndex = Int(elapsedTime * linesPerSecond)
-        return min(lineIndex, totalLines - 1)
+        return max(0, min(lineIndex, totalLines - 1))
     }
 }
