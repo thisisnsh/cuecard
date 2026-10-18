@@ -497,6 +497,7 @@ class SettingsService: ObservableObject {
     /// The teleprompter's open note. Named from when it was the only one.
     private let currentNoteIdKey = "cuecard_current_note_id"
     private let cardsNoteIdKey = "cuecard_cards_note_id"
+    private let teleprompterDraftIdKey = "cuecard_teleprompter_draft_id"
     private let watchNoteIDsKey = "cuecard_watch_note_ids"
     private let hasSeenWelcomeKey = "cuecard_has_seen_welcome"
     /// Cues used to be saved in a library. They're written straight into the
@@ -565,6 +566,18 @@ class SettingsService: ObservableObject {
 
     @Published private var cardsNoteId: UUID? {
         didSet { saveNoteId(cardsNoteId, forKey: cardsNoteIdKey) }
+    }
+
+    /// The ID the teleprompter's script is saved under once it's saved, so
+    /// takes recorded while it was still a draft go with the note.
+    @Published private var teleprompterDraftId: UUID {
+        didSet { saveNoteId(teleprompterDraftId, forKey: teleprompterDraftIdKey) }
+    }
+
+    /// What the teleprompter's script is filed under for its takes: the note
+    /// it was opened from, or the ID it will be saved under.
+    var teleprompterScriptID: UUID {
+        teleprompterNoteId ?? teleprompterDraftId
     }
 
     /// The saved note open in the mode the editor is in.
@@ -680,6 +693,13 @@ Thanks for listening. Questions?
             self.teleprompterNoteId = legacyNoteId
             self.cardsNoteId = userDefaults.string(forKey: cardsNoteIdKey).flatMap(UUID.init(uuidString:))
         }
+        if let draftId = userDefaults.string(forKey: teleprompterDraftIdKey).flatMap(UUID.init(uuidString:)) {
+            self.teleprompterDraftId = draftId
+        } else {
+            let draftId = UUID()
+            self.teleprompterDraftId = draftId
+            userDefaults.set(draftId.uuidString, forKey: teleprompterDraftIdKey)
+        }
 
         // Saved notes used to be kept in UserDefaults. Move them into the
         // store, and let go of the old copy once they're safely there.
@@ -779,10 +799,19 @@ Thanks for listening. Questions?
         let trimmedContent = notes.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedContent.isEmpty else { return true }
 
-        let note = SavedNote(title: title, content: notes, mode: settings.scriptMode)
+        let mode = settings.scriptMode
+        let note = SavedNote(id: mode == .teleprompter ? teleprompterDraftId : UUID(),
+                             title: title, content: notes, mode: mode)
         guard store(note) else { return false }
         currentNoteId = note.id
+        if mode == .teleprompter { startNewDraft() }
         return true
+    }
+
+    /// The teleprompter's draft was saved or let go of. What's written next
+    /// is a new script, with no takes of its own yet.
+    private func startNewDraft() {
+        teleprompterDraftId = UUID()
     }
 
     /// Update an existing saved note. Returns false if it couldn't be saved.
@@ -832,6 +861,7 @@ Thanks for listening. Questions?
         settings.scriptMode = note.mode
         notes = note.content
         currentNoteId = note.id
+        if note.mode == .teleprompter { startNewDraft() }
     }
 
     /// Delete a saved note. Returns false if its file in the notes folder
@@ -858,6 +888,7 @@ Thanks for listening. Questions?
     private func forget(_ id: UUID) {
         noteStore.delete(id: id)
         noteVersions.remove(id: id)
+        TakeStore.shared.remove(scriptID: id)
         versionCounts[id] = nil
         savedNotes.removeAll { $0.id == id }
         watchNoteIDs.remove(id)
@@ -874,6 +905,9 @@ Thanks for listening. Questions?
         close(ids)
         noteStore.deleteAll()
         noteVersions.removeAll()
+        for id in ids {
+            TakeStore.shared.remove(scriptID: id)
+        }
         versionCounts = [:]
         savedNotes = []
         watchNoteIDs = []
@@ -965,6 +999,7 @@ Thanks for listening. Questions?
     func createNewNote() {
         notes = ""
         currentNoteId = nil
+        if settings.scriptMode == .teleprompter { startNewDraft() }
     }
 
     /// Load imported file content into the editor and keep it as a saved note.
@@ -974,6 +1009,7 @@ Thanks for listening. Questions?
     func importNote(title: String, content: String) -> Bool {
         notes = content
         currentNoteId = nil
+        if settings.scriptMode == .teleprompter { startNewDraft() }
         return saveCurrentNote(title: title)
     }
 
@@ -1018,10 +1054,12 @@ Thanks for listening. Questions?
         cardsNotes = ""
         noteStore.deleteAll()
         noteVersions.removeAll()
+        TakeStore.shared.removeAll()
         versionCounts = [:]
         savedNotes = []
         teleprompterNoteId = nil
         cardsNoteId = nil
+        startNewDraft()
         watchNoteIDs = []
         userDefaults.removeObject(forKey: settingsKey)
         userDefaults.removeObject(forKey: notesKey)

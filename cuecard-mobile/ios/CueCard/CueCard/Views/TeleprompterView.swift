@@ -189,6 +189,9 @@ struct TeleprompterView: View {
                 }
                 .onAppear {
                     setupPiP()
+                    // A video recorded from now until the teleprompter closes
+                    // is a take of this script.
+                    TakeStore.shared.begin(scriptID: settingsService.teleprompterScriptID)
                     // A read is a stretch of looking without touching, which is
                     // exactly what the idle timer takes for absence. Hold the
                     // screen for as long as the prompter is up.
@@ -229,6 +232,7 @@ struct TeleprompterView: View {
         .persistentSystemOverlays(.hidden)
         .onDisappear {
             stopControlsTimer()
+            TakeStore.shared.end()
             UIApplication.shared.isIdleTimerDisabled = false
         }
         .onChange(of: scenePhase) { _, newPhase in
@@ -304,6 +308,7 @@ struct TeleprompterView: View {
 
     private func stopAndDismiss() {
         pipManager.cleanup()
+        TakeStore.shared.end()
         Analytics.logEvent("teleprompter_closed", parameters: ["elapsed_time": Int(elapsedTime)])
         ReviewPromptService.shared.recordCompletedSession()
         dismiss()

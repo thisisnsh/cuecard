@@ -74,6 +74,7 @@
 		5A7ED0000000000000000003 /* NoteFolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A7ED0000000000000000004 /* NoteFolder.swift */; };
 		5A7ED0000000000000000005 /* NoteVersions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A7ED0000000000000000006 /* NoteVersions.swift */; };
 		5A7ED0000000000000000007 /* NoteVersionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A7ED0000000000000000008 /* NoteVersionsView.swift */; };
+		7A4E50000000000000000001 /* TakeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4E50000000000000000002 /* TakeStore.swift */; };
 		AA7130F62F04E5BC00F5C366 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = AA7130F52F04E5BC00F5C366 /* GoogleService-Info.plist */; };
 		AA856D562F060DFC00B0CBC6 /* GlassEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA856D542F060DFC00B0CBC6 /* GlassEffect.swift */; };
 		B1C400000000000000000002 /* RichText.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C400000000000000000001 /* RichText.swift */; };
@@ -187,6 +188,7 @@
 		5A7ED0000000000000000004 /* NoteFolder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteFolder.swift; sourceTree = "<group>"; };
 		5A7ED0000000000000000006 /* NoteVersions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteVersions.swift; sourceTree = "<group>"; };
 		5A7ED0000000000000000008 /* NoteVersionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteVersionsView.swift; sourceTree = "<group>"; };
+		7A4E50000000000000000002 /* TakeStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TakeStore.swift; sourceTree = "<group>"; };
 		AA2E5C0E2F0F38B500E1D079 /* CueCard.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CueCard.entitlements; sourceTree = "<group>"; };
 		AA7130F52F04E5BC00F5C366 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		AA856D542F060DFC00B0CBC6 /* GlassEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassEffect.swift; sourceTree = "<group>"; };
@@ -284,6 +286,7 @@
 				5A7ED0000000000000000002 /* NoteStore.swift */,
 				5A7ED0000000000000000004 /* NoteFolder.swift */,
 				5A7ED0000000000000000006 /* NoteVersions.swift */,
+				7A4E50000000000000000002 /* TakeStore.swift */,
 				114 /* ReviewPromptService.swift */,
 				112 /* TeleprompterPiPManager.swift */,
 				126 /* TeleprompterRemoteCommand+App.swift */,
@@ -559,6 +562,7 @@
 				5A7ED0000000000000000001 /* NoteStore.swift in Sources */,
 				5A7ED0000000000000000003 /* NoteFolder.swift in Sources */,
 				5A7ED0000000000000000005 /* NoteVersions.swift in Sources */,
+				7A4E50000000000000000001 /* TakeStore.swift in Sources */,
 				5A7ED0000000000000000007 /* NoteVersionsView.swift in Sources */,
 				019 /* ReviewPromptService.swift in Sources */,
 				013 /* SettingsView.swift in Sources */,
