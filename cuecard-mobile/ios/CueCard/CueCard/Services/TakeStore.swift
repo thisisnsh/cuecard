@@ -7,9 +7,9 @@ struct TeleprompterSession: Codable, Equatable {
     let start: Date
     var end: Date
 
-    /// Whether any of `start..<end` falls inside this session.
+    /// Whether any of `start...end` falls inside this session.
     func overlaps(start: Date, end: Date) -> Bool {
-        start < self.end && self.start < end
+        start <= self.end && self.start <= end
     }
 }
 

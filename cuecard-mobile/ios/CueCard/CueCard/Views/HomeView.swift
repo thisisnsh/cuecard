@@ -17,6 +17,7 @@ struct HomeView: View {
     @State private var showingTimer = false
     @State private var showingSavedNotes = false
     @State private var showingVersions = false
+    @State private var showingTakes = false
     @State private var showingSaveDialog = false
     @State private var saveNoteTitle = ""
     @State private var showingImporter = false
@@ -30,6 +31,8 @@ struct HomeView: View {
     @StateObject private var editorController = CueEditorController()
     @ObservedObject private var watch = WatchSessionService.shared
     @ObservedObject private var cardsSession = CueCardsSession.shared
+    @StateObject private var takes = TakesLibrary()
+    @Namespace private var takesTransition
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.requestReview) private var requestReview
 
@@ -91,7 +94,7 @@ struct HomeView: View {
     private func showCardsOpenedOnWatch() {
         guard scenePhase == .active, !cardsSession.cards.isEmpty, !showingCards,
               !showingTeleprompter, !showingSettings, !showingSavedNotes, !showingHelp,
-              !showingTimer else { return }
+              !showingTimer, !showingTakes else { return }
         cardsOpenedOnWatch = true
         showingCards = true
     }
@@ -150,6 +153,25 @@ struct HomeView: View {
                     .frame(height: 52)
                     .glassedEffect(in: Capsule())
             }
+        }
+    }
+
+    /// The videos recorded while the teleprompter was open on the script. Once
+    /// it has been, and before Photos can be read, a button to go find them.
+    @ViewBuilder
+    private var takesControl: some View {
+        let canFind = takes.hasSessions && (takes.status == .notDetermined || takes.status == .limited)
+        if !isCardsMode, !takes.takes.isEmpty || canFind {
+            Button {
+                AnalyticsEvents.logButtonClick("takes", screen: "home")
+                isEditorFocused = false
+                showingTakes = true
+            } label: {
+                TakeStack(takes: takes.takes, colorScheme: colorScheme)
+            }
+            .buttonStyle(.plain)
+            .takesTransitionSource(in: takesTransition)
+            .transition(.scale.combined(with: .opacity))
         }
     }
 
@@ -342,6 +364,8 @@ struct HomeView: View {
 
                     Spacer(minLength: isCardsMode ? 0 : 12)
 
+                    takesControl
+
                     Button(action: {
                         isEditorFocused = false
                         if isCardsMode {
@@ -381,6 +405,7 @@ struct HomeView: View {
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 24)
+                .animation(.spring(response: 0.35, dampingFraction: 0.8), value: takes.takes.map(\.id))
                 }
             }
             .animation(.easeInOut(duration: 0.2), value: isEditorFocused)
@@ -510,6 +535,10 @@ struct HomeView: View {
             .sheet(isPresented: $showingTimer) {
                 TimerSheet()
             }
+            .sheet(isPresented: $showingTakes) {
+                TakesView(library: takes, scriptTitle: settingsService.currentNote?.title)
+                    .zoomsFromTakes(in: takesTransition)
+            }
             .fileImporter(isPresented: $showingImporter,
                           allowedContentTypes: ScriptFile.importableContentTypes) { result in
                 handleImport(result)
@@ -554,7 +583,11 @@ struct HomeView: View {
             } message: {
                 Text("Enter a title for your note")
             }
-            .fullScreenCover(isPresented: $showingTeleprompter, onDismiss: requestReviewIfEarned) {
+            .fullScreenCover(isPresented: $showingTeleprompter, onDismiss: {
+                // Anything recorded while it was open is a take now.
+                takes.reload()
+                requestReviewIfEarned()
+            }) {
                 TeleprompterView(content: TeleprompterParser.parseNotes(settingsService.notes))
                     // Passed on by hand: as an iPad app on a Mac, a full screen
                     // cover doesn't inherit environment objects.
@@ -572,9 +605,14 @@ struct HomeView: View {
             }
             .onChange(of: scenePhase) {
                 showCardsOpenedOnWatch()
+                if scenePhase == .active { takes.reload() }
+            }
+            .onChange(of: settingsService.teleprompterScriptID) {
+                takes.load(scriptID: settingsService.teleprompterScriptID)
             }
         }
         .onAppear {
+            takes.load(scriptID: settingsService.teleprompterScriptID)
             showCardsOpenedOnWatch()
             Analytics.logEvent(AnalyticsEventScreenView, parameters: [
                 AnalyticsParameterScreenName: "home",
