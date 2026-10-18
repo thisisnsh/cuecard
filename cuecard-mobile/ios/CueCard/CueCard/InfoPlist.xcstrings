@@ -1,0 +1,72 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "NSPhotoLibraryUsageDescription" : {
+      "comment" : "Why CueCard asks to see the photo library",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "CueCard finds the videos you record while the teleprompter is open, so each take stays with its script."
+          }
+        },
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CueCard findet die Videos, die du bei geöffnetem Teleprompter aufnimmst, damit jeder Take bei seinem Skript bleibt."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CueCard encuentra los vídeos que grabas con el teleprompter abierto para que cada toma quede con su guion."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CueCard retrouve les vidéos que vous filmez pendant que le prompteur est ouvert, pour que chaque prise reste avec son script."
+          }
+        },
+        "hi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CueCard टेलीप्रॉम्प्टर खुला रहते रिकॉर्ड किए गए आपके वीडियो ढूँढता है, ताकि हर टेक अपनी स्क्रिप्ट के साथ रहे।"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CueCard trova i video che registri con il gobbo aperto, così ogni ripresa resta con il suo copione."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CueCardは、プロンプターを開いている間に撮影した動画を見つけ、各テイクを原稿とひも付けます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CueCard는 프롬프터가 열려 있는 동안 녹화한 동영상을 찾아 각 테이크를 해당 원고와 함께 보관합니다."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O CueCard encontra os vídeos que você grava com o teleprompter aberto, para que cada take fique com o seu roteiro."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CueCard 会找到你在提词器打开时录制的视频，让每段录像都与对应的稿子放在一起。"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.1"
+}

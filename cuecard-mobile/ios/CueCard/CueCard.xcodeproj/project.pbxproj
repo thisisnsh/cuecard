@@ -68,6 +68,7 @@
 		077 /* SavedDeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 157 /* SavedDeckView.swift */; };
 		078 /* HelpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 158 /* HelpView.swift */; };
 		1A10C0000000000000000011 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 1A10C0000000000000000001 /* Localizable.xcstrings */; };
+		7A4E50000000000000000007 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A4E50000000000000000008 /* InfoPlist.xcstrings */; };
 		1A10C0000000000000000012 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 1A10C0000000000000000002 /* Localizable.xcstrings */; };
 		1A10C0000000000000000013 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 1A10C0000000000000000003 /* Localizable.xcstrings */; };
 		5A7ED0000000000000000001 /* NoteStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A7ED0000000000000000002 /* NoteStore.swift */; };
@@ -178,6 +179,7 @@
 		157 /* SavedDeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedDeckView.swift; sourceTree = "<group>"; };
 		158 /* HelpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpView.swift; sourceTree = "<group>"; };
 		1A10C0000000000000000001 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		7A4E50000000000000000008 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 		1A10C0000000000000000002 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		1A10C0000000000000000003 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		201 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -246,6 +248,7 @@
 			isa = PBXGroup;
 			children = (
 				1A10C0000000000000000001 /* Localizable.xcstrings */,
+				7A4E50000000000000000008 /* InfoPlist.xcstrings */,
 				AA2E5C0E2F0F38B500E1D079 /* CueCard.entitlements */,
 				101 /* CueCardApp.swift */,
 				AA856D552F060DFC00B0CBC6 /* Modifiers */,
@@ -493,6 +496,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1A10C0000000000000000011 /* Localizable.xcstrings in Resources */,
+				7A4E50000000000000000007 /* InfoPlist.xcstrings in Resources */,
 				007 /* Assets.xcassets in Resources */,
 				AA7130F62F04E5BC00F5C366 /* GoogleService-Info.plist in Resources */,
 				029 /* WhatsNew.json in Resources */,
