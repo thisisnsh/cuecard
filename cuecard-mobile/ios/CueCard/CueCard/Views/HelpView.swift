@@ -79,7 +79,7 @@ private enum AllHelp {
         HelpTopic("Use Over Other Apps",
                   detail: "Leave CueCard while the teleprompter is open and your script keeps going in a floating window, handy on video calls."),
         HelpTopic("Find Your Takes",
-                  detail: "Videos you record while the teleprompter is open show up as a stack next to Play. Tap it to see every take, and tap one to open Photos."),
+                  detail: "Videos you record while the teleprompter is open show up as a stack next to Play. Tap it to see every take, rate and tag them, and add notes. Tap a take to open Photos."),
         HelpTopic("Watch the Timer",
                   detail: "The timer changes color when you're near the end and again once you're over time. Pick the colors in the timer.")
     ])

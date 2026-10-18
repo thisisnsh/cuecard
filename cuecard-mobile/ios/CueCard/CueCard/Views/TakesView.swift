@@ -88,7 +88,8 @@ struct TakeStack: View {
     }
 }
 
-/// Every take of the script, newest first. A take opens in Photos.
+/// Every take of the script, newest first, to rate and tag. A take opens in
+/// Photos.
 struct TakesView: View {
     @ObservedObject var library: TakesLibrary
     /// The saved note's title, while the script is one.
@@ -98,6 +99,8 @@ struct TakesView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// The rows fan out of the stack they were opened from.
     @State private var hasAppeared = false
+    /// The take whose tags and notes are open.
+    @State private var editingTakeID: String?
 
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -118,6 +121,11 @@ struct TakesView: View {
                     }
                 } else {
                     list
+                }
+            }
+            .navigationDestination(item: $editingTakeID) { id in
+                if let take = library.takes.first(where: { $0.id == id }) {
+                    TakeDetailsView(take: take, library: library)
                 }
             }
             .navigationTitle("Takes")
@@ -155,21 +163,24 @@ struct TakesView: View {
         return List {
             Section {
                 ForEach(Array(takes.enumerated()), id: \.element.id) { index, take in
-                    Button {
-                        AnalyticsEvents.logButtonClick("open_take", screen: "takes")
-                        TakesLibrary.openPhotos()
-                    } label: {
-                        row(for: take)
-                    }
-                    .opacity(hasAppeared ? 1 : 0)
-                    .offset(y: hasAppeared || reduceMotion ? 0 : -24 * CGFloat(min(index, 6)))
-                    .animation(.spring(response: 0.4, dampingFraction: 0.85)
-                        .delay(reduceMotion ? 0 : 0.03 * Double(min(index, 6))), value: hasAppeared)
+                    row(for: take)
+                        .opacity(hasAppeared ? 1 : 0)
+                        .offset(y: hasAppeared || reduceMotion ? 0 : -24 * CGFloat(min(index, 6)))
+                        .animation(.spring(response: 0.4, dampingFraction: 0.85)
+                            .delay(reduceMotion ? 0 : 0.03 * Double(min(index, 6))), value: hasAppeared)
+                        .swipeActions(edge: .leading, allowsFullSwipe: true) {
+                            Button {
+                                edit(take)
+                            } label: {
+                                Label("Tags and Notes", systemImage: "square.and.pencil")
+                            }
+                            .tint(AppColors.blue(for: colorScheme))
+                        }
                 }
             } footer: {
                 VStack(spacing: 8) {
                     if library.status == .limited { limitedAccessNote }
-                    Text("Tap a take to open Photos. Your videos stay there, and nothing leaves this device.")
+                    Text("Tap a take to open Photos, or a star to rate it. Your videos stay there, and nothing leaves this device.")
                         .foregroundStyle(AppColors.textSecondary(for: colorScheme))
                 }
                 .font(.caption)
@@ -180,8 +191,32 @@ struct TakesView: View {
         }
     }
 
+    private func openInPhotos() {
+        AnalyticsEvents.logButtonClick("open_take", screen: "takes")
+        TakesLibrary.openPhotos()
+    }
+
+    private func edit(_ take: Take) {
+        AnalyticsEvents.logButtonClick("edit_take", screen: "takes")
+        editingTakeID = take.id
+    }
+
+    /// The take's rating, set right here with a tap on a star.
+    private func rating(of take: Take) -> Binding<Int> {
+        Binding(
+            get: { library.details(of: take).rating },
+            set: { rating in
+                AnalyticsEvents.logButtonClick("rate_take", screen: "takes")
+                var details = library.details(of: take)
+                details.rating = rating
+                library.setDetails(details, of: take)
+            }
+        )
+    }
+
     private func row(for take: Take) -> some View {
-        HStack(spacing: 12) {
+        let details = library.details(of: take)
+        return HStack(alignment: .top, spacing: 12) {
             TakeThumbnail(asset: take.asset, size: CGSize(width: 54, height: 72))
                 .overlay(alignment: .bottomTrailing) {
                     Text(TeleprompterParser.formatTime(Int(take.duration.rounded())))
@@ -193,22 +228,54 @@ struct TakesView: View {
                         .padding(4)
                 }
 
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Take \(take.number)")
-                    .font(.headline)
-                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                Text(dateFormatter.string(from: take.recordedAt))
-                    .font(.caption)
-                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+            VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Take \(take.number)")
+                        .font(.headline)
+                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                    Text(dateFormatter.string(from: take.recordedAt))
+                        .font(.caption)
+                        .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                }
+
+                StarRating(rating: rating(of: take), size: 15, colorScheme: colorScheme)
+
+                if !details.tags.isEmpty {
+                    FlowLayout(spacing: 6) {
+                        ForEach(details.tags, id: \.self) { tag in
+                            TagLabel(tag: tag, colorScheme: colorScheme)
+                        }
+                    }
+                }
+
+                if !details.note.isEmpty {
+                    Text(details.note)
+                        .font(.caption)
+                        .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                        .lineLimit(2)
+                }
             }
 
             Spacer(minLength: 0)
 
-            Image(systemName: "arrow.up.forward.app")
-                .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+            Button {
+                edit(take)
+            } label: {
+                Image(systemName: "square.and.pencil")
+                    .font(.body)
+                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                    .frame(width: 36, height: 36)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.borderless)
+            .accessibilityLabel("Tags and Notes")
         }
         .padding(.vertical, 2)
         .contentShape(Rectangle())
+        // The stars and the edit button take their own taps; anywhere else
+        // opens Photos.
+        .onTapGesture(perform: openInPhotos)
+        .accessibilityAction(named: Text("Open in Photos"), openInPhotos)
     }
 
     /// Before the videos can be looked through: why, and the way to allow it.
@@ -279,6 +346,264 @@ struct TakesView: View {
         .padding(.horizontal, 32)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(.systemGroupedBackground))
+    }
+}
+
+/// A take's rating, tags and notes, kept as they're changed.
+private struct TakeDetailsView: View {
+    let take: Take
+    @ObservedObject var library: TakesLibrary
+    @Environment(\.colorScheme) var colorScheme
+    @State private var details = TakeDetails()
+    @State private var hasLoaded = false
+    @State private var newTag = ""
+    @FocusState private var isAddingTag: Bool
+
+    /// Offered until the script's takes have tags of their own to offer.
+    private static let starterTags = [
+        String(localized: "Best", comment: "A tag for a recorded take"),
+        String(localized: "Usable", comment: "A tag for a recorded take"),
+        String(localized: "Retake", comment: "A tag for a recorded take")
+    ]
+    private static let longestTag = 30
+
+    private let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        return formatter
+    }()
+
+    /// Tags used on the script's other takes, then the starters, leaving out
+    /// any this take already has.
+    private var suggestedTags: [String] {
+        (library.usedTags + Self.starterTags).reduce(into: [String]()) { tags, tag in
+            if !tags.containsIgnoringCase(tag), !details.tags.containsIgnoringCase(tag) {
+                tags.append(tag)
+            }
+        }
+        .prefix(8)
+        .map { $0 }
+    }
+
+    var body: some View {
+        Form {
+            Section {
+                HStack(spacing: 16) {
+                    TakeThumbnail(asset: take.asset, size: CGSize(width: 72, height: 96), cornerRadius: 10)
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(dateFormatter.string(from: take.recordedAt))
+                            .font(.subheadline)
+                            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                        Text(TeleprompterParser.formatTime(Int(take.duration.rounded())))
+                            .font(.caption.monospacedDigit())
+                            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                        Button("Open in Photos") {
+                            AnalyticsEvents.logButtonClick("open_take", screen: "take_details")
+                            TakesLibrary.openPhotos()
+                        }
+                        .font(.subheadline.weight(.semibold))
+                        .buttonStyle(.borderless)
+                        .padding(.top, 4)
+                    }
+                }
+            }
+
+            Section("Rating") {
+                StarRating(rating: $details.rating, size: 28, colorScheme: colorScheme)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 4)
+            }
+
+            Section {
+                if !details.tags.isEmpty {
+                    FlowLayout(spacing: 8) {
+                        ForEach(details.tags, id: \.self) { tag in
+                            TagButton(tag: tag, systemImage: "xmark", colorScheme: colorScheme) {
+                                details.tags.removeAll { $0 == tag }
+                            }
+                            .accessibilityLabel(String(localized: "Remove \(tag)", comment: "Takes a tag off a take"))
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+
+                TextField("Add a Tag", text: $newTag)
+                    .focused($isAddingTag)
+                    .submitLabel(.done)
+                    .onSubmit {
+                        add(newTag)
+                    }
+
+                if !suggestedTags.isEmpty {
+                    FlowLayout(spacing: 8) {
+                        ForEach(suggestedTags, id: \.self) { tag in
+                            TagButton(tag: tag, systemImage: "plus", isSuggestion: true, colorScheme: colorScheme) {
+                                add(tag)
+                            }
+                            .accessibilityLabel(String(localized: "Add \(tag)", comment: "Puts a tag on a take"))
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+            } header: {
+                Text("Tags")
+            }
+
+            Section("Notes") {
+                TextField("What worked, and what to change next time", text: $details.note, axis: .vertical)
+                    .lineLimit(4...12)
+            }
+        }
+        .navigationTitle("Take \(take.number)")
+        .navigationBarTitleDisplayMode(.inline)
+        .onAppear {
+            guard !hasLoaded else { return }
+            hasLoaded = true
+            details = library.details(of: take)
+        }
+        .onChange(of: details) {
+            guard hasLoaded else { return }
+            library.setDetails(details, of: take)
+        }
+    }
+
+    private func add(_ tag: String) {
+        let tag = String(tag.trimmingCharacters(in: .whitespacesAndNewlines).prefix(Self.longestTag))
+        newTag = ""
+        guard !tag.isEmpty, !details.tags.containsIgnoringCase(tag) else { return }
+        AnalyticsEvents.logButtonClick("tag_take", screen: "take_details")
+        details.tags.append(tag)
+    }
+}
+
+/// One to five stars. A tap on the star already set clears the rating.
+struct StarRating: View {
+    @Binding var rating: Int
+    let size: CGFloat
+    let colorScheme: ColorScheme
+
+    var body: some View {
+        HStack(spacing: size * 0.3) {
+            ForEach(1...5, id: \.self) { star in
+                Button {
+                    rating = rating == star ? 0 : star
+                } label: {
+                    Image(systemName: star <= rating ? "star.fill" : "star")
+                        .font(.system(size: size))
+                        .foregroundStyle(star <= rating
+                                         ? AppColors.yellow(for: colorScheme)
+                                         : AppColors.textSecondary(for: colorScheme).opacity(0.5))
+                        .padding(.vertical, 2)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.borderless)
+            }
+        }
+        .sensoryFeedback(.selection, trigger: rating)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Rating")
+        .accessibilityValue(rating == 0
+                            ? String(localized: "Not rated")
+                            : String(localized: "\(rating) of 5 stars", comment: "A take's rating"))
+        .accessibilityAdjustableAction { direction in
+            switch direction {
+            case .increment: rating = min(rating + 1, 5)
+            case .decrement: rating = max(rating - 1, 0)
+            @unknown default: break
+            }
+        }
+    }
+}
+
+/// A tag on a take, as it shows in the list.
+private struct TagLabel: View {
+    let tag: String
+    let colorScheme: ColorScheme
+
+    var body: some View {
+        Text(tag)
+            .font(.caption2.weight(.semibold))
+            .lineLimit(1)
+            .foregroundStyle(AppColors.blue(for: colorScheme))
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(Capsule().fill(AppColors.blue(for: colorScheme).opacity(0.15)))
+    }
+}
+
+/// A tag to take off, or a suggested one to put on.
+private struct TagButton: View {
+    let tag: String
+    let systemImage: String
+    var isSuggestion = false
+    let colorScheme: ColorScheme
+    let action: () -> Void
+
+    var body: some View {
+        let color = isSuggestion ? AppColors.textSecondary(for: colorScheme) : AppColors.blue(for: colorScheme)
+        Button(action: action) {
+            HStack(spacing: 4) {
+                Text(tag)
+                    .lineLimit(1)
+                Image(systemName: systemImage)
+                    .font(.caption2.weight(.bold))
+            }
+            .font(.subheadline.weight(.medium))
+            .foregroundStyle(color)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(Capsule().fill(color.opacity(isSuggestion ? 0.12 : 0.15)))
+        }
+        // Inside a form row, so each tag takes only its own taps.
+        .buttonStyle(.borderless)
+    }
+}
+
+/// Views in rows, wrapping to a new row when the next one doesn't fit.
+struct FlowLayout: Layout {
+    var spacing: CGFloat = 6
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let arrangement = arrange(subviews, width: proposal.width ?? .infinity)
+        return arrangement.size
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let arrangement = arrange(subviews, width: bounds.width)
+        for (subview, origin) in zip(subviews, arrangement.origins) {
+            subview.place(at: CGPoint(x: bounds.minX + origin.x, y: bounds.minY + origin.y),
+                          proposal: ProposedViewSize(width: min(subview.sizeThatFits(.unspecified).width, bounds.width),
+                                                     height: nil))
+        }
+    }
+
+    private func arrange(_ subviews: Subviews, width maxWidth: CGFloat) -> (origins: [CGPoint], size: CGSize) {
+        var origins: [CGPoint] = []
+        var x: CGFloat = 0
+        var y: CGFloat = 0
+        var rowHeight: CGFloat = 0
+        var width: CGFloat = 0
+        for subview in subviews {
+            let size = subview.sizeThatFits(.unspecified)
+            if x > 0, x + size.width > maxWidth {
+                x = 0
+                y += rowHeight + spacing
+                rowHeight = 0
+            }
+            origins.append(CGPoint(x: x, y: y))
+            x += size.width + spacing
+            rowHeight = max(rowHeight, size.height)
+            width = max(width, min(x - spacing, maxWidth))
+        }
+        return (origins, CGSize(width: width, height: y + rowHeight))
+    }
+}
+
+private extension Array where Element == String {
+    func containsIgnoringCase(_ string: String) -> Bool {
+        contains { $0.caseInsensitiveCompare(string) == .orderedSame }
     }
 }
 

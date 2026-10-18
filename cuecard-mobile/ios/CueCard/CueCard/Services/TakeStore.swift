@@ -13,9 +13,20 @@ struct TeleprompterSession: Codable, Equatable {
     }
 }
 
-/// When the teleprompter was open on each script, kept in the app's own
-/// storage on this device, a folder for each script. A script is filed under
-/// its saved note's ID, or the ID it will be saved under.
+/// What the user has said about a take.
+struct TakeDetails: Codable, Equatable {
+    /// 1 to 5 stars, or 0 if it hasn't been rated.
+    var rating = 0
+    var tags: [String] = []
+    var note = ""
+
+    var isEmpty: Bool { rating == 0 && tags.isEmpty && note.isEmpty }
+}
+
+/// When the teleprompter was open on each script, and what's been said about
+/// its takes, kept in the app's own storage on this device, a folder for each
+/// script. A script is filed under its saved note's ID, or the ID it will be
+/// saved under.
 @MainActor
 final class TakeStore {
     static let shared = TakeStore()
@@ -45,6 +56,22 @@ final class TakeStore {
         if let open, open.scriptID == scriptID { return open.sessions }
         guard let url = sessionsFile(of: scriptID), let data = try? Data(contentsOf: url) else { return [] }
         return (try? JSONDecoder().decode([TeleprompterSession].self, from: data)) ?? []
+    }
+
+    /// The rating, tags and notes of a script's takes, by take ID.
+    func details(for scriptID: UUID) -> [String: TakeDetails] {
+        guard let url = detailsFile(of: scriptID), let data = try? Data(contentsOf: url) else { return [:] }
+        return (try? JSONDecoder().decode([String: TakeDetails].self, from: data)) ?? [:]
+    }
+
+    /// Keep what's been said about a take. Saying nothing forgets it.
+    func setDetails(_ details: TakeDetails, ofTake takeID: String, scriptID: UUID) {
+        var all = self.details(for: scriptID)
+        all[takeID] = details.isEmpty ? nil : details
+        guard let folder = folder(of: scriptID), let url = detailsFile(of: scriptID),
+              let data = try? JSONEncoder().encode(all) else { return }
+        try? fileManager.createDirectory(at: folder, withIntermediateDirectories: true)
+        try? data.write(to: url, options: .atomic)
     }
 
     /// Start counting the teleprompter as open on `scriptID`.
@@ -107,6 +134,10 @@ final class TakeStore {
 
     private func sessionsFile(of scriptID: UUID) -> URL? {
         folder(of: scriptID)?.appendingPathComponent("sessions.json")
+    }
+
+    private func detailsFile(of scriptID: UUID) -> URL? {
+        folder(of: scriptID)?.appendingPathComponent("details.json")
     }
 
     private func writeOpenSessions() {

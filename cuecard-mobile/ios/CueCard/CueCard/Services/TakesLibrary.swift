@@ -22,6 +22,8 @@ final class TakesLibrary: NSObject, ObservableObject {
     @Published private(set) var takes: [Take] = []
     /// The teleprompter has been open on the script, so it may have takes.
     @Published private(set) var hasSessions = false
+    /// The rating, tags and notes of each take, by take ID.
+    @Published private(set) var details: [String: TakeDetails] = [:]
 
     private var scriptID: UUID?
     private var isObservingLibrary = false
@@ -48,6 +50,7 @@ final class TakesLibrary: NSObject, ObservableObject {
         guard let scriptID else { return }
         let sessions = TakeStore.shared.sessions(for: scriptID)
         hasSessions = !sessions.isEmpty
+        details = TakeStore.shared.details(for: scriptID)
         guard canRead, hasSessions else {
             takes = []
             return
@@ -60,6 +63,25 @@ final class TakesLibrary: NSObject, ObservableObject {
         takes = Self.videos(recordedDuring: sessions).enumerated().map { index, asset in
             Take(asset: asset, number: index + 1)
         }
+    }
+
+    func details(of take: Take) -> TakeDetails {
+        details[take.id] ?? TakeDetails()
+    }
+
+    func setDetails(_ newDetails: TakeDetails, of take: Take) {
+        guard let scriptID, newDetails != details(of: take) else { return }
+        details[take.id] = newDetails.isEmpty ? nil : newDetails
+        TakeStore.shared.setDetails(newDetails, ofTake: take.id, scriptID: scriptID)
+    }
+
+    /// Tags already given to the script's takes, the most used first.
+    var usedTags: [String] {
+        var counts: [String: Int] = [:]
+        for tag in details.values.flatMap(\.tags) {
+            counts[tag, default: 0] += 1
+        }
+        return counts.sorted { $0.value != $1.value ? $0.value > $1.value : $0.key < $1.key }.map(\.key)
     }
 
     func requestAccess() async {
