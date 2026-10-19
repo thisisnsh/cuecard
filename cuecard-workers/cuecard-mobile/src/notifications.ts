@@ -27,6 +27,7 @@ export const NOTIFICATIONS: Notification[] = [
       { kind: "openURL", label: "Tell us", url: "https://cuecard.dev/feedback-95efa0d9/" },
       { kind: "dismiss", label: "Not now" },
     ],
+    minInstallAgeDays: 3,
     expiresAt: "2026-12-31T00:00:00Z",
   },
 ];
