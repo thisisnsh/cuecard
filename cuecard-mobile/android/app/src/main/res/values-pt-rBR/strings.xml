@@ -2,7 +2,7 @@
 <resources>
     <string name="share_message">Confira %1$s</string>
     <string name="translation_report_body">Onde no app:\n\nO que está escrito:\n\nO que deveria estar escrito:\n</string>
-    <string name="sample_teleprompter">Olá a todos.\n\nEstou animado por estar aqui hoje para falar sobre o teleprompter do CueCard.\n\n[cue sorria e pause]\n\nEle rola seu roteiro no seu ritmo, para que seus olhos fiquem para cima e suas palavras no rumo certo.\n\n[cue pausa]\n\nSaia do app e ele continua em uma janela flutuante, bem em cima da sua câmera ou da sua videochamada.\n\n[cue mais devagar]\n\nSe perdeu? Arraste o roteiro de volta. Passando do tempo? Pule para a frente.\n\nE o timer fica amarelo perto do fim… e vermelho se você se empolgar um pouco demais.\n\n[cue risada leve]\n\nE essas palavras coloridas?\n\n[cue enfatize]\n\nSão as suas deixas. Lembretes para sorrir, pausar ou não entrar em pânico. Elas nunca devem ser lidas em voz alta.\n\n[cue pausa]\n\nExperimente. Acho que você vai adorar.</string>
+    <string name="sample_teleprompter">Olá a todos.\n\nEstou animado por estar aqui hoje para falar sobre o teleprompter do CueCard.\n\n[cue sorria e pause]\n\nEle rola seu roteiro no seu ritmo, para você manter o olhar à frente e não perder o fio da fala.\n\n[cue pausa]\n\nSaia do app e ele continua em uma janela flutuante, bem em cima da sua câmera ou da sua videochamada.\n\n[cue mais devagar]\n\nSe perdeu? Arraste o roteiro de volta. Passando do tempo? Pule para a frente.\n\nE o timer fica amarelo perto do fim… e vermelho se você se empolgar um pouco demais.\n\n[cue risada leve]\n\nE essas palavras coloridas?\n\n[cue enfatize]\n\nSão as suas deixas. Lembretes para sorrir, pausar ou não entrar em pânico. Elas nunca devem ser lidas em voz alta.\n\n[cue pausa]\n\nExperimente. Acho que você vai adorar.</string>
     <string name="sample_cards">Olá a todos. Apresento o Cue Cards. [cue sorria]\n[separator]\nUma ideia por cartão. Deslize para o próximo quando estiver pronto.\n[separator]\nO timer no topo mantém você no horário. [cue risada leve]\n[separator]\nPalavras coloridas são deixas, não falas. [cue enfatize]\n[separator]\nObrigado pela atenção. Perguntas?</string>
     <string name="theme_system">Sistema</string>
     <string name="theme_light">Claro</string>
@@ -31,7 +31,7 @@
     <string name="teleprompter_settings">Ajustes do teleprompter</string>
     <string name="editor">Editor</string>
     <string name="editor_text_size">Tamanho do texto do editor</string>
-    <string name="test_crash_footer">Isso fecha o app de propósito para verificar os relatórios do Crashlytics.</string>
+    <string name="test_crash_footer">Isso provoca uma falha no app de propósito para verificar os relatórios do Crashlytics.</string>
     <string name="trigger_test_crash">Provocar falha de teste</string>
     <string name="scroll_speed">Velocidade de rolagem</string>
     <string name="lines_per_min">linhas/min</string>
@@ -48,7 +48,7 @@
     <string name="theme">Tema</string>
     <string name="cue_color">Cor das deixas</string>
     <string name="share_cuecard">Compartilhar CueCard</string>
-    <string name="review_on_google_play">Avaliar na Google Play</string>
+    <string name="review_on_google_play">Avaliar no Google Play</string>
     <string name="reset_to_defaults">Redefinir padrões</string>
     <string name="labeled_value">%1$s: %2$s</string>
     <string name="custom_size">Personalizado (%1$d)</string>
@@ -68,7 +68,7 @@
     <string name="start">Início</string>
     <string name="warning">Aviso</string>
     <string name="overtime">Tempo excedido</string>
-    <string name="warn_in_last">Avisar no final</string>
+    <string name="warn_in_last">Avisar antes do fim</string>
     <string name="countdown">Contagem regressiva</string>
     <string name="countdown_seconds">Segundos da contagem regressiva</string>
     <string name="sec">s</string>
@@ -246,5 +246,11 @@
     <string-array name="whats_new_text">
         <item>Mais idiomas compatíveis: chinês, francês, alemão, hindi, italiano, japonês, coreano, português e espanhol.</item>
         <item>Texto formatado: deixe palavras em negrito ou itálico no seu roteiro.</item>
+        <item>Melhorias e novos recursos</item>
+        <item>Tamanhos de texto definidos em pontos, com opções predefinidas ajustadas à sua tela.</item>
+        <item>Selecionar Tudo na barra de deixas do editor.</item>
+        <item>O botão de reprodução mostra a contagem regressiva antes de o roteiro começar.</item>
+        <item>O timer da janela flutuante aumenta com o tamanho do texto.</item>
+        <item>Ajustes separados para o editor e o teleprompter, com uma opção para compartilhar o CueCard.</item>
     </string-array>
 </resources>

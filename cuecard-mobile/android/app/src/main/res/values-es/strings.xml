@@ -3,7 +3,7 @@
     <string name="share_message">Echa un vistazo a %1$s</string>
     <string name="translation_report_body">Dónde en la app:\n\nQué dice:\n\nQué debería decir:\n</string>
     <string name="sample_teleprompter">Hola a todos.\n\nMe alegra estar aquí hoy para hablaros del teleprompter de CueCard.\n\n[cue sonríe y haz una pausa]\n\nDesplaza tu guion a tu ritmo, para que mantengas la mirada al frente y no pierdas el hilo.\n\n[cue pausa]\n\nSal de la app y sigue en una ventana flotante, justo encima de tu cámara o tu videollamada.\n\n[cue más despacio]\n\n¿Te has perdido? Arrastra el guion hacia atrás. ¿Vas largo? Salta hacia delante.\n\nY el temporizador se pone amarillo cerca del final… y rojo si te emocionas demasiado.\n\n[cue risa suave]\n\n¿Y estas palabras de colores?\n\n[cue enfatiza]\n\nSon tus indicaciones. Recordatorios para sonreír, hacer una pausa o no entrar en pánico. Nunca se leen en voz alta.\n\n[cue pausa]\n\nPruébalo. Creo que te va a encantar.</string>
-    <string name="sample_cards">Hola a todos. Os presento Cue Cards. [cue sonríe]\n[separator]\nUna idea por tarjeta. Desliza a la siguiente cuando estés listo.\n[separator]\nEl temporizador de arriba te mantiene a raya. [cue risa suave]\n[separator]\nLas palabras de colores son indicaciones, no texto. [cue enfatiza]\n[separator]\nGracias por escuchar. ¿Preguntas?</string>
+    <string name="sample_cards">Hola a todos. Os presento Cue Cards. [cue sonríe]\n[separator]\nUna idea por tarjeta. Desliza a la siguiente cuando estés listo.\n[separator]\nEl temporizador de arriba te mantiene a raya. [cue risa suave]\n[separator]\nLas palabras de colores son indicaciones, no palabras para leer en voz alta. [cue enfatiza]\n[separator]\nGracias por escuchar. ¿Preguntas?</string>
     <string name="theme_system">Sistema</string>
     <string name="theme_light">Claro</string>
     <string name="theme_dark">Oscuro</string>
@@ -31,7 +31,7 @@
     <string name="teleprompter_settings">Ajustes del teleprompter</string>
     <string name="editor">Editor</string>
     <string name="editor_text_size">Tamaño del texto del editor</string>
-    <string name="test_crash_footer">Esto cierra la app a propósito para comprobar los informes de Crashlytics.</string>
+    <string name="test_crash_footer">Esto provoca un fallo de la app a propósito para comprobar los informes de Crashlytics.</string>
     <string name="trigger_test_crash">Provocar fallo de prueba</string>
     <string name="scroll_speed">Velocidad de desplazamiento</string>
     <string name="lines_per_min">líneas/min</string>
@@ -48,7 +48,7 @@
     <string name="theme">Tema</string>
     <string name="cue_color">Color de las indicaciones</string>
     <string name="share_cuecard">Compartir CueCard</string>
-    <string name="review_on_google_play">Valorar en el Google Play</string>
+    <string name="review_on_google_play">Valorar en Google Play</string>
     <string name="reset_to_defaults">Restablecer valores por omisión</string>
     <string name="labeled_value">%1$s: %2$s</string>
     <string name="custom_size">Personalizado (%1$d)</string>
@@ -68,7 +68,7 @@
     <string name="start">Inicio</string>
     <string name="warning">Aviso</string>
     <string name="overtime">Tiempo extra</string>
-    <string name="warn_in_last">Avisar al final</string>
+    <string name="warn_in_last">Avisar antes del final</string>
     <string name="countdown">Cuenta atrás</string>
     <string name="countdown_seconds">Segundos de cuenta atrás</string>
     <string name="sec">s</string>
@@ -154,7 +154,7 @@
     <string name="help_add_cards_detail">Cada recuadro del editor es una tarjeta. Toca Crear tarjeta para añadir otra.</string>
     <string name="help_turn_cards_title">Pasa las tarjetas</string>
     <string name="help_turn_cards_detail">Desliza o toca Atrás y Siguiente. Los puntos de arriba indican en qué tarjeta estás.</string>
-    <string name="help_watch_the_timer_cards_detail">La hora de arriba muestra la cuenta atrás del temporizador. Si no hay temporizador, cuenta desde que empezaste.</string>
+    <string name="help_watch_the_timer_cards_detail">El tiempo de arriba muestra la cuenta atrás del temporizador. Si no hay temporizador, cuenta desde que empezaste.</string>
     <string name="help_general">General</string>
     <string name="help_bold_and_italic_title">Negrita y cursiva</string>
     <string name="help_bold_and_italic_detail">Selecciona palabras y toca B o I encima del teclado. O escribe *negrita* o _cursiva_.</string>
@@ -246,5 +246,11 @@
     <string-array name="whats_new_text">
         <item>Más idiomas compatibles: chino, francés, alemán, hindi, italiano, japonés, coreano, portugués y español.</item>
         <item>Texto enriquecido: pon palabras en negrita o cursiva en tu guion.</item>
+        <item>Mejoras y nuevas funciones</item>
+        <item>Tamaños de texto en puntos, con opciones predefinidas adaptadas a tu pantalla.</item>
+        <item>Seleccionar todo en la barra de indicaciones del editor.</item>
+        <item>El botón de reproducción muestra la cuenta atrás antes de que empiece el guion.</item>
+        <item>El temporizador de la ventana flotante crece con el tamaño del texto.</item>
+        <item>Ajustes independientes para el editor y el teleprompter, con una opción para compartir CueCard.</item>
     </string-array>
 </resources>
