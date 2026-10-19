@@ -21,9 +21,8 @@ eleventyComputed:
 {% set formUrl = "https://docs.google.com/forms/d/e/" + form.formId + "/viewform" %}
 
 <main id="main-content" tabindex="-1">
-    <section class="feedback" aria-labelledby="feedback-h">
+    <section class="feedback" aria-label="{{ form.title }}">
         <div class="wrap wrap-narrow">
-            <h1 class="section-h" id="feedback-h">{{ form.title }}</h1>
             <iframe class="feedback-frame" title="{{ form.title }}"
                     style="--frame-h: {{ form.height }}px; --frame-h-wide: {{ form.heightWide or form.height }}px"
                     src="{{ formUrl }}?embedded=true"></iframe>

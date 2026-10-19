@@ -479,10 +479,11 @@ code, .notes-content { font-family: var(--mono); font-size: 0.92em; }
 .hero .body { max-width: 56ch; }
 .hero-404 { min-height: 66svh; display: flex; align-items: center; }
 
-/* /feedback-<id>/: an embedded Google Form under a one-line heading. */
-.feedback { padding-top: clamp(32px, 5vh, 56px); }
+/* /feedback-<id>/: an embedded Google Form, centred. The form carries its own
+   title, so the page adds none. */
+.feedback { padding-top: clamp(16px, 3vh, 32px); text-align: center; }
 .feedback-frame {
-  display: block; width: 100%; max-width: var(--narrow); margin-top: 20px; border: 0;
+  display: block; width: 100%; max-width: var(--narrow); margin: 0 auto; border: 0;
   height: var(--frame-h);
 }
 @media (min-width: 600px) { .feedback-frame { height: var(--frame-h-wide); } }
