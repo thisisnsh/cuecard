@@ -132,9 +132,10 @@ button { font: inherit; color: inherit; }
    is the <summary>. Its label never changes between pages, which is the whole
    point of it. */
 .nav-get { position: static; margin-left: 4px; }
-.nav-get-btn {
+/* Scoped under .nav to outrank .btn, which comes later and is 48px tall. */
+.nav .nav-get-btn {
   list-style: none; cursor: pointer;
-  padding: 8px 15px; font-size: 13.5px; gap: 7px;
+  min-height: 38px; padding: 7px 15px; font-size: 13.5px; gap: 7px;
   white-space: nowrap;
 }
 .nav-get-btn::-webkit-details-marker { display: none; }
@@ -194,17 +195,18 @@ button { font: inherit; color: inherit; }
 .dlmenu-foot a:hover { color: var(--ink); }
 
 .nav-toggle {
-  display: none; width: 44px; height: 44px; padding: 0;
+  display: none; width: 40px; height: 40px; padding: 0; margin-right: -9px;
   background: none; border: 0; cursor: pointer;
-  flex-direction: column; justify-content: center; gap: 9px;
+  flex-direction: column; align-items: center; justify-content: center; gap: 6px;
 }
+/* Two 20px bars, 8px apart centre to centre, so each moves 4px to cross. */
 .nav-toggle span {
-  display: block; height: 1.5px; border-radius: 2px;
+  display: block; width: 20px; height: 2px; border-radius: 2px;
   background: var(--ink);
   transition: transform .25s var(--ease);
 }
-.nav-toggle[aria-expanded="true"] span:first-child { transform: translateY(5px) rotate(45deg); }
-.nav-toggle[aria-expanded="true"] span:last-child { transform: translateY(-5px) rotate(-45deg); }
+.nav-toggle[aria-expanded="true"] span:first-child { transform: translateY(4px) rotate(45deg); }
+.nav-toggle[aria-expanded="true"] span:last-child { transform: translateY(-4px) rotate(-45deg); }
 
 /* The strip that sends you to the other half of the product. */
 .nav-secondary { border-top: 1px solid var(--hairline); background: var(--leaf); }
@@ -224,20 +226,25 @@ button { font: inherit; color: inherit; }
 
 @media (max-width: 980px) {
   .nav { min-height: 58px; }
+  /* Holds the top row's height when the open menu wraps below it, so the logo
+     and buttons don't jump up. */
+  .nav > .brand, .nav-actions { min-height: 58px; }
   .nav-ready .nav-toggle { display: flex; }
   .nav-actions { margin-left: auto; order: 2; }
   .nav-links {
     display: flex; width: 100%; order: 3;
     flex-direction: column; align-items: flex-start; gap: 0;
-    padding-bottom: 10px; margin-top: 6px; border-top: 1px solid var(--hairline);
+    padding-bottom: 8px; border-top: 1px solid var(--hairline);
   }
   .nav-ready .nav-links:not(.open) { display: none; }
   .nav-links .nav-link {
-    width: 100%; padding: 13px 0; font-size: 16px;
+    width: 100%; padding: 12px 0; font-size: 17px; color: var(--ink);
     border-bottom: 1px solid var(--hairline);
   }
+  /* The topbar's own border closes the list; a second line under it doubled up. */
+  .nav-links .nav-link:last-child { border-bottom: 0; }
   .nav-get { margin: 0; }
-  .nav-get-btn { min-height: 44px; padding: 10px 14px; }
+  .nav .nav-get-btn { min-height: 36px; padding: 6px 14px; font-size: 13.5px; }
   .nav-get-panel {
     position: absolute; right: 0; width: 340px;
     max-height: calc(100dvh - 80px); overflow-y: auto; overscroll-behavior: contain;
@@ -1703,7 +1710,8 @@ main:focus { outline: none; }
 @media (max-width: 480px) {
   .nav { gap: 8px; }
   .nav-actions { gap: 6px; }
-  .nav-get-btn { padding-inline: 12px; }
+  .nav .nav-get-btn { padding-inline: 14px; }
+  .nav-get-btn .icon-download { display: none; }
   .nav-get-caret { display: none; }
   .deck-controls { flex-wrap: wrap; }
   .hero { padding-top: 32px; }
