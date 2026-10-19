@@ -41,6 +41,12 @@ class CueCardApplication : Application() {
         // Configure Crashlytics
         Firebase.crashlytics.setCrashlyticsCollectionEnabled(true)
 
+        // The language the app is showing, which can differ from the phone's.
+        // One event per language, so the Events report counts each one's users
+        // as it is. Event names can't hold a hyphen, so pt-BR becomes pt_br.
+        val language = getString(R.string.language_code).lowercase().replace('-', '_')
+        analytics.logEvent("app_language_$language", null)
+
         // Log app open event
         analytics.logEvent(FirebaseAnalytics.Event.APP_OPEN, null)
     }

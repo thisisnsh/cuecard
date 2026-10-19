@@ -40,6 +40,12 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         // Configure Crashlytics
         Crashlytics.crashlytics().setCrashlyticsCollectionEnabled(true)
 
+        // The language the app is showing, which can differ from the phone's.
+        // One event per language, so the Events report counts each one's users
+        // as it is. Event names can't hold a hyphen, so pt-BR becomes pt_br.
+        let language = (Bundle.main.preferredLocalizations.first ?? "en").lowercased().replacingOccurrences(of: "-", with: "_")
+        Analytics.logEvent("app_language_\(language)", parameters: nil)
+
         Analytics.logEvent(AnalyticsEventAppOpen, parameters: nil)
 
         // At launch, so a command from the watch that launched the app in the
