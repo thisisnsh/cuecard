@@ -17,19 +17,16 @@ export const NOTIFICATIONS: Notification[] = [
     targets: [{ platform: "ios", maxVersion: "1.5.0" }],
     expiresAt: "2026-10-31T00:00:00Z",
   },
-  // The feedback form on cuecard.dev, once per platform so the link can tell
-  // the form which app it came from.
-  ...(["ios", "android", "macos", "windows"] as const).map((platform): Notification => ({
-    id: `feedback-95efa0d9-${platform}`,
+  {
+    id: "feedback-95efa0d9",
     surface: "homeBanner",
     severity: "info",
     title: "Help make CueCard better",
     body: "Got an idea or found a bug? It takes a minute.",
     actions: [
-      { kind: "openURL", label: "Tell us", url: `https://cuecard.dev/feedback-95efa0d9/?p=${platform}` },
+      { kind: "openURL", label: "Tell us", url: "https://cuecard.dev/feedback-95efa0d9/" },
       { kind: "dismiss", label: "Not now" },
     ],
-    targets: [{ platform }],
     expiresAt: "2026-12-31T00:00:00Z",
-  })),
+  },
 ];
