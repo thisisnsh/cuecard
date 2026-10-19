@@ -467,13 +467,7 @@
 				Base,
 				es,
 				fr,
-				de,
 				"pt-BR",
-				it,
-				ja,
-				ko,
-				"zh-Hans",
-				hi,
 			);
 			mainGroup = 700;
 			packageReferences = (
