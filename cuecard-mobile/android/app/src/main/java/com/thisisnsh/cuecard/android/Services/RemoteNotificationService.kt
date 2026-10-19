@@ -66,7 +66,9 @@ class RemoteNotificationService private constructor(context: Context) {
             return
         }
 
-        val raw = FAKE_RESPONSE ?: withContext(Dispatchers.IO) {
+        // Checked here rather than where it's declared, so a fake pasted in for
+        // testing can't reach a release build.
+        val raw = FAKE_RESPONSE.takeIf { BuildConfig.DEBUG } ?: withContext(Dispatchers.IO) {
             try {
                 (URL(ENDPOINT).openConnection() as HttpURLConnection).run {
                     connectTimeout = TIMEOUT_MS
