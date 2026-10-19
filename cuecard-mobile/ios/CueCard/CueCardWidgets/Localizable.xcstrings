@@ -24,6 +24,12 @@
             "state" : "translated",
             "value" : "%lld de %lld"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld из %lld"
+          }
         }
       }
     },
@@ -52,6 +58,12 @@
             "state" : "translated",
             "value" : "Voltar"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Назад"
+          }
         }
       }
     },
@@ -73,6 +85,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Azul"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Синий"
           }
         }
       }
@@ -96,6 +114,12 @@
             "state" : "translated",
             "value" : "Cartões"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Карточки"
+          }
         }
       }
     },
@@ -117,6 +141,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cartão atual"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Текущая карточка"
           }
         }
       }
@@ -140,6 +170,12 @@
             "state" : "translated",
             "value" : "Cartão de destino"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Целевая карточка"
+          }
         }
       }
     },
@@ -161,6 +197,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "OK"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Готово"
           }
         }
       }
@@ -184,6 +226,12 @@
             "state" : "translated",
             "value" : "Concluir"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завершить"
+          }
         }
       }
     },
@@ -205,6 +253,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verde"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зелёный"
           }
         }
       }
@@ -228,6 +282,12 @@
             "state" : "translated",
             "value" : "Avança pelo conjunto de cartões aberto."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Листает открытый набор карточек."
+          }
         }
       }
     },
@@ -249,6 +309,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Próximo"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Далее"
           }
         }
       }
@@ -272,6 +338,12 @@
             "state" : "translated",
             "value" : "Abra o CueCard para virar o cartão"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Откройте CueCard, чтобы перелистнуть карточку"
+          }
         }
       }
     },
@@ -293,6 +365,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Primeiro abra um roteiro no teleprompter do CueCard."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сначала откройте сценарий в телесуфлёре CueCard."
           }
         }
       }
@@ -316,6 +394,12 @@
             "state" : "translated",
             "value" : "Rosa"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розовый"
+          }
         }
       }
     },
@@ -337,6 +421,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Reproduzir ou pausar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пуск или пауза"
           }
         }
       }
@@ -360,6 +450,12 @@
             "state" : "translated",
             "value" : "Reproduzir ou pausar teleprompter"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пуск или пауза телесуфлёра"
+          }
         }
       }
     },
@@ -381,6 +477,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Reproduz ou pausa o roteiro aberto no teleprompter."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запускает или ставит на паузу сценарий, открытый в телесуфлёре."
           }
         }
       }
@@ -404,6 +506,12 @@
             "state" : "translated",
             "value" : "Roxo"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фиолетовый"
+          }
         }
       }
     },
@@ -425,6 +533,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vermelho"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Красный"
           }
         }
       }
@@ -448,6 +562,12 @@
             "state" : "translated",
             "value" : "Sessão"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сеанс"
+          }
         }
       }
     },
@@ -469,6 +589,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Recomeçar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Начать сначала"
           }
         }
       }
@@ -492,6 +618,12 @@
             "state" : "translated",
             "value" : "Virar cartão"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перелистнуть карточку"
+          }
         }
       }
     },
@@ -513,6 +645,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Amarelo"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Жёлтый"
           }
         }
       }

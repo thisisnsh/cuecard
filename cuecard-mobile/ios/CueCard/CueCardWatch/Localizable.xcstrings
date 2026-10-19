@@ -78,6 +78,36 @@
               }
             }
           }
+        },
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld карточки"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld карточек"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld карточка"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld карточки"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -100,6 +130,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld de %lld"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld из %lld"
           }
         }
       }
@@ -126,6 +162,12 @@
             "state" : "translated",
             "value" : "De novo"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ещё раз"
+          }
         }
       }
     },
@@ -147,6 +189,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Todos os cartões concluídos"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Все карточки пройдены"
           }
         }
       }
@@ -170,6 +218,12 @@
             "state" : "translated",
             "value" : "Voltar 10 segundos"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Назад на 10 секунд"
+          }
         }
       }
     },
@@ -191,6 +245,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Azul"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Синий"
           }
         }
       }
@@ -214,6 +274,12 @@
             "state" : "translated",
             "value" : "Cartões"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Карточки"
+          }
         }
       }
     },
@@ -235,6 +301,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cartões fechados"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Карточки закрыты"
           }
         }
       }
@@ -261,6 +333,12 @@
             "state" : "translated",
             "value" : "Conjunto removido"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Набор удалён"
+          }
         }
       }
     },
@@ -282,6 +360,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Conjuntos salvos no relógio funcionam mesmo sem o iPhone."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Наборы, сохранённые на часах, работают даже без iPhone."
           }
         }
       }
@@ -305,6 +389,12 @@
             "state" : "translated",
             "value" : "OK"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Готово"
+          }
         }
       }
     },
@@ -326,6 +416,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Durante uma palestra"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Во время выступления"
           }
         }
       }
@@ -349,6 +445,12 @@
             "state" : "translated",
             "value" : "Concluir"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завершить"
+          }
         }
       }
     },
@@ -370,6 +472,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Concluir conjunto"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завершить набор"
           }
         }
       }
@@ -393,6 +501,12 @@
             "state" : "translated",
             "value" : "Volte ou leia de novo."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вернитесь назад или прочитайте их ещё раз."
+          }
         }
       }
     },
@@ -414,6 +528,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verde"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зелёный"
           }
         }
       }
@@ -437,6 +557,12 @@
             "state" : "translated",
             "value" : "No CueCard do iPhone, abra um conjunto salvo e escolha Manter no Apple Watch no menu •••."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В CueCard на iPhone откройте сохранённый набор и выберите «Хранить на Apple Watch» в меню •••."
+          }
         }
       }
     },
@@ -458,6 +584,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ele foi removido deste relógio pelo seu iPhone."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Он был удалён с этих часов на iPhone."
           }
         }
       }
@@ -481,6 +613,12 @@
             "state" : "translated",
             "value" : "Grande"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Большой"
+          }
         }
       }
     },
@@ -502,6 +640,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Médio"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Средний"
           }
         }
       }
@@ -525,6 +669,12 @@
             "state" : "translated",
             "value" : "Próximo"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Далее"
+          }
         }
       }
     },
@@ -546,6 +696,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Próximo cartão"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Следующая карточка"
           }
         }
       }
@@ -569,6 +725,12 @@
             "state" : "translated",
             "value" : "No relógio"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На часах"
+          }
         }
       }
     },
@@ -590,6 +752,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Abra um roteiro no CueCard no seu iPhone."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Откройте сценарий в CueCard на iPhone."
           }
         }
       }
@@ -613,6 +781,12 @@
             "state" : "translated",
             "value" : "Abra um roteiro ou cartões no CueCard no seu iPhone."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Откройте сценарий или карточки в CueCard на iPhone."
+          }
         }
       }
     },
@@ -634,6 +808,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Abra cartões no CueCard no seu iPhone."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Откройте карточки в CueCard на iPhone."
           }
         }
       }
@@ -657,6 +837,12 @@
             "state" : "translated",
             "value" : "Tempo excedido"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сверх времени"
+          }
         }
       }
     },
@@ -678,6 +864,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pausar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пауза"
           }
         }
       }
@@ -701,6 +893,12 @@
             "state" : "translated",
             "value" : "Pausado"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "На паузе"
+          }
         }
       }
     },
@@ -722,6 +920,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Rosa"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розовый"
           }
         }
       }
@@ -745,6 +949,12 @@
             "state" : "translated",
             "value" : "Reproduzir"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пуск"
+          }
         }
       }
     },
@@ -766,6 +976,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cartão anterior"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Предыдущая карточка"
           }
         }
       }
@@ -789,6 +1005,12 @@
             "state" : "translated",
             "value" : "Roxo"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фиолетовый"
+          }
         }
       }
     },
@@ -810,6 +1032,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lendo"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Чтение"
           }
         }
       }
@@ -833,6 +1061,12 @@
             "state" : "translated",
             "value" : "Lendo cartões"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Чтение карточек"
+          }
         }
       }
     },
@@ -854,6 +1088,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Dicas de leitura"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Советы по чтению"
           }
         }
       }
@@ -877,6 +1117,12 @@
             "state" : "translated",
             "value" : "Leitura no Apple Watch"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Чтение на Apple Watch"
+          }
         }
       }
     },
@@ -898,6 +1144,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vermelho"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Красный"
           }
         }
       }
@@ -921,6 +1173,12 @@
             "state" : "translated",
             "value" : "Roteiro fechado"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сценарий закрыт"
+          }
         }
       }
     },
@@ -942,6 +1200,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pequeno"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Маленький"
           }
         }
       }
@@ -965,6 +1229,12 @@
             "state" : "translated",
             "value" : "Recomeçar"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Начать сначала"
+          }
         }
       }
     },
@@ -986,6 +1256,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Iniciando"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запуск"
           }
         }
       }
@@ -1009,6 +1285,12 @@
             "state" : "translated",
             "value" : "Deslize para virar um cartão. Gire a Digital Crown para rolar cartões longos."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Смахните, чтобы перелистнуть карточку. Поворачивайте колесико Digital Crown, чтобы прокручивать длинные карточки."
+          }
         }
       }
     },
@@ -1030,6 +1312,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Teleprompter"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Телесуфлёр"
           }
         }
       }
@@ -1053,6 +1341,12 @@
             "state" : "translated",
             "value" : "Para manter o CueCard na tela durante uma palestra, abra o app Watch no iPhone, vá em Geral › Retornar ao Relógio, escolha CueCard e defina para voltar após 1 hora."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Чтобы CueCard оставался на экране всё выступление, откройте приложение Watch на iPhone, перейдите в «Основные» › «Возврат к циферблату», выберите CueCard и задайте возврат через 1 час."
+          }
         }
       }
     },
@@ -1074,6 +1368,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Amarelo"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Жёлтый"
           }
         }
       }

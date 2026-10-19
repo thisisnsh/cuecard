@@ -26,6 +26,12 @@
             "state" : "translated",
             "value" : "“%@” não pôde ser apagado da pasta de notas. A nota continua apagada."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось удалить «%@» из папки заметок. Заметка остаётся удалённой."
+          }
         }
       }
     },
@@ -47,6 +53,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "“%@” tem mais de 10 MB, então não foi adicionado às suas notas."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файл «%@» больше 10 МБ, поэтому он не добавлен в заметки."
           }
         }
       }
@@ -71,6 +83,12 @@
             "state" : "translated",
             "value" : "%@, minutos"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@, минуты"
+          }
         }
       }
     },
@@ -94,6 +112,12 @@
             "state" : "translated",
             "value" : "%@, segundos"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@, секунды"
+          }
         }
       }
     },
@@ -112,6 +136,12 @@
           }
         },
         "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@: %2$@"
+          }
+        },
+        "ru" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@: %2$@"
@@ -141,6 +171,12 @@
             "state" : "translated",
             "value" : "%lld arquivos não puderam ser apagados da pasta de notas. As notas continuam apagadas."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файлов, которые не удалось удалить из папки заметок: %lld. Их заметки остаются удалёнными."
+          }
         }
       }
     },
@@ -162,6 +198,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld arquivos da pasta de notas têm mais de 10 MB, então não foram adicionados às suas notas."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файлов больше 10 МБ в папке заметок: %lld. Они не добавлены в заметки."
           }
         }
       }
@@ -240,6 +282,36 @@
               }
             }
           }
+        },
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld заметки"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld заметок"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld заметка"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld заметки"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -263,6 +335,12 @@
             "state" : "translated",
             "value" : "%lld de %lld"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld из %lld"
+          }
         }
       }
     },
@@ -285,6 +363,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld de 5 estrelas"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld из 5 звёзд"
           }
         }
       }
@@ -359,6 +443,36 @@
                 "stringUnit" : {
                   "state" : "translated",
                   "value" : "%lld takes"
+                }
+              }
+            }
+          }
+        },
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld дубля"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld дублей"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld дубль"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld дубля"
                 }
               }
             }
@@ -440,6 +554,36 @@
               }
             }
           }
+        },
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld версии"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld версий"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld версия"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld версии"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -469,6 +613,12 @@
             "state" : "translated",
             "value" : "Adicionar %@"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавить «%@»"
+          }
         }
       }
     },
@@ -491,6 +641,12 @@
             "state" : "translated",
             "value" : "Adicionar tag"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавить тег"
+          }
         }
       }
     },
@@ -512,6 +668,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Permitir acesso ao Fotos"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Разрешить доступ к «Фото»"
           }
         }
       }
@@ -536,6 +698,12 @@
             "state" : "translated",
             "value" : "Melhor"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Лучший"
+          }
         }
       }
     },
@@ -557,6 +725,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Alterar em Ajustes"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Изменить в Настройках"
           }
         }
       }
@@ -580,6 +754,12 @@
             "state" : "translated",
             "value" : "O CueCard não consegue ver suas fotos, então não pode encontrar os vídeos gravados com este roteiro. Permita o acesso em Ajustes."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CueCard не видит ваши фото, поэтому не может найти видео, записанные с этим сценарием. Разрешите доступ в Настройках."
+          }
         }
       }
     },
@@ -601,6 +781,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "O CueCard pode encontrar os vídeos que você grava com o teleprompter aberto e manter cada um com o seu roteiro. Eles continuam no Fotos."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CueCard может находить видео, которые вы записываете при открытом телесуфлёре, и хранить каждое вместе с его сценарием. Сами видео остаются в «Фото»."
           }
         }
       }
@@ -624,6 +810,12 @@
             "state" : "translated",
             "value" : "O CueCard só vê os vídeos que você escolheu, então alguns takes podem estar faltando."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CueCard видит только выбранные вами видео, поэтому некоторых дублей может не быть."
+          }
         }
       }
     },
@@ -645,6 +837,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Encontre seus takes"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Найдите свои дубли"
           }
         }
       }
@@ -668,6 +866,12 @@
             "state" : "translated",
             "value" : "Nenhum take ainda"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дублей пока нет"
+          }
         }
       }
     },
@@ -689,6 +893,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Notas"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заметки"
           }
         }
       }
@@ -712,6 +922,12 @@
             "state" : "translated",
             "value" : "Sem avaliação"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Без оценки"
+          }
         }
       }
     },
@@ -733,6 +949,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Abrir no Fotos"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть в «Фото»"
           }
         }
       }
@@ -756,6 +978,12 @@
             "state" : "translated",
             "value" : "Avaliação"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оценка"
+          }
         }
       }
     },
@@ -777,6 +1005,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Grave um vídeo com o teleprompter aberto, mesmo flutuando sobre a câmera, e ele aparece aqui."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запишите видео при открытом телесуфлёре, даже если он плавает поверх камеры, и оно появится здесь."
           }
         }
       }
@@ -801,6 +1035,12 @@
             "state" : "translated",
             "value" : "Remover %@"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Убрать «%@»"
+          }
         }
       }
     },
@@ -824,6 +1064,12 @@
             "state" : "translated",
             "value" : "Regravar"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переснять"
+          }
         }
       }
     },
@@ -845,6 +1091,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tags"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Теги"
           }
         }
       }
@@ -868,6 +1120,12 @@
             "state" : "translated",
             "value" : "Tags e notas"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Теги и заметки"
+          }
         }
       }
     },
@@ -889,6 +1147,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Take %lld"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дубль %lld"
           }
         }
       }
@@ -912,6 +1176,12 @@
             "state" : "translated",
             "value" : "Takes"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дубли"
+          }
         }
       }
     },
@@ -933,6 +1203,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Toque em um take para abrir o Fotos, ou em uma estrela para avaliá-lo. Seus vídeos ficam lá, e nada sai deste dispositivo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Коснитесь дубля, чтобы открыть «Фото», или звезды, чтобы оценить его. Видео остаются там, и ничто не покидает это устройство."
           }
         }
       }
@@ -957,6 +1233,12 @@
             "state" : "translated",
             "value" : "Aproveitável"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Годный"
+          }
         }
       }
     },
@@ -979,6 +1261,12 @@
             "state" : "translated",
             "value" : "Os vídeos que você grava com o teleprompter aberto aparecem como uma pilha ao lado de Reproduzir. Toque nela para ver todos os takes, avaliá-los, adicionar tags e notas. Toque em um take para abrir o Fotos."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видео, записанные при открытом телесуфлёре, появляются стопкой рядом с кнопкой «Пуск». Коснитесь её, чтобы увидеть все дубли, оценить их, добавить теги и заметки. Коснитесь дубля, чтобы открыть «Фото»."
+          }
         }
       }
     },
@@ -1000,6 +1288,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "O que funcionou e o que mudar da próxima vez"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Что получилось и что изменить в следующий раз"
           }
         }
       }
@@ -1080,6 +1374,36 @@
               }
             }
           }
+        },
+        "ru" : {
+          "variations" : {
+            "plural" : {
+              "few" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "⋯ %lld строки без изменений"
+                }
+              },
+              "many" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "⋯ %lld строк без изменений"
+                }
+              },
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "⋯ %lld строка без изменений"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "⋯ %lld строки без изменений"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -1101,6 +1425,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "0:00 desativa o timer."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "0:00 выключает таймер."
           }
         }
       }
@@ -1124,6 +1454,12 @@
             "state" : "translated",
             "value" : "Botão de Ação"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Кнопка действия"
+          }
         }
       }
     },
@@ -1145,6 +1481,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Adicionar cartões"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавьте карточки"
           }
         }
       }
@@ -1168,6 +1510,12 @@
             "state" : "translated",
             "value" : "Adicionar deixa"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавить подсказку"
+          }
         }
       }
     },
@@ -1189,6 +1537,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Adicionar deixas"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавьте подсказки"
           }
         }
       }
@@ -1212,6 +1566,12 @@
             "state" : "translated",
             "value" : "Adicionar texto de exemplo"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавить пример текста"
+          }
         }
       }
     },
@@ -1233,6 +1593,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Adicione o widget Cartões pela galeria de widgets da Tela de Início. Os widgets médio e grande incluem controles."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавьте виджет «Карточки» из галереи виджетов экрана «Домой». В среднем и большом виджетах есть кнопки управления."
           }
         }
       }
@@ -1256,6 +1622,12 @@
             "state" : "translated",
             "value" : "Adicione seu roteiro aqui...\n\nToque em Adicionar deixa para inserir um lembrete, ou digite [ para escrever um você mesmo.\n\nPor exemplo: Bem-vindos a todos [cue sorria e pause]"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавьте сюда свой сценарий...\n\nКоснитесь «Добавить подсказку», чтобы вставить напоминание, или введите [, чтобы написать его самостоятельно.\n\nНапример: Добро пожаловать [cue улыбка и пауза]"
+          }
         }
       }
     },
@@ -1277,6 +1649,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tudo"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Все"
           }
         }
       }
@@ -1300,6 +1678,12 @@
             "state" : "translated",
             "value" : "Todos os cartões concluídos"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Все карточки пройдены"
+          }
         }
       }
     },
@@ -1321,6 +1705,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Também na Tela Bloqueada"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Также на экране блокировки"
           }
         }
       }
@@ -1344,6 +1734,12 @@
             "state" : "translated",
             "value" : "Qualquer pessoa que veja seu iPhone pode ler o cartão atual. Cartões com mais de %lld caracteres serão cortados na Tela Bloqueada."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Любой, кто видит ваш iPhone, сможет прочитать текущую карточку. Если число символов в карточке больше %lld, на экране блокировки она будет обрезана."
+          }
         }
       }
     },
@@ -1366,6 +1762,12 @@
             "state" : "translated",
             "value" : "Aparência"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оформление"
+          }
         }
       }
     },
@@ -1384,6 +1786,12 @@
           }
         },
         "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apple Watch"
+          }
+        },
+        "ru" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Apple Watch"
@@ -1410,6 +1818,12 @@
             "state" : "translated",
             "value" : "Autentique-se com Face ID, Touch ID ou seu código para usar os botões."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Чтобы пользоваться кнопками, подтвердите личность с помощью Face ID, Touch ID или код-пароля."
+          }
         }
       }
     },
@@ -1431,6 +1845,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Voltar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Назад"
           }
         }
       }
@@ -1454,6 +1874,12 @@
             "state" : "translated",
             "value" : "Azul"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Синий"
+          }
         }
       }
     },
@@ -1475,6 +1901,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Negrito"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Жирный"
           }
         }
       }
@@ -1498,6 +1930,12 @@
             "state" : "translated",
             "value" : "Negrito e itálico"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Жирный и курсив"
+          }
         }
       }
     },
@@ -1519,6 +1957,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cancelar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отменить"
           }
         }
       }
@@ -1542,6 +1986,12 @@
             "state" : "translated",
             "value" : "Cartão %lld"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Карточка %lld"
+          }
         }
       }
     },
@@ -1563,6 +2013,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "O texto dos cartões pode ir de %lld a %lld e o do editor de %lld a %lld."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Размер текста карточек — от %lld до %lld, текста редактора — от %lld до %lld."
           }
         }
       }
@@ -1586,6 +2042,12 @@
             "state" : "translated",
             "value" : "Tamanho do texto do cartão"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Размер текста карточек"
+          }
         }
       }
     },
@@ -1607,6 +2069,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cartões"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Карточки"
           }
         }
       }
@@ -1630,6 +2098,12 @@
             "state" : "translated",
             "value" : "Ajustes dos cartões"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Настройки карточек"
+          }
         }
       }
     },
@@ -1651,6 +2125,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Timer dos cartões"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Таймер карточек"
           }
         }
       }
@@ -1674,6 +2154,12 @@
             "state" : "translated",
             "value" : "Alterar pasta de notas"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сменить папку заметок"
+          }
         }
       }
     },
@@ -1696,6 +2182,12 @@
             "state" : "translated",
             "value" : "Alterar velocidade"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Измените скорость"
+          }
         }
       }
     },
@@ -1717,6 +2209,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Alterar tamanho do texto e cores"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Измените размер текста и цвета"
           }
         }
       }
@@ -1741,6 +2239,12 @@
             "state" : "translated",
             "value" : "Confira %@"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Посмотрите: %@"
+          }
         }
       }
     },
@@ -1762,6 +2266,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Verifique se as Atividades ao Vivo estão ativadas para o CueCard nos Ajustes, volte a este conjunto e tente novamente."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Убедитесь, что для CueCard в Настройках включены Live Activity, затем вернитесь к этому набору и повторите попытку."
           }
         }
       }
@@ -1785,6 +2295,12 @@
             "state" : "translated",
             "value" : "Escolher pasta de notas"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выбрать папку заметок"
+          }
         }
       }
     },
@@ -1806,6 +2322,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fechar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Закрыть"
           }
         }
       }
@@ -1829,6 +2351,12 @@
             "state" : "translated",
             "value" : "Fechar sobreposição"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Закрыть плавающее окно"
+          }
         }
       }
     },
@@ -1850,6 +2378,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Comparar alterações"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сравнить изменения"
           }
         }
       }
@@ -1873,6 +2407,12 @@
             "state" : "translated",
             "value" : "Comparar com"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сравнить с"
+          }
         }
       }
     },
@@ -1894,6 +2434,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Controlar o teleprompter"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Управляйте телесуфлёром"
           }
         }
       }
@@ -1917,6 +2463,12 @@
             "state" : "translated",
             "value" : "Não foi possível apagar os arquivos"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось удалить файлы заметок"
+          }
         }
       }
     },
@@ -1938,6 +2490,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Contagem regressiva"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обратный отсчёт"
           }
         }
       }
@@ -1961,6 +2519,12 @@
             "state" : "translated",
             "value" : "A contagem regressiva é o tempo antes de o roteiro começar a rolar."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обратный отсчёт — это время до начала прокрутки сценария."
+          }
         }
       }
     },
@@ -1982,6 +2546,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Segundos da contagem regressiva"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Секунды обратного отсчёта"
           }
         }
       }
@@ -2005,6 +2575,12 @@
             "state" : "translated",
             "value" : "Contagem crescente"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прямой отсчёт"
+          }
         }
       }
     },
@@ -2026,6 +2602,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Criar cartão"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Новая карточка"
           }
         }
       }
@@ -2049,6 +2631,12 @@
             "state" : "translated",
             "value" : "Deixa"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подсказка"
+          }
         }
       }
     },
@@ -2070,6 +2658,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cor das deixas"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цвет подсказок"
           }
         }
       }
@@ -2096,6 +2690,12 @@
             "state" : "translated",
             "value" : "A página do CueCard no app Ajustes só mostra Idioma depois que você adiciona um segundo idioma em Geral › Idioma e Região."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пункт «Язык» на странице CueCard в приложении «Настройки» появляется только после добавления второго языка в разделе «Основные» › «Язык и регион»."
+          }
         }
       }
     },
@@ -2117,6 +2717,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Deixas são lembretes como [cue pausa], mostrados em cor e não lidos em voz alta. Digite [ ou toque em Adicionar deixa acima do teclado."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Подсказки — это напоминания вроде [cue пауза]: они выделены цветом и не читаются вслух. Введите [ или коснитесь «Добавить подсказку» над клавиатурой."
           }
         }
       }
@@ -2140,6 +2746,12 @@
             "state" : "translated",
             "value" : "Atual"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Текущая"
+          }
         }
       }
     },
@@ -2161,6 +2773,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cartão atual"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Текущая карточка"
           }
         }
       }
@@ -2184,6 +2802,12 @@
             "state" : "translated",
             "value" : "Edição atual"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Текущая правка"
+          }
         }
       }
     },
@@ -2205,6 +2829,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Personalizado (%lld)"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Свой (%lld)"
           }
         }
       }
@@ -2228,6 +2858,12 @@
             "state" : "translated",
             "value" : "Escuro"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тёмная"
+          }
         }
       }
     },
@@ -2249,6 +2885,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Apagar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Удалить"
           }
         }
       }
@@ -2272,6 +2914,12 @@
             "state" : "translated",
             "value" : "Apagar Tudo"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Удалить все"
+          }
         }
       }
     },
@@ -2293,6 +2941,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Apagar todas as notas salvas?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Удалить все сохранённые заметки?"
           }
         }
       }
@@ -2316,6 +2970,12 @@
             "state" : "translated",
             "value" : "Cartão de destino"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Целевая карточка"
+          }
         }
       }
     },
@@ -2337,6 +2997,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Descartar alterações"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отменить изменения"
           }
         }
       }
@@ -2360,6 +3026,12 @@
             "state" : "translated",
             "value" : "Descartar alterações não salvas?"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отменить несохранённые изменения?"
+          }
         }
       }
     },
@@ -2381,6 +3053,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ignorar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Закрыть"
           }
         }
       }
@@ -2404,6 +3082,12 @@
             "state" : "translated",
             "value" : "OK"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Готово"
+          }
         }
       }
     },
@@ -2425,6 +3109,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Arraste o roteiro para voltar ou avançar. Ele continua rolando de onde você parar."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перетащите сценарий, чтобы вернуться назад или перейти вперёд. Прокрутка продолжится с того места, где вы остановились."
           }
         }
       }
@@ -2448,6 +3138,12 @@
             "state" : "translated",
             "value" : "Duração"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Длительность"
+          }
         }
       }
     },
@@ -2469,6 +3165,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cada caixa do editor é um cartão. Toque em Criar cartão para adicionar outro."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Каждый блок в редакторе — это одна карточка. Коснитесь «Новая карточка», чтобы добавить ещё одну."
           }
         }
       }
@@ -2492,6 +3194,12 @@
             "state" : "translated",
             "value" : "Editor"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Редактор"
+          }
         }
       }
     },
@@ -2513,6 +3221,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tamanho do texto do editor"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Размер текста редактора"
           }
         }
       }
@@ -2536,6 +3250,12 @@
             "state" : "translated",
             "value" : "Enviar e-mail ao suporte"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Написать в поддержку"
+          }
         }
       }
     },
@@ -2557,6 +3277,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ativar cartões na Tela Bloqueada"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Включить карточки на экране блокировки"
           }
         }
       }
@@ -2580,6 +3306,12 @@
             "state" : "translated",
             "value" : "Digite um novo título para sua nota"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Введите новое название заметки"
+          }
         }
       }
     },
@@ -2601,6 +3333,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Digite um título para sua nota"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Введите название заметки"
           }
         }
       }
@@ -2624,6 +3362,12 @@
             "state" : "translated",
             "value" : "Cada vez que você salva, cria uma versão. Quando uma nota tiver mais de uma, toque no relógio no topo para comparar alterações e restaurar uma."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Каждое сохранение — это новая версия. Когда у заметки их больше одной, коснитесь часов вверху, чтобы сравнить изменения и восстановить нужную."
+          }
         }
       }
     },
@@ -2645,6 +3389,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Todas as notas salvas e seus arquivos na pasta “%@” serão apagados. Não é possível desfazer."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Все сохранённые заметки и их файлы в папке «%@» будут удалены. Это действие нельзя отменить."
           }
         }
       }
@@ -2668,6 +3418,12 @@
             "state" : "translated",
             "value" : "Todas as notas salvas serão apagadas. Não é possível desfazer."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Все сохранённые заметки будут удалены. Это действие нельзя отменить."
+          }
         }
       }
     },
@@ -2689,6 +3445,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Concluir"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Завершить"
           }
         }
       }
@@ -2712,6 +3474,12 @@
             "state" : "translated",
             "value" : "Teleprompter flutuante"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Плавающий телесуфлёр"
+          }
         }
       }
     },
@@ -2733,6 +3501,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Janela flutuante"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Плавающее окно"
           }
         }
       }
@@ -2756,6 +3530,12 @@
             "state" : "translated",
             "value" : "Tamanho do texto da janela flutuante"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Размер текста плавающего окна"
+          }
         }
       }
     },
@@ -2777,6 +3557,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Geral"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Общее"
           }
         }
       }
@@ -2800,6 +3586,12 @@
             "state" : "translated",
             "value" : "Começar"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Начать"
+          }
         }
       }
     },
@@ -2821,6 +3613,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Voltar a uma versão anterior"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вернитесь к старой версии"
           }
         }
       }
@@ -2844,6 +3642,12 @@
             "state" : "translated",
             "value" : "Verde"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зелёный"
+          }
         }
       }
     },
@@ -2865,6 +3669,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ajuda"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Справка"
           }
         }
       }
@@ -2889,6 +3699,12 @@
             "state" : "translated",
             "value" : "Olá a todos.\n\nEstou animado por estar aqui hoje para falar sobre o teleprompter do CueCard.\n\n[cue sorria e pause]\n\nEle rola seu roteiro no seu ritmo, para que seus olhos fiquem para cima e suas palavras no rumo certo.\n\n[cue pausa]\n\nSaia do app e ele continua em uma janela flutuante, bem em cima da sua câmera ou da sua videochamada.\n\n[cue mais devagar]\n\nSe perdeu? Arraste o roteiro de volta. Passando do tempo? Pule para a frente.\n\nE o timer fica amarelo perto do fim… e vermelho se você se empolgar um pouco demais.\n\n[cue risada leve]\n\nVocê pode até reproduzir ou pausar pelo Apple Watch, ou com o Botão de Ação.\n\nE essas palavras coloridas?\n\n[cue enfatize]\n\nSão as suas deixas. Lembretes para sorrir, pausar ou não entrar em pânico. Elas nunca devem ser lidas em voz alta.\n\n[cue pausa]\n\nExperimente. Acho que você vai adorar."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Всем привет.\n\nСегодня я расскажу о телесуфлёре CueCard.\n\n[cue улыбка и пауза]\n\nОн прокручивает ваш сценарий в вашем темпе, чтобы вы смотрели вперёд и не сбивались с мысли.\n\n[cue пауза]\n\nВыйдите из приложения — и он продолжит работу в плавающем окне, прямо поверх камеры или видеозвонка.\n\n[cue помедленнее]\n\nСбились? Потяните сценарий назад. Не укладываетесь? Перемотайте вперёд.\n\nА таймер желтеет ближе к концу… и краснеет, если вы слишком увлечётесь.\n\n[cue лёгкий смешок]\n\nМожно даже запускать и ставить на паузу с Apple Watch или кнопкой действия.\n\nА эти цветные слова?\n\n[cue акцент]\n\nЭто ваши подсказки. Напоминания улыбнуться, сделать паузу или не паниковать. Их никогда не читают вслух.\n\n[cue пауза]\n\nПопробуйте. Думаю, вам понравится."
+          }
         }
       }
     },
@@ -2912,6 +3728,12 @@
             "state" : "translated",
             "value" : "Olá a todos. Apresento o Cue Cards. [cue sorria]\n[separator]\nUma ideia por cartão. Deslize para o próximo quando estiver pronto.\n[separator]\nO timer no topo mantém você no horário. [cue risada leve]\n[separator]\nAtive Mostrar na Tela Bloqueada para ler e virar os cartões por lá.\n[separator]\nOu vire pelo Apple Watch. [cue pausa]\n[separator]\nPalavras coloridas são deixas, não falas. [cue enfatize]\n[separator]\nObrigado pela atenção. Perguntas?"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Всем привет. Представляю Cue Cards. [cue улыбка]\n[separator]\nОдна мысль на карточку. Смахните к следующей, когда будете готовы.\n[separator]\nТаймер наверху не даст затянуть. [cue лёгкий смешок]\n[separator]\nВключите «Показывать на экране блокировки», чтобы читать и листать карточки прямо там.\n[separator]\nИли листайте их с Apple Watch. [cue пауза]\n[separator]\nЦветные слова — это подсказки, а не текст. [cue акцент]\n[separator]\nСпасибо за внимание. Вопросы?"
+          }
         }
       }
     },
@@ -2933,6 +3755,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ocultar ajustes avançados"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скрыть расширенные настройки"
           }
         }
       }
@@ -2956,6 +3784,12 @@
             "state" : "translated",
             "value" : "Ocultar teclado"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скрыть клавиатуру"
+          }
         }
       }
     },
@@ -2977,6 +3811,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Importar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Импорт"
           }
         }
       }
@@ -3000,6 +3840,12 @@
             "state" : "translated",
             "value" : "Importar um arquivo de texto"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Импортируйте текстовый файл"
+          }
         }
       }
     },
@@ -3021,6 +3867,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Roteiro importado"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Импортированный сценарий"
           }
         }
       }
@@ -3044,6 +3896,12 @@
             "state" : "translated",
             "value" : "Instalar no Apple Watch"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Установить на Apple Watch"
+          }
         }
       }
     },
@@ -3065,6 +3923,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Itálico"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Курсив"
           }
         }
       }
@@ -3088,6 +3952,12 @@
             "state" : "translated",
             "value" : "O arquivo dela na pasta “%@” não pôde ser apagado. O CueCard tentará de novo e não o trará de volta como nota."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Её файл в папке «%@» не удалось удалить. CueCard попробует ещё раз и не вернёт его в заметки."
+          }
         }
       }
     },
@@ -3109,6 +3979,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "O arquivo dela será apagado da pasta de notas quando ela estiver acessível."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Её файл будет удалён из папки заметок, когда папка станет доступна."
           }
         }
       }
@@ -3132,6 +4008,12 @@
             "state" : "translated",
             "value" : "Manter conjuntos no relógio"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Храните наборы на часах"
+          }
         }
       }
     },
@@ -3153,6 +4035,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Manter notas se o app for removido"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сохраните заметки при удалении приложения"
           }
         }
       }
@@ -3176,6 +4064,12 @@
             "state" : "translated",
             "value" : "Manter no Apple Watch"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Хранить на Apple Watch"
+          }
         }
       }
     },
@@ -3197,6 +4091,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Continuar usando a pasta"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Продолжить использовать папку"
           }
         }
       }
@@ -3220,6 +4120,12 @@
             "state" : "translated",
             "value" : "Idioma"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Язык"
+          }
         }
       }
     },
@@ -3241,6 +4147,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Grande"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Большой"
           }
         }
       }
@@ -3264,6 +4176,12 @@
             "state" : "translated",
             "value" : "Layout"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Формат"
+          }
         }
       }
     },
@@ -3285,6 +4203,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Saia do CueCard com o teleprompter aberto e o roteiro continua em uma janela flutuante, útil em videochamadas."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выйдите из CueCard при открытом телесуфлёре — сценарий продолжит прокручиваться в плавающем окне. Удобно во время видеозвонков."
           }
         }
       }
@@ -3308,6 +4232,12 @@
             "state" : "translated",
             "value" : "Claro"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Светлая"
+          }
         }
       }
     },
@@ -3329,6 +4259,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "linhas/min"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "строк/мин"
           }
         }
       }
@@ -3352,6 +4288,12 @@
             "state" : "translated",
             "value" : "Tela Bloqueada"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Экран блокировки"
+          }
         }
       }
     },
@@ -3373,6 +4315,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Médio"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Средний"
           }
         }
       }
@@ -3396,6 +4344,12 @@
             "state" : "translated",
             "value" : "min"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "мин"
+          }
         }
       }
     },
@@ -3418,6 +4372,12 @@
             "state" : "translated",
             "value" : "Modo: %@"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Режим: %@"
+          }
         }
       }
     },
@@ -3439,6 +4399,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mais"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ещё"
           }
         }
       }
@@ -3463,6 +4429,12 @@
             "state" : "translated",
             "value" : "Mais idiomas compatíveis: chinês, francês, alemão, hindi, italiano, japonês, coreano, português e espanhol."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поддержка новых языков: китайский, французский, немецкий, хинди, итальянский, японский, корейский, португальский и испанский."
+          }
         }
       }
     },
@@ -3484,6 +4456,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Avança pelo conjunto de cartões aberto."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Листает открытый набор карточек."
           }
         }
       }
@@ -3507,6 +4485,12 @@
             "state" : "translated",
             "value" : "Novo"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Новая"
+          }
         }
       }
     },
@@ -3528,6 +4512,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Próximo cartão"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Следующая карточка"
           }
         }
       }
@@ -3551,6 +4541,12 @@
             "state" : "translated",
             "value" : "Não precisa de conta. Os roteiros ficam neste dispositivo."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Аккаунт не нужен. Сценарии хранятся на этом устройстве."
+          }
         }
       }
     },
@@ -3572,6 +4568,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sem alterações"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Без изменений"
           }
         }
       }
@@ -3595,6 +4597,12 @@
             "state" : "translated",
             "value" : "Normal"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Обычный"
+          }
         }
       }
     },
@@ -3616,6 +4624,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Título da nota"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Название заметки"
           }
         }
       }
@@ -3639,6 +4653,12 @@
             "state" : "translated",
             "value" : "As notas ficam neste dispositivo e são apagadas se o app for removido. Escolha uma pasta de notas em %@ para mantê-las."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заметки хранятся на этом устройстве и удаляются вместе с приложением. Чтобы сохранить их, выберите папку заметок в меню %@."
+          }
         }
       }
     },
@@ -3660,6 +4680,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "As notas ficam neste dispositivo e são apagadas com o app. Em Notas salvas, escolha uma pasta de notas em ••• para mantê-las como arquivos."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заметки хранятся на этом устройстве и удаляются вместе с приложением. Чтобы сохранить их в виде файлов, в «Сохранённых заметках» выберите папку заметок в меню •••."
           }
         }
       }
@@ -3683,6 +4709,12 @@
             "state" : "translated",
             "value" : "As notas ficam neste dispositivo e também como arquivos na pasta “%@”, então são mantidas mesmo se o app for removido."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заметки хранятся на этом устройстве, а также в виде файлов в папке «%@», поэтому сохранятся даже после удаления приложения."
+          }
         }
       }
     },
@@ -3704,6 +4736,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "As notas ficam neste dispositivo. A pasta de notas não está acessível, então elas ficam só aqui até ela voltar."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заметки хранятся на этом устройстве. Папка заметок недоступна, поэтому они хранятся только здесь, пока она не станет доступна."
           }
         }
       }
@@ -3727,6 +4765,12 @@
             "state" : "translated",
             "value" : "Nada antes"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нет предыдущей"
+          }
         }
       }
     },
@@ -3749,6 +4793,12 @@
             "state" : "translated",
             "value" : "Nada salvo ainda"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пока ничего не сохранено"
+          }
         }
       }
     },
@@ -3770,6 +4820,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "OK"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ОК"
           }
         }
       }
@@ -3794,6 +4850,12 @@
             "state" : "translated",
             "value" : "Uma ideia por cartão.\n\nDigite [ ou toque em Adicionar deixa para lembretes como [cue pausa]."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Одна мысль на карточку.\n\nВведите [ или коснитесь «Добавить подсказку», чтобы добавить напоминание вроде [cue пауза]."
+          }
         }
       }
     },
@@ -3815,6 +4877,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Abrir"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть"
           }
         }
       }
@@ -3838,6 +4906,12 @@
             "state" : "translated",
             "value" : "Abra um conjunto no iPhone e ele aparece também no relógio. Virar um cartão em um deles move os dois."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Откройте набор на iPhone — он появится и на часах. Если перелистнуть карточку на одном устройстве, она перелистнётся на обоих."
+          }
         }
       }
     },
@@ -3859,6 +4933,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Abra um conjunto salvo e toque em ••• › Manter no Apple Watch. Assim você pode lê-lo sem o iPhone."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Откройте сохранённый набор и коснитесь ••• › «Хранить на Apple Watch». Тогда его можно будет читать без iPhone."
           }
         }
       }
@@ -3882,6 +4962,12 @@
             "state" : "translated",
             "value" : "Primeiro abra um roteiro no teleprompter do CueCard."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сначала откройте сценарий в телесуфлёре CueCard."
+          }
         }
       }
     },
@@ -3903,6 +4989,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Abra um roteiro no iPhone. O relógio mostra o timer e pode reproduzir, pausar ou voltar 10 segundos."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Откройте сценарий на iPhone. Часы показывают его таймер и могут запускать, ставить на паузу или отматывать на 10 секунд назад."
           }
         }
       }
@@ -3926,6 +5018,12 @@
             "state" : "translated",
             "value" : "Abrir cartões"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть карточки"
+          }
         }
       }
     },
@@ -3947,6 +5045,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Abrir notas salvas"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Откройте сохранённые заметки"
           }
         }
       }
@@ -3970,6 +5074,12 @@
             "state" : "translated",
             "value" : "Abrir Ajustes"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть Настройки"
+          }
         }
       }
     },
@@ -3991,6 +5101,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Abra o app Watch no iPhone. Em Apps Disponíveis, toque em Instalar ao lado de CueCard."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Откройте приложение Watch на iPhone. В разделе «Доступные приложения» коснитесь «Установить» рядом с CueCard."
           }
         }
       }
@@ -4014,6 +5130,12 @@
             "state" : "translated",
             "value" : "Tempo excedido"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сверх времени"
+          }
         }
       }
     },
@@ -4035,6 +5157,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pausar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пауза"
           }
         }
       }
@@ -4058,6 +5186,12 @@
             "state" : "translated",
             "value" : "Pausar, começa em %lld"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пауза, старт через %lld"
+          }
         }
       }
     },
@@ -4079,6 +5213,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Escolha um modo"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выберите режим"
           }
         }
       }
@@ -4102,6 +5242,12 @@
             "state" : "translated",
             "value" : "Rosa"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Розовый"
+          }
         }
       }
     },
@@ -4123,6 +5269,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Reproduzir"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пуск"
           }
         }
       }
@@ -4146,6 +5298,12 @@
             "state" : "translated",
             "value" : "Reproduzir e pausar"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пуск и пауза"
+          }
         }
       }
     },
@@ -4167,6 +5325,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Reproduzir ou pausar teleprompter"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пуск или пауза телесуфлёра"
           }
         }
       }
@@ -4190,6 +5354,12 @@
             "state" : "translated",
             "value" : "Reproduzir ou pausar o teleprompter"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запускайте и останавливайте телесуфлёр"
+          }
         }
       }
     },
@@ -4211,6 +5381,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Reproduz ou pausa o roteiro aberto no teleprompter."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запускает или ставит на паузу сценарий, открытый в телесуфлёре."
           }
         }
       }
@@ -4234,6 +5410,12 @@
             "state" : "translated",
             "value" : "Cartão anterior"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Предыдущая карточка"
+          }
         }
       }
     },
@@ -4255,6 +5437,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Política de privacidade"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Политика конфиденциальности"
           }
         }
       }
@@ -4278,6 +5466,12 @@
             "state" : "translated",
             "value" : "Roxo"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Фиолетовый"
+          }
         }
       }
     },
@@ -4299,6 +5493,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ler cartões"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Читать карточки"
           }
         }
       }
@@ -4322,6 +5522,12 @@
             "state" : "translated",
             "value" : "Ler cartões no pulso"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Читайте карточки на запястье"
+          }
         }
       }
     },
@@ -4343,6 +5549,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ler na Tela Bloqueada"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Читайте с экрана блокировки"
           }
         }
       }
@@ -4366,6 +5578,12 @@
             "state" : "translated",
             "value" : "Leia na Tela Bloqueada"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Читайте с экрана блокировки"
+          }
         }
       }
     },
@@ -4387,6 +5605,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Retângulo 4:3"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прямоугольник 4:3"
           }
         }
       }
@@ -4410,6 +5634,12 @@
             "state" : "translated",
             "value" : "Retângulo 16:9"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прямоугольник 16:9"
+          }
         }
       }
     },
@@ -4431,6 +5661,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Vermelho"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Красный"
           }
         }
       }
@@ -4454,6 +5690,12 @@
             "state" : "translated",
             "value" : "Remover"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Удалить"
+          }
         }
       }
     },
@@ -4475,6 +5717,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Remover do Apple Watch"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Удалить с Apple Watch"
           }
         }
       }
@@ -4498,6 +5746,12 @@
             "state" : "translated",
             "value" : "Renomear"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переименовать"
+          }
         }
       }
     },
@@ -4519,6 +5773,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Renomear nota"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Переименовать заметку"
           }
         }
       }
@@ -4542,6 +5802,12 @@
             "state" : "translated",
             "value" : "Informar erro de tradução"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сообщить об ошибке перевода"
+          }
         }
       }
     },
@@ -4563,6 +5829,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Redefinir cores do timer"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сбросить цвета таймера"
           }
         }
       }
@@ -4586,6 +5858,12 @@
             "state" : "translated",
             "value" : "Redefinir padrões"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сбросить настройки"
+          }
         }
       }
     },
@@ -4607,6 +5885,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Restaurar esta versão"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Восстановить эту версию"
           }
         }
       }
@@ -4630,6 +5914,12 @@
             "state" : "translated",
             "value" : "Restaurar Versão %lld"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Восстановить версию %lld"
+          }
         }
       }
     },
@@ -4652,6 +5942,12 @@
             "state" : "translated",
             "value" : "Restaurada da Versão %lld"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Восстановлено из версии %lld"
+          }
         }
       }
     },
@@ -4673,6 +5969,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Avaliar na App Store"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оценить в App Store"
           }
         }
       }
@@ -4697,6 +5999,12 @@
             "state" : "translated",
             "value" : "Texto formatado"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Форматирование текста"
+          }
         }
       }
     },
@@ -4720,6 +6028,12 @@
             "state" : "translated",
             "value" : "Texto formatado: deixe palavras em negrito ou itálico no seu roteiro."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Форматирование текста: выделяйте слова в сценарии жирным или курсивом."
+          }
         }
       }
     },
@@ -4741,6 +6055,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Salvar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сохранить"
           }
         }
       }
@@ -4764,6 +6084,12 @@
             "state" : "translated",
             "value" : "Salvar nota"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сохранить заметку"
+          }
         }
       }
     },
@@ -4785,6 +6111,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Salve seus roteiros e cartões para abri-los depois."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сохраняйте сценарии и карточки, чтобы открыть их позже."
           }
         }
       }
@@ -4808,6 +6140,12 @@
             "state" : "translated",
             "value" : "Salve seu trabalho"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сохраняйте работу"
+          }
         }
       }
     },
@@ -4829,6 +6167,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Salvo"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сохранено"
           }
         }
       }
@@ -4852,6 +6196,12 @@
             "state" : "translated",
             "value" : "Notas salvas"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сохранённые заметки"
+          }
         }
       }
     },
@@ -4873,6 +6223,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Salva suas alterações"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сохраняет изменения"
           }
         }
       }
@@ -4896,6 +6252,12 @@
             "state" : "translated",
             "value" : "Rolar manualmente"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прокручивайте вручную"
+          }
         }
       }
     },
@@ -4917,6 +6279,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Velocidade de rolagem"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Скорость прокрутки"
           }
         }
       }
@@ -4940,6 +6308,12 @@
             "state" : "translated",
             "value" : "Velocidade de rolagem, nos Ajustes, define quantas linhas passam por minuto. Defina uma contagem regressiva no timer para ter alguns segundos antes de começar."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Скорость прокрутки» в настройках задаёт, сколько строк проходит за минуту. Задайте обратный отсчёт в таймере, чтобы получить несколько секунд перед началом."
+          }
         }
       }
     },
@@ -4961,6 +6335,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Buscar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поиск"
           }
         }
       }
@@ -4984,6 +6364,12 @@
             "state" : "translated",
             "value" : "Buscar na ajuda"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поиск в справке"
+          }
         }
       }
     },
@@ -5005,6 +6391,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "s"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "с"
           }
         }
       }
@@ -5028,6 +6420,12 @@
             "state" : "translated",
             "value" : "Selecionar Tudo"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выбрать все"
+          }
         }
       }
     },
@@ -5049,6 +6447,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Selecione palavras e toque em B ou I acima do teclado. Ou digite *negrito* ou _itálico_."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выделите слова и коснитесь B или I над клавиатурой. Или введите *жирный* или _курсив_."
           }
         }
       }
@@ -5072,6 +6476,12 @@
             "state" : "translated",
             "value" : "Sessão"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сеанс"
+          }
         }
       }
     },
@@ -5093,6 +6503,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Definir um timer"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Задайте таймер"
           }
         }
       }
@@ -5116,6 +6532,12 @@
             "state" : "translated",
             "value" : "Ajustes"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Настройки"
+          }
         }
       }
     },
@@ -5137,6 +6559,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Compartilhar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поделиться"
           }
         }
       }
@@ -5160,6 +6588,12 @@
             "state" : "translated",
             "value" : "Compartilhar um roteiro"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поделитесь сценарием"
+          }
         }
       }
     },
@@ -5181,6 +6615,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Compartilhar CueCard"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поделиться CueCard"
           }
         }
       }
@@ -5204,6 +6644,12 @@
             "state" : "translated",
             "value" : "Mostrar ajustes avançados"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показать расширенные настройки"
+          }
         }
       }
     },
@@ -5225,6 +6671,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mostrar cartões na Tela Bloqueada?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показывать карточки на экране блокировки?"
           }
         }
       }
@@ -5248,6 +6700,12 @@
             "state" : "translated",
             "value" : "Mostrar na Tela Bloqueada"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показывать на экране блокировки"
+          }
         }
       }
     },
@@ -5269,6 +6727,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Mostra instruções da Tela Bloqueada"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показывает инструкции для экрана блокировки"
           }
         }
       }
@@ -5292,6 +6756,12 @@
             "state" : "translated",
             "value" : "Pequeno"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Маленький"
+          }
         }
       }
     },
@@ -5313,6 +6783,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Alguns arquivos da pasta “%@” não puderam ser apagados, então ela continua em uso. Você pode parar de usá-la mesmo assim e deixar os arquivos lá."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Некоторые файлы заметок в папке «%@» не удалось удалить, поэтому она всё ещё используется. Можно всё равно перестать её использовать и оставить файлы там."
           }
         }
       }
@@ -5336,6 +6812,12 @@
             "state" : "translated",
             "value" : "Algo deu errado"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Что-то пошло не так"
+          }
         }
       }
     },
@@ -5357,6 +6839,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Discurso"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выступление"
           }
         }
       }
@@ -5380,6 +6868,12 @@
             "state" : "translated",
             "value" : "Quadrado 1:1"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Квадрат 1:1"
+          }
         }
       }
     },
@@ -5401,6 +6895,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Início"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Начало"
           }
         }
       }
@@ -5424,6 +6924,12 @@
             "state" : "translated",
             "value" : "Inicie e pare a rolagem sem tocar na tela. No app Ajustes, vá em Botão de Ação › Controles e escolha Reproduzir ou pausar em CueCard."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запускайте и останавливайте прокрутку, не касаясь экрана. В приложении «Настройки» перейдите в «Кнопка действия» › «Элементы управления» и выберите «Пуск или пауза» в разделе CueCard."
+          }
         }
       }
     },
@@ -5445,6 +6951,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Recomeçar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Начать сначала"
           }
         }
       }
@@ -5468,6 +6980,12 @@
             "state" : "translated",
             "value" : "Iniciar sobreposição"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть плавающее окно"
+          }
         }
       }
     },
@@ -5489,6 +7007,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Iniciar teleprompter"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запустить телесуфлёр"
           }
         }
       }
@@ -5512,6 +7036,12 @@
             "state" : "translated",
             "value" : "Manter na tela"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оставайтесь на экране"
+          }
         }
       }
     },
@@ -5533,6 +7063,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Parar mesmo assim"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Всё равно перестать"
           }
         }
       }
@@ -5556,6 +7092,12 @@
             "state" : "translated",
             "value" : "Parar de usar a pasta"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перестать использовать папку"
+          }
         }
       }
     },
@@ -5577,6 +7119,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Parar de usar a pasta de notas?"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перестать использовать папку заметок?"
           }
         }
       }
@@ -5600,6 +7148,12 @@
             "state" : "translated",
             "value" : "Deslize para a direita para voltar ao último cartão, ou recomece."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Смахните вправо, чтобы вернуть последнюю карточку, или начните сначала."
+          }
         }
       }
     },
@@ -5621,6 +7175,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Deslize para virar o cartão"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Смахните, чтобы перелистнуть карточку"
           }
         }
       }
@@ -5644,6 +7204,12 @@
             "state" : "translated",
             "value" : "Deslize ou toque em Voltar e Próximo. Os pontos no topo mostram em qual cartão você está."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Смахивайте или касайтесь «Назад» и «Далее». Точки вверху показывают, на какой вы карточке."
+          }
         }
       }
     },
@@ -5665,6 +7231,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sistema"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Системная"
           }
         }
       }
@@ -5688,6 +7260,12 @@
             "state" : "translated",
             "value" : "Toque em ••• › Importar. O arquivo abre no editor e é mantido como nota salva."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Коснитесь ••• › «Импорт». Файл откроется в редакторе и сохранится как заметка."
+          }
         }
       }
     },
@@ -5709,6 +7287,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Toque em ••• › Abrir para ver tudo o que salvou. Deslize para renomear ou apagar."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Коснитесь ••• › «Открыть», чтобы увидеть всё сохранённое. Смахните, чтобы переименовать или удалить."
           }
         }
       }
@@ -5732,6 +7316,12 @@
             "state" : "translated",
             "value" : "Toque em ••• › Compartilhar para enviá-lo como texto, com as deixas."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Коснитесь ••• › «Поделиться», чтобы отправить его текстом вместе с подсказками."
+          }
         }
       }
     },
@@ -5753,6 +7343,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Toque na engrenagem no topo. Cada modo tem seus próprios tamanhos e cor de deixa. As cores do timer são definidas no timer."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Коснитесь шестерёнки вверху. У каждого режима свои размеры и цвет подсказок. Цвета таймера задаются в самом таймере."
           }
         }
       }
@@ -5776,6 +7372,12 @@
             "state" : "translated",
             "value" : "Toque no nome do modo no topo. Teleprompter rola o roteiro inteiro. Cartões mostra um cartão por vez."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Коснитесь названия режима вверху. «Телесуфлёр» прокручивает весь сценарий. «Карточки» показывают его по одной карточке."
+          }
         }
       }
     },
@@ -5797,6 +7399,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Toque no timer ao lado de Reproduzir para definir quanto tempo você tem e quando ele avisa."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Коснитесь таймера рядом с кнопкой «Пуск», чтобы задать, сколько у вас времени и когда предупредить."
           }
         }
       }
@@ -5820,6 +7428,12 @@
             "state" : "translated",
             "value" : "Teleprompter"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Телесуфлёр"
+          }
         }
       }
     },
@@ -5841,6 +7455,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ajustes do teleprompter"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Настройки телесуфлёра"
           }
         }
       }
@@ -5864,6 +7484,12 @@
             "state" : "translated",
             "value" : "O texto do teleprompter pode ir de %lld a %lld, o da janela flutuante de %lld a %lld e o do editor de %lld a %lld."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Размер текста телесуфлёра — от %lld до %lld, плавающего окна — от %lld до %lld, редактора — от %lld до %lld."
+          }
         }
       }
     },
@@ -5885,6 +7511,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tamanho do texto do teleprompter"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Размер текста телесуфлёра"
           }
         }
       }
@@ -5908,6 +7540,12 @@
             "state" : "translated",
             "value" : "Timer do teleprompter"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Таймер телесуфлёра"
+          }
         }
       }
     },
@@ -5929,6 +7567,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tamanho do texto"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Размер текста"
           }
         }
       }
@@ -5952,6 +7596,12 @@
             "state" : "translated",
             "value" : "Esse arquivo está vazio."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Этот файл пуст."
+          }
         }
       }
     },
@@ -5973,6 +7623,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Esse arquivo tem mais de 10 MB, então não pode ser importado."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Этот файл больше 10 МБ, поэтому его нельзя импортировать."
           }
         }
       }
@@ -5996,6 +7652,12 @@
             "state" : "translated",
             "value" : "Os botões somem enquanto o roteiro rola, para não atrapalhar. Toque na tela para mostrá-los de novo."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Во время прокрутки кнопки исчезают, чтобы не мешать. Коснитесь экрана, чтобы снова их показать."
+          }
         }
       }
     },
@@ -6018,6 +7680,12 @@
             "state" : "translated",
             "value" : "O editor tem alterações não salvas. Restaurar as substitui por esta versão."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В редакторе есть несохранённые изменения. При восстановлении они будут заменены этой версией."
+          }
         }
       }
     },
@@ -6039,6 +7707,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "O editor tem alterações não salvas. Elas serão perdidas."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В редакторе есть несохранённые изменения. Они будут потеряны."
           }
         }
       }
@@ -6064,6 +7738,12 @@
             "state" : "translated",
             "value" : "O arquivo foi aberto, mas não foi possível salvá-lo como nota. Tente salvá-lo novamente."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файл открыт, но его не удалось сохранить как заметку. Попробуйте сохранить ещё раз."
+          }
         }
       }
     },
@@ -6085,6 +7765,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Não foi possível renomear a nota. Tente novamente."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось переименовать заметку. Попробуйте ещё раз."
           }
         }
       }
@@ -6108,6 +7794,12 @@
             "state" : "translated",
             "value" : "Os arquivos de notas da pasta “%@” serão apagados. Suas notas ficam neste dispositivo."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файлы заметок в папке «%@» будут удалены. Сами заметки останутся на этом устройстве."
+          }
         }
       }
     },
@@ -6129,6 +7821,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "A nota foi apagada. %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заметка удалена. %@"
           }
         }
       }
@@ -6152,6 +7850,12 @@
             "state" : "translated",
             "value" : "Não é possível acessar a pasta de notas, então os arquivos não puderam ser apagados. Você pode parar de usá-la mesmo assim e deixar os arquivos lá."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Папка заметок недоступна, поэтому файлы заметок в ней не удалось удалить. Можно всё равно перестать её использовать и оставить файлы там."
+          }
         }
       }
     },
@@ -6173,6 +7877,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "O widget pequeno da Tela Bloqueada mostra uma prévia. Botões interativos exigem iOS 17 ou posterior."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Маленький виджет на экране блокировки показывает превью. Для интерактивных кнопок нужна iOS 17 или новее."
           }
         }
       }
@@ -6196,6 +7906,12 @@
             "state" : "translated",
             "value" : "O tempo no topo faz a contagem regressiva do timer. Sem timer, ele conta a partir de quando você começou."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Время вверху отсчитывает таймер назад. Если таймер не задан, оно считает время с начала."
+          }
         }
       }
     },
@@ -6217,6 +7933,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "O timer muda de cor quando você está perto do fim e de novo quando passa do tempo. Escolha as cores no timer."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Таймер меняет цвет ближе к концу и ещё раз, когда время вышло. Цвета выбираются в таймере."
           }
         }
       }
@@ -6240,6 +7962,12 @@
             "state" : "translated",
             "value" : "O relógio volta ao mostrador depois de um tempo. No app Watch, vá em Geral › Retornar ao Relógio › CueCard e defina 1 hora."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Через некоторое время часы возвращаются к циферблату. В приложении Watch перейдите в «Основные» › «Возврат к циферблату» › CueCard и выберите 1 час."
+          }
         }
       }
     },
@@ -6261,6 +7989,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Os arquivos delas na pasta “%@” não puderam ser apagados. O CueCard tentará de novo e não os trará de volta como notas."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Их файлы в папке «%@» не удалось удалить. CueCard попробует ещё раз и не вернёт их в заметки."
           }
         }
       }
@@ -6284,6 +8018,12 @@
             "state" : "translated",
             "value" : "Os arquivos delas serão apagados da pasta de notas quando ela estiver acessível."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Их файлы будут удалены из папки заметок, когда папка станет доступна."
+          }
         }
       }
     },
@@ -6305,6 +8045,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tema"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Тема"
           }
         }
       }
@@ -6328,6 +8074,12 @@
             "state" : "translated",
             "value" : "Não foi possível ler este arquivo como texto."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Этот файл не удалось прочитать как текст."
+          }
         }
       }
     },
@@ -6350,6 +8102,12 @@
             "state" : "translated",
             "value" : "Esta pasta não pode ser usada para notas."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Эту папку нельзя использовать для заметок."
+          }
         }
       }
     },
@@ -6371,6 +8129,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Isso fecha o app de propósito para verificar os relatórios do Crashlytics."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Приложение намеренно аварийно завершится, чтобы проверить отчёты Crashlytics."
           }
         }
       }
@@ -6396,6 +8160,12 @@
             "state" : "translated",
             "value" : "Não foi possível restaurar esta versão. Tente novamente."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось восстановить эту версию. Попробуйте ещё раз."
+          }
         }
       }
     },
@@ -6417,6 +8187,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cores do timer"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Цвета таймера"
           }
         }
       }
@@ -6440,6 +8216,12 @@
             "state" : "translated",
             "value" : "Timer, %@"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Таймер, %@"
+          }
         }
       }
     },
@@ -6461,6 +8243,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Timer, não definido"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Таймер не задан"
           }
         }
       }
@@ -6484,6 +8272,12 @@
             "state" : "translated",
             "value" : "Para manter o CueCard na tela durante uma palestra, abra o app Watch no iPhone, vá em Geral › Retornar ao Relógio, escolha CueCard e defina para voltar após 1 hora."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Чтобы CueCard оставался на экране всё выступление, откройте приложение Watch на iPhone, перейдите в «Основные» › «Возврат к циферблату», выберите CueCard и задайте возврат через 1 час."
+          }
         }
       }
     },
@@ -6505,6 +8299,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Provocar falha de teste"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вызвать тестовый сбой"
           }
         }
       }
@@ -6528,6 +8328,12 @@
             "state" : "translated",
             "value" : "Tentar Novamente"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Повторить"
+          }
         }
       }
     },
@@ -6549,6 +8355,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Virar cartões"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Листайте карточки"
           }
         }
       }
@@ -6572,6 +8384,12 @@
             "state" : "translated",
             "value" : "Virar cartão"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перелистнуть карточку"
+          }
         }
       }
     },
@@ -6593,6 +8411,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ative Mostrar na Tela Bloqueada nos Ajustes. Depois bloqueie o iPhone e vire os cartões direto na Tela Bloqueada."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Включите «Показывать на экране блокировки» в настройках. Затем заблокируйте iPhone и листайте карточки прямо на экране блокировки."
           }
         }
       }
@@ -6616,6 +8440,12 @@
             "state" : "translated",
             "value" : "Não salvo"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не сохранено"
+          }
         }
       }
     },
@@ -6637,6 +8467,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Não salvo abaixo da barra superior indica alterações a salvar. Toque nele para salvar, ou toque em ••• › Salvar."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Надпись «Не сохранено» под верхней панелью означает, что есть несохранённые изменения. Коснитесь её, чтобы сохранить, или коснитесь ••• › «Сохранить»."
           }
         }
       }
@@ -6660,6 +8496,12 @@
             "state" : "translated",
             "value" : "Use Voltar e Próximo na Atividade ao Vivo para virar os cartões."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Листайте карточки кнопками «Назад» и «Далее» в Live Activity."
+          }
         }
       }
     },
@@ -6681,6 +8523,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Usar sobre outros apps"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поверх других приложений"
           }
         }
       }
@@ -6704,6 +8552,12 @@
             "state" : "translated",
             "value" : "Versão %@"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Версия %@"
+          }
         }
       }
     },
@@ -6725,6 +8579,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Versão %lld"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Версия %lld"
           }
         }
       }
@@ -6748,6 +8608,12 @@
             "state" : "translated",
             "value" : "Histórico de versões"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "История версий"
+          }
         }
       }
     },
@@ -6769,6 +8635,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Avisar no final"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Предупредить за"
           }
         }
       }
@@ -6792,6 +8664,12 @@
             "state" : "translated",
             "value" : "Aviso"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Предупреждение"
+          }
         }
       }
     },
@@ -6813,6 +8691,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Acompanhe o timer"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Следите за таймером"
           }
         }
       }
@@ -6836,6 +8720,12 @@
             "state" : "translated",
             "value" : "Novidades"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Что нового"
+          }
         }
       }
     },
@@ -6857,6 +8747,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Novidades da %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Что нового в версии %@"
           }
         }
       }
@@ -6880,6 +8776,12 @@
             "state" : "translated",
             "value" : "Onde no app:\n\nO que está escrito:\n\nO que deveria estar escrito:\n"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Где в приложении:\n\nЧто написано:\n\nКак должно быть:\n"
+          }
         }
       }
     },
@@ -6901,6 +8803,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Enquanto você lê um conjunto, o título e o cartão atual aparecem na Tela Bloqueada, onde qualquer pessoa que veja seu iPhone pode lê-los, mesmo bloqueado."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пока вы читаете набор, его название и текущая карточка показываются на экране блокировки, где их может прочитать любой, кто видит ваш iPhone, даже заблокированный."
           }
         }
       }
@@ -6924,6 +8832,12 @@
             "state" : "translated",
             "value" : "Amarelo"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Жёлтый"
+          }
         }
       }
     },
@@ -6945,6 +8859,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sua próxima ideia…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваша следующая мысль…"
           }
         }
       }
@@ -6970,6 +8890,12 @@
             "state" : "translated",
             "value" : "Não foi possível salvar sua nota. Tente novamente."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось сохранить заметку. Попробуйте ещё раз."
+          }
         }
       }
     },
@@ -6991,6 +8917,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Suas notas ficam neste dispositivo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ваши заметки хранятся на этом устройстве."
           }
         }
       }
@@ -7014,6 +8946,12 @@
             "state" : "translated",
             "value" : "Suas notas foram apagadas. %@"
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заметки удалены. %@"
+          }
         }
       }
     },
@@ -7035,6 +8973,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sua posição fica sincronizada com o app e o Apple Watch. Fechar este conjunto encerra a Atividade ao Vivo e limpa os widgets."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Позиция синхронизируется с приложением и Apple Watch. Если закрыть этот набор, его Live Activity завершится, а виджеты очистятся."
           }
         }
       }

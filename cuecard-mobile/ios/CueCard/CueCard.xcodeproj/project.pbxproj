@@ -468,6 +468,7 @@
 				es,
 				fr,
 				"pt-BR",
+				ru,
 			);
 			mainGroup = 700;
 			packageReferences = (

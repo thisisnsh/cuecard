@@ -28,6 +28,12 @@
             "state" : "translated",
             "value" : "O CueCard encontra os vídeos que você grava com o teleprompter aberto, para que cada take fique com o seu roteiro."
           }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CueCard находит видео, которые вы записываете при открытом телесуфлёре, чтобы каждый дубль оставался со своим сценарием."
+          }
         }
       }
     }
