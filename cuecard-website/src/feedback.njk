@@ -24,7 +24,8 @@ eleventyComputed:
     <section class="feedback" aria-labelledby="feedback-h">
         <div class="wrap wrap-narrow">
             <h1 class="section-h" id="feedback-h">{{ form.title }}</h1>
-            <iframe class="feedback-frame" title="{{ form.title }}" height="{{ form.height }}"
+            <iframe class="feedback-frame" title="{{ form.title }}"
+                    style="--frame-h: {{ form.height }}px; --frame-h-wide: {{ form.heightWide or form.height }}px"
                     src="{{ formUrl }}?embedded=true"></iframe>
             <span class="meta-note">Form not loading? <a href="{{ formUrl }}" target="_blank" rel="noopener">Open it in Google Forms</a>.</span>
         </div>
