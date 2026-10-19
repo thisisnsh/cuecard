@@ -200,6 +200,15 @@ export async function saveTextFile(defaultName, text) {
  *
  * Returns the raw JSON body, or null if it could not be had.
  */
+/** When CueCard was installed, in ms since the epoch, or null if unknown. */
+export async function installDate() {
+  try {
+    return (await call('install_date')) ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchNotificationsPayload() {
   try {
     return (await call('fetch_notifications')) || null;

@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 import java.net.HttpURLConnection
 import java.net.URL
+import java.time.Instant
 
 /**
  * Fetches `/v2/notifications` from the mobile worker and decides which notice —
@@ -37,6 +38,14 @@ class RemoteNotificationService private constructor(context: Context) {
     val dismissedIds: StateFlow<Set<String>> = _dismissedIds.asStateFlow()
 
     private var lastRefresh: Long? = null
+
+    /**
+     * When the app was first installed, for `minInstallAgeDays`. Kept by the
+     * system across updates, so someone who updated doesn't look brand new.
+     */
+    private val installedAt: Instant? = runCatching {
+        Instant.ofEpochMilli(context.packageManager.getPackageInfo(context.packageName, 0).firstInstallTime)
+    }.getOrNull()
 
     init {
         prefs.getString(PAYLOAD_KEY, null)?.let { cached ->
@@ -129,13 +138,14 @@ class RemoteNotificationService private constructor(context: Context) {
     }
 
     /**
-     * Everyone gets the same list from the worker, so all four of these checks
-     * are ours to make: drawable at all, meant for this build, still in date,
-     * not already waved away.
+     * Everyone gets the same list from the worker, so all five of these checks
+     * are ours to make: drawable at all, meant for this build, installed long
+     * enough ago, still in date, not already waved away.
      */
     private fun isShowable(notification: RemoteNotification): Boolean {
         if (!notification.isRenderable) return false
         if (!notification.isTargeted()) return false
+        if (!notification.isOldEnough(installedAt)) return false
         if (notification.hasExpired()) return false
         if (_dismissedIds.value.contains(notification.id)) return false
 

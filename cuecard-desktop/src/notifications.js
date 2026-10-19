@@ -10,7 +10,7 @@
  * a client that has never reached the worker shows nothing at all.
  */
 
-import { appVersion, fetchNotificationsPayload, getStored, platformInfo, setStored, track } from './tauri.js';
+import { appVersion, fetchNotificationsPayload, getStored, installDate, platformInfo, setStored, track } from './tauri.js';
 
 const KEY_PAYLOAD = 'notifications_payload';
 const KEY_DISMISSED = 'notifications_dismissed';
@@ -33,7 +33,7 @@ const state = {
   list: [],
   dismissed: new Set(),
   lastRefresh: 0,
-  build: { platform: platformInfo().platform, version: null },
+  build: { platform: platformInfo().platform, version: null, installedAt: null },
 };
 
 const listeners = new Set();
@@ -127,6 +127,7 @@ function readNotification(raw) {
     actions,
     dismissible,
     targets,
+    minInstallAgeDays: typeof raw.minInstallAgeDays === 'number' ? raw.minInstallAgeDays : null,
     expiresAt: typeof raw.expiresAt === 'string' ? Date.parse(raw.expiresAt) : null,
   };
 }
@@ -159,11 +160,26 @@ function isTargeted(notification) {
   });
 }
 
+/**
+ * Installed long enough ago to be asked. An install date we cannot read counts
+ * as old enough: the rule only spares someone on their first days, and not
+ * knowing is no evidence that they are.
+ */
+function isOldEnough(notification) {
+  const days = notification.minInstallAgeDays;
+  if (!days || days <= 0 || state.build.installedAt === null) return true;
+
+  return Date.now() - state.build.installedAt >= days * 24 * 60 * 60 * 1000;
+}
+
 const hasExpired = (notification) =>
   notification.expiresAt !== null && !Number.isNaN(notification.expiresAt) && notification.expiresAt <= Date.now();
 
 const isShowable = (notification) =>
-  isTargeted(notification) && !hasExpired(notification) && !state.dismissed.has(notification.id);
+  isTargeted(notification) &&
+  isOldEnough(notification) &&
+  !hasExpired(notification) &&
+  !state.dismissed.has(notification.id);
 
 /** The one notice for a surface: the highest priority still showable. */
 export function notificationFor(surface) {
@@ -178,6 +194,7 @@ export function notificationFor(surface) {
 
 export async function loadNotifications() {
   state.build.version = versionComponents(await appVersion());
+  state.build.installedAt = await installDate();
   state.dismissed = new Set((await getStored(KEY_DISMISSED)) || []);
 
   const cached = await getStored(KEY_PAYLOAD);

@@ -102,6 +102,7 @@ struct RemoteNotification: Identifiable, Equatable {
     var actions: [Action] = []
     var dismissible = true
     var targets: [Target] = []
+    var minInstallAgeDays: Int?
     var expiresAt: Date?
 
     /// Hosts a notification is allowed to link to, mirrored from the worker. The
@@ -142,6 +143,15 @@ struct RemoteNotification: Identifiable, Equatable {
         guard !targets.isEmpty else { return true }
 
         return targets.contains { $0.matches(app) }
+    }
+
+    /// Whether this install has been around long enough to be asked. An install
+    /// date we can't read counts as old enough: the rule only exists to spare
+    /// someone on their first days, and not knowing isn't evidence that they are.
+    func isOldEnough(installedAt: Date?, asOf now: Date = Date()) -> Bool {
+        guard let minInstallAgeDays, minInstallAgeDays > 0, let installedAt else { return true }
+
+        return now.timeIntervalSince(installedAt) >= TimeInterval(minInstallAgeDays) * 24 * 60 * 60
     }
 
     /// Expiry is enforced here alone — the worker serves the same list to
@@ -218,7 +228,7 @@ extension RemoteNotifications: Decodable {
 extension RemoteNotification: Decodable {
     private enum CodingKeys: String, CodingKey {
         case id, surface, severity, priority, title, body
-        case actions, dismissible, targets, expiresAt
+        case actions, dismissible, targets, minInstallAgeDays, expiresAt
     }
 
     init(from decoder: Decoder) throws {
@@ -234,6 +244,7 @@ extension RemoteNotification: Decodable {
         priority = (try? container.decode(Int.self, forKey: .priority)) ?? 0
         body = try? container.decode(String.self, forKey: .body)
         dismissible = (try? container.decode(Bool.self, forKey: .dismissible)) ?? true
+        minInstallAgeDays = try? container.decode(Int.self, forKey: .minInstallAgeDays)
 
         if let expiry = try? container.decode(String.self, forKey: .expiresAt) {
             expiresAt = parseISO8601(expiry)

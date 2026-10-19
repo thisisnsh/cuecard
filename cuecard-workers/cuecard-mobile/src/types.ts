@@ -66,6 +66,11 @@ export interface Notification {
   // Android is on 1.0.0 — which is why a version range always sits inside a
   // platform rather than beside a list of them.
   targets?: Target[];
+  // Hide from installs younger than this many days, so someone who only just
+  // downloaded the app isn't asked about it before they've used it. Enforced on
+  // device, like targets, so builds from before this field show it regardless.
+  // A device that can't tell when it was installed counts as old enough.
+  minInstallAgeDays?: number;
   // ISO 8601. Enforced on device. Optional but strongly encouraged — it's what
   // stops a stale incident banner outliving the incident.
   expiresAt?: string;

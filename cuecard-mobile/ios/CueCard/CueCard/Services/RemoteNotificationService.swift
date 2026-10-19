@@ -46,6 +46,14 @@ final class RemoteNotificationService: ObservableObject {
 
     private var lastRefresh: Date?
 
+    /// When the app was installed, for `minInstallAgeDays`. iOS doesn't say, but
+    /// the Documents folder is created at install and survives updates, so its
+    /// creation date stands in. A first-launch date we stored ourselves would
+    /// make everyone who updated look brand new.
+    private let installedAt: Date? = FileManager.default
+        .urls(for: .documentDirectory, in: .userDomainMask).first
+        .flatMap { try? $0.resourceValues(forKeys: [.creationDateKey]).creationDate }
+
     private let session: URLSession = {
         let configuration = URLSessionConfiguration.default
         configuration.timeoutIntervalForRequest = 5
@@ -143,12 +151,13 @@ final class RemoteNotificationService: ObservableObject {
         ])
     }
 
-    /// Everyone gets the same list from the worker, so all four of these checks
-    /// are ours to make: drawable at all, meant for this build, still in date,
-    /// not already waved away.
+    /// Everyone gets the same list from the worker, so all five of these checks
+    /// are ours to make: drawable at all, meant for this build, installed long
+    /// enough ago, still in date, not already waved away.
     private func isShowable(_ notification: RemoteNotification) -> Bool {
         guard notification.isRenderable else { return false }
         guard notification.isTargeted() else { return false }
+        guard notification.isOldEnough(installedAt: installedAt) else { return false }
         guard !notification.hasExpired() else { return false }
         guard !dismissedIDs.contains(notification.id) else { return false }
 

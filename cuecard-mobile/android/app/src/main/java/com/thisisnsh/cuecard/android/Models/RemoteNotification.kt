@@ -6,6 +6,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.jsonObject
 import java.net.URI
+import java.time.Duration
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
@@ -86,6 +87,7 @@ data class RemoteNotification(
     val actions: List<Action> = emptyList(),
     val dismissible: Boolean = true,
     val targets: List<Target> = emptyList(),
+    val minInstallAgeDays: Int? = null,
     val expiresAt: Instant? = null
 ) {
     /**
@@ -192,6 +194,18 @@ data class RemoteNotification(
 
             return dismissible || actions.isNotEmpty()
         }
+
+    /**
+     * Whether this install has been around long enough to be asked. An install
+     * date we can't read counts as old enough: the rule only exists to spare
+     * someone on their first days, and not knowing isn't evidence that they are.
+     */
+    fun isOldEnough(installedAt: Instant?, now: Instant = Instant.now()): Boolean {
+        val days = minInstallAgeDays ?: return true
+        if (days <= 0 || installedAt == null) return true
+
+        return !now.isBefore(installedAt.plus(Duration.ofDays(days.toLong())))
+    }
 
     /**
      * Expiry is enforced here alone — the worker serves the same list to everyone
@@ -318,6 +332,7 @@ private data class RemoteNotificationDTO(
     val actions: List<ActionDTO>? = null,
     val dismissible: Boolean? = null,
     val targets: List<TargetDTO>? = null,
+    val minInstallAgeDays: Int? = null,
     val expiresAt: String? = null
 ) {
     /**
@@ -340,6 +355,7 @@ private data class RemoteNotificationDTO(
             // A target we can't read would quietly widen the audience to
             // everyone, so it takes the notification with it for the same reason.
             targets = targets?.map { it.toTarget() } ?: emptyList(),
+            minInstallAgeDays = minInstallAgeDays,
             expiresAt = expiresAt?.let { parseISO8601(it) }
         )
     }

@@ -1150,6 +1150,19 @@ fn check_and_mark_first_open(app: AppHandle) -> bool {
     false
 }
 
+/// When CueCard was installed, in milliseconds since the epoch, for a
+/// notification's `minInstallAgeDays`. The app data folder is created on first
+/// launch and kept across updates, so its creation date stands in. None when the
+/// file system can't say, which the caller treats as old enough.
+#[tauri::command]
+fn install_date(app: AppHandle) -> Option<u64> {
+    let created = std::fs::metadata(app.path().app_data_dir().ok()?).ok()?.created().ok()?;
+    created
+        .duration_since(std::time::UNIX_EPOCH)
+        .ok()
+        .map(|age| age.as_millis() as u64)
+}
+
 /// Fetch the notifications payload and hand back the raw JSON.
 ///
 /// The web view cannot do this itself: the worker serves the phone apps over
@@ -1415,6 +1428,7 @@ pub fn run() {
             init_analytics,
             send_event,
             check_and_mark_first_open,
+            install_date,
             has_slides_scope,
             connect_slides,
             refresh_notes,
