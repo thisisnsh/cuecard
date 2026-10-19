@@ -23,9 +23,13 @@ eleventyComputed:
 <main id="main-content" tabindex="-1">
     <section class="feedback" aria-label="{{ form.title }}">
         <div class="wrap wrap-narrow">
-            <iframe class="feedback-frame" title="{{ form.title }}"
-                    style="--frame-h: {{ form.height }}px; --frame-h-wide: {{ form.heightWide or form.height }}px"
-                    src="{{ formUrl }}?embedded=true"></iframe>
+            <style>
+                {% for minWidth, height in form.heights %}
+                {% if minWidth == "0" %}.feedback-frame { height: {{ height }}px; }
+                {% else %}@media (min-width: {{ minWidth }}px) { .feedback-frame { height: {{ height }}px; } }
+                {% endif %}{% endfor %}
+            </style>
+            <iframe class="feedback-frame" title="{{ form.title }}" src="{{ formUrl }}?embedded=true"></iframe>
             <span class="meta-note">Form not loading? <a href="{{ formUrl }}" target="_blank" rel="noopener">Open it in Google Forms</a>.</span>
         </div>
     </section>

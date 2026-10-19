@@ -7,17 +7,18 @@
 // the form it was sent with.
 //
 //   formId   The long id in docs.google.com/forms/d/e/<formId>/viewform.
-//   height      The iframe's height in pixels on phones. Google Forms can't
-//               report its own, so measure the form's longest page and match it;
-//               any extra shows up as blank space under the form.
-//   heightWide  The same from 600px wide up, where the form wraps less.
+//   heights  Screen width -> the iframe's height from that width up, in pixels.
+//            The page can't read the form's height (it is on Google's domain),
+//            so measure it inside the frame on this page: the bottom of Google's
+//            footer plus about 45px for the help button under it, at the
+//            narrowest width of each step. Too little and the form scrolls inside
+//            its frame; too much leaves blank space under it.
 
 module.exports = [
   {
     id: "95efa0d9",
     title: "Help make CueCard better",
     formId: "1FAIpQLSc_XWKXhezJHwRCdUl2u322KYtsc8xnRC1KpoyrKSjlFXIpHA",
-    height: 1080,
-    heightWide: 960,
+    heights: { 0: 1410, 380: 1335, 600: 1185 },
   },
 ];
