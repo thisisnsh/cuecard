@@ -68,7 +68,6 @@
 		077 /* SavedDeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 157 /* SavedDeckView.swift */; };
 		078 /* HelpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 158 /* HelpView.swift */; };
 		1A10C0000000000000000011 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 1A10C0000000000000000001 /* Localizable.xcstrings */; };
-		7A4E50000000000000000007 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A4E50000000000000000008 /* InfoPlist.xcstrings */; };
 		1A10C0000000000000000012 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 1A10C0000000000000000002 /* Localizable.xcstrings */; };
 		1A10C0000000000000000013 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 1A10C0000000000000000003 /* Localizable.xcstrings */; };
 		5A7ED0000000000000000001 /* NoteStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A7ED0000000000000000002 /* NoteStore.swift */; };
@@ -78,6 +77,7 @@
 		7A4E50000000000000000001 /* TakeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4E50000000000000000002 /* TakeStore.swift */; };
 		7A4E50000000000000000003 /* TakesLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4E50000000000000000004 /* TakesLibrary.swift */; };
 		7A4E50000000000000000005 /* TakesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A4E50000000000000000006 /* TakesView.swift */; };
+		7A4E50000000000000000007 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A4E50000000000000000008 /* InfoPlist.xcstrings */; };
 		AA7130F62F04E5BC00F5C366 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = AA7130F52F04E5BC00F5C366 /* GoogleService-Info.plist */; };
 		AA856D562F060DFC00B0CBC6 /* GlassEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA856D542F060DFC00B0CBC6 /* GlassEffect.swift */; };
 		B1C400000000000000000002 /* RichText.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C400000000000000000001 /* RichText.swift */; };
@@ -179,7 +179,6 @@
 		157 /* SavedDeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedDeckView.swift; sourceTree = "<group>"; };
 		158 /* HelpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpView.swift; sourceTree = "<group>"; };
 		1A10C0000000000000000001 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
-		7A4E50000000000000000008 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 		1A10C0000000000000000002 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		1A10C0000000000000000003 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		201 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -195,6 +194,7 @@
 		7A4E50000000000000000002 /* TakeStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TakeStore.swift; sourceTree = "<group>"; };
 		7A4E50000000000000000004 /* TakesLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TakesLibrary.swift; sourceTree = "<group>"; };
 		7A4E50000000000000000006 /* TakesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TakesView.swift; sourceTree = "<group>"; };
+		7A4E50000000000000000008 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 		AA2E5C0E2F0F38B500E1D079 /* CueCard.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = CueCard.entitlements; sourceTree = "<group>"; };
 		AA7130F52F04E5BC00F5C366 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		AA856D542F060DFC00B0CBC6 /* GlassEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassEffect.swift; sourceTree = "<group>"; };
@@ -787,6 +787,7 @@
 				INFOPLIST_FILE = CueCard/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = CueCard;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "CueCard finds the videos you record while the teleprompter is open, so each take stays with its script.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
@@ -822,6 +823,7 @@
 				INFOPLIST_FILE = CueCard/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = CueCard;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "CueCard finds the videos you record while the teleprompter is open, so each take stays with its script.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
