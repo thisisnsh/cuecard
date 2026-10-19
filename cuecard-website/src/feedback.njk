@@ -14,10 +14,6 @@ eleventyComputed:
 {#
   A Google Form, embedded. Reached from an in-app notification rather than from
   the site, so it is noindex and stays out of the sitemap.
-
-  The apps may append ?p=<platform>&v=<version>. They are copied into the form's
-  prefill fields, per src/_data/feedbackForms.js, so a response says which build
-  it came from without the reader typing it.
 #}
 {% block body %}
 {% include "partials/nav.njk" %}
@@ -28,35 +24,12 @@ eleventyComputed:
     <section class="feedback" aria-labelledby="feedback-h">
         <div class="wrap wrap-narrow">
             <h1 class="section-h" id="feedback-h">{{ form.title }}</h1>
-            {# No src until the script below has added the prefill parameters, so
-               the form loads once rather than twice. #}
-            <iframe class="feedback-frame" id="feedback-frame" title="{{ form.title }}"
-                    height="{{ form.height }}"></iframe>
-            <noscript>
-                <iframe class="feedback-frame" title="{{ form.title }}" height="{{ form.height }}"
-                        src="{{ formUrl }}?embedded=true"></iframe>
-            </noscript>
+            <iframe class="feedback-frame" title="{{ form.title }}" height="{{ form.height }}"
+                    src="{{ formUrl }}?embedded=true"></iframe>
             <span class="meta-note">Form not loading? <a href="{{ formUrl }}" target="_blank" rel="noopener">Open it in Google Forms</a>.</span>
         </div>
     </section>
 </main>
-
-<script>
-    (function () {
-        var frame = document.getElementById('feedback-frame');
-        var fields = {{ form.fields | jsonLd | safe }};
-        var query = new URLSearchParams(window.location.search);
-        var src = new URL({{ formUrl | jsonLd | safe }});
-
-        src.searchParams.set('embedded', 'true');
-        Object.keys(fields).forEach(function (key) {
-            var value = query.get(key);
-            if (fields[key] && value) src.searchParams.set(fields[key], value.slice(0, 64));
-        });
-
-        frame.src = src.href;
-    })();
-</script>
 
 {% include "partials/footer.njk" %}
 {% endblock %}
