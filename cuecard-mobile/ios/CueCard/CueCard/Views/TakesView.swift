@@ -95,7 +95,7 @@ struct TakeStack: View {
     }
 }
 
-/// Every take of the script, newest first, to rate and tag. A take plays
+/// Every take of the script, newest first, to tag. A take plays
 /// right here.
 struct TakesView: View {
     @ObservedObject var library: TakesLibrary
@@ -199,7 +199,7 @@ struct TakesView: View {
             } footer: {
                 VStack(spacing: 8) {
                     if library.status == .limited { limitedAccessNote }
-                    Text("Tap a take to play it, or a star to rate it. Your videos stay in Photos, and nothing leaves this device.")
+                    Text("Tap a take to play it. Your videos stay in Photos, and nothing leaves this device.")
                         .foregroundStyle(AppColors.textSecondary(for: colorScheme))
                 }
                 .font(.caption)
@@ -218,19 +218,6 @@ struct TakesView: View {
     private func edit(_ take: Take) {
         AnalyticsEvents.logButtonClick("edit_take", screen: "takes")
         editingTakeID = take.id
-    }
-
-    /// The take's rating, set right here with a tap on a star.
-    private func rating(of take: Take) -> Binding<Int> {
-        Binding(
-            get: { library.details(of: take).rating },
-            set: { rating in
-                AnalyticsEvents.logButtonClick("rate_take", screen: "takes")
-                var details = library.details(of: take)
-                details.rating = rating
-                library.setDetails(details, of: take)
-            }
-        )
     }
 
     private func row(for take: Take) -> some View {
@@ -256,8 +243,6 @@ struct TakesView: View {
                         .font(.caption)
                         .foregroundStyle(AppColors.textSecondary(for: colorScheme))
                 }
-
-                StarRating(rating: rating(of: take), size: 15, colorScheme: colorScheme)
 
                 if !details.tags.isEmpty {
                     FlowLayout(spacing: 6) {
@@ -291,8 +276,7 @@ struct TakesView: View {
         }
         .padding(.vertical, 2)
         .contentShape(Rectangle())
-        // The stars and the edit button take their own taps; anywhere else
-        // plays the take.
+        // The edit button takes its own taps; anywhere else plays the take.
         .onTapGesture { play(take) }
         .accessibilityAction(named: Text("Play")) { play(take) }
     }
@@ -368,7 +352,7 @@ struct TakesView: View {
     }
 }
 
-/// A take's rating, tags and notes, kept as they're changed.
+/// A take's tags and notes, kept as they're changed.
 private struct TakeDetailsView: View {
     let take: Take
     @ObservedObject var library: TakesLibrary
@@ -431,12 +415,6 @@ private struct TakeDetailsView: View {
                 }
             }
 
-            Section("Rating") {
-                StarRating(rating: $details.rating, size: 28, colorScheme: colorScheme)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 4)
-            }
-
             Section {
                 if !details.tags.isEmpty {
                     FlowLayout(spacing: 8) {
@@ -496,45 +474,6 @@ private struct TakeDetailsView: View {
         guard !tag.isEmpty, !details.tags.containsIgnoringCase(tag) else { return }
         AnalyticsEvents.logButtonClick("tag_take", screen: "take_details")
         details.tags.append(tag)
-    }
-}
-
-/// One to five stars. A tap on the star already set clears the rating.
-struct StarRating: View {
-    @Binding var rating: Int
-    let size: CGFloat
-    let colorScheme: ColorScheme
-
-    var body: some View {
-        HStack(spacing: size * 0.3) {
-            ForEach(1...5, id: \.self) { star in
-                Button {
-                    rating = rating == star ? 0 : star
-                } label: {
-                    Image(systemName: star <= rating ? "star.fill" : "star")
-                        .font(.system(size: size))
-                        .foregroundStyle(star <= rating
-                                         ? AppColors.yellow(for: colorScheme)
-                                         : AppColors.textSecondary(for: colorScheme).opacity(0.5))
-                        .padding(.vertical, 2)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.borderless)
-            }
-        }
-        .sensoryFeedback(.selection, trigger: rating)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Rating")
-        .accessibilityValue(rating == 0
-                            ? String(localized: "Not rated")
-                            : String(localized: "\(rating) of 5 stars", comment: "A take's rating"))
-        .accessibilityAdjustableAction { direction in
-            switch direction {
-            case .increment: rating = min(rating + 1, 5)
-            case .decrement: rating = max(rating - 1, 0)
-            @unknown default: break
-            }
-        }
     }
 }
 

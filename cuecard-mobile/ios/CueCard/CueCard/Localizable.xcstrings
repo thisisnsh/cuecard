@@ -7,30 +7,30 @@
     " %@ " : {
       "shouldTranslate" : false
     },
-    "Tap a take to play it, or a star to rate it. Your videos stay in Photos, and nothing leaves this device." : {
+    "Tap a take to play it. Your videos stay in Photos, and nothing leaves this device." : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Toca una toma para reproducirla, o una estrella para valorarla. Tus vídeos se quedan en Fotos y nada sale de este dispositivo."
+            "value" : "Toca una toma para reproducirla. Tus vídeos se quedan en Fotos y nada sale de este dispositivo."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Touchez une prise pour la lire, ou une étoile pour la noter. Vos vidéos restent dans Photos, et rien ne quitte cet appareil."
+            "value" : "Touchez une prise pour la lire. Vos vidéos restent dans Photos, et rien ne quitte cet appareil."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Toque em um take para reproduzi-lo, ou em uma estrela para avaliá-lo. Seus vídeos ficam no Fotos, e nada sai deste dispositivo."
+            "value" : "Toque em um take para reproduzi-lo. Seus vídeos ficam no Fotos, e nada sai deste dispositivo."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Коснитесь дубля, чтобы воспроизвести его, или звезды, чтобы оценить его. Видео остаются в «Фото», и ничто не покидает это устройство."
+            "value" : "Коснитесь дубля, чтобы воспроизвести его. Видео остаются в «Фото», и ничто не покидает это устройство."
           }
         }
       }
@@ -368,35 +368,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld из %lld"
-          }
-        }
-      }
-    },
-    "%lld of 5 stars" : {
-      "comment" : "A take's rating",
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld de 5 estrellas"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld étoiles sur 5"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld de 5 estrelas"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld из 5 звёзд"
           }
         }
       }
@@ -927,62 +898,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Заметки"
-          }
-        }
-      }
-    },
-    "Not rated" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sin valorar"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Non noté"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sem avaliação"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Без оценки"
-          }
-        }
-      }
-    },
-    "Rating" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Valoración"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Note"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Avaliação"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Оценка"
           }
         }
       }

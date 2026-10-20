@@ -15,12 +15,10 @@ struct TeleprompterSession: Codable, Equatable {
 
 /// What the user has said about a take.
 struct TakeDetails: Codable, Equatable {
-    /// 1 to 5 stars, or 0 if it hasn't been rated.
-    var rating = 0
     var tags: [String] = []
     var note = ""
 
-    var isEmpty: Bool { rating == 0 && tags.isEmpty && note.isEmpty }
+    var isEmpty: Bool { tags.isEmpty && note.isEmpty }
 }
 
 /// When the teleprompter was open on each script, and what's been said about
@@ -58,7 +56,7 @@ final class TakeStore {
         return (try? JSONDecoder().decode([TeleprompterSession].self, from: data)) ?? []
     }
 
-    /// The rating, tags and notes of a script's takes, by take ID.
+    /// The tags and notes of a script's takes, by take ID.
     func details(for scriptID: UUID) -> [String: TakeDetails] {
         guard let url = detailsFile(of: scriptID), let data = try? Data(contentsOf: url) else { return [:] }
         return (try? JSONDecoder().decode([String: TakeDetails].self, from: data)) ?? [:]

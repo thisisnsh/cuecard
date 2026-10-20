@@ -23,7 +23,7 @@ final class TakesLibrary: NSObject, ObservableObject {
     @Published private(set) var takes: [Take] = []
     /// The teleprompter has been open on the script, so it may have takes.
     @Published private(set) var hasSessions = false
-    /// The rating, tags and notes of each take, by take ID.
+    /// The tags and notes of each take, by take ID.
     @Published private(set) var details: [String: TakeDetails] = [:]
 
     private var scriptID: UUID?
