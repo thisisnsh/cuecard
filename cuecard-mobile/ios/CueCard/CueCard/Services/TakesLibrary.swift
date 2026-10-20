@@ -12,6 +12,8 @@ struct Take: Identifiable {
     var id: String { asset.localIdentifier }
     var recordedAt: Date { asset.creationDate ?? .distantPast }
     var duration: TimeInterval { asset.duration }
+    /// Marked as a favorite in Photos.
+    var isFavorite: Bool { asset.isFavorite }
 }
 
 /// The takes of one script, found in the photo library by when they were
@@ -117,6 +119,14 @@ final class TakesLibrary: NSObject, ObservableObject {
                 player.play()
             }
         }
+    }
+
+    /// Mark the take as a favorite in Photos, or take the mark off.
+    func setFavorite(_ isFavorite: Bool, of take: Take) async {
+        try? await PHPhotoLibrary.shared().performChanges {
+            PHAssetChangeRequest(for: take.asset).isFavorite = isFavorite
+        }
+        reload()
     }
 
     /// Videos whose recording overlaps a session, oldest first.

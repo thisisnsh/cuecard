@@ -95,7 +95,7 @@ struct TakeStack: View {
     }
 }
 
-/// Every take of the script, newest first, to tag. A take plays
+/// Every take of the script, newest first, to tag and favorite. A take plays
 /// right here.
 struct TakesView: View {
     @ObservedObject var library: TakesLibrary
@@ -189,6 +189,7 @@ struct TakesView: View {
                             } label: {
                                 Label("Play", systemImage: "play")
                             }
+                            favoriteButton(for: take)
                             Button {
                                 edit(take)
                             } label: {
@@ -218,6 +219,19 @@ struct TakesView: View {
     private func edit(_ take: Take) {
         AnalyticsEvents.logButtonClick("edit_take", screen: "takes")
         editingTakeID = take.id
+    }
+
+    private func favoriteButton(for take: Take) -> some View {
+        Button {
+            AnalyticsEvents.logButtonClick("favorite_take", screen: "takes")
+            Task { await library.setFavorite(!take.isFavorite, of: take) }
+        } label: {
+            if take.isFavorite {
+                Label("Unfavorite", systemImage: "heart.slash")
+            } else {
+                Label("Favorite", systemImage: "heart")
+            }
+        }
     }
 
     private func row(for take: Take) -> some View {
@@ -262,6 +276,8 @@ struct TakesView: View {
 
             Spacer(minLength: 0)
 
+            FavoriteButton(take: take, library: library, size: 36, screen: "takes", colorScheme: colorScheme)
+
             Button {
                 edit(take)
             } label: {
@@ -276,7 +292,8 @@ struct TakesView: View {
         }
         .padding(.vertical, 2)
         .contentShape(Rectangle())
-        // The edit button takes its own taps; anywhere else plays the take.
+        // The heart and the edit button take their own taps; anywhere else
+        // plays the take.
         .onTapGesture { play(take) }
         .accessibilityAction(named: Text("Play")) { play(take) }
     }
@@ -352,7 +369,8 @@ struct TakesView: View {
     }
 }
 
-/// A take's tags and notes, kept as they're changed.
+/// A take's tags and notes, kept as they're changed, and the ways to play it
+/// and favorite it in Photos.
 private struct TakeDetailsView: View {
     let take: Take
     @ObservedObject var library: TakesLibrary
@@ -403,6 +421,11 @@ private struct TakeDetailsView: View {
                         .buttonStyle(.borderless)
                         .padding(.top, 4)
                     }
+
+                    Spacer(minLength: 0)
+
+                    FavoriteButton(take: take, library: library, size: 44, screen: "take_details",
+                                   colorScheme: colorScheme)
                 }
             }
 
@@ -465,6 +488,33 @@ private struct TakeDetailsView: View {
         guard !tag.isEmpty, !details.tags.containsIgnoringCase(tag) else { return }
         AnalyticsEvents.logButtonClick("tag_take", screen: "take_details")
         details.tags.append(tag)
+    }
+}
+
+/// A heart that marks the take as a favorite in Photos, or takes the mark off.
+private struct FavoriteButton: View {
+    let take: Take
+    @ObservedObject var library: TakesLibrary
+    let size: CGFloat
+    let screen: String
+    let colorScheme: ColorScheme
+
+    var body: some View {
+        Button {
+            AnalyticsEvents.logButtonClick("favorite_take", screen: screen)
+            Task { await library.setFavorite(!take.isFavorite, of: take) }
+        } label: {
+            Image(systemName: take.isFavorite ? "heart.fill" : "heart")
+                .font(size > 40 ? .title3 : .body)
+                .foregroundStyle(take.isFavorite
+                                 ? AppColors.red(for: colorScheme)
+                                 : AppColors.textSecondary(for: colorScheme))
+                .frame(width: size, height: size)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.borderless)
+        .sensoryFeedback(.selection, trigger: take.isFavorite)
+        .accessibilityLabel(take.isFavorite ? "Unfavorite" : "Favorite")
     }
 }
 

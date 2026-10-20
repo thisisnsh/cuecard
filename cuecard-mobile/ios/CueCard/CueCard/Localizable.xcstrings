@@ -7,6 +7,34 @@
     " %@ " : {
       "shouldTranslate" : false
     },
+    "Favorite" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Favorito"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Favori"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Favoritar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В избранное"
+          }
+        }
+      }
+    },
     "Tap a take to play it. Your videos stay in Photos, and nothing leaves this device." : {
       "localizations" : {
         "es" : {
@@ -31,6 +59,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Коснитесь дубля, чтобы воспроизвести его. Видео остаются в «Фото», и ничто не покидает это устройство."
+          }
+        }
+      }
+    },
+    "Unfavorite" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quitar de favoritos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retirer des favoris"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desfavoritar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Убрать из избранного"
           }
         }
       }
