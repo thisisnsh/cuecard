@@ -1,3 +1,4 @@
+import AVKit
 import Photos
 import UIKit
 
@@ -89,11 +90,33 @@ final class TakesLibrary: NSObject, ObservableObject {
         reload()
     }
 
-    /// Photos can't be opened on one video, so this opens it where it was:
-    /// on the library, newest videos first.
-    static func openPhotos() {
-        guard let url = URL(string: "photos-redirect://") else { return }
-        UIApplication.shared.open(url)
+    /// Play the take full screen, over whatever is showing. A take kept only
+    /// in iCloud starts once enough of it has come down.
+    static func play(_ take: Take) {
+        guard let root = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene })
+            .flatMap(\.windows)
+            .first(where: \.isKeyWindow)?
+            .rootViewController else { return }
+        var top = root
+        while let presented = top.presentedViewController { top = presented }
+
+        // Heard even with the ringer off, like any other video.
+        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback)
+        let player = AVPlayer()
+        let controller = AVPlayerViewController()
+        controller.player = player
+        top.present(controller, animated: true)
+
+        let options = PHVideoRequestOptions()
+        options.isNetworkAccessAllowed = true
+        PHImageManager.default().requestPlayerItem(forVideo: take.asset, options: options) { item, _ in
+            guard let item else { return }
+            Task { @MainActor in
+                player.replaceCurrentItem(with: item)
+                player.play()
+            }
+        }
     }
 
     /// Videos whose recording overlaps a session, oldest first.

@@ -95,8 +95,8 @@ struct TakeStack: View {
     }
 }
 
-/// Every take of the script, newest first, to rate and tag. A take opens in
-/// Photos.
+/// Every take of the script, newest first, to rate and tag. A take plays
+/// right here.
 struct TakesView: View {
     @ObservedObject var library: TakesLibrary
     /// The saved note's title, while the script is one.
@@ -183,11 +183,23 @@ struct TakesView: View {
                             }
                             .tint(AppColors.blue(for: colorScheme))
                         }
+                        .contextMenu {
+                            Button {
+                                play(take)
+                            } label: {
+                                Label("Play", systemImage: "play")
+                            }
+                            Button {
+                                edit(take)
+                            } label: {
+                                Label("Tags and Notes", systemImage: "square.and.pencil")
+                            }
+                        }
                 }
             } footer: {
                 VStack(spacing: 8) {
                     if library.status == .limited { limitedAccessNote }
-                    Text("Tap a take to open Photos, or a star to rate it. Your videos stay there, and nothing leaves this device.")
+                    Text("Tap a take to play it, or a star to rate it. Your videos stay in Photos, and nothing leaves this device.")
                         .foregroundStyle(AppColors.textSecondary(for: colorScheme))
                 }
                 .font(.caption)
@@ -198,9 +210,9 @@ struct TakesView: View {
         }
     }
 
-    private func openInPhotos() {
-        AnalyticsEvents.logButtonClick("open_take", screen: "takes")
-        TakesLibrary.openPhotos()
+    private func play(_ take: Take) {
+        AnalyticsEvents.logButtonClick("play_take", screen: "takes")
+        TakesLibrary.play(take)
     }
 
     private func edit(_ take: Take) {
@@ -280,9 +292,9 @@ struct TakesView: View {
         .padding(.vertical, 2)
         .contentShape(Rectangle())
         // The stars and the edit button take their own taps; anywhere else
-        // opens Photos.
-        .onTapGesture(perform: openInPhotos)
-        .accessibilityAction(named: Text("Open in Photos"), openInPhotos)
+        // plays the take.
+        .onTapGesture { play(take) }
+        .accessibilityAction(named: Text("Play")) { play(take) }
     }
 
     /// Before the videos can be looked through: why, and the way to allow it.
@@ -406,9 +418,11 @@ private struct TakeDetailsView: View {
                         Text(TeleprompterParser.formatTime(Int(take.duration.rounded())))
                             .font(.caption.monospacedDigit())
                             .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                        Button("Open in Photos") {
-                            AnalyticsEvents.logButtonClick("open_take", screen: "take_details")
-                            TakesLibrary.openPhotos()
+                        Button {
+                            AnalyticsEvents.logButtonClick("play_take", screen: "take_details")
+                            TakesLibrary.play(take)
+                        } label: {
+                            Label("Play", systemImage: "play.fill")
                         }
                         .font(.subheadline.weight(.semibold))
                         .buttonStyle(.borderless)

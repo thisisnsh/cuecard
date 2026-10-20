@@ -7,6 +7,34 @@
     " %@ " : {
       "shouldTranslate" : false
     },
+    "Tap a take to play it, or a star to rate it. Your videos stay in Photos, and nothing leaves this device." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toca una toma para reproducirla, o una estrella para valorarla. Tus vídeos se quedan en Fotos y nada sale de este dispositivo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touchez une prise pour la lire, ou une étoile pour la noter. Vos vidéos restent dans Photos, et rien ne quitte cet appareil."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toque em um take para reproduzi-lo, ou em uma estrela para avaliá-lo. Seus vídeos ficam no Fotos, e nada sai deste dispositivo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Коснитесь дубля, чтобы воспроизвести его, или звезды, чтобы оценить его. Видео остаются в «Фото», и ничто не покидает это устройство."
+          }
+        }
+      }
+    },
     "“%@” couldn't be deleted from the notes folder. Its note stays deleted." : {
       "localizations" : {
         "es" : {
@@ -931,34 +959,6 @@
         }
       }
     },
-    "Open in Photos" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Abrir en Fotos"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ouvrir dans Photos"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Abrir no Fotos"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Открыть в «Фото»"
-          }
-        }
-      }
-    },
     "Rating" : {
       "localizations" : {
         "es" : {
@@ -1181,34 +1181,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Дубли"
-          }
-        }
-      }
-    },
-    "Tap a take to open Photos, or a star to rate it. Your videos stay there, and nothing leaves this device." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toca una toma para abrir Fotos, o una estrella para valorarla. Tus vídeos se quedan allí y nada sale de este dispositivo."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Touchez une prise pour ouvrir Photos, ou une étoile pour la noter. Vos vidéos y restent, et rien ne quitte cet appareil."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toque em um take para abrir o Fotos, ou em uma estrela para avaliá-lo. Seus vídeos ficam lá, e nada sai deste dispositivo."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Коснитесь дубля, чтобы открыть «Фото», или звезды, чтобы оценить его. Видео остаются там, и ничто не покидает это устройство."
           }
         }
       }
