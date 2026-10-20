@@ -129,6 +129,46 @@ final class TakesLibrary: NSObject, ObservableObject {
         reload()
     }
 
+    /// The user's own albums in Photos that a video can be put in, by name.
+    func albums() -> [PHAssetCollection] {
+        var albums: [PHAssetCollection] = []
+        PHAssetCollection.fetchAssetCollections(with: .album, subtype: .albumRegular, options: nil)
+            .enumerateObjects { album, _, _ in
+                if album.canPerform(.addContent) { albums.append(album) }
+            }
+        return albums.sorted {
+            ($0.localizedTitle ?? "").localizedStandardCompare($1.localizedTitle ?? "") == .orderedAscending
+        }
+    }
+
+    /// The IDs of the albums the take is in.
+    func albumIDs(holding take: Take) -> Set<String> {
+        var ids: Set<String> = []
+        PHAssetCollection.fetchAssetCollectionsContaining(take.asset, with: .album, options: nil)
+            .enumerateObjects { album, _, _ in ids.insert(album.localIdentifier) }
+        return ids
+    }
+
+    /// Put the take in an album, or take it out.
+    func setTake(_ take: Take, isIn isIn: Bool, album: PHAssetCollection) async {
+        try? await PHPhotoLibrary.shared().performChanges {
+            let request = PHAssetCollectionChangeRequest(for: album)
+            if isIn {
+                request?.addAssets([take.asset] as NSArray)
+            } else {
+                request?.removeAssets([take.asset] as NSArray)
+            }
+        }
+    }
+
+    /// Make a new album in Photos with the take in it.
+    func addTake(_ take: Take, toNewAlbumNamed name: String) async {
+        try? await PHPhotoLibrary.shared().performChanges {
+            PHAssetCollectionChangeRequest.creationRequestForAssetCollection(withTitle: name)
+                .addAssets([take.asset] as NSArray)
+        }
+    }
+
     /// Videos whose recording overlaps a session, oldest first.
     private static func videos(recordedDuring sessions: [TeleprompterSession]) -> [PHAsset] {
         // A recording that overlaps a session started before it ended, and no

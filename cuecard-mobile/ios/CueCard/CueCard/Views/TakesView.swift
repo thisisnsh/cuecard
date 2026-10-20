@@ -108,6 +108,8 @@ struct TakesView: View {
     @State private var hasAppeared = false
     /// The take whose tags and notes are open.
     @State private var editingTakeID: String?
+    /// The take being put in albums.
+    @State private var albumTake: Take?
 
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -134,6 +136,9 @@ struct TakesView: View {
                 if let take = library.takes.first(where: { $0.id == id }) {
                     TakeDetailsView(take: take, library: library)
                 }
+            }
+            .sheet(item: $albumTake) { take in
+                AlbumPicker(take: take, library: library)
             }
             .navigationTitle("Takes")
             .navigationBarTitleDisplayMode(.inline)
@@ -191,6 +196,11 @@ struct TakesView: View {
                             }
                             favoriteButton(for: take)
                             Button {
+                                addToAlbum(take)
+                            } label: {
+                                Label("Add to Album", systemImage: "rectangle.stack.badge.plus")
+                            }
+                            Button {
                                 edit(take)
                             } label: {
                                 Label("Tags and Notes", systemImage: "square.and.pencil")
@@ -219,6 +229,11 @@ struct TakesView: View {
     private func edit(_ take: Take) {
         AnalyticsEvents.logButtonClick("edit_take", screen: "takes")
         editingTakeID = take.id
+    }
+
+    private func addToAlbum(_ take: Take) {
+        AnalyticsEvents.logButtonClick("album_take", screen: "takes")
+        albumTake = take
     }
 
     private func favoriteButton(for take: Take) -> some View {
@@ -369,8 +384,8 @@ struct TakesView: View {
     }
 }
 
-/// A take's tags and notes, kept as they're changed, and the ways to play it
-/// and favorite it in Photos.
+/// A take's tags and notes, kept as they're changed, and the ways to play it,
+/// favorite it and put it in albums in Photos.
 private struct TakeDetailsView: View {
     let take: Take
     @ObservedObject var library: TakesLibrary
@@ -378,6 +393,7 @@ private struct TakeDetailsView: View {
     @State private var details = TakeDetails()
     @State private var hasLoaded = false
     @State private var newTag = ""
+    @State private var isPickingAlbums = false
     @FocusState private var isAddingTag: Bool
 
     private static let longestTag = 30
@@ -430,6 +446,15 @@ private struct TakeDetailsView: View {
             }
 
             Section {
+                Button {
+                    AnalyticsEvents.logButtonClick("album_take", screen: "take_details")
+                    isPickingAlbums = true
+                } label: {
+                    Label("Add to Album", systemImage: "rectangle.stack.badge.plus")
+                }
+            }
+
+            Section {
                 if !details.tags.isEmpty {
                     FlowLayout(spacing: 8) {
                         ForEach(details.tags, id: \.self) { tag in
@@ -471,6 +496,9 @@ private struct TakeDetailsView: View {
         }
         .navigationTitle("Take \(take.number)")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $isPickingAlbums) {
+            AlbumPicker(take: take, library: library)
+        }
         .onAppear {
             guard !hasLoaded else { return }
             hasLoaded = true
@@ -515,6 +543,96 @@ private struct FavoriteButton: View {
         .buttonStyle(.borderless)
         .sensoryFeedback(.selection, trigger: take.isFavorite)
         .accessibilityLabel(take.isFavorite ? "Unfavorite" : "Favorite")
+    }
+}
+
+/// The user's albums in Photos, ticked where the take is in one. A tap puts it
+/// in or takes it out, and a new album can be made with it in.
+private struct AlbumPicker: View {
+    let take: Take
+    @ObservedObject var library: TakesLibrary
+    @Environment(\.dismiss) var dismiss
+    @Environment(\.colorScheme) var colorScheme
+    @State private var albums: [PHAssetCollection] = []
+    @State private var holdingIDs: Set<String> = []
+    @State private var isNaming = false
+    @State private var newName = ""
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    Button {
+                        newName = ""
+                        isNaming = true
+                    } label: {
+                        Label("New Album", systemImage: "plus")
+                    }
+                }
+
+                if !albums.isEmpty {
+                    Section {
+                        ForEach(albums, id: \.localIdentifier) { album in
+                            row(for: album)
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Add to Album")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") {
+                        AnalyticsEvents.logButtonClick("done", screen: "albums")
+                        dismiss()
+                    }
+                }
+            }
+            .alert("New Album", isPresented: $isNaming) {
+                TextField("Title", text: $newName)
+                Button("Cancel", role: .cancel) { }
+                Button("Save") {
+                    let name = newName.trimmingCharacters(in: .whitespacesAndNewlines)
+                    guard !name.isEmpty else { return }
+                    AnalyticsEvents.logButtonClick("new_album", screen: "albums")
+                    Task {
+                        await library.addTake(take, toNewAlbumNamed: name)
+                        refresh()
+                    }
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
+        .onAppear(perform: refresh)
+    }
+
+    private func row(for album: PHAssetCollection) -> some View {
+        let isIn = holdingIDs.contains(album.localIdentifier)
+        return Button {
+            AnalyticsEvents.logButtonClick(isIn ? "remove_from_album" : "add_to_album", screen: "albums")
+            Task {
+                await library.setTake(take, isIn: !isIn, album: album)
+                refresh()
+            }
+        } label: {
+            HStack {
+                Text(album.localizedTitle ?? "")
+                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                Spacer()
+                if isIn {
+                    Image(systemName: "checkmark")
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(AppColors.blue(for: colorScheme))
+                }
+            }
+            .contentShape(Rectangle())
+        }
+        .accessibilityAddTraits(isIn ? .isSelected : [])
+    }
+
+    private func refresh() {
+        albums = library.albums()
+        holdingIDs = library.albumIDs(holding: take)
     }
 }
 
