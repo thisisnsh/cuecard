@@ -362,12 +362,6 @@ private struct TakeDetailsView: View {
     @State private var newTag = ""
     @FocusState private var isAddingTag: Bool
 
-    /// Offered until the script's takes have tags of their own to offer.
-    private static let starterTags = [
-        String(localized: "Best", comment: "A tag for a recorded take"),
-        String(localized: "Usable", comment: "A tag for a recorded take"),
-        String(localized: "Retake", comment: "A tag for a recorded take")
-    ]
     private static let longestTag = 30
 
     private let dateFormatter: DateFormatter = {
@@ -377,16 +371,13 @@ private struct TakeDetailsView: View {
         return formatter
     }()
 
-    /// Tags used on the script's other takes, then the starters, leaving out
-    /// any this take already has.
+    /// Tags on the script's other takes, leaving out any this take already
+    /// has. A tag no take has any more isn't offered.
     private var suggestedTags: [String] {
-        (library.usedTags + Self.starterTags).reduce(into: [String]()) { tags, tag in
-            if !tags.containsIgnoringCase(tag), !details.tags.containsIgnoringCase(tag) {
-                tags.append(tag)
-            }
-        }
-        .prefix(8)
-        .map { $0 }
+        library.usedTags
+            .filter { !details.tags.containsIgnoringCase($0) }
+            .prefix(8)
+            .map { $0 }
     }
 
     var body: some View {

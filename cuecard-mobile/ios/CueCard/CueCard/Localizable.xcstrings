@@ -677,35 +677,6 @@
         }
       }
     },
-    "Best" : {
-      "comment" : "A tag for a recorded take",
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La mejor"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Meilleure"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Melhor"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Лучший"
-          }
-        }
-      }
-    },
     "Change in Settings" : {
       "localizations" : {
         "es" : {
@@ -959,35 +930,6 @@
         }
       }
     },
-    "Retake" : {
-      "comment" : "A tag for a recorded take",
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Repetir"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "À refaire"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Regravar"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Переснять"
-          }
-        }
-      }
-    },
     "Tags" : {
       "localizations" : {
         "es" : {
@@ -1096,35 +1038,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Дубли"
-          }
-        }
-      }
-    },
-    "Usable" : {
-      "comment" : "A tag for a recorded take",
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aprovechable"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Utilisable"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aproveitável"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Годный"
           }
         }
       }
