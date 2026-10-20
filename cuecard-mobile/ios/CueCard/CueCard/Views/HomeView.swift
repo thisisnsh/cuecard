@@ -167,10 +167,9 @@ struct HomeView: View {
                 isEditorFocused = false
                 showingTakes = true
             } label: {
-                TakeStack(takes: takes.takes, colorScheme: colorScheme)
+                TakeStack(takes: takes.takes, colorScheme: colorScheme, transition: takesTransition)
             }
             .buttonStyle(.plain)
-            .takesTransitionSource(in: takesTransition)
             .transition(.scale.combined(with: .opacity))
         }
     }

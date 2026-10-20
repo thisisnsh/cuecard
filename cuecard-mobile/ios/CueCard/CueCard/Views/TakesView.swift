@@ -36,6 +36,9 @@ struct TakeThumbnail: View {
 struct TakeStack: View {
     let takes: [Take]
     let colorScheme: ColorScheme
+    /// The Takes list grows out of the newest tile, or the button before
+    /// there are any.
+    let transition: Namespace.ID
 
     private static let tileSize = CGSize(width: 36, height: 48)
     /// The most tiles drawn; more takes than this only raise the count.
@@ -48,6 +51,7 @@ struct TakeStack: View {
                 .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                 .frame(width: 52, height: 52)
                 .glassedEffect(in: Circle())
+                .takesTransitionSource(in: transition, cornerRadius: 26)
                 .accessibilityLabel("Takes")
         } else {
             stack
@@ -61,6 +65,9 @@ struct TakeStack: View {
                 // 0 for the newest, on top; each one under it tips further out.
                 let depth = CGFloat(shown.count - 1 - index)
                 TakeThumbnail(asset: take.asset, size: Self.tileSize)
+                    // Only the top tile, the one not tipped, so the list closes
+                    // into a tile its own shape and the ones under it stay put.
+                    .takesTransitionSource(in: transition, cornerRadius: 8, isEnabled: depth == 0)
                     .overlay(
                         RoundedRectangle(cornerRadius: 8, style: .continuous)
                             .stroke(AppColors.background(for: colorScheme), lineWidth: 1.5)
@@ -615,9 +622,12 @@ private let takesTransitionID = "takes"
 
 extension View {
     @ViewBuilder
-    func takesTransitionSource(in namespace: Namespace.ID) -> some View {
-        if #available(iOS 18.0, *) {
-            matchedTransitionSource(id: takesTransitionID, in: namespace)
+    fileprivate func takesTransitionSource(in namespace: Namespace.ID, cornerRadius: CGFloat,
+                                           isEnabled: Bool = true) -> some View {
+        if #available(iOS 18.0, *), isEnabled {
+            matchedTransitionSource(id: takesTransitionID, in: namespace) { source in
+                source.clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+            }
         } else {
             self
         }
