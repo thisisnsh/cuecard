@@ -142,7 +142,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Отсчёт без таймера"
+            "value" : "Прямой отсчёт без таймера"
           }
         }
       }
@@ -180,13 +180,13 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Favorito"
+            "value" : "Añadir a favoritos"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Favori"
+            "value" : "Ajouter aux favoris"
           }
         },
         "pt-BR" : {
@@ -214,7 +214,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mettre une prise en favori"
+            "value" : "Ajouter une prise aux favoris"
           }
         },
         "pt-BR" : {
@@ -226,7 +226,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Избранные дубли"
+            "value" : "Добавление дубля в избранное"
           }
         }
       }
@@ -264,7 +264,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sabe cuándo se acaba el tiempo"
+            "value" : "Entérate de cuándo se acaba el tiempo"
           }
         },
         "fr" : {
@@ -815,7 +815,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Коснитесь таймера рядом с кнопкой «Пуск», чтобы задать, сколько у вас времени, когда предупредить и какими цветами он меняется."
+            "value" : "Коснитесь таймера рядом с кнопкой «Пуск», чтобы задать длительность, время предупреждения и цвета таймера."
           }
         }
       }
@@ -2837,19 +2837,19 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "El texto de las tarjetas puede ir de %lld a %lld y el del editor de %lld a %lld."
+            "value" : "El tamaño del texto de las tarjetas puede ir de %lld a %lld y el del editor de %lld a %lld."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Le texte des fiches peut aller de %lld à %lld et celui de l'éditeur de %lld à %lld."
+            "value" : "La taille du texte des fiches peut aller de %lld à %lld et celle du texte de l'éditeur de %lld à %lld."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "O texto dos cartões pode ir de %lld a %lld e o do editor de %lld a %lld."
+            "value" : "O tamanho do texto dos cartões pode ir de %lld a %lld e o do editor de %lld a %lld."
           }
         },
         "ru" : {
@@ -4523,25 +4523,25 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hola a todos. Os presento Cue Cards. [cue sonríe]\n[separator]\nUna idea por tarjeta. Desliza a la siguiente cuando estés listo.\n[separator]\nEl temporizador de arriba te mantiene a raya. [cue risa suave]\n[separator]\nActiva Mostrar en pantalla bloqueada para leer y pasar tarjetas desde allí.\n[separator]\nO pásalas desde tu Apple Watch. [cue pausa]\n[separator]\nLas palabras de colores son indicaciones, no palabras para leer en voz alta. [cue enfatiza]\n[separator]\nGracias por escuchar. ¿Preguntas?"
+            "value" : "Hola a todos. Os presento el modo Tarjetas. [cue sonríe]\n[separator]\nUna idea por tarjeta. Desliza a la siguiente cuando estés listo.\n[separator]\nEl temporizador de arriba te mantiene a raya. [cue risa suave]\n[separator]\nActiva Mostrar en pantalla bloqueada para leer y pasar tarjetas desde allí.\n[separator]\nO pásalas desde tu Apple Watch. [cue pausa]\n[separator]\nLas palabras de colores son indicaciones, no palabras para leer en voz alta. [cue enfatiza]\n[separator]\nGracias por escuchar. ¿Preguntas?"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bonjour à tous. Voici Cue Cards. [cue sourire]\n[separator]\nUne idée par fiche. Balayez vers la suivante quand vous êtes prêt.\n[separator]\nLe minuteur en haut vous garde dans les temps. [cue petit rire]\n[separator]\nActivez Afficher sur l'écran verrouillé pour lire et tourner vos fiches depuis là.\n[separator]\nOu tournez-les depuis votre Apple Watch. [cue pause]\n[separator]\nLes mots en couleur sont des repères, pas des mots à lire à voix haute. [cue insister]\n[separator]\nMerci de votre attention. Des questions ?"
+            "value" : "Bonjour à tous. Voici le mode Fiches. [cue sourire]\n[separator]\nUne idée par fiche. Balayez vers la suivante quand vous êtes prêt.\n[separator]\nLe minuteur en haut vous garde dans les temps. [cue petit rire]\n[separator]\nActivez Afficher sur l'écran verrouillé pour lire et tourner vos fiches depuis là.\n[separator]\nOu tournez-les depuis votre Apple Watch. [cue pause]\n[separator]\nLes mots en couleur sont des repères, pas des mots à lire à voix haute. [cue insister]\n[separator]\nMerci de votre attention. Des questions ?"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Olá a todos. Apresento o Cue Cards. [cue sorria]\n[separator]\nUma ideia por cartão. Deslize para o próximo quando estiver pronto.\n[separator]\nO timer no topo mantém você no horário. [cue risada leve]\n[separator]\nAtive Mostrar na Tela Bloqueada para ler e virar os cartões por lá.\n[separator]\nOu vire pelo Apple Watch. [cue pausa]\n[separator]\nPalavras coloridas são deixas, não falas. [cue enfatize]\n[separator]\nObrigado pela atenção. Perguntas?"
+            "value" : "Olá a todos. Apresento o modo Cartões. [cue sorria]\n[separator]\nUma ideia por cartão. Deslize para o próximo quando estiver pronto.\n[separator]\nO timer no topo mantém você no horário. [cue risada leve]\n[separator]\nAtive Mostrar na Tela Bloqueada para ler e virar os cartões por lá.\n[separator]\nOu vire pelo Apple Watch. [cue pausa]\n[separator]\nPalavras coloridas são deixas, não falas. [cue enfatize]\n[separator]\nObrigado pela atenção. Perguntas?"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Всем привет. Представляю Cue Cards. [cue улыбка]\n[separator]\nОдна мысль на карточку. Смахните к следующей, когда будете готовы.\n[separator]\nТаймер наверху не даст затянуть. [cue лёгкий смешок]\n[separator]\nВключите «Показывать на экране блокировки», чтобы читать и листать карточки прямо там.\n[separator]\nИли листайте их с Apple Watch. [cue пауза]\n[separator]\nЦветные слова — это подсказки, а не слова для чтения вслух. [cue подчеркните голосом]\n[separator]\nСпасибо за внимание. Вопросы?"
+            "value" : "Всем привет. Представляю режим «Карточки». [cue улыбка]\n[separator]\nОдна мысль на карточку. Смахните к следующей, когда будете готовы.\n[separator]\nТаймер наверху не даст затянуть. [cue лёгкий смешок]\n[separator]\nВключите «Показывать на экране блокировки», чтобы читать и листать карточки прямо там.\n[separator]\nИли листайте их с Apple Watch. [cue пауза]\n[separator]\nЦветные слова — это подсказки, а не слова для чтения вслух. [cue подчеркните голосом]\n[separator]\nСпасибо за внимание. Вопросы?"
           }
         }
       }
@@ -5280,25 +5280,25 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nuevo"
+            "value" : "Nueva nota"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nouveau"
+            "value" : "Nouvelle note"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Novo"
+            "value" : "Nova nota"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Новая"
+            "value" : "Новая заметка"
           }
         }
       }
@@ -7082,7 +7082,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Défiler à la main"
+            "value" : "Faire défiler manuellement"
           }
         },
         "pt-BR" : {
@@ -8224,19 +8224,19 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "El texto del teleprompter puede ir de %lld a %lld, el de la ventana flotante de %lld a %lld y el del editor de %lld a %lld."
+            "value" : "El tamaño del texto del teleprompter puede ir de %lld a %lld, el de la ventana flotante de %lld a %lld y el del editor de %lld a %lld."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Le texte du prompteur peut aller de %lld à %lld, celui de la fenêtre flottante de %lld à %lld et celui de l'éditeur de %lld à %lld."
+            "value" : "La taille du texte du prompteur peut aller de %lld à %lld, celle du texte de la fenêtre flottante de %lld à %lld et celle du texte de l'éditeur de %lld à %lld."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "O texto do teleprompter pode ir de %lld a %lld, o da janela flutuante de %lld a %lld e o do editor de %lld a %lld."
+            "value" : "O tamanho do texto do teleprompter pode ir de %lld a %lld, o da janela flutuante de %lld a %lld e o do editor de %lld a %lld."
           }
         },
         "ru" : {
@@ -9242,7 +9242,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Non enregistré au-dessus de Lecture signale des modifications à enregistrer. Touchez-le pour enregistrer, ou touchez ••• › Enregistrer."
+            "value" : "La mention « Non enregistré » au-dessus de Lire signale des modifications à enregistrer. Touchez-la pour enregistrer, ou touchez ••• › Enregistrer."
           }
         },
         "pt-BR" : {
@@ -9488,19 +9488,19 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Novedades de la %@"
+            "value" : "Novedades de la versión %@"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Nouveautés de la %@"
+            "value" : "Nouveautés de la version %@"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Novidades da %@"
+            "value" : "Novidades da versão %@"
           }
         },
         "ru" : {
