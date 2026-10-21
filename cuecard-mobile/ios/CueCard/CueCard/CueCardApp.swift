@@ -80,15 +80,35 @@ enum AppLinks {
     static let appStore = URL(string: "https://apps.apple.com/app/id6757321325")!
     static let supportEmail = URL(string: "mailto:support@cuecard.dev?subject=CueCard%20Feedback")!
 
-    /// An email to support about a translation. The subject stays English, with
-    /// the language's code, so reports sort together whatever the language.
+    /// An email to support about a translation, with the language's code.
     static func translationReport(language: String) -> URL {
+        supportEmail(
+            subject: "CueCard Translation Mistake (\(language))",
+            body: String(localized: "Where in the app:\n\nWhat it says:\n\nWhat it should say:\n")
+        )
+    }
+
+    /// An email to support about something that's broken.
+    static let bugReport = supportEmail(
+        subject: "CueCard Bug Report",
+        body: String(localized: "What happened:\n\nWhat you expected:\n\nSteps to reproduce:\n")
+    )
+
+    /// An email to support asking for something new.
+    static let featureRequest = supportEmail(
+        subject: "CueCard Feature Request",
+        body: String(localized: "What would you like CueCard to do?\n")
+    )
+
+    /// An email to support. The subject stays English so emails sort
+    /// together whatever the language.
+    private static func supportEmail(subject: String, body: String) -> URL {
         var components = URLComponents()
         components.scheme = "mailto"
         components.path = "support@cuecard.dev"
         components.queryItems = [
-            URLQueryItem(name: "subject", value: "CueCard Translation Mistake (\(language))"),
-            URLQueryItem(name: "body", value: String(localized: "Where in the app:\n\nWhat it says:\n\nWhat it should say:\n"))
+            URLQueryItem(name: "subject", value: subject),
+            URLQueryItem(name: "body", value: body)
         ]
         return components.url ?? supportEmail
     }

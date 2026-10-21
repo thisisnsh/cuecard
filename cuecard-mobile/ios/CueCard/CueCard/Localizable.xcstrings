@@ -427,6 +427,62 @@
         }
       }
     },
+    "Report a Bug" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informar de un error"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signaler un bug"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relatar um bug"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сообщить об ошибке"
+          }
+        }
+      }
+    },
+    "Request a Feature" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sugerir una función"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suggérer une fonctionnalité"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sugerir um recurso"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Предложить функцию"
+          }
+        }
+      }
+    },
     "Save, open, import, versions and sharing" : {
       "localizations" : {
         "es" : {
@@ -899,6 +955,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Видео, записанные при открытом телесуфлёре, даже если он плавает поверх камеры, сохраняются как дубли этого текста. Коснитесь кнопки с плёнкой рядом с «Пуск», чтобы их увидеть."
+          }
+        }
+      }
+    },
+    "What happened:\n\nWhat you expected:\n\nSteps to reproduce:\n" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Qué pasó:\n\nQué esperabas:\n\nPasos para reproducirlo:\n"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce qui s'est passé :\n\nCe que vous attendiez :\n\nÉtapes pour reproduire :\n"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O que aconteceu:\n\nO que você esperava:\n\nPassos para reproduzir:\n"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Что произошло:\n\nЧего вы ожидали:\n\nКак воспроизвести:\n"
+          }
+        }
+      }
+    },
+    "What would you like CueCard to do?\n" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Qué te gustaría que hiciera CueCard?\n"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Qu'aimeriez-vous que CueCard fasse ?\n"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O que você gostaria que o CueCard fizesse?\n"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Что бы вы хотели, чтобы делал CueCard?\n"
           }
         }
       }
