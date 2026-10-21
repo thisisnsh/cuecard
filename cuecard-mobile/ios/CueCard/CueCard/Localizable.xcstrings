@@ -7,1155 +7,6 @@
     " %@ " : {
       "shouldTranslate" : false
     },
-    "Add to Album" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Añadir a un álbum"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ajouter à un album"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Adicionar ao Álbum"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Добавить в альбом"
-          }
-        }
-      }
-    },
-    "Add to an Album" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Añade a un álbum"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ajouter à un album"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Adicione a um álbum"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Добавление в альбом"
-          }
-        }
-      }
-    },
-    "Albums" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Álbumes"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Albums"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Álbuns"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Альбомы"
-          }
-        }
-      }
-    },
-    "Control the teleprompter and read cards" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Controla el teleprompter y lee tarjetas"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Contrôler le prompteur et lire les fiches"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Controle o teleprompter e leia cartões"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Управление телесуфлёром и чтение карточек"
-          }
-        }
-      }
-    },
-    "Count Down Before Scrolling" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cuenta atrás antes de desplazar"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Compte à rebours avant le défilement"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Contagem regressiva antes de rolar"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Отсчёт перед прокруткой"
-          }
-        }
-      }
-    },
-    "Count Up Without a Timer" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cuenta hacia arriba sin temporizador"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Compter sans minuteur"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Conte o tempo sem timer"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Прямой отсчёт без таймера"
-          }
-        }
-      }
-    },
-    "Delete a Take" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Elimina una toma"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Supprimer une prise"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Apague um take"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Удаление дубля"
-          }
-        }
-      }
-    },
-    "Favorite" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Añadir a favoritos"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ajouter aux favoris"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Favoritar"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "В избранное"
-          }
-        }
-      }
-    },
-    "Favorite a Take" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Marca una toma como favorita"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ajouter une prise aux favoris"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Favorite um take"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Добавление дубля в избранное"
-          }
-        }
-      }
-    },
-    "In the teleprompter's timer, set a Countdown to get a few seconds before the script starts scrolling." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "En el temporizador del teleprompter, pon una cuenta atrás para tener unos segundos antes de que el guion empiece a desplazarse."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dans le minuteur du prompteur, réglez un compte à rebours pour avoir quelques secondes avant que le texte commence à défiler."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No timer do teleprompter, defina uma contagem regressiva para ter alguns segundos antes de o roteiro começar a rolar."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "В таймере телесуфлёра задайте обратный отсчёт, чтобы получить несколько секунд до начала прокрутки текста."
-          }
-        }
-      }
-    },
-    "Know When Time Is Running Out" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Entérate de cuándo se acaba el tiempo"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Savoir quand le temps presse"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Saiba quando o tempo está acabando"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Когда время на исходе"
-          }
-        }
-      }
-    },
-    "Modes, cues, formatting and cards" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Modos, indicaciones, formato y tarjetas"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Modes, repères, mise en forme et fiches"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Modos, deixas, formatação e cartões"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Режимы, подсказки, оформление и карточки"
-          }
-        }
-      }
-    },
-    "New Album" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nuevo álbum"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nouvel album"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Novo Álbum"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Новый альбом"
-          }
-        }
-      }
-    },
-    "Notes & Saving" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Notas y guardado"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Notes et enregistrement"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Notas e salvamento"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Заметки и сохранение"
-          }
-        }
-      }
-    },
-    "Play a Take" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reproduce una toma"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lire une prise"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reproduza um take"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Воспроизведение дубля"
-          }
-        }
-      }
-    },
-    "Play or pause without touching the screen" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reproduce o pausa sin tocar la pantalla"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lire ou mettre en pause sans toucher l'écran"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reproduza ou pause sem tocar na tela"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Пуск или пауза без касания экрана"
-          }
-        }
-      }
-    },
-    "Report a Bug" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Informar de un error"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Signaler un bug"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Relatar um bug"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Сообщить об ошибке"
-          }
-        }
-      }
-    },
-    "Request a Feature" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sugerir una función"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Suggérer une fonctionnalité"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sugerir um recurso"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Предложить функцию"
-          }
-        }
-      }
-    },
-    "Save, open, import, versions and sharing" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Guardar, abrir, importar, versiones y compartir"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enregistrer, ouvrir, importer, versions et partage"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Salvar, abrir, importar, versões e compartilhar"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Сохранение, открытие, импорт, версии и отправка"
-          }
-        }
-      }
-    },
-    "Scroll Speed in Settings sets how many lines pass each minute." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Velocidad de desplazamiento, en Ajustes, indica cuántas líneas pasan por minuto."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vitesse de défilement, dans Réglages, définit le nombre de lignes par minute."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Velocidade de rolagem, nos Ajustes, define quantas linhas passam por minuto."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "«Скорость прокрутки» в настройках задаёт, сколько строк проходит за минуту."
-          }
-        }
-      }
-    },
-    "Scrolling, speed and the floating window" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Desplazamiento, velocidad y ventana flotante"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Défilement, vitesse et fenêtre flottante"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Rolagem, velocidade e janela flutuante"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Прокрутка, скорость и плавающее окно"
-          }
-        }
-      }
-    },
-    "Settings & Timer" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ajustes y temporizador"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Réglages et minuteur"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ajustes e timer"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Настройки и таймер"
-          }
-        }
-      }
-    },
-    "Swipe left on a take, or play it and tap Delete. It's deleted from Photos too." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Desliza una toma a la izquierda, o reprodúcela y toca Eliminar. También se elimina de Fotos."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Balayez une prise vers la gauche, ou lisez-la et touchez Supprimer. Elle est aussi supprimée de Photos."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Deslize um take para a esquerda, ou reproduza-o e toque em Apagar. Ele também é apagado do Fotos."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Смахните дубль влево или воспроизведите его и коснитесь «Удалить». Он удалится и из «Фото»."
-          }
-        }
-      }
-    },
-    "Takes: Videos you record with the CueCard teleprompter can now be viewed in the app." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tomas: los vídeos que grabas con el teleprompter de CueCard ahora se pueden ver en la app."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Prises : les vidéos filmées avec le prompteur de CueCard sont maintenant visibles dans l'app."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Takes: os vídeos que você grava com o teleprompter do CueCard agora podem ser vistos no app."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Дубли: видео, записанные с телесуфлёром CueCard, теперь можно смотреть в приложении."
-          }
-        }
-      }
-    },
-    "Tap a take to play it and add tags, notes and albums. Your videos stay in Photos, and nothing leaves this device." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toca una toma para reproducirla y añadir etiquetas, notas y álbumes. Tus vídeos se quedan en Fotos y nada sale de este dispositivo."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Touchez une prise pour la lire et ajouter des tags, des notes et des albums. Vos vidéos restent dans Photos, et rien ne quitte cet appareil."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toque em um take para reproduzi-lo e adicionar tags, notas e álbuns. Seus vídeos ficam no Fotos, e nada sai deste dispositivo."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Коснитесь дубля, чтобы воспроизвести его и добавить теги, заметки и альбомы. Видео остаются в «Фото», и ничто не покидает это устройство."
-          }
-        }
-      }
-    },
-    "Tap a take to play it right in CueCard. Below the video, add tags and notes, like what worked and what to change next time." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toca una toma para reproducirla en CueCard. Debajo del vídeo, añade etiquetas y notas, como qué funcionó y qué cambiar la próxima vez."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Touchez une prise pour la lire directement dans CueCard. Sous la vidéo, ajoutez des tags et des notes, comme ce qui a marché et ce qu'il faut changer la prochaine fois."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toque em um take para reproduzi-lo no próprio CueCard. Abaixo do vídeo, adicione tags e notas, como o que funcionou e o que mudar da próxima vez."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Коснитесь дубля, чтобы воспроизвести его прямо в CueCard. Под видео добавьте теги и заметки: что получилось и что изменить в следующий раз."
-          }
-        }
-      }
-    },
-    "Tap the gear at the top, then Language. CueCard is in English, French, Portuguese, Russian and Spanish." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toca el engranaje arriba y luego Idioma. CueCard está en inglés, francés, portugués, ruso y español."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Touchez l'engrenage en haut, puis Langue. CueCard est disponible en anglais, français, portugais, russe et espagnol."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toque na engrenagem no topo e depois em Idioma. O CueCard está em inglês, francês, português, russo e espanhol."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Коснитесь шестерёнки вверху, затем «Язык». CueCard доступен на английском, французском, португальском, русском и испанском."
-          }
-        }
-      }
-    },
-    "Tap the gear at the top. Each mode keeps its own sizes and cue color." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toca el engranaje arriba. Cada modo tiene sus propios tamaños y color de indicaciones."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Touchez l'engrenage en haut. Chaque mode a ses propres tailles et couleur de repère."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toque na engrenagem no topo. Cada modo tem seus próprios tamanhos e cor de deixa."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Коснитесь шестерёнки вверху. У каждого режима свои размеры и цвет подсказок."
-          }
-        }
-      }
-    },
-    "Tap the heart on a take. It's a favorite in Photos too." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toca el corazón de una toma. También será favorita en Fotos."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Touchez le cœur d'une prise. Elle devient aussi favorite dans Photos."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toque no coração de um take. Ele também fica como favorito no Fotos."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Коснитесь сердечка у дубля. В «Фото» он тоже попадёт в избранное."
-          }
-        }
-      }
-    },
-    "Tap the timer next to Play to set how long you have, when it warns you, and the colors it turns." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toca el temporizador junto a Reproducir para indicar cuánto tiempo tienes, cuándo avisarte y de qué colores se pone."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Touchez le minuteur à côté de Lire pour définir votre durée, le moment de l'alerte et les couleurs qu'il prend."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toque no timer ao lado de Reproduzir para definir quanto tempo você tem, quando ele avisa e as cores que ele assume."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Коснитесь таймера рядом с кнопкой «Пуск», чтобы задать длительность, время предупреждения и цвета таймера."
-          }
-        }
-      }
-    },
-    "The videos you record with a script" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Los vídeos que grabas con un guion"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Les vidéos filmées avec un texte"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Os vídeos que você grava com um roteiro"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Видео, записанные с текстом"
-          }
-        }
-      }
-    },
-    "Title" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Título"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Titre"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Título"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Название"
-          }
-        }
-      }
-    },
-    "Touch and hold a take, or play it, and tap Add to Album to put it in a Photos album." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mantén pulsada una toma, o reprodúcela, y toca Añadir a un álbum para ponerla en un álbum de Fotos."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Touchez longuement une prise, ou lisez-la, puis touchez Ajouter à un album pour la placer dans un album Photos."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toque e segure um take, ou reproduza-o, e toque em Adicionar ao Álbum para colocá-lo em um álbum do Fotos."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Нажмите и удерживайте дубль или воспроизведите его и коснитесь «Добавить в альбом», чтобы поместить его в альбом «Фото»."
-          }
-        }
-      }
-    },
-    "Turning cards and the Lock Screen" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pasar tarjetas y la pantalla bloqueada"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tourner les fiches et l'écran verrouillé"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Passar cartões e a Tela Bloqueada"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Листание карточек и экран блокировки"
-          }
-        }
-      }
-    },
-    "Unfavorite" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Quitar de favoritos"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retirer des favoris"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Desfavoritar"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Убрать из избранного"
-          }
-        }
-      }
-    },
-    "Videos you record while the teleprompter is open, even floating over the camera, are kept as takes of the script. Tap the film button next to Play to see them." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Los vídeos que grabas con el teleprompter abierto, aunque esté flotando sobre la cámara, se guardan como tomas del guion. Toca el botón de película junto a Reproducir para verlas."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Les vidéos filmées pendant que le prompteur est ouvert, même s'il flotte au-dessus de l'appareil photo, sont gardées comme prises du texte. Touchez le bouton pellicule à côté de Lire pour les voir."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Os vídeos que você grava com o teleprompter aberto, mesmo flutuando sobre a câmera, ficam como takes do roteiro. Toque no botão de filme ao lado de Reproduzir para vê-los."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Видео, записанные при открытом телесуфлёре, даже если он плавает поверх камеры, сохраняются как дубли этого текста. Коснитесь кнопки с плёнкой рядом с «Пуск», чтобы их увидеть."
-          }
-        }
-      }
-    },
-    "What happened:\n\nWhat you expected:\n\nSteps to reproduce:\n" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Qué pasó:\n\nQué esperabas:\n\nPasos para reproducirlo:\n"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ce qui s'est passé :\n\nCe que vous attendiez :\n\nÉtapes pour reproduire :\n"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "O que aconteceu:\n\nO que você esperava:\n\nPassos para reproduzir:\n"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Что произошло:\n\nЧего вы ожидали:\n\nКак воспроизвести:\n"
-          }
-        }
-      }
-    },
-    "What would you like CueCard to do?\n" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "¿Qué te gustaría que hiciera CueCard?\n"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Qu'aimeriez-vous que CueCard fasse ?\n"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "O que você gostaria que o CueCard fizesse?\n"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Что бы вы хотели, чтобы делал CueCard?\n"
-          }
-        }
-      }
-    },
-    "Where Takes Are Kept" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dónde se guardan las tomas"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Où sont gardées les prises"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Onde os takes ficam"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Где хранятся дубли"
-          }
-        }
-      }
-    },
-    "Writing" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Escritura"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Écriture"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Escrita"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Текст"
-          }
-        }
-      }
-    },
-    "Your videos stay in Photos, and nothing leaves this device." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tus vídeos se quedan en Fotos y nada sale de este dispositivo."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vos vidéos restent dans Photos, et rien ne quitte cet appareil."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Seus vídeos ficam no Fotos, e nada sai deste dispositivo."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Видео остаются в «Фото», и ничто не покидает это устройство."
-          }
-        }
-      }
-    },
     "“%@” couldn't be deleted from the notes folder. Its note stays deleted." : {
       "localizations" : {
         "es" : {
@@ -1713,456 +564,6 @@
     "+%lld" : {
       "shouldTranslate" : false
     },
-    "Add %@" : {
-      "comment" : "Puts a tag on a take",
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Añadir %@"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ajouter %@"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Adicionar %@"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Добавить «%@»"
-          }
-        }
-      }
-    },
-    "Add a Tag" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Añadir etiqueta"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ajouter un tag"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Adicionar tag"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Добавить тег"
-          }
-        }
-      }
-    },
-    "Allow Access to Photos" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Permitir acceso a Fotos"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Autoriser l'accès à Photos"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Permitir acesso ao Fotos"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Разрешить доступ к «Фото»"
-          }
-        }
-      }
-    },
-    "Change in Settings" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cambiar en Ajustes"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Modifier dans Réglages"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Alterar em Ajustes"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Изменить в Настройках"
-          }
-        }
-      }
-    },
-    "CueCard can't see your photos, so it can't find the videos you recorded with this script. Allow access in Settings." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "CueCard no puede ver tus fotos, así que no puede encontrar los vídeos que grabaste con este guion. Permite el acceso en Ajustes."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "CueCard ne peut pas voir vos photos, il ne peut donc pas retrouver les vidéos filmées avec ce script. Autorisez l'accès dans Réglages."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "O CueCard não consegue ver suas fotos, então não pode encontrar os vídeos gravados com este roteiro. Permita o acesso em Ajustes."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "CueCard не видит ваши фото, поэтому не может найти видео, записанные с этим сценарием. Разрешите доступ в Настройках."
-          }
-        }
-      }
-    },
-    "CueCard can find the videos you record while the teleprompter is open, and keep each one with its script. They stay in Photos." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "CueCard puede encontrar los vídeos que grabas con el teleprompter abierto y guardar cada uno con su guion. Se quedan en Fotos."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "CueCard peut retrouver les vidéos que vous filmez pendant que le prompteur est ouvert, et associer chacune à son script. Elles restent dans Photos."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "O CueCard pode encontrar os vídeos que você grava com o teleprompter aberto e manter cada um com o seu roteiro. Eles continuam no Fotos."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "CueCard может находить видео, которые вы записываете при открытом телесуфлёре, и хранить каждое вместе с его сценарием. Сами видео остаются в «Фото»."
-          }
-        }
-      }
-    },
-    "CueCard can only see the videos you've chosen, so some takes may be missing." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "CueCard solo puede ver los vídeos que has elegido, así que puede que falten algunas tomas."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "CueCard ne voit que les vidéos que vous avez choisies, certaines prises peuvent donc manquer."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "O CueCard só vê os vídeos que você escolheu, então alguns takes podem estar faltando."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "CueCard видит только выбранные вами видео, поэтому некоторых дублей может не быть."
-          }
-        }
-      }
-    },
-    "Find Your Takes" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Encuentra tus tomas"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retrouvez vos prises"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Encontre seus takes"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Найдите свои дубли"
-          }
-        }
-      }
-    },
-    "No Takes Yet" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aún no hay tomas"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aucune prise pour l'instant"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nenhum take ainda"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Дублей пока нет"
-          }
-        }
-      }
-    },
-    "Notes" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Notas"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Notes"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Notas"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Заметки"
-          }
-        }
-      }
-    },
-    "Record a video while the teleprompter is open, even with it floating over the camera, and it shows up here." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Graba un vídeo con el teleprompter abierto, aunque esté flotando sobre la cámara, y aparecerá aquí."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Filmez une vidéo pendant que le prompteur est ouvert, même s'il flotte au-dessus de l'appareil photo, et elle apparaîtra ici."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Grave um vídeo com o teleprompter aberto, mesmo flutuando sobre a câmera, e ele aparece aqui."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Запишите видео при открытом телесуфлёре, даже если он плавает поверх камеры, и оно появится здесь."
-          }
-        }
-      }
-    },
-    "Remove %@" : {
-      "comment" : "Takes a tag off a take",
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Quitar %@"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retirer %@"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Remover %@"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Убрать «%@»"
-          }
-        }
-      }
-    },
-    "Tags" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Etiquetas"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tags"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tags"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Теги"
-          }
-        }
-      }
-    },
-    "Take %lld" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toma %lld"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Prise %lld"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Take %lld"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Дубль %lld"
-          }
-        }
-      }
-    },
-    "Takes" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tomas"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Prises"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Takes"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Дубли"
-          }
-        }
-      }
-    },
-    "What worked, and what to change next time" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Qué funcionó y qué cambiar la próxima vez"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ce qui a marché, et ce qu'il faut changer la prochaine fois"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "O que funcionou e o que mudar da próxima vez"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Что получилось и что изменить в следующий раз"
-          }
-        }
-      }
-    },
     "−%lld" : {
       "shouldTranslate" : false
     },
@@ -2328,6 +729,63 @@
         }
       }
     },
+    "Add %@" : {
+      "comment" : "Puts a tag on a take",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter %@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adicionar %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавить «%@»"
+          }
+        }
+      }
+    },
+    "Add a Tag" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir etiqueta"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter un tag"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adicionar tag"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавить тег"
+          }
+        }
+      }
+    },
     "Add Cards" : {
       "localizations" : {
         "es" : {
@@ -2468,6 +926,62 @@
         }
       }
     },
+    "Add to Album" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir a un álbum"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter à un album"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adicionar ao Álbum"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавить в альбом"
+          }
+        }
+      }
+    },
+    "Add to an Album" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añade a un álbum"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter à un album"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adicione a um álbum"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавление в альбом"
+          }
+        }
+      }
+    },
     "Add your script here...\n\nTap Add Cue to drop in a delivery reminder, or type [ to write one yourself.\n\nFor example: Welcome everyone [cue smile and pause]" : {
       "localizations" : {
         "es" : {
@@ -2492,6 +1006,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Добавьте сюда свой сценарий...\n\nКоснитесь «Добавить подсказку», чтобы вставить напоминание, или введите [, чтобы написать его самостоятельно.\n\nНапример: Добро пожаловать [cue улыбка и пауза]"
+          }
+        }
+      }
+    },
+    "Albums" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Álbumes"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Albums"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Álbuns"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Альбомы"
           }
         }
       }
@@ -2548,6 +1090,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Все карточки пройдены"
+          }
+        }
+      }
+    },
+    "Allow Access to Photos" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permitir acceso a Fotos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Autoriser l'accès à Photos"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permitir acesso ao Fotos"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Разрешить доступ к «Фото»"
           }
         }
       }
@@ -3000,6 +1570,34 @@
         }
       }
     },
+    "Change in Settings" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambiar en Ajustes"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modifier dans Réglages"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alterar em Ajustes"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Изменить в Настройках"
+          }
+        }
+      }
+    },
     "Change Notes Folder" : {
       "localizations" : {
         "es" : {
@@ -3337,6 +1935,34 @@
         }
       }
     },
+    "Control the teleprompter and read cards" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controla el teleprompter y lee tarjetas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contrôler le prompteur et lire les fiches"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controle o teleprompter e leia cartões"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Управление телесуфлёром и чтение карточек"
+          }
+        }
+      }
+    },
     "Couldn't Delete Note Files" : {
       "localizations" : {
         "es" : {
@@ -3361,6 +1987,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Не удалось удалить файлы заметок"
+          }
+        }
+      }
+    },
+    "Count Down Before Scrolling" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuenta atrás antes de desplazar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compte à rebours avant le défilement"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contagem regressiva antes de rolar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отсчёт перед прокруткой"
+          }
+        }
+      }
+    },
+    "Count Up Without a Timer" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuenta hacia arriba sin temporizador"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compter sans minuteur"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conte o tempo sem timer"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прямой отсчёт без таймера"
           }
         }
       }
@@ -3563,6 +2245,90 @@
     },
     "CueCard" : {
       "shouldTranslate" : false
+    },
+    "CueCard can find the videos you record while the teleprompter is open, and keep each one with its script. They stay in Photos." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CueCard puede encontrar los vídeos que grabas con el teleprompter abierto y guardar cada uno con su guion. Se quedan en Fotos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CueCard peut retrouver les vidéos que vous filmez pendant que le prompteur est ouvert, et associer chacune à son script. Elles restent dans Photos."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O CueCard pode encontrar os vídeos que você grava com o teleprompter aberto e manter cada um com o seu roteiro. Eles continuam no Fotos."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CueCard может находить видео, которые вы записываете при открытом телесуфлёре, и хранить каждое вместе с его сценарием. Сами видео остаются в «Фото»."
+          }
+        }
+      }
+    },
+    "CueCard can only see the videos you've chosen, so some takes may be missing." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CueCard solo puede ver los vídeos que has elegido, así que puede que falten algunas tomas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CueCard ne voit que les vidéos que vous avez choisies, certaines prises peuvent donc manquer."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O CueCard só vê os vídeos que você escolheu, então alguns takes podem estar faltando."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CueCard видит только выбранные вами видео, поэтому некоторых дублей может не быть."
+          }
+        }
+      }
+    },
+    "CueCard can't see your photos, so it can't find the videos you recorded with this script. Allow access in Settings." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CueCard no puede ver tus fotos, así que no puede encontrar los vídeos que grabaste con este guion. Permite el acceso en Ajustes."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CueCard ne peut pas voir vos photos, il ne peut donc pas retrouver les vidéos filmées avec ce script. Autorisez l'accès dans Réglages."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O CueCard não consegue ver suas fotos, então não pode encontrar os vídeos gravados com este roteiro. Permita o acesso em Ajustes."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CueCard не видит ваши фото, поэтому не может найти видео, записанные с этим сценарием. Разрешите доступ в Настройках."
+          }
+        }
+      }
     },
     "CueCard's page in the Settings app only shows Language once you've added a second language under General › Language & Region." : {
       "localizations" : {
@@ -3784,6 +2550,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Удалить"
+          }
+        }
+      }
+    },
+    "Delete a Take" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elimina una toma"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer une prise"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apague um take"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Удаление дубля"
           }
         }
       }
@@ -4292,6 +3086,90 @@
         }
       }
     },
+    "Favorite" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir a favoritos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter aux favoris"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Favoritar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В избранное"
+          }
+        }
+      }
+    },
+    "Favorite a Take" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marca una toma como favorita"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter une prise aux favoris"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Favorite um take"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавление дубля в избранное"
+          }
+        }
+      }
+    },
+    "Find Your Takes" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encuentra tus tomas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retrouvez vos prises"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encontre seus takes"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Найдите свои дубли"
+          }
+        }
+      }
+    },
     "Finish" : {
       "localizations" : {
         "es" : {
@@ -4714,6 +3592,34 @@
         }
       }
     },
+    "In the teleprompter's timer, set a Countdown to get a few seconds before the script starts scrolling." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En el temporizador del teleprompter, pon una cuenta atrás para tener unos segundos antes de que el guion empiece a desplazarse."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dans le minuteur du prompteur, réglez un compte à rebours pour avoir quelques secondes avant que le texte commence à défiler."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No timer do teleprompter, defina uma contagem regressiva para ter alguns segundos antes de o roteiro começar a rolar."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В таймере телесуфлёра задайте обратный отсчёт, чтобы получить несколько секунд до начала прокрутки текста."
+          }
+        }
+      }
+    },
     "Install on Apple Watch" : {
       "localizations" : {
         "es" : {
@@ -4934,6 +3840,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Продолжить использовать папку"
+          }
+        }
+      }
+    },
+    "Know When Time Is Running Out" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entérate de cuándo se acaba el tiempo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Savoir quand le temps presse"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saiba quando o tempo está acabando"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Когда время на исходе"
           }
         }
       }
@@ -5190,6 +4124,9 @@
         }
       }
     },
+    "Mirror Text" : {
+
+    },
     "Mode: %@" : {
       "localizations" : {
         "es" : {
@@ -5214,6 +4151,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Режим: %@"
+          }
+        }
+      }
+    },
+    "Modes, cues, formatting and cards" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modos, indicaciones, formato y tarjetas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modes, repères, mise en forme et fiches"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modos, deixas, formatação e cartões"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Режимы, подсказки, оформление и карточки"
           }
         }
       }
@@ -5331,6 +4296,34 @@
         }
       }
     },
+    "New Album" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nuevo álbum"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nouvel album"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Novo Álbum"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Новый альбом"
+          }
+        }
+      }
+    },
     "Next Card" : {
       "localizations" : {
         "es" : {
@@ -5415,6 +4408,34 @@
         }
       }
     },
+    "No Takes Yet" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aún no hay tomas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aucune prise pour l'instant"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nenhum take ainda"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дублей пока нет"
+          }
+        }
+      }
+    },
     "Normal" : {
       "localizations" : {
         "es" : {
@@ -5467,6 +4488,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Название заметки"
+          }
+        }
+      }
+    },
+    "Notes" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notes"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notas"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заметки"
+          }
+        }
+      }
+    },
+    "Notes & Saving" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notas y guardado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notes et enregistrement"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notas e salvamento"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заметки и сохранение"
           }
         }
       }
@@ -5639,6 +4716,9 @@
         }
       }
     },
+    "Off" : {
+
+    },
     "OK" : {
       "localizations" : {
         "es" : {
@@ -5666,6 +4746,9 @@
           }
         }
       }
+    },
+    "On" : {
+
     },
     "One thought per card.\n\nType [ or tap Add Cue for reminders like [cue pause]." : {
       "comment" : "Keep [cue …] as written; translate the word after cue.",
@@ -5948,6 +5031,35 @@
         }
       }
     },
+    "Organize Takes: Keep all your takes in order with tags, notes, favorites and albums." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organiza tus tomas: mantenlas todas en orden con etiquetas, notas, favoritos y álbumes."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organisez vos prises : gardez-les toutes en ordre avec des tags, des notes, des favoris et des albums."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Organize seus takes: mantenha todos em ordem com tags, notas, favoritos e álbuns."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Упорядочивайте дубли: держите их в порядке с помощью тегов, заметок, избранного и альбомов."
+          }
+        }
+      }
+    },
     "Overtime" : {
       "localizations" : {
         "es" : {
@@ -6116,6 +5228,34 @@
         }
       }
     },
+    "Play a Take" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reproduce una toma"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lire une prise"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reproduza um take"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Воспроизведение дубля"
+          }
+        }
+      }
+    },
     "Play and Pause" : {
       "localizations" : {
         "es" : {
@@ -6196,6 +5336,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Запускайте и ставьте телесуфлёр на паузу"
+          }
+        }
+      }
+    },
+    "Play or pause without touching the screen" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reproduce o pausa sin tocar la pantalla"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lire ou mettre en pause sans toucher l'écran"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reproduza ou pause sem tocar na tela"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пуск или пауза без касания экрана"
           }
         }
       }
@@ -6424,6 +5592,34 @@
         }
       }
     },
+    "Record a video while the teleprompter is open, even with it floating over the camera, and it shows up here." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Graba un vídeo con el teleprompter abierto, aunque esté flotando sobre la cámara, y aparecerá aquí."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filmez une vidéo pendant que le prompteur est ouvert, même s'il flotte au-dessus de l'appareil photo, et elle apparaîtra ici."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grave um vídeo com o teleprompter aberto, mesmo flutuando sobre a câmera, e ele aparece aqui."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запишите видео при открытом телесуфлёре, даже если он плавает поверх камеры, и оно появится здесь."
+          }
+        }
+      }
+    },
     "Rectangle 4:3" : {
       "localizations" : {
         "es" : {
@@ -6536,6 +5732,35 @@
         }
       }
     },
+    "Remove %@" : {
+      "comment" : "Takes a tag off a take",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quitar %@"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retirer %@"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remover %@"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Убрать «%@»"
+          }
+        }
+      }
+    },
     "Remove from Apple Watch" : {
       "localizations" : {
         "es" : {
@@ -6620,6 +5845,34 @@
         }
       }
     },
+    "Report a Bug" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Informar de un error"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Signaler un bug"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relatar um bug"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сообщить об ошибке"
+          }
+        }
+      }
+    },
     "Report a Translation Mistake" : {
       "localizations" : {
         "es" : {
@@ -6644,6 +5897,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Сообщить об ошибке перевода"
+          }
+        }
+      }
+    },
+    "Request a Feature" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sugerir una función"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suggérer une fonctionnalité"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sugerir um recurso"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Предложить функцию"
           }
         }
       }
@@ -6874,35 +6155,6 @@
         }
       }
     },
-    "Organize Takes: Keep all your takes in order with tags, notes, favorites and albums." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Organiza tus tomas: mantenlas todas en orden con etiquetas, notas, favoritos y álbumes."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Organisez vos prises : gardez-les toutes en ordre avec des tags, des notes, des favoris et des albums."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Organize seus takes: mantenha todos em ordem com tags, notas, favoritos e álbuns."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Упорядочивайте дубли: держите их в порядке с помощью тегов, заметок, избранного и альбомов."
-          }
-        }
-      }
-    },
     "Save" : {
       "localizations" : {
         "es" : {
@@ -7011,6 +6263,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Сохраняйте работу"
+          }
+        }
+      }
+    },
+    "Save, open, import, versions and sharing" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardar, abrir, importar, versiones y compartir"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistrer, ouvrir, importer, versions et partage"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salvar, abrir, importar, versões e compartilhar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сохранение, открытие, импорт, версии и отправка"
           }
         }
       }
@@ -7151,6 +6431,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Скорость прокрутки"
+          }
+        }
+      }
+    },
+    "Scroll Speed in Settings sets how many lines pass each minute." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Velocidad de desplazamiento, en Ajustes, indica cuántas líneas pasan por minuto."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vitesse de défilement, dans Réglages, définit le nombre de lignes par minute."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Velocidade de rolagem, nos Ajustes, define quantas linhas passam por minuto."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Скорость прокрутки» в настройках задаёт, сколько строк проходит за минуту."
+          }
+        }
+      }
+    },
+    "Scrolling, speed and the floating window" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desplazamiento, velocidad y ventana flotante"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Défilement, vitesse et fenêtre flottante"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rolagem, velocidade e janela flutuante"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прокрутка, скорость и плавающее окно"
           }
         }
       }
@@ -7375,6 +6711,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Настройки"
+          }
+        }
+      }
+    },
+    "Settings & Timer" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajustes y temporizador"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réglages et minuteur"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajustes e timer"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Настройки и таймер"
           }
         }
       }
@@ -7967,6 +7331,34 @@
         }
       }
     },
+    "Swipe left on a take, or play it and tap Delete. It's deleted from Photos too." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desliza una toma a la izquierda, o reprodúcela y toca Eliminar. También se elimina de Fotos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Balayez une prise vers la gauche, ou lisez-la et touchez Supprimer. Elle est aussi supprimée de Photos."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deslize um take para a esquerda, ou reproduza-o e toque em Apagar. Ele também é apagado do Fotos."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Смахните дубль влево или воспроизведите его и коснитесь «Удалить». Он удалится и из «Фото»."
+          }
+        }
+      }
+    },
     "Swipe right to bring the last card back, or start over." : {
       "localizations" : {
         "es" : {
@@ -8079,6 +7471,119 @@
         }
       }
     },
+    "Tags" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Etiquetas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tags"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tags"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Теги"
+          }
+        }
+      }
+    },
+    "Take %lld" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toma %lld"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prise %lld"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Take %lld"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дубль %lld"
+          }
+        }
+      }
+    },
+    "Takes" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tomas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prises"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Takes"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дубли"
+          }
+        }
+      }
+    },
+    "Takes: Videos you record with the CueCard teleprompter can now be viewed in the app." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tomas: los vídeos que grabas con el teleprompter de CueCard ahora se pueden ver en la app."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prises : les vidéos filmées avec le prompteur de CueCard sont maintenant visibles dans l'app."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Takes: os vídeos que você grava com o teleprompter do CueCard agora podem ser vistos no app."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дубли: видео, записанные с телесуфлёром CueCard, теперь можно смотреть в приложении."
+          }
+        }
+      }
+    },
     "Tap ••• › Import. The file opens in the editor and is kept as a saved note." : {
       "localizations" : {
         "es" : {
@@ -8163,6 +7668,146 @@
         }
       }
     },
+    "Tap a take to play it and add tags, notes and albums. Your videos stay in Photos, and nothing leaves this device." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toca una toma para reproducirla y añadir etiquetas, notas y álbumes. Tus vídeos se quedan en Fotos y nada sale de este dispositivo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touchez une prise pour la lire et ajouter des tags, des notes et des albums. Vos vidéos restent dans Photos, et rien ne quitte cet appareil."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toque em um take para reproduzi-lo e adicionar tags, notas e álbuns. Seus vídeos ficam no Fotos, e nada sai deste dispositivo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Коснитесь дубля, чтобы воспроизвести его и добавить теги, заметки и альбомы. Видео остаются в «Фото», и ничто не покидает это устройство."
+          }
+        }
+      }
+    },
+    "Tap a take to play it right in CueCard. Below the video, add tags and notes, like what worked and what to change next time." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toca una toma para reproducirla en CueCard. Debajo del vídeo, añade etiquetas y notas, como qué funcionó y qué cambiar la próxima vez."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touchez une prise pour la lire directement dans CueCard. Sous la vidéo, ajoutez des tags et des notes, comme ce qui a marché et ce qu'il faut changer la prochaine fois."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toque em um take para reproduzi-lo no próprio CueCard. Abaixo do vídeo, adicione tags e notas, como o que funcionou e o que mudar da próxima vez."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Коснитесь дубля, чтобы воспроизвести его прямо в CueCard. Под видео добавьте теги и заметки: что получилось и что изменить в следующий раз."
+          }
+        }
+      }
+    },
+    "Tap the gear at the top, then Language. CueCard is in English, French, Portuguese, Russian and Spanish." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toca el engranaje arriba y luego Idioma. CueCard está en inglés, francés, portugués, ruso y español."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touchez l'engrenage en haut, puis Langue. CueCard est disponible en anglais, français, portugais, russe et espagnol."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toque na engrenagem no topo e depois em Idioma. O CueCard está em inglês, francês, português, russo e espanhol."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Коснитесь шестерёнки вверху, затем «Язык». CueCard доступен на английском, французском, португальском, русском и испанском."
+          }
+        }
+      }
+    },
+    "Tap the gear at the top. Each mode keeps its own sizes and cue color." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toca el engranaje arriba. Cada modo tiene sus propios tamaños y color de indicaciones."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touchez l'engrenage en haut. Chaque mode a ses propres tailles et couleur de repère."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toque na engrenagem no topo. Cada modo tem seus próprios tamanhos e cor de deixa."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Коснитесь шестерёнки вверху. У каждого режима свои размеры и цвет подсказок."
+          }
+        }
+      }
+    },
+    "Tap the heart on a take. It's a favorite in Photos too." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toca el corazón de una toma. También será favorita en Fotos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touchez le cœur d'une prise. Elle devient aussi favorite dans Photos."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toque no coração de um take. Ele também fica como favorito no Fotos."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Коснитесь сердечка у дубля. В «Фото» он тоже попадёт в избранное."
+          }
+        }
+      }
+    },
     "Tap the mode name at the top. Teleprompter scrolls your whole script. Cards shows it one card at a time." : {
       "localizations" : {
         "es" : {
@@ -8187,6 +7832,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Коснитесь названия режима вверху. «Телесуфлёр» прокручивает весь сценарий. «Карточки» показывают его по одной карточке."
+          }
+        }
+      }
+    },
+    "Tap the timer next to Play to set how long you have, when it warns you, and the colors it turns." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toca el temporizador junto a Reproducir para indicar cuánto tiempo tienes, cuándo avisarte y de qué colores se pone."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touchez le minuteur à côté de Lire pour définir votre durée, le moment de l'alerte et les couleurs qu'il prend."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toque no timer ao lado de Reproduzir para definir quanto tempo você tem, quando ele avisa e as cores que ele assume."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Коснитесь таймера рядом с кнопкой «Пуск», чтобы задать длительность, время предупреждения и цвета таймера."
           }
         }
       }
@@ -8753,6 +8426,34 @@
         }
       }
     },
+    "The videos you record with a script" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los vídeos que grabas con un guion"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les vidéos filmées avec un texte"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Os vídeos que você grava com um roteiro"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видео, записанные с текстом"
+          }
+        }
+      }
+    },
     "The watch goes back to the clock after a while. In the Watch app, go to General › Return to Clock › CueCard and set it to 1 hour." : {
       "localizations" : {
         "es" : {
@@ -9063,6 +8764,34 @@
         }
       }
     },
+    "Title" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Título"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Titre"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Título"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Название"
+          }
+        }
+      }
+    },
     "To keep CueCard on screen through a talk, open the Watch app on your iPhone, go to General › Return to Clock, choose CueCard, and set it to return after 1 hour." : {
       "localizations" : {
         "es" : {
@@ -9087,6 +8816,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Чтобы CueCard оставался на экране всё выступление, откройте приложение Watch на iPhone, перейдите в «Основные» › «Возврат к циферблату», выберите CueCard и задайте возврат через 1 час."
+          }
+        }
+      }
+    },
+    "Touch and hold a take, or play it, and tap Add to Album to put it in a Photos album." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantén pulsada una toma, o reprodúcela, y toca Añadir a un álbum para ponerla en un álbum de Fotos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touchez longuement une prise, ou lisez-la, puis touchez Ajouter à un album pour la placer dans un album Photos."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toque e segure um take, ou reproduza-o, e toque em Adicionar ao Álbum para colocá-lo em um álbum do Fotos."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нажмите и удерживайте дубль или воспроизведите его и коснитесь «Добавить в альбом», чтобы поместить его в альбом «Фото»."
           }
         }
       }
@@ -9227,6 +8984,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Включите «Показывать на экране блокировки» в настройках. Затем заблокируйте iPhone и листайте карточки прямо на экране блокировки."
+          }
+        }
+      }
+    },
+    "Turning cards and the Lock Screen" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pasar tarjetas y la pantalla bloqueada"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tourner les fiches et l'écran verrouillé"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passar cartões e a Tela Bloqueada"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Листание карточек и экран блокировки"
+          }
+        }
+      }
+    },
+    "Unfavorite" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quitar de favoritos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retirer des favoris"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desfavoritar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Убрать из избранного"
           }
         }
       }
@@ -9427,6 +9240,34 @@
         }
       }
     },
+    "Videos you record while the teleprompter is open, even floating over the camera, are kept as takes of the script. Tap the film button next to Play to see them." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los vídeos que grabas con el teleprompter abierto, aunque esté flotando sobre la cámara, se guardan como tomas del guion. Toca el botón de película junto a Reproducir para verlas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les vidéos filmées pendant que le prompteur est ouvert, même s'il flotte au-dessus de l'appareil photo, sont gardées comme prises du texte. Touchez le bouton pellicule à côté de Lire pour les voir."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Os vídeos que você grava com o teleprompter aberto, mesmo flutuando sobre a câmera, ficam como takes do roteiro. Toque no botão de filme ao lado de Reproduzir para vê-los."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видео, записанные при открытом телесуфлёре, даже если он плавает поверх камеры, сохраняются как дубли этого текста. Коснитесь кнопки с плёнкой рядом с «Пуск», чтобы их увидеть."
+          }
+        }
+      }
+    },
     "Warn in Last" : {
       "localizations" : {
         "es" : {
@@ -9479,6 +9320,90 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Предупреждение"
+          }
+        }
+      }
+    },
+    "What happened:\n\nWhat you expected:\n\nSteps to reproduce:\n" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Qué pasó:\n\nQué esperabas:\n\nPasos para reproducirlo:\n"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce qui s'est passé :\n\nCe que vous attendiez :\n\nÉtapes pour reproduire :\n"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O que aconteceu:\n\nO que você esperava:\n\nPassos para reproduzir:\n"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Что произошло:\n\nЧего вы ожидали:\n\nКак воспроизвести:\n"
+          }
+        }
+      }
+    },
+    "What worked, and what to change next time" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Qué funcionó y qué cambiar la próxima vez"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce qui a marché, et ce qu'il faut changer la prochaine fois"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O que funcionou e o que mudar da próxima vez"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Что получилось и что изменить в следующий раз"
+          }
+        }
+      }
+    },
+    "What would you like CueCard to do?\n" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Qué te gustaría que hiciera CueCard?\n"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Qu'aimeriez-vous que CueCard fasse ?\n"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O que você gostaria que o CueCard fizesse?\n"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Что бы вы хотели, чтобы делал CueCard?\n"
           }
         }
       }
@@ -9567,6 +9492,34 @@
         }
       }
     },
+    "Where Takes Are Kept" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dónde se guardan las tomas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Où sont gardées les prises"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Onde os takes ficam"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Где хранятся дубли"
+          }
+        }
+      }
+    },
     "While you read a deck, its title and the current card are shown on the Lock Screen, where anyone who can see your iPhone can read them, even while it's locked." : {
       "localizations" : {
         "es" : {
@@ -9591,6 +9544,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Пока вы читаете набор, его название и текущая карточка показываются на экране блокировки, где их может прочитать любой, кто видит ваш iPhone, даже заблокированный."
+          }
+        }
+      }
+    },
+    "Writing" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escritura"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Écriture"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escrita"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Текст"
           }
         }
       }
@@ -9761,6 +9742,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Позиция синхронизируется с приложением и Apple Watch. Если закрыть этот набор, его Эфир активности завершится, а виджеты очистятся."
+          }
+        }
+      }
+    },
+    "Your videos stay in Photos, and nothing leaves this device." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tus vídeos se quedan en Fotos y nada sale de este dispositivo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vos vidéos restent dans Photos, et rien ne quitte cet appareil."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seus vídeos ficam no Fotos, e nada sai deste dispositivo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видео остаются в «Фото», и ничто не покидает это устройство."
           }
         }
       }
