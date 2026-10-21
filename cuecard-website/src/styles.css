@@ -479,13 +479,6 @@ code, .notes-content { font-family: var(--mono); font-size: 0.92em; }
 .hero .body { max-width: 56ch; }
 .hero-404 { min-height: 66svh; display: flex; align-items: center; }
 
-/* /feedback-<id>/: an embedded Google Form, centred. The form carries its own
-   title, so the page adds none. */
-.feedback { padding-top: clamp(16px, 3vh, 32px); text-align: center; }
-.feedback-frame {
-  display: block; width: 100%; max-width: var(--narrow); margin: 0 auto; border: 0;
-}
-
 /* On the pages that carry the live prompter, the hero is two columns: the
    argument on the left, the app doing the thing on the right. */
 .hero-grid {
