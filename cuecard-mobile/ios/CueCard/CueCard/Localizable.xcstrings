@@ -7,6 +7,34 @@
     " %@ " : {
       "shouldTranslate" : false
     },
+    "Tap the mirror button at the top of the teleprompter to flip the text horizontally for a teleprompter mirror. Tap the screen first if the buttons are hidden. The floating window uses the same setting. Tap the mirror button again to turn it off." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toca el botón de reflejo en la parte superior del teleprompter para invertir el texto horizontalmente y leerlo en un espejo de teleprompter. Si los botones están ocultos, toca primero la pantalla. La ventana flotante usa el mismo ajuste. Vuelve a tocar el botón de reflejo para desactivarlo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touchez le bouton miroir en haut du prompteur pour inverser le texte horizontalement et le lire dans un miroir de prompteur. Si les boutons sont masqués, touchez d'abord l'écran. La fenêtre flottante utilise le même réglage. Touchez à nouveau le bouton miroir pour le désactiver."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toque no botão de espelhamento na parte superior do teleprompter para inverter o texto horizontalmente e lê-lo em um espelho de teleprompter. Se os botões estiverem ocultos, toque primeiro na tela. A janela flutuante usa o mesmo ajuste. Toque no botão de espelhamento novamente para desativá-lo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Коснитесь кнопки зеркального отражения вверху телесуфлёра, чтобы отразить текст по горизонтали для чтения через зеркало телесуфлёра. Если кнопки скрыты, сначала коснитесь экрана. Эта настройка действует и в плавающем окне. Коснитесь кнопки ещё раз, чтобы выключить зеркальное отражение."
+          }
+        }
+      }
+    },
     "“%@” couldn't be deleted from the notes folder. Its note stays deleted." : {
       "localizations" : {
         "es" : {
@@ -4125,7 +4153,32 @@
       }
     },
     "Mirror Text" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reflejar texto"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texte en miroir"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Espelhar texto"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отразить текст"
+          }
+        }
+      }
     },
     "Mode: %@" : {
       "localizations" : {
@@ -4717,7 +4770,32 @@
       }
     },
     "Off" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desactivado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Désactivé"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desativado"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выкл."
+          }
+        }
+      }
     },
     "OK" : {
       "localizations" : {
@@ -4748,7 +4826,32 @@
       }
     },
     "On" : {
-
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activé"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ativado"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Вкл."
+          }
+        }
+      }
     },
     "One thought per card.\n\nType [ or tap Add Cue for reminders like [cue pause]." : {
       "comment" : "Keep [cue …] as written; translate the word after cue.",
@@ -6463,30 +6566,30 @@
         }
       }
     },
-    "Scrolling, speed and the floating window" : {
+    "Scrolling, speed, mirroring and the floating window" : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Desplazamiento, velocidad y ventana flotante"
+            "value" : "Desplazamiento, velocidad, reflejo y ventana flotante"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Défilement, vitesse et fenêtre flottante"
+            "value" : "Défilement, vitesse, miroir et fenêtre flottante"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Rolagem, velocidade e janela flutuante"
+            "value" : "Rolagem, velocidade, espelhamento e janela flutuante"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Прокрутка, скорость и плавающее окно"
+            "value" : "Прокрутка, скорость, зеркальное отражение и плавающее окно"
           }
         }
       }

@@ -107,7 +107,7 @@ private enum AllHelp {
     ])
 
     static let teleprompter = HelpSection("teleprompter", title: "Teleprompter",
-                                    summary: "Scrolling, speed and the floating window",
+                                    summary: "Scrolling, speed, mirroring and the floating window",
                                     systemImage: "text.alignleft", topics: [
         HelpTopic("Play and Pause",
                   detail: "The buttons fade while the script scrolls so they stay out of the way. Tap the screen to show them again."),
@@ -115,6 +115,8 @@ private enum AllHelp {
                   detail: "Drag the script to go back or skip ahead. It keeps scrolling from where you leave it."),
         HelpTopic("Change Speed",
                   detail: "Scroll Speed in Settings sets how many lines pass each minute."),
+        HelpTopic("Mirror Text",
+                  detail: "Tap the mirror button at the top of the teleprompter to flip the text horizontally for a teleprompter mirror. Tap the screen first if the buttons are hidden. The floating window uses the same setting. Tap the mirror button again to turn it off."),
         HelpTopic("Use Over Other Apps",
                   detail: "Leave CueCard while the teleprompter is open and your script keeps going in a floating window, handy on video calls."),
         HelpTopic("Know When Time Is Running Out",
