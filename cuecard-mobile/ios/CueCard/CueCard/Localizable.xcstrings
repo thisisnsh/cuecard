@@ -623,6 +623,35 @@
         }
       }
     },
+    "Takes: Videos you record with the teleprompter are kept with their script. Play them in CueCard, tag them, add notes, favorite them and add them to albums." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tomas: los vídeos que grabas con el teleprompter se guardan con su guion. Reprodúcelos en CueCard, etiquétalos, añade notas, márcalos como favoritos y añádelos a álbumes."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prises : les vidéos filmées avec le prompteur sont gardées avec leur texte. Lisez-les dans CueCard, ajoutez des tags et des notes, mettez-les en favoris et rangez-les dans des albums."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Takes: os vídeos que você grava com o teleprompter ficam com o roteiro. Reproduza no CueCard, adicione tags e notas, marque como favoritos e coloque em álbuns."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дубли: видео, записанные с телесуфлёром, сохраняются вместе с текстом. Смотрите их в CueCard, добавляйте теги и заметки, отмечайте избранное и добавляйте в альбомы."
+          }
+        }
+      }
+    },
     "Tap a take to play it and add tags, notes and albums. Your videos stay in Photos, and nothing leaves this device." : {
       "localizations" : {
         "es" : {
@@ -6813,6 +6842,35 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Форматирование текста: выделяйте слова в сценарии жирным или курсивом."
+          }
+        }
+      }
+    },
+    "Russian: Use CueCard in Russian." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ruso: usa CueCard en ruso."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Russe : utilisez CueCard en russe."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Russo: use o CueCard em russo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Русский язык: пользуйтесь CueCard на русском."
           }
         }
       }
