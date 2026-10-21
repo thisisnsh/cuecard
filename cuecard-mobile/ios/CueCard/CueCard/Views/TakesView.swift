@@ -334,8 +334,8 @@ private struct TakePlayerView: View {
     @FocusState private var isAddingTag: Bool
 
     private static let longestTag = 30
-    /// How much of the screen the card takes, the video below it the rest.
-    private static let cardShare: CGFloat = 0.45
+    /// How much of the screen the video takes, the cards below it scrolling up after.
+    private static let videoShare: CGFloat = 0.6
 
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -362,11 +362,7 @@ private struct TakePlayerView: View {
         GeometryReader { proxy in
             VStack(spacing: 0) {
                 header
-                card
-                    .frame(height: proxy.size.height * Self.cardShare)
-                VideoPlayer(player: player)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .padding(.top, 8)
+                cards(videoHeight: proxy.size.height * Self.videoShare)
             }
         }
         .background(Color.black.ignoresSafeArea())
@@ -420,8 +416,16 @@ private struct TakePlayerView: View {
         .padding(.bottom, 8)
     }
 
-    private var card: some View {
+    /// The video and then the take's tags, notes and albums, all in one scroll.
+    private func cards(videoHeight: CGFloat) -> some View {
         Form {
+            Section {
+                VideoPlayer(player: player)
+                    .frame(height: videoHeight)
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.black)
+            }
+
             Section {
                 if !details.tags.isEmpty {
                     FlowLayout(spacing: 8) {
