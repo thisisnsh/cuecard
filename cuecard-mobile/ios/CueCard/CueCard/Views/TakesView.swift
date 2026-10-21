@@ -52,7 +52,7 @@ struct TakesIcon: View {
 }
 
 /// Every take of the script, newest first. A take plays right here, with its
-/// tags, notes and albums on a card below it.
+/// tags, notes and albums on a card above it.
 struct TakesView: View {
     @ObservedObject var library: TakesLibrary
     /// The saved note's title, while the script is one.
@@ -319,7 +319,7 @@ struct TakesView: View {
     }
 }
 
-/// A take playing, with a card below it of its tags, notes and the albums
+/// A take playing, with a card above it of its tags, notes and the albums
 /// it's in, kept as they're changed, and a way to delete it.
 private struct TakePlayerView: View {
     let take: Take
@@ -335,7 +335,7 @@ private struct TakePlayerView: View {
     @FocusState private var isAddingTag: Bool
 
     private static let longestTag = 30
-    /// How much of the screen the card takes, the video the rest.
+    /// How much of the screen the card takes, the video below it the rest.
     private static let cardShare: CGFloat = 0.45
 
     private let dateFormatter: DateFormatter = {
@@ -363,10 +363,11 @@ private struct TakePlayerView: View {
         GeometryReader { proxy in
             VStack(spacing: 0) {
                 header
-                VideoPlayer(player: player)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 card
                     .frame(height: proxy.size.height * Self.cardShare)
+                VideoPlayer(player: player)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .padding(.top, 8)
             }
         }
         .background(Color.black.ignoresSafeArea())
@@ -490,8 +491,7 @@ private struct TakePlayerView: View {
         }
         .scrollContentBackground(.hidden)
         .background(Color(.systemGroupedBackground))
-        .clipShape(UnevenRoundedRectangle(topLeadingRadius: 20, topTrailingRadius: 20, style: .continuous))
-        .ignoresSafeArea(.container, edges: .bottom)
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 
     /// Play from the start once the video is on hand, heard even with the
