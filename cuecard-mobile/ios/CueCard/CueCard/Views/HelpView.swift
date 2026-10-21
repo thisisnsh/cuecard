@@ -44,15 +44,18 @@ private struct HelpSection: Identifiable {
 // MARK: - Topics
 
 private enum AllHelp {
-    static let general = HelpSection(title: String(localized: "General"), topics: [
+    static let writing = HelpSection(title: String(localized: "Writing"), topics: [
         HelpTopic("Pick a Mode",
                   detail: "Tap the mode name at the top. Teleprompter scrolls your whole script. Cards shows it one card at a time."),
         HelpTopic("Add Cues",
                   detail: "Cues are reminders like [cue pause], shown in color and not read out. Type [ or tap Add Cue above the keyboard."),
         HelpTopic("Bold and Italic",
                   detail: "Select words and tap B or I above the keyboard. Or type *bold* or _italic_."),
-        HelpTopic("Set a Timer",
-                  detail: "Tap the timer next to Play to set how long you have and when it warns you."),
+        HelpTopic("Add Cards",
+                  detail: "Each box in the editor is one card. Tap Create New Card to add another.")
+    ])
+
+    static let notes = HelpSection(title: String(localized: "Notes & Saving"), topics: [
         HelpTopic("Save Your Work",
                   detail: "Unsaved above Play means there are changes to save. Tap it to save, or tap ••• › Save."),
         HelpTopic("Open Saved Notes",
@@ -64,9 +67,16 @@ private enum AllHelp {
         HelpTopic("Keep Notes if the App Is Removed",
                   detail: "Notes stay on this device and are deleted with the app. In Saved Notes, choose a notes folder from ••• to keep them as files."),
         HelpTopic("Share a Script",
-                  detail: "Tap ••• › Share to send it as text, cues included."),
+                  detail: "Tap ••• › Share to send it as text, cues included.")
+    ])
+
+    static let settings = HelpSection(title: String(localized: "Settings & Timer"), topics: [
         HelpTopic("Change Text Size and Colors",
-                  detail: "Tap the gear at the top. Each mode keeps its own sizes and cue color. Timer colors are set in the timer.")
+                  detail: "Tap the gear at the top. Each mode keeps its own sizes and cue color."),
+        HelpTopic("Set a Timer",
+                  detail: "Tap the timer next to Play to set how long you have, when it warns you, and the colors it turns."),
+        HelpTopic("Count Down Before Scrolling",
+                  detail: "In the teleprompter's timer, set a Countdown to get a few seconds before the script starts scrolling.")
     ])
 
     static let teleprompter = HelpSection(title: String(localized: "Teleprompter"), topics: [
@@ -75,24 +85,35 @@ private enum AllHelp {
         HelpTopic("Scroll by Hand",
                   detail: "Drag the script to go back or skip ahead. It keeps scrolling from where you leave it."),
         HelpTopic("Change Speed",
-                  detail: "Scroll Speed in Settings sets how many lines pass each minute. Set a Countdown in the timer to get a few seconds before it starts."),
+                  detail: "Scroll Speed in Settings sets how many lines pass each minute."),
         HelpTopic("Use Over Other Apps",
                   detail: "Leave CueCard while the teleprompter is open and your script keeps going in a floating window, handy on video calls."),
-        HelpTopic("Find Your Takes",
-                  detail: "Videos you record while the teleprompter is open show up as a stack next to Play. Tap it to see every take, rate and tag them, and add notes. Tap a take to open Photos."),
-        HelpTopic("Watch the Timer",
+        HelpTopic("Know When Time Is Running Out",
                   detail: "The timer changes color when you're near the end and again once you're over time. Pick the colors in the timer.")
     ])
 
     static let cards = HelpSection(title: String(localized: "Cards"), topics: [
-        HelpTopic("Add Cards",
-                  detail: "Each box in the editor is one card. Tap Create New Card to add another."),
         HelpTopic("Turn Cards",
                   detail: "Swipe, or tap Back and Next. The dots at the top show which card you're on."),
         HelpTopic("Read from the Lock Screen",
                   detail: "Turn on Show on Lock Screen in Settings. Then lock your iPhone and turn cards right from the Lock Screen."),
-        HelpTopic("Watch the Timer",
+        HelpTopic("Count Up Without a Timer",
                   detail: "The time at the top counts down your timer. With no timer set, it counts up from when you started.")
+    ])
+
+    static let takes = HelpSection(title: String(localized: "Takes"), topics: [
+        HelpTopic("Find Your Takes",
+                  detail: "Videos you record while the teleprompter is open, even floating over the camera, are kept as takes of the script. Tap the film button next to Play to see them."),
+        HelpTopic("Play a Take",
+                  detail: "Tap a take to play it right in CueCard. Below the video, add tags and notes, like what worked and what to change next time."),
+        HelpTopic("Favorite a Take",
+                  detail: "Tap the heart on a take. It's a favorite in Photos too."),
+        HelpTopic("Add to an Album",
+                  detail: "Touch and hold a take, or play it, and tap Add to Album to put it in a Photos album."),
+        HelpTopic("Delete a Take",
+                  detail: "Swipe left on a take, or play it and tap Delete. It's deleted from Photos too."),
+        HelpTopic("Where Takes Are Kept",
+                  detail: "Your videos stay in Photos, and nothing leaves this device.")
     ])
 
     static let appleWatch = HelpSection(title: String(localized: "Apple Watch"), topics: [
@@ -118,7 +139,7 @@ private enum AllHelp {
     }
 
     static var sections: [HelpSection] {
-        [general, teleprompter, cards, appleWatch] + (actionButton.map { [$0] } ?? [])
+        [writing, notes, settings, teleprompter, cards, takes, appleWatch] + (actionButton.map { [$0] } ?? [])
     }
 }
 

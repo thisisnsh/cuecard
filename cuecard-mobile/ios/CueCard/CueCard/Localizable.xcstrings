@@ -35,6 +35,118 @@
         }
       }
     },
+    "Add to an Album" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añade a un álbum"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter à un album"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adicione a um álbum"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавление в альбом"
+          }
+        }
+      }
+    },
+    "Count Down Before Scrolling" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuenta atrás antes de desplazar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compte à rebours avant le défilement"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contagem regressiva antes de rolar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отсчёт перед прокруткой"
+          }
+        }
+      }
+    },
+    "Count Up Without a Timer" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuenta hacia arriba sin temporizador"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compter sans minuteur"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Conte o tempo sem timer"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отсчёт без таймера"
+          }
+        }
+      }
+    },
+    "Delete a Take" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elimina una toma"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Supprimer une prise"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Apague um take"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Удаление дубля"
+          }
+        }
+      }
+    },
     "Favorite" : {
       "localizations" : {
         "es" : {
@@ -59,6 +171,90 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "В избранное"
+          }
+        }
+      }
+    },
+    "Favorite a Take" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Marca una toma como favorita"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mettre une prise en favori"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Favorite um take"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Избранные дубли"
+          }
+        }
+      }
+    },
+    "In the teleprompter's timer, set a Countdown to get a few seconds before the script starts scrolling." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En el temporizador del teleprompter, pon una cuenta atrás para tener unos segundos antes de que el guion empiece a desplazarse."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dans le minuteur du prompteur, réglez un compte à rebours pour avoir quelques secondes avant que le texte commence à défiler."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No timer do teleprompter, defina uma contagem regressiva para ter alguns segundos antes de o roteiro começar a rolar."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В таймере телесуфлёра задайте обратный отсчёт, чтобы получить несколько секунд до начала прокрутки текста."
+          }
+        }
+      }
+    },
+    "Know When Time Is Running Out" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sabe cuándo se acaba el tiempo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Savoir quand le temps presse"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saiba quando o tempo está acabando"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Когда время на исходе"
           }
         }
       }
@@ -91,6 +287,146 @@
         }
       }
     },
+    "Notes & Saving" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notas y guardado"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notes et enregistrement"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notas e salvamento"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Заметки и сохранение"
+          }
+        }
+      }
+    },
+    "Play a Take" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reproduce una toma"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lire une prise"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reproduza um take"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Воспроизведение дубля"
+          }
+        }
+      }
+    },
+    "Scroll Speed in Settings sets how many lines pass each minute." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Velocidad de desplazamiento, en Ajustes, indica cuántas líneas pasan por minuto."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vitesse de défilement, dans Réglages, définit le nombre de lignes par minute."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Velocidade de rolagem, nos Ajustes, define quantas linhas passam por minuto."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Скорость прокрутки» в настройках задаёт, сколько строк проходит за минуту."
+          }
+        }
+      }
+    },
+    "Settings & Timer" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajustes y temporizador"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réglages et minuteur"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajustes e timer"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Настройки и таймер"
+          }
+        }
+      }
+    },
+    "Swipe left on a take, or play it and tap Delete. It's deleted from Photos too." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desliza una toma a la izquierda, o reprodúcela y toca Eliminar. También se elimina de Fotos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Balayez une prise vers la gauche, ou lisez-la et touchez Supprimer. Elle est aussi supprimée de Photos."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deslize um take para a esquerda, ou reproduza-o e toque em Apagar. Ele também é apagado do Fotos."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Смахните дубль влево или воспроизведите его и коснитесь «Удалить». Он удалится и из «Фото»."
+          }
+        }
+      }
+    },
     "Tap a take to play it and add tags, notes and albums. Your videos stay in Photos, and nothing leaves this device." : {
       "localizations" : {
         "es" : {
@@ -115,6 +451,118 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Коснитесь дубля, чтобы воспроизвести его и добавить теги, заметки и альбомы. Видео остаются в «Фото», и ничто не покидает это устройство."
+          }
+        }
+      }
+    },
+    "Tap a take to play it right in CueCard. Below the video, add tags and notes, like what worked and what to change next time." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toca una toma para reproducirla en CueCard. Debajo del vídeo, añade etiquetas y notas, como qué funcionó y qué cambiar la próxima vez."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touchez une prise pour la lire directement dans CueCard. Sous la vidéo, ajoutez des tags et des notes, comme ce qui a marché et ce qu'il faut changer la prochaine fois."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toque em um take para reproduzi-lo no próprio CueCard. Abaixo do vídeo, adicione tags e notas, como o que funcionou e o que mudar da próxima vez."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Коснитесь дубля, чтобы воспроизвести его прямо в CueCard. Под видео добавьте теги и заметки: что получилось и что изменить в следующий раз."
+          }
+        }
+      }
+    },
+    "Tap the gear at the top. Each mode keeps its own sizes and cue color." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toca el engranaje arriba. Cada modo tiene sus propios tamaños y color de indicaciones."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touchez l'engrenage en haut. Chaque mode a ses propres tailles et couleur de repère."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toque na engrenagem no topo. Cada modo tem seus próprios tamanhos e cor de deixa."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Коснитесь шестерёнки вверху. У каждого режима свои размеры и цвет подсказок."
+          }
+        }
+      }
+    },
+    "Tap the heart on a take. It's a favorite in Photos too." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toca el corazón de una toma. También será favorita en Fotos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touchez le cœur d'une prise. Elle devient aussi favorite dans Photos."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toque no coração de um take. Ele também fica como favorito no Fotos."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Коснитесь сердечка у дубля. В «Фото» он тоже попадёт в избранное."
+          }
+        }
+      }
+    },
+    "Tap the timer next to Play to set how long you have, when it warns you, and the colors it turns." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toca el temporizador junto a Reproducir para indicar cuánto tiempo tienes, cuándo avisarte y de qué colores se pone."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touchez le minuteur à côté de Lire pour définir votre durée, le moment de l'alerte et les couleurs qu'il prend."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toque no timer ao lado de Reproduzir para definir quanto tempo você tem, quando ele avisa e as cores que ele assume."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Коснитесь таймера рядом с кнопкой «Пуск», чтобы задать, сколько у вас времени, когда предупредить и какими цветами он меняется."
           }
         }
       }
@@ -147,6 +595,34 @@
         }
       }
     },
+    "Touch and hold a take, or play it, and tap Add to Album to put it in a Photos album." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantén pulsada una toma, o reprodúcela, y toca Añadir a un álbum para ponerla en un álbum de Fotos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touchez longuement une prise, ou lisez-la, puis touchez Ajouter à un album pour la placer dans un album Photos."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toque e segure um take, ou reproduza-o, e toque em Adicionar ao Álbum para colocá-lo em um álbum do Fotos."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Нажмите и удерживайте дубль или воспроизведите его и коснитесь «Добавить в альбом», чтобы поместить его в альбом «Фото»."
+          }
+        }
+      }
+    },
     "Unfavorite" : {
       "localizations" : {
         "es" : {
@@ -171,6 +647,118 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Убрать из избранного"
+          }
+        }
+      }
+    },
+    "Videos you record while the teleprompter is open, even floating over the camera, are kept as takes of the script. Tap the film button next to Play to see them." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los vídeos que grabas con el teleprompter abierto, aunque esté flotando sobre la cámara, se guardan como tomas del guion. Toca el botón de película junto a Reproducir para verlas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les vidéos filmées pendant que le prompteur est ouvert, même s'il flotte au-dessus de l'appareil photo, sont gardées comme prises du texte. Touchez le bouton pellicule à côté de Lire pour les voir."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Os vídeos que você grava com o teleprompter aberto, mesmo flutuando sobre a câmera, ficam como takes do roteiro. Toque no botão de filme ao lado de Reproduzir para vê-los."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видео, записанные при открытом телесуфлёре, даже если он плавает поверх камеры, сохраняются как дубли этого текста. Коснитесь кнопки с плёнкой рядом с «Пуск», чтобы их увидеть."
+          }
+        }
+      }
+    },
+    "Where Takes Are Kept" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dónde se guardan las tomas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Où sont gardées les prises"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Onde os takes ficam"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Где хранятся дубли"
+          }
+        }
+      }
+    },
+    "Writing" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escritura"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Écriture"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escrita"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Текст"
+          }
+        }
+      }
+    },
+    "Your videos stay in Photos, and nothing leaves this device." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tus vídeos se quedan en Fotos y nada sale de este dispositivo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vos vidéos restent dans Photos, et rien ne quitte cet appareil."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seus vídeos ficam no Fotos, e nada sai deste dispositivo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видео остаются в «Фото», и ничто не покидает это устройство."
           }
         }
       }
@@ -1150,34 +1738,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Дубли"
-          }
-        }
-      }
-    },
-    "Videos you record while the teleprompter is open show up as a stack next to Play. Tap it to see every take, rate and tag them, and add notes. Tap a take to open Photos." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Los vídeos que grabas con el teleprompter abierto aparecen como una pila junto a Reproducir. Tócala para ver todas las tomas, valorarlas, etiquetarlas y añadir notas. Toca una toma para abrir Fotos."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Les vidéos filmées pendant que le prompteur est ouvert apparaissent en pile à côté de Lire. Touchez-la pour voir toutes les prises, les noter, les taguer et ajouter des notes. Touchez une prise pour ouvrir Photos."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Os vídeos que você grava com o teleprompter aberto aparecem como uma pilha ao lado de Reproduzir. Toque nela para ver todos os takes, avaliá-los, adicionar tags e notas. Toque em um take para abrir o Fotos."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Видео, записанные при открытом телесуфлёре, появляются стопкой рядом с кнопкой «Пуск». Коснитесь её, чтобы увидеть все дубли, оценить их, добавить теги и заметки. Коснитесь дубля, чтобы открыть «Фото»."
           }
         }
       }
@@ -3447,34 +4007,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Размер текста плавающего окна"
-          }
-        }
-      }
-    },
-    "General" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "General"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Général"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Geral"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Общее"
           }
         }
       }
@@ -6201,34 +6733,6 @@
         }
       }
     },
-    "Scroll Speed in Settings sets how many lines pass each minute. Set a Countdown in the timer to get a few seconds before it starts." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Velocidad de desplazamiento, en Ajustes, indica cuántas líneas pasan por minuto. Pon una cuenta atrás en el temporizador para tener unos segundos antes de empezar."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vitesse de défilement, dans Réglages, définit le nombre de lignes par minute. Réglez un compte à rebours dans le minuteur pour avoir quelques secondes avant le début."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Velocidade de rolagem, nos Ajustes, define quantas linhas passam por minuto. Defina uma contagem regressiva no timer para ter alguns segundos antes de começar."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "«Скорость прокрутки» в настройках задаёт, сколько строк проходит за минуту. Задайте обратный отсчёт в таймере, чтобы получить несколько секунд перед началом."
-          }
-        }
-      }
-    },
     "Search" : {
       "localizations" : {
         "es" : {
@@ -7237,34 +7741,6 @@
         }
       }
     },
-    "Tap the gear at the top. Each mode keeps its own sizes and cue color. Timer colors are set in the timer." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toca el engranaje arriba. Cada modo tiene sus propios tamaños y color de indicaciones. Los colores del temporizador se ajustan en el temporizador."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Touchez l'engrenage en haut. Chaque mode a ses propres tailles et couleur de repère. Les couleurs du minuteur se règlent dans le minuteur."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toque na engrenagem no topo. Cada modo tem seus próprios tamanhos e cor de deixa. As cores do timer são definidas no timer."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Коснитесь шестерёнки вверху. У каждого режима свои размеры и цвет подсказок. Цвета таймера задаются в самом таймере."
-          }
-        }
-      }
-    },
     "Tap the mode name at the top. Teleprompter scrolls your whole script. Cards shows it one card at a time." : {
       "localizations" : {
         "es" : {
@@ -7289,34 +7765,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Коснитесь названия режима вверху. «Телесуфлёр» прокручивает весь сценарий. «Карточки» показывают его по одной карточке."
-          }
-        }
-      }
-    },
-    "Tap the timer next to Play to set how long you have and when it warns you." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toca el temporizador junto a Reproducir para indicar cuánto tiempo tienes y cuándo avisarte."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Touchez le minuteur à côté de Lire pour définir votre durée et le moment de l'alerte."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toque no timer ao lado de Reproduzir para definir quanto tempo você tem e quando ele avisa."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Коснитесь таймера рядом с кнопкой «Пуск», чтобы задать, сколько у вас времени и когда предупредить."
           }
         }
       }
@@ -8581,34 +9029,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Предупреждение"
-          }
-        }
-      }
-    },
-    "Watch the Timer" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vigila el temporizador"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Surveiller le minuteur"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Acompanhe o timer"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Следите за таймером"
           }
         }
       }
