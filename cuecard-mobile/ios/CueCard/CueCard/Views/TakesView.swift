@@ -470,7 +470,7 @@ private struct TakePlayerView: View {
     }
 
     private var tagsCard: some View {
-        detailCard("Tags", systemImage: "tag", color: AppColors.blue(for: colorScheme)) {
+        detailCard("Tags") {
             if !details.tags.isEmpty {
                 FlowLayout(spacing: 8) {
                     ForEach(details.tags, id: \.self) { tag in
@@ -519,7 +519,7 @@ private struct TakePlayerView: View {
     }
 
     private var notesCard: some View {
-        detailCard("Notes", systemImage: "text.alignleft", color: AppColors.purple(for: colorScheme)) {
+        detailCard("Notes") {
             TextField("What worked, and what to change next time", text: $details.note, axis: .vertical)
                 .lineLimit(3...8)
                 .font(.body)
@@ -528,7 +528,7 @@ private struct TakePlayerView: View {
     }
 
     private var albumsCard: some View {
-        detailCard("Albums", systemImage: "rectangle.stack", color: AppColors.yellow(for: colorScheme)) {
+        detailCard("Albums") {
             if !albumTitles.isEmpty {
                 VStack(alignment: .leading, spacing: 10) {
                     ForEach(albumTitles.indices, id: \.self) { index in
@@ -559,19 +559,12 @@ private struct TakePlayerView: View {
         }
     }
 
-    private func detailCard<Content: View>(_ title: LocalizedStringKey, systemImage: String,
-                                          color: Color, @ViewBuilder content: () -> Content) -> some View {
+    private func detailCard<Content: View>(_ title: LocalizedStringKey,
+                                          @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 14) {
-            HStack(spacing: 10) {
-                Image(systemName: systemImage)
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(color)
-                    .frame(width: 32, height: 32)
-                    .background(color.opacity(0.12), in: RoundedRectangle(cornerRadius: 9))
-                Text(title)
-                    .font(.headline)
-                    .accessibilityAddTraits(.isHeader)
-            }
+            Text(title)
+                .font(.headline)
+                .accessibilityAddTraits(.isHeader)
             content()
         }
         .frame(maxWidth: .infinity, alignment: .leading)
