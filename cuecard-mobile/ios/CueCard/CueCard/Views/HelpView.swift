@@ -247,7 +247,7 @@ struct HelpView: View {
 
     @ViewBuilder
     private var frontPage: some View {
-        Section("Email Support") {
+        Section {
             Button {
                 AnalyticsEvents.logButtonClick("report_bug", screen: Self.screen)
                 openURL(AppLinks.bugReport)
@@ -264,22 +264,22 @@ struct HelpView: View {
         }
 
         Section {
-            ForEach(AllHelp.sections) { section in
-                NavigationLink {
-                    HelpSectionView(section: section, close: close)
-                } label: {
-                    sectionRow(section)
-                }
-            }
-        }
-
-        Section {
             if whatsNew.release != nil {
                 Button {
                     AnalyticsEvents.logButtonClick("whats_new", screen: Self.screen)
                     whatsNew.show()
                 } label: {
                     linkRow("What's New in \(whatsNew.version)", systemImage: "sparkles")
+                }
+            }
+        }
+
+        Section {
+            ForEach(AllHelp.sections) { section in
+                NavigationLink {
+                    HelpSectionView(section: section, close: close)
+                } label: {
+                    sectionRow(section)
                 }
             }
         }
