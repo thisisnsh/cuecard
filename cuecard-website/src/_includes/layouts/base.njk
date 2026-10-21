@@ -114,15 +114,17 @@
           "inLanguage": "en"
         },
         {
-          "@type": "WebPage",
+          "@type": "{{ 'CollectionPage' if resource else 'WebPage' }}",
           "@id": {{ ((canonical or (site.url + page.url)) + "#webpage") | jsonLd | safe }},
           "url": {{ ((canonical or (site.url + page.url))) | jsonLd | safe }},
           "name": {{ (pageName or title) | jsonLd | safe }},
           "description": {{ description | jsonLd | safe }},
+          {% if resource or (app and app.modified) %}"dateModified": {{ (resource.modified if resource else app.modified) | jsonLd | safe }},{% endif %}
           "isPartOf": { "@id": {{ ((site.url) + "/#website") | jsonLd | safe }} },
           {% if blog %}"mainEntity": { "@id": {{ (canonical + "#post") | jsonLd | safe }} },{% endif %}
+          {% if resource %}"mainEntity": { "@id": {{ (canonical + "#templates") | jsonLd | safe }} },{% endif %}
           {% if crumbs %}"breadcrumb": { "@id": {{ ((canonical or (site.url + page.url)) + "#breadcrumb") | jsonLd | safe }} },{% endif %}
-          {% if app or mobileProfession or speakingPage %}"about": { "@id": {{ ((site.products.mobile.id)) | jsonLd | safe }} },
+          {% if app or mobileProfession or speakingPage or resource %}"about": { "@id": {{ ((site.products.mobile.id)) | jsonLd | safe }} },
           {% elif page.url == '/' %}"about": [{ "@id": {{ ((site.products.mobile.id)) | jsonLd | safe }} }, { "@id": {{ ((site.products.desktop.id)) | jsonLd | safe }} }],
           {% elif page.url == '/desktop/' or platform or profession %}"about": { "@id": {{ ((site.products.desktop.id)) | jsonLd | safe }} },{% endif %}
           "inLanguage": "en"

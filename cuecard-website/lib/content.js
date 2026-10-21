@@ -20,6 +20,7 @@ function softwareSchema(product, platformKey) {
     '@context': 'https://schema.org',
     '@type': product.id.endsWith('#mobileapp') ? 'MobileApplication' : 'SoftwareApplication',
     '@id': product.id, name: product.name, url: product.url,
+    alternateName: product.alternateName,
     applicationCategory: product.id.endsWith('#mobileapp') ? 'UtilitiesApplication' : 'BusinessApplication',
     description: product.description, isAccessibleForFree: product.price === '0',
     image: product.image, screenshot: product.screenshots, featureList: product.features,

@@ -486,15 +486,15 @@
     "slug": "mobile/instagram",
     "name": "CueCard for Instagram",
     "platform": "ios",
-    "title": "Free Instagram Teleprompter for Reels | CueCard",
-    "description": "Float your script above Instagram on iPhone. Set up CueCard, keep your eye-line near the lens, and record a Reel with room for natural pauses.",
+    "title": "Free Instagram Teleprompter for Reels on iPhone | CueCard",
+    "description": "Read your script while recording Instagram Reels on iPhone. Set up the free floating teleprompter, try a sample script, and keep your eyes near the lens.",
     "keywords": "instagram teleprompter, instagram reels teleprompter, instagram stories script, floating notes instagram, instagram live notes, instagram content creation",
     "canonical": "https://cuecard.dev/mobile/instagram/",
-    "ogTitle": "Free Instagram Teleprompter for Reels | CueCard",
-    "ogDescription": "Float your script above Instagram on iPhone. Set up CueCard, keep your eye-line near the lens, and record a Reel with room for natural pauses.",
-    "heroSubtitle": "Read your script while you record <em>Instagram Reels</em>",
-    "promotionalText": "Reels, Stories and Lives — the prompter sits above all of them.",
-    "appDescription": "Float your script above Instagram on iPhone. Set up CueCard, keep your eye-line near the lens, and record a Reel with room for natural pauses.",
+    "ogTitle": "Free Instagram Teleprompter for Reels on iPhone | CueCard",
+    "ogDescription": "Read your script while recording Instagram Reels on iPhone. Set up the free floating teleprompter, try a sample script, and keep your eyes near the lens.",
+    "heroSubtitle": "A free Instagram teleprompter <em>for your next Reel.</em>",
+    "promotionalText": "Your script, scroll speed and camera app stay in your control.",
+    "appDescription": "Use CueCard as a floating Instagram teleprompter on iPhone. Keep your script near the lens while recording a Reel or Story, with your own scroll speed and text size. Free, with no ads, subscription or account required.",
     "showIos": true,
     "showAndroid": true,
     "faq": [
@@ -525,6 +525,10 @@
       {
         "question": "Will the script appear in my video?",
         "answer": "Camera recording captures the image through the lens, so the floating script is not part of that footage. Phone screen recording or a screen broadcast can capture the window. Record a short camera test and review it before posting."
+      },
+      {
+        "question": "Can I use this Instagram teleprompter on Android?",
+        "answer": "CueCard is available now for iPhone and iPad. The Android app is still in development. See the <a href=\"/mobile/android/\">Android availability page</a> for its status."
       }
     ],
     "subject": "Instagram",
@@ -615,7 +619,8 @@
           "label": "Why Your Reels Look Like You’re Reading — and How to Fix the Eye-Line"
         }
       ]
-    }
+    },
+    "modified": "2026-10-21"
   },
   {
     "slug": "mobile/tiktok",
@@ -660,6 +665,10 @@
       {
         "question": "Will the script appear in my video?",
         "answer": "Camera recording captures the image through the lens, so the floating script is not part of that footage. Phone screen recording or a screen broadcast can capture the window. Record a short camera test and review it before posting."
+      },
+      {
+        "question": "Can I use this TikTok teleprompter on Android?",
+        "answer": "CueCard is available now for iPhone and iPad. The Android app is still in development. See the <a href=\"/mobile/android/\">Android availability page</a> for its status."
       }
     ],
     "subject": "TikTok",
@@ -750,21 +759,22 @@
           "label": "A TikTok Teleprompter That Isn’t Trapped Inside TikTok"
         }
       ]
-    }
+    },
+    "modified": "2026-10-21"
   },
   {
     "slug": "mobile/youtube",
     "name": "CueCard for YouTube",
     "platform": "ios",
-    "title": "YouTube Teleprompter for Videos & Shorts - CueCard",
-    "description": "Float your script over your camera while recording YouTube videos and Shorts. Stay on script without switching apps.",
+    "title": "Free YouTube Teleprompter for Videos & Shorts | CueCard",
+    "description": "Record YouTube videos and Shorts with a floating teleprompter on iPhone. Follow the setup, try a sample script, and get CueCard free with no account.",
     "keywords": "youtube teleprompter, youtube shorts teleprompter, youtube script app, floating notes youtube, youtube creator tools, youtube recording tips",
     "canonical": "https://cuecard.dev/mobile/youtube/",
-    "ogTitle": "YouTube Teleprompter for Videos & Shorts - CueCard",
-    "ogDescription": "Float your script over your camera while recording YouTube videos and Shorts. Stay on script without switching apps.",
-    "heroSubtitle": "Shoot a video, or a Short, <em>off the cuff</em>.",
+    "ogTitle": "Free YouTube Teleprompter for Videos & Shorts | CueCard",
+    "ogDescription": "Record YouTube videos and Shorts with a floating teleprompter on iPhone. Follow the setup, try a sample script, and get CueCard free with no account.",
+    "heroSubtitle": "A free YouTube teleprompter <em>for videos and Shorts.</em>",
     "promotionalText": "Long form or vertical, the script scrolls at the speed you set.",
-    "appDescription": "CueCard Teleprompter floats your script over your camera, so you can record YouTube videos and Shorts while reading your notes. Perfect for creators who want professional-quality content without memorizing every line.",
+    "appDescription": "Keep a tutorial, intro or Short on track with a floating script near your iPhone camera. Record a reusable video in Camera and upload it to YouTube, or follow the Shorts setup below.",
     "showIos": true,
     "showAndroid": true,
     "faq": [
@@ -800,6 +810,10 @@
       {
         "question": "Will the script appear in my video?",
         "answer": "Camera recording captures the image through the lens, so the floating script is not part of that footage. Phone screen recording or a screen broadcast can capture the window. Record a short camera test and review it before posting."
+      },
+      {
+        "question": "Can I use this YouTube teleprompter on Android?",
+        "answer": "CueCard is available now for iPhone and iPad. The Android app is still in development. See the <a href=\"/mobile/android/\">Android availability page</a> for its status."
       }
     ],
     "subject": "YouTube",
@@ -886,21 +900,22 @@
           "label": "Choose a mobile workflow"
         }
       ]
-    }
+    },
+    "modified": "2026-10-21"
   },
   {
     "slug": "mobile/linkedin",
     "name": "CueCard for LinkedIn",
     "platform": "ios",
-    "title": "LinkedIn Video Teleprompter, Free - CueCard Teleprompter",
-    "description": "Float your script over your camera while recording LinkedIn videos. Create polished professional content without memorizing scripts.",
+    "title": "Free LinkedIn Video Teleprompter for iPhone | CueCard",
+    "description": "Record LinkedIn videos with a free floating teleprompter on iPhone. Prepare your talking points in CueCard, film in Camera, then upload your finished clip.",
     "keywords": "linkedin teleprompter, linkedin video script, professional video teleprompter, floating notes linkedin, linkedin content creation, linkedin video tips",
     "canonical": "https://cuecard.dev/mobile/linkedin/",
-    "ogTitle": "LinkedIn Video Teleprompter, Free - CueCard Teleprompter",
-    "ogDescription": "Float your script over your camera while recording LinkedIn videos. Create polished professional content without memorizing scripts.",
-    "heroSubtitle": "Post to LinkedIn without <em>reading it twice</em>.",
+    "ogTitle": "Free LinkedIn Video Teleprompter for iPhone | CueCard",
+    "ogDescription": "Record LinkedIn videos with a free floating teleprompter on iPhone. Prepare your talking points in CueCard, film in Camera, then upload your finished clip.",
+    "heroSubtitle": "A LinkedIn video teleprompter <em>for your next update.</em>",
     "promotionalText": "Sound prepared without sounding read to.",
-    "appDescription": "CueCard Teleprompter floats your script over your camera, so you can record polished LinkedIn videos while reading your notes. Perfect for professionals who want to share thought leadership content without memorizing scripts.",
+    "appDescription": "Share an insight or project update without memorizing every line. Float CueCard over your iPhone Camera app, record your video, then upload the finished clip to LinkedIn.",
     "showIos": true,
     "showAndroid": true,
     "faq": [
@@ -932,6 +947,10 @@
       {
         "question": "Will the script appear in my video?",
         "answer": "Camera recording captures the image through the lens, so the floating script is not part of that footage. Phone screen recording or a screen broadcast can capture the window. Record a short camera test and review it before posting."
+      },
+      {
+        "question": "Can I use this LinkedIn teleprompter on Android?",
+        "answer": "CueCard is available now for iPhone and iPad. The Android app is still in development. See the <a href=\"/mobile/android/\">Android availability page</a> for its status."
       }
     ],
     "subject": "LinkedIn",
@@ -1018,21 +1037,22 @@
           "label": "Choose a mobile workflow"
         }
       ]
-    }
+    },
+    "modified": "2026-10-21"
   },
   {
     "slug": "mobile/facebook",
     "name": "CueCard for Facebook",
     "platform": "ios",
-    "title": "Facebook Teleprompter for Reels & Live - CueCard",
-    "description": "Float your script over Facebook while recording Reels or going Live. Stay on script without switching apps.",
+    "title": "Free Facebook Teleprompter for Reels & Live | CueCard",
+    "description": "Keep your script visible for Facebook Reels and camera-based Live video on iPhone. Follow the floating teleprompter setup and download CueCard free.",
     "keywords": "facebook teleprompter, facebook reels teleprompter, facebook live script, floating notes facebook, facebook content creation, facebook video tips",
     "canonical": "https://cuecard.dev/mobile/facebook/",
-    "ogTitle": "Facebook Teleprompter for Reels & Live - CueCard",
-    "ogDescription": "Float your script over Facebook while recording Reels or going Live. Stay on script without switching apps.",
-    "heroSubtitle": "Go live on Facebook with your <em>notes in front of you</em>.",
+    "ogTitle": "Free Facebook Teleprompter for Reels & Live | CueCard",
+    "ogDescription": "Keep your script visible for Facebook Reels and camera-based Live video on iPhone. Follow the floating teleprompter setup and download CueCard free.",
+    "heroSubtitle": "A free Facebook teleprompter <em>for Reels and Live.</em>",
     "promotionalText": "Reels and Facebook Live, with the script only you can see.",
-    "appDescription": "CueCard Teleprompter floats your script directly over Facebook, so you can record Reels or go Live while reading your notes. Perfect for creators and businesses who want professional content.",
+    "appDescription": "Use a floating script for a Facebook Reel or keep talking points close during a camera-based Live video. Start with a short test recording and position CueCard so your camera controls stay reachable.",
     "showIos": true,
     "showAndroid": true,
     "faq": [
@@ -1064,6 +1084,10 @@
       {
         "question": "Will the script appear in my video?",
         "answer": "Camera recording captures the image through the lens, so the floating script is not part of that footage. Phone screen recording or a screen broadcast can capture the window. Record a short camera test and review it before posting."
+      },
+      {
+        "question": "Can I use this Facebook teleprompter on Android?",
+        "answer": "CueCard is available now for iPhone and iPad. The Android app is still in development. See the <a href=\"/mobile/android/\">Android availability page</a> for its status."
       }
     ],
     "subject": "Facebook",
@@ -1150,21 +1174,22 @@
           "label": "Choose a mobile workflow"
         }
       ]
-    }
+    },
+    "modified": "2026-10-21"
   },
   {
     "slug": "mobile/snapchat",
     "name": "CueCard for Snapchat",
     "platform": "ios",
-    "title": "Snapchat Teleprompter for Stories & Spotlight - CueCard",
-    "description": "Float your script over Snapchat while recording Stories or Spotlight videos. Stay on script without switching apps.",
+    "title": "Free Snapchat Teleprompter for iPhone | CueCard",
+    "description": "Read a floating script while recording a Snap on iPhone. Follow the Snapchat teleprompter setup, try a Story script, and download CueCard free.",
     "keywords": "snapchat teleprompter, snapchat stories script, snapchat spotlight teleprompter, floating notes snapchat, snapchat content creation, snapchat video tips",
     "canonical": "https://cuecard.dev/mobile/snapchat/",
-    "ogTitle": "Snapchat Teleprompter for Stories & Spotlight - CueCard",
-    "ogDescription": "Float your script over Snapchat while recording Stories or Spotlight videos. Stay on script without switching apps.",
-    "heroSubtitle": "Shoot a Snap with the words <em>already there</em>.",
-    "promotionalText": "Spotlight and Stories, without a single retake for a lost line.",
-    "appDescription": "CueCard Teleprompter floats your script directly over Snapchat, so you can record Stories or Spotlight videos while reading your notes. Perfect for creators who want polished content.",
+    "ogTitle": "Free Snapchat Teleprompter for iPhone | CueCard",
+    "ogDescription": "Read a floating script while recording a Snap on iPhone. Follow the Snapchat teleprompter setup, try a Story script, and download CueCard free.",
+    "heroSubtitle": "A free Snapchat teleprompter <em>for Stories and Spotlight.</em>",
+    "promotionalText": "Keep your next line close while you record a Snap.",
+    "appDescription": "Keep your words in view while recording a video Snap on iPhone. CueCard floats your script above Snapchat for Stories or Spotlight, with adjustable speed and text size. Follow the setup below and try a short test recording.",
     "showIos": true,
     "showAndroid": true,
     "faq": [
@@ -1196,6 +1221,10 @@
       {
         "question": "Will the script appear in my video?",
         "answer": "Camera recording captures the image through the lens, so the floating script is not part of that footage. Phone screen recording or a screen broadcast can capture the window. Record a short camera test and review it before posting."
+      },
+      {
+        "question": "Can I use this Snapchat teleprompter on Android?",
+        "answer": "CueCard is available now for iPhone and iPad. The Android app is still in development. See the <a href=\"/mobile/android/\">Android availability page</a> for its status."
       }
     ],
     "subject": "Snapchat",
@@ -1286,21 +1315,22 @@
           "label": "How to Use a Teleprompter on Snapchat Without It Ending Up in the Snap"
         }
       ]
-    }
+    },
+    "modified": "2026-10-21"
   },
   {
     "slug": "mobile/twitter",
     "name": "CueCard for Twitter/X",
     "platform": "ios",
-    "title": "Teleprompter for X (Twitter) Videos - CueCard Teleprompter",
-    "description": "Float your script over your camera while recording video tweets. Create engaging Twitter/X content without memorizing scripts.",
+    "title": "Free Teleprompter for X (Twitter) Videos | CueCard",
+    "description": "Prepare a focused video for X with a floating teleprompter on iPhone. Record in Camera, review your delivery, and upload the clip. CueCard is free.",
     "keywords": "twitter teleprompter, x teleprompter, video tweet script, floating notes twitter, twitter content creation, x video tips",
     "canonical": "https://cuecard.dev/mobile/twitter/",
-    "ogTitle": "Teleprompter for X (Twitter) Videos - CueCard Teleprompter",
-    "ogDescription": "Float your script over your camera while recording video tweets. Create engaging Twitter/X content without memorizing scripts.",
-    "heroSubtitle": "Post a video to X in <em>one take</em>.",
+    "ogTitle": "Free Teleprompter for X (Twitter) Videos | CueCard",
+    "ogDescription": "Prepare a focused video for X with a floating teleprompter on iPhone. Record in Camera, review your delivery, and upload the clip. CueCard is free.",
+    "heroSubtitle": "A free teleprompter <em>for X videos.</em>",
     "promotionalText": "Say the whole thought, the first time.",
-    "appDescription": "CueCard Teleprompter floats your script over your camera, so you can record engaging video tweets while reading your notes. Perfect for creators and professionals who want polished Twitter/X content.",
+    "appDescription": "Turn your next update into a focused video for X. Float your script over the iPhone Camera app, record at your own pace, then review and attach the saved clip to your post.",
     "showIos": true,
     "showAndroid": true,
     "faq": [
@@ -1332,6 +1362,10 @@
       {
         "question": "Will the script appear in my video?",
         "answer": "Camera recording captures the image through the lens, so the floating script is not part of that footage. Phone screen recording or a screen broadcast can capture the window. Record a short camera test and review it before posting."
+      },
+      {
+        "question": "Can I use this X teleprompter on Android?",
+        "answer": "CueCard is available now for iPhone and iPad. The Android app is still in development. See the <a href=\"/mobile/android/\">Android availability page</a> for its status."
       }
     ],
     "subject": "X",
@@ -1418,21 +1452,22 @@
           "label": "Choose a mobile workflow"
         }
       ]
-    }
+    },
+    "modified": "2026-10-21"
   },
   {
     "slug": "mobile/twitch",
     "name": "CueCard for Twitch",
     "platform": "ios",
-    "title": "Twitch Teleprompter - CueCard Teleprompter for Going Live",
-    "description": "Keep your talking points floating over Twitch while you stream from your phone. Free teleprompter for iPhone and iPad, with Android coming soon.",
+    "title": "Free Twitch Teleprompter for iPhone Camera Streams | CueCard",
+    "description": "Keep a run of show or sponsor script in view during an iPhone camera stream. Set up CueCard’s free floating teleprompter and check your broadcast view.",
     "keywords": "twitch teleprompter, teleprompter for streaming, streamer script app, twitch live notes, going live teleprompter, mobile streaming notes, twitch stream script",
     "canonical": "https://cuecard.dev/mobile/twitch/",
-    "ogTitle": "Twitch Teleprompter - CueCard Teleprompter for Going Live",
-    "ogDescription": "Keep your talking points floating over Twitch while you stream from your phone. Free teleprompter for iPhone and iPad, with Android coming soon.",
-    "heroSubtitle": "Go live with your <em>run of show</em> on the glass.",
+    "ogTitle": "Free Twitch Teleprompter for iPhone Camera Streams | CueCard",
+    "ogDescription": "Keep a run of show or sponsor script in view during an iPhone camera stream. Set up CueCard’s free floating teleprompter and check your broadcast view.",
+    "heroSubtitle": "A Twitch teleprompter <em>for your camera stream.</em>",
     "promotionalText": "Segments, sponsor reads and shout-outs, in order, while you stream.",
-    "appDescription": "CueCard Teleprompter floats your run of show above Twitch while you stream from your phone, so sponsor reads land word for word and you never lose the thread mid-stream.",
+    "appDescription": "Keep your opening, talking points and transitions within reach during a camera-based stream. Float CueCard near your iPhone camera and check your broadcast view first: a screen broadcast can include the overlay.",
     "showIos": true,
     "showAndroid": true,
     "demoId": "phone",
@@ -1464,6 +1499,10 @@
       {
         "question": "Will the script appear in my video?",
         "answer": "Camera recording captures the image through the lens, so the floating script is not part of that footage. Phone screen recording or a screen broadcast can capture the window. Record a short camera test and review it before posting."
+      },
+      {
+        "question": "Can I use this Twitch teleprompter on Android?",
+        "answer": "CueCard is available now for iPhone and iPad. The Android app is still in development. See the <a href=\"/mobile/android/\">Android availability page</a> for its status."
       }
     ],
     "subject": "Twitch",
@@ -1550,6 +1589,7 @@
           "label": "Choose a mobile workflow"
         }
       ]
-    }
+    },
+    "modified": "2026-10-21"
   }
 ]

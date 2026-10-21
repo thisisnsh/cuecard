@@ -26,6 +26,7 @@ class Page(HTMLParser):
         self.links = []
         self.ids = set()
         self.schemas = []
+        self.downloads = []
         self.title = ''
         self.h1s = 0
         self.in_title = False
@@ -43,6 +44,8 @@ class Page(HTMLParser):
             self.canonicals.append(attrs.get('href'))
         if tag == 'a' and attrs.get('href'):
             self.links.append(attrs['href'])
+            if 'download' in attrs:
+                self.downloads.append(attrs['href'])
         if tag == 'h1':
             self.h1s += 1
         if tag == 'title':
@@ -87,6 +90,7 @@ require('/' in indexable, 'Homepage must be indexable')
 titles, descriptions = defaultdict(list), defaultdict(list)
 edges = defaultdict(set)
 article_dates = {}
+modified_dates = {}
 
 for route, page in pages.items():
     canonical = ORIGIN + route
@@ -104,6 +108,8 @@ for route, page in pages.items():
         titles[page.title].append(route)
         descriptions[page.value('description')].append(route)
         for schema in page.schemas:
+            if schema.get('@type') in ('WebPage', 'CollectionPage') and schema.get('dateModified'):
+                modified_dates[canonical] = schema['dateModified']
             if schema.get('@type') == 'BreadcrumbList':
                 crumbs = schema.get('itemListElement', [])
                 require(bool(crumbs) and crumbs[-1].get('item') == canonical,
@@ -114,6 +120,22 @@ for route, page in pages.items():
                                     ('dateModified', 'article:modified_time')):
                     require(schema.get(field) == page.value(name), f'{route}: inconsistent {field}')
                 article_dates[canonical] = schema.get('dateModified')
+
+    # Resource downloads must be real editable text, not an HTML error page.
+    for href in page.downloads:
+        target = urlsplit(urljoin(canonical, href))
+        if target.netloc != urlsplit(ORIGIN).netloc or not target.path.startswith('/templates/'):
+            continue
+        file = ROOT / unquote(target.path).lstrip('/')
+        require(file.is_file(), f'{route}: missing template download {href}')
+        if file.is_file():
+            content = file.read_text()
+            require(content.strip() and '<html' not in content.lower(), f'{href}: expected plain text')
+            require(file.suffix == '.txt', f'{href}: expected .txt extension')
+            if '[separator]' in content:
+                cards = content.strip().split('[separator]')
+                require(all(0 < len(card.strip()) <= 120 for card in cards),
+                        f'{href}: starting cards must fit the advertised Lock Screen limit')
 
     for href in page.links:
         target = urlsplit(urljoin(canonical, href))
@@ -142,6 +164,9 @@ for node in sitemap.findall('s:url', ns):
     if url in article_dates:
         require(node.findtext('s:lastmod', namespaces=ns) == article_dates[url],
                 f'{url}: sitemap lastmod differs from article dateModified')
+    if url in modified_dates:
+        require(node.findtext('s:lastmod', namespaces=ns) == modified_dates[url],
+                f'{url}: sitemap lastmod differs from page dateModified')
 require(f'Sitemap: {ORIGIN}/sitemap.xml' in (ROOT / 'robots.txt').read_text(),
         'robots.txt must advertise the canonical sitemap')
 for route in ('/404.html', '/ios/', '/android/'):

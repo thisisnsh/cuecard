@@ -10,8 +10,8 @@ permalink: "sitemap.xml"
     The /ios/ and /android/ shortlinks are deliberately absent - they are
     noindex meta-refresh stubs pointing at the app stores, not pages.
 
-    Only the posts carry <lastmod>, because only the posts know when they
-    actually changed. Stamping the build date on the marketing pages would
+    Posts, resources and revised app guides carry explicit <lastmod> dates
+    when they actually changed. Stamping the build date on marketing pages would
     claim all fifty-odd of them change on every deploy, and Google keeps using
     lastmod only while it stays true - once it reads as noise it is discounted
     for the whole site, which costs us the one moment it is worth having: a
@@ -33,7 +33,12 @@ permalink: "sitemap.xml"
   {# The mobile app: its own page, the two platforms, and one page per app it
      is read over. #}
   {%- for app in apps %}
-  <url><loc>{{ app.canonical }}</loc><changefreq>monthly</changefreq><priority>{% if app.slug == "mobile" %}0.9{% else %}0.8{% endif %}</priority></url>
+  <url><loc>{{ app.canonical }}</loc>{% if app.modified %}<lastmod>{{ app.modified }}</lastmod>{% endif %}<changefreq>monthly</changefreq><priority>{% if app.slug == "mobile" %}0.9{% else %}0.8{% endif %}</priority></url>
+  {%- endfor %}
+
+  {# Original script and cue-card examples, with real content revision dates. #}
+  {%- for resource in resources %}
+  <url><loc>{{ site.url }}/{{ resource.slug }}/</loc><lastmod>{{ resource.modified }}</lastmod></url>
   {%- endfor %}
 
   {# The desktop app's meeting and presentation pages. #}
@@ -49,7 +54,7 @@ permalink: "sitemap.xml"
   <url><loc>{{ role.canonical }}</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   {%- endfor %}
 
-  {# Posts. The one place a real date is known. #}
+  {# Posts retain their publication date or explicit content revision date. #}
   {%- for blog in blogs %}
   <url><loc>https://cuecard.dev/blog/{{ blog.slug }}/</loc><lastmod>{{ blog.modified or blog.datetime }}</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
   {%- endfor %}

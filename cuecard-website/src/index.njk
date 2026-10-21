@@ -65,7 +65,7 @@ ogLocale: "en_US"
 
 <main id="main-content" tabindex="-1">
     {% set heroEyebrow = 'Free teleprompter & cue cards app' %}
-    {% set heroTitle = 'Read your script.<br><em>Speak naturally.</em>' %}
+    {% set heroTitle = 'Your free teleprompter.<br><em>Your cue cards.</em>' %}
     {% set heroBody = 'Float your script over the app you film in, or speak from cue cards at a glance. Free on iPhone, iPad and Apple Watch, with private speaker notes for Mac and Windows too.' %}
     {% set heroButtons = [
       { text: "Download for iPhone & iPad", href: site.ios, icon: "apple", style: "primary", external: true },
@@ -84,8 +84,6 @@ ogLocale: "en_US"
     {% set modesNote = "Film with the teleprompter, give a talk from cards, and keep either one in reach on your Apple Watch." %}
     {% include "partials/modes.njk" %}
 
-
-
     {% set shotsHeading = 'What it looks like.' %}
     {% set shotsNote = "The script floating over another app, the teleprompter, a card being swiped, cards on the Lock Screen, and the settings." %}
     {% set shotsFoot = 'Looking for the computer app instead? <a href="/desktop/">CueCard for Mac and Windows</a> keeps your speaker notes on your screen and out of your screen share.' %}
@@ -94,6 +92,8 @@ ogLocale: "en_US"
     {% set getHeading = "Your next take starts here." %}
     {% set getBody = "Choose your device. Get the full app free, with no ads, subscription or required account." %}
     {% include "partials/getcuecard.njk" %}
+
+    {% include "partials/creator-guides.njk" %}
 
     {% set featureRows = features.mobile %}
     {% set rowsMicro = "What you get" %}
@@ -141,6 +141,8 @@ ogLocale: "en_US"
         <div class="guide-link-group">
           <h3 class="guide-group-title">Delivery tips</h3>
           <ul class="guide-link-grid guide-link-grid-short">
+            <li><a href="/teleprompter-scripts/"><span>Free teleprompter script templates</span>{{ icon("arrow", 14) }}</a></li>
+            <li><a href="/cue-card-templates/"><span>Free cue-card templates for speeches</span>{{ icon("arrow", 14) }}</a></li>
             <li><a href="/blog/instagram-reels-teleprompter-stop-looking-like-reading/"><span>Keep a natural eye-line</span>{{ icon("arrow", 14) }}</a></li>
             <li><a href="/blog/tiktok-teleprompter-one-script-every-app/"><span>Reuse one script across recording apps</span>{{ icon("arrow", 14) }}</a></li>
             <li><a href="/blog/cue-cards-vs-teleprompter/"><span>Cue cards or a teleprompter?</span>{{ icon("arrow", 14) }}</a></li>

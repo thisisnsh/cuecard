@@ -18,7 +18,7 @@ const appSteps = {
     ...sharedOpening("Instagram Reel", "Instagram"),
     {
       title: "Open the Instagram Reel camera",
-      body: "In Instagram, tap Create, choose Reel, and switch to the selfie camera before starting the clip.",
+      body: "Open Instagram’s Reel recording camera and switch to the selfie camera before starting the clip. Recording controls can vary by app version.",
     },
     {
       title: "Keep the record button clear",
@@ -228,7 +228,18 @@ function forApp(app) {
     ? `Use CueCard with ${app.subject} in six short steps, from the saved script to the final take.`
     : app.guide.intro;
 
-  return { ...app.guide, intro, steps };
+  const sampleIds = {
+    'mobile/instagram': 'instagram-reel',
+    'mobile/tiktok': 'tiktok-demo',
+    'mobile/snapchat': 'snapchat-story',
+    'mobile/youtube': 'youtube-short'
+  };
+  const links = (app.guide.links || []).filter(link => !link.href.startsWith(`/${app.slug}/`));
+  // The partial displays six links: put the useful sample and delivery article
+  // before the larger list of other recording apps.
+  const resourceLink = { href: '/teleprompter-scripts/' + (sampleIds[app.slug] ? `#${sampleIds[app.slug]}` : ''), label: 'Free teleprompter scripts to copy or download' };
+  const prioritized = [resourceLink, ...links.filter(link => link.href.startsWith('/blog/')), ...links.filter(link => !link.href.startsWith('/blog/'))];
+  return { ...app.guide, intro, steps, links: prioritized };
 }
 
 function forRole(role) {

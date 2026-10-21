@@ -1,0 +1,89 @@
+---
+layout: layouts/base.njk
+pagination:
+  data: resources
+  size: 1
+  alias: resource
+permalink: "{{ resource.slug }}/index.html"
+eleventyComputed:
+  title: "{{ resource.title | safe }}"
+  description: "{{ resource.description | safe }}"
+  canonical: "https://cuecard.dev/{{ resource.slug }}/"
+---
+{% block jsonld %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "@id": {{ (canonical + "#templates") | jsonLd | safe }},
+  "name": {{ resource.name | jsonLd | safe }},
+  "numberOfItems": {{ resource.samples | length }},
+  "itemListElement": [
+    {% for sample in resource.samples %}
+    {
+      "@type": "ListItem",
+      "position": {{ loop.index }},
+      "name": {{ sample.title | jsonLd | safe }},
+      "url": {{ (canonical + "#" + sample.id) | jsonLd | safe }}
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ]
+}
+</script>
+{% endblock %}
+{% block body %}
+{% from "partials/icons.njk" import icon %}
+{% include "partials/nav.njk" %}
+<main id="main-content" tabindex="-1">
+  {% set heroEyebrow = "Free, editable examples" %}
+  {% set heroTitle = resource.heading %}
+  {% set heroLong = true %}
+  {% set heroBody = resource.intro %}
+  {% set heroStrip = "none" %}
+  {% set heroButtons = [
+    { text: "Choose a template", href: "#templates", icon: "arrow", style: "primary" },
+    { text: "Get CueCard free", href: site.ios, icon: "apple", style: "ghost", external: true }
+  ] %}
+  {% set heroNote = "Copy or download without signing up. CueCard is free on iPhone and iPad." %}
+  {% include "partials/hero.njk" %}
+
+  <section class="workflow-section" id="templates" aria-labelledby="templates-h">
+    <div class="wrap">
+      <h2 class="section-h" id="templates-h">Choose your starting point</h2>
+      <ul class="guide-link-grid">
+        {% for sample in resource.samples %}
+        <li><a href="#{{ sample.id }}"><span>{{ sample.title }}</span>{{ icon("arrow", 14) }}</a></li>
+        {% endfor %}
+      </ul>
+      {% for sample in resource.samples %}
+      <article class="resource-template" id="{{ sample.id }}" aria-labelledby="{{ sample.id }}-h">
+        <h3 id="{{ sample.id }}-h">{{ sample.title }}</h3>
+        <p>{{ sample.description }}</p>
+        {% if sample.cards %}
+        <ol class="template-cards">
+          {% for card in sample.cards %}
+          <li><span class="micro">Card {{ loop.index }}</span><pre>{{ card }}</pre></li>
+          {% endfor %}
+        </ol>
+        {% else %}
+        <pre class="template-script">{{ sample.text }}</pre>
+        {% endif %}
+        <p>{{ sample.tip }}</p>
+        <div class="actions">
+          <a class="btn btn-primary" href="/templates/{{ sample.id }}.txt" download>{{ icon("download", 17) }}Download {{ sample.title.split(":")[0] }} template (.txt)</a>
+          <a class="btn btn-ghost" href="{{ sample.link }}">{{ sample.linkLabel }} {{ icon("arrow", 14) }}</a>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+
+  {% set guide = { heading: "How to use these templates in CueCard", intro: resource.note, steps: resource.instructions, links: resource.related } %}
+  {% include "partials/setup-guide.njk" %}
+  {% set getGroups = [site.downloadGroups[0]] %}
+  {% set getHeading = "Put your next script within reach." %}
+  {% set getBody = "Read a scrolling script or turn cue cards at your own pace. Free on iPhone, iPad and Apple Watch, with no ads or required account." %}
+  {% include "partials/getcuecard.njk" %}
+</main>
+{% include "partials/footer.njk" %}
+{% endblock %}

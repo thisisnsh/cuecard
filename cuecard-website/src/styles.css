@@ -1544,6 +1544,29 @@ a.modes-card:hover .modes-go { color: var(--cue); }
 }
 
 /* Written guides use the same two-column ledger as the feature section. */
+.resource-template {
+  max-width: 980px;
+  margin-top: 40px;
+  padding-top: 28px;
+  border-top: 1px solid var(--hairline);
+  scroll-margin-top: 100px;
+}
+.resource-template h3 { font: 700 clamp(1.2rem, 2.5vw, 1.6rem)/1.25 var(--display); }
+.resource-template p { max-width: 68ch; margin: 16px 0; line-height: 1.65; color: var(--ash); }
+.template-script, .template-cards pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: inherit;
+  line-height: 1.7;
+}
+.template-script { padding: clamp(18px, 3vw, 28px); background: var(--leaf); border-radius: 14px; }
+.template-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; padding: 0; list-style: none; }
+.template-cards li { padding: 20px; border: 1px solid var(--hairline); border-radius: 14px; background: var(--paper); }
+.template-cards pre { margin-top: 12px; }
+.resource-template .btn { white-space: normal; text-align: center; }
+@media (max-width: 620px) {
+  .template-cards { grid-template-columns: 1fr; }
+}
 .workflow-section, .setup-guide { padding: clamp(44px, 6vw, 68px) 0; }
 .setup-guide .body, .workflow-section .body { max-width: 64ch; }
 .tutorial-action { margin-top: 18px; }

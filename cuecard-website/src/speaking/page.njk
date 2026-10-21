@@ -88,6 +88,9 @@ eleventyComputed:
     {% set demoCards = p.cards %}
     {% include "partials/hero.njk" %}
 
+    {% if p.slug == "teleprompter" %}
+    {% include "partials/creator-guides.njk" %}
+    {% endif %}
     {% set featureRows = p.rows %}
     {% set rowsMicro = "What you get" %}
     {% set rowsHeading = p.rowsHeading %}
@@ -123,6 +126,7 @@ eleventyComputed:
                 {% endif %}{% endfor %}
                 {% if p.kind == "speech" %}<li><a href="/cards/"><span>Everything Cards does</span>{{ icon("arrow", 14) }}</a></li>{% endif %}
                 <li><a href="/watch/"><span>Cue cards on Apple Watch</span>{{ icon("arrow", 14) }}</a></li>
+                <li><a href="/cue-card-templates/"><span>Free cue-card templates to copy or download</span>{{ icon("arrow", 14) }}</a></li>
             </ul>
         </div>
     </section>

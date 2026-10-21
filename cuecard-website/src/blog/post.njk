@@ -67,6 +67,7 @@ eleventyComputed:
         <div class="wrap">
             <article class="blog-entry-content">
                 {{ blog.content | markdownify | safe }}
+                {% if templateResource %}<p><a href="{{ templateResource.href }}">{{ templateResource.label }}</a> — copy an example or download an editable text file.</p>{% endif %}
                 <p><a href="{{ site.ios }}" data-product-platform="ios" data-cta-location="article" data-destination-type="app_store">Get CueCard free on iPhone &amp; iPad</a></p>
             </article>
             <p class="backline">

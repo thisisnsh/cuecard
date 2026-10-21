@@ -11,6 +11,7 @@ Eleventy/Nunjucks static site for [cuecard.dev](https://cuecard.dev).
 - `/mobile/ios/` covers the iPhone overlay, controls, positioning and troubleshooting.
 - `/mobile/ipad/` covers full-screen reading beside a camera and floating notes on iPad.
 - Social-app pages under `/mobile/` provide written setup, a sample script and troubleshooting. TikTok, Instagram, Snapchat, YouTube, LinkedIn, Facebook, X and Twitch have distinct workflows. Camera-roll recording is described where it provides the reusable video workflow.
+- `/teleprompter-scripts/` provides four original video script examples; `/cue-card-templates/` provides three speech and presentation decks. Both offer editable `.txt` files without an account. Content and downloads share `src/_data/resources.js`; `src/template-downloads.11ty.js` emits the files with `[separator]` between cards. Keep starting cards within 120 characters and bump `modified` only for substantive revisions.
 - `/desktop/` covers private speaker notes on Mac and Windows. `/zoom/`, `/google-meet/`, `/microsoft-teams/` and `/google-slides/` retain their dedicated meeting and Slides content.
 - Mobile audience pages include a role-specific filming workflow and usable example script. Articles focus on delivery, eye-line and reusing scripts, with links to setup instructions.
 
@@ -70,6 +71,10 @@ Set `youtubeUrl` to the supplied HTTPS YouTube video URL and rebuild. Use “Wat
 Use `seoTitle` for a descriptive search title and `related` for an ordered list of relevant article slugs. Related articles render as ordinary HTML links, including without JavaScript; unknown or self-referencing slugs fail the build. Article breadcrumbs include the current post, and social metadata uses the same publication and modification dates as JSON-LD. Metadata-only edits do not reset article publication dates.
 
 `scripts/check-seo.py` runs in the deployment workflow before publishing. It verifies unique titles and descriptions, canonical URLs, one primary heading, parseable JSON-LD, complete breadcrumbs, article date consistency, sitemap coverage, noindex utility pages, internal links and fragments, and reachability from the homepage. It checks generated files locally; it does not measure rankings, live HTTP responses, or Google indexing.
+
+Resource and revised social-guide dates also match their sitemap `lastmod`. The check validates template file links, plain-text output and the starting decks' Lock Screen character limit. Resource collections have `CollectionPage` / `ItemList` markup describing the visible examples; this does not imply eligibility for a Google carousel or other rich result.
+
+The October 21 search-content pass brings social setup guides immediately after the hero, adds descriptive links from the homepage and product pages, and prioritizes relevant templates and delivery articles within the six related links. Existing social URLs stay canonical. See [the search growth notes](docs/seo-growth.md) for the query-to-page map and account-dependent follow-up.
 
 ## Download measurement
 

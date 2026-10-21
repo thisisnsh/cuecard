@@ -84,6 +84,15 @@ layout: layouts/mobile-app.njk
     {% set deckScript = deck.forApp(app.subject, "my iPad" if app.slug == "mobile/ipad" else "my phone") %}
     {% include "partials/hero.njk" %}
 
+    {% set guide = mobileGuides.forApp(app) %}
+    {% set tutorial = app.tutorial %}
+    {% if app.subject %}
+    {% include "partials/setup-guide.njk" %}
+    {% endif %}
+    {% if app.slug == "mobile" %}
+    {% include "partials/creator-guides.njk" %}
+    {% endif %}
+
     {% set featureRows = features.forApp(app.subject, "social") if app.subject else (features.mobile if app.showIos else features.mobilePlanned) %}
     {% set rowsMicro = "What you get" %}
     {% set rowsHeading = (("Reading a script over " + app.subject) if app.subject else "Everything in the app, free") if app.showIos else "Planned for Android" %}
@@ -131,9 +140,9 @@ layout: layouts/mobile-app.njk
     {% set getBody = "Free, with no account required, no subscription and nothing to cancel — and free on your computer too." %}
     {% include "partials/getcuecard.njk" %}
 
-    {% set guide = mobileGuides.forApp(app) %}
-    {% set tutorial = app.tutorial %}
+    {% if not app.subject %}
     {% include "partials/setup-guide.njk" %}
+    {% endif %}
 
     {% set faqItems = appFaq %}
     {% set faqHeading = "Questions about " + app.name %}
