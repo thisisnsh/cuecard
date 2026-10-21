@@ -1116,6 +1116,16 @@ struct SavedNotesView: View {
                                                     .padding(.vertical, 3)
                                                     .background(Capsule().fill(AppColors.green(for: colorScheme).opacity(0.15)))
                                             }
+
+                                            // The note open in the editor.
+                                            if note.id == settingsService.currentNoteId {
+                                                Text("Current")
+                                                    .font(.caption2.weight(.semibold))
+                                                    .foregroundStyle(AppColors.blue(for: colorScheme))
+                                                    .padding(.horizontal, 8)
+                                                    .padding(.vertical, 3)
+                                                    .background(Capsule().fill(AppColors.blue(for: colorScheme).opacity(0.15)))
+                                            }
                                         }
 
                                         Text(preview(of: note))
