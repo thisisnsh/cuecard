@@ -90,6 +90,8 @@
 		C0CA4D530000000000000020 /* CueCardsRemoteCommand+Widget.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CA4D520000000000000003 /* CueCardsRemoteCommand+Widget.swift */; };
 		C0CA4D530000000000000030 /* CueCardsWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0CA4D520000000000000004 /* CueCardsWidgets.swift */; };
 		D1E000000000000000000001 /* TimerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1E000000000000000000002 /* TimerSheet.swift */; };
+		CA4E4A000000000000000001 /* CameraRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA4E4A000000000000000002 /* CameraRecorder.swift */; };
+		CA4E4A000000000000000003 /* CameraRecordingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA4E4A000000000000000004 /* CameraRecordingView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -205,6 +207,8 @@
 		C0CA4D520000000000000003 /* CueCardsRemoteCommand+Widget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CueCardsRemoteCommand+Widget.swift"; sourceTree = "<group>"; };
 		C0CA4D520000000000000004 /* CueCardsWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CueCardsWidgets.swift; sourceTree = "<group>"; };
 		D1E000000000000000000002 /* TimerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerSheet.swift; sourceTree = "<group>"; };
+		CA4E4A000000000000000002 /* CameraRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraRecorder.swift; sourceTree = "<group>"; };
+		CA4E4A000000000000000004 /* CameraRecordingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraRecordingView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -266,6 +270,7 @@
 		711 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				CA4E4A000000000000000004 /* CameraRecordingView.swift */,
 				140 /* CueCardsView.swift */,
 				D1E000000000000000000002 /* TimerSheet.swift */,
 				102 /* ContentView.swift */,
@@ -286,6 +291,7 @@
 		712 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				CA4E4A000000000000000002 /* CameraRecorder.swift */,
 				C0CA4D520000000000000002 /* CueCardsRemoteCommand+App.swift */,
 				146 /* WatchSessionService.swift */,
 				138 /* CueCardsSession.swift */,
@@ -546,6 +552,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CA4E4A000000000000000003 /* CameraRecordingView.swift in Sources */,
+				CA4E4A000000000000000001 /* CameraRecorder.swift in Sources */,
 				B1C400000000000000000002 /* RichText.swift in Sources */,
 				C0CA4D530000000000000010 /* CueCardsRemoteCommand+App.swift in Sources */,
 				C0CA4D530000000000000000 /* CueCardsWidgetState.swift in Sources */,

@@ -19,6 +19,7 @@ struct CueCardsView: View {
     @State private var dragOffset: CGFloat = 0
     @State private var showingLockScreenHelp = false
     @State private var showingHelp = false
+    @State private var showingCamera = false
     @Environment(\.openURL) private var openURL
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -104,6 +105,17 @@ struct CueCardsView: View {
                     .accessibilityElement(children: .combine)
                     .accessibilityValue(progress)
                 }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        AnalyticsEvents.logButtonClick("camera", screen: "cards")
+                        showingCamera = true
+                    } label: {
+                        Image(systemName: "camera")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                    }
+                    .accessibilityLabel("Record Video")
+                }
                 HelpToolbarItem(page: .cards, isPresented: $showingHelp)
             }
             .helpSheet(for: .cards, isPresented: $showingHelp)
@@ -145,6 +157,10 @@ struct CueCardsView: View {
                 }
                 .presentationDetents([.medium, .large])
             }
+        }
+        .fullScreenCover(isPresented: $showingCamera) {
+            CameraRecordingView(prompt: .cards, scriptID: session.deckID ?? deckID)
+                .environmentObject(settingsService)
         }
         .onAppear {
             Analytics.logEvent(AnalyticsEventScreenView, parameters: [

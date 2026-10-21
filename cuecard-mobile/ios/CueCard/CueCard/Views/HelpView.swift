@@ -115,6 +115,8 @@ private enum AllHelp {
                   detail: "Drag the script to go back or skip ahead. It keeps scrolling from where you leave it."),
         HelpTopic("Change Speed",
                   detail: "Scroll Speed in Settings sets how many lines pass each minute."),
+        HelpTopic("Record in CueCard",
+                  detail: "Tap the camera next to Mirror Text. Tap Record to capture video and start the prompt. Drag the prompt's handle to move it, use its controls to pause or restart, and expand or minimize the window. Stop recording to save the video to Photos. The prompt stays out of your video."),
         HelpTopic("Mirror Text",
                   detail: "Tap the mirror button at the top of the teleprompter to flip the text horizontally for a teleprompter mirror. Tap the screen first if the buttons are hidden. The floating window uses the same setting. Tap the mirror button again to turn it off."),
         HelpTopic("Use Over Other Apps",
@@ -128,6 +130,8 @@ private enum AllHelp {
                                     systemImage: "rectangle.on.rectangle", topics: [
         HelpTopic("Turn Cards",
                   detail: "Swipe, or tap Back and Next. The dots at the top show which card you're on."),
+        HelpTopic("Record with Cards",
+                  detail: "Tap the camera next to Help to record a video. Your cards float above the camera: swipe left or right, or use the arrows to turn them. Drag the handle to move the window. Stop recording to save to Photos."),
         HelpTopic("Read from the Lock Screen",
                   detail: "Turn on Show on Lock Screen in Settings. Then lock your iPhone and turn cards right from the Lock Screen."),
         HelpTopic("Count Up Without a Timer",

@@ -86,6 +86,22 @@ final class TakeStore {
         heartbeat = timer
     }
 
+    /// A native camera take also belongs to its card deck or script, even if
+    /// saving to Photos completes after the reader closes.
+    func recordSession(scriptID: UUID, start: Date, end: Date) {
+        let recorded = TeleprompterSession(start: start, end: end)
+        if open?.scriptID == scriptID {
+            open?.sessions.append(recorded)
+            writeOpenSessions()
+            return
+        }
+        let all = sessions(for: scriptID) + [recorded]
+        guard let folder = folder(of: scriptID), let url = sessionsFile(of: scriptID),
+              let data = try? JSONEncoder().encode(all) else { return }
+        try? fileManager.createDirectory(at: folder, withIntermediateDirectories: true)
+        try? data.write(to: url, options: .atomic)
+    }
+
     /// The teleprompter closed. Nothing happens if it wasn't open.
     func end() {
         heartbeat?.invalidate()

@@ -54,6 +54,7 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
     private var renderer: TeleprompterOverlayRenderer?
     private var possibilityObservation: NSKeyValueObservation?
     private var isStartingPiP = false
+    private var isCameraPresented = false
     private var lastFrameTime: CFTimeInterval = 0
     /// What the watch was last told, so it is only told again on a change.
     private var watchTimer: TeleprompterTimerState?
@@ -447,7 +448,7 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
 
     @discardableResult
     func startPiP(minimizeApp: Bool = false) -> Bool {
-        guard !isPiPActive, !isStartingPiP,
+        guard !isCameraPresented, !isPiPActive, !isStartingPiP,
               let controller = pipController, controller.isPictureInPicturePossible else { return false }
         if minimizeApp && UIApplication.shared.applicationState == .active {
             // Use the same automatic PiP entry as swiping Home. Starting PiP
@@ -466,6 +467,16 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
     }
 
     func stopPiP() { pipController?.stopPictureInPicture() }
+
+    /// The in-app recorder uses the playback clock, but never starts system PiP.
+    func setCameraPresented(_ presented: Bool) {
+        isCameraPresented = presented
+        pipController?.canStartPictureInPictureAutomaticallyFromInline = !presented
+        if presented {
+            pause()
+            stopPiP()
+        }
+    }
 
     /// Called when returning to the foreground; there is no state to copy back.
     func refreshPresentation() {
@@ -517,6 +528,7 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         isPiPActive = false
         isPiPPossible = false
         isStartingPiP = false
+        isCameraPresented = false
         lastFrameTime = 0
         syncWatch()
     }
@@ -556,7 +568,7 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
             activeVideoCallSourceView: source, contentViewController: controller
         ))
         pip.delegate = self
-        pip.canStartPictureInPictureAutomaticallyFromInline = true
+        pip.canStartPictureInPictureAutomaticallyFromInline = !isCameraPresented
         pipController = pip
         possibilityObservation = pip.observe(\.isPictureInPicturePossible, options: [.initial, .new]) { [weak self] controller, _ in
             Task { @MainActor in

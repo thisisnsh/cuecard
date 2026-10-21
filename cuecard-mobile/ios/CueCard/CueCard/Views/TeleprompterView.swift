@@ -25,6 +25,7 @@ struct TeleprompterView: View {
     @State private var hasConfiguredSession = false
     @State private var showControls = true
     @State private var showingHelp = false
+    @State private var showingCamera = false
     @State private var controlsTimer: Timer?
     @Environment(\.scenePhase) private var scenePhase
 
@@ -84,37 +85,39 @@ struct TeleprompterView: View {
 
                     // The script scrolls at the reader's own pace: so many rendered
                     // lines a minute, counted from the time on the clock.
-                    AttributedTextView(
-                        content: content,
-                        cueColor: settings.cueColor,
-                        fontSize: CGFloat(settings.fontSize),
-                        linePosition: scriptTime * Double(settings.linesPerMinute) / 60.0,
-                        colorScheme: colorScheme,
-                        topPadding: geometry.size.height * Self.readingLineFraction,
-                        bottomPadding: geometry.size.height * (1 - Self.readingLineFraction),
-                        snapToken: pipManager.playback.snapToken,
-                        restorationRequest: pipManager.restorationRequest,
-                        onRestorationReady: { request in
-                            pipManager.completeRestoration(request)
-                        },
-                        onLayoutChange: { starts in
-                            referenceLineStarts = starts
-                            pipManager.updateReferenceLayout(starts)
-                        },
-                        onHandOff: { line in
-                            handOff(toLine: line)
-                        },
-                        onTap: {
-                            withAnimation(controlsFade) {
-                                showControls.toggle()
+                    if !showingCamera {
+                        AttributedTextView(
+                            content: content,
+                            cueColor: settings.cueColor,
+                            fontSize: CGFloat(settings.fontSize),
+                            linePosition: scriptTime * Double(settings.linesPerMinute) / 60.0,
+                            colorScheme: colorScheme,
+                            topPadding: geometry.size.height * Self.readingLineFraction,
+                            bottomPadding: geometry.size.height * (1 - Self.readingLineFraction),
+                            snapToken: pipManager.playback.snapToken,
+                            restorationRequest: pipManager.restorationRequest,
+                            onRestorationReady: { request in
+                                pipManager.completeRestoration(request)
+                            },
+                            onLayoutChange: { starts in
+                                referenceLineStarts = starts
+                                pipManager.updateReferenceLayout(starts)
+                            },
+                            onHandOff: { line in
+                                handOff(toLine: line)
+                            },
+                            onTap: {
+                                withAnimation(controlsFade) {
+                                    showControls.toggle()
+                                }
+                                resetControlsTimer()
                             }
-                            resetControlsTimer()
-                        }
-                    )
-                    .scaleEffect(x: isMirrored ? -1 : 1, y: 1)
-                    // Lines arrive and leave through a fade rather than being cut
-                    // off flat against the toolbar and the controls.
-                    .scriptEdgeFade(for: colorScheme, top: Self.topFade, bottom: Self.bottomFade)
+                        )
+                        .scaleEffect(x: isMirrored ? -1 : 1, y: 1)
+                        // Lines arrive and leave through a fade rather than being cut
+                        // off flat against the toolbar and the controls.
+                        .scriptEdgeFade(for: colorScheme, top: Self.topFade, bottom: Self.bottomFade)
+                    }
 
                     // Controls overlay. Always laid out and faded rather than
                     // added and removed, so the glass fades with the icons
@@ -221,7 +224,18 @@ struct TeleprompterView: View {
                         }
                         .accessibilityLabel("Close")
                     }
-                    ToolbarItem(placement: .topBarTrailing) {
+                    ToolbarItemGroup(placement: .topBarTrailing) {
+                        Button {
+                            AnalyticsEvents.logButtonClick("camera", screen: "teleprompter")
+                            stopControlsTimer()
+                            pipManager.setCameraPresented(true)
+                            showingCamera = true
+                        } label: {
+                            Image(systemName: "camera")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                        }
+                        .accessibilityLabel("Record Video")
                         Button(action: {
                             pipManager.toggleMirroring()
                             AnalyticsEvents.logButtonClick(isMirrored ? "mirror_on" : "mirror_off", screen: "teleprompter")
@@ -245,14 +259,23 @@ struct TeleprompterView: View {
             }
             .helpSheet(for: .teleprompter, isPresented: $showingHelp)
         }
+        .fullScreenCover(isPresented: $showingCamera, onDismiss: {
+            pipManager.setCameraPresented(false)
+            showControls = true
+            UIApplication.shared.isIdleTimerDisabled = true
+        }) {
+            CameraRecordingView(prompt: .teleprompter(content), scriptID: settingsService.teleprompterScriptID)
+                .environmentObject(settingsService)
+        }
         .persistentSystemOverlays(.hidden)
         .onDisappear {
             stopControlsTimer()
+            guard !showingCamera else { return }
             TakeStore.shared.end()
             UIApplication.shared.isIdleTimerDisabled = false
         }
         .onChange(of: scenePhase) { _, newPhase in
-            if newPhase == .background && !pipManager.isPiPActive && pipManager.isPiPPossible {
+            if newPhase == .background && !showingCamera && !pipManager.isPiPActive && pipManager.isPiPPossible {
                 // Auto-start PiP when app goes to background (like YouTube)
                 startPiP(minimizeApp: false)
             } else if newPhase == .active {
@@ -469,6 +492,7 @@ struct AttributedTextView: UIViewRepresentable {
     /// on from there.
     let onHandOff: (Double) -> Void
     let onTap: (() -> Void)?
+    var attachesPiPSource = true
 
     func makeCoordinator() -> Coordinator {
         Coordinator(onTap: onTap, onHandOff: onHandOff)
@@ -678,7 +702,7 @@ struct AttributedTextView: UIViewRepresentable {
         }
         let textView = host.textView
         host.layoutIfNeeded()
-        TeleprompterPiPManager.shared.attachReader(host)
+        if attachesPiPSource { TeleprompterPiPManager.shared.attachReader(host) }
         textView.backgroundColor = colorScheme == .dark ? AppColors.UIColors.Dark.background : AppColors.UIColors.Light.background
         coordinator.onTap = onTap
         coordinator.onHandOff = onHandOff
