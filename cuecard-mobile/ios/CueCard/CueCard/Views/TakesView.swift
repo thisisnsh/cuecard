@@ -51,8 +51,7 @@ struct TakesIcon: View {
     }
 }
 
-/// Every take of the script, newest first. A take plays right here, with its
-/// tags, notes and albums on a card above it.
+/// Every take of the script, newest first, opening into playback and details.
 struct TakesView: View {
     @ObservedObject var library: TakesLibrary
     /// The saved note's title, while the script is one.
@@ -318,8 +317,7 @@ struct TakesView: View {
     }
 }
 
-/// A take playing, with a card above it of its tags, notes and the albums
-/// it's in, kept as they're changed, and a way to delete it.
+/// A take's preview and editable details, kept as they're changed.
 private struct TakePlayerView: View {
     let take: Take
     @ObservedObject var library: TakesLibrary
@@ -334,8 +332,6 @@ private struct TakePlayerView: View {
     @FocusState private var isAddingTag: Bool
 
     private static let longestTag = 30
-    /// How much of the screen the video takes, the cards below it scrolling up after.
-    private static let videoShare: CGFloat = 0.6
 
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -360,12 +356,30 @@ private struct TakePlayerView: View {
 
     var body: some View {
         GeometryReader { proxy in
-            VStack(spacing: 0) {
-                header
-                cards(videoHeight: proxy.size.height * Self.videoShare)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    recordingSummary
+                    VideoPlayer(player: player)
+                        .frame(height: videoHeight(in: proxy.size))
+                        .background(.black)
+                        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                    tagsCard
+                    notesCard
+                    albumsCard
+                    deleteButton
+                }
+                .frame(maxWidth: 680)
+                .padding(.horizontal, 20)
+                .padding(.top, 12)
+                .padding(.bottom, 24)
+                .frame(maxWidth: .infinity)
             }
+            .scrollDismissesKeyboard(.interactively)
         }
-        .background(Color.black.ignoresSafeArea())
+        .safeAreaInset(edge: .top, spacing: 0) { header }
+        .background(AppColors.background(for: colorScheme).ignoresSafeArea())
+        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+        .tint(AppColors.blue(for: colorScheme))
         .sheet(isPresented: $isPickingAlbums, onDismiss: refreshAlbums) {
             AlbumPicker(take: take, library: library)
         }
@@ -384,117 +398,203 @@ private struct TakePlayerView: View {
     }
 
     private var header: some View {
-        HStack(spacing: 8) {
+        HStack {
             Button {
                 AnalyticsEvents.logButtonClick("close", screen: "take_player")
                 dismiss()
             } label: {
                 Image(systemName: "xmark")
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(.white)
+                    .font(.system(size: 17, weight: .semibold))
                     .frame(width: 44, height: 44)
-                    .contentShape(Rectangle())
+                    .background(Color(.secondarySystemGroupedBackground), in: Circle())
             }
+            .buttonStyle(.plain)
             .accessibilityLabel("Close")
 
-            Spacer(minLength: 0)
+            Spacer()
 
-            VStack(spacing: 1) {
-                Text("Take \(take.number)")
-                    .font(.headline)
-                    .foregroundStyle(.white)
-                Text(dateFormatter.string(from: take.recordedAt))
-                    .font(.caption)
-                    .foregroundStyle(.white.opacity(0.7))
-            }
-
-            Spacer(minLength: 0)
-
-            FavoriteButton(take: current, library: library, size: 44, screen: "take_player", colorScheme: .dark)
+            FavoriteButton(take: current, library: library, size: 44,
+                           screen: "take_player", colorScheme: colorScheme)
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                .background(Color(.secondarySystemGroupedBackground), in: Circle())
         }
-        .padding(.horizontal, 8)
-        .padding(.bottom, 8)
+        .overlay {
+            Text("Take \(take.number)")
+                .font(.headline)
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+                .padding(.horizontal, 60)
+                .allowsHitTesting(false)
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 8)
+        .background(.bar)
     }
 
-    /// The video and then the take's tags, notes and albums, all in one scroll.
-    private func cards(videoHeight: CGFloat) -> some View {
-        Form {
-            Section {
-                VideoPlayer(player: player)
-                    .frame(height: videoHeight)
-                    .listRowInsets(EdgeInsets())
-                    .listRowBackground(Color.black)
+    private var recordingSummary: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 12) {
+                recordingDate
+                Spacer(minLength: 0)
+                durationBadge
+            }
+            VStack(alignment: .leading, spacing: 10) {
+                recordingDate
+                durationBadge
+            }
+        }
+    }
+
+    private var recordingDate: some View {
+        Text(dateFormatter.string(from: take.recordedAt))
+            .font(.subheadline)
+            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private var durationBadge: some View {
+        Label(TeleprompterParser.formatTime(Int(take.duration.rounded())), systemImage: "clock")
+            .font(.caption.weight(.medium).monospacedDigit())
+            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(Color(.secondarySystemGroupedBackground), in: Capsule())
+            .fixedSize()
+    }
+
+    /// Respect the recording's shape while leaving room to discover its details.
+    private func videoHeight(in size: CGSize) -> CGFloat {
+        let width = min(680, max(0, size.width - 40))
+        let aspectRatio = CGFloat(max(take.asset.pixelWidth, 1)) / CGFloat(max(take.asset.pixelHeight, 1))
+        return min(width / aspectRatio, max(200, size.height * 0.48))
+    }
+
+    private var tagsCard: some View {
+        detailCard("Tags", systemImage: "tag", color: AppColors.blue(for: colorScheme)) {
+            if !details.tags.isEmpty {
+                FlowLayout(spacing: 8) {
+                    ForEach(details.tags, id: \.self) { tag in
+                        TagButton(tag: tag, systemImage: "xmark", colorScheme: colorScheme) {
+                            details.tags.removeAll { $0 == tag }
+                        }
+                        .accessibilityLabel(String(localized: "Remove \(tag)", comment: "Takes a tag off a take"))
+                    }
+                }
             }
 
-            Section {
-                if !details.tags.isEmpty {
-                    FlowLayout(spacing: 8) {
-                        ForEach(details.tags, id: \.self) { tag in
-                            TagButton(tag: tag, systemImage: "xmark", colorScheme: colorScheme) {
-                                details.tags.removeAll { $0 == tag }
-                            }
-                            .accessibilityLabel(String(localized: "Remove \(tag)", comment: "Takes a tag off a take"))
-                        }
-                    }
-                    .padding(.vertical, 4)
-                }
-
+            HStack(spacing: 8) {
                 TextField("Add a Tag", text: $newTag)
                     .focused($isAddingTag)
                     .submitLabel(.done)
-                    .onSubmit {
-                        add(newTag)
-                    }
+                    .onSubmit { add(newTag) }
+                    .padding(.leading, 12)
 
-                if !suggestedTags.isEmpty {
-                    FlowLayout(spacing: 8) {
-                        ForEach(suggestedTags, id: \.self) { tag in
-                            TagButton(tag: tag, systemImage: "plus", isSuggestion: true, colorScheme: colorScheme) {
-                                add(tag)
-                            }
-                            .accessibilityLabel(String(localized: "Add \(tag)", comment: "Puts a tag on a take"))
-                        }
-                    }
-                    .padding(.vertical, 4)
-                }
-            } header: {
-                Text("Tags")
-            }
-
-            Section("Notes") {
-                TextField("What worked, and what to change next time", text: $details.note, axis: .vertical)
-                    .lineLimit(3...8)
-            }
-
-            Section {
                 Button {
-                    AnalyticsEvents.logButtonClick("album_take", screen: "take_player")
-                    isPickingAlbums = true
+                    add(newTag)
+                    isAddingTag = true
                 } label: {
-                    Label("Add to Album", systemImage: "rectangle.stack.badge.plus")
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 24))
+                        .frame(width: 44, height: 44)
                 }
-            } footer: {
-                if !albumTitles.isEmpty {
-                    Label(albumTitles.formatted(.list(type: .and)), systemImage: "rectangle.stack")
-                }
+                .buttonStyle(.plain)
+                .foregroundStyle(AppColors.blue(for: colorScheme))
+                .disabled(newTag.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .opacity(newTag.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.4 : 1)
+                .accessibilityLabel("Add a Tag")
             }
+            .background(Color(.tertiarySystemFill), in: RoundedRectangle(cornerRadius: 12))
 
-            Section {
-                Button(role: .destructive) {
-                    AnalyticsEvents.logButtonClick("delete_take", screen: "take_player")
-                    player.pause()
-                    Task {
-                        if await library.delete(take) { dismiss() }
+            if !suggestedTags.isEmpty {
+                FlowLayout(spacing: 8) {
+                    ForEach(suggestedTags, id: \.self) { tag in
+                        TagButton(tag: tag, systemImage: "plus", isSuggestion: true, colorScheme: colorScheme) {
+                            add(tag)
+                        }
+                        .accessibilityLabel(String(localized: "Add \(tag)", comment: "Puts a tag on a take"))
                     }
-                } label: {
-                    Label("Delete", systemImage: "trash")
-                        .foregroundStyle(AppColors.red(for: colorScheme))
                 }
             }
         }
-        .scrollContentBackground(.hidden)
-        .background(Color(.systemGroupedBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+    }
+
+    private var notesCard: some View {
+        detailCard("Notes", systemImage: "text.alignleft", color: AppColors.purple(for: colorScheme)) {
+            TextField("What worked, and what to change next time", text: $details.note, axis: .vertical)
+                .lineLimit(3...8)
+                .font(.body)
+                .accessibilityLabel("Notes")
+        }
+    }
+
+    private var albumsCard: some View {
+        detailCard("Albums", systemImage: "rectangle.stack", color: AppColors.yellow(for: colorScheme)) {
+            if !albumTitles.isEmpty {
+                VStack(alignment: .leading, spacing: 10) {
+                    ForEach(albumTitles.indices, id: \.self) { index in
+                        Label(albumTitles[index], systemImage: "folder")
+                            .font(.subheadline)
+                            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                    }
+                }
+                Divider()
+            }
+
+            Button {
+                AnalyticsEvents.logButtonClick("album_take", screen: "take_player")
+                isPickingAlbums = true
+            } label: {
+                HStack {
+                    Label("Add to Album", systemImage: "plus")
+                    Spacer(minLength: 8)
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.semibold))
+                }
+                .font(.subheadline.weight(.semibold))
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(AppColors.blue(for: colorScheme))
+        }
+    }
+
+    private func detailCard<Content: View>(_ title: LocalizedStringKey, systemImage: String,
+                                          color: Color, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 10) {
+                Image(systemName: systemImage)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(color)
+                    .frame(width: 32, height: 32)
+                    .background(color.opacity(0.12), in: RoundedRectangle(cornerRadius: 9))
+                Text(title)
+                    .font(.headline)
+                    .accessibilityAddTraits(.isHeader)
+            }
+            content()
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(16)
+        .background(Color(.secondarySystemGroupedBackground),
+                    in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+    }
+
+    private var deleteButton: some View {
+        Button(role: .destructive) {
+            AnalyticsEvents.logButtonClick("delete_take", screen: "take_player")
+            player.pause()
+            Task {
+                if await library.delete(take) { dismiss() }
+            }
+        } label: {
+            Label("Delete", systemImage: "trash")
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(AppColors.red(for: colorScheme))
+                .frame(maxWidth: .infinity, minHeight: 48)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 
     /// Play from the start once the video is on hand, heard even with the
@@ -676,8 +776,9 @@ private struct TagButton: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
             .background(Capsule().fill(color.opacity(isSuggestion ? 0.12 : 0.15)))
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
         }
-        // Inside a form row, so each tag takes only its own taps.
         .buttonStyle(.borderless)
     }
 }
