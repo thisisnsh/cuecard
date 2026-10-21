@@ -131,7 +131,7 @@ final class TakesLibrary: NSObject, ObservableObject {
     }
 
     /// Put the take in an album, or take it out.
-    func setTake(_ take: Take, isIn isIn: Bool, album: PHAssetCollection) async {
+    func setTake(_ take: Take, isIn: Bool, album: PHAssetCollection) async {
         try? await PHPhotoLibrary.shared().performChanges {
             let request = PHAssetCollectionChangeRequest(for: album)
             if isIn {
