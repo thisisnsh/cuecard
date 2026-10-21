@@ -318,6 +318,7 @@ private struct TakePlayerView: View {
     @State private var details = TakeDetails()
     @State private var hasLoaded = false
     @State private var newTag = ""
+    @State private var albumTitles: [String] = []
     @State private var isPickingAlbums = false
     @FocusState private var isAddingTag: Bool
 
@@ -357,13 +358,14 @@ private struct TakePlayerView: View {
             }
         }
         .background(Color.black.ignoresSafeArea())
-        .sheet(isPresented: $isPickingAlbums) {
+        .sheet(isPresented: $isPickingAlbums, onDismiss: refreshAlbums) {
             AlbumPicker(take: take, library: library)
         }
         .onAppear {
             guard !hasLoaded else { return }
             hasLoaded = true
             details = library.details(of: take)
+            refreshAlbums()
         }
         .task { await startPlaying() }
         .onDisappear { player.pause() }
@@ -455,6 +457,10 @@ private struct TakePlayerView: View {
                 } label: {
                     Label("Add to Album", systemImage: "rectangle.stack.badge.plus")
                 }
+            } footer: {
+                if !albumTitles.isEmpty {
+                    Label(albumTitles.formatted(.list(type: .and)), systemImage: "rectangle.stack")
+                }
             }
         }
         .scrollContentBackground(.hidden)
@@ -470,6 +476,10 @@ private struct TakePlayerView: View {
         try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback)
         player.replaceCurrentItem(with: item)
         player.play()
+    }
+
+    private func refreshAlbums() {
+        albumTitles = library.albumTitles(holding: take)
     }
 
     private func add(_ tag: String) {
