@@ -30,68 +30,23 @@ struct TakeThumbnail: View {
     }
 }
 
-/// The script's takes beside the Play button: a small stack of their
-/// pictures with the newest on top, or, before Photos can be read, a button
-/// to go and find them.
-struct TakeStack: View {
-    let takes: [Take]
+/// The button beside Play that opens the script's takes.
+struct TakesIcon: View {
+    let count: Int
     let colorScheme: ColorScheme
-    /// The Takes list grows out of the newest tile, or the button before
-    /// there are any.
+    /// The Takes list grows out of this button, and closes back into it.
     let transition: Namespace.ID
 
-    private static let tileSize = CGSize(width: 36, height: 48)
-    /// The most tiles drawn; more takes than this only raise the count.
-    private static let shownTiles = 3
-
     var body: some View {
-        if takes.isEmpty {
-            Image(systemName: "film.stack")
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                .frame(width: 52, height: 52)
-                .glassedEffect(in: Circle())
-                .takesTransitionSource(in: transition, cornerRadius: 26)
-                .accessibilityLabel("Takes")
-        } else {
-            stack
-        }
-    }
-
-    private var stack: some View {
-        let shown = Array(takes.suffix(Self.shownTiles))
-        return ZStack {
-            ForEach(Array(shown.enumerated()), id: \.element.id) { index, take in
-                // 0 for the newest, on top; each one under it tips further out.
-                let depth = CGFloat(shown.count - 1 - index)
-                TakeThumbnail(asset: take.asset, size: Self.tileSize)
-                    // Only the top tile, the one not tipped, so the list closes
-                    // into a tile its own shape and the ones under it stay put.
-                    .takesTransitionSource(in: transition, cornerRadius: 8, isEnabled: depth == 0)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .stroke(AppColors.background(for: colorScheme), lineWidth: 1.5)
-                    )
-                    .shadow(color: .black.opacity(0.18), radius: 4, y: 2)
-                    .rotationEffect(.degrees(-8 * depth), anchor: .bottom)
-                    .offset(x: -5 * depth)
-            }
-        }
-        .frame(width: 52, height: 52)
-        .overlay(alignment: .topTrailing) {
-            if takes.count > 1 {
-                Text("\(takes.count)")
-                    .font(.caption2.weight(.bold).monospacedDigit())
-                    .foregroundStyle(colorScheme == .dark ? .black : .white)
-                    .padding(.horizontal, 5)
-                    .frame(minWidth: 18, minHeight: 18)
-                    .background(Capsule().fill(AppColors.green(for: colorScheme)))
-                    .offset(x: 2, y: -4)
-            }
-        }
-        .contentShape(Rectangle())
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(String(localized: "\(takes.count) Takes", comment: "How many videos were recorded with a script"))
+        Image(systemName: "film.stack")
+            .font(.system(size: 18, weight: .semibold))
+            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+            .frame(width: 52, height: 52)
+            .glassedEffect(in: Circle())
+            .takesTransitionSource(in: transition)
+            .accessibilityLabel(count == 0
+                                ? String(localized: "Takes")
+                                : String(localized: "\(count) Takes", comment: "How many videos were recorded with a script"))
     }
 }
 
@@ -733,12 +688,12 @@ private extension Array where Element == String {
 private let takesTransitionID = "takes"
 
 extension View {
+    /// The 52-point button's circle, as the only shape a source takes.
     @ViewBuilder
-    fileprivate func takesTransitionSource(in namespace: Namespace.ID, cornerRadius: CGFloat,
-                                           isEnabled: Bool = true) -> some View {
-        if #available(iOS 18.0, *), isEnabled {
+    fileprivate func takesTransitionSource(in namespace: Namespace.ID) -> some View {
+        if #available(iOS 18.0, *) {
             matchedTransitionSource(id: takesTransitionID, in: namespace) { source in
-                source.clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+                source.clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
             }
         } else {
             self
