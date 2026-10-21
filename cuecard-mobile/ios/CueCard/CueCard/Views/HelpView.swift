@@ -54,7 +54,7 @@ private enum AllHelp {
         HelpTopic("Set a Timer",
                   detail: "Tap the timer next to Play to set how long you have and when it warns you."),
         HelpTopic("Save Your Work",
-                  detail: "Unsaved below the top bar means there are changes to save. Tap it to save, or tap ••• › Save."),
+                  detail: "Unsaved above Play means there are changes to save. Tap it to save, or tap ••• › Save."),
         HelpTopic("Open Saved Notes",
                   detail: "Tap ••• › Open to see everything you saved. Swipe to rename or delete."),
         HelpTopic("Import a Text File",

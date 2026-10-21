@@ -212,10 +212,10 @@ struct HomeView: View {
         if isUnsaved || showsSaved {
             Button(action: save) {
                 Text(isUnsaved ? "Unsaved" : "Saved")
-                    .font(.caption.weight(.medium))
+                    .font(.subheadline.weight(.medium))
                     .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 6)
                     .glassedEffect(in: Capsule(), interactive: isUnsaved)
                     .contentShape(Capsule())
             }
@@ -333,15 +333,6 @@ struct HomeView: View {
                             .ignoresSafeArea(.keyboard, edges: .bottom)
                         }
                     }
-                    // What's written since the last save is kept on this device,
-                    // but isn't in Saved Notes until it's saved. Laid over the top
-                    // of the script rather than above it, so the fade still starts
-                    // in the top bar and nothing moves when this comes or goes.
-                    .overlay(alignment: .top) {
-                        saveStatus
-                    }
-                    .animation(.easeInOut(duration: 0.2), value: settingsService.hasUnsavedChanges)
-                    .animation(.easeInOut(duration: 0.2), value: showsSaved)
                 }
                 .animation(.easeInOut(duration: 0.25), value: notifications.dismissedIDs)
             }
@@ -356,6 +347,14 @@ struct HomeView: View {
                     )
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 } else {
+                VStack(spacing: 12) {
+                // What's written since the last save is kept on this device,
+                // but isn't in Saved Notes until it's saved. Laid over the
+                // bottom of the script, so nothing moves when this comes or goes.
+                saveStatus
+                    .animation(.easeInOut(duration: 0.2), value: settingsService.hasUnsavedChanges)
+                    .animation(.easeInOut(duration: 0.2), value: showsSaved)
+
                 HStack(alignment: .bottom, spacing: 12) {
                     VStack(alignment: .leading, spacing: 12) {
                         timerControl
@@ -402,9 +401,10 @@ struct HomeView: View {
                     .opacity(hasNotes ? 1.0 : 0.6)
                     .accessibilityLabel(isCardsMode ? "Open Cards" : "Start Teleprompter")
                 }
+                .animation(.spring(response: 0.35, dampingFraction: 0.8), value: takes.takes.map(\.id))
+                }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 24)
-                .animation(.spring(response: 0.35, dampingFraction: 0.8), value: takes.takes.map(\.id))
                 }
             }
             .animation(.easeInOut(duration: 0.2), value: isEditorFocused)

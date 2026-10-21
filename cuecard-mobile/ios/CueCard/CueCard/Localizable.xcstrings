@@ -8361,30 +8361,30 @@
         }
       }
     },
-    "Unsaved below the top bar means there are changes to save. Tap it to save, or tap ••• › Save." : {
+    "Unsaved above Play means there are changes to save. Tap it to save, or tap ••• › Save." : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sin guardar debajo de la barra superior indica que hay cambios por guardar. Tócalo para guardar, o toca ••• › Guardar."
+            "value" : "Sin guardar encima de Reproducir indica que hay cambios por guardar. Tócalo para guardar, o toca ••• › Guardar."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Non enregistré sous la barre supérieure signale des modifications à enregistrer. Touchez-le pour enregistrer, ou touchez ••• › Enregistrer."
+            "value" : "Non enregistré au-dessus de Lecture signale des modifications à enregistrer. Touchez-le pour enregistrer, ou touchez ••• › Enregistrer."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Não salvo abaixo da barra superior indica alterações a salvar. Toque nele para salvar, ou toque em ••• › Salvar."
+            "value" : "Não salvo acima de Reproduzir indica alterações a salvar. Toque nele para salvar, ou toque em ••• › Salvar."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Надпись «Не сохранено» под верхней панелью означает, что есть несохранённые изменения. Коснитесь её, чтобы сохранить, или коснитесь ••• › «Сохранить»."
+            "value" : "Надпись «Не сохранено» над кнопкой воспроизведения означает, что есть несохранённые изменения. Коснитесь её, чтобы сохранить, или коснитесь ••• › «Сохранить»."
           }
         }
       }
