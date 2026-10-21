@@ -1,8 +1,8 @@
 {
   "1.11.0": {
     "features": [
-        "Takes: Videos you record with the teleprompter are kept with their script. Play them in CueCard, tag them, add notes, favorite them and add them to albums.",
-        "Russian: Use CueCard in Russian."
+        "Takes: Videos you record with the CueCard teleprompter can now be viewed in the app.",
+        "Organize Takes: Keep all your takes in order with tags, notes, favorites and albums."
     ]
   }
 }

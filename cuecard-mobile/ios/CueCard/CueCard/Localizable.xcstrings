@@ -623,31 +623,31 @@
         }
       }
     },
-    "Takes: Videos you record with the teleprompter are kept with their script. Play them in CueCard, tag them, add notes, favorite them and add them to albums." : {
+    "Takes: Videos you record with the CueCard teleprompter can now be viewed in the app." : {
       "extractionState" : "manual",
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tomas: los vídeos que grabas con el teleprompter se guardan con su guion. Reprodúcelos en CueCard, etiquétalos, añade notas, márcalos como favoritos y añádelos a álbumes."
+            "value" : "Tomas: los vídeos que grabas con el teleprompter de CueCard ahora se pueden ver en la app."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Prises : les vidéos filmées avec le prompteur sont gardées avec leur texte. Lisez-les dans CueCard, ajoutez des tags et des notes, mettez-les en favoris et rangez-les dans des albums."
+            "value" : "Prises : les vidéos filmées avec le prompteur de CueCard sont maintenant visibles dans l'app."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Takes: os vídeos que você grava com o teleprompter ficam com o roteiro. Reproduza no CueCard, adicione tags e notas, marque como favoritos e coloque em álbuns."
+            "value" : "Takes: os vídeos que você grava com o teleprompter do CueCard agora podem ser vistos no app."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Дубли: видео, записанные с телесуфлёром, сохраняются вместе с текстом. Смотрите их в CueCard, добавляйте теги и заметки, отмечайте избранное и добавляйте в альбомы."
+            "value" : "Дубли: видео, записанные с телесуфлёром CueCard, теперь можно смотреть в приложении."
           }
         }
       }
@@ -6846,31 +6846,31 @@
         }
       }
     },
-    "Russian: Use CueCard in Russian." : {
+    "Organize Takes: Keep all your takes in order with tags, notes, favorites and albums." : {
       "extractionState" : "manual",
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ruso: usa CueCard en ruso."
+            "value" : "Organiza tus tomas: mantenlas todas en orden con etiquetas, notas, favoritos y álbumes."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Russe : utilisez CueCard en russe."
+            "value" : "Organisez vos prises : gardez-les toutes en ordre avec des tags, des notes, des favoris et des albums."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Russo: use o CueCard em russo."
+            "value" : "Organize seus takes: mantenha todos em ordem com tags, notas, favoritos e álbuns."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Русский язык: пользуйтесь CueCard на русском."
+            "value" : "Упорядочивайте дубли: держите их в порядке с помощью тегов, заметок, избранного и альбомов."
           }
         }
       }
