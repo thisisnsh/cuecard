@@ -708,6 +708,34 @@
         }
       }
     },
+    "Tap the gear at the top, then Language. CueCard is in English, French, Portuguese, Russian and Spanish." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toca el engranaje arriba y luego Idioma. CueCard está en inglés, francés, portugués, ruso y español."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touchez l'engrenage en haut, puis Langue. CueCard est disponible en anglais, français, portugais, russe et espagnol."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toque na engrenagem no topo e depois em Idioma. O CueCard está em inglês, francês, português, russo e espanhol."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Коснитесь шестерёнки вверху, затем «Язык». CueCard доступен на английском, французском, португальском, русском и испанском."
+          }
+        }
+      }
+    },
     "Tap the gear at the top. Each mode keeps its own sizes and cue color." : {
       "localizations" : {
         "es" : {
@@ -788,34 +816,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Коснитесь таймера рядом с кнопкой «Пуск», чтобы задать, сколько у вас времени, когда предупредить и какими цветами он меняется."
-          }
-        }
-      }
-    },
-    "Text size, colors, timer and countdown" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tamaño de texto, colores, temporizador y cuenta atrás"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Taille du texte, couleurs, minuteur et compte à rebours"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tamanho do texto, cores, timer e contagem regressiva"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Размер текста, цвета, таймер и обратный отсчёт"
           }
         }
       }
@@ -3052,6 +3052,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Измените размер текста и цвета"
+          }
+        }
+      }
+    },
+    "Change the Language" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cambia el idioma"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Changer de langue"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alterar o idioma"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Измените язык"
           }
         }
       }
@@ -8327,6 +8355,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Размер текста"
+          }
+        }
+      }
+    },
+    "Text size, colors, timer and language" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamaño de texto, colores, temporizador e idioma"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Taille du texte, couleurs, minuteur et langue"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamanho do texto, cores, timer e idioma"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Размер текста, цвета, таймер и язык"
           }
         }
       }

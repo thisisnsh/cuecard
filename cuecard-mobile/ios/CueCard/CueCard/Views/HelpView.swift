@@ -94,14 +94,16 @@ private enum AllHelp {
     ])
 
     static let settings = HelpSection("settings", title: "Settings & Timer",
-                                    summary: "Text size, colors, timer and countdown",
+                                    summary: "Text size, colors, timer and language",
                                     systemImage: "gearshape", topics: [
         HelpTopic("Change Text Size and Colors",
                   detail: "Tap the gear at the top. Each mode keeps its own sizes and cue color."),
         HelpTopic("Set a Timer",
                   detail: "Tap the timer next to Play to set how long you have, when it warns you, and the colors it turns."),
         HelpTopic("Count Down Before Scrolling",
-                  detail: "In the teleprompter's timer, set a Countdown to get a few seconds before the script starts scrolling.")
+                  detail: "In the teleprompter's timer, set a Countdown to get a few seconds before the script starts scrolling."),
+        HelpTopic("Change the Language",
+                  detail: "Tap the gear at the top, then Language. CueCard is in English, French, Portuguese, Russian and Spanish.")
     ])
 
     static let teleprompter = HelpSection("teleprompter", title: "Teleprompter",
