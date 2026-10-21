@@ -329,6 +329,7 @@ private struct TakePlayerView: View {
     @State private var newTag = ""
     @State private var albumTitles: [String] = []
     @State private var isPickingAlbums = false
+    @State private var isShowingDetails = false
     @FocusState private var isAddingTag: Bool
 
     private static let longestTag = 30
@@ -355,34 +356,17 @@ private struct TakePlayerView: View {
     }
 
     var body: some View {
-        GeometryReader { proxy in
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    recordingSummary
-                    VideoPlayer(player: player)
-                        .frame(height: videoHeight(in: proxy.size))
-                        .background(.black)
-                        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                    tagsCard
-                    notesCard
-                    albumsCard
-                    deleteButton
-                }
-                .frame(maxWidth: 680)
-                .padding(.horizontal, 20)
-                .padding(.top, 12)
-                .padding(.bottom, 24)
-                .frame(maxWidth: .infinity)
-            }
-            .scrollDismissesKeyboard(.interactively)
+        VStack(spacing: 0) {
+            header
+            VideoPlayer(player: player)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .ignoresSafeArea(edges: .horizontal)
+            bottomBar
         }
-        .safeAreaInset(edge: .top, spacing: 0) { header }
-        .background(AppColors.background(for: colorScheme).ignoresSafeArea())
-        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-        .tint(AppColors.blue(for: colorScheme))
-        .sheet(isPresented: $isPickingAlbums, onDismiss: refreshAlbums) {
-            AlbumPicker(take: take, library: library)
-        }
+        .background(Color.black.ignoresSafeArea())
+        .foregroundStyle(.white)
+        .preferredColorScheme(.dark)
+        .sheet(isPresented: $isShowingDetails) { detailsSheet }
         .onAppear {
             guard !hasLoaded else { return }
             hasLoaded = true
@@ -406,67 +390,93 @@ private struct TakePlayerView: View {
                 Image(systemName: "xmark")
                     .font(.system(size: 17, weight: .semibold))
                     .frame(width: 44, height: 44)
-                    .background(Color(.secondarySystemGroupedBackground), in: Circle())
+                    .background(Color.white.opacity(0.14), in: Circle())
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Close")
 
             Spacer()
-
-            FavoriteButton(take: current, library: library, size: 44,
-                           screen: "take_player", colorScheme: colorScheme)
-                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
-                .background(Color(.secondarySystemGroupedBackground), in: Circle())
         }
         .overlay {
-            Text("Take \(take.number)")
-                .font(.headline)
-                .lineLimit(1)
-                .minimumScaleFactor(0.75)
-                .padding(.horizontal, 60)
-                .allowsHitTesting(false)
+            VStack(spacing: 1) {
+                Text("Take \(take.number)")
+                    .font(.headline)
+                Text(dateFormatter.string(from: take.recordedAt))
+                    .font(.caption)
+                    .foregroundStyle(.white.opacity(0.6))
+            }
+            .lineLimit(1)
+            .minimumScaleFactor(0.75)
+            .padding(.horizontal, 60)
+            .allowsHitTesting(false)
         }
-        .padding(.horizontal, 20)
+        .padding(.horizontal, 16)
         .padding(.vertical, 8)
-        .background(.bar)
     }
 
-    private var recordingSummary: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: 12) {
-                recordingDate
-                Spacer(minLength: 0)
-                durationBadge
+    /// What can be done with the take, under the video as in Photos.
+    private var bottomBar: some View {
+        HStack {
+            FavoriteButton(take: current, library: library, size: 44, screen: "take_player",
+                           colorScheme: colorScheme, unfilledColor: .white)
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+
+            Spacer()
+
+            Button {
+                AnalyticsEvents.logButtonClick("take_details", screen: "take_player")
+                isShowingDetails = true
+            } label: {
+                Image(systemName: "info.circle")
+                    .font(.title3)
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
             }
-            VStack(alignment: .leading, spacing: 10) {
-                recordingDate
-                durationBadge
+            .buttonStyle(.plain)
+            .accessibilityLabel("Tags, Notes and Albums")
+
+            Spacer()
+
+            deleteButton
+        }
+        .padding(.horizontal, 24)
+        .padding(.vertical, 6)
+    }
+
+    /// The take's tags, notes and albums, pulled up over the video.
+    private var detailsSheet: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    tagsCard
+                    notesCard
+                    albumsCard
+                }
+                .frame(maxWidth: 680)
+                .padding(.horizontal, 20)
+                .padding(.top, 12)
+                .padding(.bottom, 24)
+                .frame(maxWidth: .infinity)
+            }
+            .scrollDismissesKeyboard(.interactively)
+            .background(AppColors.background(for: colorScheme).ignoresSafeArea())
+            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+            .tint(AppColors.blue(for: colorScheme))
+            .navigationTitle("Take \(take.number)")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") {
+                        AnalyticsEvents.logButtonClick("done", screen: "take_details")
+                        isShowingDetails = false
+                    }
+                }
             }
         }
-    }
-
-    private var recordingDate: some View {
-        Text(dateFormatter.string(from: take.recordedAt))
-            .font(.subheadline)
-            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-            .fixedSize(horizontal: false, vertical: true)
-    }
-
-    private var durationBadge: some View {
-        Label(TeleprompterParser.formatTime(Int(take.duration.rounded())), systemImage: "clock")
-            .font(.caption.weight(.medium).monospacedDigit())
-            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-            .background(Color(.secondarySystemGroupedBackground), in: Capsule())
-            .fixedSize()
-    }
-
-    /// Respect the recording's shape while leaving room to discover its details.
-    private func videoHeight(in size: CGSize) -> CGFloat {
-        let width = min(680, max(0, size.width - 40))
-        let aspectRatio = CGFloat(max(take.asset.pixelWidth, 1)) / CGFloat(max(take.asset.pixelHeight, 1))
-        return min(width / aspectRatio, max(200, size.height * 0.48))
+        .presentationDetents([.medium, .large])
+        .sheet(isPresented: $isPickingAlbums, onDismiss: refreshAlbums) {
+            AlbumPicker(take: take, library: library)
+        }
     }
 
     private var tagsCard: some View {
@@ -581,13 +591,13 @@ private struct TakePlayerView: View {
                 if await library.delete(take) { dismiss() }
             }
         } label: {
-            Label("Delete", systemImage: "trash")
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(AppColors.red(for: colorScheme))
-                .frame(maxWidth: .infinity, minHeight: 48)
+            Image(systemName: "trash")
+                .font(.title3)
+                .frame(width: 44, height: 44)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("Delete")
     }
 
     /// Play from the start once the video is on hand, heard even with the
@@ -621,6 +631,8 @@ private struct FavoriteButton: View {
     let size: CGFloat
     let screen: String
     let colorScheme: ColorScheme
+    /// The empty heart's color, where the usual gray would be lost.
+    var unfilledColor: Color?
 
     var body: some View {
         Button {
@@ -631,7 +643,7 @@ private struct FavoriteButton: View {
                 .font(size > 40 ? .title3 : .body)
                 .foregroundStyle(take.isFavorite
                                  ? AppColors.red(for: colorScheme)
-                                 : AppColors.textSecondary(for: colorScheme))
+                                 : unfilledColor ?? AppColors.textSecondary(for: colorScheme))
                 .frame(width: size, height: size)
                 .contentShape(Rectangle())
         }
