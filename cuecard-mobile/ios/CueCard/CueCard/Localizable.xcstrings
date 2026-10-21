@@ -4096,34 +4096,6 @@
         }
       }
     },
-    "Email Support" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enviar correo a soporte"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Contacter l'assistance"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enviar e-mail ao suporte"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Написать в поддержку"
-          }
-        }
-      }
-    },
     "Enable Lock Screen cards" : {
       "localizations" : {
         "es" : {
