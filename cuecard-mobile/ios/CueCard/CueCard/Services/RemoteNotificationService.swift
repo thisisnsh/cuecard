@@ -26,33 +26,6 @@ final class RemoteNotificationService: ObservableObject {
     private static let minimumRefreshInterval: TimeInterval = 15 * 60
     #endif
 
-    #if DEBUG
-    /// A stand-in for the worker's response, for seeing the notification design
-    /// without deploying anything. It goes through the same decoding and checks
-    /// as the real thing. Set to nil to hit the worker again.
-    ///
-    /// Dismissing one remembers its id, so change the id to see it again.
-    private static let fakeResponse: String? = """
-    {
-      "notifications": [
-        {
-          "id": "debug-feedback-3",
-          "surface": "homeBanner",
-          "severity": "info",
-          "title": "Help make CueCard better",
-          "body": "Got an idea or found a bug? It takes a minute.",
-          "actions": [
-            { "kind": "openURL", "label": "Tell us", "url": "https://forms.gle/eQnYdfxJXu3uHHx76" },
-            { "kind": "dismiss", "label": "Not now" }
-          ],
-          "minInstallAgeDays": 3,
-          "expiresAt": "2026-12-31T00:00:00Z"
-        }
-      ]
-    }
-    """
-    #endif
-
     @Published private(set) var payload: RemoteNotifications = .empty
     @Published private(set) var dismissedIDs: Set<String> = []
 
@@ -108,21 +81,9 @@ final class RemoteNotificationService: ObservableObject {
         request.setValue("application/json", forHTTPHeaderField: "Accept")
 
         do {
-            #if DEBUG
-            let data: Data
-
-            if let fake = Self.fakeResponse {
-                data = Data(fake.utf8)
-            } else {
-                let (fetched, response) = try await session.data(for: request)
-                guard let http = response as? HTTPURLResponse, http.statusCode == 200 else { return }
-                data = fetched
-            }
-            #else
             let (data, response) = try await session.data(for: request)
 
             guard let http = response as? HTTPURLResponse, http.statusCode == 200 else { return }
-            #endif
 
             let fetched = try JSONDecoder().decode(RemoteNotifications.self, from: data)
 
