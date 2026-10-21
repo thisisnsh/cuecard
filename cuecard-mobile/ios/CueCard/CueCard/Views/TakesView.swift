@@ -198,8 +198,7 @@ struct TakesView: View {
 
     private func row(for take: Take) -> some View {
         let details = library.details(of: take)
-        // With no tags, the name and date sit level with the picture and heart.
-        return HStack(alignment: details.tags.isEmpty ? .center : .top, spacing: 12) {
+        return HStack(alignment: .center, spacing: 12) {
             TakeThumbnail(asset: take.asset, size: CGSize(width: 54, height: 72))
                 .overlay(alignment: .bottomTrailing) {
                     Text(TeleprompterParser.formatTime(Int(take.duration.rounded())))
