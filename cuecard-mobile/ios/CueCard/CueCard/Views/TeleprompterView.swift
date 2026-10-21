@@ -24,6 +24,7 @@ struct TeleprompterView: View {
     @State private var hasConfiguredSession = false
     @State private var showControls = true
     @State private var showingHelp = false
+    @State private var isMirrored = false
     @State private var controlsTimer: Timer?
     @Environment(\.scenePhase) private var scenePhase
 
@@ -110,6 +111,7 @@ struct TeleprompterView: View {
                             resetControlsTimer()
                         }
                     )
+                    .scaleEffect(x: isMirrored ? -1 : 1, y: 1)
                     // Lines arrive and leave through a fade rather than being cut
                     // off flat against the toolbar and the controls.
                     .scriptEdgeFade(for: colorScheme, top: Self.topFade, bottom: Self.bottomFade)
@@ -218,6 +220,22 @@ struct TeleprompterView: View {
                                 .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                         }
                         .accessibilityLabel("Close")
+                    }
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button(action: {
+                            isMirrored.toggle()
+                            AnalyticsEvents.logButtonClick(isMirrored ? "mirror_on" : "mirror_off", screen: "teleprompter")
+                            resetControlsTimer()
+                        }) {
+                            Image(systemName: "arrow.left.and.right.righttriangle.left.righttriangle.right")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundStyle(isMirrored
+                                                 ? AppColors.green(for: colorScheme)
+                                                 : AppColors.textPrimary(for: colorScheme))
+                        }
+                        .accessibilityLabel("Mirror Text")
+                        .accessibilityValue(isMirrored ? "On" : "Off")
+                        .accessibilityAddTraits(isMirrored ? .isSelected : [])
                     }
                     HelpToolbarItem(page: .teleprompter, isPresented: $showingHelp)
                 }
