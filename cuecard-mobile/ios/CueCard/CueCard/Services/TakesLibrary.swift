@@ -1,4 +1,4 @@
-import AVKit
+import AVFoundation
 import Photos
 import UIKit
 
@@ -90,35 +90,6 @@ final class TakesLibrary: NSObject, ObservableObject {
     func requestAccess() async {
         status = await PHPhotoLibrary.requestAuthorization(for: .readWrite)
         reload()
-    }
-
-    /// Play the take full screen, over whatever is showing. A take kept only
-    /// in iCloud starts once enough of it has come down.
-    static func play(_ take: Take) {
-        guard let root = UIApplication.shared.connectedScenes
-            .compactMap({ $0 as? UIWindowScene })
-            .flatMap(\.windows)
-            .first(where: \.isKeyWindow)?
-            .rootViewController else { return }
-        var top = root
-        while let presented = top.presentedViewController { top = presented }
-
-        // Heard even with the ringer off, like any other video.
-        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback)
-        let player = AVPlayer()
-        let controller = AVPlayerViewController()
-        controller.player = player
-        top.present(controller, animated: true)
-
-        let options = PHVideoRequestOptions()
-        options.isNetworkAccessAllowed = true
-        PHImageManager.default().requestPlayerItem(forVideo: take.asset, options: options) { item, _ in
-            guard let item else { return }
-            Task { @MainActor in
-                player.replaceCurrentItem(with: item)
-                player.play()
-            }
-        }
     }
 
     /// Mark the take as a favorite in Photos, or take the mark off.
@@ -231,6 +202,18 @@ extension PHAsset {
             PHImageManager.default().requestImage(for: self, targetSize: pixels, contentMode: .aspectFill,
                                                   options: options) { image, _ in
                 continuation.resume(returning: image)
+            }
+        }
+    }
+
+    /// The video ready to play, once enough of it is on the device.
+    func playerItem() async -> AVPlayerItem? {
+        let options = PHVideoRequestOptions()
+        // A take kept only in iCloud comes down to play.
+        options.isNetworkAccessAllowed = true
+        return await withCheckedContinuation { continuation in
+            PHImageManager.default().requestPlayerItem(forVideo: self, options: options) { item, _ in
+                continuation.resume(returning: item)
             }
         }
     }

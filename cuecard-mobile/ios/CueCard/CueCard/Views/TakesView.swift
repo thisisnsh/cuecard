@@ -1,4 +1,5 @@
 import SwiftUI
+import AVKit
 import Photos
 
 /// A take's picture, filled in once the library hands it over.
@@ -50,8 +51,8 @@ struct TakesIcon: View {
     }
 }
 
-/// Every take of the script, newest first, to tag and favorite. A take plays
-/// right here.
+/// Every take of the script, newest first. A take plays right here, with its
+/// tags, notes and albums on a card below it.
 struct TakesView: View {
     @ObservedObject var library: TakesLibrary
     /// The saved note's title, while the script is one.
@@ -61,8 +62,8 @@ struct TakesView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// The rows fan out of the stack they were opened from.
     @State private var hasAppeared = false
-    /// The take whose tags and notes are open.
-    @State private var editingTakeID: String?
+    /// The take playing.
+    @State private var playingTake: Take?
     /// The take being put in albums.
     @State private var albumTake: Take?
 
@@ -87,10 +88,8 @@ struct TakesView: View {
                     list
                 }
             }
-            .navigationDestination(item: $editingTakeID) { id in
-                if let take = library.takes.first(where: { $0.id == id }) {
-                    TakeDetailsView(take: take, library: library)
-                }
+            .fullScreenCover(item: $playingTake) { take in
+                TakePlayerView(take: take, library: library)
             }
             .sheet(item: $albumTake) { take in
                 AlbumPicker(take: take, library: library)
@@ -135,14 +134,6 @@ struct TakesView: View {
                         .offset(y: hasAppeared || reduceMotion ? 0 : -24 * CGFloat(min(index, 6)))
                         .animation(.spring(response: 0.4, dampingFraction: 0.85)
                             .delay(reduceMotion ? 0 : 0.03 * Double(min(index, 6))), value: hasAppeared)
-                        .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                            Button {
-                                edit(take)
-                            } label: {
-                                Label("Tags and Notes", systemImage: "square.and.pencil")
-                            }
-                            .tint(AppColors.blue(for: colorScheme))
-                        }
                         .contextMenu {
                             Button {
                                 play(take)
@@ -155,17 +146,12 @@ struct TakesView: View {
                             } label: {
                                 Label("Add to Album", systemImage: "rectangle.stack.badge.plus")
                             }
-                            Button {
-                                edit(take)
-                            } label: {
-                                Label("Tags and Notes", systemImage: "square.and.pencil")
-                            }
                         }
                 }
             } footer: {
                 VStack(spacing: 8) {
                     if library.status == .limited { limitedAccessNote }
-                    Text("Tap a take to play it. Your videos stay in Photos, and nothing leaves this device.")
+                    Text("Tap a take to play it and add tags, notes and albums. Your videos stay in Photos, and nothing leaves this device.")
                         .foregroundStyle(AppColors.textSecondary(for: colorScheme))
                 }
                 .font(.caption)
@@ -178,12 +164,7 @@ struct TakesView: View {
 
     private func play(_ take: Take) {
         AnalyticsEvents.logButtonClick("play_take", screen: "takes")
-        TakesLibrary.play(take)
-    }
-
-    private func edit(_ take: Take) {
-        AnalyticsEvents.logButtonClick("edit_take", screen: "takes")
-        editingTakeID = take.id
+        playingTake = take
     }
 
     private func addToAlbum(_ take: Take) {
@@ -247,23 +228,10 @@ struct TakesView: View {
             Spacer(minLength: 0)
 
             FavoriteButton(take: take, library: library, size: 36, screen: "takes", colorScheme: colorScheme)
-
-            Button {
-                edit(take)
-            } label: {
-                Image(systemName: "square.and.pencil")
-                    .font(.body)
-                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                    .frame(width: 36, height: 36)
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.borderless)
-            .accessibilityLabel("Tags and Notes")
         }
         .padding(.vertical, 2)
         .contentShape(Rectangle())
-        // The heart and the edit button take their own taps; anywhere else
-        // plays the take.
+        // The heart takes its own taps; anywhere else plays the take.
         .onTapGesture { play(take) }
         .accessibilityAction(named: Text("Play")) { play(take) }
     }
@@ -339,12 +307,14 @@ struct TakesView: View {
     }
 }
 
-/// A take's tags and notes, kept as they're changed, and the ways to play it,
-/// favorite it and put it in albums in Photos.
-private struct TakeDetailsView: View {
+/// A take playing, with a card below it of its tags, notes and the albums
+/// it's in, kept as they're changed.
+private struct TakePlayerView: View {
     let take: Take
     @ObservedObject var library: TakesLibrary
+    @Environment(\.dismiss) var dismiss
     @Environment(\.colorScheme) var colorScheme
+    @State private var player = AVPlayer()
     @State private var details = TakeDetails()
     @State private var hasLoaded = false
     @State private var newTag = ""
@@ -352,6 +322,8 @@ private struct TakeDetailsView: View {
     @FocusState private var isAddingTag: Bool
 
     private static let longestTag = 30
+    /// How much of the screen the card takes, the video the rest.
+    private static let cardShare: CGFloat = 0.45
 
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -359,6 +331,11 @@ private struct TakeDetailsView: View {
         formatter.timeStyle = .short
         return formatter
     }()
+
+    /// The take as the library has it now, so the heart keeps up with Photos.
+    private var current: Take {
+        library.takes.first { $0.id == take.id } ?? take
+    }
 
     /// Tags on the script's other takes, leaving out any this take already
     /// has. A tag no take has any more isn't offered.
@@ -370,45 +347,67 @@ private struct TakeDetailsView: View {
     }
 
     var body: some View {
+        GeometryReader { proxy in
+            VStack(spacing: 0) {
+                header
+                VideoPlayer(player: player)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                card
+                    .frame(height: proxy.size.height * Self.cardShare)
+            }
+        }
+        .background(Color.black.ignoresSafeArea())
+        .sheet(isPresented: $isPickingAlbums) {
+            AlbumPicker(take: take, library: library)
+        }
+        .onAppear {
+            guard !hasLoaded else { return }
+            hasLoaded = true
+            details = library.details(of: take)
+        }
+        .task { await startPlaying() }
+        .onDisappear { player.pause() }
+        .onChange(of: details) {
+            guard hasLoaded else { return }
+            library.setDetails(details, of: take)
+        }
+    }
+
+    private var header: some View {
+        HStack(spacing: 8) {
+            Button {
+                AnalyticsEvents.logButtonClick("close", screen: "take_player")
+                dismiss()
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+            }
+            .accessibilityLabel("Close")
+
+            Spacer(minLength: 0)
+
+            VStack(spacing: 1) {
+                Text("Take \(take.number)")
+                    .font(.headline)
+                    .foregroundStyle(.white)
+                Text(dateFormatter.string(from: take.recordedAt))
+                    .font(.caption)
+                    .foregroundStyle(.white.opacity(0.7))
+            }
+
+            Spacer(minLength: 0)
+
+            FavoriteButton(take: current, library: library, size: 44, screen: "take_player", colorScheme: .dark)
+        }
+        .padding(.horizontal, 8)
+        .padding(.bottom, 8)
+    }
+
+    private var card: some View {
         Form {
-            Section {
-                HStack(spacing: 16) {
-                    TakeThumbnail(asset: take.asset, size: CGSize(width: 72, height: 96), cornerRadius: 10)
-
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(dateFormatter.string(from: take.recordedAt))
-                            .font(.subheadline)
-                            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                        Text(TeleprompterParser.formatTime(Int(take.duration.rounded())))
-                            .font(.caption.monospacedDigit())
-                            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                        Button {
-                            AnalyticsEvents.logButtonClick("play_take", screen: "take_details")
-                            TakesLibrary.play(take)
-                        } label: {
-                            Label("Play", systemImage: "play.fill")
-                        }
-                        .font(.subheadline.weight(.semibold))
-                        .buttonStyle(.borderless)
-                        .padding(.top, 4)
-                    }
-
-                    Spacer(minLength: 0)
-
-                    FavoriteButton(take: take, library: library, size: 44, screen: "take_details",
-                                   colorScheme: colorScheme)
-                }
-            }
-
-            Section {
-                Button {
-                    AnalyticsEvents.logButtonClick("album_take", screen: "take_details")
-                    isPickingAlbums = true
-                } label: {
-                    Label("Add to Album", systemImage: "rectangle.stack.badge.plus")
-                }
-            }
-
             Section {
                 if !details.tags.isEmpty {
                     FlowLayout(spacing: 8) {
@@ -446,30 +445,38 @@ private struct TakeDetailsView: View {
 
             Section("Notes") {
                 TextField("What worked, and what to change next time", text: $details.note, axis: .vertical)
-                    .lineLimit(4...12)
+                    .lineLimit(3...8)
+            }
+
+            Section {
+                Button {
+                    AnalyticsEvents.logButtonClick("album_take", screen: "take_player")
+                    isPickingAlbums = true
+                } label: {
+                    Label("Add to Album", systemImage: "rectangle.stack.badge.plus")
+                }
             }
         }
-        .navigationTitle("Take \(take.number)")
-        .navigationBarTitleDisplayMode(.inline)
-        .sheet(isPresented: $isPickingAlbums) {
-            AlbumPicker(take: take, library: library)
-        }
-        .onAppear {
-            guard !hasLoaded else { return }
-            hasLoaded = true
-            details = library.details(of: take)
-        }
-        .onChange(of: details) {
-            guard hasLoaded else { return }
-            library.setDetails(details, of: take)
-        }
+        .scrollContentBackground(.hidden)
+        .background(Color(.systemGroupedBackground))
+        .clipShape(UnevenRoundedRectangle(topLeadingRadius: 20, topTrailingRadius: 20, style: .continuous))
+        .ignoresSafeArea(.container, edges: .bottom)
+    }
+
+    /// Play from the start once the video is on hand, heard even with the
+    /// ringer off.
+    private func startPlaying() async {
+        guard player.currentItem == nil, let item = await take.asset.playerItem() else { return }
+        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback)
+        player.replaceCurrentItem(with: item)
+        player.play()
     }
 
     private func add(_ tag: String) {
         let tag = String(tag.trimmingCharacters(in: .whitespacesAndNewlines).prefix(Self.longestTag))
         newTag = ""
         guard !tag.isEmpty, !details.tags.containsIgnoringCase(tag) else { return }
-        AnalyticsEvents.logButtonClick("tag_take", screen: "take_details")
+        AnalyticsEvents.logButtonClick("tag_take", screen: "take_player")
         details.tags.append(tag)
     }
 }

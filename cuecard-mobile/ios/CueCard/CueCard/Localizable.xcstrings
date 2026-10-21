@@ -91,30 +91,30 @@
         }
       }
     },
-    "Tap a take to play it. Your videos stay in Photos, and nothing leaves this device." : {
+    "Tap a take to play it and add tags, notes and albums. Your videos stay in Photos, and nothing leaves this device." : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Toca una toma para reproducirla. Tus vídeos se quedan en Fotos y nada sale de este dispositivo."
+            "value" : "Toca una toma para reproducirla y añadir etiquetas, notas y álbumes. Tus vídeos se quedan en Fotos y nada sale de este dispositivo."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Touchez une prise pour la lire. Vos vidéos restent dans Photos, et rien ne quitte cet appareil."
+            "value" : "Touchez une prise pour la lire et ajouter des tags, des notes et des albums. Vos vidéos restent dans Photos, et rien ne quitte cet appareil."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Toque em um take para reproduzi-lo. Seus vídeos ficam no Fotos, e nada sai deste dispositivo."
+            "value" : "Toque em um take para reproduzi-lo e adicionar tags, notas e álbuns. Seus vídeos ficam no Fotos, e nada sai deste dispositivo."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Коснитесь дубля, чтобы воспроизвести его. Видео остаются в «Фото», и ничто не покидает это устройство."
+            "value" : "Коснитесь дубля, чтобы воспроизвести его и добавить теги, заметки и альбомы. Видео остаются в «Фото», и ничто не покидает это устройство."
           }
         }
       }
@@ -1094,34 +1094,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Теги"
-          }
-        }
-      }
-    },
-    "Tags and Notes" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Etiquetas y notas"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tags et notes"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tags e notas"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Теги и заметки"
           }
         }
       }
