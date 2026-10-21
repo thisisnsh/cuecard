@@ -134,6 +134,17 @@ struct TakesView: View {
                         .offset(y: hasAppeared || reduceMotion ? 0 : -24 * CGFloat(min(index, 6)))
                         .animation(.spring(response: 0.4, dampingFraction: 0.85)
                             .delay(reduceMotion ? 0 : 0.03 * Double(min(index, 6))), value: hasAppeared)
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            // Not a destructive role: that takes the row away at
+                            // once, before iOS has asked whether to delete it.
+                            Button {
+                                AnalyticsEvents.logButtonClick("delete_take", screen: "takes")
+                                Task { await library.delete(take) }
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                            .tint(AppColors.red(for: colorScheme))
+                        }
                         .contextMenu {
                             Button {
                                 play(take)
@@ -308,7 +319,7 @@ struct TakesView: View {
 }
 
 /// A take playing, with a card below it of its tags, notes and the albums
-/// it's in, kept as they're changed.
+/// it's in, kept as they're changed, and a way to delete it.
 private struct TakePlayerView: View {
     let take: Take
     @ObservedObject var library: TakesLibrary
@@ -460,6 +471,18 @@ private struct TakePlayerView: View {
             } footer: {
                 if !albumTitles.isEmpty {
                     Label(albumTitles.formatted(.list(type: .and)), systemImage: "rectangle.stack")
+                }
+            }
+
+            Section {
+                Button(role: .destructive) {
+                    AnalyticsEvents.logButtonClick("delete_take", screen: "take_player")
+                    player.pause()
+                    Task {
+                        if await library.delete(take) { dismiss() }
+                    }
+                } label: {
+                    Label("Delete", systemImage: "trash")
                 }
             }
         }

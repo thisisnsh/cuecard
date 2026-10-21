@@ -100,6 +100,22 @@ final class TakesLibrary: NSObject, ObservableObject {
         reload()
     }
 
+    /// Delete the take's video from Photos, once iOS has asked the user, and
+    /// forget its tags and notes. Whether it was deleted.
+    @discardableResult
+    func delete(_ take: Take) async -> Bool {
+        do {
+            try await PHPhotoLibrary.shared().performChanges {
+                PHAssetChangeRequest.deleteAssets([take.asset] as NSArray)
+            }
+        } catch {
+            return false
+        }
+        setDetails(TakeDetails(), of: take)
+        reload()
+        return true
+    }
+
     /// The user's own albums in Photos that a video can be put in, by name.
     func albums() -> [PHAssetCollection] {
         var albums: [PHAssetCollection] = []
