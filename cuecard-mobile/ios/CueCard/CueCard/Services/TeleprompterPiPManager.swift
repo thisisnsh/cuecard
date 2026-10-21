@@ -27,6 +27,7 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
     }
     @Published private(set) var isPiPActive = false
     @Published private(set) var isPiPPossible = false
+    @Published private(set) var isMirrored = false
     /// A restoration request belongs to the full-screen presentation only. The
     /// still-visible overlay carries on scrolling through it.
     @Published private(set) var restorationRequest: UUID?
@@ -169,6 +170,11 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
             reanchorPlayback()
         }
         repaintOverlay()
+        renderFrame(force: true)
+    }
+
+    func toggleMirroring() {
+        isMirrored.toggle()
         renderFrame(force: true)
     }
 
@@ -432,7 +438,7 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         if !renderingPiP && !force {
             guard hostNow - lastFrameTime >= 0.2 else { return }
         }
-        contentView.present(linePosition: overlayLine(for: playback), state: playback)
+        contentView.present(linePosition: overlayLine(for: playback), state: playback, isMirrored: isMirrored)
         #if DEBUG
         os_signpost(.event, log: pipPerformanceLog, name: "PiP frame submitted")
         #endif
@@ -507,6 +513,7 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         readerHost?.cancelVideoRestoration()
         isRestoringToReader = false
         renderer = nil
+        isMirrored = false
         isPiPActive = false
         isPiPPossible = false
         isStartingPiP = false
@@ -648,6 +655,7 @@ private final class TeleprompterPiPContentView: UIView {
     }
     private var linePosition: Double = 0
     private var state = TeleprompterPlaybackState()
+    private var isMirrored = false
 
     init(renderer: TeleprompterOverlayRenderer) {
         self.renderer = renderer
@@ -660,10 +668,11 @@ private final class TeleprompterPiPContentView: UIView {
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
-    func present(linePosition: Double, state: TeleprompterPlaybackState) {
-        guard linePosition != self.linePosition || state != self.state else { return }
+    func present(linePosition: Double, state: TeleprompterPlaybackState, isMirrored: Bool) {
+        guard linePosition != self.linePosition || state != self.state || isMirrored != self.isMirrored else { return }
         self.linePosition = linePosition
         self.state = state
+        self.isMirrored = isMirrored
         setNeedsDisplay()
     }
 
@@ -678,7 +687,7 @@ private final class TeleprompterPiPContentView: UIView {
         context.translateBy(x: (bounds.width - size.width * scale) / 2,
                             y: (bounds.height - size.height * scale) / 2)
         context.scaleBy(x: scale, y: scale)
-        renderer.draw(in: context, linePosition: linePosition, state: state)
+        renderer.draw(in: context, linePosition: linePosition, state: state, isMirrored: isMirrored)
         context.restoreGState()
     }
 }
@@ -818,7 +827,7 @@ private final class TeleprompterOverlayRenderer {
 
     /// Draw the script with `linePosition` (fractional, in this layout's lines)
     /// on the reading line, into a context already scaled to `logicalSize`.
-    func draw(in context: CGContext, linePosition: Double, state: TeleprompterPlaybackState) {
+    func draw(in context: CGContext, linePosition: Double, state: TeleprompterPlaybackState, isMirrored: Bool) {
         context.setFillColor(backgroundColor.cgColor)
         context.fill(CGRect(origin: .zero, size: logicalSize))
         let remaining = timerDuration > 0 ? timerDuration - Int(state.elapsedTime) : Int(state.elapsedTime)
@@ -850,6 +859,10 @@ private final class TeleprompterOverlayRenderer {
         context.saveGState()
         context.clip(to: viewport)
         context.translateBy(x: viewport.minX, y: viewport.minY + readingY - offset)
+        if isMirrored {
+            context.translateBy(x: viewport.width, y: 0)
+            context.scaleBy(x: -1, y: 1)
+        }
         let visibleRect = CGRect(x: 0, y: offset - readingY, width: viewport.width, height: viewport.height)
         let glyphs = layoutManager.glyphRange(forBoundingRect: visibleRect, in: textContainer)
         layoutManager.drawBackground(forGlyphRange: glyphs, at: .zero)

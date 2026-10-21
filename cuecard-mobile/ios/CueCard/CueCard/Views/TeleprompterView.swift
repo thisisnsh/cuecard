@@ -16,6 +16,7 @@ struct TeleprompterView: View {
     private var scriptTime: Double { pipManager.playback.scriptTime }
     private var isCountingDown: Bool { pipManager.playback.isCountingDown }
     private var countdownValue: Int { pipManager.playback.countdownValue }
+    private var isMirrored: Bool { pipManager.isMirrored }
     /// During the countdown the play button shows the seconds left, in the cue
     /// color, and switches to the pause icon once playback starts. It still
     /// pauses while showing a number.
@@ -24,7 +25,6 @@ struct TeleprompterView: View {
     @State private var hasConfiguredSession = false
     @State private var showControls = true
     @State private var showingHelp = false
-    @State private var isMirrored = false
     @State private var controlsTimer: Timer?
     @Environment(\.scenePhase) private var scenePhase
 
@@ -223,15 +223,13 @@ struct TeleprompterView: View {
                     }
                     ToolbarItem(placement: .topBarTrailing) {
                         Button(action: {
-                            isMirrored.toggle()
+                            pipManager.toggleMirroring()
                             AnalyticsEvents.logButtonClick(isMirrored ? "mirror_on" : "mirror_off", screen: "teleprompter")
                             resetControlsTimer()
                         }) {
                             Image(systemName: "arrow.left.and.right.righttriangle.left.righttriangle.right")
                                 .font(.system(size: 15, weight: .semibold))
-                                .foregroundStyle(isMirrored
-                                                 ? AppColors.green(for: colorScheme)
-                                                 : AppColors.textPrimary(for: colorScheme))
+                                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                         }
                         .accessibilityLabel("Mirror Text")
                         .accessibilityValue(isMirrored ? "On" : "Off")
