@@ -63,6 +63,34 @@
         }
       }
     },
+    "Control the teleprompter and read cards" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controla el teleprompter y lee tarjetas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contrôler le prompteur et lire les fiches"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Controle o teleprompter e leia cartões"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Управление телесуфлёром и чтение карточек"
+          }
+        }
+      }
+    },
     "Count Down Before Scrolling" : {
       "localizations" : {
         "es" : {
@@ -259,6 +287,34 @@
         }
       }
     },
+    "Modes, cues, formatting and cards" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modos, indicaciones, formato y tarjetas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modes, repères, mise en forme et fiches"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Modos, deixas, formatação e cartões"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Режимы, подсказки, оформление и карточки"
+          }
+        }
+      }
+    },
     "New Album" : {
       "localizations" : {
         "es" : {
@@ -343,6 +399,62 @@
         }
       }
     },
+    "Play or pause without touching the screen" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reproduce o pausa sin tocar la pantalla"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lire ou mettre en pause sans toucher l'écran"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reproduza ou pause sem tocar na tela"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пуск или пауза без касания экрана"
+          }
+        }
+      }
+    },
+    "Save, open, import, versions and sharing" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guardar, abrir, importar, versiones y compartir"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enregistrer, ouvrir, importer, versions et partage"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salvar, abrir, importar, versões e compartilhar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сохранение, открытие, импорт, версии и отправка"
+          }
+        }
+      }
+    },
     "Scroll Speed in Settings sets how many lines pass each minute." : {
       "localizations" : {
         "es" : {
@@ -367,6 +479,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "«Скорость прокрутки» в настройках задаёт, сколько строк проходит за минуту."
+          }
+        }
+      }
+    },
+    "Scrolling, speed and the floating window" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desplazamiento, velocidad y ventana flotante"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Défilement, vitesse et fenêtre flottante"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rolagem, velocidade e janela flutuante"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Прокрутка, скорость и плавающее окно"
           }
         }
       }
@@ -567,6 +707,62 @@
         }
       }
     },
+    "Text size, colors, timer and countdown" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamaño de texto, colores, temporizador y cuenta atrás"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Taille du texte, couleurs, minuteur et compte à rebours"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamanho do texto, cores, timer e contagem regressiva"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Размер текста, цвета, таймер и обратный отсчёт"
+          }
+        }
+      }
+    },
+    "The videos you record with a script" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Los vídeos que grabas con un guion"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les vidéos filmées avec un texte"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Os vídeos que você grava com um roteiro"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Видео, записанные с текстом"
+          }
+        }
+      }
+    },
     "Title" : {
       "localizations" : {
         "es" : {
@@ -619,6 +815,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Нажмите и удерживайте дубль или воспроизведите его и коснитесь «Добавить в альбом», чтобы поместить его в альбом «Фото»."
+          }
+        }
+      }
+    },
+    "Turning cards and the Lock Screen" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pasar tarjetas y la pantalla bloqueada"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tourner les fiches et l'écran verrouillé"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Passar cartões e a Tela Bloqueada"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Листание карточек и экран блокировки"
           }
         }
       }

@@ -35,16 +35,37 @@ struct HelpTopic: Identifiable {
 }
 
 private struct HelpSection: Identifiable {
+    /// Names the section in analytics, the same in every language.
+    let id: String
     let title: String
-    let topics: [HelpTopic]
+    /// What's in it, under the title on the front page.
+    let summary: String
+    let systemImage: String
+    var topics: [HelpTopic]
 
-    var id: String { title }
+    init(_ id: String, title: LocalizedStringResource, summary: LocalizedStringResource,
+         systemImage: String, topics: [HelpTopic]) {
+        self.id = id
+        self.title = String(localized: title)
+        self.summary = String(localized: summary)
+        self.systemImage = systemImage
+        self.topics = topics
+    }
+
+    /// The same section with only the topics that match `query`.
+    func filtered(by query: String) -> HelpSection {
+        var section = self
+        section.topics = topics.filter { $0.matches(query) }
+        return section
+    }
 }
 
 // MARK: - Topics
 
 private enum AllHelp {
-    static let writing = HelpSection(title: String(localized: "Writing"), topics: [
+    static let writing = HelpSection("writing", title: "Writing",
+                                    summary: "Modes, cues, formatting and cards",
+                                    systemImage: "pencil", topics: [
         HelpTopic("Pick a Mode",
                   detail: "Tap the mode name at the top. Teleprompter scrolls your whole script. Cards shows it one card at a time."),
         HelpTopic("Add Cues",
@@ -55,7 +76,9 @@ private enum AllHelp {
                   detail: "Each box in the editor is one card. Tap Create New Card to add another.")
     ])
 
-    static let notes = HelpSection(title: String(localized: "Notes & Saving"), topics: [
+    static let notes = HelpSection("notes", title: "Notes & Saving",
+                                    summary: "Save, open, import, versions and sharing",
+                                    systemImage: "folder", topics: [
         HelpTopic("Save Your Work",
                   detail: "Unsaved above Play means there are changes to save. Tap it to save, or tap ••• › Save."),
         HelpTopic("Open Saved Notes",
@@ -70,7 +93,9 @@ private enum AllHelp {
                   detail: "Tap ••• › Share to send it as text, cues included.")
     ])
 
-    static let settings = HelpSection(title: String(localized: "Settings & Timer"), topics: [
+    static let settings = HelpSection("settings", title: "Settings & Timer",
+                                    summary: "Text size, colors, timer and countdown",
+                                    systemImage: "gearshape", topics: [
         HelpTopic("Change Text Size and Colors",
                   detail: "Tap the gear at the top. Each mode keeps its own sizes and cue color."),
         HelpTopic("Set a Timer",
@@ -79,7 +104,9 @@ private enum AllHelp {
                   detail: "In the teleprompter's timer, set a Countdown to get a few seconds before the script starts scrolling.")
     ])
 
-    static let teleprompter = HelpSection(title: String(localized: "Teleprompter"), topics: [
+    static let teleprompter = HelpSection("teleprompter", title: "Teleprompter",
+                                    summary: "Scrolling, speed and the floating window",
+                                    systemImage: "text.alignleft", topics: [
         HelpTopic("Play and Pause",
                   detail: "The buttons fade while the script scrolls so they stay out of the way. Tap the screen to show them again."),
         HelpTopic("Scroll by Hand",
@@ -92,7 +119,9 @@ private enum AllHelp {
                   detail: "The timer changes color when you're near the end and again once you're over time. Pick the colors in the timer.")
     ])
 
-    static let cards = HelpSection(title: String(localized: "Cards"), topics: [
+    static let cards = HelpSection("cards", title: "Cards",
+                                    summary: "Turning cards and the Lock Screen",
+                                    systemImage: "rectangle.on.rectangle", topics: [
         HelpTopic("Turn Cards",
                   detail: "Swipe, or tap Back and Next. The dots at the top show which card you're on."),
         HelpTopic("Read from the Lock Screen",
@@ -101,7 +130,9 @@ private enum AllHelp {
                   detail: "The time at the top counts down your timer. With no timer set, it counts up from when you started.")
     ])
 
-    static let takes = HelpSection(title: String(localized: "Takes"), topics: [
+    static let takes = HelpSection("takes", title: "Takes",
+                                    summary: "The videos you record with a script",
+                                    systemImage: "film.stack", topics: [
         HelpTopic("Find Your Takes",
                   detail: "Videos you record while the teleprompter is open, even floating over the camera, are kept as takes of the script. Tap the film button next to Play to see them."),
         HelpTopic("Play a Take",
@@ -116,7 +147,9 @@ private enum AllHelp {
                   detail: "Your videos stay in Photos, and nothing leaves this device.")
     ])
 
-    static let appleWatch = HelpSection(title: String(localized: "Apple Watch"), topics: [
+    static let appleWatch = HelpSection("apple_watch", title: "Apple Watch",
+                                    summary: "Control the teleprompter and read cards",
+                                    systemImage: "applewatch", topics: [
         HelpTopic("Install on Apple Watch",
                   detail: "Open the Watch app on your iPhone. Under Available Apps, tap Install next to CueCard."),
         HelpTopic("Control the Teleprompter",
@@ -132,7 +165,9 @@ private enum AllHelp {
     /// The Play or Pause control needs iOS 18 and an iPhone with an Action button.
     static var actionButton: HelpSection? {
         guard #available(iOS 18.0, *), DeviceModel.hasActionButton else { return nil }
-        return HelpSection(title: String(localized: "Action Button"), topics: [
+        return HelpSection("action_button", title: "Action Button",
+                           summary: "Play or pause without touching the screen",
+                           systemImage: "button.programmable", topics: [
             HelpTopic("Play or Pause the Teleprompter",
                       detail: "Start and stop scrolling without touching the screen. In the Settings app, go to Action Button › Controls and pick Play or Pause under CueCard.")
         ])
@@ -145,7 +180,8 @@ private enum AllHelp {
 
 // MARK: - Help Sheet
 
-/// The same help on every page, grouped by part of the app.
+/// The same help on every page: a front page of sections, each opening to
+/// its topics, with a search across all of them.
 struct HelpView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var colorScheme
@@ -156,51 +192,37 @@ struct HelpView: View {
 
     @State private var query = ""
 
-    private static let screen = "help"
+    fileprivate static let screen = "help"
 
-    private var sections: [HelpSection] {
-        let trimmed = query.trimmingCharacters(in: .whitespaces)
-        guard !trimmed.isEmpty else { return AllHelp.sections }
+    private var trimmedQuery: String {
+        query.trimmingCharacters(in: .whitespaces)
+    }
 
-        return AllHelp.sections
-            .map { HelpSection(title: $0.title, topics: $0.topics.filter { $0.matches(trimmed) }) }
+    /// The sections with a topic that matches the search.
+    private var results: [HelpSection] {
+        AllHelp.sections
+            .map { $0.filtered(by: trimmedQuery) }
             .filter { !$0.topics.isEmpty }
     }
 
     var body: some View {
         NavigationStack {
             List {
-                if query.isEmpty {
-                    Section {
-                        if whatsNew.release != nil {
-                            Button {
-                                AnalyticsEvents.logButtonClick("whats_new", screen: Self.screen)
-                                whatsNew.show()
-                            } label: {
-                                linkRow("What's New in \(whatsNew.version)", systemImage: "sparkles")
+                if trimmedQuery.isEmpty {
+                    frontPage
+                } else {
+                    ForEach(results) { section in
+                        Section(section.title) {
+                            ForEach(section.topics) { topic in
+                                HelpTopicRow(topic: topic, isExpanded: true)
                             }
-                        }
-
-                        Button {
-                            AnalyticsEvents.logButtonClick("email_support", screen: Self.screen)
-                            openURL(AppLinks.supportEmail)
-                        } label: {
-                            linkRow("Email Support", systemImage: "envelope")
-                        }
-                    }
-                }
-
-                ForEach(sections) { section in
-                    Section(section.title) {
-                        ForEach(section.topics) { topic in
-                            row(topic)
                         }
                     }
                 }
             }
             .overlay {
-                if sections.isEmpty {
-                    ContentUnavailableView.search(text: query)
+                if !trimmedQuery.isEmpty && results.isEmpty {
+                    ContentUnavailableView.search(text: trimmedQuery)
                 }
             }
             .searchable(text: $query, prompt: "Search Help")
@@ -208,10 +230,7 @@ struct HelpView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") {
-                        AnalyticsEvents.logButtonClick("done", screen: Self.screen)
-                        dismiss()
-                    }
+                    Button("Done", action: close)
                 }
             }
         }
@@ -222,6 +241,60 @@ struct HelpView: View {
                 "page": page.rawValue
             ])
         }
+    }
+
+    @ViewBuilder
+    private var frontPage: some View {
+        Section {
+            ForEach(AllHelp.sections) { section in
+                NavigationLink {
+                    HelpSectionView(section: section, close: close)
+                } label: {
+                    sectionRow(section)
+                }
+            }
+        }
+
+        Section {
+            if whatsNew.release != nil {
+                Button {
+                    AnalyticsEvents.logButtonClick("whats_new", screen: Self.screen)
+                    whatsNew.show()
+                } label: {
+                    linkRow("What's New in \(whatsNew.version)", systemImage: "sparkles")
+                }
+            }
+
+            Button {
+                AnalyticsEvents.logButtonClick("email_support", screen: Self.screen)
+                openURL(AppLinks.supportEmail)
+            } label: {
+                linkRow("Email Support", systemImage: "envelope")
+            }
+        }
+    }
+
+    /// Closes the whole sheet, from the front page or a section.
+    private func close() {
+        AnalyticsEvents.logButtonClick("done", screen: Self.screen)
+        dismiss()
+    }
+
+    private func sectionRow(_ section: HelpSection) -> some View {
+        HStack(spacing: 14) {
+            Image(systemName: section.systemImage)
+                .font(.system(size: 17, weight: .medium))
+                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                .frame(width: 28)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(section.title)
+                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                Text(section.summary)
+                    .font(.footnote)
+                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+            }
+        }
+        .padding(.vertical, 2)
     }
 
     private func linkRow(_ title: LocalizedStringKey, systemImage: String) -> some View {
@@ -235,16 +308,67 @@ struct HelpView: View {
         }
         .contentShape(Rectangle())
     }
+}
 
-    private func row(_ topic: HelpTopic) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(topic.title)
-                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-            Text(topic.detail)
-                .font(.footnote)
-                .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+/// One section's topics, each closed to its title until it's tapped.
+private struct HelpSectionView: View {
+    let section: HelpSection
+    /// Closes the sheet. The page's own dismiss would only go back.
+    let close: () -> Void
+
+    var body: some View {
+        List {
+            ForEach(section.topics) { topic in
+                HelpTopicRow(topic: topic)
+            }
         }
-        .padding(.vertical, 2)
+        .navigationTitle(section.title)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Done", action: close)
+            }
+        }
+        .onAppear {
+            AnalyticsEvents.logButtonClick("section_\(section.id)", screen: HelpView.screen)
+        }
+    }
+}
+
+/// A topic's title, and its explanation once opened. Search results start
+/// open, so the match shows.
+private struct HelpTopicRow: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    let topic: HelpTopic
+    @State var isExpanded = false
+
+    var body: some View {
+        Button {
+            withAnimation(.snappy(duration: 0.25)) { isExpanded.toggle() }
+        } label: {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(alignment: .firstTextBaseline) {
+                    Text(topic.title)
+                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                    Spacer(minLength: 8)
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                        .rotationEffect(.degrees(isExpanded ? 180 : 0))
+                        .accessibilityHidden(true)
+                }
+                if isExpanded {
+                    Text(topic.detail)
+                        .font(.footnote)
+                        .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .transition(.opacity)
+                }
+            }
+            .padding(.vertical, 2)
+            .contentShape(Rectangle())
+        }
     }
 }
 
