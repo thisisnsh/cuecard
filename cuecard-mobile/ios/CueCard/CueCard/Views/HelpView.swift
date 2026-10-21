@@ -245,6 +245,22 @@ struct HelpView: View {
 
     @ViewBuilder
     private var frontPage: some View {
+        Section("Email Support") {
+            Button {
+                AnalyticsEvents.logButtonClick("report_bug", screen: Self.screen)
+                openURL(AppLinks.bugReport)
+            } label: {
+                linkRow("Report a Bug", systemImage: "ladybug")
+            }
+
+            Button {
+                AnalyticsEvents.logButtonClick("request_feature", screen: Self.screen)
+                openURL(AppLinks.featureRequest)
+            } label: {
+                linkRow("Request a Feature", systemImage: "lightbulb")
+            }
+        }
+
         Section {
             ForEach(AllHelp.sections) { section in
                 NavigationLink {
@@ -263,22 +279,6 @@ struct HelpView: View {
                 } label: {
                     linkRow("What's New in \(whatsNew.version)", systemImage: "sparkles")
                 }
-            }
-        }
-
-        Section("Email Support") {
-            Button {
-                AnalyticsEvents.logButtonClick("report_bug", screen: Self.screen)
-                openURL(AppLinks.bugReport)
-            } label: {
-                linkRow("Report a Bug", systemImage: "ladybug")
-            }
-
-            Button {
-                AnalyticsEvents.logButtonClick("request_feature", screen: Self.screen)
-                openURL(AppLinks.featureRequest)
-            } label: {
-                linkRow("Request a Feature", systemImage: "lightbulb")
             }
         }
     }
