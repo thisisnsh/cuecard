@@ -24,7 +24,36 @@ struct CueCardRun: Codable, Hashable {
     }
 }
 
+/// Chinese, Japanese and Korean. Their glyphs fill the whole em box, so lines
+/// set as close as Latin ones crowd together.
+enum WideScript {
+    /// Room between lines in a wide script, where they're set by spacing.
+    static func lineSpacing(ofSize size: CGFloat) -> CGFloat {
+        size * 0.35
+    }
+
+    /// The least a line in a wide script takes up, where it's set by height.
+    static func lineHeight(ofSize size: CGFloat) -> CGFloat {
+        ceil(size * 1.5)
+    }
+}
+
+extension String {
+    /// Whether any of it is in a wide script.
+    var hasWideScript: Bool {
+        unicodeScalars.contains { scalar in
+            scalar.properties.isIdeographic
+                || (0x3040...0x30FF).contains(scalar.value) // Hiragana, Katakana
+                || (0xAC00...0xD7AF).contains(scalar.value) // Hangul
+        }
+    }
+}
+
 extension Array where Element == CueCardRun {
+    var hasWideScript: Bool {
+        contains { $0.text.hasWideScript }
+    }
+
     /// The card as one text, cues in their color and set narrower than the
     /// script so they never read as part of it. `cueFont`, if given, sets them
     /// smaller as well.

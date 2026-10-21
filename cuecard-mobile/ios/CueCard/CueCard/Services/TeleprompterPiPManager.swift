@@ -717,9 +717,8 @@ enum TeleprompterTextLayout {
                 }
             }
         }
-        let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.lineSpacing = fontSize * 0.18
-        paragraphStyle.paragraphSpacing = fontSize * 0.45
+        let paragraphStyle = NSParagraphStyle.script(ofSize: fontSize, isWide: text.hasWideScript,
+                                                     lineSpacing: fontSize * 0.18, paragraphSpacing: fontSize * 0.45)
         result.addAttribute(.paragraphStyle, value: paragraphStyle, range: NSRange(location: 0, length: result.length))
         return result
     }

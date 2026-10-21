@@ -443,7 +443,7 @@ private struct CueCardFace: View {
             runs.text(primary: AppColors.textPrimary(for: colorScheme), cue: cueColor.color(for: colorScheme),
                       cueFont: .system(size: fontSize * 0.82, weight: .semibold))
                 .font(.system(size: fontSize, weight: .semibold))
-                .lineSpacing(4)
+                .lineSpacing(runs.hasWideScript ? WideScript.lineSpacing(ofSize: fontSize) : 4)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(24)

@@ -120,7 +120,7 @@ private struct CardPage: View {
                       cueFont: .system(size: textSize * 0.82, weight: .semibold))
                 .opacity(isLuminanceReduced ? 0.6 : 1)
                 .font(.system(size: textSize, weight: .semibold))
-                .lineSpacing(3)
+                .lineSpacing(runs.hasWideScript ? WideScript.lineSpacing(ofSize: textSize) : 3)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 6)
                 // Clear of the Back and Next buttons at the bottom.

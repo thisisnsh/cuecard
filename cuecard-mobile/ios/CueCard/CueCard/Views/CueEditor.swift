@@ -411,7 +411,8 @@ struct CueTextEditor: UIViewRepresentable {
         guard textView.markedTextRange == nil else { return }
 
         let isDarkMode = colorScheme == .dark
-        let baseAttributes = baseAttributes(isDarkMode: isDarkMode, fontSize: fontSize)
+        let baseAttributes = baseAttributes(isDarkMode: isDarkMode, fontSize: fontSize,
+                                            isWide: textView.text.hasWideScript)
         let secondary = isDarkMode ? AppColors.UIColors.Dark.textSecondary : AppColors.UIColors.Light.textSecondary
         let tagColor = cueColor.uiColor(isDarkMode: isDarkMode)
         let storage = textView.textStorage
@@ -495,9 +496,13 @@ struct CueTextEditor: UIViewRepresentable {
         textView.typingAttributes = baseAttributes
     }
 
-    private static func baseAttributes(isDarkMode: Bool, fontSize: CGFloat) -> [NSAttributedString.Key: Any] {
+    /// Typing takes these too, so text still being composed is set like the
+    /// rest before it's styled.
+    private static func baseAttributes(isDarkMode: Bool, fontSize: CGFloat,
+                                       isWide: Bool) -> [NSAttributedString.Key: Any] {
         [
             .font: UIFont.script(ofSize: fontSize),
+            .paragraphStyle: NSParagraphStyle.script(ofSize: fontSize, isWide: isWide),
             .foregroundColor: isDarkMode ? AppColors.UIColors.Dark.textPrimary : AppColors.UIColors.Light.textPrimary
         ]
     }
@@ -735,6 +740,20 @@ extension UIFont {
     /// A cue's face: condensed, so it never reads as part of the script.
     static func cue(ofSize size: CGFloat, weight: UIFont.Weight = .semibold) -> UIFont {
         UIFont.systemFont(ofSize: size, weight: weight, width: .condensed)
+    }
+}
+
+extension NSParagraphStyle {
+    /// A script's lines, `lineSpacing` apart. A script with any Chinese,
+    /// Japanese or Korean in it sets every line taller, all the same height, so
+    /// a line doesn't shift as those words are typed or composed into it.
+    static func script(ofSize size: CGFloat, isWide: Bool, lineSpacing: CGFloat = 0,
+                       paragraphSpacing: CGFloat = 0) -> NSParagraphStyle {
+        let style = NSMutableParagraphStyle()
+        style.lineSpacing = lineSpacing
+        style.paragraphSpacing = paragraphSpacing
+        if isWide { style.minimumLineHeight = WideScript.lineHeight(ofSize: size) }
+        return style
     }
 }
 
