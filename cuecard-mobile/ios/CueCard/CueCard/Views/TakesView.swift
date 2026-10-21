@@ -484,6 +484,7 @@ private struct TakePlayerView: View {
                     }
                 } label: {
                     Label("Delete", systemImage: "trash")
+                        .foregroundStyle(AppColors.red(for: colorScheme))
                 }
             }
         }
