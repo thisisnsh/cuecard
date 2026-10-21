@@ -23,7 +23,7 @@ const MIN_REFRESH_MS = 15 * 60 * 1000;
  * longer checks these itself, so this is the only enforcement: a link anywhere
  * else means the notification is dropped rather than shown.
  */
-const ALLOWED_HOSTS = new Set(['cuecard.dev', 'www.cuecard.dev', 'github.com', 'apps.apple.com']);
+const ALLOWED_HOSTS = new Set(['cuecard.dev', 'www.cuecard.dev', 'github.com', 'apps.apple.com', 'forms.gle']);
 
 const SURFACES = new Set(['homeBanner', 'settingsRow']);
 const SEVERITIES = new Set(['info', 'warning', 'critical']);

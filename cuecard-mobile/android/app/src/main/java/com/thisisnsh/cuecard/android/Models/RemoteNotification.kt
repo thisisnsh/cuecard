@@ -223,7 +223,7 @@ data class RemoteNotification(
          * means the notification is dropped rather than shown without its action.
          */
         val allowedHosts = setOf(
-            "cuecard.dev", "www.cuecard.dev", "play.google.com", "github.com"
+            "cuecard.dev", "www.cuecard.dev", "play.google.com", "github.com", "forms.gle"
         )
 
         /**

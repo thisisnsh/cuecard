@@ -14,9 +14,10 @@ export type Surface = "homeBanner" | "settingsRow";
 export type Severity = "info" | "warning" | "critical";
 
 // Up to 2 per notification.
-//   openURL   The url must be on cuecard.dev or github.com, or the store the
-//             client itself is on (apps.apple.com for iOS, play.google.com for
-//             Android). Clients drop the whole notification otherwise.
+//   openURL   The url must be on cuecard.dev, github.com or forms.gle, or the
+//             store the client itself is on (apps.apple.com for iOS,
+//             play.google.com for Android). Clients drop the whole notification
+//             otherwise.
 //   appStore  Opens the app's own listing. Needs no url.
 //   dismiss   Closes the notification.
 export type Action =

@@ -109,7 +109,7 @@ struct RemoteNotification: Identifiable, Equatable {
     /// worker no longer checks these itself, so this is the only enforcement:
     /// a link anywhere else means the notification is dropped rather than shown.
     static let allowedHosts: Set<String> = [
-        "cuecard.dev", "www.cuecard.dev", "apps.apple.com", "github.com"
+        "cuecard.dev", "www.cuecard.dev", "apps.apple.com", "github.com", "forms.gle"
     ]
 
     /// Whether a notification may link to `url`: over https, on a host we
