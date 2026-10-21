@@ -32,7 +32,25 @@ final class RemoteNotificationService: ObservableObject {
     /// as the real thing. Set to nil to hit the worker again.
     ///
     /// Dismissing one remembers its id, so change the id to see it again.
-    private static let fakeResponse: String? = nil
+    private static let fakeResponse: String? = """
+    {
+      "notifications": [
+        {
+          "id": "debug-feedback-3",
+          "surface": "homeBanner",
+          "severity": "info",
+          "title": "Help make CueCard better",
+          "body": "Got an idea or found a bug? It takes a minute.",
+          "actions": [
+            { "kind": "openURL", "label": "Tell us", "url": "https://forms.gle/eQnYdfxJXu3uHHx76" },
+            { "kind": "dismiss", "label": "Not now" }
+          ],
+          "minInstallAgeDays": 3,
+          "expiresAt": "2026-12-31T00:00:00Z"
+        }
+      ]
+    }
+    """
     #endif
 
     @Published private(set) var payload: RemoteNotifications = .empty

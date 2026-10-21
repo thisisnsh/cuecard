@@ -24,7 +24,7 @@ export const NOTIFICATIONS: Notification[] = [
     title: "Help make CueCard better",
     body: "Got an idea or found a bug? It takes a minute.",
     actions: [
-      { kind: "openURL", label: "Tell us", url: "https://cuecard.dev/feedback-95efa0d9/" },
+      { kind: "openURL", label: "Tell us", url: "https://forms.gle/eQnYdfxJXu3uHHx76" },
       { kind: "dismiss", label: "Not now" },
     ],
     minInstallAgeDays: 3,
