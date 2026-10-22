@@ -7,6 +7,62 @@
     " %@ " : {
       "shouldTranslate" : false
     },
+    "Play and pause on the teleprompter start and pause recording, and recording plays and pauses the teleprompter. Stopping a recording pauses the teleprompter." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reproducir y pausar en el teleprompter inician y pausan la grabación, y la grabación reproduce y pausa el teleprompter. Detener una grabación pausa el teleprompter."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lire et Pause sur le prompteur lancent et mettent en pause l'enregistrement, et l'enregistrement lance et met en pause le prompteur. Arrêter un enregistrement met le prompteur en pause."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reproduzir e pausar no teleprompter iniciam e pausam a gravação, e a gravação reproduz e pausa o teleprompter. Parar uma gravação pausa o teleprompter."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пуск и пауза телесуфлёра запускают и приостанавливают запись, а запись запускает и ставит телесуфлёр на паузу. Остановка записи ставит телесуфлёр на паузу."
+          }
+        }
+      }
+    },
+    "Sync with Teleprompter" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sincronizar con el teleprompter"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Synchroniser avec le prompteur"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sincronizar com o teleprompter"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Синхронизация с телесуфлёром"
+          }
+        }
+      }
+    },
     "“%@” couldn't be deleted from the notes folder. Its note stays deleted." : {
       "localizations" : {
         "es" : {
