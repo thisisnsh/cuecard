@@ -77,15 +77,19 @@ struct TeleprompterView: View {
 
     var body: some View {
         NavigationStack {
-            GeometryReader { geometry in
-                ZStack {
-                    // Background - matches device theme
-                    AppColors.background(for: colorScheme)
-                        .ignoresSafeArea()
+            CameraRecordingView(isPresented: $showingCamera,
+                                scriptID: settingsService.teleprompterScriptID,
+                                onRecordingActiveChange: { active in
+                                    if active { pipManager.play() } else { pipManager.pause() }
+                                }) {
+                GeometryReader { geometry in
+                    ZStack {
+                        // Background - matches device theme
+                        AppColors.background(for: colorScheme)
+                            .ignoresSafeArea()
 
-                    // The script scrolls at the reader's own pace: so many rendered
-                    // lines a minute, counted from the time on the clock.
-                    if !showingCamera {
+                        // The script scrolls at the reader's own pace: so many rendered
+                        // lines a minute, counted from the time on the clock.
                         AttributedTextView(
                             content: content,
                             cueColor: settings.cueColor,
@@ -117,94 +121,94 @@ struct TeleprompterView: View {
                         // Lines arrive and leave through a fade rather than being cut
                         // off flat against the toolbar and the controls.
                         .scriptEdgeFade(for: colorScheme, top: Self.topFade, bottom: Self.bottomFade)
-                    }
 
-                    // Controls overlay. Always laid out and faded rather than
-                    // added and removed, so the glass fades with the icons
-                    // instead of popping in.
-                    VStack {
-                        Spacer()
+                        // Controls overlay. Always laid out and faded rather than
+                        // added and removed, so the glass fades with the icons
+                        // instead of popping in.
+                        VStack {
+                            Spacer()
 
-                        HStack(spacing: 24) {
-                            // PiP toggle button. Kept in the stack even when
-                            // PiP is unavailable — taking it out shifts the
-                            // play button off centre — and only made invisible.
-                            Button(action: {
-                                AnalyticsEvents.logButtonClick(pipManager.isPiPActive ? "pip_exit" : "pip_enter", screen: "teleprompter")
-                                togglePiP()
-                            }) {
-                                Image(systemName: pipManager.isPiPActive ? "pip.exit" : "pip.enter")
-                                    .font(.system(size: 20, weight: .semibold))
-                                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                                    .frame(width: 52, height: 52)
-                                    .glassedEffect(in: Circle())
-                            }
-                            .accessibilityLabel(pipManager.isPiPActive ? "Close Overlay" : "Start Overlay")
-                            .opacity(pipManager.isPiPPossible ? 1 : 0)
-                            .disabled(!pipManager.isPiPPossible)
-                            .accessibilityHidden(!pipManager.isPiPPossible)
-
-                            // Play/Pause button
-                            Button(action: {
-                                AnalyticsEvents.logButtonClick((isPlaying || isCountingDown) ? "pause" : "play", screen: "teleprompter")
-                                togglePlayPause()
-                            }) {
-                                ZStack {
-                                    if showsCountdownNumber {
-                                        Text("\(countdownValue)")
-                                            .font(.system(size: 30, weight: .bold, design: .rounded))
-                                            .monospacedDigit()
-                                            .transition(.opacity)
-                                    } else {
-                                        Image(systemName: (isPlaying || isCountingDown) ? "pause.fill" : "play.fill")
-                                            .font(.system(size: 28, weight: .semibold))
-                                            .transition(.opacity)
-                                    }
+                            HStack(spacing: 24) {
+                                // PiP toggle button. Kept in the stack even when
+                                // PiP is unavailable — taking it out shifts the
+                                // play button off centre — and only made invisible.
+                                Button(action: {
+                                    AnalyticsEvents.logButtonClick(pipManager.isPiPActive ? "pip_exit" : "pip_enter", screen: "teleprompter")
+                                    togglePiP()
+                                }) {
+                                    Image(systemName: pipManager.isPiPActive ? "pip.exit" : "pip.enter")
+                                        .font(.system(size: 20, weight: .semibold))
+                                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                                        .frame(width: 52, height: 52)
+                                        .glassedEffect(in: Circle())
                                 }
-                                .foregroundStyle(colorScheme == .dark ? .black : .white)
-                                .frame(width: 72, height: 72)
-                                .background(
-                                    Circle()
-                                        .fill(showsCountdownNumber
-                                              ? settings.timerStyle.countdownColor.color(for: colorScheme)
-                                              : AppColors.green(for: colorScheme))
-                                )
-                                .glassedEffect(in: Circle())
-                                .animation(.easeInOut(duration: 0.12), value: showsCountdownNumber)
-                            }
-                            .accessibilityLabel(isCountingDown
-                                                ? "Pause, starting in \(countdownValue)"
-                                                : (isPlaying ? "Pause" : "Play"))
+                                .accessibilityLabel(pipManager.isPiPActive ? "Close Overlay" : "Start Overlay")
+                                .opacity(pipManager.isPiPPossible ? 1 : 0)
+                                .disabled(!pipManager.isPiPPossible)
+                                .accessibilityHidden(!pipManager.isPiPPossible)
 
-                            // Restart button
-                            Button(action: {
-                                AnalyticsEvents.logButtonClick("restart", screen: "teleprompter")
-                                restart()
-                            }) {
-                                Image(systemName: "arrow.counterclockwise")
-                                    .font(.system(size: 20, weight: .semibold))
-                                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                                    .frame(width: 52, height: 52)
+                                // Play/Pause button
+                                Button(action: {
+                                    AnalyticsEvents.logButtonClick((isPlaying || isCountingDown) ? "pause" : "play", screen: "teleprompter")
+                                    togglePlayPause()
+                                }) {
+                                    ZStack {
+                                        if showsCountdownNumber {
+                                            Text("\(countdownValue)")
+                                                .font(.system(size: 30, weight: .bold, design: .rounded))
+                                                .monospacedDigit()
+                                                .transition(.opacity)
+                                        } else {
+                                            Image(systemName: (isPlaying || isCountingDown) ? "pause.fill" : "play.fill")
+                                                .font(.system(size: 28, weight: .semibold))
+                                                .transition(.opacity)
+                                        }
+                                    }
+                                    .foregroundStyle(colorScheme == .dark ? .black : .white)
+                                    .frame(width: 72, height: 72)
+                                    .background(
+                                        Circle()
+                                            .fill(showsCountdownNumber
+                                                  ? settings.timerStyle.countdownColor.color(for: colorScheme)
+                                                  : AppColors.green(for: colorScheme))
+                                    )
                                     .glassedEffect(in: Circle())
+                                    .animation(.easeInOut(duration: 0.12), value: showsCountdownNumber)
+                                }
+                                .accessibilityLabel(isCountingDown
+                                                    ? "Pause, starting in \(countdownValue)"
+                                                    : (isPlaying ? "Pause" : "Play"))
+
+                                // Restart button
+                                Button(action: {
+                                    AnalyticsEvents.logButtonClick("restart", screen: "teleprompter")
+                                    restart()
+                                }) {
+                                    Image(systemName: "arrow.counterclockwise")
+                                        .font(.system(size: 20, weight: .semibold))
+                                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                                        .frame(width: 52, height: 52)
+                                        .glassedEffect(in: Circle())
+                                }
                             }
+                            .padding(.bottom, 48)
                         }
-                        .padding(.bottom, 48)
+                        .fadedOut(!showControls)
                     }
-                    .fadedOut(!showControls)
-                }
-                .onAppear {
-                    setupPiP()
-                    // A video recorded from now until the teleprompter closes
-                    // is a take of this script.
-                    TakeStore.shared.begin(scriptID: settingsService.teleprompterScriptID)
-                    // A read is a stretch of looking without touching, which is
-                    // exactly what the idle timer takes for absence. Hold the
-                    // screen for as long as the prompter is up.
-                    UIApplication.shared.isIdleTimerDisabled = true
-                    Analytics.logEvent("teleprompter_started", parameters: [
-                        "word_count": content.words.count,
-                        "timer_duration": timerDuration
-                    ])
+                    .onAppear {
+                        setupPiP()
+                        // A video recorded from now until the teleprompter closes
+                        // is a take of this script.
+                        TakeStore.shared.begin(scriptID: settingsService.teleprompterScriptID)
+                        // A read is a stretch of looking without touching, which is
+                        // exactly what the idle timer takes for absence. Hold the
+                        // screen for as long as the prompter is up.
+                        UIApplication.shared.isIdleTimerDisabled = true
+                        Analytics.logEvent("teleprompter_started", parameters: [
+                            "word_count": content.words.count,
+                            "timer_duration": timerDuration
+                        ])
+                    }
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
@@ -212,11 +216,11 @@ struct TeleprompterView: View {
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
                 // Comes and goes with the play, restart and floating window buttons.
-                if showControls {
+                if showControls || showingCamera {
                     ToolbarItem(placement: .topBarLeading) {
                         Button(action: {
                             AnalyticsEvents.logButtonClick("close", screen: "teleprompter")
-                            stopAndDismiss()
+                            if showingCamera { showingCamera = false } else { stopAndDismiss() }
                         }) {
                             Image(systemName: "xmark")
                                 .font(.system(size: 14, weight: .semibold))
@@ -228,14 +232,13 @@ struct TeleprompterView: View {
                         Button {
                             AnalyticsEvents.logButtonClick("camera", screen: "teleprompter")
                             stopControlsTimer()
-                            pipManager.setCameraPresented(true)
-                            showingCamera = true
+                            showingCamera.toggle()
                         } label: {
-                            Image(systemName: "camera")
+                            Image(systemName: showingCamera ? "camera.fill" : "camera")
                                 .font(.system(size: 15, weight: .semibold))
                                 .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                         }
-                        .accessibilityLabel("Record Video")
+                        .accessibilityLabel(showingCamera ? "Close Camera" : "Record Video")
                         Button(action: {
                             pipManager.toggleMirroring()
                             AnalyticsEvents.logButtonClick(isMirrored ? "mirror_on" : "mirror_off", screen: "teleprompter")
@@ -259,13 +262,10 @@ struct TeleprompterView: View {
             }
             .helpSheet(for: .teleprompter, isPresented: $showingHelp)
         }
-        .fullScreenCover(isPresented: $showingCamera, onDismiss: {
-            pipManager.setCameraPresented(false)
+        .onChange(of: showingCamera) { _, presented in
+            pipManager.setCameraPresented(presented)
             showControls = true
-            UIApplication.shared.isIdleTimerDisabled = true
-        }) {
-            CameraRecordingView(prompt: .teleprompter(content), scriptID: settingsService.teleprompterScriptID)
-                .environmentObject(settingsService)
+            stopControlsTimer()
         }
         .persistentSystemOverlays(.hidden)
         .onDisappear {
@@ -357,7 +357,7 @@ struct TeleprompterView: View {
 
     private func resetControlsTimer() {
         stopControlsTimer()
-        if isPlaying {
+        if isPlaying && !showingCamera {
             controlsTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: false) { _ in
                 Task { @MainActor in
                     withAnimation(controlsFade) {

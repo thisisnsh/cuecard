@@ -9,6 +9,11 @@ final class CameraRecorder: ObservableObject {
     @Published private(set) var device: AVCaptureDevice?
     @Published private(set) var isReady = false
     @Published private(set) var isRecording = false
+    @Published private(set) var isPaused = false
+    @Published private(set) var zoom: Double = 1
+    @Published private(set) var maxZoom: Double = 1
+    private var pausedAt: Date?
+    private var pausedDuration: TimeInterval = 0
     @Published private(set) var isBusy = false
     @Published private(set) var startedAt: Date?
     @Published private(set) var pendingURL: URL?
@@ -16,7 +21,8 @@ final class CameraRecorder: ObservableObject {
     @Published private(set) var needsSettings = false
     let capture = CameraCapture()
     private var isVisible = false
-    private var isPreparing = false
+    private var isStartingRecording = false
+    private var preparationID = UUID()
     private var scriptID: UUID?
     private var backgroundTask: UIBackgroundTaskIdentifier = .invalid
 
@@ -37,9 +43,13 @@ final class CameraRecorder: ObservableObject {
     func prepare(scriptID: UUID?) async {
         isVisible = true
         self.scriptID = scriptID
-        guard !isPreparing else { return }
-        isPreparing = true
-        defer { isPreparing = false }
+        let request = UUID()
+        preparationID = request
+        if !isRecording, !isBusy, pendingURL == nil {
+            pendingURL = (try? FileManager.default.contentsOfDirectory(
+                at: Self.recordingsFolder, includingPropertiesForKeys: nil
+            ))?.first(where: { $0.pathExtension == "mov" })
+        }
         needsSettings = false
         for media in [AVMediaType.video, .audio] {
             let granted: Bool
@@ -48,7 +58,7 @@ final class CameraRecorder: ObservableObject {
             case .notDetermined: granted = await AVCaptureDevice.requestAccess(for: media)
             default: granted = false
             }
-            guard isVisible, !Task.isCancelled else { return }
+            guard isVisible, preparationID == request, !Task.isCancelled else { return }
             guard granted else {
                 needsSettings = true
                 message = String(localized: "Allow camera and microphone access in Settings to record videos.")
@@ -57,14 +67,15 @@ final class CameraRecorder: ObservableObject {
         }
         do {
             let activeDevice = try await capture.prepare()
-            guard isVisible, !Task.isCancelled else {
-                capture.suspend()
+            guard isVisible, preparationID == request, !Task.isCancelled else {
+                if !isVisible { capture.suspend() }
                 return
             }
-            device = activeDevice
+            updateDevice(activeDevice)
             isReady = true
             if pendingURL == nil { message = nil }
         } catch {
+            guard preparationID == request, isVisible else { return }
             message = error.localizedDescription
         }
     }
@@ -76,13 +87,39 @@ final class CameraRecorder: ObservableObject {
             let url = Self.recordingsFolder.appendingPathComponent(UUID().uuidString).appendingPathExtension("mov")
             message = nil
             isBusy = true
-            startedAt = Date()
+            isStartingRecording = true
+            pausedAt = nil
+            pausedDuration = 0
+            isPaused = false
             capture.start(url: url, rotation: rotation)
         } catch { message = error.localizedDescription }
     }
 
+    func recordedDuration(at date: Date) -> TimeInterval {
+        guard let startedAt else { return 0 }
+        return max(0, (pausedAt ?? date).timeIntervalSince(startedAt) - pausedDuration)
+    }
+
+    func togglePause() {
+        guard isRecording, !isBusy else { return }
+        isBusy = true
+        capture.setPaused(!isPaused)
+    }
+
+    func setZoom(_ value: Double) {
+        guard isReady else { return }
+        zoom = min(max(1, value), maxZoom)
+        capture.setZoom(zoom)
+    }
+
+    private func updateDevice(_ device: AVCaptureDevice) {
+        self.device = device
+        maxZoom = min(6, Double(device.maxAvailableVideoZoomFactor))
+        zoom = Double(device.videoZoomFactor)
+    }
+
     func stop() {
-        guard isRecording || (isBusy && startedAt != nil) else { return }
+        guard isRecording || isStartingRecording else { return }
         isBusy = true
         beginBackgroundTask()
         capture.stop()
@@ -90,8 +127,9 @@ final class CameraRecorder: ObservableObject {
 
     func suspend() {
         isVisible = false
+        preparationID = UUID()
         isReady = false
-        if isRecording || startedAt != nil { beginBackgroundTask() }
+        if isRecording || isStartingRecording { beginBackgroundTask() }
         capture.suspend()
     }
 
@@ -99,7 +137,7 @@ final class CameraRecorder: ObservableObject {
         guard isReady, !isBusy, !isRecording else { return }
         isBusy = true
         defer { isBusy = false }
-        do { device = try await capture.switchCamera() }
+        do { updateDevice(try await capture.switchCamera()) }
         catch { message = error.localizedDescription }
     }
 
@@ -142,12 +180,26 @@ final class CameraRecorder: ObservableObject {
     private func handle(_ event: CameraCapture.Event) {
         switch event {
         case .started:
+            isStartingRecording = false
+            if startedAt == nil { startedAt = Date() }
             isRecording = true
             isBusy = false
+        case .paused:
+            pausedAt = Date()
+            isPaused = true
+            isBusy = false
+        case .recordingResumed:
+            if let pausedAt { pausedDuration += Date().timeIntervalSince(pausedAt) }
+            pausedAt = nil
+            isPaused = false
+            isBusy = false
         case let .finished(url, error):
+            isStartingRecording = false
             let start = startedAt ?? Date()
             startedAt = nil
             isRecording = false
+            isPaused = false
+            pausedAt = nil
             isBusy = false
             if let error {
                 message = error
@@ -188,6 +240,8 @@ final class CameraRecorder: ObservableObject {
 final class CameraCapture: NSObject, @unchecked Sendable, AVCaptureFileOutputRecordingDelegate {
     enum Event {
         case started
+        case paused
+        case recordingResumed
         case finished(URL, String?)
         case unavailable(String)
         case resumed
@@ -199,6 +253,12 @@ final class CameraCapture: NSObject, @unchecked Sendable, AVCaptureFileOutputRec
     private var videoInput: AVCaptureDeviceInput?
     private var recordingRequested = false
     private var stopRequested = false
+    // iOS 17 has no native movie pause. Keep its segments until a successful
+    // export joins them without the paused intervals; never discard failed takes.
+    private var fallbackPauseRequested = false
+    private var fallbackPaused = false
+    private var segments: [URL] = []
+    private var recordingRotation: CGFloat = 90
     private var observers: [NSObjectProtocol] = []
 
     override init() {
@@ -279,6 +339,42 @@ final class CameraCapture: NSObject, @unchecked Sendable, AVCaptureFileOutputRec
         }
     }
 
+    func setZoom(_ value: Double) {
+        queue.async {
+            guard let device = self.videoInput?.device else { return }
+            do {
+                try device.lockForConfiguration()
+                defer { device.unlockForConfiguration() }
+                device.videoZoomFactor = min(max(CGFloat(value), device.minAvailableVideoZoomFactor),
+                                             device.maxAvailableVideoZoomFactor)
+            } catch {
+                // Zoom failure should not interrupt a recording.
+            }
+        }
+    }
+
+    func setPaused(_ paused: Bool) {
+        queue.async {
+            guard self.recordingRequested, !self.stopRequested else { return }
+            if #available(iOS 18.0, *) {
+                if paused { self.output.pauseRecording() } else { self.output.resumeRecording() }
+            } else if paused {
+                self.fallbackPauseRequested = true
+                self.output.stopRecording()
+            } else {
+                guard self.fallbackPaused, let first = self.segments.first else { return }
+                self.fallbackPaused = false
+                let url = first.deletingLastPathComponent().appendingPathComponent(UUID().uuidString).appendingPathExtension("mov")
+                self.segments.append(url)
+                if let connection = self.output.connection(with: .video),
+                   connection.isVideoRotationAngleSupported(self.recordingRotation) {
+                    connection.videoRotationAngle = self.recordingRotation
+                }
+                self.output.startRecording(to: url, recordingDelegate: self)
+            }
+        }
+    }
+
     func start(url: URL, rotation: CGFloat) {
         queue.async {
             guard self.session.isRunning, !self.recordingRequested,
@@ -292,6 +388,10 @@ final class CameraCapture: NSObject, @unchecked Sendable, AVCaptureFileOutputRec
                 connection.isVideoMirrored = false
             }
             self.stopRequested = false
+            self.fallbackPauseRequested = false
+            self.fallbackPaused = false
+            self.segments = [url]
+            self.recordingRotation = rotation
             self.recordingRequested = true
             self.output.startRecording(to: url, recordingDelegate: self)
         }
@@ -303,7 +403,14 @@ final class CameraCapture: NSObject, @unchecked Sendable, AVCaptureFileOutputRec
 
     private func stopOnQueue() {
         stopRequested = true
-        if output.isRecording { output.stopRecording() }
+        if fallbackPaused {
+            fallbackPaused = false
+            finishRecording(error: nil)
+        } else if output.isRecording {
+            output.stopRecording()
+        } else if #available(iOS 18.0, *), output.isRecordingPaused {
+            output.stopRecording()
+        }
     }
 
     func suspend() {
@@ -315,7 +422,7 @@ final class CameraCapture: NSObject, @unchecked Sendable, AVCaptureFileOutputRec
 
     func fileOutput(_ output: AVCaptureFileOutput, didStartRecordingTo fileURL: URL, from connections: [AVCaptureConnection]) {
         queue.async {
-            self.onEvent?(.started)
+            self.onEvent?(self.segments.count > 1 ? .recordingResumed : .started)
             if self.stopRequested { self.output.stopRecording() }
         }
     }
@@ -323,11 +430,78 @@ final class CameraCapture: NSObject, @unchecked Sendable, AVCaptureFileOutputRec
     func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL,
                     from connections: [AVCaptureConnection], error: Error?) {
         queue.async {
-            self.recordingRequested = false
             let nsError = error as NSError?
             let succeeded = error == nil || (nsError?.userInfo[AVErrorRecordingSuccessfullyFinishedKey] as? Bool == true)
-            self.onEvent?(.finished(outputFileURL, succeeded ? nil : error?.localizedDescription))
+            if self.fallbackPauseRequested, !self.stopRequested, succeeded {
+                self.fallbackPauseRequested = false
+                self.fallbackPaused = true
+                self.onEvent?(.paused)
+            } else {
+                self.finishRecording(error: succeeded ? nil : error?.localizedDescription)
+            }
         }
+    }
+
+    @available(iOS 18.0, *)
+    func fileOutput(_ output: AVCaptureFileOutput, didPauseRecordingTo fileURL: URL, from connections: [AVCaptureConnection]) {
+        queue.async { self.onEvent?(.paused) }
+    }
+
+    @available(iOS 18.0, *)
+    func fileOutput(_ output: AVCaptureFileOutput, didResumeRecordingTo fileURL: URL, from connections: [AVCaptureConnection]) {
+        queue.async { self.onEvent?(.recordingResumed) }
+    }
+
+    private func finishRecording(error: String?) {
+        recordingRequested = false
+        guard let first = segments.first else { return }
+        let files = segments
+        segments = []
+        guard error == nil, files.count > 1 else {
+            onEvent?(.finished(first, error))
+            return
+        }
+        Task {
+            do {
+                let merged = try await Self.joinSegments(files)
+                files.forEach { try? FileManager.default.removeItem(at: $0) }
+                onEvent?(.finished(merged, nil))
+            } catch {
+                onEvent?(.finished(first, String(localized: "Could not join the recording. Your video segments are kept in CueCard for saving or sharing.")))
+            }
+        }
+    }
+
+    private static func joinSegments(_ files: [URL]) async throws -> URL {
+        let composition = AVMutableComposition()
+        guard let video = composition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid),
+              let audio = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid)
+        else { throw CameraError.unavailable }
+        var cursor = CMTime.zero
+        for file in files {
+            let asset = AVURLAsset(url: file)
+            let duration = try await asset.load(.duration)
+            guard let sourceVideo = try await asset.loadTracks(withMediaType: .video).first else { throw CameraError.unavailable }
+            if cursor == .zero { video.preferredTransform = try await sourceVideo.load(.preferredTransform) }
+            try video.insertTimeRange(CMTimeRange(start: .zero, duration: duration), of: sourceVideo, at: cursor)
+            if let sourceAudio = try await asset.loadTracks(withMediaType: .audio).first {
+                let audioRange = try await sourceAudio.load(.timeRange)
+                let range = CMTimeRangeGetIntersection(audioRange, otherRange: CMTimeRange(start: .zero, duration: duration))
+                try audio.insertTimeRange(range, of: sourceAudio, at: cursor + range.start)
+            }
+            cursor = cursor + duration
+        }
+        let url = files[0].deletingLastPathComponent().appendingPathComponent(UUID().uuidString).appendingPathExtension("mov")
+        guard let exporter = AVAssetExportSession(asset: composition, presetName: AVAssetExportPresetPassthrough)
+        else { throw CameraError.unavailable }
+        exporter.outputURL = url
+        exporter.outputFileType = .mov
+        await exporter.export()
+        guard exporter.status == .completed else {
+            try? FileManager.default.removeItem(at: url)
+            throw exporter.error ?? CameraError.unavailable
+        }
+        return url
     }
 
     private enum CameraError: LocalizedError {

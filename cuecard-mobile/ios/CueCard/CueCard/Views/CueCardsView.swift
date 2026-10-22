@@ -45,31 +45,33 @@ struct CueCardsView: View {
 
     var body: some View {
         NavigationStack {
-            GeometryReader { geometry in
-                ZStack {
-                    AppColors.background(for: colorScheme)
-                        .ignoresSafeArea()
+            CameraRecordingView(isPresented: $showingCamera, scriptID: session.deckID ?? deckID) {
+                GeometryReader { geometry in
+                    ZStack {
+                        AppColors.background(for: colorScheme)
+                            .ignoresSafeArea()
 
-                    VStack(spacing: 0) {
-                        PageDots(count: session.cards.count, index: session.index, colorScheme: colorScheme)
-                            .padding(.horizontal, 24)
-                            .padding(.top, 12)
-                            .accessibilityHidden(true)
+                        VStack(spacing: 0) {
+                            PageDots(count: session.cards.count, index: session.index, colorScheme: colorScheme)
+                                .padding(.horizontal, 24)
+                                .padding(.top, 12)
+                                .accessibilityHidden(true)
 
-                        deck(width: geometry.size.width)
-                            .padding(.horizontal, 20)
-                            .padding(.top, 12)
-                            .padding(.bottom, Self.peek * 2)
-                            .frame(maxHeight: .infinity)
+                            deck(width: geometry.size.width)
+                                .padding(.horizontal, 20)
+                                .padding(.top, 12)
+                                .padding(.bottom, Self.peek * 2)
+                                .frame(maxHeight: .infinity)
 
-                        hint
-                            .padding(.horizontal, 32)
-                            .padding(.top, 12)
+                            hint
+                                .padding(.horizontal, 32)
+                                .padding(.top, 12)
 
-                        controls
-                            .padding(.horizontal, 20)
-                            .padding(.top, 16)
-                            .padding(.bottom, 16)
+                            controls
+                                .padding(.horizontal, 20)
+                                .padding(.top, 16)
+                                .padding(.bottom, 16)
+                        }
                     }
                 }
             }
@@ -81,8 +83,12 @@ struct CueCardsView: View {
                 ToolbarItem(placement: .topBarLeading) {
                     Button(action: {
                         AnalyticsEvents.logButtonClick("close", screen: "cards")
-                        session.end()
-                        dismiss()
+                        if showingCamera {
+                            showingCamera = false
+                        } else {
+                            session.end()
+                            dismiss()
+                        }
                     }) {
                         Image(systemName: "xmark")
                             .font(.system(size: 14, weight: .semibold))
@@ -108,13 +114,13 @@ struct CueCardsView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         AnalyticsEvents.logButtonClick("camera", screen: "cards")
-                        showingCamera = true
+                        showingCamera.toggle()
                     } label: {
-                        Image(systemName: "camera")
+                        Image(systemName: showingCamera ? "camera.fill" : "camera")
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                     }
-                    .accessibilityLabel("Record Video")
+                    .accessibilityLabel(showingCamera ? "Close Camera" : "Record Video")
                 }
                 HelpToolbarItem(page: .cards, isPresented: $showingHelp)
             }
@@ -157,10 +163,6 @@ struct CueCardsView: View {
                 }
                 .presentationDetents([.medium, .large])
             }
-        }
-        .fullScreenCover(isPresented: $showingCamera) {
-            CameraRecordingView(prompt: .cards, scriptID: session.deckID ?? deckID)
-                .environmentObject(settingsService)
         }
         .onAppear {
             Analytics.logEvent(AnalyticsEventScreenView, parameters: [

@@ -1,362 +1,240 @@
 import AVFoundation
 import SwiftUI
 
-/// An in-app camera with a draggable reader above its preview. Only the capture
-/// session is written to the movie; the reader and controls stay on screen.
-struct CameraRecordingView: View {
-    enum Prompt {
-        case teleprompter(TeleprompterContent)
-        case cards
-    }
-    let prompt: Prompt
+/// Keeps the same reader mounted at its original layout size. Camera mode only
+/// scales and moves that view, preserving its scroll position and all controls.
+/// The enclosing navigation bar stays outside this container.
+struct CameraRecordingView<Reader: View>: View {
+    @Binding var isPresented: Bool
     let scriptID: UUID?
-    @EnvironmentObject private var settingsService: SettingsService
-    @Environment(\.dismiss) private var dismiss
+    var onRecordingActiveChange: (Bool) -> Void = { _ in }
+    @ViewBuilder let reader: () -> Reader
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.colorScheme) private var colorScheme
     @Environment(\.openURL) private var openURL
     @StateObject private var recorder = CameraRecorder()
     @State private var rotation: AVCaptureDevice.RotationCoordinator?
-    @State private var showingStopConfirmation = false
-    @State private var panelOrigin = CGPoint(x: 12, y: 68)
+    @State private var panelOrigin = CGPoint(x: 12, y: 12)
     @GestureState private var panelDrag = CGSize.zero
     @State private var expanded = false
-    @State private var minimized = false
     @State private var previousIdleTimerDisabled = false
-    @State private var controlsHeight: CGFloat = 112
-
-    private var title: String {
-        switch prompt {
-        case .teleprompter: String(localized: "Teleprompter")
-        case .cards: String(localized: "Cards")
-        }
-    }
+    @State private var controlsHeight: CGFloat = 168
 
     var body: some View {
         GeometryReader { geometry in
+            let size = geometry.size
+            let scale = readerScale(in: size)
+            let panel = CGSize(width: size.width * scale, height: size.height * scale + 36)
+            let origin = clampedOrigin(panelOrigin, drag: panelDrag, size: size, panel: panel)
             ZStack(alignment: .topLeading) {
-                CameraPreview(session: recorder.capture.session, device: recorder.device)
-                    .ignoresSafeArea()
-                Color.black.opacity(0.12).ignoresSafeArea().allowsHitTesting(false)
-
-                VStack {
-                    topBar
-                    Spacer(minLength: 0)
-                    recordingControls
-                        .frame(width: geometry.size.width > geometry.size.height ? landscapeControlsWidth(in: geometry.size) : nil)
-                        .background(GeometryReader { controls in
-                            Color.clear.preference(key: RecordingControlsHeight.self, value: controls.size.height)
-                        })
-                        .frame(maxWidth: .infinity, alignment: geometry.size.width > geometry.size.height ? .trailing : .center)
+                if isPresented {
+                    CameraPreview(session: recorder.capture.session, device: recorder.device)
+                        .background(.black)
+                        .ignoresSafeArea()
+                    VStack {
+                        Spacer(minLength: 0)
+                        recordingControls
+                            .background(GeometryReader { controls in
+                                Color.clear.preference(key: RecordingControlsHeight.self, value: controls.size.height)
+                            })
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 8)
                 }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 8)
 
-                floatingPanel(in: geometry.size)
+                // Never branch or replace the reader when entering camera mode.
+                reader()
+                    .frame(width: size.width, height: size.height)
+                    .clipped()
+                    .scaleEffect(isPresented ? scale : 1, anchor: .topLeading)
+                    .frame(width: isPresented ? panel.width : size.width,
+                           height: isPresented ? panel.height - 36 : size.height, alignment: .topLeading)
+                    .padding(.top, isPresented ? 36 : 0)
+                    .background(isPresented ? Color.black : Color.clear)
+                    .clipShape(RoundedRectangle(cornerRadius: isPresented ? 20 : 0))
+                    .overlay(alignment: .top) {
+                        if isPresented { panelHandle(size: size, panel: panel) }
+                    }
+                    .overlay {
+                        if isPresented {
+                            RoundedRectangle(cornerRadius: 20).stroke(.white.opacity(0.3))
+                        }
+                    }
+                    .shadow(color: .black.opacity(isPresented ? 0.35 : 0), radius: 12, y: 6)
+                    .offset(x: isPresented ? origin.x : 0, y: isPresented ? origin.y : 0)
             }
-            .background(.black)
-            .onPreferenceChange(RecordingControlsHeight.self) { controlsHeight = $0 }
+            .onPreferenceChange(RecordingControlsHeight.self) { height in
+                if height > 0 { controlsHeight = height }
+            }
         }
-        .preferredColorScheme(.dark)
-        .interactiveDismissDisabled()
-        .statusBarHidden()
-        .task {
-            previousIdleTimerDisabled = UIApplication.shared.isIdleTimerDisabled
-            UIApplication.shared.isIdleTimerDisabled = true
-            await recorder.prepare(scriptID: scriptID)
+        .background {
+            if !isPresented { AppColors.background(for: colorScheme).ignoresSafeArea() }
+        }
+        .task(id: isPresented) {
+            if isPresented {
+                previousIdleTimerDisabled = UIApplication.shared.isIdleTimerDisabled
+                UIApplication.shared.isIdleTimerDisabled = true
+                await recorder.prepare(scriptID: scriptID)
+            } else {
+                recorder.suspend()
+            }
+        }
+        .onChange(of: isPresented) { _, presented in
+            if !presented {
+                onRecordingActiveChange(false)
+                UIApplication.shared.isIdleTimerDisabled = previousIdleTimerDisabled
+            }
         }
         .onChange(of: recorder.device) { _, device in
             rotation = device.map { AVCaptureDevice.RotationCoordinator(device: $0, previewLayer: nil) }
         }
+        .onChange(of: recorder.isRecording) { _, _ in updatePromptPlayback() }
+        .onChange(of: recorder.isPaused) { _, _ in updatePromptPlayback() }
         .onChange(of: scenePhase) { _, phase in
+            guard isPresented else { return }
             if phase == .background {
                 recorder.suspend()
-                pausePrompt()
+                onRecordingActiveChange(false)
             } else if phase == .active {
-                Task { await recorder.prepare(scriptID: scriptID) }
+                Task {
+                    guard isPresented else { return }
+                    await recorder.prepare(scriptID: scriptID)
+                }
             }
         }
         .onDisappear {
             recorder.suspend()
-            pausePrompt()
-            UIApplication.shared.isIdleTimerDisabled = previousIdleTimerDisabled
-        }
-        .confirmationDialog("Stop recording and save this video?", isPresented: $showingStopConfirmation, titleVisibility: .visible) {
-            Button("Stop and Save") { recorder.stop(); pausePrompt() }
-            Button("Keep Recording", role: .cancel) { }
+            if isPresented {
+                onRecordingActiveChange(false)
+                UIApplication.shared.isIdleTimerDisabled = previousIdleTimerDisabled
+            }
         }
     }
 
-    private var topBar: some View {
-        HStack {
-            Button {
-                if recorder.isRecording { showingStopConfirmation = true }
-                else { dismiss() }
-            } label: {
-                Image(systemName: "xmark").frame(width: 44, height: 44)
-                    .background(.black.opacity(0.55), in: Circle())
-            }
-            .accessibilityLabel("Close Camera")
-            .disabled(recorder.isBusy)
-            Spacer()
-            if let start = recorder.startedAt {
-                TimelineView(.periodic(from: start, by: 1)) { context in
-                    Label(TeleprompterParser.formatTime(max(0, Int(context.date.timeIntervalSince(start)))), systemImage: "record.circle.fill")
-                        .monospacedDigit()
-                        .foregroundStyle(.red)
-                        .padding(10)
-                        .background(.black.opacity(0.75), in: Capsule())
-                }
-                .accessibilityLabel("Recording duration")
-            } else {
-                Text("Camera").font(.headline)
-            }
-            Spacer()
-            Button {
-                Task { await recorder.switchCamera() }
-            } label: {
-                Image(systemName: "arrow.triangle.2.circlepath.camera")
-                    .frame(width: 44, height: 44)
-                    .background(.black.opacity(0.55), in: Circle())
-            }
-            .accessibilityLabel("Switch Camera")
-            .disabled(!recorder.isReady || recorder.isBusy || recorder.isRecording)
-        }
-        .foregroundStyle(.white)
+    private func updatePromptPlayback() {
+        guard isPresented else { return }
+        onRecordingActiveChange(scenePhase == .active && recorder.isRecording && !recorder.isPaused)
     }
 
     private var recordingControls: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 8) {
             if let message = recorder.message {
-                Text(message)
-                    .font(.footnote)
-                    .multilineTextAlignment(.center)
-                    .padding(10)
-                    .background(.black.opacity(0.75), in: RoundedRectangle(cornerRadius: 12))
+                Text(message).font(.footnote).multilineTextAlignment(.center)
                     .accessibilityAddTraits(.updatesFrequently)
             }
             if let url = recorder.pendingURL {
                 HStack {
                     Button("Save to Photos") { Task { await recorder.savePending() } }
                     ShareLink(item: url) { Label("Share Video", systemImage: "square.and.arrow.up") }
+                    Button("Record Another") { recorder.keepPendingForLater() }
                 }
-                .font(.subheadline.weight(.semibold))
-                .buttonStyle(.borderedProminent)
+                .font(.caption.weight(.semibold))
                 .disabled(recorder.isBusy)
-                Button("Record Another") { recorder.keepPendingForLater() }
-                    .font(.footnote)
-                    .disabled(recorder.isBusy)
             }
             if recorder.needsSettings {
                 Button("Open Settings") {
                     if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
                 }
-                .buttonStyle(.bordered)
             }
-            Button {
-                if recorder.isRecording {
-                    recorder.stop()
-                    pausePrompt()
-                } else {
-                    recorder.start(rotation: rotation?.videoRotationAngleForHorizonLevelCapture ?? 90)
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 24) {
+                    zoomControls.frame(width: 180)
+                    captureControls.frame(minWidth: 300)
                 }
-            } label: {
-                ZStack {
-                    Circle().stroke(.white, lineWidth: 4).frame(width: 76, height: 76)
-                    if recorder.isBusy {
-                        ProgressView().tint(.white)
-                    } else {
-                        RoundedRectangle(cornerRadius: recorder.isRecording ? 6 : 32)
-                            .fill(.red)
-                            .frame(width: recorder.isRecording ? 30 : 62, height: recorder.isRecording ? 30 : 62)
-                    }
+                VStack(spacing: 8) {
+                    zoomControls
+                    captureControls
                 }
-                .frame(width: 88, height: 88)
             }
-            .accessibilityLabel(recorder.isRecording ? "Stop Recording" : "Record Video")
-            .disabled(recorder.isBusy || (!recorder.isRecording && (!recorder.isReady || recorder.pendingURL != nil)))
-            .opacity(!recorder.isReady && !recorder.isRecording ? 0.5 : 1)
         }
         .foregroundStyle(.white)
-        .frame(maxWidth: .infinity)
-        .onChange(of: recorder.isRecording) { _, recording in
-            if recording, scenePhase == .active, recorder.isReady, case .teleprompter = prompt {
-                TeleprompterPiPManager.shared.play()
-            } else if !recording {
-                pausePrompt()
-            }
+        .tint(.white)
+        .padding(12)
+        .background(.black.opacity(0.75), in: RoundedRectangle(cornerRadius: 24))
+    }
+
+    private var zoomControls: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "minus.magnifyingglass")
+            Slider(value: Binding(get: { recorder.zoom }, set: { recorder.setZoom($0) }),
+                   in: 1...max(1.01, recorder.maxZoom))
+                .accessibilityLabel("Camera Zoom")
+                .disabled(!recorder.isReady || recorder.maxZoom <= 1)
+            Text(String(format: "%.1f×", recorder.zoom)).monospacedDigit().font(.caption)
         }
     }
 
-    private func floatingPanel(in size: CGSize) -> some View {
-        let landscape = size.width > size.height
-        let availableWidth = landscape ? size.width - landscapeControlsWidth(in: size) - 48 : size.width - 24
-        let width = min(max(0, availableWidth), expanded ? 540 : 340)
-        let availableHeight = max(100, size.height - (landscape ? 84 : controlsHeight + 84))
-        let height: CGFloat = minimized ? 44 : min(expanded ? 430 : 290, availableHeight)
-        let origin = clampedOrigin(panelOrigin, drag: panelDrag, size: size, panel: CGSize(width: width, height: height))
-        return VStack(spacing: 0) {
-            HStack(spacing: 0) {
-                HStack(spacing: 8) {
-                    Image(systemName: "line.3.horizontal")
-                    Text(title).font(.caption.weight(.semibold))
-                    Spacer(minLength: 0)
+    private var captureControls: some View {
+        HStack(spacing: 24) {
+            Button { Task { await recorder.switchCamera() } } label: {
+                Image(systemName: "arrow.triangle.2.circlepath.camera").frame(width: 48, height: 48)
+            }
+            .accessibilityLabel("Flip Camera")
+            .disabled(!recorder.isReady || recorder.isBusy || recorder.isRecording)
+            Spacer(minLength: 0)
+            Button {
+                if recorder.isRecording { recorder.togglePause() }
+                else { recorder.start(rotation: rotation?.videoRotationAngleForHorizonLevelCapture ?? 90) }
+            } label: {
+                ZStack {
+                    Circle().fill(.red).frame(width: 64, height: 64)
+                    if recorder.isBusy { ProgressView().tint(.white) }
+                    else { Image(systemName: recorder.isRecording && !recorder.isPaused ? "pause.fill" : "play.fill") }
                 }
-                .frame(maxWidth: .infinity, minHeight: 44)
+            }
+            .accessibilityLabel(recorder.isRecording ? (recorder.isPaused ? "Resume Recording" : "Pause Recording") : "Record Video")
+            .disabled(recorder.isBusy || (!recorder.isRecording && (!recorder.isReady || recorder.pendingURL != nil)))
+            Button {
+                recorder.stop()
+                onRecordingActiveChange(false)
+            } label: {
+                Image(systemName: "stop.fill").frame(width: 48, height: 48)
+            }
+            .accessibilityLabel("Stop Recording")
+            .disabled(!recorder.isRecording || recorder.isBusy)
+            Spacer(minLength: 0)
+            TimelineView(.periodic(from: .now, by: 1)) { context in
+                Text(TeleprompterParser.formatTime(Int(recorder.recordedDuration(at: context.date))))
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(recorder.isPaused ? .yellow : .white)
+            }
+            .accessibilityLabel(recorder.isPaused ? "Recording paused" : "Recording duration")
+        }
+        .font(.system(size: 22, weight: .semibold))
+    }
+
+    private func panelHandle(size: CGSize, panel: CGSize) -> some View {
+        HStack(spacing: 0) {
+            Image(systemName: "line.3.horizontal")
+                .frame(maxWidth: .infinity, minHeight: 36)
                 .contentShape(Rectangle())
                 .gesture(DragGesture()
                     .updating($panelDrag) { value, state, _ in state = value.translation }
                     .onEnded { value in
-                        panelOrigin = clampedOrigin(panelOrigin, drag: value.translation, size: size,
-                                                    panel: CGSize(width: width, height: height))
+                        panelOrigin = clampedOrigin(panelOrigin, drag: value.translation, size: size, panel: panel)
                     })
-                .accessibilityElement(children: .ignore)
-                .accessibilityLabel("Move floating prompt")
-                .accessibilityHint("Drag to reposition the window")
-                .accessibilityAction(named: "Move to Top") { panelOrigin = CGPoint(x: 12, y: 68) }
-                .accessibilityAction(named: "Move to Bottom") { panelOrigin = CGPoint(x: 12, y: size.height - height - 120) }
-                Button { expanded.toggle(); minimized = false } label: {
-                    Image(systemName: expanded ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
-                        .frame(width: 44, height: 44)
-                }
-                .accessibilityLabel(expanded ? "Make Prompt Smaller" : "Make Prompt Larger")
-                Button { minimized.toggle() } label: {
-                    Image(systemName: minimized ? "chevron.down" : "minus").frame(width: 44, height: 44)
-                }
-                .accessibilityLabel(minimized ? "Expand Prompt" : "Minimize Prompt")
+                .accessibilityLabel("Move floating reader")
+                .accessibilityAction(named: "Move to Top") { panelOrigin = CGPoint(x: 12, y: 12) }
+                .accessibilityAction(named: "Move to Bottom") { panelOrigin = CGPoint(x: 12, y: size.height) }
+            Button { expanded.toggle() } label: {
+                Image(systemName: expanded ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
+                    .frame(width: 44, height: 36)
             }
-            .padding(.leading, 14)
-            if !minimized {
-                Divider()
-                switch prompt {
-                case let .teleprompter(content):
-                    RecordingTeleprompter(content: content)
-                case .cards:
-                    RecordingCards()
-                }
-            }
+            .accessibilityLabel(expanded ? "Make Reader Smaller" : "Make Reader Larger")
         }
+        .font(.caption.weight(.semibold))
         .foregroundStyle(.white)
-        .frame(width: width, height: height)
-        .background(.black.opacity(0.88), in: RoundedRectangle(cornerRadius: 20))
-        .clipShape(RoundedRectangle(cornerRadius: 20))
-        .overlay(RoundedRectangle(cornerRadius: 20).stroke(.white.opacity(0.25)))
-        .shadow(color: .black.opacity(0.4), radius: 16, y: 8)
-        .offset(x: origin.x, y: origin.y)
+    }
+
+    private func readerScale(in size: CGSize) -> CGFloat {
+        guard isPresented, size.width > 0, size.height > 0 else { return 1 }
+        let availableHeight = max(1, size.height - controlsHeight - 68)
+        return max(0.01, min(expanded ? 0.85 : 0.65, (size.width - 24) / size.width, availableHeight / size.height))
     }
 
     private func clampedOrigin(_ point: CGPoint, drag: CGSize, size: CGSize, panel: CGSize) -> CGPoint {
-        let landscape = size.width > size.height
-        let rightInset: CGFloat = landscape ? landscapeControlsWidth(in: size) + 36 : 12
-        let bottomInset: CGFloat = landscape ? 12 : controlsHeight + 24
-        return CGPoint(x: min(max(12, point.x + drag.width), max(12, size.width - panel.width - rightInset)),
-                       y: min(max(60, point.y + drag.height), max(60, size.height - panel.height - bottomInset)))
-    }
-
-    private func landscapeControlsWidth(in size: CGSize) -> CGFloat {
-        min(320, size.width * 0.4)
-    }
-
-    private func pausePrompt() {
-        if case .teleprompter = prompt { TeleprompterPiPManager.shared.pause() }
-    }
-}
-
-private struct RecordingTeleprompter: View {
-    let content: TeleprompterContent
-    @EnvironmentObject private var settingsService: SettingsService
-    @ObservedObject private var playback = TeleprompterPiPManager.shared
-    private var settings: TeleprompterSettings { settingsService.settings }
-    private var running: Bool { playback.playback.isPlaying || playback.playback.isCountingDown }
-
-    var body: some View {
-        VStack(spacing: 0) {
-            GeometryReader { geometry in
-                AttributedTextView(
-                    content: content, cueColor: settings.cueColor,
-                    fontSize: CGFloat(min(settings.fontSize, 32)),
-                    linePosition: playback.playback.scriptTime * Double(settings.linesPerMinute) / 60,
-                    colorScheme: .dark, topPadding: geometry.size.height * 0.3,
-                    bottomPadding: geometry.size.height * 0.7,
-                    snapToken: playback.playback.snapToken, restorationRequest: nil,
-                    onRestorationReady: { _ in },
-                    onLayoutChange: { playback.updateReferenceLayout($0) },
-                    onHandOff: { playback.seek(toLine: $0) }, onTap: nil,
-                    attachesPiPSource: false
-                )
-                .scaleEffect(x: playback.isMirrored ? -1 : 1, y: 1)
-            }
-            HStack {
-                Button { playback.restart() } label: {
-                    Image(systemName: "arrow.counterclockwise").frame(width: 44, height: 44)
-                }.accessibilityLabel("Restart Prompt")
-                Spacer()
-                Button { playback.togglePlayPause() } label: {
-                    if playback.playback.isCountingDown {
-                        Text("\(playback.playback.countdownValue)").frame(width: 44, height: 44)
-                    } else {
-                        Image(systemName: running ? "pause.fill" : "play.fill").frame(width: 44, height: 44)
-                    }
-                }.accessibilityLabel(running ? "Pause Prompt" : "Play Prompt")
-                Spacer()
-                Menu {
-                    Button("Slower") { settingsService.settings.linesPerMinute = max(TeleprompterSettings.lpmRange.lowerBound, settings.linesPerMinute - 5) }
-                    Button("Faster") { settingsService.settings.linesPerMinute = min(TeleprompterSettings.lpmRange.upperBound, settings.linesPerMinute + 5) }
-                    Button("Mirror Text") { playback.toggleMirroring() }
-                } label: {
-                    Image(systemName: "slider.horizontal.3").frame(width: 44, height: 44)
-                }.accessibilityLabel("Prompt Controls")
-            }
-            .padding(.horizontal, 12)
-        }
-    }
-}
-
-private struct RecordingCards: View {
-    @EnvironmentObject private var settingsService: SettingsService
-    @ObservedObject private var session = CueCardsSession.shared
-
-    var body: some View {
-        VStack(spacing: 0) {
-            Group {
-                if session.isFinished {
-                    Text("All cards done").font(.headline).frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else {
-                    ScrollView {
-                        CueCards.runs(for: session.cards[session.index])
-                            .text(primary: .white, cue: settingsService.settings.cards.cueColor.color(for: .dark),
-                                  cueFont: .system(size: 20, weight: .semibold))
-                            .font(.system(size: min(CGFloat(settingsService.settings.cards.fontSize), 28)))
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(16)
-                    }
-                    .id(session.index)
-                }
-            }
-            .contentShape(Rectangle())
-            .simultaneousGesture(DragGesture(minimumDistance: 20).onEnded { value in
-                guard abs(value.translation.width) > abs(value.translation.height), abs(value.translation.width) > 45 else { return }
-                if value.translation.width < 0 { session.next() } else { session.previous() }
-            })
-            HStack {
-                Button { session.previous() } label: {
-                    Image(systemName: "chevron.left").frame(width: 44, height: 44)
-                }
-                .disabled(session.index == 0)
-                .accessibilityLabel("Previous Card")
-                Spacer()
-                Text(session.isFinished ? String(localized: "Done") : "\(session.index + 1) / \(session.cards.count)")
-                    .font(.caption.monospacedDigit())
-                Spacer()
-                Button {
-                    if session.isFinished { session.restart() } else { session.next() }
-                } label: {
-                    Image(systemName: session.isFinished ? "arrow.counterclockwise" : "chevron.right")
-                        .frame(width: 44, height: 44)
-                }
-                .accessibilityLabel(session.isFinished ? "Restart Cards" : "Next Card")
-            }
-            .padding(.horizontal, 12)
-        }
+        CGPoint(x: min(max(12, point.x + drag.width), max(12, size.width - panel.width - 12)),
+                y: min(max(12, point.y + drag.height), max(12, size.height - panel.height - controlsHeight - 20)))
     }
 }
 
@@ -405,6 +283,6 @@ private struct CameraPreview: UIViewRepresentable {
 }
 
 private struct RecordingControlsHeight: PreferenceKey {
-    static var defaultValue: CGFloat = 112
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
 }
