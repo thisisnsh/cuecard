@@ -97,16 +97,10 @@ struct CueCardsView: View {
                         .accessibilityLabel("Close")
                     }
                     ToolbarItem(placement: .principal) {
-                        VStack(spacing: 2) {
-                            // The dots show where the deck is, so the title
-                            // bar is the timer's.
-                            TimelineView(.periodic(from: session.startedAt, by: 1)) { context in
-                                timerText(at: context.date)
-                            }
-                            Text(session.title.isEmpty ? title : session.title)
-                                .font(.caption)
-                                .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                                .lineLimit(1)
+                        // The dots show where the deck is, so the title
+                        // bar is the timer's.
+                        TimelineView(.periodic(from: session.startedAt, by: 1)) { context in
+                            timerText(at: context.date)
                         }
                         .accessibilityElement(children: .combine)
                         .accessibilityValue(progress)
