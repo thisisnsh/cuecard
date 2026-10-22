@@ -224,29 +224,33 @@ struct TeleprompterView: View {
                             }
                             .accessibilityLabel("Close")
                         }
-                        ToolbarItemGroup(placement: .topBarTrailing) {
-                            Button {
-                                AnalyticsEvents.logButtonClick("camera", screen: "teleprompter")
-                                stopControlsTimer()
-                                showingCamera.toggle()
-                            } label: {
-                                Image(systemName: showingCamera ? "camera.fill" : "camera")
-                                    .font(.system(size: 15, weight: .semibold))
-                                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                        // One item, so the two sit as close as a pair, like the
+                        // editor's menu and settings buttons.
+                        ToolbarItem(placement: .topBarTrailing) {
+                            HStack(spacing: 8) {
+                                Button {
+                                    AnalyticsEvents.logButtonClick("camera", screen: "teleprompter")
+                                    stopControlsTimer()
+                                    showingCamera.toggle()
+                                } label: {
+                                    Image(systemName: showingCamera ? "camera.fill" : "camera")
+                                        .font(.system(size: 15, weight: .semibold))
+                                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                                }
+                                .accessibilityLabel(showingCamera ? "Close Camera" : "Record Video")
+                                Button(action: {
+                                    pipManager.toggleMirroring()
+                                    AnalyticsEvents.logButtonClick(isMirrored ? "mirror_on" : "mirror_off", screen: "teleprompter")
+                                    resetControlsTimer()
+                                }) {
+                                    Image(systemName: "arrow.left.and.right.righttriangle.left.righttriangle.right")
+                                        .font(.system(size: 15, weight: .semibold))
+                                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                                }
+                                .accessibilityLabel("Mirror Text")
+                                .accessibilityValue(isMirrored ? "On" : "Off")
+                                .accessibilityAddTraits(isMirrored ? .isSelected : [])
                             }
-                            .accessibilityLabel(showingCamera ? "Close Camera" : "Record Video")
-                            Button(action: {
-                                pipManager.toggleMirroring()
-                                AnalyticsEvents.logButtonClick(isMirrored ? "mirror_on" : "mirror_off", screen: "teleprompter")
-                                resetControlsTimer()
-                            }) {
-                                Image(systemName: "arrow.left.and.right.righttriangle.left.righttriangle.right")
-                                    .font(.system(size: 15, weight: .semibold))
-                                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                            }
-                            .accessibilityLabel("Mirror Text")
-                            .accessibilityValue(isMirrored ? "On" : "Off")
-                            .accessibilityAddTraits(isMirrored ? .isSelected : [])
                         }
                         HelpToolbarItem(page: .teleprompter, isPresented: $showingHelp)
                     }
