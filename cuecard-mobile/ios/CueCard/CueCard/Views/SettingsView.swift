@@ -87,7 +87,7 @@ struct EditorSettingsView: View {
         } header: {
             Text("Camera")
         } footer: {
-            Text("Play and pause on the teleprompter start and pause recording, and recording plays and pauses the teleprompter. Stopping a recording pauses the teleprompter.")
+            Text("Sync play and pause on the teleprompter and camera.")
         }
 
         AppleWatchSection(screen: Self.screen, mode: .teleprompter)

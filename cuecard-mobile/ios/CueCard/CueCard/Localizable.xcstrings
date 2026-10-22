@@ -6147,34 +6147,6 @@
         }
       }
     },
-    "Play and pause on the teleprompter start and pause recording, and recording plays and pauses the teleprompter. Stopping a recording pauses the teleprompter." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reproducir y pausar en el teleprompter inician y pausan la grabación, y la grabación reproduce y pausa el teleprompter. Detener una grabación pausa el teleprompter."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lire et Pause sur le prompteur lancent et mettent en pause l'enregistrement, et l'enregistrement lance et met en pause le prompteur. Arrêter un enregistrement met le prompteur en pause."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reproduzir e pausar no teleprompter iniciam e pausam a gravação, e a gravação reproduz e pausa o teleprompter. Parar uma gravação pausa o teleprompter."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Пуск и пауза телесуфлёра запускают и приостанавливают запись, а запись запускает и ставит телесуфлёр на паузу. Остановка записи ставит телесуфлёр на паузу."
-          }
-        }
-      }
-    },
     "Play or Pause Teleprompter" : {
       "localizations" : {
         "es" : {
@@ -8937,6 +8909,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Сменить камеру"
+          }
+        }
+      }
+    },
+    "Sync play and pause on the teleprompter and camera." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sincroniza reproducir y pausar entre el teleprompter y la cámara."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Synchronise la lecture et la pause entre le prompteur et la caméra."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sincroniza reproduzir e pausar entre o teleprompter e a câmera."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Синхронизирует пуск и паузу телесуфлёра и камеры."
           }
         }
       }
