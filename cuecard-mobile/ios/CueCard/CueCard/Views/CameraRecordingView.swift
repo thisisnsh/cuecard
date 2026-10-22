@@ -179,8 +179,11 @@ private struct CameraBackdropPicture: View {
         GeometryReader { geometry in
             let origin = geometry.frame(in: .global).origin
             let frame = placement.frame
+            let picture = placement.largestSize
             let shape = RoundedRectangle(cornerRadius: CameraWindowPlacement.cornerRadius, style: .continuous)
             CameraPreview(session: recorder.capture.session, device: recorder.device)
+                .frame(width: picture.width, height: picture.height)
+                .scaleEffect(frame.width / picture.width)
                 .frame(width: frame.width, height: frame.height)
                 .background(.black)
                 .clipShape(shape)
@@ -231,16 +234,25 @@ private final class CameraWindowPlacement {
     /// landscape on screen whenever the app is laid out in landscape.
     var isLandscape: Bool { area.width > area.height }
 
+    private var small: CGFloat { min(min(area.width, area.height) * 0.36, 180) }
+    private var large: CGFloat { min(min(area.width, area.height) * 0.6, 320) }
+
     /// Collapsed and expanded short sides, followed live while pinching and
     /// always kept small enough to fit the area.
     var size: CGSize {
-        let side = min(area.width, area.height)
-        let small = min(side * 0.36, 180)
-        let large = min(side * 0.6, 320)
+        size(short: min(max((expanded ? large : small) * pinchScale, small * 0.8), large * 1.1))
+    }
+
+    /// The largest the window gets. The picture is laid out at this size and
+    /// scaled down to the window: a preview layer resized mid-animation shows
+    /// black until its video catches up, while a scaled one stays smooth.
+    var largestSize: CGSize { size(short: large * 1.1) }
+
+    private func size(short: CGFloat) -> CGSize {
         let height = area.height - Self.topMargin - Self.margin
         let width = area.width - 2 * Self.margin
         let fit = max(1, isLandscape ? min(height, width / Self.aspect) : min(width, height / Self.aspect))
-        let short = min(max((expanded ? large : small) * pinchScale, small * 0.8), large * 1.1, fit)
+        let short = min(short, fit)
         let long = short * Self.aspect
         return isLandscape ? CGSize(width: long, height: short) : CGSize(width: short, height: long)
     }
