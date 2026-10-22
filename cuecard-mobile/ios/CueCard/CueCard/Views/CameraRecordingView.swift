@@ -134,7 +134,6 @@ private struct FloatingCameraWindow: View {
     @Binding var corner: WindowCorner
     @Binding var expanded: Bool
     let onClose: () -> Void
-    @Environment(\.openURL) private var openURL
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var rotation: AVCaptureDevice.RotationCoordinator?
     @State private var dragTranslation = CGSize.zero
@@ -254,9 +253,6 @@ private struct FloatingCameraWindow: View {
                     .background(.black.opacity(0.5), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                     .accessibilityAddTraits(.updatesFrequently)
             }
-            if recorder.pendingURL != nil || recorder.needsSettings {
-                pendingActions
-            }
             HStack {
                 Button { Task { await recorder.switchCamera() } } label: {
                     Image(systemName: "arrow.triangle.2.circlepath.camera").frame(width: 36, height: 36)
@@ -287,36 +283,6 @@ private struct FloatingCameraWindow: View {
         .dynamicTypeSize(...DynamicTypeSize.xxLarge)
     }
 
-    private var pendingActions: some View {
-        HStack(spacing: 4) {
-            if let url = recorder.pendingURL {
-                Button { Task { await recorder.savePending() } } label: {
-                    Image(systemName: "square.and.arrow.down").frame(width: 32, height: 32)
-                }
-                .accessibilityLabel("Save to Photos")
-                ShareLink(item: url) {
-                    Image(systemName: "square.and.arrow.up").frame(width: 32, height: 32)
-                }
-                .accessibilityLabel("Share Video")
-                Button { recorder.keepPendingForLater() } label: {
-                    Image(systemName: "record.circle").frame(width: 32, height: 32)
-                }
-                .accessibilityLabel("Record Another")
-            }
-            if recorder.needsSettings {
-                Button {
-                    if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
-                } label: {
-                    Image(systemName: "gearshape").frame(width: 32, height: 32)
-                }
-                .accessibilityLabel("Open Settings")
-            }
-        }
-        .padding(.horizontal, 4)
-        .background(.black.opacity(0.5), in: Capsule())
-        .disabled(recorder.isBusy)
-    }
-
     private func recordButton(diameter: CGFloat) -> some View {
         Button {
             if recorder.isRecording { recorder.togglePause() }
@@ -330,7 +296,7 @@ private struct FloatingCameraWindow: View {
             }
         }
         .accessibilityLabel(recorder.isRecording ? (recorder.isPaused ? "Resume Recording" : "Pause Recording") : "Record Video")
-        .disabled(recorder.isBusy || (!recorder.isRecording && (!recorder.isReady || recorder.pendingURL != nil)))
+        .disabled(recorder.isBusy || (!recorder.isRecording && !recorder.isReady))
     }
 
     private func duration(compact: Bool) -> some View {

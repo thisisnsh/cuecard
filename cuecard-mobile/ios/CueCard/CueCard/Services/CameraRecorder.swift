@@ -16,9 +16,9 @@ final class CameraRecorder: ObservableObject {
     private var pausedDuration: TimeInterval = 0
     @Published private(set) var isBusy = false
     @Published private(set) var startedAt: Date?
-    @Published private(set) var pendingURL: URL?
+    /// A finished take not yet in Photos.
+    private var pendingURL: URL?
     @Published var message: String?
-    @Published private(set) var needsSettings = false
     let capture = CameraCapture()
     private var isVisible = false
     private var isStartingRecording = false
@@ -33,9 +33,13 @@ final class CameraRecorder: ObservableObject {
         capture.onEvent = { [weak self] event in
             Task { @MainActor in self?.handle(event) }
         }
-        pendingURL = (try? FileManager.default.contentsOfDirectory(
-            at: Self.recordingsFolder, includingPropertiesForKeys: nil
-        ))?.first(where: { $0.pathExtension == "mov" })
+        pendingURL = Self.leftoverTake()
+    }
+
+    /// A take still in CueCard's folder, from a save that failed or never ran.
+    private static func leftoverTake() -> URL? {
+        (try? FileManager.default.contentsOfDirectory(at: recordingsFolder, includingPropertiesForKeys: nil))?
+            .first { $0.pathExtension == "mov" }
     }
 
     static var recordingsFolder: URL {
@@ -49,11 +53,8 @@ final class CameraRecorder: ObservableObject {
         let request = UUID()
         preparationID = request
         if !isRecording, !isBusy, pendingURL == nil {
-            pendingURL = (try? FileManager.default.contentsOfDirectory(
-                at: Self.recordingsFolder, includingPropertiesForKeys: nil
-            ))?.first(where: { $0.pathExtension == "mov" })
+            pendingURL = Self.leftoverTake()
         }
-        needsSettings = false
         for media in [AVMediaType.video, .audio] {
             let granted: Bool
             switch AVCaptureDevice.authorizationStatus(for: media) {
@@ -63,7 +64,6 @@ final class CameraRecorder: ObservableObject {
             }
             guard isVisible, preparationID == request, !Task.isCancelled else { return }
             guard granted else {
-                needsSettings = true
                 message = String(localized: "Allow camera and microphone access in Settings to record videos.")
                 return
             }
@@ -76,7 +76,9 @@ final class CameraRecorder: ObservableObject {
             }
             updateDevice(activeDevice)
             isReady = true
-            if pendingURL == nil { message = nil }
+            message = nil
+            // A take that didn't reach Photos last time goes there now.
+            await savePending()
         } catch {
             guard preparationID == request, isVisible else { return }
             message = error.localizedDescription
@@ -84,7 +86,7 @@ final class CameraRecorder: ObservableObject {
     }
 
     func start(rotation: CGFloat) {
-        guard isReady, !isBusy, !isRecording, pendingURL == nil else { return }
+        guard isReady, !isBusy, !isRecording else { return }
         do {
             try FileManager.default.createDirectory(at: Self.recordingsFolder, withIntermediateDirectories: true)
             let url = Self.recordingsFolder.appendingPathComponent(UUID().uuidString).appendingPathExtension("mov")
@@ -144,14 +146,11 @@ final class CameraRecorder: ObservableObject {
         catch { message = error.localizedDescription }
     }
 
-    func keepPendingForLater() {
-        guard !isBusy, pendingURL != nil else { return }
-        pendingURL = nil
-        message = String(localized: "Video kept in CueCard. Reopen the camera to save or share it later.")
-    }
-
+    /// Move every take still in CueCard into Photos. One that can't go stays
+    /// in CueCard and is tried again the next time the camera opens.
     func savePending() async {
-        guard let url = pendingURL, !isBusy else { return }
+        // Never while a take is still being written: it sits in the same folder.
+        guard pendingURL != nil, !isBusy, startedAt == nil, !isStartingRecording else { return }
         isBusy = true
         defer {
             isBusy = false
@@ -159,25 +158,25 @@ final class CameraRecorder: ObservableObject {
         }
         let status = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
         guard status == .authorized || status == .limited else {
-            needsSettings = true
-            message = String(localized: "Your video is kept in CueCard. Allow Photos access to save it, or use Share Video.")
+            message = String(localized: "Your video is kept in CueCard. Allow Photos access in Settings to save it.")
             return
         }
-        do {
-            let created = (try? url.resourceValues(forKeys: [.creationDateKey]))?.creationDate ?? Date()
-            try await PHPhotoLibrary.shared().performChanges {
-                let request = PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: url)
-                request?.creationDate = created
+        while let url = pendingURL {
+            do {
+                let created = (try? url.resourceValues(forKeys: [.creationDateKey]))?.creationDate ?? Date()
+                try await PHPhotoLibrary.shared().performChanges {
+                    let request = PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: url)
+                    request?.creationDate = created
+                }
+                try? FileManager.default.removeItem(at: url)
+                let next = Self.leftoverTake()
+                pendingURL = next == url ? nil : next
+            } catch {
+                message = String(localized: "Your video is kept in CueCard. Saving failed; it will try again when you next open the camera.")
+                return
             }
-            try? FileManager.default.removeItem(at: url)
-            pendingURL = (try? FileManager.default.contentsOfDirectory(
-                at: Self.recordingsFolder, includingPropertiesForKeys: nil
-            ))?.first(where: { $0.pathExtension == "mov" })
-            message = String(localized: "Video saved to Photos")
-            needsSettings = false
-        } catch {
-            message = String(localized: "Your video is kept in CueCard. Saving failed; try again or use Share Video.")
         }
+        message = String(localized: "Video saved to Photos")
     }
 
     private func handle(_ event: CameraCapture.Event) {
