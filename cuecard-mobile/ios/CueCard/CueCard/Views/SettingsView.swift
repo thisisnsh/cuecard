@@ -80,6 +80,14 @@ struct EditorSettingsView: View {
             AspectRatioPicker(selection: $settingsService.settings.overlayAspectRatio)
         }
 
+        Section {
+            Toggle("Sync with Teleprompter", isOn: $settingsService.settings.syncsCamera)
+        } header: {
+            Text("Camera")
+        } footer: {
+            Text("Play and pause on the teleprompter start and pause recording, and recording plays and pauses the teleprompter. Stopping a recording pauses the teleprompter.")
+        }
+
         AppleWatchSection(screen: Self.screen, mode: .teleprompter)
 
         AppearanceSection(screen: Self.screen, cueColor: $settingsService.settings.cueColor)

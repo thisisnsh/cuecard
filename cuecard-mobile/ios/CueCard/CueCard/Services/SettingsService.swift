@@ -197,6 +197,9 @@ struct TeleprompterSettings: Codable, Equatable {
     var watch: WatchSettings
     /// Cards mode's own text sizes, cue color and timer.
     var cards: CardsSettings
+    /// Play and pause on the teleprompter start and pause the camera's
+    /// recording, and the camera's buttons play and pause the teleprompter.
+    var syncsCamera: Bool
 
     static let `default` = TeleprompterSettings(
         editorFontSize: ScreenTextScale.scaled(16, by: ScreenTextScale.editor),
@@ -219,7 +222,8 @@ struct TeleprompterSettings: Codable, Equatable {
             cueColor: .default,
             timerMinutes: 1,
             timerSeconds: 0
-        )
+        ),
+        syncsCamera: true
     )
 
     /// Scroll speed range (multiplier)
@@ -335,6 +339,7 @@ struct TeleprompterSettings: Codable, Equatable {
         case cardDisplay
         case watch
         case cards
+        case syncsCamera
     }
 
     init(
@@ -352,7 +357,8 @@ struct TeleprompterSettings: Codable, Equatable {
         cueColor: CueColor,
         scriptMode: ScriptMode,
         watch: WatchSettings,
-        cards: CardsSettings
+        cards: CardsSettings,
+        syncsCamera: Bool
     ) {
         self.editorFontSize = editorFontSize
         self.fontSize = fontSize
@@ -369,6 +375,7 @@ struct TeleprompterSettings: Codable, Equatable {
         self.scriptMode = scriptMode
         self.watch = watch
         self.cards = cards
+        self.syncsCamera = syncsCamera
     }
 
     init(from decoder: Decoder) throws {
@@ -422,6 +429,8 @@ struct TeleprompterSettings: Codable, Equatable {
         if let display = try container.decodeIfPresent(String.self, forKey: .cardDisplay) {
             cards.showOnLockScreen = display != "inApp"
         }
+        syncsCamera = try container.decodeIfPresent(Bool.self, forKey: .syncsCamera)
+            ?? TeleprompterSettings.default.syncsCamera
     }
 
     static func clamp(_ value: Int, to range: ClosedRange<Int>) -> Int {
@@ -445,6 +454,7 @@ struct TeleprompterSettings: Codable, Equatable {
         try container.encode(scriptMode, forKey: .scriptMode)
         try container.encode(watch, forKey: .watch)
         try container.encode(cards, forKey: .cards)
+        try container.encode(syncsCamera, forKey: .syncsCamera)
     }
 }
 

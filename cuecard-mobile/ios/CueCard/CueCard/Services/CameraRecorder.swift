@@ -17,6 +17,8 @@ final class CameraRecorder: ObservableObject {
     @Published private(set) var maxZoom: Double = 1
     /// The device zoom factor that shows as 1×.
     private var zoomBase: Double = 1
+    /// Keeps a recording level with the horizon, however the phone is held.
+    private var rotation: AVCaptureDevice.RotationCoordinator?
     private var pausedAt: Date?
     private var pausedDuration: TimeInterval = 0
     @Published private(set) var isBusy = false
@@ -90,7 +92,12 @@ final class CameraRecorder: ObservableObject {
         }
     }
 
-    func start(rotation: CGFloat) {
+    /// Starts a recording, or resumes a paused one.
+    func record() {
+        if isRecording { setPaused(false) } else { start() }
+    }
+
+    func start() {
         guard isReady, !isBusy, !isRecording else { return }
         do {
             try FileManager.default.createDirectory(at: Self.recordingsFolder, withIntermediateDirectories: true)
@@ -101,7 +108,7 @@ final class CameraRecorder: ObservableObject {
             pausedAt = nil
             pausedDuration = 0
             isPaused = false
-            capture.start(url: url, rotation: rotation)
+            capture.start(url: url, rotation: rotation?.videoRotationAngleForHorizonLevelCapture ?? 90)
         } catch { message = error.localizedDescription }
     }
 
@@ -111,9 +118,13 @@ final class CameraRecorder: ObservableObject {
     }
 
     func togglePause() {
-        guard isRecording, !isBusy else { return }
+        setPaused(!isPaused)
+    }
+
+    func setPaused(_ paused: Bool) {
+        guard isRecording, !isBusy, paused != isPaused else { return }
         isBusy = true
-        capture.setPaused(!isPaused)
+        capture.setPaused(paused)
     }
 
     func setZoom(_ value: Double) {
@@ -124,6 +135,7 @@ final class CameraRecorder: ObservableObject {
 
     private func updateDevice(_ device: AVCaptureDevice) {
         self.device = device
+        rotation = AVCaptureDevice.RotationCoordinator(device: device, previewLayer: nil)
         zoomBase = Double(CameraCapture.mainLensZoomFactor(of: device))
         let minZoom = Double(device.minAvailableVideoZoomFactor) / zoomBase
         maxZoom = min(Double(device.maxAvailableVideoZoomFactor) / zoomBase, 10)

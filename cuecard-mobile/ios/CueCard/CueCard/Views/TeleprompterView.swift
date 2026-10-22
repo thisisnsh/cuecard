@@ -26,6 +26,7 @@ struct TeleprompterView: View {
     @State private var showControls = true
     @State private var showingHelp = false
     @State private var showingCamera = false
+    @State private var cameraLink = CameraLink()
     @State private var controlsTimer: Timer?
     @Environment(\.scenePhase) private var scenePhase
 
@@ -76,7 +77,8 @@ struct TeleprompterView: View {
     private static let readingLineFraction: CGFloat = 0.45
 
     var body: some View {
-        CameraRecordingView(isPresented: $showingCamera, scriptID: settingsService.teleprompterScriptID) {
+        CameraRecordingView(isPresented: $showingCamera, scriptID: settingsService.teleprompterScriptID,
+                            link: cameraLink, onControl: followCamera) {
             NavigationStack {
                 GeometryReader { geometry in
                     ZStack {
@@ -328,12 +330,27 @@ struct TeleprompterView: View {
         }
     }
 
-    private func togglePlayPause() {
+    /// - Parameter syncingCamera: Whether the camera's recording follows, when
+    ///   that's turned on in Settings. Off when the camera is what asked.
+    private func togglePlayPause(syncingCamera: Bool = true) {
         let wasRunning = isPlaying || isCountingDown
         // Animated so the gear leaves the toolbar, and comes back, with the same fade.
         withAnimation(controlsFade) { pipManager.togglePlayPause() }
         Analytics.logEvent(wasRunning ? "teleprompter_pause" : "teleprompter_play", parameters: nil)
+        if syncingCamera, settings.syncsCamera, showingCamera {
+            if wasRunning { cameraLink.pause() } else { cameraLink.record() }
+        }
         resetControlsTimer()
+    }
+
+    /// Plays when the camera starts or resumes recording, and pauses when it
+    /// pauses or stops, if that's turned on in Settings.
+    private func followCamera(_ control: CameraLink.Control) {
+        guard settings.syncsCamera else { return }
+        let shouldRun = control == .record
+        if shouldRun != (isPlaying || isCountingDown) {
+            togglePlayPause(syncingCamera: false)
+        }
     }
 
     private func restart() {

@@ -11,6 +11,10 @@ import SwiftUI
 struct CameraRecordingView<Content: View>: View {
     @Binding var isPresented: Bool
     let scriptID: UUID?
+    /// Lets the reader start and pause the recording from its own buttons.
+    let link: CameraLink?
+    /// Called after the camera's record, pause or stop button is tapped.
+    let onControl: (CameraLink.Control) -> Void
     @ViewBuilder let content: () -> Content
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -23,6 +27,16 @@ struct CameraRecordingView<Content: View>: View {
     /// The reader's area in global coordinates.
     @State private var area = CGRect.zero
 
+    init(isPresented: Binding<Bool>, scriptID: UUID?, link: CameraLink? = nil,
+         onControl: @escaping (CameraLink.Control) -> Void = { _ in },
+         @ViewBuilder content: @escaping () -> Content) {
+        _isPresented = isPresented
+        self.scriptID = scriptID
+        self.link = link
+        self.onControl = onControl
+        self.content = content
+    }
+
     var body: some View {
         content()
             .environment(\.reportCameraWindowArea, CameraWindowAreaReporter { area = $0 })
@@ -33,12 +47,14 @@ struct CameraRecordingView<Content: View>: View {
                         FloatingCameraWindow(recorder: recorder,
                                              bounds: area.offsetBy(dx: -origin.x, dy: -origin.y),
                                              corner: $corner, expanded: $expanded,
+                                             onControl: onControl,
                                              onClose: { isPresented = false })
                     }
                     .transition(.opacity)
                 }
             }
             .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: isPresented)
+            .onAppear { link?.recorder = recorder }
             .task(id: isPresented) {
                 if isPresented {
                     previousIdleTimerDisabled = UIApplication.shared.isIdleTimerDisabled
@@ -71,6 +87,21 @@ struct CameraRecordingView<Content: View>: View {
                 }
             }
     }
+}
+
+/// Ties a reader's play and pause to the floating camera's recording. The
+/// reader starts and pauses the camera through it; the camera's own buttons
+/// reach the reader through `CameraRecordingView`'s `onControl`.
+@MainActor
+final class CameraLink {
+    enum Control { case record, pause, stop }
+
+    fileprivate weak var recorder: CameraRecorder?
+
+    /// Starts a recording, or resumes a paused one.
+    func record() { recorder?.record() }
+
+    func pause() { recorder?.setPaused(true) }
 }
 
 extension View {
@@ -133,9 +164,9 @@ private struct FloatingCameraWindow: View {
     let bounds: CGRect
     @Binding var corner: WindowCorner
     @Binding var expanded: Bool
+    let onControl: (CameraLink.Control) -> Void
     let onClose: () -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var rotation: AVCaptureDevice.RotationCoordinator?
     @State private var dragTranslation = CGSize.zero
     @State private var pinchScale: CGFloat = 1
     @State private var showsControls = true
@@ -182,9 +213,6 @@ private struct FloatingCameraWindow: View {
         .accessibilityAction(named: "Move to Top") { corner = WindowCorner(leading: corner.isLeading, top: true) }
         .accessibilityAction(named: "Move to Bottom") { corner = WindowCorner(leading: corner.isLeading, top: false) }
         .accessibilityAction(named: "Move to Other Side") { corner = WindowCorner(leading: !corner.isLeading, top: corner.isTop) }
-        .onChange(of: recorder.device, initial: true) { _, device in
-            rotation = device.map { AVCaptureDevice.RotationCoordinator(device: $0, previewLayer: nil) }
-        }
     }
 
     /// Collapsed and expanded widths, followed live while pinching and always
@@ -262,7 +290,10 @@ private struct FloatingCameraWindow: View {
                 Spacer(minLength: 0)
                 recordButton(diameter: compact ? 44 : 56)
                 Spacer(minLength: 0)
-                Button { recorder.stop() } label: {
+                Button {
+                    recorder.stop()
+                    onControl(.stop)
+                } label: {
                     Image(systemName: "stop.fill").frame(width: 36, height: 36)
                 }
                 .accessibilityLabel("Stop Recording")
@@ -285,8 +316,10 @@ private struct FloatingCameraWindow: View {
 
     private func recordButton(diameter: CGFloat) -> some View {
         Button {
+            let control: CameraLink.Control = recorder.isRecording && !recorder.isPaused ? .pause : .record
             if recorder.isRecording { recorder.togglePause() }
-            else { recorder.start(rotation: rotation?.videoRotationAngleForHorizonLevelCapture ?? 90) }
+            else { recorder.start() }
+            onControl(control)
         } label: {
             ZStack {
                 Circle().fill(.red).frame(width: diameter, height: diameter)
