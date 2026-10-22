@@ -684,6 +684,19 @@ struct AttributedTextView: UIViewRepresentable {
         colorScheme == .dark ? AppColors.UIColors.Dark.background : AppColors.UIColors.Light.background
     }
 
+    /// A shadow in the background color around every line, so the script
+    /// stays readable over the camera drawn behind it. Over the background
+    /// itself it doesn't show.
+    private func withHalo(_ text: NSAttributedString) -> NSAttributedString {
+        let shadow = NSShadow()
+        shadow.shadowColor = backgroundColor
+        shadow.shadowBlurRadius = 6
+        shadow.shadowOffset = .zero
+        let result = NSMutableAttributedString(attributedString: text)
+        result.addAttribute(.shadow, value: shadow, range: NSRange(location: 0, length: result.length))
+        return result
+    }
+
     func makeUIView(context: Context) -> TeleprompterReaderHostView {
         let host = TeleprompterReaderHostView()
         let textView = host.textView
@@ -751,9 +764,9 @@ struct AttributedTextView: UIViewRepresentable {
             || coordinator.lastColorScheme != colorScheme
 
         if needsFullRebuild {
-            textView.attributedText = TeleprompterTextLayout.attributedString(
+            textView.attributedText = withHalo(TeleprompterTextLayout.attributedString(
                 text: content.fullText, fontSize: fontSize, cueColor: cueColor, isDarkMode: colorScheme == .dark
-            )
+            ))
             textView.layoutIfNeeded()
 
             coordinator.lastContentId = contentId

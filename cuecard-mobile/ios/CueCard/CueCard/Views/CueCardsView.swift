@@ -492,10 +492,14 @@ private struct PageDots: View {
 private struct CueCardBack: View {
     let colorScheme: ColorScheme
 
+    static func color(for colorScheme: ColorScheme) -> Color {
+        colorScheme == .dark ? Color(white: 0.11) : Color.white
+    }
+
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: CueCardFace.cornerRadius, style: .continuous)
         shape
-            .fill(colorScheme == .dark ? Color(white: 0.11) : Color.white)
+            .fill(Self.color(for: colorScheme))
             .overlay(shape.stroke(AppColors.textSecondary(for: colorScheme).opacity(0.2), lineWidth: 0.7))
             .shadow(color: .black.opacity(colorScheme == .dark ? 0.5 : 0.1), radius: 16, y: 6)
     }
@@ -517,6 +521,9 @@ private struct CueCardFace: View {
                       cueFont: .system(size: fontSize * 0.82, weight: .semibold))
                 .font(.system(size: fontSize, weight: .semibold))
                 .lineSpacing(runs.hasWideScript ? WideScript.lineSpacing(ofSize: fontSize) : 4)
+                // In the card's color, so the words stay readable over the
+                // camera drawn behind them. Over the card itself it doesn't show.
+                .shadow(color: CueCardBack.color(for: colorScheme), radius: 4)
                 .fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(24)
