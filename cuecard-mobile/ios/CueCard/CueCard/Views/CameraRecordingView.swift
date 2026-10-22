@@ -1,9 +1,10 @@
 import AVFoundation
 import SwiftUI
 
-/// Keeps the reader full screen and floats the camera above it in a 9:16
-/// window styled like Picture in Picture. The reader is never replaced, so its
-/// scroll position and controls survive turning the camera on and off.
+/// Keeps the reader full screen and floats the camera above it in a window
+/// styled like Picture in Picture, 9:16 or 16:9 to fit the picture. The reader
+/// is never replaced, so its scroll position and controls survive turning the
+/// camera on and off.
 ///
 /// It wraps the reader's whole navigation stack so the window passes over the
 /// navigation bar while dragged. It settles only inside the area the reader
@@ -175,13 +176,14 @@ private struct FloatingCameraWindow: View {
     /// Space between the window and the navigation bar.
     private static let topMargin: CGFloat = 24
     private static let cornerRadius: CGFloat = 16
+    /// The long side over the short one.
     private static let aspect: CGFloat = 16 / 9
     private var snap: Animation { reduceMotion ? .easeOut(duration: 0.2) : .spring(response: 0.38, dampingFraction: 0.8) }
 
     var body: some View {
         let size = windowSize
         let origin = origin(for: corner, size: size)
-        let compact = size.width < 220
+        let compact = min(size.width, size.height) < 220
         ZStack {
             CameraPreview(session: recorder.capture.session, device: recorder.device)
             if showsControls {
@@ -215,14 +217,22 @@ private struct FloatingCameraWindow: View {
         .accessibilityAction(named: "Move to Other Side") { corner = WindowCorner(leading: !corner.isLeading, top: corner.isTop) }
     }
 
-    /// Collapsed and expanded widths, followed live while pinching and always
-    /// kept short enough to fit the bounds' height.
+    /// Wide when the app is: the picture stays level with the horizon, so it's
+    /// landscape on screen whenever the app is laid out in landscape.
+    private var isLandscape: Bool { bounds.width > bounds.height }
+
+    /// Collapsed and expanded short sides, followed live while pinching and
+    /// always kept small enough to fit the bounds.
     private var windowSize: CGSize {
-        let small = min(bounds.width * 0.36, 180)
-        let large = min(bounds.width * 0.6, 320)
-        let fit = max(1, (bounds.height - Self.topMargin - Self.margin) / Self.aspect)
-        let width = min(max((expanded ? large : small) * pinchScale, small * 0.8), large * 1.1, fit)
-        return CGSize(width: width, height: width * Self.aspect)
+        let side = min(bounds.width, bounds.height)
+        let small = min(side * 0.36, 180)
+        let large = min(side * 0.6, 320)
+        let height = bounds.height - Self.topMargin - Self.margin
+        let width = bounds.width - 2 * Self.margin
+        let fit = max(1, isLandscape ? min(height, width / Self.aspect) : min(width, height / Self.aspect))
+        let short = min(max((expanded ? large : small) * pinchScale, small * 0.8), large * 1.1, fit)
+        let long = short * Self.aspect
+        return isLandscape ? CGSize(width: long, height: short) : CGSize(width: short, height: long)
     }
 
     private func origin(for corner: WindowCorner, size: CGSize) -> CGPoint {
@@ -381,8 +391,7 @@ private struct CameraPreview: UIViewRepresentable {
     func makeUIView(context: Context) -> PreviewView {
         let view = PreviewView()
         view.previewLayer.session = session
-        // Fills the 9:16 window. A landscape picture shows its centre, the
-        // same crop the recording is saved with.
+        // The window turns to match the picture, so this only trims rounding.
         view.previewLayer.videoGravity = .resizeAspectFill
         return view
     }

@@ -278,7 +278,7 @@ final class CameraCapture: NSObject, @unchecked Sendable, AVCaptureFileOutputRec
         case started
         case paused
         case recordingResumed
-        /// Recording ended, and the take is being joined or cropped.
+        /// Recording ended, and the take's segments are being joined.
         case saving
         case finished(URL, String?)
         case unavailable(String)
@@ -518,10 +518,7 @@ final class CameraCapture: NSObject, @unchecked Sendable, AVCaptureFileOutputRec
         guard let first = segments.first else { return }
         let files = segments
         segments = []
-        // Takes are always 9:16. Portrait capture already is; a landscape one
-        // keeps its centre, matching the floating preview.
-        let crops = Int(recordingRotation) % 180 == 0
-        guard error == nil, files.count > 1 || crops else {
+        guard error == nil, files.count > 1 else {
             onEvent?(.finished(first, error))
             return
         }
@@ -529,34 +526,26 @@ final class CameraCapture: NSObject, @unchecked Sendable, AVCaptureFileOutputRec
         // Below the reader's priority, so the script keeps scrolling smoothly.
         Task(priority: .utility) {
             do {
-                let merged = try await Self.export(files, cropToPortrait: crops)
+                let merged = try await Self.joinSegments(files)
                 files.forEach { try? FileManager.default.removeItem(at: $0) }
                 onEvent?(.finished(merged, nil))
-            } catch where files.count == 1 {
-                // An uncropped take beats none.
-                onEvent?(.finished(first, nil))
             } catch {
                 onEvent?(.finished(first, String(localized: "Could not join the recording. Your video segments are kept in CueCard for saving or sharing.")))
             }
         }
     }
 
-    private static func export(_ files: [URL], cropToPortrait: Bool) async throws -> URL {
+    private static func joinSegments(_ files: [URL]) async throws -> URL {
         let composition = AVMutableComposition()
         guard let video = composition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid),
               let audio = composition.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid)
         else { throw CameraError.unavailable }
         var cursor = CMTime.zero
-        var transform = CGAffineTransform.identity
-        var naturalSize = CGSize.zero
-        var frameRate: Float = 30
         for file in files {
             let asset = AVURLAsset(url: file)
             let duration = try await asset.load(.duration)
             guard let sourceVideo = try await asset.loadTracks(withMediaType: .video).first else { throw CameraError.unavailable }
-            if cursor == .zero {
-                (transform, naturalSize, frameRate) = try await sourceVideo.load(.preferredTransform, .naturalSize, .nominalFrameRate)
-            }
+            if cursor == .zero { video.preferredTransform = try await sourceVideo.load(.preferredTransform) }
             try video.insertTimeRange(CMTimeRange(start: .zero, duration: duration), of: sourceVideo, at: cursor)
             if let sourceAudio = try await asset.loadTracks(withMediaType: .audio).first {
                 let audioRange = try await sourceAudio.load(.timeRange)
@@ -566,28 +555,8 @@ final class CameraCapture: NSObject, @unchecked Sendable, AVCaptureFileOutputRec
             cursor = cursor + duration
         }
         let url = files[0].deletingLastPathComponent().appendingPathComponent(UUID().uuidString).appendingPathExtension("mov")
-        guard let exporter = AVAssetExportSession(
-            asset: composition,
-            presetName: cropToPortrait ? AVAssetExportPresetHighestQuality : AVAssetExportPresetPassthrough
-        ) else { throw CameraError.unavailable }
-        if cropToPortrait {
-            // Stand the frame upright, then slide its centre 9:16 into view.
-            let upright = CGRect(origin: .zero, size: naturalSize).applying(transform)
-            let width = (upright.height * 9 / 16 / 2).rounded() * 2
-            let layer = AVMutableVideoCompositionLayerInstruction(assetTrack: video)
-            layer.setTransform(transform.concatenating(CGAffineTransform(
-                translationX: -upright.minX - (upright.width - width) / 2, y: -upright.minY)), at: .zero)
-            let instruction = AVMutableVideoCompositionInstruction()
-            instruction.timeRange = CMTimeRange(start: .zero, duration: cursor)
-            instruction.layerInstructions = [layer]
-            let videoComposition = AVMutableVideoComposition()
-            videoComposition.renderSize = CGSize(width: width, height: upright.height)
-            videoComposition.frameDuration = CMTime(value: 1, timescale: CMTimeScale(frameRate > 0 ? frameRate.rounded() : 30))
-            videoComposition.instructions = [instruction]
-            exporter.videoComposition = videoComposition
-        } else {
-            video.preferredTransform = transform
-        }
+        guard let exporter = AVAssetExportSession(asset: composition, presetName: AVAssetExportPresetPassthrough)
+        else { throw CameraError.unavailable }
         exporter.outputURL = url
         exporter.outputFileType = .mov
         await exporter.export()
