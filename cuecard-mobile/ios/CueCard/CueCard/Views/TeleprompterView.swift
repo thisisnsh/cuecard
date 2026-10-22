@@ -216,7 +216,7 @@ struct TeleprompterView: View {
                     ToolbarItem(placement: .topBarLeading) {
                         Button(action: {
                             AnalyticsEvents.logButtonClick("close", screen: "teleprompter")
-                            if showingCamera { showingCamera = false } else { stopAndDismiss() }
+                            stopAndDismiss()
                         }) {
                             Image(systemName: "xmark")
                                 .font(.system(size: 14, weight: .semibold))
@@ -266,7 +266,6 @@ struct TeleprompterView: View {
         .persistentSystemOverlays(.hidden)
         .onDisappear {
             stopControlsTimer()
-            guard !showingCamera else { return }
             TakeStore.shared.end()
             UIApplication.shared.isIdleTimerDisabled = false
         }

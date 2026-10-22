@@ -86,13 +86,9 @@ struct CueCardsView: View {
                 ToolbarItem(placement: .topBarLeading) {
                     Button(action: {
                         AnalyticsEvents.logButtonClick("close", screen: "cards")
-                        if showingCamera {
-                            showingCamera = false
-                        } else {
-                            session.end()
-                            TakeStore.shared.end()
-                            dismiss()
-                        }
+                        session.end()
+                        TakeStore.shared.end()
+                        dismiss()
                     }) {
                         Image(systemName: "xmark")
                             .font(.system(size: 14, weight: .semibold))
