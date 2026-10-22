@@ -156,12 +156,12 @@ struct HomeView: View {
         }
     }
 
-    /// The videos recorded while the teleprompter was open on the script. Once
+    /// The videos recorded while the teleprompter or cards were open on the script. Once
     /// it has been, and before Photos can be read, a button to go find them.
     @ViewBuilder
     private var takesControl: some View {
         let canFind = takes.hasSessions && (takes.status == .notDetermined || takes.status == .limited)
-        if !isCardsMode, !takes.takes.isEmpty || canFind {
+        if !takes.takes.isEmpty || canFind {
             Button {
                 AnalyticsEvents.logButtonClick("takes", screen: "home")
                 isEditorFocused = false
@@ -592,7 +592,9 @@ struct HomeView: View {
                     // cover doesn't inherit environment objects.
                     .environmentObject(settingsService)
             }
-            .fullScreenCover(isPresented: $showingCards) {
+            .fullScreenCover(isPresented: $showingCards, onDismiss: {
+                takes.reload()
+            }) {
                 CueCardsView(cards: cardsOpenedOnWatch ? nil : CueCards.cards(in: settingsService.notes),
                              title: settingsService.currentNote?.title ?? String(localized: "Cards"),
                              deckID: settingsService.currentNoteId)
@@ -606,12 +608,12 @@ struct HomeView: View {
                 showCardsOpenedOnWatch()
                 if scenePhase == .active { takes.reload() }
             }
-            .onChange(of: settingsService.teleprompterScriptID) {
-                takes.load(scriptID: settingsService.teleprompterScriptID)
+            .onChange(of: settingsService.currentScriptID) {
+                takes.load(scriptID: settingsService.currentScriptID)
             }
         }
         .onAppear {
-            takes.load(scriptID: settingsService.teleprompterScriptID)
+            takes.load(scriptID: settingsService.currentScriptID)
             showCardsOpenedOnWatch()
             Analytics.logEvent(AnalyticsEventScreenView, parameters: [
                 AnalyticsParameterScreenName: "home",

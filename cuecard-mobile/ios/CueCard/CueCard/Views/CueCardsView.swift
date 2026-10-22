@@ -24,6 +24,9 @@ struct CueCardsView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var settings: TeleprompterSettings { settingsService.settings }
+    /// What the deck's takes are filed under: its saved note, or the ID it
+    /// will be saved under.
+    private var scriptID: UUID { session.deckID ?? settingsService.cardsScriptID }
 
     /// How far a card has to be dragged to count as a swipe.
     private static let swipeDistance: CGFloat = 90
@@ -45,7 +48,7 @@ struct CueCardsView: View {
 
     var body: some View {
         NavigationStack {
-            CameraRecordingView(isPresented: $showingCamera, scriptID: session.deckID ?? deckID) {
+            CameraRecordingView(isPresented: $showingCamera, scriptID: scriptID) {
                 GeometryReader { geometry in
                     ZStack {
                         AppColors.background(for: colorScheme)
@@ -87,6 +90,7 @@ struct CueCardsView: View {
                             showingCamera = false
                         } else {
                             session.end()
+                            TakeStore.shared.end()
                             dismiss()
                         }
                     }) {
@@ -171,6 +175,9 @@ struct CueCardsView: View {
             ])
             guard !hasOpenedDeck else { return }
             hasOpenedDeck = true
+            // A video recorded from now until the deck closes is a take of it,
+            // counted once the deck below is open.
+            defer { TakeStore.shared.begin(scriptID: scriptID) }
             guard let cards else { return }
             session.start(cards: cards, title: title, deckID: deckID,
                           showOnLockScreen: settings.cards.showOnLockScreen)
@@ -179,6 +186,7 @@ struct CueCardsView: View {
                 "on_lock_screen": settings.cards.showOnLockScreen ? 1 : 0
             ])
         }
+        .onDisappear { TakeStore.shared.end() }
     }
 
     // MARK: - Timer
