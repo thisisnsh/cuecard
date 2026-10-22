@@ -109,7 +109,10 @@ private struct FloatingCameraWindow: View {
     @State private var pinchScale: CGFloat = 1
     @State private var showsControls = true
 
-    private static let margin: CGFloat = 12
+    private static let margin: CGFloat = 16
+    /// Room above the window for its shadow, which the navigation bar would
+    /// otherwise cut off.
+    private static let topMargin: CGFloat = 24
     private static let cornerRadius: CGFloat = 16
     private static let aspect: CGFloat = 16 / 9
     private var snap: Animation { reduceMotion ? .easeOut(duration: 0.2) : .spring(response: 0.38, dampingFraction: 0.8) }
@@ -136,7 +139,7 @@ private struct FloatingCameraWindow: View {
         .background(.black)
         .clipShape(RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous))
         .contentShape(RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous))
-        .shadow(color: .black.opacity(0.3), radius: 16, y: 6)
+        .shadow(color: .black.opacity(0.3), radius: 14, y: 6)
         .onTapGesture(count: 2) { withAnimation(snap) { expanded.toggle() } }
         .onTapGesture { withAnimation(.easeInOut(duration: 0.2)) { showsControls.toggle() } }
         .gesture(drag(origin: origin, size: size).simultaneously(with: pinch))
@@ -159,14 +162,14 @@ private struct FloatingCameraWindow: View {
     private var windowSize: CGSize {
         let small = min(container.width * 0.36, 180)
         let large = min(container.width * 0.6, 320)
-        let fit = max(1, (container.height - Self.margin * 2) / Self.aspect)
+        let fit = max(1, (container.height - Self.topMargin - Self.margin) / Self.aspect)
         let width = min(max((expanded ? large : small) * pinchScale, small * 0.8), large * 1.1, fit)
         return CGSize(width: width, height: width * Self.aspect)
     }
 
     private func origin(for corner: WindowCorner, size: CGSize) -> CGPoint {
         CGPoint(x: corner.isLeading ? Self.margin : container.width - size.width - Self.margin,
-                y: corner.isTop ? Self.margin : container.height - size.height - Self.margin)
+                y: corner.isTop ? Self.topMargin : container.height - size.height - Self.margin)
     }
 
     private func drag(origin: CGPoint, size: CGSize) -> some Gesture {
