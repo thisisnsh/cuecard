@@ -77,11 +77,7 @@ struct TeleprompterView: View {
 
     var body: some View {
         NavigationStack {
-            CameraRecordingView(isPresented: $showingCamera,
-                                scriptID: settingsService.teleprompterScriptID,
-                                onRecordingActiveChange: { active in
-                                    if active { pipManager.play() } else { pipManager.pause() }
-                                }) {
+            CameraRecordingView(isPresented: $showingCamera, scriptID: settingsService.teleprompterScriptID) {
                 GeometryReader { geometry in
                     ZStack {
                         // Background - matches device theme

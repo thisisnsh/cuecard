@@ -468,14 +468,12 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
 
     func stopPiP() { pipController?.stopPictureInPicture() }
 
-    /// The in-app recorder uses the playback clock, but never starts system PiP.
+    /// The in-app camera never runs alongside system PiP. Playback is left
+    /// alone: recording and the script are started and paused separately.
     func setCameraPresented(_ presented: Bool) {
         isCameraPresented = presented
         pipController?.canStartPictureInPictureAutomaticallyFromInline = !presented
-        if presented {
-            pause()
-            stopPiP()
-        }
+        if presented { stopPiP() }
     }
 
     /// Called when returning to the foreground; there is no state to copy back.

@@ -7,7 +7,6 @@ import SwiftUI
 struct CameraRecordingView<Reader: View>: View {
     @Binding var isPresented: Bool
     let scriptID: UUID?
-    var onRecordingActiveChange: (Bool) -> Void = { _ in }
     @ViewBuilder let reader: () -> Reader
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -25,8 +24,7 @@ struct CameraRecordingView<Reader: View>: View {
                     GeometryReader { geometry in
                         FloatingCameraWindow(recorder: recorder, container: geometry.size,
                                              corner: $corner, expanded: $expanded,
-                                             onClose: { isPresented = false },
-                                             onStop: { onRecordingActiveChange(false) })
+                                             onClose: { isPresented = false })
                     }
                     .transition(.opacity)
                 }
@@ -43,17 +41,13 @@ struct CameraRecordingView<Reader: View>: View {
             }
             .onChange(of: isPresented) { _, presented in
                 if !presented {
-                    onRecordingActiveChange(false)
                     UIApplication.shared.isIdleTimerDisabled = previousIdleTimerDisabled
                 }
             }
-            .onChange(of: recorder.isRecording) { _, _ in updatePromptPlayback() }
-            .onChange(of: recorder.isPaused) { _, _ in updatePromptPlayback() }
             .onChange(of: scenePhase) { _, phase in
                 guard isPresented else { return }
                 if phase == .background {
                     recorder.suspend()
-                    onRecordingActiveChange(false)
                 } else if phase == .active {
                     Task {
                         guard isPresented else { return }
@@ -64,15 +58,9 @@ struct CameraRecordingView<Reader: View>: View {
             .onDisappear {
                 recorder.suspend()
                 if isPresented {
-                    onRecordingActiveChange(false)
                     UIApplication.shared.isIdleTimerDisabled = previousIdleTimerDisabled
                 }
             }
-    }
-
-    private func updatePromptPlayback() {
-        guard isPresented else { return }
-        onRecordingActiveChange(scenePhase == .active && recorder.isRecording && !recorder.isPaused)
     }
 }
 
@@ -101,7 +89,6 @@ private struct FloatingCameraWindow: View {
     @Binding var corner: WindowCorner
     @Binding var expanded: Bool
     let onClose: () -> Void
-    let onStop: () -> Void
     @Environment(\.openURL) private var openURL
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var rotation: AVCaptureDevice.RotationCoordinator?
@@ -235,10 +222,7 @@ private struct FloatingCameraWindow: View {
                 Spacer(minLength: 0)
                 recordButton(diameter: compact ? 44 : 56)
                 Spacer(minLength: 0)
-                Button {
-                    recorder.stop()
-                    onStop()
-                } label: {
+                Button { recorder.stop() } label: {
                     Image(systemName: "stop.fill").frame(width: 36, height: 36)
                 }
                 .accessibilityLabel("Stop Recording")
