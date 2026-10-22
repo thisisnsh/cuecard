@@ -7,174 +7,6 @@
     " %@ " : {
       "shouldTranslate" : false
     },
-    "Drag the camera window to any corner. Pinch or double-tap it to change its size, and tap it to hide or show its buttons. Use the buttons to zoom or flip the camera." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Arrastra la ventana de la cámara a cualquier esquina. Pellízcala o tócala dos veces para cambiar su tamaño, y tócala para ocultar o mostrar sus botones. Usa los botones para hacer zoom o cambiar de cámara."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Faites glisser la fenêtre de l'appareil photo dans n'importe quel coin. Pincez-la ou touchez-la deux fois pour changer sa taille, et touchez-la pour masquer ou afficher ses boutons. Utilisez les boutons pour zoomer ou changer de caméra."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Arraste a janela da câmera para qualquer canto. Faça o gesto de pinça ou toque duas vezes nela para mudar o tamanho, e toque nela para ocultar ou mostrar os botões. Use os botões para dar zoom ou alternar a câmera."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Перетащите окно камеры в любой угол. Сведите или разведите пальцы либо дважды коснитесь окна, чтобы изменить его размер, и коснитесь один раз, чтобы скрыть или показать кнопки. Кнопками можно менять масштаб или сменить камеру."
-          }
-        }
-      }
-    },
-    "Move the Camera Window" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mueve la ventana de la cámara"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Déplacer la fenêtre de l'appareil photo"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mover a janela da câmera"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Перемещайте окно камеры"
-          }
-        }
-      }
-    },
-    "Play and pause on the teleprompter start and pause recording, and recording plays and pauses the teleprompter. Stopping a recording pauses the teleprompter." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reproducir y pausar en el teleprompter inician y pausan la grabación, y la grabación reproduce y pausa el teleprompter. Detener una grabación pausa el teleprompter."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lire et Pause sur le prompteur lancent et mettent en pause l'enregistrement, et l'enregistrement lance et met en pause le prompteur. Arrêter un enregistrement met le prompteur en pause."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reproduzir e pausar no teleprompter iniciam e pausam a gravação, e a gravação reproduz e pausa o teleprompter. Parar uma gravação pausa o teleprompter."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Пуск и пауза телесуфлёра запускают и приостанавливают запись, а запись запускает и ставит телесуфлёр на паузу. Остановка записи ставит телесуфлёр на паузу."
-          }
-        }
-      }
-    },
-    "Record in Step with the Script" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Graba al ritmo del guion"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Filmer au rythme du script"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gravar no ritmo do roteiro"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Записывайте в такт сценарию"
-          }
-        }
-      }
-    },
-    "Sync with Teleprompter" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sincronizar con el teleprompter"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Synchroniser avec le prompteur"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sincronizar com o teleprompter"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Синхронизация с телесуфлёром"
-          }
-        }
-      }
-    },
-    "With the camera open, Play starts recording and Pause pauses it. Recording or pausing on the camera plays or pauses the script, and stopping pauses it. Turn off Sync with Teleprompter in Settings to use them separately." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Con la cámara abierta, Reproducir empieza a grabar y Pausa pausa la grabación. Grabar o pausar en la cámara reproduce o pausa el guion, y detener la grabación lo pausa. Desactiva Sincronizar con el teleprompter en Ajustes para usarlos por separado."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Quand l'appareil photo est ouvert, Lire lance l'enregistrement et Pause le met en pause. Filmer ou mettre en pause depuis l'appareil photo lance ou met en pause le script, et arrêter l'enregistrement le met en pause. Désactivez Synchroniser avec le prompteur dans Réglages pour les utiliser séparément."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Com a câmera aberta, Reproduzir começa a gravar e Pausar pausa a gravação. Gravar ou pausar na câmera reproduz ou pausa o roteiro, e parar a gravação o pausa. Desative Sincronizar com o teleprompter em Ajustes para usá-los separadamente."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Когда камера открыта, «Пуск» начинает запись, а «Пауза» ставит её на паузу. Запись или пауза на камере запускает или ставит на паузу сценарий, а остановка записи ставит его на паузу. Выключите «Синхронизацию с телесуфлёром» в настройках, чтобы управлять ими по отдельности."
-          }
-        }
-      }
-    },
     "“%@” couldn't be deleted from the notes folder. Its note stays deleted." : {
       "localizations" : {
         "es" : {
@@ -3187,6 +3019,34 @@
         }
       }
     },
+    "Drag the camera window to any corner. Pinch or double-tap it to change its size, and tap it to hide or show its buttons. Use the buttons to zoom or flip the camera." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrastra la ventana de la cámara a cualquier esquina. Pellízcala o tócala dos veces para cambiar su tamaño, y tócala para ocultar o mostrar sus botones. Usa los botones para hacer zoom o cambiar de cámara."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Faites glisser la fenêtre de l'appareil photo dans n'importe quel coin. Pincez-la ou touchez-la deux fois pour changer sa taille, et touchez-la pour masquer ou afficher ses boutons. Utilisez les boutons pour zoomer ou changer de caméra."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arraste a janela da câmera para qualquer canto. Faça o gesto de pinça ou toque duas vezes nela para mudar o tamanho, e toque nela para ocultar ou mostrar os botões. Use os botões para dar zoom ou alternar a câmera."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перетащите окно камеры в любой угол. Сведите или разведите пальцы либо дважды коснитесь окна, чтобы изменить его размер, и коснитесь один раз, чтобы скрыть или показать кнопки. Кнопками можно менять масштаб или сменить камеру."
+          }
+        }
+      }
+    },
     "Drag the script to go back or skip ahead. It keeps scrolling from where you leave it." : {
       "localizations" : {
         "es" : {
@@ -5012,6 +4872,34 @@
         }
       }
     },
+    "Move the Camera Window" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mueve la ventana de la cámara"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Déplacer la fenêtre de l'appareil photo"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mover a janela da câmera"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перемещайте окно камеры"
+          }
+        }
+      }
+    },
     "Move to Bottom" : {
       "comment" : "A button that moves the floating panel to the bottom of the screen.",
       "isCommentAutoGenerated" : true,
@@ -5579,6 +5467,7 @@
       }
     },
     "Off" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -5635,6 +5524,7 @@
       }
     },
     "On" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -6257,6 +6147,34 @@
         }
       }
     },
+    "Play and pause on the teleprompter start and pause recording, and recording plays and pauses the teleprompter. Stopping a recording pauses the teleprompter." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reproducir y pausar en el teleprompter inician y pausan la grabación, y la grabación reproduce y pausa el teleprompter. Detener una grabación pausa el teleprompter."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lire et Pause sur le prompteur lancent et mettent en pause l'enregistrement, et l'enregistrement lance et met en pause le prompteur. Arrêter un enregistrement met le prompteur en pause."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reproduzir e pausar no teleprompter iniciam e pausam a gravação, e a gravação reproduz e pausa o teleprompter. Parar uma gravação pausa o teleprompter."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Пуск и пауза телесуфлёра запускают и приостанавливают запись, а запись запускает и ставит телесуфлёр на паузу. Остановка записи ставит телесуфлёр на паузу."
+          }
+        }
+      }
+    },
     "Play or Pause Teleprompter" : {
       "localizations" : {
         "es" : {
@@ -6710,6 +6628,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Запись в CueCard"
+          }
+        }
+      }
+    },
+    "Record in Step with the Script" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Graba al ritmo del guion"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filmer au rythme du script"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gravar no ritmo do roteiro"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Записывайте в такт сценарию"
           }
         }
       }
@@ -8995,6 +8941,34 @@
         }
       }
     },
+    "Sync with Teleprompter" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sincronizar con el teleprompter"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Synchroniser avec le prompteur"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sincronizar com o teleprompter"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Синхронизация с телесуфлёром"
+          }
+        }
+      }
+    },
     "System" : {
       "localizations" : {
         "es" : {
@@ -9306,36 +9280,6 @@
         }
       }
     },
-    "Tap the camera next to Help. The camera opens in a small window over your cards. Tap the red button to record and again to pause, then tap stop to save the video to Photos. Keep turning cards while you record." : {
-      "comment" : "A help topic for recording a video with cards.",
-      "isCommentAutoGenerated" : true,
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toca la cámara junto a Ayuda. La cámara se abre en una pequeña ventana sobre tus tarjetas. Toca el botón rojo para grabar y otra vez para pausar, y luego toca el botón de detener para guardar el vídeo en Fotos. Sigue pasando tarjetas mientras grabas."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Touchez l'appareil photo à côté d'Aide. L'appareil photo s'ouvre dans une petite fenêtre au-dessus de vos fiches. Touchez le bouton rouge pour filmer et touchez-le à nouveau pour mettre en pause, puis touchez le bouton d'arrêt pour sauvegarder la vidéo dans Photos. Continuez à tourner les fiches pendant que vous filmez."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toque na câmera ao lado de Ajuda. A câmera abre em uma pequena janela sobre os cartões. Toque no botão vermelho para gravar e de novo para pausar, depois toque no botão de parar para salvar o vídeo no Fotos. Continue passando os cartões enquanto grava."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Коснитесь камеры рядом со «Справкой». Камера откроется в небольшом окне поверх карточек. Коснитесь красной кнопки, чтобы начать запись, и ещё раз, чтобы поставить её на паузу, затем коснитесь кнопки остановки, чтобы сохранить видео в «Фото». Листайте карточки прямо во время записи."
-          }
-        }
-      }
-    },
     "Tap the camera next to Help, tapping the screen first if the buttons are hidden. The camera opens in a small window over your script. Tap the red button to record and again to pause, then tap stop to save the video to Photos. Your script stays out of the video." : {
       "comment" : "A help topic for recording a prompt.",
       "isCommentAutoGenerated" : true,
@@ -9362,6 +9306,36 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Коснитесь камеры рядом со «Справкой» — если кнопки скрыты, сначала коснитесь экрана. Камера откроется в небольшом окне поверх сценария. Коснитесь красной кнопки, чтобы начать запись, и ещё раз, чтобы поставить её на паузу, затем коснитесь кнопки остановки, чтобы сохранить видео в «Фото». Сценарий не попадает в видео."
+          }
+        }
+      }
+    },
+    "Tap the camera next to Help. The camera opens in a small window over your cards. Tap the red button to record and again to pause, then tap stop to save the video to Photos. Keep turning cards while you record." : {
+      "comment" : "A help topic for recording a video with cards.",
+      "isCommentAutoGenerated" : true,
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toca la cámara junto a Ayuda. La cámara se abre en una pequeña ventana sobre tus tarjetas. Toca el botón rojo para grabar y otra vez para pausar, y luego toca el botón de detener para guardar el vídeo en Fotos. Sigue pasando tarjetas mientras grabas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touchez l'appareil photo à côté d'Aide. L'appareil photo s'ouvre dans une petite fenêtre au-dessus de vos fiches. Touchez le bouton rouge pour filmer et touchez-le à nouveau pour mettre en pause, puis touchez le bouton d'arrêt pour sauvegarder la vidéo dans Photos. Continuez à tourner les fiches pendant que vous filmez."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toque na câmera ao lado de Ajuda. A câmera abre em uma pequena janela sobre os cartões. Toque no botão vermelho para gravar e de novo para pausar, depois toque no botão de parar para salvar o vídeo no Fotos. Continue passando os cartões enquanto grava."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Коснитесь камеры рядом со «Справкой». Камера откроется в небольшом окне поверх карточек. Коснитесь красной кнопки, чтобы начать запись, и ещё раз, чтобы поставить её на паузу, затем коснитесь кнопки остановки, чтобы сохранить видео в «Фото». Листайте карточки прямо во время записи."
           }
         }
       }
@@ -9446,34 +9420,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Коснитесь сердечка у дубля. В «Фото» он тоже попадёт в избранное."
-          }
-        }
-      }
-    },
-    "Turn on Mirror Text in Settings to flip the text horizontally for a teleprompter mirror. The floating window uses the same setting. It's off by default." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Activa Reflejar texto en Ajustes para invertir el texto horizontalmente y leerlo en un espejo de teleprompter. La ventana flotante usa el mismo ajuste. Está desactivado de forma predeterminada."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Activez Texte en miroir dans Réglages pour inverser le texte horizontalement et le lire dans un miroir de prompteur. La fenêtre flottante utilise le même réglage. Il est désactivé par défaut."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ative Espelhar texto em Ajustes para inverter o texto horizontalmente e lê-lo em um espelho de teleprompter. A janela flutuante usa o mesmo ajuste. Fica desativado por padrão."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Включите «Отразить текст» в настройках, чтобы отразить текст по горизонтали для чтения через зеркало телесуфлёра. Эта настройка действует и в плавающем окне. По умолчанию она выключена."
           }
         }
       }
@@ -10660,6 +10606,34 @@
         }
       }
     },
+    "Turn on Mirror Text in Settings to flip the text horizontally for a teleprompter mirror. The floating window uses the same setting. It's off by default." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activa Reflejar texto en Ajustes para invertir el texto horizontalmente y leerlo en un espejo de teleprompter. La ventana flotante usa el mismo ajuste. Está desactivado de forma predeterminada."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activez Texte en miroir dans Réglages pour inverser le texte horizontalement et le lire dans un miroir de prompteur. La fenêtre flottante utilise le même réglage. Il est désactivé par défaut."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ative Espelhar texto em Ajustes para inverter o texto horizontalmente e lê-lo em um espelho de teleprompter. A janela flutuante usa o mesmo ajuste. Fica desativado por padrão."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Включите «Отразить текст» в настройках, чтобы отразить текст по горизонтали для чтения через зеркало телесуфлёра. Эта настройка действует и в плавающем окне. По умолчанию она выключена."
+          }
+        }
+      }
+    },
     "Turn on Show on Lock Screen in Settings. Then lock your iPhone and turn cards right from the Lock Screen." : {
       "localizations" : {
         "es" : {
@@ -11305,6 +11279,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Пока вы читаете набор, его название и текущая карточка показываются на экране блокировки, где их может прочитать любой, кто видит ваш iPhone, даже заблокированный."
+          }
+        }
+      }
+    },
+    "With the camera open, Play starts recording and Pause pauses it. Recording or pausing on the camera plays or pauses the script, and stopping pauses it. Turn off Sync with Teleprompter in Settings to use them separately." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Con la cámara abierta, Reproducir empieza a grabar y Pausa pausa la grabación. Grabar o pausar en la cámara reproduce o pausa el guion, y detener la grabación lo pausa. Desactiva Sincronizar con el teleprompter en Ajustes para usarlos por separado."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quand l'appareil photo est ouvert, Lire lance l'enregistrement et Pause le met en pause. Filmer ou mettre en pause depuis l'appareil photo lance ou met en pause le script, et arrêter l'enregistrement le met en pause. Désactivez Synchroniser avec le prompteur dans Réglages pour les utiliser séparément."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Com a câmera aberta, Reproduzir começa a gravar e Pausar pausa a gravação. Gravar ou pausar na câmera reproduz ou pausa o roteiro, e parar a gravação o pausa. Desative Sincronizar com o teleprompter em Ajustes para usá-los separadamente."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Когда камера открыта, «Пуск» начинает запись, а «Пауза» ставит её на паузу. Запись или пауза на камере запускает или ставит на паузу сценарий, а остановка записи ставит его на паузу. Выключите «Синхронизацию с телесуфлёром» в настройках, чтобы управлять ими по отдельности."
           }
         }
       }
