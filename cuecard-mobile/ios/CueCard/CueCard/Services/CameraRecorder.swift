@@ -25,6 +25,9 @@ final class CameraRecorder: ObservableObject {
     private var preparationID = UUID()
     private var scriptID: UUID?
     private var backgroundTask: UIBackgroundTaskIdentifier = .invalid
+    /// Keeps the recorder alive while a take is saved, even after the reader
+    /// it was recorded over has closed.
+    private var savingSelf: CameraRecorder?
 
     init() {
         capture.onEvent = { [weak self] event in
@@ -229,6 +232,7 @@ final class CameraRecorder: ObservableObject {
     }
 
     private func beginBackgroundTask() {
+        savingSelf = self
         guard backgroundTask == .invalid else { return }
         backgroundTask = UIApplication.shared.beginBackgroundTask { [weak self] in
             Task { @MainActor in self?.endBackgroundTask() }
@@ -236,6 +240,7 @@ final class CameraRecorder: ObservableObject {
     }
 
     private func endBackgroundTask() {
+        savingSelf = nil
         guard backgroundTask != .invalid else { return }
         UIApplication.shared.endBackgroundTask(backgroundTask)
         backgroundTask = .invalid
