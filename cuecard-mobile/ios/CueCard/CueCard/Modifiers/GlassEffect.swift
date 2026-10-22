@@ -70,6 +70,23 @@ extension View {
 }
 
 extension View {
+    /// `scriptEdgeFade` as a mask: the script itself fades out at its edges,
+    /// so whatever is drawn behind it, such as the camera, stays clear.
+    func scriptEdgeMask(top: CGFloat, bottom: CGFloat) -> some View {
+        mask {
+            Rectangle()
+                .overlay(alignment: .top) {
+                    EdgeFade(color: .black, height: top, isTop: true).blendMode(.destinationOut)
+                }
+                .overlay(alignment: .bottom) {
+                    EdgeFade(color: .black, height: bottom, isTop: false).blendMode(.destinationOut)
+                }
+                .compositingGroup()
+        }
+    }
+}
+
+extension View {
     /// Leaves the top of a scroll view to `scriptEdgeFade`, without the bar's
     /// own edge effect drawn over it on iOS 26.
     @ViewBuilder

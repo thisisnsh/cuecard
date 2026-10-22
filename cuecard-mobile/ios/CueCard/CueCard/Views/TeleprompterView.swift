@@ -86,6 +86,9 @@ struct TeleprompterView: View {
                         AppColors.background(for: colorScheme)
                             .ignoresSafeArea()
 
+                        // Under the script, so the lines stay in view over it.
+                        CameraBackdrop()
+
                         // The script scrolls at the reader's own pace: so many rendered
                         // lines a minute, counted from the time on the clock.
                         AttributedTextView(
@@ -94,6 +97,7 @@ struct TeleprompterView: View {
                             fontSize: CGFloat(settings.fontSize),
                             linePosition: scriptTime * Double(settings.linesPerMinute) / 60.0,
                             colorScheme: colorScheme,
+                            seesThrough: showingCamera,
                             topPadding: geometry.size.height * Self.readingLineFraction,
                             bottomPadding: geometry.size.height * (1 - Self.readingLineFraction),
                             snapToken: pipManager.playback.snapToken,
@@ -117,8 +121,9 @@ struct TeleprompterView: View {
                         )
                         .scaleEffect(x: isMirrored ? -1 : 1, y: 1)
                         // Lines arrive and leave through a fade rather than being cut
-                        // off flat against the toolbar and the controls.
-                        .scriptEdgeFade(for: colorScheme, top: Self.topFade, bottom: Self.bottomFade)
+                        // off flat against the toolbar and the controls. A mask,
+                        // not a painted fade, so the camera behind stays clear.
+                        .scriptEdgeMask(top: Self.topFade, bottom: Self.bottomFade)
 
                         // Controls overlay. Always laid out and faded rather than
                         // added and removed, so the glass fades with the icons
@@ -395,6 +400,7 @@ final class TeleprompterReaderHostView: UIView {
     let textView = UITextView(usingTextLayoutManager: false)
     var onLayoutChange: (() -> Void)?
     private weak var videoSource: UIView?
+    private var seesThrough = false
     private var lastLayoutSize: CGSize = .zero
     private var restorationAnimation: UUID?
 
@@ -427,8 +433,25 @@ final class TeleprompterReaderHostView: UIView {
         source.frame = bounds
         source.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         source.isUserInteractionEnabled = false
+        source.alpha = seesThrough ? 0 : 1
         insertSubview(source, belowSubview: textView)
         videoSource = source
+    }
+
+    /// Clears the script's background so the camera, drawn behind the reader,
+    /// shows between the lines. The overlay's source view clears with it: the
+    /// overlay doesn't open while the camera is on.
+    func setBackground(_ color: UIColor, seesThrough: Bool) {
+        guard seesThrough != self.seesThrough else {
+            if !seesThrough { textView.backgroundColor = color }
+            return
+        }
+        self.seesThrough = seesThrough
+        // Matches the camera's own fade in and out.
+        UIView.animate(withDuration: UIAccessibility.isReduceMotionEnabled || window == nil ? 0 : 0.2) {
+            self.textView.backgroundColor = seesThrough ? .clear : color
+            self.videoSource?.alpha = seesThrough ? 0 : 1
+        }
     }
 
     func prepareVideoRestoration() -> Bool {
@@ -462,7 +485,7 @@ final class TeleprompterReaderHostView: UIView {
         videoSource.layer.removeAllAnimations()
         // Keep the source opaque and attached for the next automatic PiP start.
         insertSubview(videoSource, belowSubview: textView)
-        videoSource.alpha = 1
+        videoSource.alpha = seesThrough ? 0 : 1
     }
 }
 
@@ -478,6 +501,8 @@ struct AttributedTextView: UIViewRepresentable {
     /// scroll interpolates between lines rather than stepping between them.
     let linePosition: Double
     let colorScheme: ColorScheme
+    /// Leaves the background clear for the camera behind it.
+    var seesThrough = false
     let topPadding: CGFloat
     let bottomPadding: CGFloat
     /// Changes when the position was set from outside this view's own clock —
@@ -655,12 +680,16 @@ struct AttributedTextView: UIViewRepresentable {
         }
     }
 
+    private var backgroundColor: UIColor {
+        colorScheme == .dark ? AppColors.UIColors.Dark.background : AppColors.UIColors.Light.background
+    }
+
     func makeUIView(context: Context) -> TeleprompterReaderHostView {
         let host = TeleprompterReaderHostView()
         let textView = host.textView
         textView.isEditable = false
         textView.isSelectable = false
-        textView.backgroundColor = colorScheme == .dark ? AppColors.UIColors.Dark.background : AppColors.UIColors.Light.background
+        host.setBackground(backgroundColor, seesThrough: seesThrough)
         textView.delegate = context.coordinator
         textView.showsVerticalScrollIndicator = false
         textView.alwaysBounceVertical = true
@@ -704,7 +733,7 @@ struct AttributedTextView: UIViewRepresentable {
         let textView = host.textView
         host.layoutIfNeeded()
         if attachesPiPSource { TeleprompterPiPManager.shared.attachReader(host) }
-        textView.backgroundColor = colorScheme == .dark ? AppColors.UIColors.Dark.background : AppColors.UIColors.Light.background
+        host.setBackground(backgroundColor, seesThrough: seesThrough)
         coordinator.onTap = onTap
         coordinator.onHandOff = onHandOff
         textView.textContainerInset = UIEdgeInsets(top: topPadding, left: 24, bottom: bottomPadding, right: 24)

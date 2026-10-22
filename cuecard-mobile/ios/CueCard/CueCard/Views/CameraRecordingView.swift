@@ -1,4 +1,5 @@
 import AVFoundation
+import Observation
 import SwiftUI
 
 /// Keeps the reader full screen and floats the camera above it in a window
@@ -9,6 +10,10 @@ import SwiftUI
 /// It wraps the reader's whole navigation stack so the window passes over the
 /// navigation bar while dragged. It settles only inside the area the reader
 /// marks with `cameraWindowArea()`, below that bar.
+///
+/// The window up here only takes the gestures and draws the controls. The
+/// picture itself is drawn by the reader with `CameraBackdrop`, between its
+/// background and its text, so the script stays in view over the camera.
 struct CameraRecordingView<Content: View>: View {
     @Binding var isPresented: Bool
     let scriptID: UUID?
@@ -20,13 +25,10 @@ struct CameraRecordingView<Content: View>: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @StateObject private var recorder = CameraRecorder()
-    // Only where the window settles lives here. The live drag and pinch stay
-    // inside the window so they never re-render the reader.
-    @State private var corner = WindowCorner.topTrailing
-    @State private var expanded = false
+    // Read here only for the reader's area, so the live drag and pinch
+    // re-render the window and the picture but never the reader.
+    @State private var placement = CameraWindowPlacement()
     @State private var previousIdleTimerDisabled = false
-    /// The reader's area in global coordinates.
-    @State private var area = CGRect.zero
 
     init(isPresented: Binding<Bool>, scriptID: UUID?, link: CameraLink? = nil,
          onControl: @escaping (CameraLink.Control) -> Void = { _ in },
@@ -39,15 +41,15 @@ struct CameraRecordingView<Content: View>: View {
     }
 
     var body: some View {
+        let isShown = isPresented && !placement.area.isEmpty
         content()
-            .environment(\.reportCameraWindowArea, CameraWindowAreaReporter { area = $0 })
+            .environment(\.reportCameraWindowArea, CameraWindowAreaReporter { [placement] in placement.area = $0 })
+            .environment(\.cameraBackdrop, isShown ? CameraBackdropSource(recorder: recorder, placement: placement) : nil)
             .overlay(alignment: .topLeading) {
-                if isPresented, !area.isEmpty {
+                if isShown {
                     GeometryReader { geometry in
-                        let origin = geometry.frame(in: .global).origin
-                        FloatingCameraWindow(recorder: recorder,
-                                             bounds: area.offsetBy(dx: -origin.x, dy: -origin.y),
-                                             corner: $corner, expanded: $expanded,
+                        FloatingCameraWindow(recorder: recorder, placement: placement,
+                                             origin: geometry.frame(in: .global).origin,
                                              onControl: onControl,
                                              onClose: { isPresented = false })
                     }
@@ -126,17 +128,67 @@ private struct CameraWindowArea: ViewModifier {
 }
 
 private struct CameraWindowAreaReporter {
-    var action: (CGRect) -> Void = { _ in }
+    var action: @MainActor (CGRect) -> Void = { _ in }
 }
 
 private struct CameraWindowAreaKey: EnvironmentKey {
     static let defaultValue = CameraWindowAreaReporter()
 }
 
+/// What the reader's `CameraBackdrop` draws: there only while the camera is.
+private struct CameraBackdropSource {
+    let recorder: CameraRecorder
+    let placement: CameraWindowPlacement
+}
+
+private struct CameraBackdropKey: EnvironmentKey {
+    static let defaultValue: CameraBackdropSource? = nil
+}
+
 private extension EnvironmentValues {
     var reportCameraWindowArea: CameraWindowAreaReporter {
         get { self[CameraWindowAreaKey.self] }
         set { self[CameraWindowAreaKey.self] = newValue }
+    }
+
+    var cameraBackdrop: CameraBackdropSource? {
+        get { self[CameraBackdropKey.self] }
+        set { self[CameraBackdropKey.self] = newValue }
+    }
+}
+
+/// The floating camera's picture. The reader puts it between its background
+/// and its text, so the words are drawn over the camera rather than under it.
+/// It draws nothing while the camera is off.
+struct CameraBackdrop: View {
+    @Environment(\.cameraBackdrop) private var source
+
+    var body: some View {
+        if let source {
+            CameraBackdropPicture(recorder: source.recorder, placement: source.placement)
+                .transition(.opacity)
+        }
+    }
+}
+
+private struct CameraBackdropPicture: View {
+    @ObservedObject var recorder: CameraRecorder
+    let placement: CameraWindowPlacement
+
+    var body: some View {
+        GeometryReader { geometry in
+            let origin = geometry.frame(in: .global).origin
+            let frame = placement.frame
+            let shape = RoundedRectangle(cornerRadius: CameraWindowPlacement.cornerRadius, style: .continuous)
+            CameraPreview(session: recorder.capture.session, device: recorder.device)
+                .frame(width: frame.width, height: frame.height)
+                .background(.black)
+                .clipShape(shape)
+                .shadow(color: .black.opacity(0.3), radius: 14, y: 6)
+                .offset(x: frame.minX - origin.x, y: frame.minY - origin.y)
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }
 
@@ -156,36 +208,78 @@ private enum WindowCorner {
     var isTop: Bool { self == .topLeading || self == .topTrailing }
 }
 
-/// The camera preview and its controls. Drag to move it, anywhere on screen,
-/// and it springs back into the nearest corner of `bounds`; pinch or
-/// double-tap to change its size; tap to show or hide the controls.
+/// Where the floating camera is, in global coordinates: shared by the window,
+/// which takes the gestures and draws the controls, and the reader's
+/// `CameraBackdrop`, which draws the picture.
+@MainActor @Observable
+private final class CameraWindowPlacement {
+    /// The reader's area: where the window settles.
+    var area = CGRect.zero
+    var corner = WindowCorner.topTrailing
+    var expanded = false
+    var dragTranslation = CGSize.zero
+    var pinchScale: CGFloat = 1
+
+    static let margin: CGFloat = 16
+    /// Space between the window and the navigation bar.
+    static let topMargin: CGFloat = 24
+    static let cornerRadius: CGFloat = 16
+    /// The long side over the short one.
+    static let aspect: CGFloat = 16 / 9
+
+    /// Wide when the app is: the picture stays level with the horizon, so it's
+    /// landscape on screen whenever the app is laid out in landscape.
+    var isLandscape: Bool { area.width > area.height }
+
+    /// Collapsed and expanded short sides, followed live while pinching and
+    /// always kept small enough to fit the area.
+    var size: CGSize {
+        let side = min(area.width, area.height)
+        let small = min(side * 0.36, 180)
+        let large = min(side * 0.6, 320)
+        let height = area.height - Self.topMargin - Self.margin
+        let width = area.width - 2 * Self.margin
+        let fit = max(1, isLandscape ? min(height, width / Self.aspect) : min(width, height / Self.aspect))
+        let short = min(max((expanded ? large : small) * pinchScale, small * 0.8), large * 1.1, fit)
+        let long = short * Self.aspect
+        return isLandscape ? CGSize(width: long, height: short) : CGSize(width: short, height: long)
+    }
+
+    func origin(for corner: WindowCorner, size: CGSize) -> CGPoint {
+        CGPoint(x: corner.isLeading ? area.minX + Self.margin : area.maxX - size.width - Self.margin,
+                y: corner.isTop ? area.minY + Self.topMargin : area.maxY - size.height - Self.margin)
+    }
+
+    /// Where the window is drawn, following the finger while dragged.
+    var frame: CGRect {
+        let size = size
+        let origin = origin(for: corner, size: size)
+        return CGRect(origin: CGPoint(x: origin.x + dragTranslation.width, y: origin.y + dragTranslation.height),
+                      size: size)
+    }
+}
+
+/// The camera's controls, over the picture the reader draws. Drag to move it,
+/// anywhere on screen, and it springs back into the nearest corner of the
+/// reader's area; pinch or double-tap to change its size; tap to show or hide
+/// the controls.
 private struct FloatingCameraWindow: View {
     @ObservedObject var recorder: CameraRecorder
-    /// Where the window may settle, in the space it's drawn in.
-    let bounds: CGRect
-    @Binding var corner: WindowCorner
-    @Binding var expanded: Bool
+    let placement: CameraWindowPlacement
+    /// The space it's drawn in, in global coordinates.
+    let origin: CGPoint
     let onControl: (CameraLink.Control) -> Void
     let onClose: () -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var dragTranslation = CGSize.zero
-    @State private var pinchScale: CGFloat = 1
     @State private var showsControls = true
 
-    private static let margin: CGFloat = 16
-    /// Space between the window and the navigation bar.
-    private static let topMargin: CGFloat = 24
-    private static let cornerRadius: CGFloat = 16
-    /// The long side over the short one.
-    private static let aspect: CGFloat = 16 / 9
     private var snap: Animation { reduceMotion ? .easeOut(duration: 0.2) : .spring(response: 0.38, dampingFraction: 0.8) }
 
     var body: some View {
-        let size = windowSize
-        let origin = origin(for: corner, size: size)
-        let compact = min(size.width, size.height) < 220
+        let frame = placement.frame
+        let compact = min(frame.width, frame.height) < 220
+        let shape = RoundedRectangle(cornerRadius: CameraWindowPlacement.cornerRadius, style: .continuous)
         ZStack {
-            CameraPreview(session: recorder.capture.session, device: recorder.device)
             if showsControls {
                 controls(compact: compact)
                     .transition(.opacity)
@@ -198,71 +292,49 @@ private struct FloatingCameraWindow: View {
                 .transition(.opacity)
             }
         }
-        .frame(width: size.width, height: size.height)
-        .background(.black)
-        .clipShape(RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous))
-        .contentShape(RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous))
-        .shadow(color: .black.opacity(0.3), radius: 14, y: 6)
-        .onTapGesture(count: 2) { withAnimation(snap) { expanded.toggle() } }
+        .frame(width: frame.width, height: frame.height)
+        .clipShape(shape)
+        .contentShape(shape)
+        .onTapGesture(count: 2) { withAnimation(snap) { placement.expanded.toggle() } }
         .onTapGesture { withAnimation(.easeInOut(duration: 0.2)) { showsControls.toggle() } }
-        .gesture(drag(origin: origin, size: size).simultaneously(with: pinch))
-        .offset(x: origin.x + dragTranslation.width, y: origin.y + dragTranslation.height)
+        .gesture(drag.simultaneously(with: pinch))
+        .offset(x: frame.minX - origin.x, y: frame.minY - origin.y)
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Camera")
-        .accessibilityAction(named: expanded ? "Make Camera Smaller" : "Make Camera Larger") {
-            withAnimation(snap) { expanded.toggle() }
+        .accessibilityAction(named: placement.expanded ? "Make Camera Smaller" : "Make Camera Larger") {
+            withAnimation(snap) { placement.expanded.toggle() }
         }
-        .accessibilityAction(named: "Move to Top") { corner = WindowCorner(leading: corner.isLeading, top: true) }
-        .accessibilityAction(named: "Move to Bottom") { corner = WindowCorner(leading: corner.isLeading, top: false) }
-        .accessibilityAction(named: "Move to Other Side") { corner = WindowCorner(leading: !corner.isLeading, top: corner.isTop) }
+        .accessibilityAction(named: "Move to Top") { placement.corner = WindowCorner(leading: placement.corner.isLeading, top: true) }
+        .accessibilityAction(named: "Move to Bottom") { placement.corner = WindowCorner(leading: placement.corner.isLeading, top: false) }
+        .accessibilityAction(named: "Move to Other Side") { placement.corner = WindowCorner(leading: !placement.corner.isLeading, top: placement.corner.isTop) }
     }
 
-    /// Wide when the app is: the picture stays level with the horizon, so it's
-    /// landscape on screen whenever the app is laid out in landscape.
-    private var isLandscape: Bool { bounds.width > bounds.height }
-
-    /// Collapsed and expanded short sides, followed live while pinching and
-    /// always kept small enough to fit the bounds.
-    private var windowSize: CGSize {
-        let side = min(bounds.width, bounds.height)
-        let small = min(side * 0.36, 180)
-        let large = min(side * 0.6, 320)
-        let height = bounds.height - Self.topMargin - Self.margin
-        let width = bounds.width - 2 * Self.margin
-        let fit = max(1, isLandscape ? min(height, width / Self.aspect) : min(width, height / Self.aspect))
-        let short = min(max((expanded ? large : small) * pinchScale, small * 0.8), large * 1.1, fit)
-        let long = short * Self.aspect
-        return isLandscape ? CGSize(width: long, height: short) : CGSize(width: short, height: long)
-    }
-
-    private func origin(for corner: WindowCorner, size: CGSize) -> CGPoint {
-        CGPoint(x: corner.isLeading ? bounds.minX + Self.margin : bounds.maxX - size.width - Self.margin,
-                y: corner.isTop ? bounds.minY + Self.topMargin : bounds.maxY - size.height - Self.margin)
-    }
-
-    private func drag(origin: CGPoint, size: CGSize) -> some Gesture {
+    private var drag: some Gesture {
         // Global space: the window's own space moves with it while dragging.
         DragGesture(coordinateSpace: .global)
-            .onChanged { dragTranslation = $0.translation }
+            .onChanged { placement.dragTranslation = $0.translation }
             .onEnded { value in
                 // Throwing the window carries it to the corner it is heading for.
+                let size = placement.size
+                let origin = placement.origin(for: placement.corner, size: size)
+                let area = placement.area
                 let x = origin.x + value.predictedEndTranslation.width + size.width / 2
                 let y = origin.y + value.predictedEndTranslation.height + size.height / 2
                 withAnimation(snap) {
-                    corner = WindowCorner(leading: x < bounds.midX, top: y < bounds.midY)
-                    dragTranslation = .zero
+                    placement.corner = WindowCorner(leading: x < area.midX, top: y < area.midY)
+                    placement.dragTranslation = .zero
                 }
             }
     }
 
     private var pinch: some Gesture {
         MagnifyGesture()
-            .onChanged { pinchScale = $0.magnification }
+            .onChanged { placement.pinchScale = $0.magnification }
             .onEnded { value in
                 withAnimation(snap) {
-                    if value.magnification > 1.1 { expanded = true }
-                    else if value.magnification < 0.9 { expanded = false }
-                    pinchScale = 1
+                    if value.magnification > 1.1 { placement.expanded = true }
+                    else if value.magnification < 0.9 { placement.expanded = false }
+                    placement.pinchScale = 1
                 }
             }
     }

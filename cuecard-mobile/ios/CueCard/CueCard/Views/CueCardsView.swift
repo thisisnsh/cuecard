@@ -201,36 +201,77 @@ struct CueCardsView: View {
     /// swiped back in. The next two sit behind the top card, peeking out below.
     /// Every card keeps its identity as it moves between those places, so a
     /// swipe, a button and the Lock Screen all animate the deck the same way.
+    ///
+    /// The cards and their words are drawn apart, for the camera to sit
+    /// between them: over the cards, under the words.
     private func deck(width: CGFloat) -> some View {
         let lower = max(session.index - 1, 0)
         let upper = min(session.index + 3, session.cards.count)
 
         return ZStack {
-            if session.isFinished {
-                finishedCard
-                    .transition(.opacity)
+            ZStack {
+                if session.isFinished {
+                    finishedCard
+                        .transition(.opacity)
+                }
+
+                ForEach(lower..<upper, id: \.self) { cardIndex in
+                    let placement = placement(of: cardIndex - session.index, width: width)
+                    place(CueCardBack(colorScheme: colorScheme), at: placement)
+                        .zIndex(placement.zIndex)
+                        .accessibilityHidden(true)
+                        .allowsHitTesting(false)
+                }
             }
 
-            ForEach(lower..<upper, id: \.self) { cardIndex in
-                let placement = placement(of: cardIndex - session.index, width: width)
-                CueCardFace(
-                    runs: CueCards.runs(for: session.cards[cardIndex]),
-                    cueColor: settings.cards.cueColor,
-                    fontSize: CGFloat(settings.cards.fontSize),
-                    colorScheme: colorScheme
-                )
-                .scaleEffect(placement.scale, anchor: .bottom)
-                .offset(x: placement.x, y: placement.y)
-                .rotationEffect(.degrees(placement.rotation), anchor: .bottom)
-                .opacity(placement.opacity)
-                .zIndex(placement.zIndex)
-                .accessibilityHidden(cardIndex != session.index)
-                .allowsHitTesting(cardIndex == session.index)
+            CameraBackdrop()
+
+            ZStack {
+                ForEach(lower..<upper, id: \.self) { cardIndex in
+                    let offset = cardIndex - session.index
+                    let placement = placement(of: offset, width: width)
+                    place(CueCardFace(
+                        runs: CueCards.runs(for: session.cards[cardIndex]),
+                        cueColor: settings.cards.cueColor,
+                        fontSize: CGFloat(settings.cards.fontSize),
+                        colorScheme: colorScheme
+                    ), at: placement)
+                    // The words are drawn over every card, so those of the
+                    // cards behind the top one are left out, and the top
+                    // card's are cleared where the card before it passes over.
+                    .opacity(offset > 0 ? 0 : 1)
+                    .mask { uncovered(by: offset - 1, width: width, isCovered: cardIndex > 0 && offset >= 0) }
+                    .zIndex(placement.zIndex)
+                    .accessibilityHidden(cardIndex != session.index)
+                    .allowsHitTesting(cardIndex == session.index)
+                }
             }
         }
         .contentShape(Rectangle())
         .simultaneousGesture(swipe(width: width))
         .animation(animation, value: session.index)
+    }
+
+    private func place(_ card: some View, at placement: Placement) -> some View {
+        card
+            .scaleEffect(placement.scale, anchor: .bottom)
+            .offset(x: placement.x, y: placement.y)
+            .rotationEffect(.degrees(placement.rotation), anchor: .bottom)
+            .opacity(placement.opacity)
+    }
+
+    /// A mask leaving out the card at `offset`. Always drawn, so the hole
+    /// follows the card through every animation. Uncovered, it waits further
+    /// off screen than any card: cards past the left edge share one place.
+    private func uncovered(by offset: Int, width: CGFloat, isCovered: Bool) -> some View {
+        Rectangle()
+            .overlay {
+                place(RoundedRectangle(cornerRadius: CueCardFace.cornerRadius, style: .continuous),
+                      at: isCovered ? placement(of: offset, width: width) : Placement(x: -2 * (width + 60)))
+                    .opacity(isCovered ? 1 : 0)
+                    .blendMode(.destinationOut)
+            }
+            .compositingGroup()
     }
 
     private struct Placement {
@@ -446,7 +487,21 @@ private struct PageDots: View {
     }
 }
 
-/// One card of the deck, cues drawn in their color.
+/// One card of the deck, without its words.
+private struct CueCardBack: View {
+    let colorScheme: ColorScheme
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: CueCardFace.cornerRadius, style: .continuous)
+        shape
+            .fill(colorScheme == .dark ? Color(white: 0.11) : Color.white)
+            .overlay(shape.stroke(AppColors.textSecondary(for: colorScheme).opacity(0.2), lineWidth: 0.7))
+            .shadow(color: .black.opacity(colorScheme == .dark ? 0.5 : 0.1), radius: 16, y: 6)
+    }
+}
+
+/// The words on one card of the deck, cues drawn in their color, drawn over
+/// its `CueCardBack`.
 private struct CueCardFace: View {
     let runs: [CueCardRun]
     let cueColor: CueColor
@@ -467,14 +522,5 @@ private struct CueCardFace: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .clipShape(RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous))
-        .background(
-            RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous)
-                .fill(colorScheme == .dark ? Color(white: 0.11) : Color.white)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous)
-                .stroke(AppColors.textSecondary(for: colorScheme).opacity(0.2), lineWidth: 0.7)
-        )
-        .shadow(color: .black.opacity(colorScheme == .dark ? 0.5 : 0.1), radius: 16, y: 6)
     }
 }
