@@ -7,6 +7,62 @@
     " %@ " : {
       "shouldTranslate" : false
     },
+    "Drag the camera window to any corner. Pinch or double-tap it to change its size, and tap it to hide or show its buttons. Use the buttons to zoom or flip the camera." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arrastra la ventana de la cámara a cualquier esquina. Pellízcala o tócala dos veces para cambiar su tamaño, y tócala para ocultar o mostrar sus botones. Usa los botones para hacer zoom o cambiar de cámara."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Faites glisser la fenêtre de l'appareil photo dans n'importe quel coin. Pincez-la ou touchez-la deux fois pour changer sa taille, et touchez-la pour masquer ou afficher ses boutons. Utilisez les boutons pour zoomer ou changer de caméra."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arraste a janela da câmera para qualquer canto. Faça o gesto de pinça ou toque duas vezes nela para mudar o tamanho, e toque nela para ocultar ou mostrar os botões. Use os botões para dar zoom ou alternar a câmera."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перетащите окно камеры в любой угол. Сведите или разведите пальцы либо дважды коснитесь окна, чтобы изменить его размер, и коснитесь один раз, чтобы скрыть или показать кнопки. Кнопками можно менять масштаб или сменить камеру."
+          }
+        }
+      }
+    },
+    "Move the Camera Window" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mueve la ventana de la cámara"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Déplacer la fenêtre de l'appareil photo"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mover a janela da câmera"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Перемещайте окно камеры"
+          }
+        }
+      }
+    },
     "Play and pause on the teleprompter start and pause recording, and recording plays and pauses the teleprompter. Stopping a recording pauses the teleprompter." : {
       "localizations" : {
         "es" : {
@@ -35,6 +91,34 @@
         }
       }
     },
+    "Record in Step with the Script" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Graba al ritmo del guion"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filmer au rythme du script"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gravar no ritmo do roteiro"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Записывайте в такт сценарию"
+          }
+        }
+      }
+    },
     "Sync with Teleprompter" : {
       "localizations" : {
         "es" : {
@@ -59,6 +143,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Синхронизация с телесуфлёром"
+          }
+        }
+      }
+    },
+    "With the camera open, Play starts recording and Pause pauses it. Recording or pausing on the camera plays or pauses the script, and stopping pauses it. Turn off Sync with Teleprompter in Settings to use them separately." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Con la cámara abierta, Reproducir empieza a grabar y Pausa pausa la grabación. Grabar o pausar en la cámara reproduce o pausa el guion, y detener la grabación lo pausa. Desactiva Sincronizar con el teleprompter en Ajustes para usarlos por separado."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quand l'appareil photo est ouvert, Lire lance l'enregistrement et Pause le met en pause. Filmer ou mettre en pause depuis l'appareil photo lance ou met en pause le script, et arrêter l'enregistrement le met en pause. Désactivez Synchroniser avec le prompteur dans Réglages pour les utiliser séparément."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Com a câmera aberta, Reproduzir começa a gravar e Pausar pausa a gravação. Gravar ou pausar na câmera reproduz ou pausa o roteiro, e parar a gravação o pausa. Desative Sincronizar com o teleprompter em Ajustes para usá-los separadamente."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Когда камера открыта, «Пуск» начинает запись, а «Пауза» ставит её на паузу. Запись или пауза на камере запускает или ставит на паузу сценарий, а остановка записи ставит его на паузу. Выключите «Синхронизацию с телесуфлёром» в настройках, чтобы управлять ими по отдельности."
           }
         }
       }
@@ -4407,30 +4519,30 @@
         }
       }
     },
-    "Leave CueCard while the teleprompter is open and your script keeps going in a floating window, handy on video calls." : {
+    "Leave CueCard while the teleprompter is open and your script keeps going in a floating window, handy on video calls. It doesn't open while the camera is on." : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sal de CueCard con el teleprompter abierto y tu guion seguirá en una ventana flotante, muy útil en videollamadas."
+            "value" : "Sal de CueCard con el teleprompter abierto y tu guion seguirá en una ventana flotante, muy útil en videollamadas. No se abre mientras la cámara está activa."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Quittez CueCard pendant que le prompteur est ouvert : votre script continue dans une fenêtre flottante, pratique en visioconférence."
+            "value" : "Quittez CueCard pendant que le prompteur est ouvert : votre script continue dans une fenêtre flottante, pratique en visioconférence. Elle ne s'ouvre pas tant que l'appareil photo est allumé."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Saia do CueCard com o teleprompter aberto e o roteiro continua em uma janela flutuante, útil em videochamadas."
+            "value" : "Saia do CueCard com o teleprompter aberto e o roteiro continua em uma janela flutuante, útil em videochamadas. Ela não abre enquanto a câmera estiver ligada."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Выйдите из CueCard при открытом телесуфлёре — сценарий продолжит прокручиваться в плавающем окне. Удобно во время видеозвонков."
+            "value" : "Выйдите из CueCard при открытом телесуфлёре — сценарий продолжит прокручиваться в плавающем окне. Удобно во время видеозвонков. Пока камера включена, окно не открывается."
           }
         }
       }
@@ -7718,30 +7830,30 @@
         }
       }
     },
-    "Scrolling, speed, mirroring and the floating window" : {
+    "Scrolling, recording, mirroring and the floating window" : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Desplazamiento, velocidad, reflejo y ventana flotante"
+            "value" : "Desplazamiento, grabación, reflejo y ventana flotante"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Défilement, vitesse, miroir et fenêtre flottante"
+            "value" : "Défilement, enregistrement, miroir et fenêtre flottante"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Rolagem, velocidade, espelhamento e janela flutuante"
+            "value" : "Rolagem, gravação, espelhamento e janela flutuante"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Прокрутка, скорость, зеркальное отражение и плавающее окно"
+            "value" : "Прокрутка, запись, зеркальное отражение и плавающее окно"
           }
         }
       }
@@ -9194,62 +9306,62 @@
         }
       }
     },
-    "Tap the camera next to Help to record a video. Your cards float above the camera: swipe left or right, or use the arrows to turn them. Drag the handle to move the window. Stop recording to save to Photos." : {
+    "Tap the camera next to Help. The camera opens in a small window over your cards. Tap the red button to record and again to pause, then tap stop to save the video to Photos. Keep turning cards while you record." : {
       "comment" : "A help topic for recording a video with cards.",
       "isCommentAutoGenerated" : true,
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Toca la cámara junto a Ayuda para grabar un vídeo. Tus tarjetas flotan sobre la cámara: desliza a la izquierda o a la derecha, o usa las flechas para pasarlas. Arrastra el asa para mover la ventana. Detén la grabación para guardarla en Fotos."
+            "value" : "Toca la cámara junto a Ayuda. La cámara se abre en una pequeña ventana sobre tus tarjetas. Toca el botón rojo para grabar y otra vez para pausar, y luego toca el botón de detener para guardar el vídeo en Fotos. Sigue pasando tarjetas mientras grabas."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Touchez l'appareil photo à côté d'Aide pour filmer une vidéo. Vos fiches flottent au-dessus de l'appareil photo : balayez vers la gauche ou la droite, ou utilisez les flèches pour les tourner. Faites glisser la poignée pour déplacer la fenêtre. Arrêtez l'enregistrement pour sauvegarder dans Photos."
+            "value" : "Touchez l'appareil photo à côté d'Aide. L'appareil photo s'ouvre dans une petite fenêtre au-dessus de vos fiches. Touchez le bouton rouge pour filmer et touchez-le à nouveau pour mettre en pause, puis touchez le bouton d'arrêt pour sauvegarder la vidéo dans Photos. Continuez à tourner les fiches pendant que vous filmez."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Toque na câmera ao lado de Ajuda para gravar um vídeo. Seus cartões flutuam sobre a câmera: deslize para a esquerda ou para a direita, ou use as setas para virá-los. Arraste a alça para mover a janela. Pare a gravação para salvar no Fotos."
+            "value" : "Toque na câmera ao lado de Ajuda. A câmera abre em uma pequena janela sobre os cartões. Toque no botão vermelho para gravar e de novo para pausar, depois toque no botão de parar para salvar o vídeo no Fotos. Continue passando os cartões enquanto grava."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Коснитесь камеры рядом со «Справкой», чтобы записать видео. Карточки парят над камерой: смахивайте влево или вправо или листайте их стрелками. Перетащите ручку, чтобы переместить окно. Остановите запись, чтобы сохранить видео в «Фото»."
+            "value" : "Коснитесь камеры рядом со «Справкой». Камера откроется в небольшом окне поверх карточек. Коснитесь красной кнопки, чтобы начать запись, и ещё раз, чтобы поставить её на паузу, затем коснитесь кнопки остановки, чтобы сохранить видео в «Фото». Листайте карточки прямо во время записи."
           }
         }
       }
     },
-    "Tap the camera next to Help. Tap Record to capture video and start the prompt. Drag the prompt's handle to move it, use its controls to pause or restart, and expand or minimize the window. Stop recording to save the video to Photos. The prompt stays out of your video." : {
+    "Tap the camera next to Help, tapping the screen first if the buttons are hidden. The camera opens in a small window over your script. Tap the red button to record and again to pause, then tap stop to save the video to Photos. Your script stays out of the video." : {
       "comment" : "A help topic for recording a prompt.",
       "isCommentAutoGenerated" : true,
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Toca la cámara junto a Ayuda. Toca Grabar para grabar vídeo e iniciar el teleprompter. Arrastra el asa del teleprompter para moverlo, usa sus controles para pausarlo o reiniciarlo, y amplía o minimiza la ventana. Detén la grabación para guardar el vídeo en Fotos. El teleprompter no aparece en tu vídeo."
+            "value" : "Toca la cámara junto a Ayuda; si los botones están ocultos, toca antes la pantalla. La cámara se abre en una pequeña ventana sobre tu guion. Toca el botón rojo para grabar y otra vez para pausar, y luego toca el botón de detener para guardar el vídeo en Fotos. Tu guion no aparece en el vídeo."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Touchez l'appareil photo à côté d'Aide. Touchez Filmer pour enregistrer la vidéo et lancer le prompteur. Faites glisser la poignée du prompteur pour le déplacer, utilisez ses commandes pour le mettre en pause ou le relancer, et agrandissez ou réduisez la fenêtre. Arrêtez l'enregistrement pour sauvegarder la vidéo dans Photos. Le prompteur n'apparaît pas dans votre vidéo."
+            "value" : "Touchez l'appareil photo à côté d'Aide, après avoir touché l'écran si les boutons sont masqués. L'appareil photo s'ouvre dans une petite fenêtre au-dessus de votre script. Touchez le bouton rouge pour filmer et touchez-le à nouveau pour mettre en pause, puis touchez le bouton d'arrêt pour sauvegarder la vidéo dans Photos. Votre script n'apparaît pas dans la vidéo."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Toque na câmera ao lado de Ajuda. Toque em Gravar para gravar o vídeo e iniciar o teleprompter. Arraste a alça do teleprompter para movê-lo, use os controles para pausar ou reiniciar, e amplie ou minimize a janela. Pare a gravação para salvar o vídeo no Fotos. O teleprompter não aparece no seu vídeo."
+            "value" : "Toque na câmera ao lado de Ajuda; se os botões estiverem ocultos, toque na tela antes. A câmera abre em uma pequena janela sobre o roteiro. Toque no botão vermelho para gravar e de novo para pausar, depois toque no botão de parar para salvar o vídeo no Fotos. O roteiro não aparece no vídeo."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Коснитесь камеры рядом со «Справкой». Коснитесь «Записать», чтобы начать запись видео и запустить телесуфлёр. Перетащите ручку телесуфлёра, чтобы переместить его, ставьте его на паузу или перезапускайте кнопками управления, разворачивайте или сворачивайте окно. Остановите запись, чтобы сохранить видео в «Фото». Телесуфлёр не попадает в видео."
+            "value" : "Коснитесь камеры рядом со «Справкой» — если кнопки скрыты, сначала коснитесь экрана. Камера откроется в небольшом окне поверх сценария. Коснитесь красной кнопки, чтобы начать запись, и ещё раз, чтобы поставить её на паузу, затем коснитесь кнопки остановки, чтобы сохранить видео в «Фото». Сценарий не попадает в видео."
           }
         }
       }
@@ -10576,30 +10688,30 @@
         }
       }
     },
-    "Turning cards and the Lock Screen" : {
+    "Turning cards, recording and the Lock Screen" : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Pasar tarjetas y la pantalla bloqueada"
+            "value" : "Pasar tarjetas, grabar y la pantalla bloqueada"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tourner les fiches et l'écran verrouillé"
+            "value" : "Tourner les fiches, filmer et l'écran verrouillé"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Passar cartões e a Tela Bloqueada"
+            "value" : "Passar cartões, gravar e a Tela Bloqueada"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Листание карточек и экран блокировки"
+            "value" : "Листание карточек, запись и экран блокировки"
           }
         }
       }
@@ -10889,30 +11001,30 @@
         }
       }
     },
-    "Videos you record while the teleprompter is open, even floating over the camera, are kept as takes of the script. Tap the film button next to Play to see them." : {
+    "Videos you record in CueCard with a script or deck open are kept as its takes, and so are videos you record in another app while the teleprompter floats over it. Tap the film button next to Play to see them." : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Los vídeos que grabas con el teleprompter abierto, aunque esté flotando sobre la cámara, se guardan como tomas del guion. Toca el botón de película junto a Reproducir para verlas."
+            "value" : "Los vídeos que grabas en CueCard con un guion o un mazo abierto se guardan como sus tomas, igual que los que grabas en otra app mientras el teleprompter flota sobre ella. Toca el botón de película junto a Reproducir para verlas."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Les vidéos filmées pendant que le prompteur est ouvert, même s'il flotte au-dessus de l'appareil photo, sont gardées comme prises du texte. Touchez le bouton pellicule à côté de Lire pour les voir."
+            "value" : "Les vidéos filmées dans CueCard pendant qu'un script ou un jeu est ouvert sont gardées comme ses prises, tout comme celles filmées dans une autre app pendant que le prompteur flotte au-dessus. Touchez le bouton pellicule à côté de Lire pour les voir."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Os vídeos que você grava com o teleprompter aberto, mesmo flutuando sobre a câmera, ficam como takes do roteiro. Toque no botão de filme ao lado de Reproduzir para vê-los."
+            "value" : "Os vídeos que você grava no CueCard com um roteiro ou conjunto aberto ficam como takes dele, assim como os que você grava em outro app enquanto o teleprompter flutua sobre ele. Toque no botão de filme ao lado de Reproduzir para vê-los."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Видео, записанные при открытом телесуфлёре, даже если он плавает поверх камеры, сохраняются как дубли этого текста. Коснитесь кнопки с плёнкой рядом с «Пуск», чтобы их увидеть."
+            "value" : "Видео, записанные в CueCard при открытом сценарии или наборе, сохраняются как его дубли — как и видео, записанные в другом приложении, пока над ним плавает телесуфлёр. Коснитесь кнопки с плёнкой рядом с «Пуск», чтобы их увидеть."
           }
         }
       }

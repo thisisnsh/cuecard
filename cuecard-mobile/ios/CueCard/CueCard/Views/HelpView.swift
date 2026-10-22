@@ -107,7 +107,7 @@ private enum AllHelp {
     ])
 
     static let teleprompter = HelpSection("teleprompter", title: "Teleprompter",
-                                    summary: "Scrolling, speed, mirroring and the floating window",
+                                    summary: "Scrolling, recording, mirroring and the floating window",
                                     systemImage: "text.alignleft", topics: [
         HelpTopic("Play and Pause",
                   detail: "The buttons fade while the script scrolls so they stay out of the way. Tap the screen to show them again."),
@@ -116,22 +116,24 @@ private enum AllHelp {
         HelpTopic("Change Speed",
                   detail: "Scroll Speed in Settings sets how many lines pass each minute."),
         HelpTopic("Record in CueCard",
-                  detail: "Tap the camera next to Help. Tap Record to capture video and start the prompt. Drag the prompt's handle to move it, use its controls to pause or restart, and expand or minimize the window. Stop recording to save the video to Photos. The prompt stays out of your video."),
+                  detail: "Tap the camera next to Help, tapping the screen first if the buttons are hidden. The camera opens in a small window over your script. Tap the red button to record and again to pause, then tap stop to save the video to Photos. Your script stays out of the video."),
+        HelpTopic("Record in Step with the Script",
+                  detail: "With the camera open, Play starts recording and Pause pauses it. Recording or pausing on the camera plays or pauses the script, and stopping pauses it. Turn off Sync with Teleprompter in Settings to use them separately."),
         HelpTopic("Mirror Text",
                   detail: "Turn on Mirror Text in Settings to flip the text horizontally for a teleprompter mirror. The floating window uses the same setting. It's off by default."),
         HelpTopic("Use Over Other Apps",
-                  detail: "Leave CueCard while the teleprompter is open and your script keeps going in a floating window, handy on video calls."),
+                  detail: "Leave CueCard while the teleprompter is open and your script keeps going in a floating window, handy on video calls. It doesn't open while the camera is on."),
         HelpTopic("Know When Time Is Running Out",
                   detail: "The timer changes color when you're near the end and again once you're over time. Pick the colors in the timer.")
     ])
 
     static let cards = HelpSection("cards", title: "Cards",
-                                    summary: "Turning cards and the Lock Screen",
+                                    summary: "Turning cards, recording and the Lock Screen",
                                     systemImage: "rectangle.on.rectangle", topics: [
         HelpTopic("Turn Cards",
                   detail: "Swipe, or tap Back and Next. The dots at the top show which card you're on."),
         HelpTopic("Record with Cards",
-                  detail: "Tap the camera next to Help to record a video. Your cards float above the camera: swipe left or right, or use the arrows to turn them. Drag the handle to move the window. Stop recording to save to Photos."),
+                  detail: "Tap the camera next to Help. The camera opens in a small window over your cards. Tap the red button to record and again to pause, then tap stop to save the video to Photos. Keep turning cards while you record."),
         HelpTopic("Read from the Lock Screen",
                   detail: "Turn on Show on Lock Screen in Settings. Then lock your iPhone and turn cards right from the Lock Screen."),
         HelpTopic("Count Up Without a Timer",
@@ -142,7 +144,9 @@ private enum AllHelp {
                                     summary: "The videos you record with a script",
                                     systemImage: "film.stack", topics: [
         HelpTopic("Find Your Takes",
-                  detail: "Videos you record while the teleprompter is open, even floating over the camera, are kept as takes of the script. Tap the film button next to Play to see them."),
+                  detail: "Videos you record in CueCard with a script or deck open are kept as its takes, and so are videos you record in another app while the teleprompter floats over it. Tap the film button next to Play to see them."),
+        HelpTopic("Move the Camera Window",
+                  detail: "Drag the camera window to any corner. Pinch or double-tap it to change its size, and tap it to hide or show its buttons. Use the buttons to zoom or flip the camera."),
         HelpTopic("Play a Take",
                   detail: "Tap a take to play it right in CueCard. Below the video, add tags and notes, like what worked and what to change next time."),
         HelpTopic("Favorite a Take",
