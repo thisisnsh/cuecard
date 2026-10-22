@@ -68,6 +68,8 @@ struct EditorSettingsView: View {
                 value: $settingsService.settings.fontSize,
                 presets: TeleprompterSettings.fontSizePresets
             )
+
+            Toggle("Mirror Text", isOn: $settingsService.settings.mirrorsText)
         }
 
         Section("Floating Window") {

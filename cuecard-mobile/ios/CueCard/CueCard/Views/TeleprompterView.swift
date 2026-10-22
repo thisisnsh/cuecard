@@ -16,7 +16,7 @@ struct TeleprompterView: View {
     private var scriptTime: Double { pipManager.playback.scriptTime }
     private var isCountingDown: Bool { pipManager.playback.isCountingDown }
     private var countdownValue: Int { pipManager.playback.countdownValue }
-    private var isMirrored: Bool { pipManager.isMirrored }
+    private var isMirrored: Bool { settings.mirrorsText }
     /// During the countdown the play button shows the seconds left, in the cue
     /// color, and switches to the pause icon once playback starts. It still
     /// pauses while showing a number.
@@ -226,33 +226,17 @@ struct TeleprompterView: View {
                             }
                             .accessibilityLabel("Close")
                         }
-                        // One item, so the two sit as close as a pair, like the
-                        // editor's menu and settings buttons.
                         ToolbarItem(placement: .topBarTrailing) {
-                            HStack(spacing: 8) {
-                                Button {
-                                    AnalyticsEvents.logButtonClick("camera", screen: "teleprompter")
-                                    stopControlsTimer()
-                                    showingCamera.toggle()
-                                } label: {
-                                    Image(systemName: showingCamera ? "camera.fill" : "camera")
-                                        .font(.system(size: 15, weight: .semibold))
-                                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                                }
-                                .accessibilityLabel(showingCamera ? "Close Camera" : "Record Video")
-                                Button(action: {
-                                    pipManager.toggleMirroring()
-                                    AnalyticsEvents.logButtonClick(isMirrored ? "mirror_on" : "mirror_off", screen: "teleprompter")
-                                    resetControlsTimer()
-                                }) {
-                                    Image(systemName: "arrow.left.and.right.righttriangle.left.righttriangle.right")
-                                        .font(.system(size: 15, weight: .semibold))
-                                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                                }
-                                .accessibilityLabel("Mirror Text")
-                                .accessibilityValue(isMirrored ? "On" : "Off")
-                                .accessibilityAddTraits(isMirrored ? .isSelected : [])
+                            Button {
+                                AnalyticsEvents.logButtonClick("camera", screen: "teleprompter")
+                                stopControlsTimer()
+                                showingCamera.toggle()
+                            } label: {
+                                Image(systemName: showingCamera ? "camera.fill" : "camera")
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                             }
+                            .accessibilityLabel(showingCamera ? "Close Camera" : "Record Video")
                         }
                         HelpToolbarItem(page: .teleprompter, isPresented: $showingHelp)
                     }

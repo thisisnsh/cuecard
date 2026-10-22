@@ -27,7 +27,6 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
     }
     @Published private(set) var isPiPActive = false
     @Published private(set) var isPiPPossible = false
-    @Published private(set) var isMirrored = false
     /// A restoration request belongs to the full-screen presentation only. The
     /// still-visible overlay carries on scrolling through it.
     @Published private(set) var restorationRequest: UUID?
@@ -128,6 +127,7 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
             || newSettings.cueColor != settings.cueColor
             || newSettings.timerDurationSeconds != settings.timerDurationSeconds
             || newSettings.timerStyle != settings.timerStyle
+            || newSettings.mirrorsText != settings.mirrorsText
             || newIsDarkMode != isDarkMode
         let speedChanged = newSettings.linesPerMinute != settings.linesPerMinute
         settings = newSettings
@@ -171,11 +171,6 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
             reanchorPlayback()
         }
         repaintOverlay()
-        renderFrame(force: true)
-    }
-
-    func toggleMirroring() {
-        isMirrored.toggle()
         renderFrame(force: true)
     }
 
@@ -439,7 +434,7 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         if !renderingPiP && !force {
             guard hostNow - lastFrameTime >= 0.2 else { return }
         }
-        contentView.present(linePosition: overlayLine(for: playback), state: playback, isMirrored: isMirrored)
+        contentView.present(linePosition: overlayLine(for: playback), state: playback, isMirrored: settings.mirrorsText)
         #if DEBUG
         os_signpost(.event, log: pipPerformanceLog, name: "PiP frame submitted")
         #endif
@@ -522,7 +517,6 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         readerHost?.cancelVideoRestoration()
         isRestoringToReader = false
         renderer = nil
-        isMirrored = false
         isPiPActive = false
         isPiPPossible = false
         isStartingPiP = false

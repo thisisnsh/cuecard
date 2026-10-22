@@ -200,6 +200,9 @@ struct TeleprompterSettings: Codable, Equatable {
     /// Play and pause on the teleprompter start and pause the camera's
     /// recording, and the camera's buttons play and pause the teleprompter.
     var syncsCamera: Bool
+    /// The teleprompter and floating window draw the text flipped, for reading
+    /// off a teleprompter's glass.
+    var mirrorsText: Bool
 
     static let `default` = TeleprompterSettings(
         editorFontSize: ScreenTextScale.scaled(16, by: ScreenTextScale.editor),
@@ -223,7 +226,8 @@ struct TeleprompterSettings: Codable, Equatable {
             timerMinutes: 1,
             timerSeconds: 0
         ),
-        syncsCamera: true
+        syncsCamera: true,
+        mirrorsText: false
     )
 
     /// Scroll speed range (multiplier)
@@ -340,6 +344,7 @@ struct TeleprompterSettings: Codable, Equatable {
         case watch
         case cards
         case syncsCamera
+        case mirrorsText
     }
 
     init(
@@ -358,7 +363,8 @@ struct TeleprompterSettings: Codable, Equatable {
         scriptMode: ScriptMode,
         watch: WatchSettings,
         cards: CardsSettings,
-        syncsCamera: Bool
+        syncsCamera: Bool,
+        mirrorsText: Bool
     ) {
         self.editorFontSize = editorFontSize
         self.fontSize = fontSize
@@ -376,6 +382,7 @@ struct TeleprompterSettings: Codable, Equatable {
         self.watch = watch
         self.cards = cards
         self.syncsCamera = syncsCamera
+        self.mirrorsText = mirrorsText
     }
 
     init(from decoder: Decoder) throws {
@@ -431,6 +438,8 @@ struct TeleprompterSettings: Codable, Equatable {
         }
         syncsCamera = try container.decodeIfPresent(Bool.self, forKey: .syncsCamera)
             ?? TeleprompterSettings.default.syncsCamera
+        mirrorsText = try container.decodeIfPresent(Bool.self, forKey: .mirrorsText)
+            ?? TeleprompterSettings.default.mirrorsText
     }
 
     static func clamp(_ value: Int, to range: ClosedRange<Int>) -> Int {
@@ -455,6 +464,7 @@ struct TeleprompterSettings: Codable, Equatable {
         try container.encode(watch, forKey: .watch)
         try container.encode(cards, forKey: .cards)
         try container.encode(syncsCamera, forKey: .syncsCamera)
+        try container.encode(mirrorsText, forKey: .mirrorsText)
     }
 }
 
