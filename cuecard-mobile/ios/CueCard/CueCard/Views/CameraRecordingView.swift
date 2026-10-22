@@ -315,12 +315,13 @@ private struct FloatingCameraWindow: View {
         .accessibilityLabel(recorder.isPaused ? "Recording paused" : "Recording duration")
     }
 
-    /// Steps through 1×, 2× and 3×, as far as the camera allows.
+    /// Steps through the Camera app's stops this camera has, such as 0.5×, 1×,
+    /// 2× and 5×, switching lenses on the way.
     private var zoomButton: some View {
-        let steps = [1.0, 2.0, 3.0].filter { $0 <= recorder.maxZoom }
-        let next = steps.first { $0 > recorder.zoom + 0.05 } ?? 1
+        let steps = recorder.zoomSteps
+        let next = steps.first { $0 > recorder.zoom + 0.05 } ?? steps[0]
         return Button { recorder.setZoom(next) } label: {
-            Text("\(Int(recorder.zoom.rounded()))×")
+            Text(verbatim: recorder.zoom.formatted(.number.precision(.fractionLength(0...1))) + "×")
                 .font(.caption2.monospacedDigit().weight(.bold))
                 .frame(width: 28, height: 28)
                 .background(.black.opacity(0.5), in: Circle())

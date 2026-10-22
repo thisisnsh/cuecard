@@ -10,8 +10,13 @@ final class CameraRecorder: ObservableObject {
     @Published private(set) var isReady = false
     @Published private(set) var isRecording = false
     @Published private(set) var isPaused = false
+    /// As the Camera app counts it: 1× is the main lens, 0.5× the ultra wide.
     @Published private(set) var zoom: Double = 1
+    /// The Camera app's zoom stops this camera has, smallest first.
+    @Published private(set) var zoomSteps: [Double] = [1]
     @Published private(set) var maxZoom: Double = 1
+    /// The device zoom factor that shows as 1×.
+    private var zoomBase: Double = 1
     private var pausedAt: Date?
     private var pausedDuration: TimeInterval = 0
     @Published private(set) var isBusy = false
@@ -113,14 +118,22 @@ final class CameraRecorder: ObservableObject {
 
     func setZoom(_ value: Double) {
         guard isReady else { return }
-        zoom = min(max(1, value), maxZoom)
-        capture.setZoom(zoom)
+        zoom = min(max(zoomSteps[0], value), maxZoom)
+        capture.setZoom(zoom * zoomBase)
     }
 
     private func updateDevice(_ device: AVCaptureDevice) {
         self.device = device
-        maxZoom = min(6, Double(device.maxAvailableVideoZoomFactor))
-        zoom = Double(device.videoZoomFactor)
+        zoomBase = Double(CameraCapture.mainLensZoomFactor(of: device))
+        let minZoom = Double(device.minAvailableVideoZoomFactor) / zoomBase
+        maxZoom = min(Double(device.maxAvailableVideoZoomFactor) / zoomBase, 10)
+        // Each lens the camera switches to, and 2× from the main lens as the
+        // Camera app offers it, rounded the way it labels them.
+        let lenses = device.virtualDeviceSwitchOverVideoZoomFactors.map { $0.doubleValue / zoomBase }
+        zoomSteps = Set(([minZoom, 1, 2] + lenses).map { ($0 * 10).rounded() / 10 })
+            .filter { $0 >= minZoom - 0.01 && $0 <= maxZoom + 0.01 }
+            .sorted()
+        zoom = Double(device.videoZoomFactor) / zoomBase
     }
 
     func stop() {
@@ -312,8 +325,7 @@ final class CameraCapture: NSObject, @unchecked Sendable, AVCaptureFileOutputRec
         session.inputs.forEach { session.removeInput($0) }
         session.outputs.forEach { session.removeOutput($0) }
         if session.canSetSessionPreset(.hd1920x1080) { session.sessionPreset = .hd1920x1080 }
-        guard let camera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front)
-                ?? AVCaptureDevice.default(for: .video),
+        guard let camera = Self.camera(at: .front) ?? AVCaptureDevice.default(for: .video),
               let microphone = AVCaptureDevice.default(for: .audio) else { throw CameraError.unavailable }
         let video = try AVCaptureDeviceInput(device: camera)
         let audio = try AVCaptureDeviceInput(device: microphone)
@@ -324,6 +336,30 @@ final class CameraCapture: NSObject, @unchecked Sendable, AVCaptureFileOutputRec
         guard session.canAddOutput(output) else { throw CameraError.unavailable }
         session.addOutput(output)
         videoInput = video
+        Self.zoomToMainLens(camera)
+    }
+
+    /// The camera on that side as the Camera app uses it. On the back, every
+    /// lens sits behind one device that switches between them as it zooms.
+    private static func camera(at position: AVCaptureDevice.Position) -> AVCaptureDevice? {
+        let types: [AVCaptureDevice.DeviceType] = position == .back
+            ? [.builtInTripleCamera, .builtInDualWideCamera, .builtInDualCamera, .builtInWideAngleCamera]
+            : [.builtInWideAngleCamera]
+        return types.lazy.compactMap { AVCaptureDevice.default($0, for: .video, position: position) }.first
+    }
+
+    /// The zoom factor of the main lens, the Camera app's 1×. A device with an
+    /// ultra wide starts at it, 0.5×, and reaches the main lens at its first switch.
+    static func mainLensZoomFactor(of device: AVCaptureDevice) -> CGFloat {
+        guard device.constituentDevices.contains(where: { $0.deviceType == .builtInUltraWideCamera }),
+              let main = device.virtualDeviceSwitchOverVideoZoomFactors.first else { return 1 }
+        return CGFloat(truncating: main)
+    }
+
+    private static func zoomToMainLens(_ device: AVCaptureDevice) {
+        guard (try? device.lockForConfiguration()) != nil else { return }
+        device.videoZoomFactor = mainLensZoomFactor(of: device)
+        device.unlockForConfiguration()
     }
 
     func switchCamera() async throws -> AVCaptureDevice {
@@ -331,8 +367,7 @@ final class CameraCapture: NSObject, @unchecked Sendable, AVCaptureFileOutputRec
             queue.async {
                 do {
                     guard !self.recordingRequested, let old = self.videoInput,
-                          let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video,
-                                                               position: old.device.position == .front ? .back : .front)
+                          let device = Self.camera(at: old.device.position == .front ? .back : .front)
                     else { throw CameraError.unavailable }
                     let input = try AVCaptureDeviceInput(device: device)
                     self.session.beginConfiguration()
@@ -341,6 +376,7 @@ final class CameraCapture: NSObject, @unchecked Sendable, AVCaptureFileOutputRec
                         self.session.addInput(input)
                         self.videoInput = input
                         self.session.commitConfiguration()
+                        Self.zoomToMainLens(device)
                         continuation.resume(returning: device)
                     } else {
                         self.session.addInput(old)
