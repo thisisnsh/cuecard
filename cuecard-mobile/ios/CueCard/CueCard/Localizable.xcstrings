@@ -1442,25 +1442,25 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Cámara interrumpida. La grabación se detendrá y se guardará."
+            "value" : "Se ha interrumpido el funcionamiento de la cámara. La grabación se detendrá y se guardará."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Appareil photo interrompu. L'enregistrement va s'arrêter et être sauvegardé."
+            "value" : "Le fonctionnement de l'appareil photo a été interrompu. L'enregistrement va s'arrêter et être sauvegardé."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Câmera interrompida. A gravação será parada e salva."
+            "value" : "O funcionamento da câmera foi interrompido. A gravação será encerrada e salva."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Камера прервана. Запись остановится и сохранится."
+            "value" : "Работа камеры прервана. Запись остановится и сохранится."
           }
         }
       }

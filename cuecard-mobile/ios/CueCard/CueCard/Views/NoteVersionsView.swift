@@ -241,7 +241,11 @@ private struct VersionDiffView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 Picker("Compare With", selection: $comparison) {
-                    Text(previous.map { "Version \($0.number)" } ?? "Nothing Before").tag(Comparison.previous)
+                    if let previous {
+                        Text("Version \(previous.number)").tag(Comparison.previous)
+                    } else {
+                        Text("Nothing Before").tag(Comparison.previous)
+                    }
                     Text("Current Edit").tag(Comparison.editor)
                 }
                 .pickerStyle(.segmented)
