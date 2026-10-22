@@ -34,6 +34,30 @@
             "state" : "new",
             "value" : "CueCard uses your camera to record videos while you read your script or cards."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CueCard usa la cámara para grabar vídeos mientras lees tu guion o tus tarjetas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CueCard utilise l'appareil photo pour filmer des vidéos pendant que vous lisez votre script ou vos fiches."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O CueCard usa a câmera para gravar vídeos enquanto você lê seu roteiro ou seus cartões."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CueCard использует камеру, чтобы записывать видео, пока вы читаете сценарий или карточки."
+          }
         }
       }
     },
@@ -46,6 +70,30 @@
             "state" : "new",
             "value" : "CueCard uses your microphone to record audio with your videos."
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CueCard usa el micrófono para grabar el audio de tus vídeos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CueCard utilise le micro pour enregistrer le son de vos vidéos."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O CueCard usa o microfone para gravar o áudio dos seus vídeos."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CueCard использует микрофон, чтобы записывать звук для ваших видео."
+          }
         }
       }
     },
@@ -57,6 +105,30 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "CueCard saves the videos you record to your photo library."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CueCard guarda en tu fototeca los vídeos que grabas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CueCard enregistre dans votre photothèque les vidéos que vous filmez."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O CueCard salva na sua fototeca os vídeos que você grava."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CueCard сохраняет записанные вами видео в медиатеку."
           }
         }
       }
