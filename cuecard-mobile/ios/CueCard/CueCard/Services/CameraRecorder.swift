@@ -193,6 +193,12 @@ final class CameraRecorder: ObservableObject {
             pausedAt = nil
             isPaused = false
             isBusy = false
+        case .saving:
+            // The camera has stopped; only the file is still being written.
+            isRecording = false
+            isPaused = false
+            pausedAt = nil
+            message = String(localized: "Saving video…")
         case let .finished(url, error):
             isStartingRecording = false
             let start = startedAt ?? Date()
@@ -208,6 +214,7 @@ final class CameraRecorder: ObservableObject {
                 endBackgroundTask()
             } else {
                 pendingURL = url
+                message = nil
                 if let scriptID {
                     TakeStore.shared.recordSession(scriptID: scriptID, start: start, end: Date())
                 }
@@ -242,6 +249,8 @@ final class CameraCapture: NSObject, @unchecked Sendable, AVCaptureFileOutputRec
         case started
         case paused
         case recordingResumed
+        /// Recording ended, and the take is being joined or cropped.
+        case saving
         case finished(URL, String?)
         case unavailable(String)
         case resumed
@@ -464,7 +473,9 @@ final class CameraCapture: NSObject, @unchecked Sendable, AVCaptureFileOutputRec
             onEvent?(.finished(first, error))
             return
         }
-        Task {
+        onEvent?(.saving)
+        // Below the reader's priority, so the script keeps scrolling smoothly.
+        Task(priority: .utility) {
             do {
                 let merged = try await Self.export(files, cropToPortrait: crops)
                 files.forEach { try? FileManager.default.removeItem(at: $0) }
