@@ -356,7 +356,7 @@ private struct FloatingCameraWindow: View {
         return VStack(spacing: 6) {
             HStack(spacing: 4) {
                 Button(action: onClose) {
-                    Image(systemName: "xmark").frame(width: 32, height: 32)
+                    circledIcon("xmark", size: 32)
                 }
                 .accessibilityLabel("Close Camera")
                 Spacer(minLength: 0)
@@ -377,7 +377,7 @@ private struct FloatingCameraWindow: View {
             }
             HStack {
                 Button { Task { await recorder.switchCamera() } } label: {
-                    Image(systemName: "arrow.triangle.2.circlepath.camera").frame(width: 36, height: 36)
+                    circledIcon("arrow.triangle.2.circlepath.camera", size: 36)
                 }
                 .accessibilityLabel("Flip Camera")
                 .disabled(!recorder.isReady || recorder.isBusy || recorder.isRecording)
@@ -388,7 +388,7 @@ private struct FloatingCameraWindow: View {
                     recorder.stop()
                     onControl(.stop)
                 } label: {
-                    Image(systemName: "stop.fill").frame(width: 36, height: 36)
+                    circledIcon("stop.fill", size: 36)
                 }
                 .accessibilityLabel("Stop Recording")
                 .disabled(!recorder.isRecording || recorder.isBusy)
@@ -406,6 +406,15 @@ private struct FloatingCameraWindow: View {
                 .allowsHitTesting(false)
         }
         .dynamicTypeSize(...DynamicTypeSize.xxLarge)
+    }
+
+    /// A glyph on the same dark disc as the zoom button, so it stays readable
+    /// over a bright picture.
+    private func circledIcon(_ name: String, size: CGFloat) -> some View {
+        Image(systemName: name)
+            .frame(width: size - 4, height: size - 4)
+            .background(.black.opacity(0.5), in: Circle())
+            .frame(width: size, height: size)
     }
 
     private func recordButton(diameter: CGFloat) -> some View {
