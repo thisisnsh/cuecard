@@ -263,14 +263,15 @@ struct CueCardsView: View {
     /// A mask leaving out the card at `offset`. Always drawn, so the hole
     /// follows the card through every animation. Uncovered, it waits further
     /// off screen than any card: cards past the left edge share one place.
+    ///
+    /// The mask reaches well past the deck, which sits inset from the screen,
+    /// so a card's words aren't cut off as it's swiped toward the edge.
     private func uncovered(by offset: Int, width: CGFloat, isCovered: Bool) -> some View {
-        Rectangle()
-            .overlay {
-                place(RoundedRectangle(cornerRadius: CueCardFace.cornerRadius, style: .continuous),
-                      at: isCovered ? placement(of: offset, width: width) : Placement(x: -2 * (width + 60)))
-                    .opacity(isCovered ? 1 : 0)
-                    .blendMode(.destinationOut)
-            }
+        place(RoundedRectangle(cornerRadius: CueCardFace.cornerRadius, style: .continuous),
+              at: isCovered ? placement(of: offset, width: width) : Placement(x: -2 * (width + 60)))
+            .opacity(isCovered ? 1 : 0)
+            .blendMode(.destinationOut)
+            .background { Rectangle().padding(-2 * (width + 60)) }
             .compositingGroup()
     }
 
