@@ -76,8 +76,8 @@ struct TeleprompterView: View {
     private static let readingLineFraction: CGFloat = 0.45
 
     var body: some View {
-        NavigationStack {
-            CameraRecordingView(isPresented: $showingCamera, scriptID: settingsService.teleprompterScriptID) {
+        CameraRecordingView(isPresented: $showingCamera, scriptID: settingsService.teleprompterScriptID) {
+            NavigationStack {
                 GeometryReader { geometry in
                     ZStack {
                         // Background - matches device theme
@@ -206,57 +206,58 @@ struct TeleprompterView: View {
                         ])
                     }
                 }
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(AppColors.background(for: colorScheme), for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbar {
-                // Comes and goes with the play, restart and floating window buttons.
-                if showControls || showingCamera {
-                    ToolbarItem(placement: .topBarLeading) {
-                        Button(action: {
-                            AnalyticsEvents.logButtonClick("close", screen: "teleprompter")
-                            stopAndDismiss()
-                        }) {
-                            Image(systemName: "xmark")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                .cameraWindowArea()
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbarBackground(AppColors.background(for: colorScheme), for: .navigationBar)
+                .toolbarBackground(.visible, for: .navigationBar)
+                .toolbar {
+                    // Comes and goes with the play, restart and floating window buttons.
+                    if showControls || showingCamera {
+                        ToolbarItem(placement: .topBarLeading) {
+                            Button(action: {
+                                AnalyticsEvents.logButtonClick("close", screen: "teleprompter")
+                                stopAndDismiss()
+                            }) {
+                                Image(systemName: "xmark")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                            }
+                            .accessibilityLabel("Close")
                         }
-                        .accessibilityLabel("Close")
+                        ToolbarItemGroup(placement: .topBarTrailing) {
+                            Button {
+                                AnalyticsEvents.logButtonClick("camera", screen: "teleprompter")
+                                stopControlsTimer()
+                                showingCamera.toggle()
+                            } label: {
+                                Image(systemName: showingCamera ? "camera.fill" : "camera")
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                            }
+                            .accessibilityLabel(showingCamera ? "Close Camera" : "Record Video")
+                            Button(action: {
+                                pipManager.toggleMirroring()
+                                AnalyticsEvents.logButtonClick(isMirrored ? "mirror_on" : "mirror_off", screen: "teleprompter")
+                                resetControlsTimer()
+                            }) {
+                                Image(systemName: "arrow.left.and.right.righttriangle.left.righttriangle.right")
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                            }
+                            .accessibilityLabel("Mirror Text")
+                            .accessibilityValue(isMirrored ? "On" : "Off")
+                            .accessibilityAddTraits(isMirrored ? .isSelected : [])
+                        }
+                        HelpToolbarItem(page: .teleprompter, isPresented: $showingHelp)
                     }
-                    ToolbarItemGroup(placement: .topBarTrailing) {
-                        Button {
-                            AnalyticsEvents.logButtonClick("camera", screen: "teleprompter")
-                            stopControlsTimer()
-                            showingCamera.toggle()
-                        } label: {
-                            Image(systemName: showingCamera ? "camera.fill" : "camera")
-                                .font(.system(size: 15, weight: .semibold))
-                                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                        }
-                        .accessibilityLabel(showingCamera ? "Close Camera" : "Record Video")
-                        Button(action: {
-                            pipManager.toggleMirroring()
-                            AnalyticsEvents.logButtonClick(isMirrored ? "mirror_on" : "mirror_off", screen: "teleprompter")
-                            resetControlsTimer()
-                        }) {
-                            Image(systemName: "arrow.left.and.right.righttriangle.left.righttriangle.right")
-                                .font(.system(size: 15, weight: .semibold))
-                                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                        }
-                        .accessibilityLabel("Mirror Text")
-                        .accessibilityValue(isMirrored ? "On" : "Off")
-                        .accessibilityAddTraits(isMirrored ? .isSelected : [])
+                    ToolbarItem(placement: .principal) {
+                        Text(timeDisplay)
+                            .font(.system(size: 16, weight: .bold, design: .monospaced))
+                            .foregroundStyle(timerColor)
                     }
-                    HelpToolbarItem(page: .teleprompter, isPresented: $showingHelp)
                 }
-                ToolbarItem(placement: .principal) {
-                    Text(timeDisplay)
-                        .font(.system(size: 16, weight: .bold, design: .monospaced))
-                        .foregroundStyle(timerColor)
-                }
+                .helpSheet(for: .teleprompter, isPresented: $showingHelp)
             }
-            .helpSheet(for: .teleprompter, isPresented: $showingHelp)
         }
         .onChange(of: showingCamera) { _, presented in
             pipManager.setCameraPresented(presented)

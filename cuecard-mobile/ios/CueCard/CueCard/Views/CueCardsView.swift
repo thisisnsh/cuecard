@@ -47,8 +47,8 @@ struct CueCardsView: View {
     private var animation: Animation? { reduceMotion ? nil : Self.deckAnimation }
 
     var body: some View {
-        NavigationStack {
-            CameraRecordingView(isPresented: $showingCamera, scriptID: scriptID) {
+        CameraRecordingView(isPresented: $showingCamera, scriptID: scriptID) {
+            NavigationStack {
                 GeometryReader { geometry in
                     ZStack {
                         AppColors.background(for: colorScheme)
@@ -77,91 +77,92 @@ struct CueCardsView: View {
                         }
                     }
                 }
-            }
-            .navigationTitle("Cards")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(AppColors.background(for: colorScheme), for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button(action: {
-                        AnalyticsEvents.logButtonClick("close", screen: "cards")
-                        session.end()
-                        TakeStore.shared.end()
-                        dismiss()
-                    }) {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                    }
-                    .accessibilityLabel("Close")
-                }
-                ToolbarItem(placement: .principal) {
-                    VStack(spacing: 2) {
-                        // The dots show where the deck is, so the title
-                        // bar is the timer's.
-                        TimelineView(.periodic(from: session.startedAt, by: 1)) { context in
-                            timerText(at: context.date)
+                .cameraWindowArea()
+                .navigationTitle("Cards")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbarBackground(AppColors.background(for: colorScheme), for: .navigationBar)
+                .toolbarBackground(.visible, for: .navigationBar)
+                .toolbar {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button(action: {
+                            AnalyticsEvents.logButtonClick("close", screen: "cards")
+                            session.end()
+                            TakeStore.shared.end()
+                            dismiss()
+                        }) {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                         }
-                        Text(session.title.isEmpty ? title : session.title)
-                            .font(.caption)
-                            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                            .lineLimit(1)
+                        .accessibilityLabel("Close")
                     }
-                    .accessibilityElement(children: .combine)
-                    .accessibilityValue(progress)
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        AnalyticsEvents.logButtonClick("camera", screen: "cards")
-                        showingCamera.toggle()
-                    } label: {
-                        Image(systemName: showingCamera ? "camera.fill" : "camera")
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                    }
-                    .accessibilityLabel(showingCamera ? "Close Camera" : "Record Video")
-                }
-                HelpToolbarItem(page: .cards, isPresented: $showingHelp)
-            }
-            .helpSheet(for: .cards, isPresented: $showingHelp)
-            .sheet(isPresented: $showingLockScreenHelp) {
-                NavigationStack {
-                    List {
-                        Section {
-                            Label("Use Back and Next on the Live Activity to turn cards.", systemImage: "hand.tap")
-                            Label("Authenticate with Face ID, Touch ID or your passcode to use the buttons.", systemImage: "lock.open")
-                            Label("Add the Cards widget from your Home Screen widget gallery. Medium and large widgets include card controls.", systemImage: "square.grid.2x2")
-                            Text("The small Lock Screen widget shows a preview. Interactive buttons require iOS 17 or later.")
-                                .foregroundStyle(.secondary)
-                        } header: {
-                            Text("Read from your Lock Screen")
-                        } footer: {
-                            Text("Your place stays in sync with the app and Apple Watch. Closing this deck ends its Live Activity and clears the widgets.")
+                    ToolbarItem(placement: .principal) {
+                        VStack(spacing: 2) {
+                            // The dots show where the deck is, so the title
+                            // bar is the timer's.
+                            TimelineView(.periodic(from: session.startedAt, by: 1)) { context in
+                                timerText(at: context.date)
+                            }
+                            Text(session.title.isEmpty ? title : session.title)
+                                .font(.caption)
+                                .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                                .lineLimit(1)
                         }
-                        if session.lockScreenUnavailable && !session.isOnLockScreen {
-                            Text("Check that Live Activities are enabled for CueCard in Settings, then return to this deck and try again.")
-                                .foregroundStyle(.secondary)
-                            Button("Open Settings") {
-                                if let url = URL(string: UIApplication.openSettingsURLString) {
-                                    openURL(url)
+                        .accessibilityElement(children: .combine)
+                        .accessibilityValue(progress)
+                    }
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            AnalyticsEvents.logButtonClick("camera", screen: "cards")
+                            showingCamera.toggle()
+                        } label: {
+                            Image(systemName: showingCamera ? "camera.fill" : "camera")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                        }
+                        .accessibilityLabel(showingCamera ? "Close Camera" : "Record Video")
+                    }
+                    HelpToolbarItem(page: .cards, isPresented: $showingHelp)
+                }
+                .helpSheet(for: .cards, isPresented: $showingHelp)
+                .sheet(isPresented: $showingLockScreenHelp) {
+                    NavigationStack {
+                        List {
+                            Section {
+                                Label("Use Back and Next on the Live Activity to turn cards.", systemImage: "hand.tap")
+                                Label("Authenticate with Face ID, Touch ID or your passcode to use the buttons.", systemImage: "lock.open")
+                                Label("Add the Cards widget from your Home Screen widget gallery. Medium and large widgets include card controls.", systemImage: "square.grid.2x2")
+                                Text("The small Lock Screen widget shows a preview. Interactive buttons require iOS 17 or later.")
+                                    .foregroundStyle(.secondary)
+                            } header: {
+                                Text("Read from your Lock Screen")
+                            } footer: {
+                                Text("Your place stays in sync with the app and Apple Watch. Closing this deck ends its Live Activity and clears the widgets.")
+                            }
+                            if session.lockScreenUnavailable && !session.isOnLockScreen {
+                                Text("Check that Live Activities are enabled for CueCard in Settings, then return to this deck and try again.")
+                                    .foregroundStyle(.secondary)
+                                Button("Open Settings") {
+                                    if let url = URL(string: UIApplication.openSettingsURLString) {
+                                        openURL(url)
+                                    }
+                                }
+                                Button("Try Again") {
+                                    session.showOnLockScreen()
+                                    showingLockScreenHelp = false
                                 }
                             }
-                            Button("Try Again") {
-                                session.showOnLockScreen()
-                                showingLockScreenHelp = false
+                        }
+                        .navigationTitle("Lock Screen")
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar {
+                            ToolbarItem(placement: .confirmationAction) {
+                                Button("Done") { showingLockScreenHelp = false }
                             }
                         }
                     }
-                    .navigationTitle("Lock Screen")
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .confirmationAction) {
-                            Button("Done") { showingLockScreenHelp = false }
-                        }
-                    }
+                    .presentationDetents([.medium, .large])
                 }
-                .presentationDetents([.medium, .large])
             }
         }
         .onAppear {

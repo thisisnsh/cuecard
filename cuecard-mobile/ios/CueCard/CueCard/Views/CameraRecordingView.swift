@@ -4,10 +4,14 @@ import SwiftUI
 /// Keeps the reader full screen and floats the camera above it in a 9:16
 /// window styled like Picture in Picture. The reader is never replaced, so its
 /// scroll position and controls survive turning the camera on and off.
-struct CameraRecordingView<Reader: View>: View {
+///
+/// It wraps the reader's whole navigation stack so the window passes over the
+/// navigation bar while dragged. It settles only inside the area the reader
+/// marks with `cameraWindowArea()`, below that bar.
+struct CameraRecordingView<Content: View>: View {
     @Binding var isPresented: Bool
     let scriptID: UUID?
-    @ViewBuilder let reader: () -> Reader
+    @ViewBuilder let content: () -> Content
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @StateObject private var recorder = CameraRecorder()
@@ -16,13 +20,18 @@ struct CameraRecordingView<Reader: View>: View {
     @State private var corner = WindowCorner.topTrailing
     @State private var expanded = false
     @State private var previousIdleTimerDisabled = false
+    /// The reader's area in global coordinates.
+    @State private var area = CGRect.zero
 
     var body: some View {
-        reader()
+        content()
+            .environment(\.reportCameraWindowArea, CameraWindowAreaReporter { area = $0 })
             .overlay(alignment: .topLeading) {
-                if isPresented {
+                if isPresented, !area.isEmpty {
                     GeometryReader { geometry in
-                        FloatingCameraWindow(recorder: recorder, container: geometry.size,
+                        let origin = geometry.frame(in: .global).origin
+                        FloatingCameraWindow(recorder: recorder,
+                                             bounds: area.offsetBy(dx: -origin.x, dy: -origin.y),
                                              corner: $corner, expanded: $expanded,
                                              onClose: { isPresented = false })
                     }
@@ -64,6 +73,41 @@ struct CameraRecordingView<Reader: View>: View {
     }
 }
 
+extension View {
+    /// Marks the reader below its navigation bar: where the floating camera
+    /// window settles.
+    func cameraWindowArea() -> some View { modifier(CameraWindowArea()) }
+}
+
+private struct CameraWindowArea: ViewModifier {
+    @Environment(\.reportCameraWindowArea) private var report
+
+    func body(content: Content) -> some View {
+        content.background {
+            GeometryReader { geometry in
+                Color.clear.onChange(of: geometry.frame(in: .global), initial: true) { _, frame in
+                    report.action(frame)
+                }
+            }
+        }
+    }
+}
+
+private struct CameraWindowAreaReporter {
+    var action: (CGRect) -> Void = { _ in }
+}
+
+private struct CameraWindowAreaKey: EnvironmentKey {
+    static let defaultValue = CameraWindowAreaReporter()
+}
+
+private extension EnvironmentValues {
+    var reportCameraWindowArea: CameraWindowAreaReporter {
+        get { self[CameraWindowAreaKey.self] }
+        set { self[CameraWindowAreaKey.self] = newValue }
+    }
+}
+
 private enum WindowCorner {
     case topLeading, topTrailing, bottomLeading, bottomTrailing
 
@@ -80,12 +124,13 @@ private enum WindowCorner {
     var isTop: Bool { self == .topLeading || self == .topTrailing }
 }
 
-/// The camera preview and its controls. Drag to move it, it snaps to the
-/// nearest corner; pinch or double-tap to change its size; tap to show or hide
-/// the controls.
+/// The camera preview and its controls. Drag to move it, anywhere on screen,
+/// and it springs back into the nearest corner of `bounds`; pinch or
+/// double-tap to change its size; tap to show or hide the controls.
 private struct FloatingCameraWindow: View {
     @ObservedObject var recorder: CameraRecorder
-    let container: CGSize
+    /// Where the window may settle, in the space it's drawn in.
+    let bounds: CGRect
     @Binding var corner: WindowCorner
     @Binding var expanded: Bool
     let onClose: () -> Void
@@ -97,8 +142,7 @@ private struct FloatingCameraWindow: View {
     @State private var showsControls = true
 
     private static let margin: CGFloat = 16
-    /// Room above the window for its shadow, which the navigation bar would
-    /// otherwise cut off.
+    /// Space between the window and the navigation bar.
     private static let topMargin: CGFloat = 24
     private static let cornerRadius: CGFloat = 16
     private static let aspect: CGFloat = 16 / 9
@@ -145,18 +189,18 @@ private struct FloatingCameraWindow: View {
     }
 
     /// Collapsed and expanded widths, followed live while pinching and always
-    /// kept short enough to fit the container's height.
+    /// kept short enough to fit the bounds' height.
     private var windowSize: CGSize {
-        let small = min(container.width * 0.36, 180)
-        let large = min(container.width * 0.6, 320)
-        let fit = max(1, (container.height - Self.topMargin - Self.margin) / Self.aspect)
+        let small = min(bounds.width * 0.36, 180)
+        let large = min(bounds.width * 0.6, 320)
+        let fit = max(1, (bounds.height - Self.topMargin - Self.margin) / Self.aspect)
         let width = min(max((expanded ? large : small) * pinchScale, small * 0.8), large * 1.1, fit)
         return CGSize(width: width, height: width * Self.aspect)
     }
 
     private func origin(for corner: WindowCorner, size: CGSize) -> CGPoint {
-        CGPoint(x: corner.isLeading ? Self.margin : container.width - size.width - Self.margin,
-                y: corner.isTop ? Self.topMargin : container.height - size.height - Self.margin)
+        CGPoint(x: corner.isLeading ? bounds.minX + Self.margin : bounds.maxX - size.width - Self.margin,
+                y: corner.isTop ? bounds.minY + Self.topMargin : bounds.maxY - size.height - Self.margin)
     }
 
     private func drag(origin: CGPoint, size: CGSize) -> some Gesture {
@@ -168,7 +212,7 @@ private struct FloatingCameraWindow: View {
                 let x = origin.x + value.predictedEndTranslation.width + size.width / 2
                 let y = origin.y + value.predictedEndTranslation.height + size.height / 2
                 withAnimation(snap) {
-                    corner = WindowCorner(leading: x < container.width / 2, top: y < container.height / 2)
+                    corner = WindowCorner(leading: x < bounds.midX, top: y < bounds.midY)
                     dragTranslation = .zero
                 }
             }
