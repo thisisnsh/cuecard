@@ -327,10 +327,14 @@ private struct TakePlayerView: View {
     @State private var details = TakeDetails()
     @State private var hasLoaded = false
     @State private var newTag = ""
-    @State private var albumTitles: [String] = []
-    @State private var isPickingAlbums = false
-    @State private var isShowingDetails = false
+    /// The sheet pulled up from the bar, if one is.
+    @State private var panel: Panel?
     @FocusState private var isAddingTag: Bool
+
+    private enum Panel: Identifiable {
+        case details, albums
+        var id: Self { self }
+    }
 
     private static let longestTag = 30
 
@@ -366,12 +370,21 @@ private struct TakePlayerView: View {
         .background(Color.black.ignoresSafeArea())
         .foregroundStyle(.white)
         .preferredColorScheme(.dark)
-        .sheet(isPresented: $isShowingDetails) { detailsSheet }
+        .sheet(item: $panel) { panel in
+            Group {
+                switch panel {
+                case .details: detailsSheet
+                case .albums: AlbumPicker(take: take, library: library)
+                }
+            }
+            // Darkens the sheet's glass to sit with the video, still letting
+            // it show through.
+            .background(Color.black.opacity(0.4).ignoresSafeArea())
+        }
         .onAppear {
             guard !hasLoaded else { return }
             hasLoaded = true
             details = library.details(of: take)
-            refreshAlbums()
         }
         .task { await startPlaying() }
         .onDisappear { player.pause() }
@@ -390,7 +403,7 @@ private struct TakePlayerView: View {
                 Image(systemName: "xmark")
                     .font(.system(size: 17, weight: .semibold))
                     .frame(width: 44, height: 44)
-                    .background(Color.white.opacity(0.14), in: Circle())
+                    .glassedEffect(in: Circle(), interactive: true)
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Close")
@@ -414,73 +427,74 @@ private struct TakePlayerView: View {
         .padding(.vertical, 8)
     }
 
-    /// What can be done with the take, under the video as in Photos.
+    /// What can be done with the take, floating under the video as in Photos:
+    /// the heart and the bin on their own, the details together between them.
     private var bottomBar: some View {
         HStack {
-            FavoriteButton(take: current, library: library, size: 44, screen: "take_player",
+            FavoriteButton(take: current, library: library, size: 48, screen: "take_player",
                            colorScheme: colorScheme, unfilledColor: .white)
-                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+                .glassedEffect(in: Circle(), interactive: true)
 
-            Spacer()
+            Spacer(minLength: 12)
 
-            Button {
-                AnalyticsEvents.logButtonClick("take_details", screen: "take_player")
-                isShowingDetails = true
-            } label: {
-                Image(systemName: "info.circle")
-                    .font(.title3)
-                    .frame(width: 44, height: 44)
-                    .contentShape(Rectangle())
+            HStack(spacing: 4) {
+                panelButton(.details, title: "Tags and Notes", systemImage: "tag", event: "take_details")
+                panelButton(.albums, title: "Add to Album", systemImage: "rectangle.stack.badge.plus",
+                            event: "album_take")
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Tags, Notes and Albums")
+            .padding(.horizontal, 8)
+            .glassedEffect(in: Capsule(), interactive: true)
 
-            Spacer()
+            Spacer(minLength: 12)
 
             deleteButton
+                .glassedEffect(in: Circle(), interactive: true)
         }
-        .padding(.horizontal, 24)
-        .padding(.vertical, 6)
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+        .padding(.horizontal, 20)
+        .padding(.vertical, 8)
     }
 
-    /// The take's tags, notes and albums, pulled up over the video.
+    private func panelButton(_ panel: Panel, title: LocalizedStringKey, systemImage: String,
+                             event: String) -> some View {
+        Button {
+            AnalyticsEvents.logButtonClick(event, screen: "take_player")
+            self.panel = panel
+        } label: {
+            Image(systemName: systemImage)
+                .font(.title3)
+                .frame(width: 48, height: 48)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(title)
+    }
+
+    /// The take's tags and notes, pulled up over the video in the same glass
+    /// sheet as the albums.
     private var detailsSheet: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    tagsCard
-                    notesCard
-                    albumsCard
-                }
-                .frame(maxWidth: 680)
-                .padding(.horizontal, 20)
-                .padding(.top, 12)
-                .padding(.bottom, 24)
-                .frame(maxWidth: .infinity)
+            List {
+                tagsSection
+                notesSection
             }
             .scrollDismissesKeyboard(.interactively)
-            .background(AppColors.background(for: colorScheme).ignoresSafeArea())
-            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-            .tint(AppColors.blue(for: colorScheme))
             .navigationTitle("Take \(take.number)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") {
                         AnalyticsEvents.logButtonClick("done", screen: "take_details")
-                        isShowingDetails = false
+                        panel = nil
                     }
                 }
             }
         }
         .presentationDetents([.medium, .large])
-        .sheet(isPresented: $isPickingAlbums, onDismiss: refreshAlbums) {
-            AlbumPicker(take: take, library: library)
-        }
     }
 
-    private var tagsCard: some View {
-        detailCard("Tags") {
+    private var tagsSection: some View {
+        Section("Tags") {
             if !details.tags.isEmpty {
                 FlowLayout(spacing: 8) {
                     ForEach(details.tags, id: \.self) { tag in
@@ -497,7 +511,6 @@ private struct TakePlayerView: View {
                     .focused($isAddingTag)
                     .submitLabel(.done)
                     .onSubmit { add(newTag) }
-                    .padding(.leading, 12)
 
                 Button {
                     add(newTag)
@@ -507,13 +520,12 @@ private struct TakePlayerView: View {
                         .font(.system(size: 24))
                         .frame(width: 44, height: 44)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.borderless)
                 .foregroundStyle(AppColors.blue(for: colorScheme))
                 .disabled(newTag.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 .opacity(newTag.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.4 : 1)
                 .accessibilityLabel("Add a Tag")
             }
-            .background(Color(.tertiarySystemFill), in: RoundedRectangle(cornerRadius: 12))
 
             if !suggestedTags.isEmpty {
                 FlowLayout(spacing: 8) {
@@ -528,59 +540,12 @@ private struct TakePlayerView: View {
         }
     }
 
-    private var notesCard: some View {
-        detailCard("Notes") {
+    private var notesSection: some View {
+        Section("Notes") {
             TextField("What worked, and what to change next time", text: $details.note, axis: .vertical)
                 .lineLimit(3...8)
-                .font(.body)
                 .accessibilityLabel("Notes")
         }
-    }
-
-    private var albumsCard: some View {
-        detailCard("Albums") {
-            if !albumTitles.isEmpty {
-                VStack(alignment: .leading, spacing: 10) {
-                    ForEach(albumTitles.indices, id: \.self) { index in
-                        Label(albumTitles[index], systemImage: "folder")
-                            .font(.subheadline)
-                            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                    }
-                }
-                Divider()
-            }
-
-            Button {
-                AnalyticsEvents.logButtonClick("album_take", screen: "take_player")
-                isPickingAlbums = true
-            } label: {
-                HStack {
-                    Label("Add to Album", systemImage: "plus")
-                    Spacer(minLength: 8)
-                    Image(systemName: "chevron.right")
-                        .font(.caption.weight(.semibold))
-                }
-                .font(.subheadline.weight(.semibold))
-                .frame(minHeight: 44)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .foregroundStyle(AppColors.blue(for: colorScheme))
-        }
-    }
-
-    private func detailCard<Content: View>(_ title: LocalizedStringKey,
-                                          @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text(title)
-                .font(.headline)
-                .accessibilityAddTraits(.isHeader)
-            content()
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
-        .background(Color(.secondarySystemGroupedBackground),
-                    in: RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 
     private var deleteButton: some View {
@@ -609,10 +574,6 @@ private struct TakePlayerView: View {
         }.value
         player.replaceCurrentItem(with: item)
         player.play()
-    }
-
-    private func refreshAlbums() {
-        albumTitles = library.albumTitles(holding: take)
     }
 
     private func add(_ tag: String) {

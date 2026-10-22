@@ -136,16 +136,6 @@ final class TakesLibrary: NSObject, ObservableObject {
         return ids
     }
 
-    /// The names of the albums the take is in, in order.
-    func albumTitles(holding take: Take) -> [String] {
-        var titles: [String] = []
-        PHAssetCollection.fetchAssetCollectionsContaining(take.asset, with: .album, options: nil)
-            .enumerateObjects { album, _, _ in
-                if let title = album.localizedTitle { titles.append(title) }
-            }
-        return titles.sorted { $0.localizedStandardCompare($1) == .orderedAscending }
-    }
-
     /// Put the take in an album, or take it out.
     func setTake(_ take: Take, isIn: Bool, album: PHAssetCollection) async {
         try? await PHPhotoLibrary.shared().performChanges {
