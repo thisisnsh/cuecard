@@ -39,6 +39,11 @@ const mobile = [
     p: "Your script stays on screen over the camera, Instagram, TikTok or a call, in a rectangular or square window.",
   },
   {
+    h: "Record video right in CueCard",
+    p: "Open the camera in a small window over your script or cards and record, with your script kept out of the video. Takes save to Photos and stay with their script, with tags and notes.",
+    appleOnly: true,
+  },
+  {
     h: "Cards on your Lock Screen",
     p: "Turn cards and watch the timer with your phone locked.",
     appleOnly: true,

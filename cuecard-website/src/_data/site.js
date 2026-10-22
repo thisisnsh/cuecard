@@ -19,6 +19,7 @@ const products = {
     features: [
       "Teleprompter mode: a script that scrolls at a speed you set, in lines per minute",
       "Floating window over other apps, in a 16:9, 4:3 or 1:1 layout",
+      "Video recording in a floating camera window, with takes saved to Photos and kept with their script",
       "Cards mode: one card at a time, turned by swiping or with Back and Next",
       "Cards on the Lock Screen in a Live Activity",
       "Apple Watch app: teleprompter remote, cards on the wrist, decks kept on the watch",

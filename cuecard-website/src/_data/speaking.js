@@ -54,6 +54,10 @@ const teleprompter = {
       p: "Your script stays on screen over the camera, Instagram, TikTok or a video call, and the camera never records it.",
     },
     {
+      h: "Or record right in CueCard",
+      p: "Open the camera in a small window over the script. Play starts recording and Pause pauses it, and the video saves to Photos without your script in it.",
+    },
+    {
       h: "A window shaped to fit your shot",
       p: "Rectangular or square, with its own text size, and it goes wherever you drag it.",
     },
@@ -121,6 +125,11 @@ const teleprompter = {
         "Not in a camera recording: the camera films you, not your screen. A screen recording or a screen broadcast captures the whole screen, so it would include the window.",
     },
     {
+      question: "Can I record video in CueCard?",
+      answer:
+        "Yes. Tap the camera next to Help and it opens in a small window over your script. Tap the red button to record, or press Play and the recording starts with the script. Tap stop to save the video to Photos. Your script stays out of the video, and each take is kept with its script, where you can play it and add tags and notes.",
+    },
+    {
       question: "Can I control the teleprompter without touching my phone?",
       answer:
         'Yes. The <a href="/watch/">Apple Watch app</a> plays, pauses and skips back ten seconds. On an iPhone with an Action Button and iOS 18, go to Settings › Action Button › Controls and choose Play or Pause under CueCard.',
@@ -171,6 +180,10 @@ const cards = {
     {
       h: "Swipe to turn",
       p: "Swipe or tap to move through the deck, with dots showing where you are.",
+    },
+    {
+      h: "Record while you speak",
+      p: "Open the camera in a small window over your cards and keep turning them while you record. The video saves to Photos.",
     },
     {
       h: "On your Lock Screen",
