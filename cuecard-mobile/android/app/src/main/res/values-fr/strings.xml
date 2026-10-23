@@ -257,4 +257,6 @@
     <string name="file_opened_not_saved">Le fichier a été ouvert, mais n\'a pas pu être enregistré comme note. Essayez de l\'enregistrer à nouveau.</string>
     <string name="note_couldnt_be_renamed">La note n\'a pas pu être renommée. Réessayez.</string>
     <string name="version_couldnt_be_restored">Cette version n\'a pas pu être restaurée. Réessayez.</string>
+    <string name="discard_changes">Abandonner les modifications</string>
+    <string name="unsaved_will_be_lost">L\'éditeur contient des modifications non enregistrées. Elles seront perdues.</string>
 </resources>

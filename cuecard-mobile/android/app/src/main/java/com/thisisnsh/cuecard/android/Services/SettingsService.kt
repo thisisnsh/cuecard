@@ -948,6 +948,17 @@ class SettingsService(private val context: Context) {
             return current.content != _notes.value
         }
 
+    /**
+     * Whether the script of `mode` has changes its note doesn't, or is
+     * something written and never saved.
+     */
+    fun hasUnsavedChanges(mode: ScriptMode): Boolean {
+        val text = notes(mode)
+        val note = noteId(mode)?.let { id -> _savedNotes.value.find { it.id == id } }
+            ?: return text.trim().isNotEmpty()
+        return note.content != text
+    }
+
     private suspend fun saveSavedNotes() {
         persist(_savedNotes.value)
     }

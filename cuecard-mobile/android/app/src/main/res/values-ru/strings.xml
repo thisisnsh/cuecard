@@ -260,4 +260,6 @@
     <string name="file_opened_not_saved">Файл открыт, но его не удалось сохранить как заметку. Попробуйте сохранить ещё раз.</string>
     <string name="note_couldnt_be_renamed">Не удалось переименовать заметку. Попробуйте ещё раз.</string>
     <string name="version_couldnt_be_restored">Не удалось восстановить эту версию. Попробуйте ещё раз.</string>
+    <string name="discard_changes">Отменить изменения</string>
+    <string name="unsaved_will_be_lost">В редакторе есть несохранённые изменения. Они будут потеряны.</string>
 </resources>

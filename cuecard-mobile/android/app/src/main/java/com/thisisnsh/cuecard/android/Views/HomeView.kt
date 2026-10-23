@@ -172,6 +172,8 @@ fun HomeView(
     var showingMenu by remember { mutableStateOf(false) }
     var showingModeMenu by remember { mutableStateOf(false) }
     var fileErrorMessage by remember { mutableStateOf<String?>(null) }
+    /** What's waiting on the user to agree to lose the unsaved script. */
+    var confirmingDiscard by remember { mutableStateOf<Discarding?>(null) }
     /** "Saved" shows for a moment after a save, where "Unsaved" was. */
     var showsSaved by remember { mutableStateOf(false) }
     var savedJob by remember { mutableStateOf<Job?>(null) }
@@ -230,6 +232,14 @@ fun HomeView(
         }
     }
 
+    fun importNote(title: String, content: String) {
+        scope.launch {
+            if (!settingsService.importNote(title, content)) {
+                fileErrorMessage = context.getString(R.string.file_opened_not_saved)
+            }
+        }
+    }
+
     // MARK: - Files
 
     /** Open a text file in the editor, kept as a new saved note. */
@@ -244,12 +254,13 @@ fun HomeView(
                     fileErrorMessage = context.getString(R.string.file_empty)
                     return@launch
                 }
-                val saved = settingsService.importNote(
-                    title = ScriptFile.title(context, uri),
-                    content = TeleprompterParser.normalizingTags(text)
-                )
-                if (!saved) {
-                    fileErrorMessage = context.getString(R.string.file_opened_not_saved)
+                val title = ScriptFile.title(context, uri)
+                val content = TeleprompterParser.normalizingTags(text)
+                // Asked only once a file is picked, so cancelling the picker never prompts.
+                if (hasUnsavedChanges) {
+                    confirmingDiscard = Discarding.Import(title, content)
+                } else {
+                    importNote(title, content)
                 }
             } catch (e: ScriptFile.FileTooLarge) {
                 fileErrorMessage = context.getString(R.string.file_too_large)
@@ -424,7 +435,11 @@ fun HomeView(
                                     onClick = {
                                         showingMenu = false
                                         AnalyticsEvents.logButtonClick("new_note", "home")
-                                        scope.launch { settingsService.createNewNote() }
+                                        if (hasUnsavedChanges) {
+                                            confirmingDiscard = Discarding.New
+                                        } else {
+                                            scope.launch { settingsService.createNewNote() }
+                                        }
                                     }
                                 )
 
@@ -753,6 +768,23 @@ fun HomeView(
         )
     }
 
+    confirmingDiscard?.let { discarding ->
+        ConfirmDialog(
+            title = stringResource(R.string.discard_unsaved_changes),
+            message = stringResource(R.string.unsaved_will_be_lost),
+            confirmLabel = stringResource(R.string.discard_changes),
+            isDark = isDark,
+            onDismiss = { confirmingDiscard = null },
+            onConfirm = {
+                confirmingDiscard = null
+                when (discarding) {
+                    Discarding.New -> scope.launch { settingsService.createNewNote() }
+                    is Discarding.Import -> importNote(discarding.title, discarding.content)
+                }
+            }
+        )
+    }
+
     fileErrorMessage?.let { message ->
         AlertDialog(
             onDismissRequest = { fileErrorMessage = null },
@@ -766,6 +798,12 @@ fun HomeView(
             containerColor = AppColors.background(isDark)
         )
     }
+}
+
+/** What replaces the script in the editor once its unsaved changes are let go. */
+private sealed class Discarding {
+    data object New : Discarding()
+    data class Import(val title: String, val content: String) : Discarding()
 }
 
 /**
@@ -1333,6 +1371,8 @@ fun SavedNotesView(
     val undeletedFiles by settingsService.notesFolderUndeletedFiles.collectAsState()
 
     var noteToRename by remember { mutableStateOf<SavedNote?>(null) }
+    /** A note waiting on the user to agree to lose the unsaved script it replaces. */
+    var noteToOpen by remember { mutableStateOf<SavedNote?>(null) }
     var showingMenu by remember { mutableStateOf(false) }
     var showingDeleteAll by remember { mutableStateOf(false) }
     var showingStopFolder by remember { mutableStateOf(false) }
@@ -1562,7 +1602,12 @@ fun SavedNotesView(
                                 pluralStringResource(R.plurals.version_count, versions, versions),
                             onLoad = {
                                 AnalyticsEvents.logButtonClick("load_note", "saved_notes")
-                                onLoad(note)
+                                // Opening replaces the script of the note's own mode.
+                                if (settingsService.hasUnsavedChanges(note.mode)) {
+                                    noteToOpen = note
+                                } else {
+                                    onLoad(note)
+                                }
                             },
                             onRename = {
                                 AnalyticsEvents.logButtonClick("rename_note", "saved_notes")
@@ -1586,6 +1631,20 @@ fun SavedNotesView(
                 }
             }
         }
+    }
+
+    noteToOpen?.let { note ->
+        ConfirmDialog(
+            title = stringResource(R.string.discard_unsaved_changes),
+            message = stringResource(R.string.unsaved_will_be_lost),
+            confirmLabel = stringResource(R.string.discard_changes),
+            isDark = isDark,
+            onDismiss = { noteToOpen = null },
+            onConfirm = {
+                noteToOpen = null
+                onLoad(note)
+            }
+        )
     }
 
     noteToRename?.let { note ->

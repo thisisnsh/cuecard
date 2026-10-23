@@ -255,4 +255,6 @@
     <string name="file_opened_not_saved">The file was opened but couldn\'t be saved as a note. Try saving it again.</string>
     <string name="note_couldnt_be_renamed">The note couldn\'t be renamed. Try again.</string>
     <string name="version_couldnt_be_restored">This version couldn\'t be restored. Try again.</string>
+    <string name="discard_changes">Discard Changes</string>
+    <string name="unsaved_will_be_lost">The editor has changes that aren\'t saved. They\'ll be lost.</string>
 </resources>

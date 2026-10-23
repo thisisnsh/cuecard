@@ -257,4 +257,6 @@
     <string name="file_opened_not_saved">El archivo se ha abierto, pero no se ha podido guardar como nota. Intenta guardarlo de nuevo.</string>
     <string name="note_couldnt_be_renamed">No se ha podido renombrar la nota. Inténtalo de nuevo.</string>
     <string name="version_couldnt_be_restored">No se ha podido restaurar esta versión. Inténtalo de nuevo.</string>
+    <string name="discard_changes">Descartar cambios</string>
+    <string name="unsaved_will_be_lost">El editor tiene cambios sin guardar. Se perderán.</string>
 </resources>
