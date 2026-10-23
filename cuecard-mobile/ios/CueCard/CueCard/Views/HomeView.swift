@@ -182,6 +182,25 @@ struct HomeView: View {
         TeleprompterParser.normalizingTags(in: settingsService.notes)
     }
 
+    /// The script as text, or — with images in it — as a TextPack, so they
+    /// go with it.
+    @ViewBuilder
+    private var shareButton: some View {
+        let title = settingsService.currentNote?.title ?? String(localized: "Speech")
+        let notes = settingsService.notes
+        if notes.contains("[image"), !TeleprompterParser.imageMatches(in: notes).isEmpty {
+            ShareLink(item: ScriptPackage(title: settingsService.currentNote?.title, content: notes),
+                      subject: Text(title), preview: SharePreview(title)) {
+                Label("Share", systemImage: "square.and.arrow.up")
+            }
+        } else {
+            ShareLink(item: shareText, subject: Text(title)) {
+                Label("Share", systemImage: "square.and.arrow.up")
+            }
+            .disabled(!hasNotes)
+        }
+    }
+
     /// Save to the open note, or ask for a title if the script isn't one yet.
     private func save() {
         AnalyticsEvents.logButtonClick("save_note", screen: "home")
@@ -247,7 +266,9 @@ struct HomeView: View {
                     importNote(title: title, content: content)
                 }
             } catch let error as ScriptFile.FileTooLarge {
-                errorMessage = String(localized: "That file is larger than 10 MB, so it can't be imported.")
+                errorMessage = TextPack.isPackage(url)
+                    ? String(localized: "That file is larger than 100 MB, so it can't be imported.")
+                    : String(localized: "That file is larger than 10 MB, so it can't be imported.")
                 Analytics.logEvent("file_too_large", parameters: [
                     "source": "import",
                     "size_mb": error.size / (1024 * 1024)
@@ -503,13 +524,7 @@ struct HomeView: View {
                                 Label("Import", systemImage: "arrow.down.doc")
                             }
 
-                            ShareLink(
-                                item: shareText,
-                                subject: Text(settingsService.currentNote?.title ?? String(localized: "Speech"))
-                            ) {
-                                Label("Share", systemImage: "square.and.arrow.up")
-                            }
-                            .disabled(!hasNotes)
+                            shareButton
 
                             if watch.isWatchAppInstalled, let note = settingsService.currentNote {
                                 let isOnWatch = settingsService.watchNoteIDs.contains(note.id)

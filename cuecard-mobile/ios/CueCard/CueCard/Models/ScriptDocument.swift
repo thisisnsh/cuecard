@@ -4,8 +4,12 @@ import UniformTypeIdentifiers
 /// Helpers for moving scripts between the editor and files on disk.
 enum ScriptFile {
     /// Types the importer accepts. `.plainText` also covers Markdown and other
-    /// plain-text formats, so .txt and .md files both come through here.
-    static let importableContentTypes: [UTType] = [.plainText, .rtf]
+    /// plain-text formats, so .txt and .md files both come through here, and a
+    /// script with images comes as a TextPack or TextBundle. Those are also
+    /// asked for by extension, in case another app on the device has named
+    /// them differently.
+    static let importableContentTypes: [UTType] = [.plainText, .rtf, .textPack, .textBundle]
+        + ["textpack", "textbundle"].compactMap { UTType(filenameExtension: $0) }
 
     /// The largest file read as a script, in bytes. Far more than any script
     /// runs to, and little enough to read into memory without trouble.
@@ -34,7 +38,14 @@ enum ScriptFile {
     /// Read a picked file as text. Files coming from the document picker live
     /// outside the sandbox, so access has to be scoped for the duration of the read.
     /// Throws `FileTooLarge` rather than read a file over `maxFileSize`.
+    ///
+    /// A TextPack or TextBundle is read as the script it holds, its images
+    /// kept in the store.
     static func readText(from url: URL) throws -> String {
+        if TextPack.isPackage(url) {
+            return try TextPack.readScript(from: url)
+        }
+
         let needsScopedAccess = url.startAccessingSecurityScopedResource()
         defer {
             if needsScopedAccess {

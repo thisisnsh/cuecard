@@ -71,6 +71,7 @@
 		1A10C0000000000000000012 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 1A10C0000000000000000002 /* Localizable.xcstrings */; };
 		1A10C0000000000000000013 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 1A10C0000000000000000003 /* Localizable.xcstrings */; };
 		1A6E50000000000000000001 /* ScriptImages.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A6E50000000000000000002 /* ScriptImages.swift */; };
+		1A6E50000000000000000003 /* TextPack.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A6E50000000000000000004 /* TextPack.swift */; };
 		5A7ED0000000000000000001 /* NoteStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A7ED0000000000000000002 /* NoteStore.swift */; };
 		5A7ED0000000000000000003 /* NoteFolder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A7ED0000000000000000004 /* NoteFolder.swift */; };
 		5A7ED0000000000000000005 /* NoteVersions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A7ED0000000000000000006 /* NoteVersions.swift */; };
@@ -185,6 +186,7 @@
 		1A10C0000000000000000002 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		1A10C0000000000000000003 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		1A6E50000000000000000002 /* ScriptImages.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptImages.swift; sourceTree = "<group>"; };
+		1A6E50000000000000000004 /* TextPack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextPack.swift; sourceTree = "<group>"; };
 		201 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		202 /* WhatsNew.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = WhatsNew.json; sourceTree = "<group>"; };
 		203 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -302,6 +304,7 @@
 				5A7ED0000000000000000002 /* NoteStore.swift */,
 				5A7ED0000000000000000004 /* NoteFolder.swift */,
 				1A6E50000000000000000002 /* ScriptImages.swift */,
+				1A6E50000000000000000004 /* TextPack.swift */,
 				5A7ED0000000000000000006 /* NoteVersions.swift */,
 				7A4E50000000000000000002 /* TakeStore.swift */,
 				7A4E50000000000000000004 /* TakesLibrary.swift */,
@@ -578,6 +581,7 @@
 				5A7ED0000000000000000001 /* NoteStore.swift in Sources */,
 				5A7ED0000000000000000003 /* NoteFolder.swift in Sources */,
 				1A6E50000000000000000001 /* ScriptImages.swift in Sources */,
+				1A6E50000000000000000003 /* TextPack.swift in Sources */,
 				5A7ED0000000000000000005 /* NoteVersions.swift in Sources */,
 				7A4E50000000000000000001 /* TakeStore.swift in Sources */,
 				7A4E50000000000000000003 /* TakesLibrary.swift in Sources */,
