@@ -628,7 +628,7 @@ private fun DiffLine(line: LineDiff.Line, isDark: Boolean) {
 
 /** Two or more choices side by side, the one picked lifted off the rest. */
 @Composable
-private fun SegmentedPicker(
+internal fun SegmentedPicker(
     options: List<String>,
     selected: Int,
     isDark: Boolean,

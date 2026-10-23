@@ -262,4 +262,5 @@
     <string name="version_couldnt_be_restored">Не удалось восстановить эту версию. Попробуйте ещё раз.</string>
     <string name="discard_changes">Отменить изменения</string>
     <string name="unsaved_will_be_lost">В редакторе есть несохранённые изменения. Они будут потеряны.</string>
+    <string name="mode">Режим</string>
 </resources>

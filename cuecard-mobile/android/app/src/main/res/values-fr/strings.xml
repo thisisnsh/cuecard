@@ -259,4 +259,5 @@
     <string name="version_couldnt_be_restored">Cette version n\'a pas pu être restaurée. Réessayez.</string>
     <string name="discard_changes">Abandonner les modifications</string>
     <string name="unsaved_will_be_lost">L\'éditeur contient des modifications non enregistrées. Elles seront perdues.</string>
+    <string name="mode">Mode</string>
 </resources>

@@ -259,4 +259,5 @@
     <string name="version_couldnt_be_restored">Não foi possível restaurar esta versão. Tente novamente.</string>
     <string name="discard_changes">Descartar alterações</string>
     <string name="unsaved_will_be_lost">O editor tem alterações não salvas. Elas serão perdidas.</string>
+    <string name="mode">Modo</string>
 </resources>

@@ -1384,15 +1384,17 @@ fun SavedNotesView(
     var showingStopFolderFailed by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var query by remember { mutableStateOf("") }
+    /** The mode whose notes are listed. Starts on the home screen's mode. */
+    var modeFilter by remember { mutableStateOf(settingsService.settings.value.scriptMode) }
     val dateFormat = remember {
         DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT)
     }
 
-    // Saved notes, newest first, narrowed to those whose title or text match
-    // the search.
+    // Saved notes of the chosen mode, newest first, narrowed to those whose
+    // title or text match the search.
     val trimmed = query.trim()
-    val notes = remember(savedNotes, trimmed) {
-        val sorted = savedNotes.sortedByDescending { it.updatedAt }
+    val notes = remember(savedNotes, trimmed, modeFilter) {
+        val sorted = savedNotes.filter { it.mode == modeFilter }.sortedByDescending { it.updatedAt }
         if (trimmed.isEmpty()) {
             sorted
         } else {
@@ -1579,6 +1581,17 @@ fun SavedNotesView(
                     placeholder = stringResource(R.string.search)
                 )
 
+                val modeLabel = stringResource(R.string.mode)
+                SegmentedPicker(
+                    options = ScriptMode.entries.map { it.displayName },
+                    selected = modeFilter.ordinal,
+                    isDark = isDark,
+                    onSelect = { modeFilter = ScriptMode.entries[it] },
+                    modifier = Modifier
+                        .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 8.dp)
+                        .semantics { contentDescription = modeLabel }
+                )
+
                 if (notes.isEmpty()) {
                     Box(
                         modifier = Modifier
@@ -1587,7 +1600,11 @@ fun SavedNotesView(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = stringResource(R.string.no_results_for, trimmed),
+                            text = if (trimmed.isEmpty()) {
+                                stringResource(R.string.nothing_saved_yet)
+                            } else {
+                                stringResource(R.string.no_results_for, trimmed)
+                            },
                             fontSize = 17.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = AppColors.textPrimary(isDark)
@@ -1913,21 +1930,11 @@ private fun SavedNoteRow(
                     text = note.title,
                     fontSize = 17.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = AppColors.textPrimary(isDark)
+                    color = AppColors.textPrimary(isDark),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false)
                 )
-
-                if (note.mode == ScriptMode.CARDS) {
-                    Text(
-                        text = stringResource(R.string.cards),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = AppColors.green(isDark),
-                        modifier = Modifier
-                            .clip(Capsule)
-                            .background(AppColors.green(isDark).copy(alpha = 0.15f))
-                            .padding(horizontal = 8.dp, vertical = 3.dp)
-                    )
-                }
 
                 // The note open in the editor.
                 if (isCurrent) {
