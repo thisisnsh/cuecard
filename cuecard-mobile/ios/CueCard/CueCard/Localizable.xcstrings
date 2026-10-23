@@ -870,6 +870,62 @@
         }
       }
     },
+    "Add Image" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir imagen"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter une image"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adicionar imagem"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавить изображение"
+          }
+        }
+      }
+    },
+    "Add Images" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir imágenes"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter des images"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adicionar imagens"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавьте изображения"
+          }
+        }
+      }
+    },
     "Add Sample Text" : {
       "localizations" : {
         "es" : {
@@ -1177,6 +1233,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Также на экране блокировки"
+          }
+        }
+      }
+    },
+    "An image couldn't be added. Try again." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se ha podido añadir una imagen. Inténtalo de nuevo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une image n'a pas pu être ajoutée. Réessayez."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foi possível adicionar uma imagem. Tente novamente."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось добавить изображение. Попробуйте ещё раз."
           }
         }
       }
@@ -3900,6 +3984,34 @@
         }
       }
     },
+    "Image" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imagen"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Image"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imagem"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Изображение"
+          }
+        }
+      }
+    },
     "Import" : {
       "localizations" : {
         "es" : {
@@ -4814,30 +4926,30 @@
         }
       }
     },
-    "Modes, cues, formatting and cards" : {
+    "Modes, cues, formatting, images and cards" : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Modos, indicaciones, formato y tarjetas"
+            "value" : "Modos, indicaciones, formato, imágenes y tarjetas"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Modes, repères, mise en forme et fiches"
+            "value" : "Modes, repères, mise en forme, images et fiches"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Modos, deixas, formatação e cartões"
+            "value" : "Modos, deixas, formatação, imagens e cartões"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Режимы, подсказки, оформление и карточки"
+            "value" : "Режимы, подсказки, оформление, изображения и карточки"
           }
         }
       }
@@ -9169,30 +9281,30 @@
         }
       }
     },
-    "Tap ••• › Import. The file opens in the editor and is kept as a saved note." : {
+    "Tap ••• › Import to open a text file or a TextPack. It opens in the editor and is kept as a saved note." : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Toca ••• › Importar. El archivo se abre en el editor y se guarda como nota."
+            "value" : "Toca ••• › Importar para abrir un archivo de texto o un TextPack. Se abre en el editor y se guarda como nota."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Touchez ••• › Importer. Le fichier s'ouvre dans l'éditeur et est conservé comme note enregistrée."
+            "value" : "Touchez ••• › Importer pour ouvrir un fichier texte ou un TextPack. Il s'ouvre dans l'éditeur et est conservé comme note enregistrée."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Toque em ••• › Importar. O arquivo abre no editor e é mantido como nota salva."
+            "value" : "Toque em ••• › Importar para abrir um arquivo de texto ou um TextPack. Ele abre no editor e é mantido como nota salva."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Коснитесь ••• › «Импорт». Файл откроется в редакторе и сохранится как заметка."
+            "value" : "Коснитесь ••• › «Импорт», чтобы открыть текстовый файл или TextPack. Он откроется в редакторе и сохранится как заметка."
           }
         }
       }
@@ -9225,30 +9337,30 @@
         }
       }
     },
-    "Tap ••• › Share to send it as text, cues included." : {
+    "Tap ••• › Share to send it as text, cues included. A script with images is sent as a TextPack, with its images." : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Toca ••• › Compartir para enviarlo como texto, con las indicaciones."
+            "value" : "Toca ••• › Compartir para enviarlo como texto, con las indicaciones. Un guion con imágenes se envía como TextPack, con sus imágenes."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Touchez ••• › Partager pour l'envoyer en texte, repères compris."
+            "value" : "Touchez ••• › Partager pour l'envoyer en texte, repères compris. Un script avec des images est envoyé en TextPack, images comprises."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Toque em ••• › Compartilhar para enviá-lo como texto, com as deixas."
+            "value" : "Toque em ••• › Compartilhar para enviá-lo como texto, com as deixas. Um roteiro com imagens é enviado como TextPack, com as imagens."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Коснитесь ••• › «Поделиться», чтобы отправить его текстом вместе с подсказками."
+            "value" : "Коснитесь ••• › «Поделиться», чтобы отправить его текстом вместе с подсказками. Сценарий с изображениями отправляется как TextPack вместе с изображениями."
           }
         }
       }
@@ -9477,6 +9589,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Коснитесь названия режима вверху. «Телесуфлёр» прокручивает весь сценарий. «Карточки» показывают его по одной карточке."
+          }
+        }
+      }
+    },
+    "Tap the photo above the keyboard to add images from your library, or paste one in. The Lock Screen and Apple Watch show a photo symbol in their place." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toca la foto encima del teclado para añadir imágenes de tu fototeca, o pega una. La pantalla bloqueada y el Apple Watch muestran un símbolo de foto en su lugar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touchez la photo au-dessus du clavier pour ajouter des images de votre photothèque, ou collez-en une. L'écran verrouillé et l'Apple Watch affichent un symbole de photo à leur place."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toque na foto acima do teclado para adicionar imagens da sua fototeca, ou cole uma. A Tela Bloqueada e o Apple Watch mostram um símbolo de foto no lugar delas."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Коснитесь значка фото над клавиатурой, чтобы добавить изображения из медиатеки, или вставьте изображение. На экране блокировки и Apple Watch вместо них показывается значок фото."
           }
         }
       }
@@ -9757,6 +9897,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Этот файл больше 10 МБ, поэтому его нельзя импортировать."
+          }
+        }
+      }
+    },
+    "That file is larger than 100 MB, so it can't be imported." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ese archivo ocupa más de 100 MB, así que no se puede importar."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ce fichier dépasse 100 Mo et ne peut donc pas être importé."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esse arquivo tem mais de 100 MB, então não pode ser importado."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Этот файл больше 100 МБ, поэтому его нельзя импортировать."
           }
         }
       }
