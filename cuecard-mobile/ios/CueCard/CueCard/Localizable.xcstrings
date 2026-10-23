@@ -9116,7 +9116,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sincroniza reproducir y pausar entre el teleprompter y la cámara."
+            "value" : "Sincroniza la reproducción y la pausa entre el teleprompter y la cámara."
           }
         },
         "fr" : {
@@ -9128,7 +9128,7 @@
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sincroniza reproduzir e pausar entre o teleprompter e a câmera."
+            "value" : "Sincroniza a reprodução e a pausa entre o teleprompter e a câmera."
           }
         },
         "ru" : {
