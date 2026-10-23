@@ -530,6 +530,7 @@ struct AttributedTextView: UIViewRepresentable {
         private var pendingUpdate: DispatchWorkItem?
         var lastContentId: String?
         var lastFontSize: CGFloat = 0
+        var lastImageHeight: CGFloat = 0
         var lastCueColor: CueColor?
         var lastColorScheme: ColorScheme = .dark
         /// The scroll offset that puts each rendered line on the reading line.
@@ -758,19 +759,25 @@ struct AttributedTextView: UIViewRepresentable {
             && coordinator.lastRestorationRequest != restorationRequest
 
         let contentId = content.fullText
+        // An image is at most half the screen tall, so the reading line and
+        // the image passing it are in view together.
+        let imageHeight = content.hasImages ? floor(textView.bounds.height * 0.5) : 0
         let needsFullRebuild = coordinator.lastContentId != contentId
             || coordinator.lastFontSize != fontSize
             || coordinator.lastCueColor != cueColor
             || coordinator.lastColorScheme != colorScheme
+            || coordinator.lastImageHeight != imageHeight
 
         if needsFullRebuild {
             textView.attributedText = withHalo(TeleprompterTextLayout.attributedString(
-                text: content.fullText, fontSize: fontSize, cueColor: cueColor, isDarkMode: colorScheme == .dark
+                text: content.fullText, fontSize: fontSize, cueColor: cueColor, isDarkMode: colorScheme == .dark,
+                maxImageHeight: imageHeight
             ))
             textView.layoutIfNeeded()
 
             coordinator.lastContentId = contentId
             coordinator.lastFontSize = fontSize
+            coordinator.lastImageHeight = imageHeight
             coordinator.lastCueColor = cueColor
             coordinator.lastColorScheme = colorScheme
             coordinator.lineOffsets = []
@@ -867,8 +874,11 @@ struct AttributedTextView: UIViewRepresentable {
         while glyphIndex < NSMaxRange(glyphRange) {
             var lineRange = NSRange(location: 0, length: 0)
             let fragment = layoutManager.lineFragmentRect(forGlyphAt: glyphIndex, effectiveRange: &lineRange)
-            offsets.append(fragment.origin.y)
-            starts.append(layoutManager.characterIndexForGlyph(at: glyphIndex))
+            let start = layoutManager.characterIndexForGlyph(at: glyphIndex)
+            for line in TeleprompterTextLayout.readingLines(in: fragment, startingAt: start, of: textView.textStorage) {
+                offsets.append(line.offset)
+                starts.append(line.start)
+            }
 
             guard lineRange.length > 0 else { break }
             glyphIndex = NSMaxRange(lineRange)

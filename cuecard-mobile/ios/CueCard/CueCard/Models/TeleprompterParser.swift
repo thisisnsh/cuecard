@@ -9,6 +9,8 @@ struct TeleprompterContent {
     let words: [WordInfo]
     /// Every cue tag found in the text, for styling
     let cues: [CueMatch]
+    /// Whether the text places any images
+    let hasImages: Bool
 }
 
 /// Information about a single word for highlighting
@@ -28,10 +30,20 @@ struct CueMatch {
     let content: String
 }
 
-/// A run of a single line: either spoken text or a delivery cue
+/// An `[image …]` tag located in a piece of text
+struct ImageMatch {
+    /// The whole tag, brackets included
+    let range: NSRange
+    /// The image's file name in the app's image store
+    let name: String
+}
+
+/// A run of a single line: spoken text, a delivery cue, or an image
 enum CueSegment {
     case text(String)
     case cue(String)
+    /// The image's file name
+    case image(String)
 }
 
 /// Parser for teleprompter scripts with `[cue …]` delivery cues
@@ -47,12 +59,27 @@ enum CueSegment {
 /// Every cue is drawn in the one color from Settings. An older `[cue:green …]`
 /// still parses, but the color name is ignored and dropped on the next import
 /// or export.
+///
+/// `[image 3fa9….jpg]` places an image, named for its file in the app's image
+/// store. The editor shows it as the image itself, and so does everything
+/// that reads the script; where an image can't be drawn, it's left out.
 enum TeleprompterParser {
 
     /// `[cue]` / `[note]`, an optional legacy `:color`, then the cue text
     private static let cuePattern = #"\[(?:cue|note)(?::[A-Za-z]+)?(?:[ \t]+([^\]\n]*))?\]"#
 
     private static let cueRegex = try! NSRegularExpression(pattern: cuePattern, options: [])
+
+    /// `[image name.ext]`. The name is kept to letters, digits and dashes, so
+    /// it's always a plain file name and never a path.
+    private static let imagePattern = #"\[image[ \t]+([A-Za-z0-9-]+\.[A-Za-z0-9]+)\]"#
+
+    private static let imageRegex = try! NSRegularExpression(pattern: imagePattern, options: [])
+
+    /// The tag for an image in the store.
+    static func imageTag(name: String) -> String {
+        "[image \(name)]"
+    }
 
     /// What an empty cue opens with, and closes with. Typing `[` writes both at
     /// once, leaving the caret between them.
@@ -76,7 +103,8 @@ enum TeleprompterParser {
         return TeleprompterContent(
             fullText: cleanedNotes,
             words: extractWords(from: cleanedNotes),
-            cues: cueMatches(in: cleanedNotes)
+            cues: cueMatches(in: cleanedNotes),
+            hasImages: !imageMatches(in: cleanedNotes).isEmpty
         )
     }
 
@@ -128,6 +156,31 @@ enum TeleprompterParser {
         }
     }
 
+    /// Find every image tag in the text, in order. One written inside a cue
+    /// belongs to the cue's text.
+    static func imageMatches(in text: String) -> [ImageMatch] {
+        let nsText = text as NSString
+        let cues = cueMatches(in: text).map(\.range)
+        return imageRegex
+            .matches(in: text, options: [], range: NSRange(location: 0, length: nsText.length))
+            .filter { match in !cues.contains { NSIntersectionRange($0, match.range).length > 0 } }
+            .map { ImageMatch(range: $0.range, name: nsText.substring(with: $0.range(at: 1))) }
+    }
+
+    /// The names of the images the text places, each once.
+    static func imageNames(in text: String) -> Set<String> {
+        Set(imageMatches(in: text).map(\.name))
+    }
+
+    /// The text with its image tags taken out, for a preview or a search.
+    static func removingImages(from text: String) -> String {
+        let result = NSMutableString(string: text)
+        for match in imageMatches(in: text).reversed() {
+            result.replaceCharacters(in: match.range, with: "")
+        }
+        return result as String
+    }
+
     /// The cue tag the caret is sitting inside, if it is inside one.
     ///
     /// A caret resting against either bracket counts as outside: that's a spot a
@@ -138,33 +191,35 @@ enum TeleprompterParser {
         }
     }
 
-    /// Split a single line into spoken text and cue runs.
+    /// Split a single line into spoken text, cue and image runs.
     ///
     /// Shared by the teleprompter and the PiP overlay so both render cues identically.
     static func segments(in line: String) -> [CueSegment] {
         let nsLine = line as NSString
-        let matches = cueMatches(in: line)
+        let tags = (cueMatches(in: line).map { ($0.range, CueSegment.cue($0.content)) }
+            + imageMatches(in: line).map { ($0.range, CueSegment.image($0.name)) })
+            .sorted { $0.0.location < $1.0.location }
 
-        if matches.isEmpty {
+        if tags.isEmpty {
             return [.text(line)]
         }
 
         var segments: [CueSegment] = []
         var lastEnd = 0
 
-        for match in matches {
-            // Text before the cue
-            if match.range.location > lastEnd {
+        for (range, tag) in tags {
+            // Text before the tag
+            if range.location > lastEnd {
                 let before = nsLine
-                    .substring(with: NSRange(location: lastEnd, length: match.range.location - lastEnd))
+                    .substring(with: NSRange(location: lastEnd, length: range.location - lastEnd))
                     .trimmingCharacters(in: .whitespaces)
                 if !before.isEmpty {
                     segments.append(.text(before))
                 }
             }
 
-            segments.append(.cue(match.content))
-            lastEnd = NSMaxRange(match.range)
+            segments.append(tag)
+            lastEnd = NSMaxRange(range)
         }
 
         // Text after the last cue
@@ -198,6 +253,8 @@ enum TeleprompterParser {
                     for word in RichText.plain(textContent).split(whereSeparator: \.isWhitespace) {
                         words.append(WordInfo(text: String(word), isCue: false))
                     }
+                case .image:
+                    break
                 }
             }
         }

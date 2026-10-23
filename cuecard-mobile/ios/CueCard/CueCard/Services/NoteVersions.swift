@@ -73,6 +73,21 @@ final class NoteVersions {
         try? fileManager.removeItem(at: root)
     }
 
+    /// What every version of every note holds. Safe to read off the main
+    /// actor, as there can be a lot of them.
+    nonisolated func allContents() -> [String] {
+        guard let root,
+              let folders = try? FileManager.default.contentsOfDirectory(at: root, includingPropertiesForKeys: nil)
+        else { return [] }
+        return folders.flatMap { folder in
+            let files = (try? FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil)) ?? []
+            return files.compactMap { file -> String? in
+                guard file.pathExtension == "json", let data = try? Data(contentsOf: file) else { return nil }
+                return (try? JSONDecoder().decode(NoteVersion.self, from: data))?.content
+            }
+        }
+    }
+
     // MARK: - Files
 
     private func folder(of id: UUID) -> URL? {

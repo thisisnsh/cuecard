@@ -267,6 +267,12 @@ final class CueCardsSession: ObservableObject {
         var runs: [CueCardRun] = []
         var budget = 1600
         for run in allRuns where budget > 0 {
+            // An image has no text, only its place on the card.
+            if run.isImage {
+                runs.append(run)
+                budget -= 16
+                continue
+            }
             let text = bounded(run.text, bytes: budget)
             guard !text.isEmpty else { break }
             budget -= text.utf8.count
@@ -278,8 +284,9 @@ final class CueCardsSession: ObservableObject {
                                         timer: timerState())
         // JSON escaping can expand control characters beyond their UTF-8 size.
         while !state.runs.isEmpty, let data = try? JSONEncoder().encode(state), data.count > 3000 {
-            state.runs[state.runs.count - 1].text.removeLast()
-            if state.runs[state.runs.count - 1].text.isEmpty { state.runs.removeLast() }
+            let last = state.runs.count - 1
+            if !state.runs[last].text.isEmpty { state.runs[last].text.removeLast() }
+            if state.runs[last].text.isEmpty { state.runs.removeLast() }
         }
         return state
     }

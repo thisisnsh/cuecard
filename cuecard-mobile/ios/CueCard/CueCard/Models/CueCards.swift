@@ -102,21 +102,27 @@ enum CueCards {
         )
     }
 
+    /// The character the editor holds an image in, where the script has its
+    /// `[image …]` tag.
+    static let imageCharacter = "\u{FFFC}"
+
     /// Count what a card shows against `limit`. Cue text counts, the `[cue`
     /// and `]` around it don't, nor do emphasis `markers`, and neither does
-    /// blank space at either end.
+    /// blank space at either end. An image doesn't count, written as its tag
+    /// or held in the editor as `imageCharacter`.
     static func measure(_ card: NSRange, in text: NSString, cues: [CueMatch], markers: [NSRange] = [],
-                        limit: Int) -> CardMeasure {
+                        images: [NSRange] = [], limit: Int) -> CardMeasure {
         var count = 0
         var solidCount = 0
         var overflowStart: Int?
 
         text.enumerateSubstrings(in: card, options: .byComposedCharacterSequences) { character, range, _, _ in
-            guard let character else { return }
+            guard let character, character != imageCharacter else { return }
             let isTagSyntax = cues.contains {
                 NSLocationInRange(range.location, $0.range) && !NSLocationInRange(range.location, $0.contentRange)
             }
-            if isTagSyntax || markers.contains(where: { NSLocationInRange(range.location, $0) }) { return }
+            if isTagSyntax || markers.contains(where: { NSLocationInRange(range.location, $0) })
+                || images.contains(where: { NSLocationInRange(range.location, $0) }) { return }
 
             let isBlank = character.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             if isBlank && count == 0 { return }
@@ -137,7 +143,8 @@ enum CueCards {
         let nsText = card as NSString
         let cues = TeleprompterParser.cueMatches(in: card)
         return measure(NSRange(location: 0, length: nsText.length), in: nsText, cues: cues,
-                       markers: RichText.markerRanges(in: card, skipping: cues.map(\.range)), limit: limit)
+                       markers: RichText.markerRanges(in: card, skipping: cues.map(\.range)),
+                       images: TeleprompterParser.imageMatches(in: card).map(\.range), limit: limit)
     }
 
     /// The cards as the editor shows them: blank ones kept, so a card just
@@ -160,7 +167,8 @@ enum CueCards {
 
     /// A card as runs of text and cue, the way the app and the watch draw it,
     /// and the Lock Screen as plain text. Past `maxLength` characters the rest is cut, which only
-    /// a card far over its limit ever reaches.
+    /// a card far over its limit ever reaches. An image is a run of its own,
+    /// which counts as a character.
     static func runs(for card: String, maxLength: Int = .max) -> [CueCardRun] {
         var runs: [CueCardRun] = []
         var remaining = maxLength
@@ -169,11 +177,17 @@ enum CueCards {
             guard remaining > 0, !text.isEmpty else { return }
             let piece = String(text.prefix(remaining))
             remaining -= piece.count
-            if let last = runs.last, last.isCue == isCue, last.style == style {
+            if let last = runs.last, !last.isImage, last.isCue == isCue, last.style == style {
                 runs[runs.count - 1].text += piece
             } else {
                 runs.append(CueCardRun(text: piece, isCue: isCue, style: style))
             }
+        }
+
+        func appendImage() {
+            guard remaining > 0 else { return }
+            remaining -= 1
+            runs.append(CueCardRun(text: "", isCue: false, isImage: true))
         }
 
         for (lineIndex, line) in card.components(separatedBy: "\n").enumerated() {
@@ -193,6 +207,9 @@ enum CueCards {
                     guard !cue.isEmpty else { continue }
                     if !isFirst { append(" ", isCue: false) }
                     append(cue, isCue: true)
+                case .image:
+                    if !isFirst { append(" ", isCue: false) }
+                    appendImage()
                 }
                 isFirst = false
             }

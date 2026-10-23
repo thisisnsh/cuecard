@@ -231,7 +231,7 @@ struct CueCardsView: View {
                     let offset = cardIndex - session.index
                     let placement = placement(of: offset, width: width)
                     place(CueCardFace(
-                        runs: CueCards.runs(for: session.cards[cardIndex]),
+                        card: session.cards[cardIndex],
                         cueColor: settings.cards.cueColor,
                         fontSize: CGFloat(settings.cards.fontSize),
                         colorScheme: colorScheme
@@ -505,30 +505,78 @@ private struct CueCardBack: View {
     }
 }
 
-/// The words on one card of the deck, cues drawn in their color, drawn over
-/// its `CueCardBack`.
+/// The words on one card of the deck, cues drawn in their color, and its
+/// images, drawn over its `CueCardBack`.
 private struct CueCardFace: View {
-    let runs: [CueCardRun]
+    let card: String
     let cueColor: CueColor
     let fontSize: CGFloat
     let colorScheme: ColorScheme
 
     static let cornerRadius: CGFloat = 28
+    private static let padding: CGFloat = 24
 
     var body: some View {
-        ScrollView {
-            runs.text(primary: AppColors.textPrimary(for: colorScheme), cue: cueColor.color(for: colorScheme),
-                      cueFont: .system(size: fontSize * 0.82, weight: .semibold))
-                .font(.system(size: fontSize, weight: .semibold))
-                .lineSpacing(runs.hasWideScript ? WideScript.lineSpacing(ofSize: fontSize) : 4)
-                // In the card's color, so the words stay readable over the
-                // camera drawn behind them. Over the card itself it doesn't show.
-                .shadow(color: CueCardBack.color(for: colorScheme), radius: 4)
-                .fixedSize(horizontal: false, vertical: true)
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    ForEach(Array(CardBlock.blocks(for: card).enumerated()), id: \.offset) { _, block in
+                        switch block {
+                        case .text(let runs):
+                            text(runs)
+                        case .image(let name):
+                            // An image on its own fills the card.
+                            ScriptImageView(name: name)
+                                .frame(maxHeight: max(geometry.size.height - Self.padding * 2, 0))
+                                .frame(maxWidth: .infinity)
+                        }
+                    }
+                }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(24)
+                .padding(Self.padding)
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .clipShape(RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous))
+    }
+
+    private func text(_ runs: [CueCardRun]) -> some View {
+        runs.text(primary: AppColors.textPrimary(for: colorScheme), cue: cueColor.color(for: colorScheme),
+                  cueFont: .system(size: fontSize * 0.82, weight: .semibold))
+            .font(.system(size: fontSize, weight: .semibold))
+            .lineSpacing(runs.hasWideScript ? WideScript.lineSpacing(ofSize: fontSize) : 4)
+            // In the card's color, so the words stay readable over the
+            // camera drawn behind them. Over the card itself it doesn't show.
+            .shadow(color: CueCardBack.color(for: colorScheme), radius: 4)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+}
+
+/// One stretch of a card as the app draws it: words, or an image.
+private enum CardBlock {
+    case text([CueCardRun])
+    /// The image's file name
+    case image(String)
+
+    /// A card's words broken around its images, each image a block of its
+    /// own however it was written.
+    static func blocks(for card: String) -> [CardBlock] {
+        let nsCard = card as NSString
+        var blocks: [CardBlock] = []
+        var start = 0
+
+        func appendText(upTo end: Int) {
+            let text = nsCard.substring(with: NSRange(location: start, length: end - start))
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            if !text.isEmpty { blocks.append(.text(CueCards.runs(for: text))) }
+        }
+
+        for match in TeleprompterParser.imageMatches(in: card) {
+            appendText(upTo: match.range.location)
+            blocks.append(.image(match.name))
+            start = NSMaxRange(match.range)
+        }
+        appendText(upTo: nsCard.length)
+        return blocks
     }
 }

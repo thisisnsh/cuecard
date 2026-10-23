@@ -53,6 +53,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         WatchSessionService.shared.activate()
 
         _ = CueCardsSession.shared.restoreIfNeeded()
+        SettingsService.shared.removeUnusedImages()
         Task { await CueCardsLockScreen.removeLegacyNotifications() }
         return true
     }

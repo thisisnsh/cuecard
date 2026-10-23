@@ -1,6 +1,7 @@
 import SwiftUI
 
-/// A stretch of a card: spoken text, or a cue drawn in the cue color.
+/// A stretch of a card: spoken text, a cue drawn in the cue color, or where
+/// an image sits.
 ///
 /// Kept in its own file so the watch app can draw cards the same way.
 struct CueCardRun: Codable, Hashable {
@@ -8,11 +9,19 @@ struct CueCardRun: Codable, Hashable {
     var isCue: Bool
     /// Bold or italic, as written in the script.
     var style: EmphasisStyle = []
+    /// An image on the card. The Lock Screen and the watch can't show the
+    /// picture, so they draw a photo symbol in its place.
+    var isImage = false
 
-    init(text: String, isCue: Bool, style: EmphasisStyle = []) {
+    init(text: String, isCue: Bool, style: EmphasisStyle = [], isImage: Bool = false) {
         self.text = text
         self.isCue = isCue
         self.style = style
+        self.isImage = isImage
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case text, isCue, style, isImage
     }
 
     // A Live Activity started before styles existed carries runs without one.
@@ -21,6 +30,17 @@ struct CueCardRun: Codable, Hashable {
         text = try container.decode(String.self, forKey: .text)
         isCue = try container.decode(Bool.self, forKey: .isCue)
         style = try container.decodeIfPresent(EmphasisStyle.self, forKey: .style) ?? []
+        isImage = try container.decodeIfPresent(Bool.self, forKey: .isImage) ?? false
+    }
+
+    // A Live Activity's content has little room, so most runs leave
+    // `isImage` out.
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(text, forKey: .text)
+        try container.encode(isCue, forKey: .isCue)
+        try container.encode(style, forKey: .style)
+        if isImage { try container.encode(true, forKey: .isImage) }
     }
 }
 
@@ -66,6 +86,9 @@ extension Array where Element == CueCardRun {
 
 private extension CueCardRun {
     func styledText(primary: Color, cue: Color, cueFont: Font?) -> Text {
+        if isImage {
+            return Text(Image(systemName: "photo")).foregroundColor(primary.opacity(0.6))
+        }
         var text = Text(self.text)
         if isCue {
             if let cueFont { text = text.font(cueFont) }

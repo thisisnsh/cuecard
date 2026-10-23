@@ -1,5 +1,6 @@
 import SwiftUI
 import StoreKit
+import PhotosUI
 import UniformTypeIdentifiers
 import FirebaseAnalytics
 import FirebaseCrashlytics
@@ -21,6 +22,8 @@ struct HomeView: View {
     @State private var showingSaveDialog = false
     @State private var saveNoteTitle = ""
     @State private var showingImporter = false
+    @State private var showingImagePicker = false
+    @State private var pickedImages: [PhotosPickerItem] = []
     /// "Saved" shows for a moment after a save, where "Unsaved" was.
     @State private var showsSaved = false
     @State private var savedTask: Task<Void, Never>?
@@ -281,6 +284,25 @@ struct HomeView: View {
         editorController.selectAll()
     }
 
+    /// Keep the images picked from the library and place them at the caret.
+    private func addPickedImages() {
+        let items = pickedImages
+        guard !items.isEmpty else { return }
+        pickedImages = []
+        Task {
+            var names: [String] = []
+            for item in items {
+                guard let data = try? await item.loadTransferable(type: Data.self),
+                      let name = await Task.detached(operation: { ScriptImages.add(data) }).value else { continue }
+                names.append(name)
+            }
+            if names.count < items.count {
+                errorMessage = String(localized: "An image couldn't be added. Try again.")
+            }
+            editorController.insertImages(names)
+        }
+    }
+
     var body: some View {
         NavigationStack {
             ZStack {
@@ -341,6 +363,10 @@ struct HomeView: View {
                     CueBar(
                         colorScheme: colorScheme,
                         onAddCue: insertCue,
+                        onAddImage: {
+                            AnalyticsEvents.logButtonClick("insert_image", screen: "home")
+                            showingImagePicker = true
+                        },
                         onFormat: format,
                         onSelectAll: selectAllText,
                         onDismissKeyboard: { isEditorFocused = false }
@@ -541,6 +567,11 @@ struct HomeView: View {
             .fileImporter(isPresented: $showingImporter,
                           allowedContentTypes: ScriptFile.importableContentTypes) { result in
                 handleImport(result)
+            }
+            .photosPicker(isPresented: $showingImagePicker, selection: $pickedImages,
+                          maxSelectionCount: 10, matching: .images)
+            .onChange(of: pickedImages) {
+                addPickedImages()
             }
             .alert("Something Went Wrong", isPresented: Binding(
                 get: { errorMessage != nil },
@@ -953,7 +984,8 @@ struct SavedNotesView: View {
 
         return sorted.filter {
             $0.title.localizedStandardContains(trimmed)
-                || CueCards.removingSeparators(from: $0.content).localizedStandardContains(trimmed)
+                || TeleprompterParser.removingImages(from: CueCards.removingSeparators(from: $0.content))
+                    .localizedStandardContains(trimmed)
         }
     }
 
@@ -964,10 +996,12 @@ struct SavedNotesView: View {
         return formatter
     }()
 
-    /// The start of a note, with card breaks read as spaces and emphasis
-    /// markers left out.
+    /// The start of a note, with card breaks read as spaces, and emphasis
+    /// markers and images left out.
     private func preview(of note: SavedNote) -> String {
-        String(RichText.plain(CueCards.removingSeparators(from: note.content)).prefix(120))
+        let text = TeleprompterParser.removingImages(from: CueCards.removingSeparators(from: note.content))
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return String(RichText.plain(text).prefix(120))
             .replacingOccurrences(of: "\n", with: " ")
     }
 

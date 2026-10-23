@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import UniformTypeIdentifiers
 
 /// The duration and curve the keyboard is moving with, so the text can travel with
 /// it rather than jumping ahead.
@@ -54,13 +55,80 @@ final class CueTextView: UITextView {
     /// Bold and Italic — from the edit menu or ⌘B, ⌘I — write their markers
     /// into the script rather than styling it, which would be lost.
     var onToggleStyle: ((EmphasisStyle) -> Void)?
+    /// Images pasted in, to keep and place at the caret.
+    var onPasteImages: (([UIImage]) -> Void)?
+    /// Script pasted in with images in it, copied from an editor here.
+    var onPasteScript: ((String) -> Void)?
 
     override func toggleBoldface(_ sender: Any?) { onToggleStyle?(.bold) }
     override func toggleItalics(_ sender: Any?) { onToggleStyle?(.italic) }
 
     /// A script has no underline to write, so it's left out of the menu.
+    /// An image can be pasted in as well as text.
     override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
-        action == #selector(toggleUnderline(_:)) ? false : super.canPerformAction(action, withSender: sender)
+        if action == #selector(toggleUnderline(_:)) { return false }
+        if action == #selector(paste(_:)), isEditable, UIPasteboard.general.hasImages { return true }
+        return super.canPerformAction(action, withSender: sender)
+    }
+
+    /// An image on its own — copied from Photos, or with the link to where it
+    /// came from — goes in as an image. Text copied here with images in it
+    /// brings them along; any other text is pasted as UIKit pastes it.
+    override func paste(_ sender: Any?) {
+        let pasteboard = UIPasteboard.general
+        if pasteboard.hasImages, !pasteboard.hasStrings || pasteboard.hasURLs,
+           let images = pasteboard.images, !images.isEmpty, let onPasteImages {
+            onPasteImages(images)
+            return
+        }
+        if let string = pasteboard.string, !TeleprompterParser.imageMatches(in: string).isEmpty,
+           let onPasteScript {
+            onPasteScript(string)
+            return
+        }
+        super.paste(sender)
+    }
+
+    /// Copied with an image in it, the selection goes out as script, its
+    /// images as `[image …]` tags, so pasting it back here brings them along.
+    /// A lone image goes out as the picture too, for pasting anywhere else.
+    override func copy(_ sender: Any?) {
+        guard let selection = selectedImageText else {
+            super.copy(sender)
+            return
+        }
+        var item: [String: Any] = [UTType.utf8PlainText.identifier: ScriptImageAttachment.script(from: selection)]
+        if selection.length == 1,
+           let attachment = selection.attribute(.attachment, at: 0, effectiveRange: nil) as? ScriptImageAttachment,
+           let data = ScriptImages.data(named: attachment.name) {
+            let type = UTType(filenameExtension: (attachment.name as NSString).pathExtension) ?? .jpeg
+            item[type.identifier] = data
+        }
+        UIPasteboard.general.items = [item]
+    }
+
+    override func cut(_ sender: Any?) {
+        guard selectedImageText != nil else {
+            super.cut(sender)
+            return
+        }
+        copy(sender)
+        deleteBackward()
+    }
+
+    /// The selection, if there's an image in it.
+    private var selectedImageText: NSAttributedString? {
+        let selection = selectedRange
+        guard selection.length > 0, NSMaxRange(selection) <= textStorage.length else { return nil }
+        let text = textStorage.attributedSubstring(from: selection)
+        var hasImage = false
+        text.enumerateAttribute(.attachment, in: NSRange(location: 0, length: text.length)) { value, _, stop in
+            if value is ScriptImageAttachment {
+                hasImage = true
+                stop.pointee = true
+            }
+        }
+        return hasImage ? text : nil
     }
 
     override init(frame: CGRect, textContainer: NSTextContainer?) {
@@ -271,12 +339,20 @@ final class CueEditorController: ObservableObject {
     func toggle(_ style: EmphasisStyle) {
         coordinator?.toggle(style)
     }
+
+    /// Place images from the store at the caret, each on a line of its own.
+    func insertImages(_ names: [String]) {
+        coordinator?.insertImages(names)
+    }
 }
 
 /// Script editor that renders `[cue …]` tags in the cue color while you type, and
 /// writes the brackets for you: pressing `[` drops in a whole empty cue with the
 /// caret inside it, so a cue is never left half-open — except inside a cue, where
 /// there is nothing left for it to open.
+///
+/// An `[image …]` tag shows as the image itself. The text view holds a
+/// `ScriptImageAttachment` there, and writes the tag back into the script.
 ///
 /// A card's editor is given the card's limit, and whatever runs past it is
 /// marked in red.
@@ -304,12 +380,18 @@ struct CueTextEditor: UIViewRepresentable {
     /// The text starts and ends this far in, so no line sits inside a fade.
     static let edgeFade: CGFloat = 28
 
+    /// The tallest an image is shown while writing: enough to tell what it
+    /// is, without pushing the words around it out of view.
+    var imageMaxHeight: CGFloat { growsWithText ? 200 : 260 }
+
     func makeUIView(context: Context) -> CueTextView {
         let textView = CueTextView()
         textView.delegate = context.coordinator
         // Puts Bold and Italic in the edit menu; they write markers.
         textView.allowsEditingTextAttributes = true
         textView.onToggleStyle = { [weak coordinator = context.coordinator] in coordinator?.toggle($0) }
+        textView.onPasteImages = { [weak coordinator = context.coordinator] in coordinator?.pasteImages($0) }
+        textView.onPasteScript = { [weak coordinator = context.coordinator] in coordinator?.pasteScript($0) }
         context.coordinator.textView = textView
         textView.backgroundColor = .clear
         textView.textContainer.lineFragmentPadding = 0
@@ -328,7 +410,7 @@ struct CueTextEditor: UIViewRepresentable {
                 textView.topEdgeEffect.isHidden = true
             }
         }
-        textView.text = text
+        textView.attributedText = ScriptImageAttachment.editorText(for: text, maxHeight: imageMaxHeight)
         applyHighlighting(to: textView)
         return textView
     }
@@ -352,8 +434,8 @@ struct CueTextEditor: UIViewRepresentable {
             || context.coordinator.appliedFontSize != fontSize
             || context.coordinator.appliedCardLimit != cardLimit
 
-        if textView.text != text {
-            textView.text = text
+        if ScriptImageAttachment.script(from: textView.textStorage) != text {
+            textView.attributedText = ScriptImageAttachment.editorText(for: text, maxHeight: imageMaxHeight)
             applyHighlighting(to: textView)
         } else if styleChanged {
             applyHighlighting(to: textView)
@@ -420,8 +502,17 @@ struct CueTextEditor: UIViewRepresentable {
         let cues = TeleprompterParser.cueMatches(in: textView.text)
         let emphases = RichText.emphases(in: textView.text, skipping: cues.map(\.range))
 
+        // Restyling the text would take its images out with everything else.
+        var images: [(range: NSRange, attachment: NSTextAttachment)] = []
+        storage.enumerateAttribute(.attachment, in: fullRange) { value, range, _ in
+            if let attachment = value as? NSTextAttachment { images.append((range, attachment)) }
+        }
+
         storage.beginEditing()
         storage.setAttributes(baseAttributes, range: fullRange)
+        for image in images {
+            storage.addAttribute(.attachment, value: image.attachment, range: image.range)
+        }
 
         // Separators show in either mode, quieter than the words, so a script
         // written as cards reads as one in the teleprompter's editor too.
@@ -608,6 +699,11 @@ struct CueTextEditor: UIViewRepresentable {
 
         private func replace(_ range: NSRange, with replacement: String, selecting selection: NSRange,
                              in textView: UITextView) {
+            replace(range, with: NSAttributedString(string: replacement), selecting: selection, in: textView)
+        }
+
+        private func replace(_ range: NSRange, with replacement: NSAttributedString, selecting selection: NSRange,
+                             in textView: UITextView) {
             // The keyboard has to be told about an edit it didn't make itself, or it
             // keeps autocorrecting against the text it still thinks is there.
             textView.inputDelegate?.textWillChange(textView)
@@ -616,16 +712,17 @@ struct CueTextEditor: UIViewRepresentable {
             parent.applyHighlighting(to: textView)
             textView.inputDelegate?.textDidChange(textView)
 
-            parent.text = textView.text
+            parent.text = ScriptImageAttachment.script(from: textView.textStorage)
             (textView as? CueTextView)?.scrollCaretIntoView()
         }
 
         func textViewDidChange(_ textView: UITextView) {
             let selection = textView.selectedRange
+            adoptPastedImages(in: textView)
             parent.applyHighlighting(to: textView)
             textView.selectedRange = selection
 
-            parent.text = textView.text
+            parent.text = ScriptImageAttachment.script(from: textView.textStorage)
 
             // UITextView's own scroll-to-caret ignores the bottom inset, so the
             // last line would slide under the cue bar as it's typed.
@@ -698,6 +795,77 @@ struct CueTextEditor: UIViewRepresentable {
                         ? NSRange(location: span.location + markerLength, length: inner.length)
                         : NSRange(location: caret, length: 0),
                     in: textView)
+        }
+
+        // MARK: Images
+
+        /// Place images from the store after the selection — or after the cue
+        /// the caret is in — each on a line of its own, and leave the caret on
+        /// the line after them.
+        func insertImages(_ names: [String]) {
+            guard let textView, !names.isEmpty, textView.markedTextRange == nil else { return }
+
+            let text = textView.text as NSString
+            var location = NSMaxRange(textView.selectedRange)
+            if let enclosing = TeleprompterParser.cueTag(containing: location, in: textView.text) {
+                location = NSMaxRange(enclosing.range)
+            }
+            let newline = NSAttributedString(string: "\n")
+            let insertion = NSMutableAttributedString()
+            if location > 0, !isNewline(text.character(at: location - 1)) {
+                insertion.append(newline)
+            }
+            for (index, name) in names.enumerated() {
+                if index > 0 { insertion.append(newline) }
+                insertion.append(NSAttributedString(
+                    attachment: ScriptImageAttachment(name: name, maxHeight: parent.imageMaxHeight)))
+            }
+            // A line break already there does for the one after the images.
+            let endsLine = location < text.length && isNewline(text.character(at: location))
+            if !endsLine { insertion.append(newline) }
+            let caret = location + insertion.length + (endsLine ? 1 : 0)
+
+            replace(NSRange(location: location, length: 0), with: insertion,
+                    selecting: NSRange(location: caret, length: 0), in: textView)
+            if !textView.isFirstResponder {
+                textView.becomeFirstResponder()
+            }
+        }
+
+        func pasteImages(_ images: [UIImage]) {
+            insertImages(images.compactMap(ScriptImages.add))
+        }
+
+        /// Script copied from an editor here, pasted in place of the selection
+        /// with its images shown as images.
+        func pasteScript(_ script: String) {
+            guard let textView, textView.markedTextRange == nil else { return }
+            let insertion = ScriptImageAttachment.editorText(for: script, maxHeight: parent.imageMaxHeight)
+            let selection = textView.selectedRange
+            replace(selection, with: insertion,
+                    selecting: NSRange(location: selection.location + insertion.length, length: 0), in: textView)
+        }
+
+        /// Images UIKit put in itself — pasted with rich text, or dropped
+        /// in — are kept in the store and held as the script's own, in the same
+        /// place. One with no picture to keep is left for `script(from:)` to drop.
+        /// UIKit's own placeholders, as for dictation, are subclasses, and are
+        /// left alone.
+        private func adoptPastedImages(in textView: UITextView) {
+            let storage = textView.textStorage
+            var adopted: [(range: NSRange, attachment: ScriptImageAttachment)] = []
+            storage.enumerateAttribute(.attachment, in: NSRange(location: 0, length: storage.length)) { value, range, _ in
+                guard let attachment = value as? NSTextAttachment, type(of: attachment) == NSTextAttachment.self,
+                      let image = attachment.pastedImage, let name = ScriptImages.add(image) else { return }
+                adopted.append((range, ScriptImageAttachment(name: name, maxHeight: parent.imageMaxHeight)))
+            }
+            for image in adopted {
+                storage.addAttribute(.attachment, value: image.attachment, range: image.range)
+            }
+        }
+
+        private func isNewline(_ character: unichar) -> Bool {
+            Unicode.Scalar(character).map(CharacterSet.newlines.contains) ?? false
         }
 
         /// The word the caret is in or just after, if any.
@@ -781,6 +949,46 @@ private extension NSString {
     }
 }
 
+// MARK: - Images in the editor
+
+extension ScriptImageAttachment {
+    /// The script as the editor holds it: each `[image …]` tag as the image.
+    static func editorText(for script: String, maxHeight: CGFloat) -> NSAttributedString {
+        let text = NSMutableAttributedString(string: script)
+        for match in TeleprompterParser.imageMatches(in: script).reversed() {
+            text.replaceCharacters(in: match.range, with: NSAttributedString(
+                attachment: ScriptImageAttachment(name: match.name, maxHeight: maxHeight)))
+        }
+        return text
+    }
+
+    /// The script the editor's text holds, each image written back as its
+    /// `[image …]` tag. Anything else held as an attachment is left out.
+    static func script(from text: NSAttributedString) -> String {
+        let script = NSMutableString(string: text.string)
+        var location = script.range(of: CueCards.imageCharacter, options: .backwards)
+        // Back to front, so writing a tag doesn't move the ones still to come.
+        while location.location != NSNotFound {
+            let attachment = text.attribute(.attachment, at: location.location, effectiveRange: nil)
+            let tag = (attachment as? ScriptImageAttachment).map { TeleprompterParser.imageTag(name: $0.name) } ?? ""
+            script.replaceCharacters(in: location, with: tag)
+            location = script.range(of: CueCards.imageCharacter, options: .backwards,
+                                    range: NSRange(location: 0, length: location.location))
+        }
+        return script as String
+    }
+}
+
+private extension NSTextAttachment {
+    /// The picture held by an attachment UIKit made itself, as for an image
+    /// pasted in with rich text.
+    var pastedImage: UIImage? {
+        if let image { return image }
+        if let data = fileWrapper?.regularFileContents ?? contents { return UIImage(data: data) }
+        return nil
+    }
+}
+
 // MARK: - Cue insertion
 
 extension NSString {
@@ -806,7 +1014,7 @@ extension NSString {
 // MARK: - Cue bar
 
 /// The strip above the keyboard while a script is being written: buttons to drop
-/// a cue in at the caret, to bold or italicize, and to select the
+/// a cue or an image in at the caret, to bold or italicize, and to select the
 /// whole script, and one to get the keyboard out of the way.
 struct CueBar: View {
     /// The bar's height. The editor keeps this much room clear at the bottom so
@@ -815,6 +1023,7 @@ struct CueBar: View {
 
     let colorScheme: ColorScheme
     var onAddCue: () -> Void
+    var onAddImage: () -> Void
     var onFormat: (EmphasisStyle) -> Void
     var onSelectAll: () -> Void
     var onDismissKeyboard: () -> Void
@@ -852,6 +1061,16 @@ struct CueBar: View {
     private func buttons(short: Bool) -> some View {
         HStack(spacing: 10) {
             addButton(short ? "Cue" : "Add Cue", accessibilityLabel: "Add Cue", action: onAddCue)
+
+            Button(action: onAddImage) {
+                Image(systemName: "photo")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                    .frame(width: 34, height: 34)
+                    .glassedEffect(in: Circle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Add Image")
 
             formatButtons
 

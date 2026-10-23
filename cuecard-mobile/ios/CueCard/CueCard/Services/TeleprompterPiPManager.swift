@@ -700,8 +700,18 @@ private final class TeleprompterPiPContentView: UIView {
 /// two layouts if one preserves spaces and the other splits text into words.
 @MainActor
 enum TeleprompterTextLayout {
-    static func attributedString(text: String, fontSize: CGFloat, cueColor: CueColor, isDarkMode: Bool) -> NSAttributedString {
+    /// Takes no room, and allows no line break beside it. An image is
+    /// followed by a run of these, one for each reading line it takes after
+    /// the first, so every layout of the script counts its reading time in
+    /// characters of its own.
+    private static let wordJoiner = "\u{2060}"
+
+    /// The script set for reading. Images are centered on lines of their
+    /// own, no taller than `maxImageHeight`.
+    static func attributedString(text: String, fontSize: CGFloat, cueColor: CueColor, isDarkMode: Bool,
+                                 maxImageHeight: CGFloat) -> NSAttributedString {
         let result = NSMutableAttributedString()
+        var imageRanges: [NSRange] = []
         let textColor = isDarkMode ? AppColors.UIColors.Dark.textPrimary : AppColors.UIColors.Light.textPrimary
         let textAttributes: [NSAttributedString.Key: Any] = [
             .font: UIFont.script(ofSize: fontSize),
@@ -715,8 +725,16 @@ enum TeleprompterTextLayout {
             if paragraphIndex > 0 { result.append(NSAttributedString(string: "\n")) }
             for (lineIndex, line) in paragraph.components(separatedBy: "\n").enumerated() {
                 if lineIndex > 0 { result.append(NSAttributedString(string: "\n")) }
-                for (index, segment) in TeleprompterParser.segments(in: line).enumerated() {
-                    if index > 0 { result.append(NSAttributedString(string: " ", attributes: textAttributes)) }
+                var follows: CueSegment?
+                for segment in TeleprompterParser.segments(in: line) {
+                    switch (follows, segment) {
+                    case (nil, _): break
+                    case (.image, _), (_, .image):
+                        result.append(NSAttributedString(string: "\n", attributes: textAttributes))
+                    default:
+                        result.append(NSAttributedString(string: " ", attributes: textAttributes))
+                    }
+                    follows = segment
                     switch segment {
                     case .text(let text):
                         for run in RichText.styled(text).runs {
@@ -726,6 +744,14 @@ enum TeleprompterTextLayout {
                         }
                     case .cue(let cue):
                         result.append(NSAttributedString(string: cue, attributes: cueAttributes))
+                    case .image(let name):
+                        let attachment = ScriptImageAttachment(name: name, maxHeight: maxImageHeight)
+                        let image = NSMutableAttributedString(attachment: attachment)
+                        image.append(NSAttributedString(
+                            string: String(repeating: wordJoiner, count: attachment.readingLines - 1)))
+                        image.addAttributes(textAttributes, range: NSRange(location: 0, length: image.length))
+                        imageRanges.append(NSRange(location: result.length, length: image.length))
+                        result.append(image)
                     }
                 }
             }
@@ -733,7 +759,35 @@ enum TeleprompterTextLayout {
         let paragraphStyle = NSParagraphStyle.script(ofSize: fontSize, isWide: text.hasWideScript,
                                                      lineSpacing: fontSize * 0.18, paragraphSpacing: fontSize * 0.45)
         result.addAttribute(.paragraphStyle, value: paragraphStyle, range: NSRange(location: 0, length: result.length))
+        if !imageRanges.isEmpty, let centered = paragraphStyle.mutableCopy() as? NSMutableParagraphStyle {
+            centered.alignment = .center
+            for range in imageRanges {
+                result.addAttribute(.paragraphStyle, value: centered, range: range)
+            }
+        }
         return result
+    }
+
+    /// The reading lines a laid-out line of the script holds, each with the
+    /// offset that puts it on the reading line and the character it starts
+    /// at. A line of text is one. A line with an image is as many as the
+    /// image takes, spread evenly down it, so the image scrolls past at the
+    /// pace of the words around it rather than in the time of one line.
+    static func readingLines(in fragment: CGRect, startingAt character: Int,
+                             of text: NSAttributedString) -> [(offset: CGFloat, start: Int)] {
+        guard character < text.length,
+              text.attribute(.attachment, at: character, effectiveRange: nil) is ScriptImageAttachment
+        else { return [(fragment.minY, character)] }
+
+        let string = text.string as NSString
+        let joiner = (wordJoiner as NSString).character(at: 0)
+        var count = 1
+        while character + count < string.length, string.character(at: character + count) == joiner {
+            count += 1
+        }
+        return (0..<count).map { line in
+            (fragment.minY + fragment.height * CGFloat(line) / CGFloat(count), character + line)
+        }
     }
 
     static func characterPosition(forLine position: Double, starts: [Int]) -> Double {
@@ -806,8 +860,11 @@ private final class TeleprompterOverlayRenderer {
                 context.cgContext.drawLinearGradient(fade, start: .zero, end: CGPoint(x: 0, y: 18), options: [])
             }
         }
+        // An image fits the space under the timer, as `draw` lays it out.
+        let viewportHeight = logicalSize.height - (6 + ceil(timerFont.lineHeight) + 6) - 8
         textStorage = NSTextStorage(attributedString: TeleprompterTextLayout.attributedString(
-            text: text, fontSize: CGFloat(settings.pipFontSize), cueColor: settings.cueColor, isDarkMode: isDarkMode
+            text: text, fontSize: CGFloat(settings.pipFontSize), cueColor: settings.cueColor, isDarkMode: isDarkMode,
+            maxImageHeight: floor(viewportHeight * 0.8)
         ))
         textContainer = NSTextContainer(size: CGSize(width: 296, height: CGFloat.greatestFiniteMagnitude))
         textContainer.lineFragmentPadding = 0
@@ -816,8 +873,11 @@ private final class TeleprompterOverlayRenderer {
         layoutManager.ensureLayout(for: textContainer)
         let glyphs = layoutManager.glyphRange(for: textContainer)
         layoutManager.enumerateLineFragments(forGlyphRange: glyphs) { [self] rect, _, _, range, _ in
-            lineStarts.append(layoutManager.characterIndexForGlyph(at: range.location))
-            lineOffsets.append(rect.minY)
+            let start = layoutManager.characterIndexForGlyph(at: range.location)
+            for line in TeleprompterTextLayout.readingLines(in: rect, startingAt: start, of: textStorage) {
+                lineStarts.append(line.start)
+                lineOffsets.append(line.offset)
+            }
         }
     }
 

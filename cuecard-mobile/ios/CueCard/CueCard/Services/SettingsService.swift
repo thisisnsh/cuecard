@@ -1060,6 +1060,21 @@ Thanks for listening. Questions?
         return saveCurrentNote(title: title)
     }
 
+    /// Delete the images nothing places any more: not the scripts being
+    /// written, the saved notes or their versions, nor a deck still open.
+    /// Run at launch, when no edit can be undone to bring one back.
+    func removeUnusedImages() {
+        let texts = [teleprompterNotes, cardsNotes] + savedNotes.map(\.content) + CueCardsSession.shared.cards
+        let versions = noteVersions
+        Task.detached(priority: .utility) {
+            var names = Set<String>()
+            for text in texts + versions.allContents() {
+                names.formUnion(TeleprompterParser.imageNames(in: text))
+            }
+            ScriptImages.removeUnused(keeping: names)
+        }
+    }
+
     /// Add sample text to current note, written for the mode the editor is in.
     func addSampleText() {
         notes = settings.scriptMode == .cards ? Self.defaultCardsText : Self.defaultNoteText
@@ -1101,6 +1116,7 @@ Thanks for listening. Questions?
         cardsNotes = ""
         noteStore.deleteAll()
         noteVersions.removeAll()
+        ScriptImages.removeAll()
         TakeStore.shared.removeAll()
         versionCounts = [:]
         savedNotes = []
