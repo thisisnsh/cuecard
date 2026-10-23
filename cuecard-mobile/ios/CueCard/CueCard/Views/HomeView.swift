@@ -990,14 +990,14 @@ struct SavedNotesView: View {
     /// A note waiting on the user to agree to lose the unsaved script it replaces.
     @State private var noteToOpen: SavedNote?
     @State private var query = ""
-    /// The mode whose notes are listed, or nil for all of them.
-    @State private var modeFilter: ScriptMode?
+    /// The mode whose notes are listed. Starts on the home screen's mode.
+    @State private var modeFilter: ScriptMode = .teleprompter
 
-    /// Saved notes, newest first, narrowed to the chosen mode and to those
-    /// whose title or text match the search.
+    /// Saved notes of the chosen mode, newest first, narrowed to those whose
+    /// title or text match the search.
     private var notes: [SavedNote] {
         let sorted = settingsService.savedNotes
-            .filter { modeFilter == nil || $0.mode == modeFilter }
+            .filter { $0.mode == modeFilter }
             .sorted { $0.updatedAt > $1.updatedAt }
         let trimmed = query.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return sorted }
@@ -1212,9 +1212,8 @@ struct SavedNotesView: View {
                             }
                         } header: {
                             Picker("Mode", selection: $modeFilter) {
-                                Text("All").tag(ScriptMode?.none)
                                 ForEach(ScriptMode.allCases) { mode in
-                                    Text(mode.displayName).tag(ScriptMode?.some(mode))
+                                    Text(mode.displayName).tag(mode)
                                 }
                             }
                             .pickerStyle(.segmented)
@@ -1234,7 +1233,7 @@ struct SavedNotesView: View {
                     }
                     .overlay {
                         if notes.isEmpty {
-                            if query.trimmingCharacters(in: .whitespaces).isEmpty, let modeFilter {
+                            if query.trimmingCharacters(in: .whitespaces).isEmpty {
                                 ContentUnavailableView("Nothing Saved Yet", systemImage: modeFilter.systemImage)
                             } else {
                                 ContentUnavailableView.search(text: query)
@@ -1301,6 +1300,7 @@ struct SavedNotesView: View {
                 }
             }
             .onAppear {
+                modeFilter = settingsService.settings.scriptMode
                 settingsService.syncNotesFolder()
             }
             .fileImporter(isPresented: $showingFolderPicker, allowedContentTypes: [.folder]) { result in
