@@ -9,6 +9,7 @@ import android.util.LruCache
 import androidx.exifinterface.media.ExifInterface
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.InputStream
 import java.security.MessageDigest
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -80,22 +81,25 @@ object ScriptImages {
      * Keep the picture at `uri`, scaled down to `MAX_PIXEL_SIZE` and turned
      * upright, and return its name. Null if it isn't an image or couldn't be kept.
      */
-    fun add(context: Context, uri: Uri): String? {
-        val resolver = context.contentResolver
+    fun add(context: Context, uri: Uri): String? = add { context.contentResolver.openInputStream(uri) }
+
+    /** The same for an image's bytes, as from a TextPack. */
+    fun add(data: ByteArray): String? = add { data.inputStream() }
+
+    /** `open` hands over the image from the start, each time it's asked. */
+    private fun add(open: () -> InputStream?): String? {
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-        runCatching { resolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds) } }
+        runCatching { open()?.use { BitmapFactory.decodeStream(it, null, bounds) } }
         if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
 
         // Decoded no larger than it needs to be, then scaled the rest of the way.
         var sample = 1
         while (max(bounds.outWidth, bounds.outHeight) / (sample * 2) >= MAX_PIXEL_SIZE) sample *= 2
         val decoded = runCatching {
-            resolver.openInputStream(uri)?.use {
-                BitmapFactory.decodeStream(it, null, BitmapFactory.Options().apply { inSampleSize = sample })
-            }
+            open()?.use { BitmapFactory.decodeStream(it, null, BitmapFactory.Options().apply { inSampleSize = sample }) }
         }.getOrNull() ?: return null
         val orientation = runCatching {
-            resolver.openInputStream(uri)?.use { ExifInterface(it).getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL) }
+            open()?.use { ExifInterface(it).getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL) }
         }.getOrNull() ?: ExifInterface.ORIENTATION_NORMAL
         return add(upright(decoded, orientation))
     }

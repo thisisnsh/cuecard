@@ -22,6 +22,8 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.thisisnsh.cuecard.android.services.TakesLibrary
 import com.thisisnsh.cuecard.android.services.ScriptImages
+import com.thisisnsh.cuecard.android.services.TextPack
+import androidx.core.content.FileProvider
 import androidx.activity.result.PickVisualMediaRequest
 import com.thisisnsh.cuecard.android.services.VideoAccess
 import androidx.compose.animation.slideInVertically
@@ -310,8 +312,12 @@ fun HomeView(
     ) { uri ->
         uri ?: return@rememberLauncherForActivityResult
         scope.launch {
+            val isPackage = withContext(Dispatchers.IO) { TextPack.isPackage(context, uri) }
             try {
-                val text = withContext(Dispatchers.IO) { ScriptFile.readText(context, uri) }
+                // A TextPack brings its images in with it.
+                val text = withContext(Dispatchers.IO) {
+                    if (isPackage) TextPack.readScript(context, uri) else ScriptFile.readText(context, uri)
+                }
                 if (text.trim().isEmpty()) {
                     fileErrorMessage = context.getString(R.string.file_empty)
                     return@launch
@@ -325,7 +331,9 @@ fun HomeView(
                     importNote(title, content)
                 }
             } catch (e: ScriptFile.FileTooLarge) {
-                fileErrorMessage = context.getString(R.string.file_too_large)
+                fileErrorMessage = context.getString(
+                    if (isPackage) R.string.package_too_large else R.string.file_too_large
+                )
                 AnalyticsEvents.logEvent(
                     "file_too_large",
                     mapOf("source" to "import", "size_mb" to e.size / (1024 * 1024))
@@ -338,12 +346,36 @@ fun HomeView(
 
     /**
      * Hand the script to the share sheet as it would be written to a file, with
-     * cues in `[cue …]` form.
+     * cues in `[cue …]` form — or, with images in it, as a TextPack, so they go
+     * with it.
      */
     fun shareScript() {
+        val subject = currentNote?.title ?: context.getString(R.string.speech)
+        if (TeleprompterParser.imageMatches(notes).isNotEmpty()) {
+            val title = currentNote?.title
+            val content = notes
+            scope.launch {
+                val send = runCatching {
+                    val file = withContext(Dispatchers.IO) { TextPack.write(context, title, content) }
+                    val uri = FileProvider.getUriForFile(context, "${context.packageName}.files", file)
+                    Intent(Intent.ACTION_SEND)
+                        .setType(TextPack.MIME_TYPE)
+                        .putExtra(Intent.EXTRA_SUBJECT, subject)
+                        .putExtra(Intent.EXTRA_STREAM, uri)
+                        .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }.getOrNull()
+                if (send == null) {
+                    fileErrorMessage = context.getString(R.string.script_couldnt_be_shared)
+                    return@launch
+                }
+                runCatching { context.startActivity(Intent.createChooser(send, null)) }
+            }
+            return
+        }
+
         val send = Intent(Intent.ACTION_SEND)
             .setType("text/plain")
-            .putExtra(Intent.EXTRA_SUBJECT, currentNote?.title ?: context.getString(R.string.speech))
+            .putExtra(Intent.EXTRA_SUBJECT, subject)
             .putExtra(Intent.EXTRA_TEXT, TeleprompterParser.normalizingTags(notes))
         try {
             context.startActivity(Intent.createChooser(send, null))
@@ -523,7 +555,7 @@ fun HomeView(
                                     onClick = {
                                         showingMenu = false
                                         AnalyticsEvents.logButtonClick("import_file", "home")
-                                        importLauncher.launch(ScriptFile.importableMimeTypes)
+                                        importLauncher.launch(ScriptFile.importableMimeTypes + TextPack.importableMimeTypes)
                                     }
                                 )
 

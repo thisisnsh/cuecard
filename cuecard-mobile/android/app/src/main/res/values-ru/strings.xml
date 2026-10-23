@@ -132,13 +132,13 @@
     <string name="help_open_saved_notes_title">Откройте сохранённые заметки</string>
     <string name="help_open_saved_notes_detail">Нажмите ⋮ › «Открыть», чтобы увидеть всё сохранённое. Проведите по заметке, чтобы переименовать или удалить её.</string>
     <string name="help_import_a_text_file_title">Импортируйте текстовый файл</string>
-    <string name="help_import_a_text_file_detail">Нажмите ⋮ › «Импорт». Файл откроется в редакторе и сохранится как заметка.</string>
+    <string name="help_import_a_text_file_detail">Коснитесь ⋮ › «Импорт», чтобы открыть текстовый файл или TextPack. Он откроется в редакторе и сохранится как заметка.</string>
     <string name="help_go_back_to_an_older_version_title">Вернитесь к старой версии</string>
     <string name="help_go_back_to_an_older_version_detail">Каждое сохранение — это новая версия. Когда у заметки их больше одной, нажмите на часы вверху, чтобы сравнить изменения и восстановить нужную.</string>
     <string name="help_keep_notes_if_the_app_is_removed_title">Сохраните заметки при удалении приложения</string>
     <string name="help_keep_notes_if_the_app_is_removed_detail">Заметки хранятся на этом устройстве и удаляются вместе с приложением. Чтобы сохранить их в виде файлов, в «Сохранённых заметках» выберите папку заметок в меню ⋮.</string>
     <string name="help_share_a_script_title">Поделитесь сценарием</string>
-    <string name="help_share_a_script_detail">Нажмите ⋮ › «Поделиться», чтобы отправить его текстом вместе с подсказками.</string>
+    <string name="help_share_a_script_detail">Коснитесь ⋮ › «Поделиться», чтобы отправить его текстом вместе с подсказками. Сценарий с изображениями отправляется как TextPack вместе с изображениями.</string>
     <string name="help_change_text_size_and_colors_title">Измените размер текста и цвета</string>
     <string name="help_change_text_size_and_colors_detail">Коснитесь шестерёнки вверху. У каждого режима свои размеры и цвет подсказок.</string>
     <string name="help_play_and_pause_title">Пуск и пауза</string>
@@ -350,4 +350,6 @@
     <string name="image_not_added">Не удалось добавить изображение. Попробуйте ещё раз.</string>
     <string name="help_add_images_title">Добавьте изображения</string>
     <string name="help_add_images_detail">Коснитесь значка фото над клавиатурой, чтобы добавить изображения из галереи.</string>
+    <string name="package_too_large">Этот файл больше 100 МБ, поэтому его нельзя импортировать.</string>
+    <string name="script_couldnt_be_shared">Не удалось поделиться этим сценарием. Попробуйте ещё раз.</string>
 </resources>

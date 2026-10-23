@@ -131,13 +131,13 @@
     <string name="help_open_saved_notes_title">Abre notas guardadas</string>
     <string name="help_open_saved_notes_detail">Toca ⋮ › Abrir para ver todo lo que has guardado. Desliza para renombrar o eliminar.</string>
     <string name="help_import_a_text_file_title">Importa un archivo de texto</string>
-    <string name="help_import_a_text_file_detail">Toca ⋮ › Importar. El archivo se abre en el editor y se guarda como nota.</string>
+    <string name="help_import_a_text_file_detail">Toca ⋮ › Importar para abrir un archivo de texto o un TextPack. Se abre en el editor y se guarda como nota.</string>
     <string name="help_go_back_to_an_older_version_title">Vuelve a una versión anterior</string>
     <string name="help_go_back_to_an_older_version_detail">Cada vez que guardas se crea una versión. Cuando una nota tenga más de una, toca el reloj arriba para comparar cambios y restaurar una.</string>
     <string name="help_keep_notes_if_the_app_is_removed_title">Conserva las notas si se elimina la app</string>
     <string name="help_keep_notes_if_the_app_is_removed_detail">Las notas se quedan en este dispositivo y se eliminan con la app. En Notas guardadas, elige una carpeta de notas en ⋮ para conservarlas como archivos.</string>
     <string name="help_share_a_script_title">Comparte un guion</string>
-    <string name="help_share_a_script_detail">Toca ⋮ › Compartir para enviarlo como texto, con las indicaciones.</string>
+    <string name="help_share_a_script_detail">Toca ⋮ › Compartir para enviarlo como texto, con las indicaciones. Un guion con imágenes se envía como TextPack, con sus imágenes.</string>
     <string name="help_change_text_size_and_colors_title">Cambia el tamaño del texto y los colores</string>
     <string name="help_change_text_size_and_colors_detail">Toca el engranaje arriba. Cada modo tiene sus propios tamaños y color de indicaciones.</string>
     <string name="help_play_and_pause_title">Reproducir y pausar</string>
@@ -346,4 +346,6 @@
     <string name="image_not_added">No se ha podido añadir una imagen. Inténtalo de nuevo.</string>
     <string name="help_add_images_title">Añadir imágenes</string>
     <string name="help_add_images_detail">Toca la foto encima del teclado para añadir imágenes de tu galería.</string>
+    <string name="package_too_large">Ese archivo ocupa más de 100 MB, así que no se puede importar.</string>
+    <string name="script_couldnt_be_shared">No se ha podido compartir este guion. Inténtalo de nuevo.</string>
 </resources>

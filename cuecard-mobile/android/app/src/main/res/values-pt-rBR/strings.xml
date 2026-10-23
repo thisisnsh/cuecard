@@ -131,13 +131,13 @@
     <string name="help_open_saved_notes_title">Abrir notas salvas</string>
     <string name="help_open_saved_notes_detail">Toque em ⋮ › Abrir para ver tudo o que salvou. Deslize para renomear ou apagar.</string>
     <string name="help_import_a_text_file_title">Importar um arquivo de texto</string>
-    <string name="help_import_a_text_file_detail">Toque em ⋮ › Importar. O arquivo abre no editor e é mantido como nota salva.</string>
+    <string name="help_import_a_text_file_detail">Toque em ⋮ › Importar para abrir um arquivo de texto ou um TextPack. Ele abre no editor e é mantido como nota salva.</string>
     <string name="help_go_back_to_an_older_version_title">Voltar a uma versão anterior</string>
     <string name="help_go_back_to_an_older_version_detail">Cada vez que você salva, cria uma versão. Quando uma nota tiver mais de uma, toque no relógio no topo para comparar alterações e restaurar uma.</string>
     <string name="help_keep_notes_if_the_app_is_removed_title">Manter notas se o app for removido</string>
     <string name="help_keep_notes_if_the_app_is_removed_detail">As notas ficam neste dispositivo e são apagadas com o app. Em Notas salvas, escolha uma pasta de notas em ⋮ para mantê-las como arquivos.</string>
     <string name="help_share_a_script_title">Compartilhar um roteiro</string>
-    <string name="help_share_a_script_detail">Toque em ⋮ › Compartilhar para enviá-lo como texto, com as deixas.</string>
+    <string name="help_share_a_script_detail">Toque em ⋮ › Compartilhar para enviá-lo como texto, com as deixas. Um roteiro com imagens é enviado como TextPack, com as imagens.</string>
     <string name="help_change_text_size_and_colors_title">Alterar tamanho do texto e cores</string>
     <string name="help_change_text_size_and_colors_detail">Toque na engrenagem no topo. Cada modo tem seus próprios tamanhos e cor de deixa.</string>
     <string name="help_play_and_pause_title">Reproduzir e pausar</string>
@@ -346,4 +346,6 @@
     <string name="image_not_added">Não foi possível adicionar uma imagem. Tente novamente.</string>
     <string name="help_add_images_title">Adicionar imagens</string>
     <string name="help_add_images_detail">Toque na foto acima do teclado para adicionar imagens da sua galeria.</string>
+    <string name="package_too_large">Esse arquivo tem mais de 100 MB, então não pode ser importado.</string>
+    <string name="script_couldnt_be_shared">Não foi possível compartilhar este roteiro. Tente novamente.</string>
 </resources>

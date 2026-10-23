@@ -131,13 +131,13 @@
     <string name="help_open_saved_notes_title">Ouvrir les notes enregistrées</string>
     <string name="help_open_saved_notes_detail">Touchez ⋮ › Ouvrir pour voir tout ce que vous avez enregistré. Balayez pour renommer ou supprimer.</string>
     <string name="help_import_a_text_file_title">Importer un fichier texte</string>
-    <string name="help_import_a_text_file_detail">Touchez ⋮ › Importer. Le fichier s\'ouvre dans l\'éditeur et est conservé comme note enregistrée.</string>
+    <string name="help_import_a_text_file_detail">Touchez ⋮ › Importer pour ouvrir un fichier texte ou un TextPack. Il s\'ouvre dans l\'éditeur et est conservé comme note enregistrée.</string>
     <string name="help_go_back_to_an_older_version_title">Revenir à une ancienne version</string>
     <string name="help_go_back_to_an_older_version_detail">Chaque enregistrement crée une version. Dès qu\'une note en a plusieurs, touchez l\'horloge en haut pour comparer les modifications et en restaurer une.</string>
     <string name="help_keep_notes_if_the_app_is_removed_title">Garder les notes si l\'app est supprimée</string>
     <string name="help_keep_notes_if_the_app_is_removed_detail">Les notes restent sur cet appareil et sont supprimées avec l\'app. Dans Notes enregistrées, choisissez un dossier de notes via ⋮ pour les garder sous forme de fichiers.</string>
     <string name="help_share_a_script_title">Partager un script</string>
-    <string name="help_share_a_script_detail">Touchez ⋮ › Partager pour l\'envoyer en texte, repères compris.</string>
+    <string name="help_share_a_script_detail">Touchez ⋮ › Partager pour l\'envoyer en texte, repères compris. Un script avec des images est envoyé en TextPack, images comprises.</string>
     <string name="help_change_text_size_and_colors_title">Modifier la taille du texte et les couleurs</string>
     <string name="help_change_text_size_and_colors_detail">Touchez l\'engrenage en haut. Chaque mode a ses propres tailles et couleur de repère.</string>
     <string name="help_play_and_pause_title">Lecture et pause</string>
@@ -346,4 +346,6 @@
     <string name="image_not_added">Une image n\'a pas pu être ajoutée. Réessayez.</string>
     <string name="help_add_images_title">Ajouter des images</string>
     <string name="help_add_images_detail">Touchez la photo au-dessus du clavier pour ajouter des images de votre galerie.</string>
+    <string name="package_too_large">Ce fichier dépasse 100 Mo et ne peut donc pas être importé.</string>
+    <string name="script_couldnt_be_shared">Ce script n\'a pas pu être partagé. Réessayez.</string>
 </resources>

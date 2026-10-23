@@ -131,13 +131,13 @@
     <string name="help_open_saved_notes_title">Open Saved Notes</string>
     <string name="help_open_saved_notes_detail">Tap ⋮ › Open to see everything you saved. Swipe to rename or delete.</string>
     <string name="help_import_a_text_file_title">Import a Text File</string>
-    <string name="help_import_a_text_file_detail">Tap ⋮ › Import. The file opens in the editor and is kept as a saved note.</string>
+    <string name="help_import_a_text_file_detail">Tap ⋮ › Import to open a text file or a TextPack. It opens in the editor and is kept as a saved note.</string>
     <string name="help_go_back_to_an_older_version_title">Go Back to an Older Version</string>
     <string name="help_go_back_to_an_older_version_detail">Every save is a new version. Once a note has more than one, tap the clock at the top to compare changes and restore one.</string>
     <string name="help_keep_notes_if_the_app_is_removed_title">Keep Notes if the App Is Removed</string>
     <string name="help_keep_notes_if_the_app_is_removed_detail">Notes stay on this device and are deleted with the app. In Saved Notes, choose a notes folder from ⋮ to keep them as files.</string>
     <string name="help_share_a_script_title">Share a Script</string>
-    <string name="help_share_a_script_detail">Tap ⋮ › Share to send it as text, cues included.</string>
+    <string name="help_share_a_script_detail">Tap ⋮ › Share to send it as text, cues included. A script with images is sent as a TextPack, with its images.</string>
     <string name="help_change_text_size_and_colors_title">Change Text Size and Colors</string>
     <string name="help_change_text_size_and_colors_detail">Tap the gear at the top. Each mode keeps its own sizes and cue color.</string>
     <string name="help_play_and_pause_title">Play and Pause</string>
@@ -343,4 +343,6 @@
     <string name="image_not_added">An image couldn\'t be added. Try again.</string>
     <string name="help_add_images_title">Add Images</string>
     <string name="help_add_images_detail">Tap the photo above the keyboard to add images from your gallery.</string>
+    <string name="package_too_large">That file is larger than 100 MB, so it can\'t be imported.</string>
+    <string name="script_couldnt_be_shared">This script couldn\'t be shared. Try again.</string>
 </resources>
