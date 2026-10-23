@@ -1159,14 +1159,13 @@ struct SavedNotesView: View {
                                                 .font(.headline)
                                                 .foregroundStyle(AppColors.textPrimary(for: colorScheme))
 
-                                            if note.mode == .cards {
-                                                Text("Cards")
-                                                    .font(.caption2.weight(.semibold))
-                                                    .foregroundStyle(AppColors.green(for: colorScheme))
-                                                    .padding(.horizontal, 8)
-                                                    .padding(.vertical, 3)
-                                                    .background(Capsule().fill(AppColors.green(for: colorScheme).opacity(0.15)))
-                                            }
+                                            // The note's mode, grey so Current stands out.
+                                            Text(note.mode.displayName)
+                                                .font(.caption2.weight(.semibold))
+                                                .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                                                .padding(.horizontal, 8)
+                                                .padding(.vertical, 3)
+                                                .background(Capsule().fill(AppColors.textSecondary(for: colorScheme).opacity(0.15)))
 
                                             // The note open in the editor.
                                             if note.id == settingsService.currentNoteId {
