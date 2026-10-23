@@ -216,7 +216,7 @@ object TeleprompterParser {
     ): Int {
         val wordsPerSecond = wordsPerMinute / 60.0
         val wordIndex = (elapsedTime * wordsPerSecond).toInt()
-        return minOf(wordIndex, totalWords - 1)
+        return maxOf(0, minOf(wordIndex, totalWords - 1))
     }
 
     /** Calculate line index based on elapsed time and lines per minute */
@@ -227,6 +227,6 @@ object TeleprompterParser {
     ): Int {
         val linesPerSecond = linesPerMinute / 60.0
         val lineIndex = (elapsedTime * linesPerSecond).toInt()
-        return minOf(lineIndex, totalLines - 1)
+        return maxOf(0, minOf(lineIndex, totalLines - 1))
     }
 }
