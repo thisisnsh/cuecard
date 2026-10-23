@@ -253,4 +253,8 @@
         <item>El temporizador de la ventana flotante crece con el tamaño del texto.</item>
         <item>Ajustes independientes para el editor y el teleprompter, con una opción para compartir CueCard.</item>
     </string-array>
+    <string name="note_couldnt_be_saved">No se ha podido guardar la nota. Inténtalo de nuevo.</string>
+    <string name="file_opened_not_saved">El archivo se ha abierto, pero no se ha podido guardar como nota. Intenta guardarlo de nuevo.</string>
+    <string name="note_couldnt_be_renamed">No se ha podido renombrar la nota. Inténtalo de nuevo.</string>
+    <string name="version_couldnt_be_restored">No se ha podido restaurar esta versión. Inténtalo de nuevo.</string>
 </resources>

@@ -168,6 +168,7 @@ fun NoteVersionsView(
     var changes by remember { mutableStateOf<Map<Int, LineDiff.Counts>>(emptyMap()) }
     /** The version being compared, by number, or null while the list is showing. */
     var selected by remember { mutableStateOf<Int?>(null) }
+    var restoreFailed by remember { mutableStateOf(false) }
     val dateFormat = remember {
         DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT)
     }
@@ -188,6 +189,20 @@ fun NoteVersionsView(
 
     BackHandler(enabled = selected != null) { selected = null }
 
+    if (restoreFailed) {
+        AlertDialog(
+            onDismissRequest = { restoreFailed = false },
+            title = { Text(stringResource(R.string.something_went_wrong)) },
+            text = { Text(stringResource(R.string.version_couldnt_be_restored)) },
+            confirmButton = {
+                TextButton(onClick = { restoreFailed = false }) {
+                    Text(stringResource(R.string.ok), color = AppColors.blue(isDark))
+                }
+            },
+            containerColor = AppColors.background(isDark)
+        )
+    }
+
     val version = versions.firstOrNull { it.number == selected }
     if (version != null) {
         VersionDiffView(
@@ -198,8 +213,11 @@ fun NoteVersionsView(
             onBack = { selected = null },
             onRestore = {
                 scope.launch {
-                    settingsService.restoreVersion(version, noteId)
-                    onDismiss()
+                    if (settingsService.restoreVersion(version, noteId)) {
+                        onDismiss()
+                    } else {
+                        restoreFailed = true
+                    }
                 }
             }
         )

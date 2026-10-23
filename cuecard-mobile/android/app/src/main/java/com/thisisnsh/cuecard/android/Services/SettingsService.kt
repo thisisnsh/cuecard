@@ -31,6 +31,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import java.io.IOException
 import java.util.UUID
 import kotlin.math.roundToInt
 
@@ -667,11 +668,21 @@ class SettingsService(private val context: Context) {
 
     // ==================== Saved Notes Methods ====================
 
-    /** Keep a note in the store, the notes folder, and the list the views read. */
-    private suspend fun store(note: SavedNote, restoredFrom: Int? = null) {
+    /**
+     * Keep a note in the store, the notes folder, and the list the views read.
+     * If the store can't take it, nothing changes and false is returned.
+     */
+    private suspend fun store(note: SavedNote, restoredFrom: Int? = null): Boolean {
+        val notes = _savedNotes.value
+        val updated = if (notes.any { it.id == note.id }) {
+            notes.map { if (it.id == note.id) note else it }
+        } else {
+            listOf(note) + notes
+        }
+        if (!persist(updated)) return false
         withContext(Dispatchers.IO) { noteFolder.write(note) }
         keep(note, restoredFrom)
-        saveSavedNotes()
+        return true
     }
 
     /**
@@ -689,27 +700,24 @@ class SettingsService(private val context: Context) {
         }
     }
 
-    /**
-     * Save current notes as a new note
-     */
-    suspend fun saveCurrentNote(title: String) {
+    /** Save current notes as a new note. Returns false if it couldn't be saved. */
+    suspend fun saveCurrentNote(title: String): Boolean {
         val trimmedContent = _notes.value.trim()
-        if (trimmedContent.isEmpty()) return
+        if (trimmedContent.isEmpty()) return true
 
         val note = SavedNote(
             title = title,
             content = _notes.value,
             mode = _settings.value.scriptMode
         )
-        notesLock.withLock { store(note) }
+        if (!notesLock.withLock { store(note) }) return false
         setCurrentNoteId(note.id)
+        return true
     }
 
-    /**
-     * Update an existing saved note
-     */
-    suspend fun updateNote(id: String, title: String? = null, content: String? = null) = notesLock.withLock {
-        val currentNote = _savedNotes.value.find { it.id == id } ?: return@withLock
+    /** Update an existing saved note. Returns false if it couldn't be saved. */
+    suspend fun updateNote(id: String, title: String? = null, content: String? = null): Boolean = notesLock.withLock {
+        val currentNote = _savedNotes.value.find { it.id == id } ?: return@withLock false
         store(
             currentNote.copy(
                 title = title ?: currentNote.title,
@@ -720,11 +728,12 @@ class SettingsService(private val context: Context) {
     }
 
     /**
-     * Save current changes to the currently loaded note
+     * Save current changes to the currently loaded note. Returns false if they
+     * couldn't be saved.
      */
-    suspend fun saveChangesToCurrentNote() {
-        val id = _currentNoteId.value ?: return
-        updateNote(id, content = _notes.value)
+    suspend fun saveChangesToCurrentNote(): Boolean {
+        val id = _currentNoteId.value ?: return false
+        return updateNote(id, content = _notes.value)
     }
 
     /** A saved note's versions, oldest first. */
@@ -734,16 +743,19 @@ class SettingsService(private val context: Context) {
     /**
      * Bring back an old version as the note's newest, and into the editor
      * wherever the note is open. Anything unsaved there is replaced.
+     * Returns false if it couldn't be saved, leaving everything as it was.
      */
-    suspend fun restoreVersion(version: NoteVersion, id: String) = notesLock.withLock {
-        val note = _savedNotes.value.find { it.id == id } ?: return@withLock
-        store(
+    suspend fun restoreVersion(version: NoteVersion, id: String): Boolean = notesLock.withLock {
+        val note = _savedNotes.value.find { it.id == id } ?: return@withLock false
+        val stored = store(
             note.copy(content = version.content, updatedAt = System.currentTimeMillis()),
             restoredFrom = version.number
         )
+        if (!stored) return@withLock false
         for (mode in ScriptMode.entries) {
             if (noteId(mode) == id) setNotes(version.content, mode)
         }
+        true
     }
 
     /**
@@ -910,11 +922,12 @@ class SettingsService(private val context: Context) {
     /**
      * Load imported file content into the editor and keep it as a saved note.
      * The file already carries a name, so there's nothing to prompt the user for.
+     * Returns false if it couldn't be saved; it's left in the editor unsaved.
      */
-    suspend fun importNote(title: String, content: String) {
+    suspend fun importNote(title: String, content: String): Boolean {
         setCurrentNoteId(null)
         saveNotes(content)
-        saveCurrentNote(title)
+        return saveCurrentNote(title)
     }
 
     /**
@@ -936,10 +949,19 @@ class SettingsService(private val context: Context) {
         }
 
     private suspend fun saveSavedNotes() {
-        val jsonList = _savedNotes.value.map { SavedNoteJson.fromSavedNote(it) }
-        val jsonStr = json.encodeToString(jsonList)
-        context.dataStore.edit { prefs ->
-            prefs[SAVED_NOTES] = jsonStr
+        persist(_savedNotes.value)
+    }
+
+    /** Write `notes` to the store. False if it couldn't take them. */
+    private suspend fun persist(notes: List<SavedNote>): Boolean {
+        val jsonStr = json.encodeToString(notes.map { SavedNoteJson.fromSavedNote(it) })
+        return try {
+            context.dataStore.edit { prefs ->
+                prefs[SAVED_NOTES] = jsonStr
+            }
+            true
+        } catch (e: IOException) {
+            false
         }
     }
 

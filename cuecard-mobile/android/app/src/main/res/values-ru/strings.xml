@@ -256,4 +256,8 @@
         <item>Таймер в плавающем окне увеличивается вместе с размером текста.</item>
         <item>Отдельные настройки редактора и телесуфлёра с возможностью поделиться CueCard.</item>
     </string-array>
+    <string name="note_couldnt_be_saved">Не удалось сохранить заметку. Попробуйте ещё раз.</string>
+    <string name="file_opened_not_saved">Файл открыт, но его не удалось сохранить как заметку. Попробуйте сохранить ещё раз.</string>
+    <string name="note_couldnt_be_renamed">Не удалось переименовать заметку. Попробуйте ещё раз.</string>
+    <string name="version_couldnt_be_restored">Не удалось восстановить эту версию. Попробуйте ещё раз.</string>
 </resources>

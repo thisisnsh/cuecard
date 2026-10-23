@@ -253,4 +253,8 @@
         <item>Le minuteur de la fenêtre flottante grandit avec la taille du texte.</item>
         <item>Des réglages distincts pour l’éditeur et le prompteur, avec une option pour partager CueCard.</item>
     </string-array>
+    <string name="note_couldnt_be_saved">Votre note n\'a pas pu être enregistrée. Réessayez.</string>
+    <string name="file_opened_not_saved">Le fichier a été ouvert, mais n\'a pas pu être enregistré comme note. Essayez de l\'enregistrer à nouveau.</string>
+    <string name="note_couldnt_be_renamed">La note n\'a pas pu être renommée. Réessayez.</string>
+    <string name="version_couldnt_be_restored">Cette version n\'a pas pu être restaurée. Réessayez.</string>
 </resources>

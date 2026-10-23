@@ -218,8 +218,11 @@ fun HomeView(
         AnalyticsEvents.logButtonClick("save_note", "home")
         if (currentNoteId != null) {
             scope.launch {
-                settingsService.saveChangesToCurrentNote()
-                flashSaved()
+                if (settingsService.saveChangesToCurrentNote()) {
+                    flashSaved()
+                } else {
+                    fileErrorMessage = context.getString(R.string.note_couldnt_be_saved)
+                }
             }
         } else {
             saveNoteTitle = ""
@@ -241,10 +244,13 @@ fun HomeView(
                     fileErrorMessage = context.getString(R.string.file_empty)
                     return@launch
                 }
-                settingsService.importNote(
+                val saved = settingsService.importNote(
                     title = ScriptFile.title(context, uri),
                     content = TeleprompterParser.normalizingTags(text)
                 )
+                if (!saved) {
+                    fileErrorMessage = context.getString(R.string.file_opened_not_saved)
+                }
             } catch (e: ScriptFile.FileTooLarge) {
                 fileErrorMessage = context.getString(R.string.file_too_large)
                 AnalyticsEvents.logEvent(
@@ -736,8 +742,11 @@ fun HomeView(
                 showingSaveDialog = false
                 if (title.trim().isNotEmpty()) {
                     scope.launch {
-                        settingsService.saveCurrentNote(title.trim())
-                        flashSaved()
+                        if (settingsService.saveCurrentNote(title.trim())) {
+                            flashSaved()
+                        } else {
+                            fileErrorMessage = context.getString(R.string.note_couldnt_be_saved)
+                        }
                     }
                 }
             }
@@ -1589,7 +1598,11 @@ fun SavedNotesView(
             onDismiss = { noteToRename = null },
             onConfirm = { title ->
                 if (title.trim().isNotEmpty()) {
-                    scope.launch { settingsService.updateNote(note.id, title = title.trim()) }
+                    scope.launch {
+                        if (!settingsService.updateNote(note.id, title = title.trim())) {
+                            errorMessage = context.getString(R.string.note_couldnt_be_renamed)
+                        }
+                    }
                 }
                 noteToRename = null
             }

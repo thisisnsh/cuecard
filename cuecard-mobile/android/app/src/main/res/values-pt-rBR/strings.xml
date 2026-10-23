@@ -253,4 +253,8 @@
         <item>O timer da janela flutuante aumenta com o tamanho do texto.</item>
         <item>Ajustes separados para o editor e o teleprompter, com uma opção para compartilhar o CueCard.</item>
     </string-array>
+    <string name="note_couldnt_be_saved">Não foi possível salvar sua nota. Tente novamente.</string>
+    <string name="file_opened_not_saved">O arquivo foi aberto, mas não foi possível salvá-lo como nota. Tente salvá-lo novamente.</string>
+    <string name="note_couldnt_be_renamed">Não foi possível renomear a nota. Tente novamente.</string>
+    <string name="version_couldnt_be_restored">Não foi possível restaurar esta versão. Tente novamente.</string>
 </resources>
