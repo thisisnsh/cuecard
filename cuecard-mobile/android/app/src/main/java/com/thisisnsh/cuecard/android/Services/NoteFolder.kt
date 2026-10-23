@@ -22,6 +22,9 @@ import java.io.OutputStream
  * file each. It sits outside the app, so the notes stay if the app is deleted,
  * and edits made to the files outside the app come back in on the next sync.
  *
+ * The images the notes place are kept beside them, in a hidden folder of
+ * CueCard's own, so they come back with the notes too.
+ *
  * The folder is reached through the Storage Access Framework, so everything
  * here but `isChosen` talks to another process and is called off the main thread.
  */
@@ -96,6 +99,40 @@ class NoteFolder(private val context: Context) {
         /** Delete the file called `name`. True once it's not there. */
         fun delete(name: String): Boolean {
             val item = file(name) ?: return true
+            val deleted = runCatching { DocumentsContract.deleteDocument(resolver, item.uri) }.getOrDefault(false)
+            if (deleted) items.remove(name)
+            return deleted
+        }
+
+        /** CueCard's folder of images, made if `creating` and it isn't there. */
+        fun imagesFolder(creating: Boolean): Item? {
+            items[IMAGES_FOLDER_NAME]?.takeIf { it.isDirectory }?.let { return it }
+            if (!creating) return null
+            return runCatching {
+                val uri = DocumentsContract.createDocument(resolver, root, Document.MIME_TYPE_DIR, IMAGES_FOLDER_NAME)
+                    ?: return null
+                describe(uri)?.takeIf { it.isDirectory && it.name == IMAGES_FOLDER_NAME }?.also { items[it.name] = it }
+            }.getOrNull()
+        }
+
+        /** What's in a folder inside this one, by name. */
+        fun children(directory: Item): MutableMap<String, Item> {
+            val children = DocumentsContract.buildChildDocumentsUriUsingTree(tree, DocumentsContract.getDocumentId(directory.uri))
+            val found = mutableMapOf<String, Item>()
+            runCatching {
+                resolver.query(children, COLUMNS, null, null, null)?.use { cursor ->
+                    while (cursor.moveToNext()) {
+                        val uri = DocumentsContract.buildDocumentUriUsingTree(tree, cursor.getString(0) ?: continue)
+                        item(cursor, uri)?.let { found.putIfAbsent(it.name, it) }
+                    }
+                }
+            }
+            return found
+        }
+
+        /** Delete the folder called `name` and what's in it. True once it's not there. */
+        fun deleteFolder(name: String): Boolean {
+            val item = items[name]?.takeIf { it.isDirectory } ?: return true
             val deleted = runCatching { DocumentsContract.deleteDocument(resolver, item.uri) }.getOrDefault(false)
             if (deleted) items.remove(name)
             return deleted
@@ -195,7 +232,8 @@ class NoteFolder(private val context: Context) {
             val kept = index.filterValues { !folder.delete(it.file) }
             pendingDeletions = pendingDeletions intersect kept.keys
             writeIndex(kept, folder)
-            kept.isEmpty()
+            val imagesDeleted = folder.deleteFolder(IMAGES_FOLDER_NAME)
+            kept.isEmpty() && imagesDeleted
         } ?: false
         if (released) forget()
         return released
@@ -336,7 +374,60 @@ class NoteFolder(private val context: Context) {
         }
 
         if (index != originalIndex) writeIndex(index, folder)
+
+        // Every note as it stands after the sync, for the images they place.
+        val updatedById = updated.associateBy { it.id }
+        val contents = notes.filter { it.id !in deleted }.map { updatedById[it.id]?.content ?: it.content } +
+            updated.filter { appNotes[it.id] == null }.map { it.content }
+        // A note file that couldn't be read yet may place images no note here
+        // does, so none are deleted until every file has been.
+        val readAll = undeletable.isEmpty() && tooLarge.isEmpty() && (files.isNotEmpty() || originalIndex.isEmpty())
+        syncImages(contents, folder, deletingUnplaced = readAll)
+
         return Changes(updated, deleted, tooLarge, undeletable.values.map { it.file }.sorted())
+    }
+
+    // MARK: - Images
+
+    /**
+     * Bring in the images the notes place that this device doesn't have, as
+     * after the app is reinstalled, and delete the folder's copies of any no
+     * note places any more.
+     */
+    private fun syncImages(contents: List<String>, folder: Folder, deletingUnplaced: Boolean) {
+        val names = contents.flatMapTo(mutableSetOf()) { TeleprompterParser.imageNames(it) }
+        val images = folder.imagesFolder(creating = false) ?: return
+        val files = folder.children(images)
+
+        for (name in names) {
+            if (ScriptImages.contains(name)) continue
+            val item = files[name] ?: continue
+            val data = runCatching { resolver.openInputStream(item.uri)?.use { it.readBytes() } }.getOrNull() ?: continue
+            ScriptImages.add(data, name)
+        }
+
+        if (!deletingUnplaced) return
+        for ((name, item) in files) {
+            if (name !in names) runCatching { DocumentsContract.deleteDocument(resolver, item.uri) }
+        }
+    }
+
+    /** Copy the images a note places into the folder, the ones not already there. */
+    private fun writeImages(content: String, folder: Folder) {
+        val names = TeleprompterParser.imageNames(content)
+        if (names.isEmpty()) return
+        val images = folder.imagesFolder(creating = true) ?: return
+        val files = folder.children(images)
+        for (name in names) {
+            if (name in files) continue
+            val data = ScriptImages.data(name) ?: continue
+            runCatching {
+                // A type no folder ties to an extension, so the file keeps its name.
+                val uri = DocumentsContract.createDocument(resolver, images.uri, INDEX_MIME_TYPE, name) ?: return@runCatching
+                val written = resolver.openOutputStream(uri, "w")?.use { it.write(data) } != null
+                if (!written || describe(uri)?.name != name) DocumentsContract.deleteDocument(resolver, uri)
+            }
+        }
     }
 
     // MARK: - Files
@@ -372,6 +463,7 @@ class NoteFolder(private val context: Context) {
             }
         }
         val name = file ?: uniqueName(note, "txt", takenNames(folder, index))
+        writeImages(note.content, folder)
         val written = folder.write(name, note.content, TEXT_MIME_TYPE) ?: return
         index[note.id] = Entry(
             file = written.name,
@@ -483,6 +575,8 @@ class NoteFolder(private val context: Context) {
         const val FOLDER_KEY = "cuecard_notes_folder_uri"
         const val PENDING_DELETIONS_KEY = "cuecard_notes_folder_pending_deletions"
         const val INDEX_NAME = ".cuecard.json"
+        /** Only CueCard writes in here, and it deletes what no note places. */
+        const val IMAGES_FOLDER_NAME = ".cuecard-images"
         const val TEXT_MIME_TYPE = "text/plain"
 
         /** A type no folder ties to an extension, so the index keeps its name. */
