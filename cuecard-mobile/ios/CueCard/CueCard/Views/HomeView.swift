@@ -990,10 +990,15 @@ struct SavedNotesView: View {
     /// A note waiting on the user to agree to lose the unsaved script it replaces.
     @State private var noteToOpen: SavedNote?
     @State private var query = ""
+    /// The mode whose notes are listed, or nil for all of them.
+    @State private var modeFilter: ScriptMode?
 
-    /// Saved notes, newest first, narrowed to those whose title or text match the search.
+    /// Saved notes, newest first, narrowed to the chosen mode and to those
+    /// whose title or text match the search.
     private var notes: [SavedNote] {
-        let sorted = settingsService.savedNotes.sorted { $0.updatedAt > $1.updatedAt }
+        let sorted = settingsService.savedNotes
+            .filter { modeFilter == nil || $0.mode == modeFilter }
+            .sorted { $0.updatedAt > $1.updatedAt }
         let trimmed = query.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return sorted }
 
@@ -1158,14 +1163,8 @@ struct SavedNotesView: View {
                                             Text(note.title)
                                                 .font(.headline)
                                                 .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-
-                                            // The note's mode, grey so Current stands out.
-                                            Text(note.mode.displayName)
-                                                .font(.caption2.weight(.semibold))
-                                                .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                                                .padding(.horizontal, 8)
-                                                .padding(.vertical, 3)
-                                                .background(Capsule().fill(AppColors.textSecondary(for: colorScheme).opacity(0.15)))
+                                                .lineLimit(1)
+                                                .truncationMode(.tail)
 
                                             // The note open in the editor.
                                             if note.id == settingsService.currentNoteId {
@@ -1175,6 +1174,7 @@ struct SavedNotesView: View {
                                                     .padding(.horizontal, 8)
                                                     .padding(.vertical, 3)
                                                     .background(Capsule().fill(AppColors.blue(for: colorScheme).opacity(0.15)))
+                                                    .fixedSize()
                                             }
                                         }
 
@@ -1210,6 +1210,18 @@ struct SavedNotesView: View {
                                     .tint(.orange)
                                 }
                             }
+                        } header: {
+                            Picker("Mode", selection: $modeFilter) {
+                                Text("All").tag(ScriptMode?.none)
+                                ForEach(ScriptMode.allCases) { mode in
+                                    Text(mode.displayName).tag(ScriptMode?.some(mode))
+                                }
+                            }
+                            .pickerStyle(.segmented)
+                            .fixedSize()
+                            .frame(maxWidth: .infinity)
+                            .padding(.bottom, 8)
+                            .textCase(nil)
                         } footer: {
                             // At the end of the list, so it never covers a note.
                             storageNote
@@ -1222,7 +1234,11 @@ struct SavedNotesView: View {
                     }
                     .overlay {
                         if notes.isEmpty {
-                            ContentUnavailableView.search(text: query)
+                            if query.trimmingCharacters(in: .whitespaces).isEmpty, let modeFilter {
+                                ContentUnavailableView("Nothing Saved Yet", systemImage: modeFilter.systemImage)
+                            } else {
+                                ContentUnavailableView.search(text: query)
+                            }
                         }
                     }
                     .searchable(text: $query, prompt: "Search")
