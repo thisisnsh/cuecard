@@ -73,6 +73,8 @@ import com.thisisnsh.cuecard.android.models.EmphasisStyle
 import com.thisisnsh.cuecard.android.models.RichText
 import com.thisisnsh.cuecard.android.models.spanStyle
 import com.thisisnsh.cuecard.android.models.TeleprompterParser
+import com.thisisnsh.cuecard.android.models.WideScript
+import com.thisisnsh.cuecard.android.models.hasWideScript
 import com.thisisnsh.cuecard.android.modifiers.Capsule
 import com.thisisnsh.cuecard.android.modifiers.glassed
 
@@ -194,10 +196,12 @@ fun CueTextEditor(
         bindController(controller, { value }, ::apply, isFocused, onFocusChange) { value = it }
     }
 
+    val isWide = remember(value.text) { value.text.hasWideScript }
     val baseStyle = TextStyle(
         fontSize = fontSize,
         fontWeight = FontWeight.Medium,
-        color = AppColors.textPrimary(isDark)
+        color = AppColors.textPrimary(isDark),
+        lineHeight = if (isWide) WideScript.lineHeight(fontSize.value).sp else TextUnit.Unspecified
     )
 
     val field: @Composable (Modifier) -> Unit = { fieldModifier ->

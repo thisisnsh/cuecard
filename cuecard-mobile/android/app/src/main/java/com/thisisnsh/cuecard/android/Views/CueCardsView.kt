@@ -80,7 +80,9 @@ import com.thisisnsh.cuecard.android.LocalIsDarkTheme
 import com.thisisnsh.cuecard.android.models.AppColors
 import com.thisisnsh.cuecard.android.models.CueCards
 import com.thisisnsh.cuecard.android.models.TeleprompterParser
+import com.thisisnsh.cuecard.android.models.WideScript
 import com.thisisnsh.cuecard.android.models.annotated
+import com.thisisnsh.cuecard.android.models.hasWideScript
 import com.thisisnsh.cuecard.android.modifiers.Capsule
 import com.thisisnsh.cuecard.android.modifiers.glassed
 import com.thisisnsh.cuecard.android.services.TeleprompterSettings
@@ -418,6 +420,7 @@ private fun CardFace(card: String, settings: TeleprompterSettings, isDark: Boole
         )
     }
     val fontSize = settings.cards.fontSize
+    val lineSpacing = if (card.hasWideScript) WideScript.lineSpacing(fontSize.toFloat()) else 4f
 
     Box(
         modifier = modifier
@@ -430,7 +433,7 @@ private fun CardFace(card: String, settings: TeleprompterSettings, isDark: Boole
         Text(
             text = text,
             fontSize = fontSize.sp,
-            lineHeight = (fontSize * 1.2f + 4).sp,
+            lineHeight = (fontSize * 1.2f + lineSpacing).sp,
             fontWeight = FontWeight.SemiBold,
             modifier = Modifier
                 .fillMaxWidth()

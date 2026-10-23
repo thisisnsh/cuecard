@@ -88,6 +88,8 @@ import com.thisisnsh.cuecard.android.models.CueColor
 import com.thisisnsh.cuecard.android.models.CueSegment
 import com.thisisnsh.cuecard.android.models.TeleprompterContent
 import com.thisisnsh.cuecard.android.models.TeleprompterParser
+import com.thisisnsh.cuecard.android.models.WideScript
+import com.thisisnsh.cuecard.android.models.hasWideScript
 import com.thisisnsh.cuecard.android.modifiers.scriptEdgeFade
 import com.thisisnsh.cuecard.android.modifiers.glassed
 import com.thisisnsh.cuecard.android.services.ReviewPromptService
@@ -898,7 +900,13 @@ private fun buildScript(
         fontFamily = CueFontFamily,
         color = cueColor.color(isDark)
     )
-    val bodyParagraph = ParagraphStyle(lineHeight = (fontSize * 1.18f).sp)
+    // Chinese, Japanese and Korean lines get at least the room their glyphs need.
+    val lineHeight = if (content.fullText.hasWideScript) {
+        maxOf(fontSize * 1.18f, WideScript.lineHeight(fontSize))
+    } else {
+        fontSize * 1.18f
+    }
+    val bodyParagraph = ParagraphStyle(lineHeight = lineHeight.sp)
     // The gap between paragraphs, as its own short line — the nearest Compose has
     // to the paragraph spacing the iOS layout applies.
     val gapParagraph = ParagraphStyle(lineHeight = (fontSize * 0.45f).sp)
