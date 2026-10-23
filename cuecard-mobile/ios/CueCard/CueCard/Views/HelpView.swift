@@ -64,7 +64,7 @@ private struct HelpSection: Identifiable {
 
 private enum AllHelp {
     static let writing = HelpSection("writing", title: "Writing",
-                                    summary: "Modes, cues, formatting and cards",
+                                    summary: "Modes, cues, formatting, images and cards",
                                     systemImage: "pencil", topics: [
         HelpTopic("Pick a Mode",
                   detail: "Tap the mode name at the top. Teleprompter scrolls your whole script. Cards shows it one card at a time."),
@@ -72,6 +72,8 @@ private enum AllHelp {
                   detail: "Cues are reminders like [cue pause], shown in color and not read out. Type [ or tap Add Cue above the keyboard."),
         HelpTopic("Bold and Italic",
                   detail: "Select words and tap B or I above the keyboard. Or type *bold* or _italic_."),
+        HelpTopic("Add Images",
+                  detail: "Tap the photo above the keyboard to add images from your library, or paste one in. The Lock Screen and Apple Watch show a photo symbol in their place."),
         HelpTopic("Add Cards",
                   detail: "Each box in the editor is one card. Tap Create New Card to add another.")
     ])
@@ -84,13 +86,13 @@ private enum AllHelp {
         HelpTopic("Open Saved Notes",
                   detail: "Tap ••• › Open to see everything you saved. Swipe to rename or delete."),
         HelpTopic("Import a Text File",
-                  detail: "Tap ••• › Import. The file opens in the editor and is kept as a saved note."),
+                  detail: "Tap ••• › Import to open a text file or a TextPack. It opens in the editor and is kept as a saved note."),
         HelpTopic("Go Back to an Older Version",
                   detail: "Every save is a new version. Once a note has more than one, tap the clock at the top to compare changes and restore one."),
         HelpTopic("Keep Notes if the App Is Removed",
                   detail: "Notes stay on this device and are deleted with the app. In Saved Notes, choose a notes folder from ••• to keep them as files."),
         HelpTopic("Share a Script",
-                  detail: "Tap ••• › Share to send it as text, cues included.")
+                  detail: "Tap ••• › Share to send it as text, cues included. A script with images is sent as a TextPack, with its images.")
     ])
 
     static let settings = HelpSection("settings", title: "Settings & Timer",
