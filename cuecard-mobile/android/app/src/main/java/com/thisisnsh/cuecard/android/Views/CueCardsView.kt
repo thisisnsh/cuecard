@@ -72,7 +72,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
@@ -108,7 +107,6 @@ private fun <T> deckSpring() = spring<T>(dampingRatio = 0.84f, stiffness = 247f)
 @Composable
 fun CueCardsView(
     cards: List<String>,
-    title: String,
     settings: TeleprompterSettings,
     onDismiss: () -> Unit
 ) {
@@ -177,28 +175,16 @@ fun CueCardsView(
                 CenterAlignedTopAppBar(
                     title = {
                         // The dots show where the deck is, so the title bar is the timer's.
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(2.dp),
-                            modifier = Modifier.semantics(mergeDescendants = true) {
-                                contentDescription = "${TeleprompterParser.formatTime(seconds)}, $title, $progress"
+                        Text(
+                            text = " ${TeleprompterParser.formatTime(seconds)} ",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace,
+                            color = timerColor,
+                            modifier = Modifier.semantics {
+                                contentDescription = "${TeleprompterParser.formatTime(seconds)}, $progress"
                             }
-                        ) {
-                            Text(
-                                text = " ${TeleprompterParser.formatTime(seconds)} ",
-                                fontSize = 16.sp,
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = FontFamily.Monospace,
-                                color = timerColor
-                            )
-                            Text(
-                                text = title,
-                                fontSize = 12.sp,
-                                color = AppColors.textSecondary(isDark),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
+                        )
                     },
                     navigationIcon = {
                         Icon(

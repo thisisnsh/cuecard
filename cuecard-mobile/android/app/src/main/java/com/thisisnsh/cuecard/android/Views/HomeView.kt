@@ -734,7 +734,6 @@ fun HomeView(
             val deck = remember { cards }
             CueCardsView(
                 cards = deck,
-                title = currentNote?.title ?: stringResource(R.string.cards),
                 settings = settings,
                 onDismiss = { showingCards = false }
             )
