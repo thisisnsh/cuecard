@@ -130,6 +130,10 @@ fun CueCardsView(
     /** A pull past either end of the deck, which gives a little and settles. */
     var rubberBand by remember { mutableFloatStateOf(0f) }
     var showingHelp by remember { mutableStateOf(false) }
+    /** The camera floats over the deck while it's open. */
+    var showingCamera by remember { mutableStateOf(false) }
+    val recorder = rememberCameraRecorder(showingCamera, scriptId)
+    val cameraPlacement = rememberCameraWindowPlacement()
 
     // The timer as it was set when the deck was opened, running from then.
     val startedAt = remember { System.currentTimeMillis() }
@@ -213,6 +217,10 @@ fun CueCardsView(
                         )
                     },
                     actions = {
+                        CameraButton(isOn = showingCamera, isDark = isDark) {
+                            AnalyticsEvents.logButtonClick("camera", CARDS_SCREEN)
+                            showingCamera = !showingCamera
+                        }
                         HelpButton(page = HelpPage.CARDS, isDark = isDark) { showingHelp = true }
                     },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -221,128 +229,141 @@ fun CueCardsView(
                 )
             }
         ) { padding ->
-            Column(
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
             ) {
-                PageDots(
-                    count = cards.size,
-                    index = index,
-                    isDark = isDark,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp)
-                        .padding(top = 12.dp)
-                )
-
-                BoxWithConstraints(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp)
-                        .padding(top = 12.dp, bottom = PEEK * 2)
-                ) {
-                    val density = LocalDensity.current
-                    val widthPx = with(density) { maxWidth.toPx() }
-                    val swipePx = with(density) { SWIPE_DISTANCE.toPx() }
-
-                    Deck(
-                        cards = cards,
-                        position = position.value,
-                        rubberBand = rubberBand,
-                        isFinished = isFinished,
-                        widthPx = widthPx,
-                        settings = settings,
+                Column(modifier = Modifier.fillMaxSize()) {
+                    PageDots(
+                        count = cards.size,
+                        index = index,
                         isDark = isDark,
                         modifier = Modifier
-                            .fillMaxSize()
-                            .pointerInput(cards.size) {
-                                var drag = 0f
-                                val velocity = VelocityTracker()
-                                detectHorizontalDragGestures(
-                                    onDragStart = {
-                                        drag = 0f
-                                        velocity.resetTracking()
-                                    },
-                                    onDragCancel = {
-                                        drag = 0f
-                                        rubberBand = 0f
-                                        show(index)
-                                    },
-                                    onDragEnd = {
-                                        // Where a fling would carry the card, like SwiftUI's
-                                        // predicted end translation.
-                                        val predicted = drag + velocity.calculateVelocity().x * 0.25f
-                                        rubberBand = 0f
-                                        when {
-                                            (drag < -swipePx || predicted < -widthPx / 2) && index < cards.size -> {
-                                                AnalyticsEvents.logEvent("cards_next", mapOf("source" to "swipe"))
-                                                next()
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp)
+                            .padding(top = 12.dp)
+                    )
+
+                    BoxWithConstraints(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                            .padding(horizontal = 20.dp)
+                            .padding(top = 12.dp, bottom = PEEK * 2)
+                    ) {
+                        val density = LocalDensity.current
+                        val widthPx = with(density) { maxWidth.toPx() }
+                        val swipePx = with(density) { SWIPE_DISTANCE.toPx() }
+
+                        Deck(
+                            cards = cards,
+                            position = position.value,
+                            rubberBand = rubberBand,
+                            isFinished = isFinished,
+                            widthPx = widthPx,
+                            settings = settings,
+                            isDark = isDark,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .pointerInput(cards.size) {
+                                    var drag = 0f
+                                    val velocity = VelocityTracker()
+                                    detectHorizontalDragGestures(
+                                        onDragStart = {
+                                            drag = 0f
+                                            velocity.resetTracking()
+                                        },
+                                        onDragCancel = {
+                                            drag = 0f
+                                            rubberBand = 0f
+                                            show(index)
+                                        },
+                                        onDragEnd = {
+                                            // Where a fling would carry the card, like SwiftUI's
+                                            // predicted end translation.
+                                            val predicted = drag + velocity.calculateVelocity().x * 0.25f
+                                            rubberBand = 0f
+                                            when {
+                                                (drag < -swipePx || predicted < -widthPx / 2) && index < cards.size -> {
+                                                    AnalyticsEvents.logEvent("cards_next", mapOf("source" to "swipe"))
+                                                    next()
+                                                }
+                                                (drag > swipePx || predicted > widthPx / 2) && index > 0 -> {
+                                                    AnalyticsEvents.logEvent("cards_previous", mapOf("source" to "swipe"))
+                                                    previous()
+                                                }
+                                                else -> show(index)
                                             }
-                                            (drag > swipePx || predicted > widthPx / 2) && index > 0 -> {
-                                                AnalyticsEvents.logEvent("cards_previous", mapOf("source" to "swipe"))
-                                                previous()
-                                            }
-                                            else -> show(index)
+                                        },
+                                        onHorizontalDrag = { change, amount ->
+                                            change.consume()
+                                            velocity.addPosition(change.uptimeMillis, change.position)
+                                            drag += amount
+                                            // Swiped left, the top card follows the finger away.
+                                            // Swiped right, the card before it comes back in
+                                            // twice as fast, so it is well in view by the time
+                                            // the swipe counts.
+                                            val travel = if (drag < 0) -drag / widthPx else -2 * drag / widthPx
+                                            val target = index + travel
+                                            val clamped = target.coerceIn(0f, cards.size.toFloat())
+                                            rubberBand = (target - clamped) * widthPx * 0.15f
+                                            scope.launch { position.snapTo(clamped) }
                                         }
-                                    },
-                                    onHorizontalDrag = { change, amount ->
-                                        change.consume()
-                                        velocity.addPosition(change.uptimeMillis, change.position)
-                                        drag += amount
-                                        // Swiped left, the top card follows the finger away.
-                                        // Swiped right, the card before it comes back in
-                                        // twice as fast, so it is well in view by the time
-                                        // the swipe counts.
-                                        val travel = if (drag < 0) -drag / widthPx else -2 * drag / widthPx
-                                        val target = index + travel
-                                        val clamped = target.coerceIn(0f, cards.size.toFloat())
-                                        rubberBand = (target - clamped) * widthPx * 0.15f
-                                        scope.launch { position.snapTo(clamped) }
-                                    }
-                                )
+                                    )
+                                }
+                        )
+                    }
+
+                    // How to move through the deck.
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 44.dp)
+                            .padding(horizontal = 32.dp)
+                            .padding(top = 12.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (!isFinished) {
+                            Text(
+                                text = stringResource(R.string.swipe_to_turn),
+                                fontSize = 13.sp,
+                                color = AppColors.textSecondary(isDark)
+                            )
+                        }
+                    }
+
+                    Controls(
+                        index = index,
+                        count = cards.size,
+                        isDark = isDark,
+                        onBack = {
+                            AnalyticsEvents.logButtonClick("previous_card", CARDS_SCREEN)
+                            previous()
+                        },
+                        onNext = {
+                            if (isFinished) {
+                                AnalyticsEvents.logButtonClick("restart_cards", CARDS_SCREEN)
+                                show(0)
+                            } else {
+                                AnalyticsEvents.logButtonClick("next_card", CARDS_SCREEN)
+                                next()
                             }
+                        },
+                        modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 16.dp)
                     )
                 }
 
-                // How to move through the deck.
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 44.dp)
-                        .padding(horizontal = 32.dp)
-                        .padding(top = 12.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (!isFinished) {
-                        Text(
-                            text = stringResource(R.string.swipe_to_turn),
-                            fontSize = 13.sp,
-                            color = AppColors.textSecondary(isDark)
-                        )
-                    }
+                // Cards keep turning while the camera records over them.
+                if (showingCamera) {
+                    FloatingCameraWindow(
+                        recorder = recorder,
+                        placement = cameraPlacement,
+                        drawsPicture = true,
+                        onControl = {},
+                        onClose = { showingCamera = false }
+                    )
                 }
-
-                Controls(
-                    index = index,
-                    count = cards.size,
-                    isDark = isDark,
-                    onBack = {
-                        AnalyticsEvents.logButtonClick("previous_card", CARDS_SCREEN)
-                        previous()
-                    },
-                    onNext = {
-                        if (isFinished) {
-                            AnalyticsEvents.logButtonClick("restart_cards", CARDS_SCREEN)
-                            show(0)
-                        } else {
-                            AnalyticsEvents.logButtonClick("next_card", CARDS_SCREEN)
-                            next()
-                        }
-                    },
-                    modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 16.dp)
-                )
             }
         }
 

@@ -39,6 +39,8 @@ import androidx.compose.material.icons.filled.PictureInPicture
 import androidx.compose.material.icons.filled.PictureInPictureAlt
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Videocam
+import androidx.compose.material.icons.outlined.Videocam
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -61,6 +63,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
@@ -91,6 +94,7 @@ import com.thisisnsh.cuecard.android.models.TeleprompterParser
 import com.thisisnsh.cuecard.android.models.WideScript
 import com.thisisnsh.cuecard.android.models.hasWideScript
 import com.thisisnsh.cuecard.android.modifiers.scriptEdgeFade
+import com.thisisnsh.cuecard.android.modifiers.scriptEdgeMask
 import com.thisisnsh.cuecard.android.modifiers.glassed
 import com.thisisnsh.cuecard.android.services.ReviewPromptService
 import com.thisisnsh.cuecard.android.services.TakeStore
@@ -174,6 +178,10 @@ fun TeleprompterView(
     val scriptClock = remember { mutableDoubleStateOf(0.0) }
     var showControls by remember { mutableStateOf(true) }
     var showingHelp by remember { mutableStateOf(false) }
+    /** The camera floats over the script, which stays full screen under it. */
+    var showingCamera by remember { mutableStateOf(false) }
+    val recorder = rememberCameraRecorder(showingCamera, scriptId)
+    val cameraPlacement = rememberCameraWindowPlacement()
     var countdownValue by remember { mutableIntStateOf(0) }
     var isCountingDown by remember { mutableStateOf(false) }
     /**
@@ -323,8 +331,31 @@ fun TeleprompterView(
         updatePiP()
     }
 
-    fun togglePlayPause() {
-        if (isPlaying || isCountingDown) pause() else startCountdownThenPlay()
+    /**
+     * `syncingCamera` says whether the camera's recording follows, when that's
+     * turned on in Settings. Off when the camera is what asked.
+     */
+    fun togglePlayPause(syncingCamera: Boolean = true) {
+        val wasRunning = isPlaying || isCountingDown
+        if (wasRunning) pause() else startCountdownThenPlay()
+        showControls = true
+        if (syncingCamera && settings.syncsCamera && showingCamera) {
+            if (wasRunning) recorder.setRecordingPaused(true) else recorder.record()
+        }
+    }
+
+    /**
+     * Plays when the camera starts or resumes recording, and pauses when it
+     * pauses or stops, if that's turned on in Settings.
+     */
+    fun followCamera(control: CameraControl) {
+        if (!settings.syncsCamera) return
+        val shouldRun = control == CameraControl.RECORD
+        if (shouldRun != (isPlaying || isCountingDown)) togglePlayPause(syncingCamera = false)
+    }
+
+    LaunchedEffect(showingCamera) {
+        pipManager.cameraPresentationChanged(showingCamera)
         showControls = true
     }
 
@@ -501,7 +532,8 @@ fun TeleprompterView(
                 // Controls auto-hide after three seconds of playback.
                 if (showControls) {
                     if (controlsShownAt == 0L) controlsShownAt = now
-                    if (isPlaying && now - controlsShownAt >= 3_000_000_000L) {
+                    // They stay while the camera is open, to reach its button.
+                    if (isPlaying && !showingCamera && now - controlsShownAt >= 3_000_000_000L) {
                         showControls = false
                         controlsShownAt = 0L
                     }
@@ -513,8 +545,13 @@ fun TeleprompterView(
         }
     }
 
-    val script = remember(content.fullText, settings.cueColor, settings.fontSize, isDark) {
-        buildScript(content, settings.cueColor, settings.fontSize.toFloat(), isDark)
+    val haloRadius = with(density) { 6.dp.toPx() }
+    val script = remember(content.fullText, settings.cueColor, settings.fontSize, isDark, showingCamera) {
+        buildScript(
+            content, settings.cueColor, settings.fontSize.toFloat(), isDark,
+            // A halo in the background color keeps the lines readable over the camera.
+            haloRadius = if (showingCamera) haloRadius else 0f
+        )
     }
 
     if (pipManager.isPiPActive) {
@@ -550,9 +587,10 @@ fun TeleprompterView(
                         )
                     },
                     navigationIcon = {
-                        // Comes and goes with the play, restart and floating window buttons.
+                        // Comes and goes with the play, restart and floating window
+                        // buttons, and stays while the camera is open.
                         AnimatedVisibility(
-                            visible = showControls,
+                            visible = showControls || showingCamera,
                             enter = fadeIn(controlsFade()),
                             exit = fadeOut(controlsFade())
                         ) {
@@ -572,11 +610,17 @@ fun TeleprompterView(
                     },
                     actions = {
                         AnimatedVisibility(
-                            visible = showControls,
+                            visible = showControls || showingCamera,
                             enter = fadeIn(controlsFade()),
                             exit = fadeOut(controlsFade())
                         ) {
-                            HelpButton(page = HelpPage.TELEPROMPTER, isDark = isDark) { showingHelp = true }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                CameraButton(isOn = showingCamera, isDark = isDark) {
+                                    AnalyticsEvents.logButtonClick("camera", "teleprompter")
+                                    showingCamera = !showingCamera
+                                }
+                                HelpButton(page = HelpPage.TELEPROMPTER, isDark = isDark) { showingHelp = true }
+                            }
                         }
                     },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -591,6 +635,11 @@ fun TeleprompterView(
                     .padding(padding)
                     .background(AppColors.background(isDark))
             ) {
+                // Under the script, so the lines stay in view over it.
+                AnimatedVisibility(visible = showingCamera, enter = fadeIn(), exit = fadeOut()) {
+                    CameraBackdrop(recorder, cameraPlacement)
+                }
+
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -605,7 +654,15 @@ fun TeleprompterView(
                         .pointerInput(Unit) {
                             detectTapGestures { showControls = !showControls }
                         }
-                        .scriptEdgeFade(isDark = isDark, top = TOP_FADE, bottom = BOTTOM_FADE)
+                        // A mask rather than a painted fade while the camera is
+                        // open, so the picture behind stays clear.
+                        .then(
+                            if (showingCamera) {
+                                Modifier.scriptEdgeMask(top = TOP_FADE, bottom = BOTTOM_FADE)
+                            } else {
+                                Modifier.scriptEdgeFade(isDark = isDark, top = TOP_FADE, bottom = BOTTOM_FADE)
+                            }
+                        )
                         // Held back while the overlay is closing, so the script
                         // arrives on the blank page rather than being there waiting
                         // behind it. See `scriptVisible`.
@@ -658,13 +715,20 @@ fun TeleprompterView(
                         // Kept in the row even when PiP is unavailable — taking it
                         // out shifts the play button off centre — and only made
                         // invisible and untouchable.
+                        // Dimmed while the camera is open: the overlay doesn't open then.
                         Box(
                             modifier = Modifier
                                 .size(52.dp)
-                                .alpha(if (pipManager.isPiPPossible) 1f else 0f)
+                                .alpha(
+                                    when {
+                                        !pipManager.isPiPPossible -> 0f
+                                        showingCamera -> 0.4f
+                                        else -> 1f
+                                    }
+                                )
                                 .glassed(CircleShape, isDark)
                                 .clickableWithoutRipple {
-                                    if (!pipManager.isPiPPossible) return@clickableWithoutRipple
+                                    if (!pipManager.isPiPPossible || showingCamera) return@clickableWithoutRipple
                                     AnalyticsEvents.logButtonClick(
                                         if (pipManager.isPiPActive) "pip_exit" else "pip_enter",
                                         "teleprompter"
@@ -764,11 +828,37 @@ fun TeleprompterView(
                         }
                     }
                 }
+
+                // The camera's gestures and controls, over the picture drawn
+                // under the script.
+                if (showingCamera) {
+                    FloatingCameraWindow(
+                        recorder = recorder,
+                        placement = cameraPlacement,
+                        drawsPicture = false,
+                        onControl = ::followCamera,
+                        onClose = { showingCamera = false }
+                    )
+                }
             }
         }
 
         HelpOverlay(page = HelpPage.TELEPROMPTER, visible = showingHelp, onDismiss = { showingHelp = false })
     }
+}
+
+/** Opens the floating camera over a reader, or closes it. */
+@Composable
+internal fun CameraButton(isOn: Boolean, isDark: Boolean, onClick: () -> Unit) {
+    Icon(
+        imageVector = if (isOn) Icons.Filled.Videocam else Icons.Outlined.Videocam,
+        contentDescription = stringResource(if (isOn) R.string.close_camera else R.string.record_video),
+        tint = AppColors.textPrimary(isDark),
+        modifier = Modifier
+            .padding(start = 12.dp)
+            .size(22.dp)
+            .clickableWithoutRipple(onClick)
+    )
 }
 
 /**
@@ -904,18 +994,23 @@ private fun buildScript(
     content: TeleprompterContent,
     cueColor: CueColor,
     fontSize: Float,
-    isDark: Boolean
+    isDark: Boolean,
+    /** A shadow in the background color around every line, in pixels; none at zero. */
+    haloRadius: Float = 0f
 ): AnnotatedString {
+    val halo = if (haloRadius > 0f) Shadow(AppColors.background(isDark), blurRadius = haloRadius) else null
     val textStyle = SpanStyle(
         fontSize = fontSize.sp,
         fontWeight = FontWeight.Medium,
-        color = AppColors.textPrimary(isDark)
+        color = AppColors.textPrimary(isDark),
+        shadow = halo
     )
     val cueStyle = SpanStyle(
         fontSize = (fontSize * 0.72f).sp,
         fontWeight = FontWeight.SemiBold,
         fontFamily = CueFontFamily,
-        color = cueColor.color(isDark)
+        color = cueColor.color(isDark),
+        shadow = halo
     )
     // Chinese, Japanese and Korean lines get at least the room their glyphs need.
     val lineHeight = if (content.fullText.hasWideScript) {

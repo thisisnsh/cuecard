@@ -239,6 +239,19 @@ private fun TeleprompterSections(
         )
     }
 
+    SettingsSection(
+        title = stringResource(R.string.camera),
+        footer = stringResource(R.string.sync_with_teleprompter_footer),
+        isDark = isDark
+    ) {
+        ToggleRow(
+            label = stringResource(R.string.sync_with_teleprompter),
+            isOn = settings.syncsCamera,
+            isDark = isDark,
+            onChange = { isOn -> update { it.copy(syncsCamera = isOn) } }
+        )
+    }
+
     AppearanceSection(
         settings = settings,
         cueColor = settings.cueColor,

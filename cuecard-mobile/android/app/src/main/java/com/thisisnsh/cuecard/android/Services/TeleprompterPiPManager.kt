@@ -48,6 +48,10 @@ class TeleprompterPiPManager private constructor() {
     var isPiPPossible by mutableStateOf(false)
         private set
 
+    /** The floating camera is open over the reader, and the overlay stays shut while it is. */
+    var isCameraPresented by mutableStateOf(false)
+        private set
+
     var isPlaying = false
     var elapsedTime: Double = 0.0
     var countdownValue: Int = 0
@@ -167,7 +171,7 @@ class TeleprompterPiPManager private constructor() {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                     // Leaving the app during a run opens the overlay, the way
                     // backgrounding does on iOS.
-                    setAutoEnterEnabled(isPiPPossible && isConfigured)
+                    setAutoEnterEnabled(isPiPPossible && isConfigured && !isCameraPresented)
                     setSeamlessResizeEnabled(true)
                 }
             }
@@ -236,7 +240,7 @@ class TeleprompterPiPManager private constructor() {
      * Enter PiP mode
      */
     fun enterPiP(): Boolean {
-        if (!isPiPPossible || !isConfigured) return false
+        if (!isPiPPossible || !isConfigured || isCameraPresented) return false
 
         val activity = activityRef?.get() ?: return false
 
@@ -258,6 +262,12 @@ class TeleprompterPiPManager private constructor() {
             Intent(activity, activity.javaClass)
                 .setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_SINGLE_TOP)
         )
+    }
+
+    /** The camera opened or closed over the reader. */
+    fun cameraPresentationChanged(presented: Boolean) {
+        isCameraPresented = presented
+        applyParams()
     }
 
     /**
@@ -283,6 +293,7 @@ class TeleprompterPiPManager private constructor() {
     fun cleanup() {
         isPiPActive = false
         isConfigured = false
+        isCameraPresented = false
         elapsedTime = 0.0
         isPlaying = false
         scriptDuration = 0.0

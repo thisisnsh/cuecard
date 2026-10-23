@@ -8,7 +8,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.Shape
@@ -106,3 +109,26 @@ fun Modifier.scriptEdgeFade(isDark: Boolean, top: Dp, bottom: Dp): Modifier =
             )
         }
     }
+
+/**
+ * Fades a scrolling script out at its top and bottom edges by masking it, for
+ * when something other than the background shows behind it, such as the camera.
+ */
+fun Modifier.scriptEdgeMask(top: Dp, bottom: Dp): Modifier =
+    graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+        .drawWithContent {
+            drawContent()
+
+            val topHeight = top.toPx()
+            val bottomHeight = bottom.toPx()
+            if (size.height <= 0f) return@drawWithContent
+            drawRect(
+                brush = Brush.verticalGradient(
+                    0f to Color.Transparent,
+                    (topHeight / size.height).coerceIn(0f, 0.5f) to Color.Black,
+                    (1 - bottomHeight / size.height).coerceIn(0.5f, 1f) to Color.Black,
+                    1f to Color.Transparent
+                ),
+                blendMode = BlendMode.DstIn
+            )
+        }

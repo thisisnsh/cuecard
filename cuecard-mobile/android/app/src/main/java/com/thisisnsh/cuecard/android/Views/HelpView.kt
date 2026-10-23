@@ -161,6 +161,8 @@ private object AllHelp {
             HelpTopic(R.string.help_play_and_pause_title, R.string.help_play_and_pause_detail),
             HelpTopic(R.string.help_scroll_by_hand_title, R.string.help_scroll_by_hand_detail),
             HelpTopic(R.string.help_change_speed_title, R.string.help_change_speed_detail),
+            HelpTopic(R.string.help_record_in_cuecard_title, R.string.help_record_in_cuecard_detail),
+            HelpTopic(R.string.help_record_in_step_title, R.string.help_record_in_step_detail),
             HelpTopic(R.string.mirror_text, R.string.help_mirror_text_detail),
             HelpTopic(R.string.help_use_over_other_apps_title, R.string.help_use_over_other_apps_detail),
             HelpTopic(R.string.help_watch_the_timer_title, R.string.help_watch_the_timer_detail)
@@ -171,6 +173,7 @@ private object AllHelp {
         "cards", R.string.cards, R.string.help_cards_summary, Icons.Filled.ViewCarousel,
         listOf(
             HelpTopic(R.string.help_turn_cards_title, R.string.help_turn_cards_detail),
+            HelpTopic(R.string.help_record_with_cards_title, R.string.help_record_with_cards_detail),
             HelpTopic(R.string.help_count_up_title, R.string.help_watch_the_timer_cards_detail)
         )
     )
@@ -179,6 +182,7 @@ private object AllHelp {
         "takes", R.string.takes, R.string.help_takes_summary, Icons.Filled.VideoLibrary,
         listOfNotNull(
             HelpTopic(R.string.find_your_takes, R.string.help_find_your_takes_detail),
+            HelpTopic(R.string.help_move_camera_title, R.string.help_move_camera_detail),
             HelpTopic(R.string.help_play_a_take_title, R.string.help_play_a_take_detail),
             // Favorites are kept on a video from Android 11.
             if (TakesLibrary.canFavorite) {

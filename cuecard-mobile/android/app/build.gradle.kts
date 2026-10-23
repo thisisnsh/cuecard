@@ -94,6 +94,12 @@ dependencies {
     // Play In-App Review
     implementation("com.google.android.play:review-ktx:2.0.2")
 
+    // CameraX, for recording takes in the app
+    implementation("androidx.camera:camera-camera2:1.4.1")
+    implementation("androidx.camera:camera-lifecycle:1.4.1")
+    implementation("androidx.camera:camera-video:1.4.1")
+    implementation("androidx.camera:camera-view:1.4.1")
+
     // Coil for image loading
     implementation("io.coil-kt:coil-compose:2.7.0")
 
