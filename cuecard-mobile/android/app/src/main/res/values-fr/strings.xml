@@ -3,7 +3,7 @@
     <string name="share_message">Découvrez %1$s</string>
     <string name="translation_report_body">Où dans l\'app :\n\nCe qui est écrit :\n\nCe qui devrait être écrit :\n</string>
     <string name="sample_teleprompter">Bonjour à tous.\n\nJe suis ravi d\'être ici aujourd\'hui pour vous parler du prompteur de CueCard.\n\n[cue sourire et pause]\n\nIl fait défiler votre script à votre rythme : vos yeux restent levés et votre discours reste sur les rails.\n\n[cue pause]\n\nQuittez l\'app et il continue dans une fenêtre flottante, juste au-dessus de votre caméra ou de votre visio.\n\n[cue ralentir]\n\nPerdu ? Faites glisser le script en arrière. Trop long ? Sautez un passage.\n\nEt le minuteur passe au jaune vers la fin… puis au rouge si vous vous emballez un peu trop.\n\n[cue petit rire]\n\nEt ces mots en couleur ?\n\n[cue insister]\n\nCe sont vos repères. Des rappels pour sourire, faire une pause ou ne pas paniquer. Ils ne sont jamais lus à voix haute.\n\n[cue pause]\n\nEssayez-le. Je pense que vous allez l\'adorer.</string>
-    <string name="sample_cards">Bonjour à tous. Voici Cue Cards. [cue sourire]\n[separator]\nUne idée par fiche. Balayez vers la suivante quand vous êtes prêt.\n[separator]\nLe minuteur en haut vous garde dans les temps. [cue petit rire]\n[separator]\nLes mots en couleur sont des repères, pas des mots à lire à voix haute. [cue insister]\n[separator]\nMerci de votre attention. Des questions ?</string>
+    <string name="sample_cards">Bonjour à tous. Voici le mode Fiches. [cue sourire]\n[separator]\nUne idée par fiche. Balayez vers la suivante quand vous êtes prêt.\n[separator]\nLe minuteur en haut vous garde dans les temps. [cue petit rire]\n[separator]\nLes mots en couleur sont des repères, pas des mots à lire à voix haute. [cue insister]\n[separator]\nMerci de votre attention. Des questions ?</string>
     <string name="theme_system">Système</string>
     <string name="theme_light">Clair</string>
     <string name="theme_dark">Sombre</string>
@@ -38,10 +38,10 @@
     <string name="text_size">Taille du texte</string>
     <string name="floating_window">Fenêtre flottante</string>
     <string name="layout">Disposition</string>
-    <string name="teleprompter_advanced_footer">Le texte du prompteur peut aller de %1$d à %2$d, celui de la fenêtre flottante de %3$d à %4$d et celui de l\'éditeur de %5$d à %6$d.</string>
+    <string name="teleprompter_advanced_footer">La taille du texte du prompteur peut aller de %1$d à %2$d, celle du texte de la fenêtre flottante de %3$d à %4$d et celle du texte de l\'éditeur de %5$d à %6$d.</string>
     <string name="teleprompter_text_size">Taille du texte du prompteur</string>
     <string name="floating_window_text_size">Taille du texte de la fenêtre flottante</string>
-    <string name="cards_advanced_footer">Le texte des fiches peut aller de %1$d à %2$d et celui de l\'éditeur de %3$d à %4$d.</string>
+    <string name="cards_advanced_footer">La taille du texte des fiches peut aller de %1$d à %2$d et celle du texte de l\'éditeur de %3$d à %4$d.</string>
     <string name="card_text_size">Taille du texte des fiches</string>
     <string name="done">OK</string>
     <string name="appearance">Apparence</string>
@@ -142,7 +142,7 @@
     <string name="help_change_text_size_and_colors_detail">Touchez l\'engrenage en haut. Chaque mode a ses propres tailles et couleur de repère.</string>
     <string name="help_play_and_pause_title">Lecture et pause</string>
     <string name="help_play_and_pause_detail">Les boutons s\'estompent pendant le défilement pour ne pas gêner. Touchez l\'écran pour les réafficher.</string>
-    <string name="help_scroll_by_hand_title">Défiler à la main</string>
+    <string name="help_scroll_by_hand_title">Faire défiler manuellement</string>
     <string name="help_scroll_by_hand_detail">Faites glisser le script pour revenir en arrière ou avancer. Il reprend le défilement là où vous le laissez.</string>
     <string name="help_change_speed_title">Changer la vitesse</string>
     <string name="help_change_speed_detail">Vitesse de défilement, dans Réglages, définit le nombre de lignes par minute.</string>
@@ -159,7 +159,7 @@
     <string name="help_bold_and_italic_detail">Sélectionnez des mots et touchez B ou I au-dessus du clavier. Ou tapez *gras* ou _italique_.</string>
     <string name="help">Aide</string>
     <string name="no_results_for">Aucun résultat pour « %1$s »</string>
-    <string name="whats_new_in">Nouveautés de la %1$s</string>
+    <string name="whats_new_in">Nouveautés de la version %1$s</string>
     <string name="search_help">Rechercher dans l\'aide</string>
     <string name="file_empty">Ce fichier est vide.</string>
     <string name="file_too_large">Ce fichier dépasse 10 Mo et ne peut donc pas être importé.</string>
@@ -167,7 +167,7 @@
     <string name="script_too_long_to_share">Ce script est trop long pour être partagé.</string>
     <string name="more">Plus</string>
     <string name="save">Enregistrer</string>
-    <string name="new_note">Nouveau</string>
+    <string name="new_note">Nouvelle note</string>
     <string name="open">Ouvrir</string>
     <string name="import_file">Importer</string>
     <string name="share">Partager</string>

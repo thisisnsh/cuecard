@@ -3,7 +3,7 @@
     <string name="share_message">Echa un vistazo a %1$s</string>
     <string name="translation_report_body">Dónde en la app:\n\nQué dice:\n\nQué debería decir:\n</string>
     <string name="sample_teleprompter">Hola a todos.\n\nMe alegra estar aquí hoy para hablaros del teleprompter de CueCard.\n\n[cue sonríe y haz una pausa]\n\nDesplaza tu guion a tu ritmo, para que mantengas la mirada al frente y no pierdas el hilo.\n\n[cue pausa]\n\nSal de la app y sigue en una ventana flotante, justo encima de tu cámara o tu videollamada.\n\n[cue más despacio]\n\n¿Te has perdido? Arrastra el guion hacia atrás. ¿Vas largo? Salta hacia delante.\n\nY el temporizador se pone amarillo cerca del final… y rojo si te emocionas demasiado.\n\n[cue risa suave]\n\n¿Y estas palabras de colores?\n\n[cue enfatiza]\n\nSon tus indicaciones. Recordatorios para sonreír, hacer una pausa o no entrar en pánico. Nunca se leen en voz alta.\n\n[cue pausa]\n\nPruébalo. Creo que te va a encantar.</string>
-    <string name="sample_cards">Hola a todos. Os presento Cue Cards. [cue sonríe]\n[separator]\nUna idea por tarjeta. Desliza a la siguiente cuando estés listo.\n[separator]\nEl temporizador de arriba te mantiene a raya. [cue risa suave]\n[separator]\nLas palabras de colores son indicaciones, no palabras para leer en voz alta. [cue enfatiza]\n[separator]\nGracias por escuchar. ¿Preguntas?</string>
+    <string name="sample_cards">Hola a todos. Os presento el modo Tarjetas. [cue sonríe]\n[separator]\nUna idea por tarjeta. Desliza a la siguiente cuando estés listo.\n[separator]\nEl temporizador de arriba te mantiene a raya. [cue risa suave]\n[separator]\nLas palabras de colores son indicaciones, no palabras para leer en voz alta. [cue enfatiza]\n[separator]\nGracias por escuchar. ¿Preguntas?</string>
     <string name="theme_system">Sistema</string>
     <string name="theme_light">Claro</string>
     <string name="theme_dark">Oscuro</string>
@@ -38,10 +38,10 @@
     <string name="text_size">Tamaño del texto</string>
     <string name="floating_window">Ventana flotante</string>
     <string name="layout">Diseño</string>
-    <string name="teleprompter_advanced_footer">El texto del teleprompter puede ir de %1$d a %2$d, el de la ventana flotante de %3$d a %4$d y el del editor de %5$d a %6$d.</string>
+    <string name="teleprompter_advanced_footer">El tamaño del texto del teleprompter puede ir de %1$d a %2$d, el de la ventana flotante de %3$d a %4$d y el del editor de %5$d a %6$d.</string>
     <string name="teleprompter_text_size">Tamaño del texto del teleprompter</string>
     <string name="floating_window_text_size">Tamaño del texto de la ventana flotante</string>
-    <string name="cards_advanced_footer">El texto de las tarjetas puede ir de %1$d a %2$d y el del editor de %3$d a %4$d.</string>
+    <string name="cards_advanced_footer">El tamaño del texto de las tarjetas puede ir de %1$d a %2$d y el del editor de %3$d a %4$d.</string>
     <string name="card_text_size">Tamaño del texto de tarjeta</string>
     <string name="done">Listo</string>
     <string name="appearance">Apariencia</string>
@@ -159,7 +159,7 @@
     <string name="help_bold_and_italic_detail">Selecciona palabras y toca B o I encima del teclado. O escribe *negrita* o _cursiva_.</string>
     <string name="help">Ayuda</string>
     <string name="no_results_for">Sin resultados para “%1$s”</string>
-    <string name="whats_new_in">Novedades de la %1$s</string>
+    <string name="whats_new_in">Novedades de la versión %1$s</string>
     <string name="search_help">Buscar en la ayuda</string>
     <string name="file_empty">Ese archivo está vacío.</string>
     <string name="file_too_large">Ese archivo ocupa más de 10 MB, así que no se puede importar.</string>
@@ -167,7 +167,7 @@
     <string name="script_too_long_to_share">Este guion es demasiado largo para compartirlo.</string>
     <string name="more">Más</string>
     <string name="save">Guardar</string>
-    <string name="new_note">Nuevo</string>
+    <string name="new_note">Nueva nota</string>
     <string name="open">Abrir</string>
     <string name="import_file">Importar</string>
     <string name="share">Compartir</string>

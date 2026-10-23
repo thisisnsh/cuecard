@@ -3,7 +3,7 @@
     <string name="share_message">Confira %1$s</string>
     <string name="translation_report_body">Onde no app:\n\nO que está escrito:\n\nO que deveria estar escrito:\n</string>
     <string name="sample_teleprompter">Olá a todos.\n\nEstou animado por estar aqui hoje para falar sobre o teleprompter do CueCard.\n\n[cue sorria e pause]\n\nEle rola seu roteiro no seu ritmo, para você manter o olhar à frente e não perder o fio da fala.\n\n[cue pausa]\n\nSaia do app e ele continua em uma janela flutuante, bem em cima da sua câmera ou da sua videochamada.\n\n[cue mais devagar]\n\nSe perdeu? Arraste o roteiro de volta. Passando do tempo? Pule para a frente.\n\nE o timer fica amarelo perto do fim… e vermelho se você se empolgar um pouco demais.\n\n[cue risada leve]\n\nE essas palavras coloridas?\n\n[cue enfatize]\n\nSão as suas deixas. Lembretes para sorrir, pausar ou não entrar em pânico. Elas nunca devem ser lidas em voz alta.\n\n[cue pausa]\n\nExperimente. Acho que você vai adorar.</string>
-    <string name="sample_cards">Olá a todos. Apresento o Cue Cards. [cue sorria]\n[separator]\nUma ideia por cartão. Deslize para o próximo quando estiver pronto.\n[separator]\nO timer no topo mantém você no horário. [cue risada leve]\n[separator]\nPalavras coloridas são deixas, não falas. [cue enfatize]\n[separator]\nObrigado pela atenção. Perguntas?</string>
+    <string name="sample_cards">Olá a todos. Apresento o modo Cartões. [cue sorria]\n[separator]\nUma ideia por cartão. Deslize para o próximo quando estiver pronto.\n[separator]\nO timer no topo mantém você no horário. [cue risada leve]\n[separator]\nPalavras coloridas são deixas, não falas. [cue enfatize]\n[separator]\nObrigado pela atenção. Perguntas?</string>
     <string name="theme_system">Sistema</string>
     <string name="theme_light">Claro</string>
     <string name="theme_dark">Escuro</string>
@@ -38,10 +38,10 @@
     <string name="text_size">Tamanho do texto</string>
     <string name="floating_window">Janela flutuante</string>
     <string name="layout">Layout</string>
-    <string name="teleprompter_advanced_footer">O texto do teleprompter pode ir de %1$d a %2$d, o da janela flutuante de %3$d a %4$d e o do editor de %5$d a %6$d.</string>
+    <string name="teleprompter_advanced_footer">O tamanho do texto do teleprompter pode ir de %1$d a %2$d, o da janela flutuante de %3$d a %4$d e o do editor de %5$d a %6$d.</string>
     <string name="teleprompter_text_size">Tamanho do texto do teleprompter</string>
     <string name="floating_window_text_size">Tamanho do texto da janela flutuante</string>
-    <string name="cards_advanced_footer">O texto dos cartões pode ir de %1$d a %2$d e o do editor de %3$d a %4$d.</string>
+    <string name="cards_advanced_footer">O tamanho do texto dos cartões pode ir de %1$d a %2$d e o do editor de %3$d a %4$d.</string>
     <string name="card_text_size">Tamanho do texto do cartão</string>
     <string name="done">OK</string>
     <string name="appearance">Aparência</string>
@@ -159,7 +159,7 @@
     <string name="help_bold_and_italic_detail">Selecione palavras e toque em B ou I acima do teclado. Ou digite *negrito* ou _itálico_.</string>
     <string name="help">Ajuda</string>
     <string name="no_results_for">Nenhum resultado para “%1$s”</string>
-    <string name="whats_new_in">Novidades da %1$s</string>
+    <string name="whats_new_in">Novidades da versão %1$s</string>
     <string name="search_help">Buscar na ajuda</string>
     <string name="file_empty">Esse arquivo está vazio.</string>
     <string name="file_too_large">Esse arquivo tem mais de 10 MB, então não pode ser importado.</string>
@@ -167,7 +167,7 @@
     <string name="script_too_long_to_share">Este roteiro é longo demais para compartilhar.</string>
     <string name="more">Mais</string>
     <string name="save">Salvar</string>
-    <string name="new_note">Novo</string>
+    <string name="new_note">Nova nota</string>
     <string name="open">Abrir</string>
     <string name="import_file">Importar</string>
     <string name="share">Compartilhar</string>
