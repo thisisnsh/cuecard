@@ -364,8 +364,19 @@ final class CueEditorController: ObservableObject {
         coordinator?.toggle(style)
     }
 
+    /// The editor showing a spinner for images still on their way in.
+    private weak var loadingCoordinator: CueTextEditor.Coordinator?
+
+    /// Show a spinner on the line images will go on, until they're inserted.
+    func beginAddingImages() {
+        loadingCoordinator = coordinator
+        coordinator?.showImageProgress()
+    }
+
     /// Place images from the store at the caret, each on a line of its own.
     func insertImages(_ names: [String]) {
+        loadingCoordinator?.hideImageProgress()
+        loadingCoordinator = nil
         coordinator?.insertImages(names)
     }
 }
@@ -835,10 +846,7 @@ struct CueTextEditor: UIViewRepresentable {
             guard let textView, !names.isEmpty, textView.markedTextRange == nil else { return }
 
             let text = textView.text as NSString
-            var location = NSMaxRange(textView.selectedRange)
-            if let enclosing = TeleprompterParser.cueTag(containing: location, in: textView.text) {
-                location = NSMaxRange(enclosing.range)
-            }
+            let location = imageLocation(in: textView)
             let newline = NSAttributedString(string: "\n")
             let insertion = NSMutableAttributedString()
             if location > 0, !isNewline(text.character(at: location - 1)) {
@@ -859,6 +867,49 @@ struct CueTextEditor: UIViewRepresentable {
             if !textView.isFirstResponder {
                 textView.becomeFirstResponder()
             }
+        }
+
+        /// Where images go: after the selection, or after the cue the caret is in.
+        private func imageLocation(in textView: UITextView) -> Int {
+            let location = NSMaxRange(textView.selectedRange)
+            if let enclosing = TeleprompterParser.cueTag(containing: location, in: textView.text) {
+                return NSMaxRange(enclosing.range)
+            }
+            return location
+        }
+
+        private var imageProgress: UIActivityIndicatorView?
+
+        /// A small spinner at the start of the line images are on their way
+        /// to — the line below, when the caret is partway along one.
+        func showImageProgress() {
+            guard let textView, imageProgress == nil else { return }
+            let location = imageLocation(in: textView)
+            guard let position = textView.position(from: textView.beginningOfDocument, offset: location) else { return }
+
+            let caret = textView.caretRect(for: position)
+            let text = textView.text as NSString
+            let startsLine = location == 0 || isNewline(text.character(at: location - 1))
+            let lineHeight = UIFont.script(ofSize: parent.fontSize).lineHeight
+
+            let spinner = UIActivityIndicatorView(style: .medium)
+            spinner.color = parent.colorScheme == .dark ? .white : .black
+            spinner.sizeToFit()
+            spinner.center = CGPoint(
+                x: textView.textContainerInset.left + spinner.bounds.width / 2,
+                y: startsLine ? caret.midY : caret.maxY + lineHeight / 2
+            )
+            spinner.startAnimating()
+            // A card is only as tall as its text, and the new line isn't there yet.
+            if parent.growsWithText { textView.clipsToBounds = false }
+            textView.addSubview(spinner)
+            imageProgress = spinner
+        }
+
+        func hideImageProgress() {
+            imageProgress?.removeFromSuperview()
+            imageProgress = nil
+            if parent.growsWithText { textView?.clipsToBounds = true }
         }
 
         func pasteImages(_ images: [UIImage]) {

@@ -24,8 +24,6 @@ struct HomeView: View {
     @State private var showingImporter = false
     @State private var showingImagePicker = false
     @State private var pickedImages: [PhotosPickerItem] = []
-    /// Picked images are still being loaded and kept.
-    @State private var isAddingImages = false
     /// "Saved" shows for a moment after a save, where "Unsaved" was.
     @State private var showsSaved = false
     @State private var savedTask: Task<Void, Never>?
@@ -312,9 +310,8 @@ struct HomeView: View {
         let items = pickedImages
         guard !items.isEmpty else { return }
         pickedImages = []
-        isAddingImages = true
+        editorController.beginAddingImages()
         Task {
-            defer { isAddingImages = false }
             var names: [String] = []
             for item in items {
                 guard let data = try? await item.loadTransferable(type: Data.self),
@@ -383,16 +380,6 @@ struct HomeView: View {
                 }
                 .animation(.easeInOut(duration: 0.25), value: notifications.dismissedIDs)
             }
-            .overlay {
-                if isAddingImages {
-                    ProgressView()
-                        .controlSize(.large)
-                        .frame(width: 72, height: 72)
-                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                        .transition(.opacity)
-                }
-            }
-            .animation(.easeInOut(duration: 0.2), value: isAddingImages)
             .overlay(alignment: .bottom) {
                 if isEditorFocused {
                     CueBar(
