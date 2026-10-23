@@ -127,7 +127,7 @@
     <string name="help_set_a_timer_title">Definir um timer</string>
     <string name="help_set_a_timer_detail">Toque no timer ao lado de Reproduzir para definir quanto tempo você tem e quando ele avisa.</string>
     <string name="help_save_your_work_title">Salve seu trabalho</string>
-    <string name="help_save_your_work_detail">Não salvo abaixo da barra superior indica alterações a salvar. Toque nele para salvar, ou toque em ⋮ › Salvar.</string>
+    <string name="help_save_your_work_detail">Não salvo acima de Reproduzir indica alterações a salvar. Toque nele para salvar, ou toque em ⋮ › Salvar.</string>
     <string name="help_open_saved_notes_title">Abrir notas salvas</string>
     <string name="help_open_saved_notes_detail">Toque em ⋮ › Abrir para ver tudo o que salvou. Deslize para renomear ou apagar.</string>
     <string name="help_import_a_text_file_title">Importar um arquivo de texto</string>

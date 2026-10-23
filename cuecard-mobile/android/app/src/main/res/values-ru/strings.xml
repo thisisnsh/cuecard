@@ -128,7 +128,7 @@
     <string name="help_set_a_timer_title">Задайте таймер</string>
     <string name="help_set_a_timer_detail">Нажмите на таймер рядом с кнопкой «Пуск», чтобы задать, сколько у вас времени и когда предупредить.</string>
     <string name="help_save_your_work_title">Сохраняйте работу</string>
-    <string name="help_save_your_work_detail">Надпись «Не сохранено» под верхней панелью означает, что есть несохранённые изменения. Нажмите на неё, чтобы сохранить, или нажмите ⋮ › «Сохранить».</string>
+    <string name="help_save_your_work_detail">Надпись «Не сохранено» над кнопкой воспроизведения означает, что есть несохранённые изменения. Нажмите на неё, чтобы сохранить, или нажмите ⋮ › «Сохранить».</string>
     <string name="help_open_saved_notes_title">Откройте сохранённые заметки</string>
     <string name="help_open_saved_notes_detail">Нажмите ⋮ › «Открыть», чтобы увидеть всё сохранённое. Проведите по заметке, чтобы переименовать или удалить её.</string>
     <string name="help_import_a_text_file_title">Импортируйте текстовый файл</string>

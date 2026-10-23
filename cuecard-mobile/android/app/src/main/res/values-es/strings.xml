@@ -127,7 +127,7 @@
     <string name="help_set_a_timer_title">Pon un temporizador</string>
     <string name="help_set_a_timer_detail">Toca el temporizador junto a Reproducir para indicar cuánto tiempo tienes y cuándo avisarte.</string>
     <string name="help_save_your_work_title">Guarda tu trabajo</string>
-    <string name="help_save_your_work_detail">Sin guardar debajo de la barra superior indica que hay cambios por guardar. Tócalo para guardar, o toca ⋮ › Guardar.</string>
+    <string name="help_save_your_work_detail">Sin guardar encima de Reproducir indica que hay cambios por guardar. Tócalo para guardar, o toca ⋮ › Guardar.</string>
     <string name="help_open_saved_notes_title">Abre notas guardadas</string>
     <string name="help_open_saved_notes_detail">Toca ⋮ › Abrir para ver todo lo que has guardado. Desliza para renombrar o eliminar.</string>
     <string name="help_import_a_text_file_title">Importa un archivo de texto</string>

@@ -552,18 +552,6 @@ fun HomeView(
                                 bottomOverlayHeight = bottomInset
                             )
                         }
-
-                        // What's written since the last save is kept on this
-                        // device, but isn't in Saved Notes until it's saved. Laid
-                        // over the top of the script rather than above it, so
-                        // nothing moves when this comes or goes.
-                        SaveStatus(
-                            isUnsaved = hasUnsavedChanges,
-                            showsSaved = showsSaved,
-                            isDark = isDark,
-                            onSave = ::save,
-                            modifier = Modifier.align(Alignment.TopCenter)
-                        )
                     }
                 }
 
@@ -592,55 +580,71 @@ fun HomeView(
                             .imePadding()
                     )
                 } else {
-                    Row(
+                    Column(
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
                             .fillMaxWidth()
                             .padding(start = 20.dp, end = 20.dp, bottom = 24.dp),
-                        verticalAlignment = Alignment.Bottom,
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        if (hasNotes) {
-                            TimerButton(settings = settings, isDark = isDark) {
-                                AnalyticsEvents.logButtonClick("set_timer", "home")
-                                isEditorFocused = false
-                                showingTimer = true
-                            }
-                        } else {
-                            Box(
-                                modifier = Modifier
-                                    .height(52.dp)
-                                    .glassed(Capsule, isDark)
-                                    .clickableWithoutRipple {
-                                        AnalyticsEvents.logButtonClick("add_sample_text", "home")
-                                        scope.launch { settingsService.addSampleText() }
-                                    }
-                                    .padding(horizontal = 16.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.add_sample_text),
-                                    fontSize = 15.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = AppColors.textPrimary(isDark)
-                                )
-                            }
-                        }
+                        // What's written since the last save is kept on this device,
+                        // but isn't in Saved Notes until it's saved. Laid over the
+                        // bottom of the script, so nothing moves when this comes or goes.
+                        SaveStatus(
+                            isUnsaved = hasUnsavedChanges,
+                            showsSaved = showsSaved,
+                            isDark = isDark,
+                            onSave = ::save
+                        )
 
-                        Spacer(modifier = Modifier.weight(1f))
-
-                        StartButton(
-                            isCardsMode = isCardsMode,
-                            isEnabled = canStart,
-                            isDark = isDark
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.Bottom,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            isEditorFocused = false
-                            if (isCardsMode) {
-                                AnalyticsEvents.logButtonClick("start_cards", "home")
-                                showingCards = true
+                            if (hasNotes) {
+                                TimerButton(settings = settings, isDark = isDark) {
+                                    AnalyticsEvents.logButtonClick("set_timer", "home")
+                                    isEditorFocused = false
+                                    showingTimer = true
+                                }
                             } else {
-                                AnalyticsEvents.logButtonClick("start_teleprompter", "home")
-                                showingTeleprompter = true
+                                Box(
+                                    modifier = Modifier
+                                        .height(52.dp)
+                                        .glassed(Capsule, isDark)
+                                        .clickableWithoutRipple {
+                                            AnalyticsEvents.logButtonClick("add_sample_text", "home")
+                                            scope.launch { settingsService.addSampleText() }
+                                        }
+                                        .padding(horizontal = 16.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.add_sample_text),
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = AppColors.textPrimary(isDark)
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.weight(1f))
+
+                            StartButton(
+                                isCardsMode = isCardsMode,
+                                isEnabled = canStart,
+                                isDark = isDark
+                            ) {
+                                isEditorFocused = false
+                                if (isCardsMode) {
+                                    AnalyticsEvents.logButtonClick("start_cards", "home")
+                                    showingCards = true
+                                } else {
+                                    AnalyticsEvents.logButtonClick("start_teleprompter", "home")
+                                    showingTeleprompter = true
+                                }
                             }
                         }
                     }
@@ -838,14 +842,14 @@ private fun SaveStatus(
     ) {
         Text(
             text = current ?: label,
-            fontSize = 12.sp,
+            fontSize = 15.sp,
             fontWeight = FontWeight.Medium,
             color = AppColors.textSecondary(isDark),
             modifier = Modifier
                 .glassed(Capsule, isDark)
                 .clickableWithoutRipple { if (isUnsaved) onSave() }
                 .semantics { if (isUnsaved) onClick(label = savesChanges, action = null) }
-                .padding(horizontal = 10.dp, vertical = 4.dp)
+                .padding(horizontal = 14.dp, vertical = 6.dp)
         )
     }
 }

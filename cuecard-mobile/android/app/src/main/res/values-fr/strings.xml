@@ -127,7 +127,7 @@
     <string name="help_set_a_timer_title">Régler un minuteur</string>
     <string name="help_set_a_timer_detail">Touchez le minuteur à côté de Lire pour définir votre durée et le moment de l\'alerte.</string>
     <string name="help_save_your_work_title">Enregistrer votre travail</string>
-    <string name="help_save_your_work_detail">Non enregistré sous la barre supérieure signale des modifications à enregistrer. Touchez-le pour enregistrer, ou touchez ⋮ › Enregistrer.</string>
+    <string name="help_save_your_work_detail">La mention « Non enregistré » au-dessus de Lire signale des modifications à enregistrer. Touchez-la pour enregistrer, ou touchez ⋮ › Enregistrer.</string>
     <string name="help_open_saved_notes_title">Ouvrir les notes enregistrées</string>
     <string name="help_open_saved_notes_detail">Touchez ⋮ › Ouvrir pour voir tout ce que vous avez enregistré. Balayez pour renommer ou supprimer.</string>
     <string name="help_import_a_text_file_title">Importer un fichier texte</string>

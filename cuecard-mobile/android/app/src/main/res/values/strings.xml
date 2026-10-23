@@ -127,7 +127,7 @@
     <string name="help_set_a_timer_title">Set a Timer</string>
     <string name="help_set_a_timer_detail">Tap the timer next to Play to set how long you have and when it warns you.</string>
     <string name="help_save_your_work_title">Save Your Work</string>
-    <string name="help_save_your_work_detail">Unsaved below the top bar means there are changes to save. Tap it to save, or tap ⋮ › Save.</string>
+    <string name="help_save_your_work_detail">Unsaved above Play means there are changes to save. Tap it to save, or tap ⋮ › Save.</string>
     <string name="help_open_saved_notes_title">Open Saved Notes</string>
     <string name="help_open_saved_notes_detail">Tap ⋮ › Open to see everything you saved. Swipe to rename or delete.</string>
     <string name="help_import_a_text_file_title">Import a Text File</string>
