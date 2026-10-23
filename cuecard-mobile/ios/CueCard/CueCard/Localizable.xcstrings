@@ -3984,6 +3984,35 @@
         }
       }
     },
+    "Improved Takes: A new look, and videos recorded with your cards are saved too." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tomas mejoradas: un nuevo diseño, y ahora también se guardan los vídeos grabados con tus tarjetas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Prises améliorées : un nouveau design, et les vidéos filmées avec vos fiches sont aussi gardées."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Takes melhorados: um novo visual, e os vídeos gravados com seus cartões também ficam salvos."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Улучшенные дубли: новый вид, а видео, записанные с карточками, теперь тоже сохраняются."
+          }
+        }
+      }
+    },
     "In the teleprompter's timer, set a Countdown to get a few seconds before the script starts scrolling." : {
       "localizations" : {
         "es" : {
@@ -4724,6 +4753,35 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Отразить текст"
+          }
+        }
+      }
+    },
+    "Mirror Text: Flip the teleprompter's text to read it through a mirror." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reflejar texto: invierte el texto del teleprompter para leerlo a través de un espejo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texte en miroir : inversez le texte du prompteur pour le lire à travers un miroir."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Espelhar texto: inverta o texto do teleprompter para ler através de um espelho."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отразить текст: отражайте текст телесуфлёра, чтобы читать его через зеркало."
           }
         }
       }
@@ -5833,35 +5891,6 @@
         }
       }
     },
-    "Organize Takes: Keep all your takes in order with tags, notes, favorites and albums." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Organiza tus tomas: mantenlas todas en orden con etiquetas, notas, favoritos y álbumes."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Organisez vos prises : gardez-les toutes en ordre avec des tags, des notes, des favoris et des albums."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Organize seus takes: mantenha todos em ordem com tags, notas, favoritos e álbuns."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Упорядочивайте дубли: держите их в порядке с помощью тегов, заметок, избранного и альбомов."
-          }
-        }
-      }
-    },
     "Overtime" : {
       "localizations" : {
         "es" : {
@@ -6658,6 +6687,35 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Записать видео"
+          }
+        }
+      }
+    },
+    "Record Videos: Film yourself right from the teleprompter or your cards." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Graba vídeos: grábate directamente desde el teleprompter o tus tarjetas."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Filmez-vous : enregistrez des vidéos directement depuis le prompteur ou vos fiches."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Grave vídeos: grave-se direto do teleprompter ou dos seus cartões."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Запись видео: снимайте себя прямо в режиме телесуфлёра или карточек."
           }
         }
       }
@@ -9107,35 +9165,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Дубли"
-          }
-        }
-      }
-    },
-    "Takes: Videos you record with the CueCard teleprompter can now be viewed in the app." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tomas: los vídeos que grabas con el teleprompter de CueCard ahora se pueden ver en la app."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Prises : les vidéos filmées avec le prompteur de CueCard sont maintenant visibles dans l'app."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Takes: os vídeos que você grava com o teleprompter do CueCard agora podem ser vistos no app."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Дубли: видео, записанные с телесуфлёром CueCard, теперь можно смотреть в приложении."
           }
         }
       }
