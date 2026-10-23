@@ -3,6 +3,9 @@ import Foundation
 /// A folder the user picked in Files where saved notes are also kept, one text
 /// file each. It sits outside the app, so the notes stay if the app is deleted,
 /// and edits made to the files outside the app come back in on the next sync.
+///
+/// The images the notes place are kept beside them, in a hidden folder of
+/// CueCard's own, so they come back with the notes too.
 @MainActor
 final class NoteFolder {
     /// What's needed to match a file to its note, kept in a hidden index in
@@ -31,6 +34,8 @@ final class NoteFolder {
     private let bookmarkKey = "cuecard_notes_folder_bookmark"
     private let pendingDeletionsKey = "cuecard_notes_folder_pending_deletions"
     private let indexName = ".cuecard.json"
+    /// Only CueCard writes in here, and it deletes what no note places.
+    private let imagesFolderName = ".cuecard-images"
     private let textExtensions: Set<String> = ["txt", "md"]
     private let fileManager = FileManager.default
 
@@ -107,7 +112,10 @@ final class NoteFolder {
             let kept = index.filter { !delete($0.value.file, in: folder) }
             pendingDeletions.formIntersection(kept.keys)
             writeIndex(kept, in: folder)
-            return kept.isEmpty
+            let images = folder.appendingPathComponent(imagesFolderName, isDirectory: true)
+            let imagesDeleted = !fileManager.fileExists(atPath: images.path)
+                || (try? fileManager.removeItem(at: images)) != nil
+            return kept.isEmpty && imagesDeleted
         } ?? false
         if released { forget() }
         return released
@@ -236,7 +244,61 @@ final class NoteFolder {
         if !sameIndex(index, originalIndex) {
             writeIndex(index, in: folder)
         }
+
+        // Every note as it stands after the sync, for the images they place.
+        let updated = Dictionary(changes.updated.map { ($0.id, $0) }, uniquingKeysWith: { _, last in last })
+        let contents = notes.filter { !deleted.contains($0.id) }.map { updated[$0.id]?.content ?? $0.content }
+            + changes.updated.filter { appNotes[$0.id] == nil }.map(\.content)
+        // A note file that couldn't be read yet may place images no note
+        // here does, so none are deleted until every file has been.
+        let readAll = pending.isEmpty && changes.tooLarge.isEmpty && (!files.isEmpty || originalIndex.isEmpty)
+        syncImages(placedIn: contents, in: folder, deletingUnplaced: readAll)
         return changes
+    }
+
+    // MARK: - Images
+
+    /// Bring in the images the notes place that this device doesn't have,
+    /// as after the app is reinstalled, and delete the folder's copies of
+    /// any no note places any more.
+    private func syncImages(placedIn contents: [String], in folder: URL, deletingUnplaced: Bool) {
+        let images = folder.appendingPathComponent(imagesFolderName, isDirectory: true)
+        let names = Set(contents.flatMap { TeleprompterParser.imageNames(in: $0) })
+
+        for name in names where !ScriptImages.contains(name) {
+            let url = images.appendingPathComponent(name)
+            if let data = try? Data(contentsOf: url) {
+                ScriptImages.add(data, named: name)
+            } else {
+                // Not downloaded from iCloud Drive yet; it's taken in once it is.
+                try? fileManager.startDownloadingUbiquitousItem(at: url)
+            }
+        }
+
+        guard deletingUnplaced, let files = try? fileManager.contentsOfDirectory(atPath: images.path) else { return }
+        for file in files {
+            // A file in iCloud Drive that isn't downloaded is ".name.icloud".
+            let name = file.hasPrefix(".") && file.hasSuffix(".icloud")
+                ? String(file.dropFirst().dropLast(".icloud".count)) : file
+            if !names.contains(name) {
+                try? fileManager.removeItem(at: images.appendingPathComponent(file))
+            }
+        }
+    }
+
+    /// Copy the images a note places into the folder, the ones not already there.
+    private func writeImages(placedIn content: String, in folder: URL) {
+        let names = TeleprompterParser.imageNames(in: content)
+        guard !names.isEmpty else { return }
+        let images = folder.appendingPathComponent(imagesFolderName, isDirectory: true)
+        try? fileManager.createDirectory(at: images, withIntermediateDirectories: true)
+        for name in names {
+            let url = images.appendingPathComponent(name)
+            guard !fileManager.fileExists(atPath: url.path),
+                  !fileManager.fileExists(atPath: images.appendingPathComponent(".\(name).icloud").path),
+                  let data = ScriptImages.data(named: name) else { continue }
+            try? data.write(to: url, options: .atomic)
+        }
     }
 
     // MARK: - Files
@@ -282,6 +344,7 @@ final class NoteFolder {
         }
         let name = file ?? uniqueName(for: note, extension: "txt", taken: takenNames(in: folder, index: index))
         let url = folder.appendingPathComponent(name)
+        writeImages(placedIn: note.content, in: folder)
         guard (try? Data(note.content.utf8).write(to: url, options: .atomic)) != nil else { return }
         index[note.id] = Entry(file: name, title: note.title, mode: note.mode, createdAt: note.createdAt,
                                noteUpdatedAt: note.updatedAt, fileModifiedAt: modificationDate(of: url))
