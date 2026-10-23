@@ -114,16 +114,25 @@ object AppLinks {
     const val SOURCE_CODE = "https://github.com/thisisnsh/cuecard"
     const val PRIVACY_POLICY = "https://cuecard.dev/privacy/"
     val PLAY_STORE = "https://play.google.com/store/apps/details?id=${BuildConfig.APPLICATION_ID}"
-    const val SUPPORT_EMAIL = "mailto:support@cuecard.dev?subject=CueCard%20Feedback"
+
+    /** An email to support about a translation, with the language's code. */
+    fun translationReport(language: String): String =
+        supportEmail("CueCard Translation Mistake ($language)", AppStrings.get(R.string.translation_report_body))
+
+    /** An email to support about something that's broken. */
+    val bugReport: String
+        get() = supportEmail("CueCard Bug Report", AppStrings.get(R.string.bug_report_body))
+
+    /** An email to support asking for something new. */
+    val featureRequest: String
+        get() = supportEmail("CueCard Feature Request", AppStrings.get(R.string.feature_request_body))
 
     /**
-     * An email to support about a translation. The subject stays English, with
-     * the language's code, so reports sort together whatever the language.
+     * An email to support. The subject stays English so emails sort together
+     * whatever the language.
      */
-    fun translationReport(language: String): String =
-        "mailto:support@cuecard.dev" +
-            "?subject=" + Uri.encode("CueCard Translation Mistake ($language)") +
-            "&body=" + Uri.encode(AppStrings.get(R.string.translation_report_body))
+    private fun supportEmail(subject: String, body: String): String =
+        "mailto:support@cuecard.dev?subject=" + Uri.encode(subject) + "&body=" + Uri.encode(body)
 
     /** What goes out when someone shares the app. */
     val shareMessage: String get() = AppStrings.get(R.string.share_message, PLAY_STORE)

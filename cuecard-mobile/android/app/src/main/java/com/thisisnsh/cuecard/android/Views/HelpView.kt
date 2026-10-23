@@ -4,7 +4,11 @@ import com.thisisnsh.cuecard.android.AppStrings
 import androidx.annotation.StringRes
 import com.thisisnsh.cuecard.android.R
 import androidx.compose.ui.res.stringResource
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -27,7 +31,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.FormatAlignLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.BugReport
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.ViewCarousel
 import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -46,6 +59,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
@@ -86,32 +101,60 @@ private data class HelpTopic(@StringRes val titleRes: Int, @StringRes val detail
         title.contains(query, ignoreCase = true) || detail.contains(query, ignoreCase = true)
 }
 
-private data class HelpSection(@StringRes val titleRes: Int, val topics: List<HelpTopic>) {
+private data class HelpSection(
+    /** Names the section in analytics, the same in every language. */
+    val id: String,
+    @StringRes val titleRes: Int,
+    /** What's in it, under the title on the front page. */
+    @StringRes val summaryRes: Int,
+    val icon: ImageVector,
+    val topics: List<HelpTopic>
+) {
     val title: String get() = AppStrings.get(titleRes)
+    val summary: String get() = AppStrings.get(summaryRes)
+
+    /** The same section with only the topics that match `query`. */
+    fun filtered(query: String): HelpSection = copy(topics = topics.filter { it.matches(query) })
 }
 
 // MARK: - Topics
 
 private object AllHelp {
-    val general = HelpSection(
-        R.string.help_general,
+    val writing = HelpSection(
+        "writing", R.string.help_writing, R.string.help_writing_summary, Icons.Filled.Edit,
         listOf(
             HelpTopic(R.string.help_pick_a_mode_title, R.string.help_pick_a_mode_detail),
             HelpTopic(R.string.help_add_cues_title, R.string.help_add_cues_detail),
             HelpTopic(R.string.help_bold_and_italic_title, R.string.help_bold_and_italic_detail),
-            HelpTopic(R.string.help_set_a_timer_title, R.string.help_set_a_timer_detail),
+            HelpTopic(R.string.help_add_cards_title, R.string.help_add_cards_detail)
+        )
+    )
+
+    val notes = HelpSection(
+        "notes", R.string.help_notes, R.string.help_notes_summary, Icons.Filled.Folder,
+        listOf(
             HelpTopic(R.string.help_save_your_work_title, R.string.help_save_your_work_detail),
             HelpTopic(R.string.help_open_saved_notes_title, R.string.help_open_saved_notes_detail),
             HelpTopic(R.string.help_import_a_text_file_title, R.string.help_import_a_text_file_detail),
             HelpTopic(R.string.help_go_back_to_an_older_version_title, R.string.help_go_back_to_an_older_version_detail),
             HelpTopic(R.string.help_keep_notes_if_the_app_is_removed_title, R.string.help_keep_notes_if_the_app_is_removed_detail),
-            HelpTopic(R.string.help_share_a_script_title, R.string.help_share_a_script_detail),
-            HelpTopic(R.string.help_change_text_size_and_colors_title, R.string.help_change_text_size_and_colors_detail)
+            HelpTopic(R.string.help_share_a_script_title, R.string.help_share_a_script_detail)
+        )
+    )
+
+    val settings = HelpSection(
+        "settings", R.string.help_settings, R.string.help_settings_summary, Icons.Filled.Settings,
+        listOf(
+            HelpTopic(R.string.help_change_text_size_and_colors_title, R.string.help_change_text_size_and_colors_detail),
+            HelpTopic(R.string.help_set_a_timer_title, R.string.help_set_a_timer_detail),
+            HelpTopic(R.string.help_count_down_title, R.string.help_count_down_detail),
+            HelpTopic(R.string.help_change_language_title, R.string.help_change_language_detail)
         )
     )
 
     val teleprompter = HelpSection(
-        R.string.teleprompter,
+        "teleprompter", R.string.teleprompter, R.string.help_teleprompter_summary,
+        Icons.AutoMirrored.Filled.FormatAlignLeft,
         listOf(
             HelpTopic(R.string.help_play_and_pause_title, R.string.help_play_and_pause_detail),
             HelpTopic(R.string.help_scroll_by_hand_title, R.string.help_scroll_by_hand_detail),
@@ -122,22 +165,24 @@ private object AllHelp {
     )
 
     val cards = HelpSection(
-        R.string.cards,
+        "cards", R.string.cards, R.string.help_cards_summary, Icons.Filled.ViewCarousel,
         listOf(
-            HelpTopic(R.string.help_add_cards_title, R.string.help_add_cards_detail),
             HelpTopic(R.string.help_turn_cards_title, R.string.help_turn_cards_detail),
-            HelpTopic(R.string.help_watch_the_timer_title, R.string.help_watch_the_timer_cards_detail)
+            HelpTopic(R.string.help_count_up_title, R.string.help_watch_the_timer_cards_detail)
         )
     )
 
-    val sections = listOf(general, teleprompter, cards)
+    val sections = listOf(writing, notes, settings, teleprompter, cards)
 }
 
 // MARK: - Help Screen
 
 private const val HELP_SCREEN = "help"
 
-/** The same help on every page, grouped by part of the app. */
+/**
+ * The same help on every page: a front page of sections, each opening to its
+ * topics, with a search across all of them.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HelpView(page: HelpPage, onDismiss: () -> Unit) {
@@ -148,15 +193,13 @@ fun HelpView(page: HelpPage, onDismiss: () -> Unit) {
 
     var query by remember { mutableStateOf("") }
     var showingWhatsNew by remember { mutableStateOf(false) }
+    /** The section open on its own page, or null on the front page. */
+    var openSectionId by remember { mutableStateOf<String?>(null) }
+    val openSection = AllHelp.sections.firstOrNull { it.id == openSectionId }
 
     val trimmed = query.trim()
-    val sections = if (trimmed.isEmpty()) {
-        AllHelp.sections
-    } else {
-        AllHelp.sections
-            .map { section -> section.copy(topics = section.topics.filter { it.matches(trimmed) }) }
-            .filter { it.topics.isNotEmpty() }
-    }
+    // The sections with a topic that matches the search.
+    val results = AllHelp.sections.map { it.filtered(trimmed) }.filter { it.topics.isNotEmpty() }
 
     LaunchedEffect(Unit) {
         AnalyticsEvents.logEvent(
@@ -165,13 +208,34 @@ fun HelpView(page: HelpPage, onDismiss: () -> Unit) {
         )
     }
 
+    BackHandler(enabled = openSection != null) { openSectionId = null }
+
+    /** Closes the whole of Help, from the front page or a section. */
+    fun close() {
+        AnalyticsEvents.logButtonClick("done", HELP_SCREEN)
+        onDismiss()
+    }
+
     Scaffold(
         containerColor = AppColors.background(isDark),
         topBar = {
             TopAppBar(
+                navigationIcon = {
+                    if (openSection != null) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.back),
+                            tint = AppColors.textPrimary(isDark),
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp)
+                                .size(20.dp)
+                                .clickableWithoutRipple { openSectionId = null }
+                        )
+                    }
+                },
                 title = {
                     Text(
-                        text = stringResource(R.string.help),
+                        text = openSection?.title ?: stringResource(R.string.help),
                         fontSize = 17.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = AppColors.textPrimary(isDark)
@@ -184,10 +248,7 @@ fun HelpView(page: HelpPage, onDismiss: () -> Unit) {
                         color = AppColors.blue(isDark),
                         modifier = Modifier
                             .padding(horizontal = 16.dp)
-                            .clickableWithoutRipple {
-                                AnalyticsEvents.logButtonClick("done", HELP_SCREEN)
-                                onDismiss()
-                            }
+                            .clickableWithoutRipple(::close)
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -201,9 +262,20 @@ fun HelpView(page: HelpPage, onDismiss: () -> Unit) {
                 .fillMaxSize()
                 .padding(padding)
         ) {
+            if (openSection != null) {
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    item { Spacer(modifier = Modifier.height(8.dp)) }
+                    items(openSection.topics, key = { it.titleRes }) { topic ->
+                        TopicRow(topic, isDark)
+                    }
+                    item { Spacer(modifier = Modifier.height(32.dp)) }
+                }
+                return@Column
+            }
+
             SearchField(query = query, onQueryChange = { query = it }, isDark = isDark)
 
-            if (sections.isEmpty()) {
+            if (trimmed.isNotEmpty() && results.isEmpty()) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -221,9 +293,18 @@ fun HelpView(page: HelpPage, onDismiss: () -> Unit) {
             }
 
             LazyColumn(modifier = Modifier.fillMaxSize()) {
-                if (query.isEmpty()) {
+                if (trimmed.isEmpty()) {
                     item {
                         Spacer(modifier = Modifier.height(8.dp))
+                        LinkRow(title = stringResource(R.string.report_a_bug), icon = Icons.Filled.BugReport, isDark = isDark) {
+                            AnalyticsEvents.logButtonClick("report_bug", HELP_SCREEN)
+                            openLink(context, AppLinks.bugReport)
+                        }
+                        LinkRow(title = stringResource(R.string.request_a_feature), icon = Icons.Filled.Lightbulb, isDark = isDark) {
+                            AnalyticsEvents.logButtonClick("request_feature", HELP_SCREEN)
+                            openLink(context, AppLinks.featureRequest)
+                        }
+                        HelpDivider(isDark)
                         if (release != null) {
                             LinkRow(
                                 title = stringResource(R.string.whats_new_in, whatsNew.version),
@@ -233,30 +314,31 @@ fun HelpView(page: HelpPage, onDismiss: () -> Unit) {
                                 AnalyticsEvents.logButtonClick("whats_new", HELP_SCREEN)
                                 showingWhatsNew = true
                             }
+                            HelpDivider(isDark)
                         }
-                        LinkRow(title = stringResource(R.string.email_support), icon = Icons.Filled.Email, isDark = isDark) {
-                            AnalyticsEvents.logButtonClick("email_support", HELP_SCREEN)
-                            openLink(context, AppLinks.SUPPORT_EMAIL)
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                    items(AllHelp.sections, key = { it.id }) { section ->
+                        SectionRow(section, isDark) {
+                            AnalyticsEvents.logButtonClick("section_${section.id}", HELP_SCREEN)
+                            openSectionId = section.id
                         }
-                        HorizontalDivider(
-                            color = AppColors.textSecondary(isDark).copy(alpha = 0.15f),
-                            modifier = Modifier.padding(top = 8.dp)
-                        )
                     }
-                }
-
-                sections.forEach { section ->
-                    item(key = section.title) {
-                        Text(
-                            text = section.title,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = AppColors.textSecondary(isDark),
-                            modifier = Modifier.padding(start = 20.dp, top = 24.dp, bottom = 4.dp)
-                        )
-                    }
-                    items(section.topics, key = { section.title + it.title }) { topic ->
-                        TopicRow(topic, isDark)
+                } else {
+                    results.forEach { section ->
+                        item(key = section.id) {
+                            Text(
+                                text = section.title,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = AppColors.textSecondary(isDark),
+                                modifier = Modifier.padding(start = 20.dp, top = 24.dp, bottom = 4.dp)
+                            )
+                        }
+                        // Search results start open, so the match shows.
+                        items(section.topics, key = { section.id + it.titleRes }) { topic ->
+                            TopicRow(topic, isDark, initiallyExpanded = true)
+                        }
                     }
                 }
 
@@ -267,6 +349,44 @@ fun HelpView(page: HelpPage, onDismiss: () -> Unit) {
 
     if (showingWhatsNew && release != null) {
         WhatsNewDialog(release = release, version = whatsNew.version, onDismiss = { showingWhatsNew = false })
+    }
+}
+
+@Composable
+private fun HelpDivider(isDark: Boolean) {
+    HorizontalDivider(
+        color = AppColors.textSecondary(isDark).copy(alpha = 0.15f),
+        modifier = Modifier.padding(vertical = 8.dp)
+    )
+}
+
+/** A section on the front page: its icon, title and what's in it. */
+@Composable
+private fun SectionRow(section: HelpSection, isDark: Boolean, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickableWithoutRipple(onClick)
+            .padding(horizontal = 20.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        Icon(
+            imageVector = section.icon,
+            contentDescription = null,
+            tint = AppColors.textPrimary(isDark),
+            modifier = Modifier.size(22.dp)
+        )
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(text = section.title, fontSize = 17.sp, color = AppColors.textPrimary(isDark))
+            Text(text = section.summary, fontSize = 13.sp, color = AppColors.textSecondary(isDark))
+        }
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = null,
+            tint = AppColors.textSecondary(isDark),
+            modifier = Modifier.size(18.dp)
+        )
     }
 }
 
@@ -309,16 +429,40 @@ internal fun SearchField(
     }
 }
 
+/** A topic's title, and its explanation once opened. */
 @Composable
-private fun TopicRow(topic: HelpTopic, isDark: Boolean) {
+private fun TopicRow(topic: HelpTopic, isDark: Boolean, initiallyExpanded: Boolean = false) {
+    var isExpanded by remember(topic.titleRes) { mutableStateOf(initiallyExpanded) }
+    val rotation by animateFloatAsState(if (isExpanded) 180f else 0f, tween(250), label = "chevron")
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(2.dp)
+            .clickableWithoutRipple { isExpanded = !isExpanded }
+            .padding(horizontal = 20.dp, vertical = 10.dp)
+            .animateContentSize(tween(250)),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        Text(text = topic.title, fontSize = 17.sp, color = AppColors.textPrimary(isDark))
-        Text(text = topic.detail, fontSize = 13.sp, color = AppColors.textSecondary(isDark))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = topic.title,
+                fontSize = 17.sp,
+                color = AppColors.textPrimary(isDark),
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Icon(
+                imageVector = Icons.Filled.KeyboardArrowDown,
+                contentDescription = null,
+                tint = AppColors.textSecondary(isDark),
+                modifier = Modifier
+                    .size(18.dp)
+                    .rotate(rotation)
+            )
+        }
+        if (isExpanded) {
+            Text(text = topic.detail, fontSize = 13.sp, color = AppColors.textSecondary(isDark))
+        }
     }
 }
 
