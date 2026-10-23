@@ -281,6 +281,7 @@
     <plurals name="takes_count">
         <item quantity="one">%1$d take</item>
         <item quantity="other">%1$d takes</item>
+        <item quantity="many">%1$d takes</item>
     </plurals>
     <string name="take_number">Take %1$d</string>
     <string name="no_takes_yet">Nenhum take ainda</string>
