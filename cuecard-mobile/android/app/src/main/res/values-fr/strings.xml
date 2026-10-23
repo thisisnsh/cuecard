@@ -268,11 +268,13 @@
     <string name="help_notes_summary">Enregistrer, ouvrir, importer, versions et partage</string>
     <string name="help_settings">Réglages et minuteur</string>
     <string name="help_settings_summary">Taille du texte, couleurs, minuteur et langue</string>
-    <string name="help_teleprompter_summary">Défilement, vitesse et fenêtre flottante</string>
+    <string name="help_teleprompter_summary">Défilement, vitesse, miroir et fenêtre flottante</string>
     <string name="help_cards_summary">Tourner les fiches et le minuteur</string>
     <string name="help_count_down_title">Compte à rebours avant le défilement</string>
     <string name="help_count_down_detail">Dans le minuteur du prompteur, réglez un compte à rebours pour avoir quelques secondes avant que le texte commence à défiler.</string>
     <string name="help_change_language_title">Changer de langue</string>
     <string name="help_change_language_detail">Touchez l\'engrenage en haut, puis Langue. CueCard est disponible en anglais, français, portugais, russe et espagnol.</string>
     <string name="help_count_up_title">Compter sans minuteur</string>
+    <string name="mirror_text">Texte en miroir</string>
+    <string name="help_mirror_text_detail">Activez Texte en miroir dans Réglages pour inverser le texte horizontalement et le lire dans un miroir de prompteur. La fenêtre flottante utilise le même réglage. Il est désactivé par défaut.</string>
 </resources>

@@ -268,11 +268,13 @@
     <string name="help_notes_summary">Guardar, abrir, importar, versiones y compartir</string>
     <string name="help_settings">Ajustes y temporizador</string>
     <string name="help_settings_summary">Tamaño de texto, colores, temporizador e idioma</string>
-    <string name="help_teleprompter_summary">Desplazamiento, velocidad y ventana flotante</string>
+    <string name="help_teleprompter_summary">Desplazamiento, velocidad, reflejo y ventana flotante</string>
     <string name="help_cards_summary">Pasar tarjetas y el temporizador</string>
     <string name="help_count_down_title">Cuenta atrás antes de desplazar</string>
     <string name="help_count_down_detail">En el temporizador del teleprompter, pon una cuenta atrás para tener unos segundos antes de que el guion empiece a desplazarse.</string>
     <string name="help_change_language_title">Cambia el idioma</string>
     <string name="help_change_language_detail">Toca el engranaje arriba y luego Idioma. CueCard está en inglés, francés, portugués, ruso y español.</string>
     <string name="help_count_up_title">Cuenta hacia arriba sin temporizador</string>
+    <string name="mirror_text">Reflejar texto</string>
+    <string name="help_mirror_text_detail">Activa Reflejar texto en Ajustes para invertir el texto horizontalmente y leerlo en un espejo de teleprompter. La ventana flotante usa el mismo ajuste. Está desactivado de forma predeterminada.</string>
 </resources>

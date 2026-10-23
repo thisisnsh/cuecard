@@ -170,6 +170,8 @@ data class TeleprompterSettings(
     val countdownSeconds: Int = 5,
     /** The color every `[cue …]` in every script is drawn in. */
     val cueColor: CueColor = CueColor.DEFAULT,
+    /** Flips the teleprompter's text left to right, for reading off a mirror. */
+    val mirrorsText: Boolean = false,
     /**
      * What the editor writes and the Play button opens. Chosen on the home
      * screen, like the timer.
@@ -333,6 +335,7 @@ class SettingsService(private val context: Context) {
         private val COUNTDOWN_SECONDS = intPreferencesKey("countdown_seconds")
         private val CUE_COLOR = stringPreferencesKey("cue_color")
         private val SCRIPT_MODE = stringPreferencesKey("script_mode")
+        private val MIRRORS_TEXT = booleanPreferencesKey("mirrors_text")
         private val CARDS = stringPreferencesKey("cards")
         /** The teleprompter's script. Named from when it was the only one. */
         private val NOTES = stringPreferencesKey("notes")
@@ -466,6 +469,7 @@ class SettingsService(private val context: Context) {
             themePreference = ThemePreference.fromString(prefs[THEME_PREFERENCE] ?: ThemePreference.SYSTEM.rawValue),
             countdownSeconds = prefs[COUNTDOWN_SECONDS] ?: 5,
             cueColor = cueColor,
+            mirrorsText = prefs[MIRRORS_TEXT] ?: defaults.mirrorsText,
             scriptMode = ScriptMode.fromString(prefs[SCRIPT_MODE]),
             // From before cards kept their own: start them on what both used.
             cards = decodeOrNull<CardsSettings>(prefs[CARDS]) ?: CardsSettings(
@@ -534,6 +538,7 @@ class SettingsService(private val context: Context) {
             prefs[COUNTDOWN_SECONDS] = newSettings.countdownSeconds
             prefs[CUE_COLOR] = newSettings.cueColor.rawValue
             prefs[SCRIPT_MODE] = newSettings.scriptMode.rawValue
+            prefs[MIRRORS_TEXT] = newSettings.mirrorsText
             prefs[CARDS] = json.encodeToString(newSettings.cards)
             prefs.remove(RETIRED_WORDS_PER_MINUTE)
             prefs.remove(RETIRED_AUTO_SCROLL)

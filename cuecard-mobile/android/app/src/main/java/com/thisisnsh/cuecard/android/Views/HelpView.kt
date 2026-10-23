@@ -159,6 +159,7 @@ private object AllHelp {
             HelpTopic(R.string.help_play_and_pause_title, R.string.help_play_and_pause_detail),
             HelpTopic(R.string.help_scroll_by_hand_title, R.string.help_scroll_by_hand_detail),
             HelpTopic(R.string.help_change_speed_title, R.string.help_change_speed_detail),
+            HelpTopic(R.string.mirror_text, R.string.help_mirror_text_detail),
             HelpTopic(R.string.help_use_over_other_apps_title, R.string.help_use_over_other_apps_detail),
             HelpTopic(R.string.help_watch_the_timer_title, R.string.help_watch_the_timer_detail)
         )

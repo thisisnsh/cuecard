@@ -268,11 +268,13 @@
     <string name="help_notes_summary">Salvar, abrir, importar, versões e compartilhar</string>
     <string name="help_settings">Ajustes e timer</string>
     <string name="help_settings_summary">Tamanho do texto, cores, timer e idioma</string>
-    <string name="help_teleprompter_summary">Rolagem, velocidade e janela flutuante</string>
+    <string name="help_teleprompter_summary">Rolagem, velocidade, espelhamento e janela flutuante</string>
     <string name="help_cards_summary">Passar cartões e o timer</string>
     <string name="help_count_down_title">Contagem regressiva antes de rolar</string>
     <string name="help_count_down_detail">No timer do teleprompter, defina uma contagem regressiva para ter alguns segundos antes de o roteiro começar a rolar.</string>
     <string name="help_change_language_title">Alterar o idioma</string>
     <string name="help_change_language_detail">Toque na engrenagem no topo e depois em Idioma. O CueCard está em inglês, francês, português, russo e espanhol.</string>
     <string name="help_count_up_title">Conte o tempo sem timer</string>
+    <string name="mirror_text">Espelhar texto</string>
+    <string name="help_mirror_text_detail">Ative Espelhar texto em Ajustes para inverter o texto horizontalmente e lê-lo em um espelho de teleprompter. A janela flutuante usa o mesmo ajuste. Fica desativado por padrão.</string>
 </resources>

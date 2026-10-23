@@ -40,6 +40,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.semantics.Role
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
@@ -206,6 +210,13 @@ private fun TeleprompterSections(
             presets = TeleprompterSettings.FONT_SIZE_PRESETS,
             isDark = isDark,
             onSelect = { size -> update { it.copy(fontSize = size) } }
+        )
+
+        ToggleRow(
+            label = stringResource(R.string.mirror_text),
+            isOn = settings.mirrorsText,
+            isDark = isDark,
+            onChange = { isOn -> update { it.copy(mirrorsText = isOn) } }
         )
     }
 
@@ -697,6 +708,34 @@ private fun NumberRow(
                 )
             }
         }
+    }
+}
+
+/** A labelled switch. */
+@Composable
+internal fun ToggleRow(label: String, isOn: Boolean, isDark: Boolean, onChange: (Boolean) -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .toggleable(value = isOn, role = Role.Switch, onValueChange = onChange)
+            .padding(horizontal = 20.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            fontSize = 17.sp,
+            color = AppColors.textPrimary(isDark),
+            modifier = Modifier.weight(1f)
+        )
+        Switch(
+            checked = isOn,
+            onCheckedChange = null,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Color.White,
+                checkedTrackColor = AppColors.green(isDark),
+                checkedBorderColor = AppColors.green(isDark)
+            )
+        )
     }
 }
 

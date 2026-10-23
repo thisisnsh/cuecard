@@ -266,11 +266,13 @@
     <string name="help_notes_summary">Save, open, import, versions and sharing</string>
     <string name="help_settings">Settings &amp; Timer</string>
     <string name="help_settings_summary">Text size, colors, timer and language</string>
-    <string name="help_teleprompter_summary">Scrolling, speed and the floating window</string>
+    <string name="help_teleprompter_summary">Scrolling, speed, mirroring and the floating window</string>
     <string name="help_cards_summary">Turning cards and the timer</string>
     <string name="help_count_down_title">Count Down Before Scrolling</string>
     <string name="help_count_down_detail">In the teleprompter\'s timer, set a Countdown to get a few seconds before the script starts scrolling.</string>
     <string name="help_change_language_title">Change the Language</string>
     <string name="help_change_language_detail">Tap the gear at the top, then Language. CueCard is in English, French, Portuguese, Russian and Spanish.</string>
     <string name="help_count_up_title">Count Up Without a Timer</string>
+    <string name="mirror_text">Mirror Text</string>
+    <string name="help_mirror_text_detail">Turn on Mirror Text in Settings to flip the text horizontally for a teleprompter mirror. The floating window uses the same setting. It\'s off by default.</string>
 </resources>

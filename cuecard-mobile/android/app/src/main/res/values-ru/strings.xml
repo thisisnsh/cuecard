@@ -271,11 +271,13 @@
     <string name="help_notes_summary">Сохранение, открытие, импорт, версии и отправка</string>
     <string name="help_settings">Настройки и таймер</string>
     <string name="help_settings_summary">Размер текста, цвета, таймер и язык</string>
-    <string name="help_teleprompter_summary">Прокрутка, скорость и плавающее окно</string>
+    <string name="help_teleprompter_summary">Прокрутка, скорость, зеркальное отражение и плавающее окно</string>
     <string name="help_cards_summary">Листание карточек и таймер</string>
     <string name="help_count_down_title">Отсчёт перед прокруткой</string>
     <string name="help_count_down_detail">В таймере телесуфлёра задайте обратный отсчёт, чтобы получить несколько секунд до начала прокрутки текста.</string>
     <string name="help_change_language_title">Измените язык</string>
     <string name="help_change_language_detail">Коснитесь шестерёнки вверху, затем «Язык». CueCard доступен на английском, французском, португальском, русском и испанском.</string>
     <string name="help_count_up_title">Прямой отсчёт без таймера</string>
+    <string name="mirror_text">Отразить текст</string>
+    <string name="help_mirror_text_detail">Включите «Отразить текст» в настройках, чтобы отразить текст по горизонтали для чтения через зеркало телесуфлёра. Эта настройка действует и в плавающем окне. По умолчанию она выключена.</string>
 </resources>

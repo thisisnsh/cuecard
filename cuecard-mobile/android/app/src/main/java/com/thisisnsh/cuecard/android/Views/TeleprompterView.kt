@@ -516,6 +516,7 @@ fun TeleprompterView(
             timeDisplay = timeDisplay,
             timerColor = timerColor,
             timerFontSize = settings.pipFontSize * TIMER_TO_TEXT_RATIO,
+            isMirrored = settings.mirrorsText,
             isDark = isDark
         )
         return
@@ -616,7 +617,9 @@ fun TeleprompterView(
                             text = script,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 24.dp),
+                                .padding(horizontal = 24.dp)
+                                // Flipped for reading off a teleprompter's mirror.
+                                .graphicsLayer { scaleX = if (settings.mirrorsText) -1f else 1f },
                             onTextLayout = { layout ->
                                 val offsets = FloatArray(layout.lineCount) { layout.getLineTop(it) }
                                 if (!offsets.contentEquals(lineOffsets)) {
@@ -774,6 +777,7 @@ private fun TeleprompterOverlay(
     timeDisplay: String,
     timerColor: Color,
     timerFontSize: Float,
+    isMirrored: Boolean,
     isDark: Boolean
 ) {
     val density = LocalDensity.current
@@ -866,7 +870,9 @@ private fun TeleprompterOverlay(
 
                 Text(
                     text = script,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .graphicsLayer { scaleX = if (isMirrored) -1f else 1f },
                     onTextLayout = { layout ->
                         val lines = layout.lineCount
                         scrollRangePx = if (lines > 1) layout.getLineTop(lines - 1) else 0f
