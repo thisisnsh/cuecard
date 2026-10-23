@@ -117,13 +117,14 @@ object CueCards {
     /**
      * Count what a card shows against `limit`. Cue text counts, the `[cue` and
      * `]` around it don't, nor do emphasis `markers`, and neither does blank
-     * space at either end.
+     * space at either end. An image doesn't count.
      */
     fun measure(
         card: IntRange,
         text: String,
         cues: List<CueMatch>,
         markers: List<IntRange> = emptyList(),
+        images: List<IntRange> = emptyList(),
         limit: Int
     ): CardMeasure {
         var count = 0
@@ -141,7 +142,7 @@ object CueCards {
             start = end
 
             val isTagSyntax = cues.any { location in it.range && location !in it.contentRange }
-            if (isTagSyntax || markers.any { location in it }) continue
+            if (isTagSyntax || markers.any { location in it } || images.any { location in it }) continue
 
             val isBlank = character.isBlank()
             if (isBlank && count == 0) continue
@@ -162,6 +163,7 @@ object CueCards {
         return measure(
             card.indices, card, cues,
             markers = RichText.markerRanges(card, skipping = cues.map { it.range }),
+            images = TeleprompterParser.imageMatches(card).map { it.range },
             limit = limit
         )
     }
@@ -217,6 +219,8 @@ object CueCards {
                         if (!isFirst) append(" ", isCue = false)
                         append(cue, isCue = true)
                     }
+                    // Drawn as a block of its own; see `CardBlock`.
+                    is CueSegment.Image -> continue
                 }
                 isFirst = false
             }
@@ -226,4 +230,35 @@ object CueCards {
 
     private fun normalizingLineBreaks(text: String): String =
         text.replace("\r\n", "\n").replace("\r", "\n")
+}
+
+/** One stretch of a card as the app draws it: words, or an image. */
+sealed class CardBlock {
+    data class Text(val runs: List<CueCardRun>) : CardBlock()
+    /** `name` is the image's file name. */
+    data class Image(val name: String) : CardBlock()
+
+    companion object {
+        /**
+         * A card's words broken around its images, each image a block of its
+         * own however it was written.
+         */
+        fun blocks(card: String): List<CardBlock> {
+            val blocks = mutableListOf<CardBlock>()
+            var start = 0
+
+            fun appendText(end: Int) {
+                val text = card.substring(start, end).trim()
+                if (text.isNotEmpty()) blocks.add(Text(CueCards.runs(text)))
+            }
+
+            for (match in TeleprompterParser.imageMatches(card)) {
+                appendText(match.range.first)
+                blocks.add(Image(match.name))
+                start = match.range.last + 1
+            }
+            appendText(card.length)
+            return blocks
+        }
+    }
 }

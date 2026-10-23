@@ -100,6 +100,9 @@ dependencies {
     implementation("androidx.camera:camera-video:1.4.1")
     implementation("androidx.camera:camera-view:1.4.1")
 
+    // Turning picked photos upright
+    implementation("androidx.exifinterface:exifinterface:1.3.7")
+
     // Coil for image loading
     implementation("io.coil-kt:coil-compose:2.7.0")
 

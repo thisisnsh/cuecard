@@ -266,7 +266,7 @@
     <string name="bug_report_body">Что произошло:\n\nЧего вы ожидали:\n\nКак воспроизвести:\n</string>
     <string name="feature_request_body">Что бы вы хотели, чтобы делал CueCard?\n</string>
     <string name="help_writing">Текст</string>
-    <string name="help_writing_summary">Режимы, подсказки, оформление и карточки</string>
+    <string name="help_writing_summary">Режимы, подсказки, оформление, изображения и карточки</string>
     <string name="help_notes">Заметки и сохранение</string>
     <string name="help_notes_summary">Сохранение, открытие, импорт, версии и отправка</string>
     <string name="help_settings">Настройки и таймер</string>
@@ -345,4 +345,9 @@
     <string name="help_record_with_cards_detail">Коснитесь камеры рядом со «Справкой». Камера откроется в небольшом окне поверх карточек. Коснитесь красной кнопки, чтобы начать запись, и ещё раз, чтобы поставить её на паузу, затем коснитесь кнопки остановки, чтобы сохранить видео в галерее. Листайте карточки прямо во время записи.</string>
     <string name="help_move_camera_title">Перемещайте окно камеры</string>
     <string name="help_move_camera_detail">Перетащите окно камеры в любой угол. Сведите или разведите пальцы либо дважды коснитесь окна, чтобы изменить его размер, и коснитесь один раз, чтобы скрыть или показать кнопки. Кнопками можно менять масштаб или сменить камеру.</string>
+    <string name="image">Изображение</string>
+    <string name="add_image">Добавить изображение</string>
+    <string name="image_not_added">Не удалось добавить изображение. Попробуйте ещё раз.</string>
+    <string name="help_add_images_title">Добавьте изображения</string>
+    <string name="help_add_images_detail">Коснитесь значка фото над клавиатурой, чтобы добавить изображения из галереи.</string>
 </resources>

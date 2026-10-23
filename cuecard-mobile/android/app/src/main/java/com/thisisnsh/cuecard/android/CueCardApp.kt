@@ -25,6 +25,7 @@ import com.google.firebase.analytics.logEvent
 import com.google.firebase.crashlytics.ktx.crashlytics
 import com.google.firebase.ktx.Firebase
 import com.thisisnsh.cuecard.android.models.AppColors
+import com.thisisnsh.cuecard.android.services.ScriptImages
 import com.thisisnsh.cuecard.android.services.ThemePreference
 
 class CueCardApplication : Application() {
@@ -35,6 +36,7 @@ class CueCardApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         AppStrings.context = this
+        ScriptImages.init(this)
         FirebaseApp.initializeApp(this)
         analytics = Firebase.analytics
 

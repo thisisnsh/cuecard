@@ -263,7 +263,7 @@
     <string name="bug_report_body">Ce qui s\'est passé :\n\nCe que vous attendiez :\n\nÉtapes pour reproduire :\n</string>
     <string name="feature_request_body">Qu\'aimeriez-vous que CueCard fasse ?\n</string>
     <string name="help_writing">Écriture</string>
-    <string name="help_writing_summary">Modes, repères, mise en forme et fiches</string>
+    <string name="help_writing_summary">Modes, repères, mise en forme, images et fiches</string>
     <string name="help_notes">Notes et enregistrement</string>
     <string name="help_notes_summary">Enregistrer, ouvrir, importer, versions et partage</string>
     <string name="help_settings">Réglages et minuteur</string>
@@ -341,4 +341,9 @@
     <string name="help_record_with_cards_detail">Touchez l\'appareil photo à côté d\'Aide. L\'appareil photo s\'ouvre dans une petite fenêtre au-dessus de vos fiches. Touchez le bouton rouge pour filmer et touchez-le à nouveau pour mettre en pause, puis touchez le bouton d\'arrêt pour sauvegarder la vidéo dans votre galerie. Continuez à tourner les fiches pendant que vous filmez.</string>
     <string name="help_move_camera_title">Déplacer la fenêtre de l\'appareil photo</string>
     <string name="help_move_camera_detail">Faites glisser la fenêtre de l\'appareil photo dans n\'importe quel coin. Pincez-la ou touchez-la deux fois pour changer sa taille, et touchez-la pour masquer ou afficher ses boutons. Utilisez les boutons pour zoomer ou changer de caméra.</string>
+    <string name="image">Image</string>
+    <string name="add_image">Ajouter une image</string>
+    <string name="image_not_added">Une image n\'a pas pu être ajoutée. Réessayez.</string>
+    <string name="help_add_images_title">Ajouter des images</string>
+    <string name="help_add_images_detail">Touchez la photo au-dessus du clavier pour ajouter des images de votre galerie.</string>
 </resources>

@@ -104,6 +104,20 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.text.InlineTextContent
+import androidx.compose.foundation.text.appendInlineContent
+import androidx.compose.material.icons.filled.Image
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.Placeholder
+import androidx.compose.ui.text.PlaceholderVerticalAlign
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
+import com.thisisnsh.cuecard.android.services.ScriptImages
 import kotlin.math.abs
 import kotlin.math.exp
 
@@ -546,18 +560,33 @@ fun TeleprompterView(
     }
 
     val haloRadius = with(density) { 6.dp.toPx() }
-    val script = remember(content.fullText, settings.cueColor, settings.fontSize, isDark, showingCamera) {
+    var viewportWidthPx by remember { mutableFloatStateOf(0f) }
+    // An image is as wide as the text, and at most half the screen tall, so the
+    // reading line and the image passing it are in view together.
+    val imageWidth = with(density) { (viewportWidthPx - 48.dp.toPx()).coerceAtLeast(1f).toSp() }
+    val maxImageHeight = with(density) { (viewportHeightPx * 0.5f).coerceAtLeast(1f).toSp() }
+    val script = remember(
+        content.fullText, settings.cueColor, settings.fontSize, isDark, showingCamera, imageWidth, maxImageHeight
+    ) {
         buildScript(
             content, settings.cueColor, settings.fontSize.toFloat(), isDark,
             // A halo in the background color keeps the lines readable over the camera.
-            haloRadius = if (showingCamera) haloRadius else 0f
+            haloRadius = if (showingCamera) haloRadius else 0f,
+            imageWidth = imageWidth,
+            maxImageHeight = maxImageHeight
         )
     }
 
     if (pipManager.isPiPActive) {
         TeleprompterOverlay(
             script = remember(content.fullText, settings.cueColor, settings.pipFontSize, isDark) {
-                buildScript(content, settings.cueColor, settings.pipFontSize.toFloat(), isDark)
+                { imageWidth: TextUnit, maxImageHeight: TextUnit ->
+                    buildScript(
+                        content, settings.cueColor, settings.pipFontSize.toFloat(), isDark,
+                        imageWidth = imageWidth,
+                        maxImageHeight = maxImageHeight
+                    )
+                }
             },
             scriptTime = { scriptClock.doubleValue },
             scriptDuration = { scriptDuration() },
@@ -645,6 +674,7 @@ fun TeleprompterView(
                         .fillMaxSize()
                         .clipToBounds()
                         .onSizeChanged { size ->
+                            viewportWidthPx = size.width.toFloat()
                             if (size.height.toFloat() != viewportHeightPx) {
                                 viewportHeightPx = size.height.toFloat()
                                 settleNext = true
@@ -682,14 +712,15 @@ fun TeleprompterView(
                         Spacer(modifier = Modifier.height(topPadding))
 
                         Text(
-                            text = script,
+                            text = script.text,
+                            inlineContent = script.inlineContent,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 24.dp)
                                 // Flipped for reading off a teleprompter's mirror.
                                 .graphicsLayer { scaleX = if (settings.mirrorsText) -1f else 1f },
                             onTextLayout = { layout ->
-                                val offsets = FloatArray(layout.lineCount) { layout.getLineTop(it) }
+                                val offsets = script.readingLineOffsets(layout)
                                 if (!offsets.contentEquals(lineOffsets)) {
                                     lineOffsets = offsets
                                     settleNext = true
@@ -872,7 +903,8 @@ internal fun CameraButton(isOn: Boolean, isDark: Boolean, onClick: () -> Unit) {
  */
 @Composable
 private fun TeleprompterOverlay(
-    script: AnnotatedString,
+    /** The script set for the window, given how wide and tall its images can be. */
+    script: (imageWidth: TextUnit, maxImageHeight: TextUnit) -> ScriptText,
     scriptTime: () -> Double,
     scriptDuration: () -> Double,
     timeDisplay: String,
@@ -883,6 +915,10 @@ private fun TeleprompterOverlay(
 ) {
     val density = LocalDensity.current
     var viewportHeightPx by remember { mutableFloatStateOf(0f) }
+    var viewportWidthPx by remember { mutableFloatStateOf(0f) }
+    val imageWidth = with(density) { (viewportWidthPx - 24.dp.toPx()).coerceAtLeast(1f).toSp() }
+    val maxImageHeight = with(density) { (viewportHeightPx * 0.5f).coerceAtLeast(1f).toSp() }
+    val built = remember(script, imageWidth, maxImageHeight) { script(imageWidth, maxImageHeight) }
     /** How far the script scrolls: the last line's own position in the text. */
     var scrollRangePx by remember { mutableFloatStateOf(0f) }
     var scrollPx by remember { mutableFloatStateOf(0f) }
@@ -950,7 +986,10 @@ private fun TeleprompterOverlay(
                 .fillMaxSize()
                 .padding(horizontal = 8.dp)
                 .clipToBounds()
-                .onSizeChanged { viewportHeightPx = it.height.toFloat() }
+                .onSizeChanged {
+                    viewportHeightPx = it.height.toFloat()
+                    viewportWidthPx = it.width.toFloat()
+                }
                 .scriptEdgeFade(isDark = isDark, top = 40.dp, bottom = 40.dp)
         ) {
             // The reading line sits where it does on the full screen, and the
@@ -970,7 +1009,8 @@ private fun TeleprompterOverlay(
                 Spacer(modifier = Modifier.height(topPadding))
 
                 Text(
-                    text = script,
+                    text = built.text,
+                    inlineContent = built.inlineContent,
                     modifier = Modifier
                         .fillMaxWidth()
                         .graphicsLayer { scaleX = if (isMirrored) -1f else 1f },
@@ -986,9 +1026,35 @@ private fun TeleprompterOverlay(
     }
 }
 
+/** The script set for reading, with its images. */
+private class ScriptText(
+    val text: AnnotatedString,
+    val inlineContent: Map<String, InlineTextContent>,
+    /** Where each image sits in the text, and the reading lines it takes. */
+    val imageLines: Map<Int, Int>
+) {
+    /**
+     * The scroll offset that puts each reading line on the reading line. A
+     * line of text is one. A line with an image is as many as the image takes,
+     * spread evenly down it, so the image scrolls past at the pace of the
+     * words around it rather than in the time of one line.
+     */
+    fun readingLineOffsets(layout: TextLayoutResult): FloatArray {
+        val offsets = ArrayList<Float>(layout.lineCount)
+        for (line in 0 until layout.lineCount) {
+            val top = layout.getLineTop(line)
+            val count = imageLines[layout.getLineStart(line)] ?: 1
+            val height = layout.getLineBottom(line) - top
+            for (step in 0 until count) offsets.add(top + height * step / count)
+        }
+        return offsets.toFloatArray()
+    }
+}
+
 /**
  * The script as one continuous block at one brightness — position on screen is
- * what says where the reader is, so nothing highlights.
+ * what says where the reader is, so nothing highlights. Images are centered on
+ * lines of their own, `imageWidth` wide and no taller than `maxImageHeight`.
  */
 private fun buildScript(
     content: TeleprompterContent,
@@ -996,8 +1062,10 @@ private fun buildScript(
     fontSize: Float,
     isDark: Boolean,
     /** A shadow in the background color around every line, in pixels; none at zero. */
-    haloRadius: Float = 0f
-): AnnotatedString {
+    haloRadius: Float = 0f,
+    imageWidth: TextUnit = (fontSize * 10).sp,
+    maxImageHeight: TextUnit = (fontSize * 10).sp
+): ScriptText {
     val halo = if (haloRadius > 0f) Shadow(AppColors.background(isDark), blurRadius = haloRadius) else null
     val textStyle = SpanStyle(
         fontSize = fontSize.sp,
@@ -1022,35 +1090,117 @@ private fun buildScript(
     // The gap between paragraphs, as its own short line — the nearest Compose has
     // to the paragraph spacing the iOS layout applies.
     val gapParagraph = ParagraphStyle(lineHeight = (fontSize * 0.45f).sp)
+    val imageParagraph = ParagraphStyle(textAlign = TextAlign.Center)
 
-    return buildAnnotatedString {
-        val paragraphs = content.fullText.split("\n\n")
+    val inlineContent = mutableMapOf<String, InlineTextContent>()
+    val imageLines = mutableMapOf<Int, Int>()
 
-        paragraphs.forEachIndexed { paragraphIndex, paragraph ->
+    val text = buildAnnotatedString {
+        // Lines of text share a paragraph; an image is a paragraph of its own,
+        // set apart by where its style starts and ends rather than by a break.
+        var body: Int? = null
+        var owesBreak = false
+
+        fun openBody() {
+            if (body == null) {
+                body = pushStyle(bodyParagraph)
+                owesBreak = false
+            }
+        }
+
+        fun closeBody() {
+            body?.let { pop(it) }
+            body = null
+        }
+
+        content.fullText.split("\n\n").forEachIndexed { paragraphIndex, paragraph ->
             if (paragraphIndex > 0) {
+                closeBody()
                 withStyle(gapParagraph) { append("\n") }
             }
 
-            withStyle(bodyParagraph) {
-                val lines = paragraph.split("\n")
+            for (line in paragraph.split("\n")) {
+                if (line.isEmpty()) {
+                    openBody()
+                    if (owesBreak) append("\n")
+                    owesBreak = true
+                    continue
+                }
 
-                lines.forEachIndexed { lineIndex, line ->
-                    if (lineIndex > 0) append("\n")
-                    if (line.isEmpty()) return@forEachIndexed
+                var lineStarted = false
+                for (segment in TeleprompterParser.segments(line)) {
+                    if (segment is CueSegment.Image) {
+                        closeBody()
+                        val id = "image:${inlineContent.size}"
+                        val aspect = ScriptImages.aspectRatio(segment.name)
+                        val height = minOf(imageWidth.value * aspect, maxImageHeight.value)
+                        inlineContent[id] = InlineTextContent(
+                            Placeholder(imageWidth, height.sp, PlaceholderVerticalAlign.Center)
+                        ) {
+                            ScriptImage(name = segment.name, modifier = Modifier.fillMaxSize())
+                        }
+                        imageLines[length] = ScriptImages.readingLines(segment.name)
+                        withStyle(imageParagraph) { appendInlineContent(id, "\uFFFC") }
+                        lineStarted = false
+                        continue
+                    }
 
-                    TeleprompterParser.segments(line).forEachIndexed { segmentIndex, segment ->
-                        if (segmentIndex > 0) withStyle(textStyle) { append(" ") }
+                    openBody()
+                    if (!lineStarted) {
+                        if (owesBreak) append("\n")
+                        lineStarted = true
+                    } else {
+                        withStyle(textStyle) { append(" ") }
+                    }
+                    owesBreak = true
 
-                        when (segment) {
-                            is CueSegment.Cue -> withStyle(cueStyle) { append(segment.text) }
-                            is CueSegment.Text -> withStyle(textStyle) {
-                                for (run in RichText.styled(segment.text).runs) {
-                                    withStyle(run.style.spanStyle()) { append(run.text) }
-                                }
+                    when (segment) {
+                        is CueSegment.Cue -> withStyle(cueStyle) { append(segment.text) }
+                        is CueSegment.Text -> withStyle(textStyle) {
+                            for (run in RichText.styled(segment.text).runs) {
+                                withStyle(run.style.spanStyle()) { append(run.text) }
                             }
                         }
+                        is CueSegment.Image -> Unit
                     }
                 }
+            }
+        }
+        closeBody()
+    }
+
+    return ScriptText(text, inlineContent, imageLines)
+}
+
+/**
+ * An image placed in a script, fit to the room it's given with its corners
+ * rounded. One that isn't in the store is drawn as an empty frame.
+ */
+@Composable
+internal fun ScriptImage(name: String, modifier: Modifier = Modifier, cornerRadius: Dp = 14.dp) {
+    val bitmap = remember(name) { ScriptImages.bitmap(name) }
+    val shape = RoundedCornerShape(cornerRadius)
+    val description = stringResource(R.string.image)
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+        if (bitmap != null) {
+            Image(
+                bitmap = bitmap.asImageBitmap(),
+                contentDescription = description,
+                contentScale = ContentScale.Fit,
+                modifier = Modifier
+                    .aspectRatio(bitmap.width.toFloat() / bitmap.height.coerceAtLeast(1))
+                    .clip(shape)
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .aspectRatio(4f / 3f)
+                    .clip(shape)
+                    .background(Color.Gray.copy(alpha = 0.2f))
+                    .semantics { contentDescription = description },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(imageVector = Icons.Filled.Image, contentDescription = null, tint = Color.Gray)
             }
         }
     }

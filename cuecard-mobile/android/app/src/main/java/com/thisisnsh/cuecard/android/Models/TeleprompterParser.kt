@@ -12,7 +12,9 @@ data class TeleprompterContent(
     /** All words, in reading order (cue words included) */
     val words: List<WordInfo>,
     /** Every cue tag found in the text, for styling */
-    val cues: List<CueMatch>
+    val cues: List<CueMatch>,
+    /** Whether the text places any images */
+    val hasImages: Boolean = false
 )
 
 /** Information about a single word */
@@ -31,10 +33,20 @@ data class CueMatch(
     val content: String
 )
 
-/** A run of a single line: either spoken text or a delivery cue */
+/** An `[image …]` tag located in a piece of text */
+data class ImageMatch(
+    /** The whole tag, brackets included */
+    val range: IntRange,
+    /** The image's file name in the app's image store */
+    val name: String
+)
+
+/** A run of a single line: spoken text, a delivery cue, or an image */
 sealed class CueSegment {
     data class Text(val text: String) : CueSegment()
     data class Cue(val text: String) : CueSegment()
+    /** `name` is the image's file name. */
+    data class Image(val name: String) : CueSegment()
 }
 
 /**
@@ -51,11 +63,24 @@ sealed class CueSegment {
  * Every cue is drawn in the one color from Settings. An older `[cue:green …]`
  * still parses, but the color name is ignored and dropped on the next import
  * or export.
+ *
+ * `[image 3fa9….jpg]` places an image, named for its file in the app's image
+ * store. The editor shows it as the image itself, and so does everything that
+ * reads the script.
  */
 object TeleprompterParser {
 
     /** `[cue]` / `[note]`, an optional legacy `:color`, then the cue text */
     private val cueRegex = Regex("""\[(?:cue|note)(?::[A-Za-z]+)?(?:[ \t]+([^\]\n]*))?\]""")
+
+    /**
+     * `[image name.ext]`. The name is kept to letters, digits and dashes, so
+     * it's always a plain file name and never a path.
+     */
+    private val imageRegex = Regex("""\[image[ \t]+([A-Za-z0-9-]+\.[A-Za-z0-9]+)\]""")
+
+    /** The tag for an image in the store. */
+    fun imageTag(name: String): String = "[image $name]"
 
     /**
      * What an empty cue opens with, and closes with. Typing `[` writes both at
@@ -78,7 +103,8 @@ object TeleprompterParser {
         return TeleprompterContent(
             fullText = cleanedNotes,
             words = extractWords(cleanedNotes),
-            cues = cueMatches(cleanedNotes)
+            cues = cueMatches(cleanedNotes),
+            hasImages = imageMatches(cleanedNotes).isNotEmpty()
         )
     }
 
@@ -121,6 +147,31 @@ object TeleprompterParser {
         }.toList()
 
     /**
+     * Find every image tag in the text, in order. One written inside a cue
+     * belongs to the cue's text.
+     */
+    fun imageMatches(text: String): List<ImageMatch> {
+        if (!text.contains("[image")) return emptyList()
+        val cues = cueMatches(text).map { it.range }
+        return imageRegex.findAll(text)
+            .filter { match -> cues.none { it.first <= match.range.last && match.range.first <= it.last } }
+            .map { ImageMatch(it.range, it.groupValues[1]) }
+            .toList()
+    }
+
+    /** The names of the images the text places, each once. */
+    fun imageNames(text: String): Set<String> = imageMatches(text).map { it.name }.toSet()
+
+    /** The text with its image tags taken out, for a preview or a search. */
+    fun removingImages(text: String): String {
+        val result = StringBuilder(text)
+        for (match in imageMatches(text).reversed()) {
+            result.delete(match.range.first, match.range.last + 1)
+        }
+        return result.toString()
+    }
+
+    /**
      * The cue tag the caret is sitting inside, if it is inside one.
      *
      * A caret resting against either bracket counts as outside: that's a spot a
@@ -132,31 +183,33 @@ object TeleprompterParser {
         }
 
     /**
-     * Split a single line into spoken text and cue runs.
+     * Split a single line into spoken text, cue and image runs.
      *
      * Shared by the teleprompter and the overlay so both render cues identically.
      */
     fun segments(line: String): List<CueSegment> {
-        val matches = cueMatches(line)
+        val tags = (cueMatches(line).map { it.range to CueSegment.Cue(it.content) } +
+            imageMatches(line).map { it.range to CueSegment.Image(it.name) })
+            .sortedBy { it.first.first }
 
-        if (matches.isEmpty()) {
+        if (tags.isEmpty()) {
             return listOf(CueSegment.Text(line))
         }
 
         val segments = mutableListOf<CueSegment>()
         var lastEnd = 0
 
-        for (match in matches) {
-            // Text before the cue
-            if (match.range.first > lastEnd) {
-                val before = line.substring(lastEnd, match.range.first).trim { it == ' ' || it == '\t' }
+        for ((range, tag) in tags) {
+            // Text before the tag
+            if (range.first > lastEnd) {
+                val before = line.substring(lastEnd, range.first).trim { it == ' ' || it == '\t' }
                 if (before.isNotEmpty()) {
                     segments.add(CueSegment.Text(before))
                 }
             }
 
-            segments.add(CueSegment.Cue(match.content))
-            lastEnd = match.range.last + 1
+            segments.add(tag)
+            lastEnd = range.last + 1
         }
 
         // Text after the last cue
@@ -191,6 +244,7 @@ object TeleprompterParser {
                         RichText.plain(segment.text).split(Regex("\\s+")).filter { it.isNotEmpty() }.forEach {
                             words.add(WordInfo(text = it, isCue = false))
                         }
+                    is CueSegment.Image -> Unit
                 }
             }
         }

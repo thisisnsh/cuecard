@@ -18,6 +18,7 @@ import com.thisisnsh.cuecard.android.AnalyticsEvents
 import com.thisisnsh.cuecard.android.models.CueCards
 import com.thisisnsh.cuecard.android.models.CueColor
 import com.thisisnsh.cuecard.android.models.ScriptMode
+import com.thisisnsh.cuecard.android.models.TeleprompterParser
 import com.thisisnsh.cuecard.android.models.TimerStyle
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -530,6 +531,7 @@ class SettingsService(private val context: Context) {
             }
         }
         _versionCounts.value = withContext(Dispatchers.IO) { noteVersions.counts() }
+        removeUnusedImages()
         _hasNotesFolder.value = noteFolder.isChosen
         notesLoaded.complete(Unit)
 
@@ -642,6 +644,7 @@ class SettingsService(private val context: Context) {
         _savedNotes.value = emptyList()
         _currentNoteId.value = null
         takeStore.removeAll()
+        withContext(Dispatchers.IO) { ScriptImages.removeAll() }
         context.dataStore.edit { prefs ->
             prefs.clear()
         }
@@ -683,6 +686,20 @@ class SettingsService(private val context: Context) {
 
     suspend fun updateCountdownSeconds(seconds: Int) {
         saveSettings(_settings.value.copy(countdownSeconds = seconds))
+    }
+
+    /**
+     * Delete the images nothing places any more: not the scripts being
+     * written, nor the saved notes or their versions. Run at launch, when no
+     * edit can be undone to bring one back.
+     */
+    private suspend fun removeUnusedImages() {
+        val texts = listOf(teleprompterNotes, cardsNotes) + _savedNotes.value.map { it.content }
+        withContext(Dispatchers.IO) {
+            val names = (texts + noteVersions.allContents())
+                .flatMapTo(mutableSetOf()) { TeleprompterParser.imageNames(it) }
+            ScriptImages.removeUnused(names)
+        }
     }
 
     /** Add sample text to current note, written for the mode the editor is in. */

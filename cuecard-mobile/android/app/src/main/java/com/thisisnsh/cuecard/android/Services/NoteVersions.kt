@@ -66,6 +66,12 @@ class NoteVersions(context: Context) {
         return if (write(version, note.id)) numbers.size + 1 else numbers.size
     }
 
+    /** What every version of every note holds. */
+    fun allContents(): List<String> =
+        root.listFiles().orEmpty()
+            .filter { it.isDirectory && SavedNote.isValidId(it.name) }
+            .flatMap { folder -> versions(folder.name).map { it.content } }
+
     fun remove(id: String) {
         folder(id)?.deleteRecursively()
     }

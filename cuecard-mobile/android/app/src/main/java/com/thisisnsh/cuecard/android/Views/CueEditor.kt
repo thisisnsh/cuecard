@@ -23,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FormatBold
 import androidx.compose.material.icons.filled.FormatItalic
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.KeyboardHide
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -60,6 +61,28 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.text.ParagraphStyle
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.style.LineHeightStyle
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.foundation.layout.offset
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.mutableIntStateOf
+import com.thisisnsh.cuecard.android.services.ScriptImages
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -95,6 +118,21 @@ class CueEditorController {
     internal var onInsertCue: (() -> Unit)? = null
     internal var onSelectAll: (() -> Unit)? = null
     internal var onToggleStyle: ((EmphasisStyle) -> Unit)? = null
+    internal var onInsertImages: ((List<String>) -> Unit)? = null
+
+    /** Images are on their way in, and a spinner shows on the line they'll go on. */
+    var isAddingImages by mutableStateOf(false)
+        private set
+
+    fun beginAddingImages() {
+        isAddingImages = true
+    }
+
+    /** Place images from the store at the caret, each on a line of its own. */
+    fun insertImages(names: List<String>) {
+        isAddingImages = false
+        if (names.isNotEmpty()) onInsertImages?.invoke(names)
+    }
 
     /** Drop an empty cue at the caret and leave the caret inside it. */
     fun insertCue() {
@@ -197,6 +235,15 @@ fun CueTextEditor(
     }
 
     val isWide = remember(value.text) { value.text.hasWideScript }
+    val density = LocalDensity.current
+    var layout by remember { mutableStateOf<TextLayoutResult?>(null) }
+    var fieldWidth by remember { mutableIntStateOf(0) }
+    // The tallest an image is shown while writing: enough to tell what it
+    // is, without pushing the words around it out of view.
+    val maxImageHeight = with(density) { (if (growsWithText) 200.dp else 260.dp).toPx() }
+    val images = remember(value.text, fieldWidth, maxImageHeight) {
+        editorImages(value.text, fieldWidth.takeIf { it > 0 } ?: with(density) { 300.dp.roundToPx() }, maxImageHeight)
+    }
     val baseStyle = TextStyle(
         fontSize = fontSize,
         fontWeight = FontWeight.Medium,
@@ -207,9 +254,17 @@ fun CueTextEditor(
     val field: @Composable (Modifier) -> Unit = { fieldModifier ->
         BasicTextField(
             value = value,
-            onValueChange = { candidate -> apply(rewritingBrackets(value, candidate)) },
+            onValueChange = { candidate -> apply(keepingImagesWhole(value, rewritingBrackets(value, candidate))) },
+            onTextLayout = { layout = it },
             modifier = fieldModifier
                 .fillMaxWidth()
+                .onSizeChanged { fieldWidth = it.width }
+                // Each image over the line its tag holds open for it.
+                .drawWithContent {
+                    drawContent()
+                    val laidOut = layout ?: return@drawWithContent
+                    for (image in images) drawEditorImage(image, laidOut)
+                }
                 .focusRequester(focusRequester)
                 // Ctrl+B and Ctrl+I on a hardware keyboard write the markers too.
                 .onPreviewKeyEvent { event ->
@@ -232,17 +287,39 @@ fun CueTextEditor(
             cursorBrush = SolidColor(AppColors.textPrimary(isDark)),
             visualTransformation = { original ->
                 androidx.compose.ui.text.input.TransformedText(
-                    highlighted(original.text, cueColor, isDark, fontSize, cardLimit),
+                    highlighted(original.text, cueColor, isDark, fontSize, cardLimit, images, density),
                     androidx.compose.ui.text.input.OffsetMapping.Identity
                 )
             }
         )
     }
 
+    // A small spinner at the start of the line images are on their way to:
+    // the line below, when the caret is partway along one.
+    val withProgress: @Composable (Modifier) -> Unit = { fieldModifier ->
+        Box(modifier = fieldModifier) {
+            field(Modifier)
+            val laidOut = layout
+            if (controller.isAddingImages && isFocused && laidOut != null) {
+                val location = imageLocation(value)
+                val line = laidOut.getLineForOffset(location.coerceIn(0, value.text.length))
+                val atLineStart = location == 0 || value.text.getOrNull(location - 1) == '\n'
+                val top = if (atLineStart) laidOut.getLineTop(line) else laidOut.getLineBottom(line)
+                CircularProgressIndicator(
+                    color = AppColors.textSecondary(isDark),
+                    strokeWidth = 2.dp,
+                    modifier = Modifier
+                        .offset { IntOffset(0, top.toInt() + 2.dp.roundToPx()) }
+                        .size(16.dp)
+                )
+            }
+        }
+    }
+
     // A card's editor grows with its text and leaves scrolling to the list it
     // sits in.
     if (growsWithText) {
-        field(modifier)
+        withProgress(modifier)
         return
     }
 
@@ -255,7 +332,7 @@ fun CueTextEditor(
     ) {
         Spacer(modifier = Modifier.height(CUE_EDITOR_EDGE_FADE))
 
-        field(Modifier.padding(horizontal = 20.dp))
+        withProgress(Modifier.padding(horizontal = 20.dp))
 
         Spacer(modifier = Modifier.height(CUE_EDITOR_EDGE_FADE))
     }
@@ -299,6 +376,28 @@ private fun bindController(
         }
     }
 
+    controller.onInsertImages = { names ->
+        val value = currentValue()
+        val text = value.text
+        val location = imageLocation(value)
+        val insertion = StringBuilder()
+        if (location > 0 && text[location - 1] != '\n') insertion.append('\n')
+        insertion.append(names.joinToString("\n") { TeleprompterParser.imageTag(it) })
+        // A line break already there does for the one after the images.
+        val endsLine = location < text.length && text[location] == '\n'
+        if (!endsLine) insertion.append('\n')
+        val caret = location + insertion.length + (if (endsLine) 1 else 0)
+        apply(
+            TextFieldValue(
+                text = text.replaceRange(location, location, insertion),
+                selection = TextRange(caret.coerceAtMost(text.length + insertion.length))
+            )
+        )
+        if (!isFocused) {
+            onFocusChange(true)
+        }
+    }
+
     controller.onSelectAll = {
         val value = currentValue()
         setValue(value.copy(selection = TextRange(0, value.text.length)))
@@ -317,7 +416,9 @@ private fun highlighted(
     cueColor: CueColor,
     isDark: Boolean,
     fontSize: TextUnit,
-    cardLimit: Int?
+    cardLimit: Int?,
+    images: List<EditorImage>,
+    density: Density
 ): AnnotatedString {
     val tagColor = cueColor.color(isDark)
     val secondary = AppColors.textSecondary(isDark)
@@ -379,13 +480,34 @@ private fun highlighted(
             }
         }
 
+        // An image's tag holds its line open, as tall as the picture drawn
+        // over it, and is itself out of sight. A tag sharing its line with
+        // words just reads quieter.
+        for (match in TeleprompterParser.imageMatches(text)) {
+            val image = images.firstOrNull { it.range == match.range }
+            if (image == null) {
+                addStyle(SpanStyle(color = secondary), match.range.first, match.range.last + 1)
+                continue
+            }
+            addStyle(SpanStyle(color = Color.Transparent, fontSize = 1.sp), match.range.first, match.range.last + 1)
+            addStyle(
+                ParagraphStyle(
+                    lineHeight = with(density) { image.size.height.toSp() },
+                    lineHeightStyle = LineHeightStyle(LineHeightStyle.Alignment.Center, LineHeightStyle.Trim.None)
+                ),
+                match.range.first,
+                match.range.last + 1
+            )
+        }
+
         // What a card holds past its limit, marked so it's plain where the card
         // has to end and a new one begin.
         if (cardLimit != null) {
             val red = AppColors.red(isDark)
             val markers = emphases.filter { it.isClosed }.flatMap { listOf(it.open, it.close!!) }
+            val imageRanges = TeleprompterParser.imageMatches(text).map { it.range }
             for (card in CueCards.cardRanges(text)) {
-                val overflow = CueCards.measure(card, text, cues, markers, cardLimit).overflow ?: continue
+                val overflow = CueCards.measure(card, text, cues, markers, imageRanges, cardLimit).overflow ?: continue
                 addStyle(
                     SpanStyle(color = red, background = red.copy(alpha = 0.14f)),
                     overflow.first,
@@ -394,6 +516,82 @@ private fun highlighted(
             }
         }
     }
+}
+
+// MARK: - Images
+
+/** An image tag on a line of its own, and the size it's drawn at, in pixels. */
+private data class EditorImage(val range: IntRange, val name: String, val size: Size)
+
+/**
+ * The images the editor draws: every image tag alone on its line, as wide as
+ * the line and no taller than `maxHeight`.
+ */
+private fun editorImages(text: String, width: Int, maxHeight: Float): List<EditorImage> =
+    TeleprompterParser.imageMatches(text).mapNotNull { match ->
+        val startsLine = match.range.first == 0 || text[match.range.first - 1] == '\n'
+        val endsLine = match.range.last + 1 == text.length || text[match.range.last + 1] == '\n'
+        if (!startsLine || !endsLine) return@mapNotNull null
+        val aspect = ScriptImages.aspectRatio(match.name)
+        var size = Size(width.toFloat(), width * aspect)
+        if (size.height > maxHeight) size = Size(maxHeight / aspect, maxHeight)
+        EditorImage(match.range, match.name, size)
+    }
+
+/** The picture, rounded, on its line; a missing one as an empty frame. */
+private fun DrawScope.drawEditorImage(image: EditorImage, layout: TextLayoutResult) {
+    val line = layout.getLineForOffset(image.range.first)
+    val top = layout.getLineTop(line) + (layout.getLineBottom(line) - layout.getLineTop(line) - image.size.height) / 2
+    val radius = minOf(12.dp.toPx(), image.size.width * 0.04f)
+    val path = Path().apply {
+        addRoundRect(RoundRect(Rect(Offset(0f, top), image.size), CornerRadius(radius)))
+    }
+    clipPath(path) {
+        val bitmap = ScriptImages.bitmap(image.name)
+        if (bitmap != null) {
+            drawImage(
+                bitmap.asImageBitmap(),
+                dstOffset = IntOffset(0, top.toInt()),
+                dstSize = IntSize(image.size.width.toInt(), image.size.height.toInt())
+            )
+        } else {
+            drawRect(Color.Gray.copy(alpha = 0.2f), Offset(0f, top), image.size)
+        }
+    }
+}
+
+/**
+ * An image is one thing to the user, though the script holds its tag: a
+ * backspace into one takes the whole tag, and the caret never rests inside one.
+ */
+private fun keepingImagesWhole(old: TextFieldValue, candidate: TextFieldValue): TextFieldValue {
+    if (!old.text.contains("[image") && !candidate.text.contains("[image")) return candidate
+
+    if (candidate.text.length == old.text.length - 1 && candidate.selection.collapsed) {
+        val deletedAt = candidate.selection.start
+        val tag = TeleprompterParser.imageMatches(old.text).firstOrNull { deletedAt in it.range }
+        if (tag != null && old.text.removeRange(deletedAt, deletedAt + 1) == candidate.text) {
+            return TextFieldValue(
+                text = old.text.removeRange(tag.range.first, tag.range.last + 1),
+                selection = TextRange(tag.range.first)
+            )
+        }
+    }
+
+    fun outside(offset: Int): Int {
+        val tag = TeleprompterParser.imageMatches(candidate.text)
+            .firstOrNull { offset > it.range.first && offset <= it.range.last } ?: return offset
+        return tag.range.last + 1
+    }
+    val selection = candidate.selection
+    val moved = TextRange(outside(selection.start), outside(selection.end))
+    return if (moved == selection) candidate else candidate.copy(selection = moved)
+}
+
+/** Where images go: after the selection, or after the cue the caret is in. */
+private fun imageLocation(value: TextFieldValue): Int {
+    val location = value.selection.max
+    return TeleprompterParser.cueTagContaining(location, value.text)?.let { it.range.last + 1 } ?: location
 }
 
 /**
@@ -567,6 +765,7 @@ val CUE_BAR_HEIGHT = 54.dp
 fun CueBar(
     isDark: Boolean,
     onAddCue: () -> Unit,
+    onAddImage: () -> Unit,
     onFormat: (EmphasisStyle) -> Unit,
     onSelectAll: () -> Unit,
     onDismissKeyboard: () -> Unit,
@@ -591,8 +790,8 @@ fun CueBar(
         // shorten when they have to.
         FirstThatFits(
             modifier = Modifier.weight(1f),
-            full = { CueBarButtons(isDark, short = false, onAddCue, onFormat, onSelectAll) },
-            short = { CueBarButtons(isDark, short = true, onAddCue, onFormat, onSelectAll) }
+            full = { CueBarButtons(isDark, short = false, onAddCue, onAddImage, onFormat, onSelectAll) },
+            short = { CueBarButtons(isDark, short = true, onAddCue, onAddImage, onFormat, onSelectAll) }
         )
 
         Box(
@@ -617,6 +816,7 @@ private fun CueBarButtons(
     isDark: Boolean,
     short: Boolean,
     onAddCue: () -> Unit,
+    onAddImage: () -> Unit,
     onFormat: (EmphasisStyle) -> Unit,
     onSelectAll: () -> Unit
 ) {
@@ -666,6 +866,16 @@ private fun CueBarButtons(
             FormatButton(Icons.Filled.FormatItalic, stringResource(R.string.italic), isDark) {
                 onFormat(EmphasisStyle.ITALIC)
             }
+        }
+
+        Box(
+            modifier = Modifier
+                .height(34.dp)
+                .glassed(Capsule, isDark)
+                .padding(horizontal = 4.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            FormatButton(Icons.Filled.Image, stringResource(R.string.add_image), isDark, onAddImage)
         }
 
         Box(

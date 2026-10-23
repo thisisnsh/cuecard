@@ -263,7 +263,7 @@
     <string name="bug_report_body">Qué pasó:\n\nQué esperabas:\n\nPasos para reproducirlo:\n</string>
     <string name="feature_request_body">¿Qué te gustaría que hiciera CueCard?\n</string>
     <string name="help_writing">Escritura</string>
-    <string name="help_writing_summary">Modos, indicaciones, formato y tarjetas</string>
+    <string name="help_writing_summary">Modos, indicaciones, formato, imágenes y tarjetas</string>
     <string name="help_notes">Notas y guardado</string>
     <string name="help_notes_summary">Guardar, abrir, importar, versiones y compartir</string>
     <string name="help_settings">Ajustes y temporizador</string>
@@ -341,4 +341,9 @@
     <string name="help_record_with_cards_detail">Toca la cámara junto a Ayuda. La cámara se abre en una pequeña ventana sobre tus tarjetas. Toca el botón rojo para grabar y otra vez para pausar, y luego toca el botón de detener para guardar el vídeo en tu galería. Sigue pasando tarjetas mientras grabas.</string>
     <string name="help_move_camera_title">Mueve la ventana de la cámara</string>
     <string name="help_move_camera_detail">Arrastra la ventana de la cámara a cualquier esquina. Pellízcala o tócala dos veces para cambiar su tamaño, y tócala para ocultar o mostrar sus botones. Usa los botones para hacer zoom o cambiar de cámara.</string>
+    <string name="image">Imagen</string>
+    <string name="add_image">Añadir imagen</string>
+    <string name="image_not_added">No se ha podido añadir una imagen. Inténtalo de nuevo.</string>
+    <string name="help_add_images_title">Añadir imágenes</string>
+    <string name="help_add_images_detail">Toca la foto encima del teclado para añadir imágenes de tu galería.</string>
 </resources>

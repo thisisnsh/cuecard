@@ -80,6 +80,7 @@ import androidx.compose.ui.zIndex
 import com.thisisnsh.cuecard.android.AnalyticsEvents
 import com.thisisnsh.cuecard.android.LocalIsDarkTheme
 import com.thisisnsh.cuecard.android.models.AppColors
+import com.thisisnsh.cuecard.android.models.CardBlock
 import com.thisisnsh.cuecard.android.models.CueCards
 import com.thisisnsh.cuecard.android.models.TeleprompterParser
 import com.thisisnsh.cuecard.android.models.WideScript
@@ -441,40 +442,58 @@ private fun Deck(
     }
 }
 
-/** One card of the deck, cues drawn in their color. */
+/** One card of the deck, cues drawn in their color, and its images. */
 @Composable
 private fun CardFace(card: String, settings: TeleprompterSettings, isDark: Boolean, modifier: Modifier = Modifier) {
     val shape = RoundedCornerShape(CARD_CORNER_RADIUS)
-    val runs = remember(card) { CueCards.runs(card) }
-    val text = remember(runs, settings.cards.cueColor, settings.cards.fontSize, isDark) {
-        runs.annotated(
-            primary = AppColors.textPrimary(isDark),
-            cue = settings.cards.cueColor.color(isDark),
-            cueFontSize = (settings.cards.fontSize * 0.82f).sp
-        )
-    }
+    val blocks = remember(card) { CardBlock.blocks(card) }
     val fontSize = settings.cards.fontSize
     val lineSpacing = if (card.hasWideScript) WideScript.lineSpacing(fontSize.toFloat()) else 4f
 
-    Box(
+    BoxWithConstraints(
         modifier = modifier
             .shadow(16.dp, shape, ambientColor = Color.Black.copy(alpha = if (isDark) 0.5f else 0.1f))
             .clip(shape)
             .background(cardBackground(isDark))
             .border(0.7.dp, AppColors.textSecondary(isDark).copy(alpha = 0.2f), shape)
-            .verticalScroll(rememberScrollState())
     ) {
-        Text(
-            text = text,
-            fontSize = fontSize.sp,
-            lineHeight = (fontSize * 1.2f + lineSpacing).sp,
-            fontWeight = FontWeight.SemiBold,
+        val imageHeight = (maxHeight - CARD_PADDING * 2).coerceAtLeast(0.dp)
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(24.dp)
-        )
+                .verticalScroll(rememberScrollState())
+                .padding(CARD_PADDING),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            for (block in blocks) {
+                when (block) {
+                    is CardBlock.Text -> Text(
+                        text = remember(block, settings.cards.cueColor, fontSize, isDark) {
+                            block.runs.annotated(
+                                primary = AppColors.textPrimary(isDark),
+                                cue = settings.cards.cueColor.color(isDark),
+                                cueFontSize = (fontSize * 0.82f).sp
+                            )
+                        },
+                        fontSize = fontSize.sp,
+                        lineHeight = (fontSize * 1.2f + lineSpacing).sp,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    // An image on its own fills the card.
+                    is CardBlock.Image -> ScriptImage(
+                        name = block.name,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = imageHeight)
+                    )
+                }
+            }
+        }
     }
 }
+
+private val CARD_PADDING = 24.dp
 
 /** A card's fill: white on the light page, a lifted grey on the dark one. */
 internal fun cardBackground(isDark: Boolean): Color =

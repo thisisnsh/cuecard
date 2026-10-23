@@ -261,7 +261,7 @@
     <string name="bug_report_body">What happened:\n\nWhat you expected:\n\nSteps to reproduce:\n</string>
     <string name="feature_request_body">What would you like CueCard to do?\n</string>
     <string name="help_writing">Writing</string>
-    <string name="help_writing_summary">Modes, cues, formatting and cards</string>
+    <string name="help_writing_summary">Modes, cues, formatting, images and cards</string>
     <string name="help_notes">Notes &amp; Saving</string>
     <string name="help_notes_summary">Save, open, import, versions and sharing</string>
     <string name="help_settings">Settings &amp; Timer</string>
@@ -338,4 +338,9 @@
     <string name="help_record_with_cards_detail">Tap the camera next to Help. The camera opens in a small window over your cards. Tap the red button to record and again to pause, then tap stop to save the video to your gallery. Keep turning cards while you record.</string>
     <string name="help_move_camera_title">Move the Camera Window</string>
     <string name="help_move_camera_detail">Drag the camera window to any corner. Pinch or double-tap it to change its size, and tap it to hide or show its buttons. Use the buttons to zoom or flip the camera.</string>
+    <string name="image">Image</string>
+    <string name="add_image">Add Image</string>
+    <string name="image_not_added">An image couldn\'t be added. Try again.</string>
+    <string name="help_add_images_title">Add Images</string>
+    <string name="help_add_images_detail">Tap the photo above the keyboard to add images from your gallery.</string>
 </resources>

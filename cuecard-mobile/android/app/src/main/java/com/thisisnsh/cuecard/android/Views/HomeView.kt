@@ -21,6 +21,8 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.thisisnsh.cuecard.android.services.TakesLibrary
+import com.thisisnsh.cuecard.android.services.ScriptImages
+import androidx.activity.result.PickVisualMediaRequest
 import com.thisisnsh.cuecard.android.services.VideoAccess
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -282,6 +284,21 @@ fun HomeView(
             if (!settingsService.importNote(title, content)) {
                 fileErrorMessage = context.getString(R.string.file_opened_not_saved)
             }
+        }
+    }
+
+    /** Keep the images picked from the gallery and place them at the caret. */
+    val imagePicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickMultipleVisualMedia(maxItems = 10)
+    ) { uris ->
+        if (uris.isEmpty()) return@rememberLauncherForActivityResult
+        editorController.beginAddingImages()
+        scope.launch {
+            val names = withContext(Dispatchers.IO) { uris.mapNotNull { ScriptImages.add(context, it) } }
+            if (names.size < uris.size) {
+                fileErrorMessage = context.getString(R.string.image_not_added)
+            }
+            editorController.insertImages(names)
         }
     }
 
@@ -609,6 +626,10 @@ fun HomeView(
                         onAddCue = {
                             AnalyticsEvents.logButtonClick("insert_cue", "home")
                             editorController.insertCue()
+                        },
+                        onAddImage = {
+                            AnalyticsEvents.logButtonClick("insert_image", "home")
+                            imagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                         },
                         onFormat = { style ->
                             AnalyticsEvents.logButtonClick(
@@ -1479,7 +1500,8 @@ fun SavedNotesView(
         } else {
             sorted.filter {
                 it.title.contains(trimmed, ignoreCase = true) ||
-                    CueCards.removingSeparators(it.content).contains(trimmed, ignoreCase = true)
+                    TeleprompterParser.removingImages(CueCards.removingSeparators(it.content))
+                        .contains(trimmed, ignoreCase = true)
             }
         }
     }
@@ -2031,10 +2053,11 @@ private fun SavedNoteRow(
                 }
             }
 
-            // The start of a note, with card breaks read as spaces and emphasis
-            // markers left out.
+            // The start of a note, with card breaks read as spaces, and emphasis
+            // markers and images left out.
             Text(
-                text = RichText.plain(CueCards.removingSeparators(note.content)).take(120).replace("\n", " "),
+                text = RichText.plain(TeleprompterParser.removingImages(CueCards.removingSeparators(note.content)).trim())
+                    .take(120).replace("\n", " "),
                 fontSize = 15.sp,
                 color = AppColors.textSecondary(isDark),
                 maxLines = 2,
