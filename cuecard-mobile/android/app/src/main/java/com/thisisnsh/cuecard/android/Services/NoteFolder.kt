@@ -276,9 +276,10 @@ class NoteFolder(private val context: Context) {
         val unknown = (files - claimed).toSortedSet()
 
         // Every file gone at once is more likely a folder that hasn't loaded
-        // than one the user emptied, so notes are only let go of while some
-        // of their files are still there.
-        if (missing.isNotEmpty() && claimed.isNotEmpty()) {
+        // than one the user emptied, so notes are only let go of while the
+        // folder still lists some file. A note's own file renamed counts, so
+        // a folder of one note keeps it through a rename.
+        if (missing.isNotEmpty() && files.isNotEmpty()) {
             for (id in missing) {
                 val entry = index[id] ?: continue
                 // A file renamed outside the app still holds the same text.
