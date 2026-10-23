@@ -1369,6 +1369,7 @@ fun SavedNotesView(
     val scope = rememberCoroutineScope()
     val savedNotes by settingsService.savedNotes.collectAsState()
     val versionCounts by settingsService.versionCounts.collectAsState()
+    val currentNoteId by settingsService.currentNoteId.collectAsState()
     val hasNotesFolder by settingsService.hasNotesFolder.collectAsState()
     val notesFolderName by settingsService.notesFolderName.collectAsState()
     val oversizedFiles by settingsService.notesFolderOversizedFiles.collectAsState()
@@ -1601,6 +1602,7 @@ fun SavedNotesView(
                         val versions = versionCounts[note.id] ?: 1
                         SavedNoteRow(
                             note = note,
+                            isCurrent = note.id == currentNoteId,
                             isDark = isDark,
                             detail = "${dateFormat.format(Date(note.updatedAt))} · " +
                                 pluralStringResource(R.plurals.version_count, versions, versions),
@@ -1852,6 +1854,8 @@ private fun StorageLine(text: String, icon: ImageVector, color: Color) {
 @Composable
 private fun SavedNoteRow(
     note: SavedNote,
+    /** The note open in the editor. */
+    isCurrent: Boolean,
     isDark: Boolean,
     detail: String,
     onLoad: () -> Unit,
@@ -1921,6 +1925,21 @@ private fun SavedNoteRow(
                         modifier = Modifier
                             .clip(Capsule)
                             .background(AppColors.green(isDark).copy(alpha = 0.15f))
+                            .padding(horizontal = 8.dp, vertical = 3.dp)
+                    )
+                }
+
+                // The note open in the editor.
+                if (isCurrent) {
+                    Text(
+                        text = stringResource(R.string.current),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = AppColors.blue(isDark),
+                        maxLines = 1,
+                        modifier = Modifier
+                            .clip(Capsule)
+                            .background(AppColors.blue(isDark).copy(alpha = 0.15f))
                             .padding(horizontal = 8.dp, vertical = 3.dp)
                     )
                 }
