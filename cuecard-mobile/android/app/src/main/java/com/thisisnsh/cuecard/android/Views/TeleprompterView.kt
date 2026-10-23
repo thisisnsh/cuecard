@@ -93,6 +93,7 @@ import com.thisisnsh.cuecard.android.models.hasWideScript
 import com.thisisnsh.cuecard.android.modifiers.scriptEdgeFade
 import com.thisisnsh.cuecard.android.modifiers.glassed
 import com.thisisnsh.cuecard.android.services.ReviewPromptService
+import com.thisisnsh.cuecard.android.services.TakeStore
 import com.thisisnsh.cuecard.android.services.TeleprompterPiPManager
 import com.thisisnsh.cuecard.android.services.TeleprompterSettings
 import androidx.compose.ui.platform.LocalContext
@@ -147,6 +148,8 @@ private fun <T> controlsFade() = tween<T>(durationMillis = 300, easing = FastOut
 fun TeleprompterView(
     content: TeleprompterContent,
     settings: TeleprompterSettings,
+    /** What the script is filed under for its takes, if it can be. */
+    scriptId: String?,
     onDismiss: () -> Unit
 ) {
     val isDark = LocalIsDarkTheme.current
@@ -204,6 +207,14 @@ fun TeleprompterView(
             hide(WindowInsetsCompat.Type.navigationBars())
         }
         onDispose { controller?.show(WindowInsetsCompat.Type.navigationBars()) }
+    }
+
+    // A video recorded from now until the teleprompter closes is a take of
+    // this script.
+    DisposableEffect(Unit) {
+        val takeStore = TakeStore.getInstance(context)
+        scriptId?.let { takeStore.begin(it) }
+        onDispose { takeStore.end() }
     }
 
     // A read is a stretch of looking without touching, which is exactly what the

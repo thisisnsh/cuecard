@@ -14,6 +14,14 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.runtime.DisposableEffect
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.thisisnsh.cuecard.android.services.TakesLibrary
+import com.thisisnsh.cuecard.android.services.VideoAccess
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
@@ -157,6 +165,7 @@ fun HomeView(
     val savedNotes by settingsService.savedNotes.collectAsState()
     val currentNoteId by settingsService.currentNoteId.collectAsState()
     val versionCounts by settingsService.versionCounts.collectAsState()
+    val draftIds by settingsService.draftIds.collectAsState()
     val payload by notifications.payload.collectAsState()
     val dismissedIds by notifications.dismissedIds.collectAsState()
 
@@ -166,6 +175,7 @@ fun HomeView(
     var showingCards by remember { mutableStateOf(false) }
     var showingSavedNotes by remember { mutableStateOf(false) }
     var showingVersions by remember { mutableStateOf(false) }
+    var showingTakes by remember { mutableStateOf(false) }
     var showingTimer by remember { mutableStateOf(false) }
     var showingSaveDialog by remember { mutableStateOf(false) }
     var saveNoteTitle by remember { mutableStateOf("") }
@@ -189,6 +199,41 @@ fun HomeView(
     val hasUnsavedChanges = if (currentNote != null) currentNote.content != notes else hasNotes
     /** The open note has older versions to go back to. */
     val hasVersionHistory = currentNoteId?.let { (versionCounts[it] ?: 1) > 1 } ?: false
+
+    /**
+     * What the script is filed under for its takes: the note it was opened
+     * from, or the ID it will be saved under.
+     */
+    val scriptId = currentNoteId ?: draftIds[settings.scriptMode]
+    val takesLibrary = remember { TakesLibrary(context) }
+    val takes by takesLibrary.takes.collectAsState()
+    val hasSessions by takesLibrary.hasSessions.collectAsState()
+    val videoAccess by takesLibrary.status.collectAsState()
+    /**
+     * The videos recorded while the teleprompter or cards were open on the
+     * script. Once it has been, and before the videos can be read, a button to
+     * go find them.
+     */
+    val showsTakes = takes.isNotEmpty() ||
+        (hasSessions && (videoAccess == VideoAccess.NOT_DETERMINED || videoAccess == VideoAccess.LIMITED))
+
+    DisposableEffect(takesLibrary) {
+        onDispose { takesLibrary.close() }
+    }
+
+    LaunchedEffect(scriptId) {
+        scriptId?.let { takesLibrary.load(it) }
+    }
+
+    // Coming back to the app, a video may have been recorded or deleted.
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    DisposableEffect(lifecycle) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) scope.launch { takesLibrary.reload() }
+        }
+        lifecycle.addObserver(observer)
+        onDispose { lifecycle.removeObserver(observer) }
+    }
 
     val banner = remember(payload, dismissedIds) {
         notifications.notification(RemoteNotification.Surface.HOME_BANNER)
@@ -318,10 +363,11 @@ fun HomeView(
 
     BackHandler(
         enabled = showingSettings || showingSavedNotes || showingVersions || showingTeleprompter ||
-            showingTimer || showingHelp || isEditorFocused
+            showingTimer || showingHelp || showingTakes || isEditorFocused
     ) {
         when {
             showingHelp -> showingHelp = false
+            showingTakes -> showingTakes = false
             showingTeleprompter -> showingTeleprompter = false
             showingSettings -> showingSettings = false
             showingTimer -> showingTimer = false
@@ -632,6 +678,18 @@ fun HomeView(
 
                             Spacer(modifier = Modifier.weight(1f))
 
+                            AnimatedVisibility(
+                                visible = showsTakes,
+                                enter = fadeIn() + scaleIn(),
+                                exit = fadeOut() + scaleOut()
+                            ) {
+                                TakesButton(count = takes.size, isDark = isDark) {
+                                    AnalyticsEvents.logButtonClick("takes", "home")
+                                    isEditorFocused = false
+                                    showingTakes = true
+                                }
+                            }
+
                             StartButton(
                                 isCardsMode = isCardsMode,
                                 isEnabled = canStart,
@@ -715,11 +773,16 @@ fun HomeView(
             exit = slideOutVertically(targetOffsetY = { it }) + fadeOut()
         ) {
             val content = remember(notes) { TeleprompterParser.parseNotes(notes) }
+            // The script it was opened on, kept while it slides away.
+            val openScriptId = remember { scriptId }
             TeleprompterView(
                 content = content,
                 settings = settings,
+                scriptId = openScriptId,
                 onDismiss = {
                     showingTeleprompter = false
+                    // Anything recorded while it was open is a take now.
+                    scope.launch { takesLibrary.reload() }
                     requestReviewIfEarned()
                 }
             )
@@ -732,10 +795,27 @@ fun HomeView(
         ) {
             // The deck as it was opened: edits wait for the next time it's read.
             val deck = remember { cards }
+            val openScriptId = remember { scriptId }
             CueCardsView(
                 cards = deck,
                 settings = settings,
-                onDismiss = { showingCards = false }
+                scriptId = openScriptId,
+                onDismiss = {
+                    showingCards = false
+                    scope.launch { takesLibrary.reload() }
+                }
+            )
+        }
+
+        AnimatedVisibility(
+            visible = showingTakes,
+            enter = scaleIn(initialScale = 0.9f) + fadeIn(),
+            exit = scaleOut(targetScale = 0.9f) + fadeOut()
+        ) {
+            TakesView(
+                library = takesLibrary,
+                scriptTitle = currentNote?.title,
+                onDismiss = { showingTakes = false }
             )
         }
 

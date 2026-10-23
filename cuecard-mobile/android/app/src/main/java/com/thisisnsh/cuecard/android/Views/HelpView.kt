@@ -40,6 +40,7 @@ import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material.icons.filled.ViewCarousel
 import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.material.icons.filled.Search
@@ -72,6 +73,7 @@ import com.thisisnsh.cuecard.android.AppLinks
 import com.thisisnsh.cuecard.android.LocalIsDarkTheme
 import com.thisisnsh.cuecard.android.models.AppColors
 import com.thisisnsh.cuecard.android.models.ScriptMode
+import com.thisisnsh.cuecard.android.services.TakesLibrary
 import com.thisisnsh.cuecard.android.services.WhatsNewService
 
 // MARK: - Pages
@@ -173,7 +175,23 @@ private object AllHelp {
         )
     )
 
-    val sections = listOf(writing, notes, settings, teleprompter, cards)
+    val takes = HelpSection(
+        "takes", R.string.takes, R.string.help_takes_summary, Icons.Filled.VideoLibrary,
+        listOfNotNull(
+            HelpTopic(R.string.find_your_takes, R.string.help_find_your_takes_detail),
+            HelpTopic(R.string.help_play_a_take_title, R.string.help_play_a_take_detail),
+            // Favorites are kept on a video from Android 11.
+            if (TakesLibrary.canFavorite) {
+                HelpTopic(R.string.help_favorite_a_take_title, R.string.help_favorite_a_take_detail)
+            } else {
+                null
+            },
+            HelpTopic(R.string.help_delete_a_take_title, R.string.help_delete_a_take_detail),
+            HelpTopic(R.string.help_where_takes_are_kept_title, R.string.help_where_takes_are_kept_detail)
+        )
+    )
+
+    val sections = listOf(writing, notes, settings, teleprompter, cards, takes)
 }
 
 // MARK: - Help Screen

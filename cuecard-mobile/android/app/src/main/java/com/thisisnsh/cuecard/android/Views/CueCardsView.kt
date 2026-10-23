@@ -40,6 +40,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -85,6 +87,7 @@ import com.thisisnsh.cuecard.android.models.annotated
 import com.thisisnsh.cuecard.android.models.hasWideScript
 import com.thisisnsh.cuecard.android.modifiers.Capsule
 import com.thisisnsh.cuecard.android.modifiers.glassed
+import com.thisisnsh.cuecard.android.services.TakeStore
 import com.thisisnsh.cuecard.android.services.TeleprompterSettings
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -110,9 +113,12 @@ private fun <T> deckSpring() = spring<T>(dampingRatio = 0.84f, stiffness = 247f)
 fun CueCardsView(
     cards: List<String>,
     settings: TeleprompterSettings,
+    /** What the deck is filed under for its takes, if it can be. */
+    scriptId: String?,
     onDismiss: () -> Unit
 ) {
     val isDark = LocalIsDarkTheme.current
+    val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
     var index by remember { mutableIntStateOf(0) }
@@ -132,6 +138,13 @@ fun CueCardsView(
     var now by remember { mutableLongStateOf(startedAt) }
 
     val isFinished = index >= cards.size
+
+    // A video recorded while the deck is open is a take of it.
+    DisposableEffect(Unit) {
+        val takeStore = TakeStore.getInstance(context)
+        scriptId?.let { takeStore.begin(it) }
+        onDispose { takeStore.end() }
+    }
 
     LaunchedEffect(Unit) {
         AnalyticsEvents.logScreenView(CARDS_SCREEN)

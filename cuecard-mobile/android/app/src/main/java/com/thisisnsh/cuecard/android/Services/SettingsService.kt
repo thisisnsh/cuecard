@@ -344,6 +344,8 @@ class SettingsService(private val context: Context) {
         /** The teleprompter's open note. Named from when it was the only one. */
         private val CURRENT_NOTE_ID = stringPreferencesKey("current_note_id")
         private val CARDS_NOTE_ID = stringPreferencesKey("cards_note_id")
+        private val TELEPROMPTER_DRAFT_ID = stringPreferencesKey("teleprompter_draft_id")
+        private val CARDS_DRAFT_ID = stringPreferencesKey("cards_draft_id")
 
         /**
          * Speed used to be set in words a minute, back when a highlight ran along
@@ -423,6 +425,15 @@ class SettingsService(private val context: Context) {
     private val _currentNoteId = MutableStateFlow<String?>(null)
     val currentNoteId: StateFlow<String?> = _currentNoteId.asStateFlow()
 
+    /**
+     * The ID each mode's script is saved under once it's saved, so takes
+     * recorded while it was still a draft go with the note.
+     */
+    private val _draftIds = MutableStateFlow<Map<ScriptMode, String>>(emptyMap())
+    val draftIds: StateFlow<Map<ScriptMode, String>> = _draftIds.asStateFlow()
+
+    private val takeStore = TakeStore.getInstance(context)
+
     private val json = Json { ignoreUnknownKeys = true }
 
     /**
@@ -496,6 +507,11 @@ class SettingsService(private val context: Context) {
         cardsNotes = prefs[CARDS_NOTES] ?: ""
         teleprompterNoteId = prefs[CURRENT_NOTE_ID]
         cardsNoteId = prefs[CARDS_NOTE_ID]
+        _draftIds.value = mapOf(
+            ScriptMode.TELEPROMPTER to (prefs[TELEPROMPTER_DRAFT_ID] ?: UUID.randomUUID().toString()),
+            ScriptMode.CARDS to (prefs[CARDS_DRAFT_ID] ?: UUID.randomUUID().toString())
+        )
+        if (prefs[TELEPROMPTER_DRAFT_ID] == null || prefs[CARDS_DRAFT_ID] == null) saveDraftIds()
         showScript(loaded.scriptMode)
 
         prefs[SAVED_NOTES]?.let { jsonStr ->
@@ -617,9 +633,12 @@ class SettingsService(private val context: Context) {
         _versionCounts.value = emptyMap()
         _savedNotes.value = emptyList()
         _currentNoteId.value = null
+        takeStore.removeAll()
         context.dataStore.edit { prefs ->
             prefs.clear()
         }
+        startNewDraft(ScriptMode.TELEPROMPTER)
+        startNewDraft(ScriptMode.CARDS)
         ReviewPromptService.getInstance(context).reset()
     }
 
@@ -710,14 +729,45 @@ class SettingsService(private val context: Context) {
         val trimmedContent = _notes.value.trim()
         if (trimmedContent.isEmpty()) return true
 
+        val mode = _settings.value.scriptMode
         val note = SavedNote(
+            id = draftId(mode),
             title = title,
             content = _notes.value,
-            mode = _settings.value.scriptMode
+            mode = mode
         )
         if (!notesLock.withLock { store(note) }) return false
         setCurrentNoteId(note.id)
+        startNewDraft(mode)
         return true
+    }
+
+    private fun draftId(mode: ScriptMode): String =
+        _draftIds.value[mode] ?: UUID.randomUUID().toString().also { id ->
+            _draftIds.value = _draftIds.value + (mode to id)
+        }
+
+    /**
+     * What `mode`'s script is filed under for its takes: the note it was
+     * opened from, or the ID it will be saved under.
+     */
+    fun scriptId(mode: ScriptMode): String = noteId(mode) ?: draftId(mode)
+
+    /**
+     * The mode's draft was saved or let go of. What's written next is a new
+     * script, with no takes of its own yet.
+     */
+    private suspend fun startNewDraft(mode: ScriptMode) {
+        _draftIds.value = _draftIds.value + (mode to UUID.randomUUID().toString())
+        saveDraftIds()
+    }
+
+    private suspend fun saveDraftIds() {
+        val drafts = _draftIds.value
+        context.dataStore.edit { prefs ->
+            drafts[ScriptMode.TELEPROMPTER]?.let { prefs[TELEPROMPTER_DRAFT_ID] = it }
+            drafts[ScriptMode.CARDS]?.let { prefs[CARDS_DRAFT_ID] = it }
+        }
     }
 
     /** Update an existing saved note. Returns false if it couldn't be saved. */
@@ -770,6 +820,7 @@ class SettingsService(private val context: Context) {
         updateScriptMode(note.mode)
         setCurrentNoteId(note.id)
         saveNotes(note.content)
+        startNewDraft(note.mode)
     }
 
     /**
@@ -796,6 +847,7 @@ class SettingsService(private val context: Context) {
 
     private suspend fun forget(id: String) {
         withContext(Dispatchers.IO) { noteVersions.remove(id) }
+        takeStore.remove(id)
         _versionCounts.value = _versionCounts.value - id
         _savedNotes.value = _savedNotes.value.filter { it.id != id }
         if (teleprompterNoteId == id || cardsNoteId == id) {
@@ -818,6 +870,7 @@ class SettingsService(private val context: Context) {
         val removed = withContext(Dispatchers.IO) { noteFolder.remove(ids) }
         close(ids)
         withContext(Dispatchers.IO) { noteVersions.removeAll() }
+        for (id in ids) takeStore.remove(id)
         _versionCounts.value = emptyMap()
         _savedNotes.value = emptyList()
         teleprompterNoteId = null
@@ -922,6 +975,7 @@ class SettingsService(private val context: Context) {
     suspend fun createNewNote() {
         setCurrentNoteId(null)
         saveNotes("")
+        startNewDraft(_settings.value.scriptMode)
     }
 
     /**
@@ -932,6 +986,7 @@ class SettingsService(private val context: Context) {
     suspend fun importNote(title: String, content: String): Boolean {
         setCurrentNoteId(null)
         saveNotes(content)
+        startNewDraft(_settings.value.scriptMode)
         return saveCurrentNote(title)
     }
 
