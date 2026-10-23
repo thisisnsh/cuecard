@@ -240,8 +240,12 @@ final class CueTextView: UITextView {
         guard !keyboardScreenFrame.isNull, let window else { return 0 }
 
         let keyboard = window.convert(keyboardScreenFrame, from: nil)
-        let editor = convert(bounds, to: window)
-        return max(0, editor.maxY - keyboard.minY)
+        // From the frame, not the bounds: the bounds move with the scroll, and
+        // a scroll between pixels made the overlap waver in its last digits.
+        let editor = superview?.convert(frame, to: window) ?? convert(bounds, to: window)
+        // Whole pixels, so a sliver of rounding never reads as the keyboard moving.
+        let scale = window.screen.scale
+        return max(0, ((editor.maxY - keyboard.minY) * scale).rounded() / scale)
     }
 
     /// Scroll so the caret sits inside the part of the editor nothing is covering.
