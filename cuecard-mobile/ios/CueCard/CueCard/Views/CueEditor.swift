@@ -181,9 +181,29 @@ final class CueTextView: UITextView {
         updateBottomInset(travellingWith: KeyboardAnimation(notification))
     }
 
+    private var laidOutWidth: CGFloat = 0
+
     override func layoutSubviews() {
         super.layoutSubviews()
+        // A new width lays every line out again, images to their new size —
+        // once UIKit has given the text its new width, or it's thrown away.
+        if textContainer.size.width != laidOutWidth {
+            laidOutWidth = textContainer.size.width
+            layOutWholeText()
+        }
         updateBottomInset()
+    }
+
+    /// Lay out the whole script, not just what's on screen. TextKit 2 guesses
+    /// at the height of lines it hasn't laid out yet, and guesses an image
+    /// as one line of text: the script came out shorter than it is, and
+    /// grew under the finger as it scrolled.
+    func layOutWholeText() {
+        guard isScrollEnabled, let textLayoutManager else { return }
+        let document = textLayoutManager.documentRange
+        textLayoutManager.ensureLayout(for: document)
+        textLayoutManager.enumerateTextLayoutFragments(from: document.location, options: [.ensuresLayout]) { _ in true }
+        textLayoutManager.textViewportLayoutController.layoutViewport()
     }
 
     /// Keep clear whatever covers the bottom of the editor: the keyboard and the
@@ -412,6 +432,7 @@ struct CueTextEditor: UIViewRepresentable {
         }
         textView.attributedText = ScriptImageAttachment.editorText(for: text, maxHeight: imageMaxHeight)
         applyHighlighting(to: textView)
+        textView.layOutWholeText()
         return textView
     }
 
@@ -437,8 +458,10 @@ struct CueTextEditor: UIViewRepresentable {
         if ScriptImageAttachment.script(from: textView.textStorage) != text {
             textView.attributedText = ScriptImageAttachment.editorText(for: text, maxHeight: imageMaxHeight)
             applyHighlighting(to: textView)
+            textView.layOutWholeText()
         } else if styleChanged {
             applyHighlighting(to: textView)
+            textView.layOutWholeText()
         }
         context.coordinator.appliedColorScheme = colorScheme
         context.coordinator.appliedCueColor = cueColor
@@ -713,6 +736,7 @@ struct CueTextEditor: UIViewRepresentable {
             textView.inputDelegate?.textDidChange(textView)
 
             parent.text = ScriptImageAttachment.script(from: textView.textStorage)
+            (textView as? CueTextView)?.layOutWholeText()
             (textView as? CueTextView)?.scrollCaretIntoView()
         }
 
@@ -726,6 +750,7 @@ struct CueTextEditor: UIViewRepresentable {
 
             // UITextView's own scroll-to-caret ignores the bottom inset, so the
             // last line would slide under the cue bar as it's typed.
+            (textView as? CueTextView)?.layOutWholeText()
             (textView as? CueTextView)?.scrollCaretIntoView()
         }
 
