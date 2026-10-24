@@ -69,7 +69,7 @@ struct EditorSettingsView: View {
                 presets: TeleprompterSettings.fontSizePresets
             )
 
-            Toggle("Mirror Text", isOn: $settingsService.settings.mirrorsText)
+            Toggle("Reading Guide", isOn: $settingsService.settings.showsReadingGuide)
         }
 
         Section("Floating Window") {
@@ -80,6 +80,16 @@ struct EditorSettingsView: View {
             )
 
             AspectRatioPicker(selection: $settingsService.settings.overlayAspectRatio)
+        }
+
+        Section {
+            Toggle("Flip Horizontally", isOn: $settingsService.settings.mirrorsText)
+
+            Toggle("Flip Vertically", isOn: $settingsService.settings.flipsTextVertically)
+        } header: {
+            Text("Mirror")
+        } footer: {
+            Text("Flip the teleprompter and floating window text to read it off a teleprompter's glass.")
         }
 
         Section {

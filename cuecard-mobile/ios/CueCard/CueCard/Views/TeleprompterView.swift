@@ -17,6 +17,7 @@ struct TeleprompterView: View {
     private var isCountingDown: Bool { pipManager.playback.isCountingDown }
     private var countdownValue: Int { pipManager.playback.countdownValue }
     private var isMirrored: Bool { settings.mirrorsText }
+    private var isFlippedVertically: Bool { settings.flipsTextVertically }
     /// During the countdown the play button shows the seconds left, in the cue
     /// color, and switches to the pause icon once playback starts. It still
     /// pauses while showing a number.
@@ -28,6 +29,10 @@ struct TeleprompterView: View {
     @State private var showingCamera = false
     @State private var cameraLink = CameraLink()
     @State private var controlsTimer: Timer?
+    /// Where the reading guide is while it's being dragged. The script only
+    /// lines up with it once it's let go.
+    @State private var draggedReadingLine: CGFloat?
+    @State private var readingLineAtDragStart: CGFloat?
     @Environment(\.scenePhase) private var scenePhase
 
     /// Settings are read live, so a size or speed changed mid-run shows at once.
@@ -68,13 +73,28 @@ struct TeleprompterView: View {
     private static let topFade: CGFloat = 96
     private static let bottomFade: CGFloat = 140
 
-    /// Where on screen the line being read sits, as a fraction of the view height.
-    /// Just above centre: high enough to leave the next few lines in view, low
-    /// enough to read as the middle of the screen rather than the top of it.
+    /// How tall one line of the script is, so the guide can point at the middle
+    /// of the line on the reading line rather than its top.
+    private var lineHeight: CGFloat { UIFont.script(ofSize: CGFloat(settings.fontSize)).lineHeight }
+
+    /// How far down the view the top of the line being read sits: wherever the
+    /// reader has dragged the reading guide, or the default spot without it.
     ///
     /// It doubles as the script's top inset, so the first line starts on the
     /// reading line and a line's scroll target is its own position in the text.
-    private static let readingLineFraction: CGFloat = 0.45
+    private func readingLine(in height: CGFloat) -> CGFloat {
+        guard settings.showsReadingGuide else {
+            return height * CGFloat(TeleprompterSettings.default.readingGuidePosition)
+        }
+        return clampedReadingLine(height * CGFloat(settings.readingGuidePosition), in: height)
+    }
+
+    /// Keeps the line on the reading guide clear of the fades at both ends.
+    private func clampedReadingLine(_ line: CGFloat, in height: CGFloat) -> CGFloat {
+        let highest = Self.topFade
+        let lowest = max(highest, height - Self.bottomFade - lineHeight)
+        return min(max(line, highest), lowest)
+    }
 
     var body: some View {
         CameraRecordingView(isPresented: $showingCamera, scriptID: settingsService.teleprompterScriptID,
@@ -98,8 +118,8 @@ struct TeleprompterView: View {
                             linePosition: scriptTime * Double(settings.linesPerMinute) / 60.0,
                             colorScheme: colorScheme,
                             seesThrough: showingCamera,
-                            topPadding: geometry.size.height * Self.readingLineFraction,
-                            bottomPadding: geometry.size.height * (1 - Self.readingLineFraction),
+                            topPadding: readingLine(in: geometry.size.height),
+                            bottomPadding: geometry.size.height - readingLine(in: geometry.size.height),
                             snapToken: pipManager.playback.snapToken,
                             restorationRequest: pipManager.restorationRequest,
                             onRestorationReady: { request in
@@ -119,11 +139,17 @@ struct TeleprompterView: View {
                                 resetControlsTimer()
                             }
                         )
-                        .scaleEffect(x: isMirrored ? -1 : 1, y: 1)
+                        .scaleEffect(x: isMirrored ? -1 : 1, y: isFlippedVertically ? -1 : 1)
                         // Lines arrive and leave through a fade rather than being cut
                         // off flat against the toolbar and the controls. A mask,
                         // not a painted fade, so the camera behind stays clear.
                         .scriptEdgeMask(top: Self.topFade, bottom: Self.bottomFade)
+
+                        if settings.showsReadingGuide {
+                            readingGuide(in: geometry.size.height)
+                                // Flipped with the script, so it stays beside the same line.
+                                .scaleEffect(x: isMirrored ? -1 : 1, y: isFlippedVertically ? -1 : 1)
+                        }
 
                         // Controls overlay. Always laid out and faded rather than
                         // added and removed, so the glass fades with the icons
@@ -131,7 +157,9 @@ struct TeleprompterView: View {
                         VStack {
                             Spacer()
 
-                            HStack(spacing: 24) {
+                            // Closer together with the anchor buttons in, so the
+                            // row still fits a small phone.
+                            HStack(spacing: content.hasAnchors ? 14 : 24) {
                                 // PiP toggle button. Kept in the stack even when
                                 // PiP is unavailable — taking it out shifts the
                                 // play button off centre — and only made invisible.
@@ -149,6 +177,10 @@ struct TeleprompterView: View {
                                 .opacity(pipManager.isPiPPossible ? 1 : 0)
                                 .disabled(!pipManager.isPiPPossible)
                                 .accessibilityHidden(!pipManager.isPiPPossible)
+
+                                if content.hasAnchors {
+                                    anchorButton(forward: false)
+                                }
 
                                 // Play/Pause button
                                 Button(action: {
@@ -181,6 +213,10 @@ struct TeleprompterView: View {
                                 .accessibilityLabel(isCountingDown
                                                     ? "Pause, starting in \(countdownValue)"
                                                     : (isPlaying ? "Pause" : "Play"))
+
+                                if content.hasAnchors {
+                                    anchorButton(forward: true)
+                                }
 
                                 // Restart button
                                 Button(action: {
@@ -290,6 +326,56 @@ struct TeleprompterView: View {
         }
     }
 
+    // MARK: - Reading Guide
+
+    /// Stays up while the buttons fade: it's there to read by.
+    private func readingGuide(in height: CGFloat) -> some View {
+        let line = draggedReadingLine ?? readingLine(in: height)
+        return ReadingGuide(
+            y: line + lineHeight / 2,
+            colorScheme: colorScheme,
+            onDrag: { translation in
+                let start = readingLineAtDragStart ?? line
+                readingLineAtDragStart = start
+                // Upside down, a drag down the screen moves the guide up the script.
+                let moved = isFlippedVertically ? -translation : translation
+                draggedReadingLine = clampedReadingLine(start + moved, in: height)
+            },
+            onDragEnd: {
+                if let draggedReadingLine, height > 0 {
+                    settingsService.settings.readingGuidePosition = Double(draggedReadingLine / height)
+                }
+                draggedReadingLine = nil
+                readingLineAtDragStart = nil
+            },
+            onStep: { lines in
+                let lines = isFlippedVertically ? -lines : lines
+                let moved = clampedReadingLine(line + lineHeight * CGFloat(lines), in: height)
+                if height > 0 { settingsService.settings.readingGuidePosition = Double(moved / height) }
+            }
+        )
+    }
+
+    /// Jumps to the next `[anchor]` in the script, or back to the one before.
+    /// Faded while there's none that way.
+    private func anchorButton(forward: Bool) -> some View {
+        let isEnabled = forward ? pipManager.canJumpToNextAnchor : pipManager.canJumpToPreviousAnchor
+        return Button(action: {
+            AnalyticsEvents.logButtonClick(forward ? "next_anchor" : "previous_anchor", screen: "teleprompter")
+            pipManager.jumpToAnchor(forward: forward)
+            resetControlsTimer()
+        }) {
+            Image(systemName: forward ? "forward.end.fill" : "backward.end.fill")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                .frame(width: 52, height: 52)
+                .glassedEffect(in: Circle())
+        }
+        .opacity(isEnabled ? 1 : 0.4)
+        .disabled(!isEnabled)
+        .accessibilityLabel(forward ? "Next Anchor" : "Previous Anchor")
+    }
+
     // MARK: - Shared Playback Session
 
     private func setupPiP() {
@@ -391,6 +477,58 @@ private extension View {
             .allowsHitTesting(!isHidden)
             .accessibilityHidden(isHidden)
             .animation(controlsFade, value: isHidden)
+    }
+}
+
+/// A pointer in the margin beside the line being read, with a faint rule across
+/// the script. Only the pointer takes touches, so the script under the rule
+/// still scrolls by hand.
+private struct ReadingGuide: View {
+    /// Where the pointer's tip sits, from the top of the view.
+    let y: CGFloat
+    let colorScheme: ColorScheme
+    /// How far the pointer has been dragged since the drag began.
+    let onDrag: (CGFloat) -> Void
+    let onDragEnd: () -> Void
+    /// Moves the guide by this many lines, for VoiceOver's swipe up and down.
+    let onStep: (Int) -> Void
+
+    private static let touchSize: CGFloat = 44
+
+    var body: some View {
+        ZStack(alignment: .topLeading) {
+            Rectangle()
+                .fill(AppColors.textPrimary(for: colorScheme).opacity(0.15))
+                .frame(height: 1)
+                .padding(.leading, 20)
+                .offset(y: y - 0.5)
+                .allowsHitTesting(false)
+
+            // Centred in the script's 24-point margin, with the touch area
+            // running off the edge of the screen.
+            Image(systemName: "arrowtriangle.right.fill")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(AppColors.green(for: colorScheme))
+                .frame(width: Self.touchSize, height: Self.touchSize)
+                .contentShape(Rectangle())
+                .offset(x: 12 - Self.touchSize / 2, y: y - Self.touchSize / 2)
+                .gesture(
+                    DragGesture(minimumDistance: 0, coordinateSpace: .global)
+                        .onChanged { onDrag($0.translation.height) }
+                        .onEnded { _ in onDragEnd() }
+                )
+                .accessibilityElement()
+                .accessibilityLabel("Reading Guide")
+                .accessibilityHint("Swipe up or down to move it.")
+                .accessibilityAdjustableAction { direction in
+                    switch direction {
+                    case .increment: onStep(-1)
+                    case .decrement: onStep(1)
+                    @unknown default: break
+                    }
+                }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 }
 
@@ -639,7 +777,7 @@ struct AttributedTextView: UIViewRepresentable {
 
         /// The inverse of the line-to-offset map: which line, fractionally, sits on
         /// the reading line at this scroll offset.
-        private func linePosition(forOffset offset: CGFloat) -> Double {
+        func linePosition(forOffset offset: CGFloat) -> Double {
             guard lineOffsets.count > 1 else { return 0 }
             guard offset > lineOffsets[0] else { return 0 }
             guard offset < lineOffsets[lineOffsets.count - 1] else { return Double(lineOffsets.count - 1) }
@@ -750,6 +888,9 @@ struct AttributedTextView: UIViewRepresentable {
         host.setBackground(backgroundColor, seesThrough: seesThrough)
         coordinator.onTap = onTap
         coordinator.onHandOff = onHandOff
+        // How far the reading line moved since the last update, when the reader
+        // moves the reading guide.
+        let readingLineShift = topPadding - textView.textContainerInset.top
         textView.textContainerInset = UIEdgeInsets(top: topPadding, left: 24, bottom: bottomPadding, right: 24)
 
         let needsSnap = coordinator.lastSnapToken != snapToken || coordinator.isScrollSuspended
@@ -789,7 +930,8 @@ struct AttributedTextView: UIViewRepresentable {
         // its own position within the laid-out text.
         let layoutSize = textView.bounds.size
         let isFirstLayout = coordinator.lineOffsets.isEmpty
-        if isFirstLayout || coordinator.lastLayoutSize != layoutSize {
+        let isNewLayout = isFirstLayout || coordinator.lastLayoutSize != layoutSize
+        if isNewLayout {
             coordinator.lastLayoutSize = layoutSize
             let layout = layoutLines(for: textView)
             coordinator.lineOffsets = layout.offsets
@@ -807,6 +949,16 @@ struct AttributedTextView: UIViewRepresentable {
             if needsRestoration {
                 restoreReader(host, coordinator: coordinator, at: offsets.first ?? 0)
             }
+            return
+        }
+
+        // The reading line moved on a screen of the same size: the script stays
+        // where it is, and the line now on the reading line is the one being read.
+        if readingLineShift != 0, !isNewLayout, !needsFullRebuild, !needsRestoration {
+            let maxY = max(0, textView.contentSize.height - textView.bounds.height)
+            let offset = min(max(textView.contentOffset.y + readingLineShift, 0), maxY)
+            coordinator.settle(at: offset, in: textView)
+            onHandOff(coordinator.linePosition(forOffset: offset))
             return
         }
 

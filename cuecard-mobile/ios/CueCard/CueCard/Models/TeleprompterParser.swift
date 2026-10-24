@@ -11,6 +11,8 @@ struct TeleprompterContent {
     let cues: [CueMatch]
     /// Whether the text places any images
     let hasImages: Bool
+    /// Whether the text marks any anchors to jump between
+    let hasAnchors: Bool
 }
 
 /// Information about a single word for highlighting
@@ -38,12 +40,14 @@ struct ImageMatch {
     let name: String
 }
 
-/// A run of a single line: spoken text, a delivery cue, or an image
+/// A run of a single line: spoken text, a delivery cue, an image, or an anchor
 enum CueSegment {
     case text(String)
     case cue(String)
     /// The image's file name
     case image(String)
+    /// A spot the teleprompter can jump to. It takes no room of its own.
+    case anchor
 }
 
 /// Parser for teleprompter scripts with `[cue …]` delivery cues
@@ -63,6 +67,10 @@ enum CueSegment {
 /// `[image 3fa9….jpg]` places an image, named for its file in the app's image
 /// store. The editor shows it as the image itself, and so does everything
 /// that reads the script; where an image can't be drawn, it's left out.
+///
+/// `[anchor]` marks a spot the teleprompter can jump to, the way a link jumps
+/// to an anchor on a web page. It isn't shown while reading, and cards
+/// leave it out.
 enum TeleprompterParser {
 
     /// `[cue]` / `[note]`, an optional legacy `:color`, then the cue text
@@ -75,6 +83,24 @@ enum TeleprompterParser {
     private static let imagePattern = #"\[image[ \t]+([A-Za-z0-9-]+\.[A-Za-z0-9]+)\]"#
 
     private static let imageRegex = try! NSRegularExpression(pattern: imagePattern, options: [])
+
+    /// The tag that marks an anchor.
+    static let anchorTag = "[anchor]"
+
+    private static let anchorRegex = try! NSRegularExpression(
+        pattern: #"\[anchor\]"#, options: [.caseInsensitive]
+    )
+
+    /// An anchor alone on its line, with the blank lines after it, so it can
+    /// be moved onto the line it marks.
+    private static let anchorLineRegex = try! NSRegularExpression(
+        pattern: #"^[ \t]*((?:\[anchor\][ \t]*)+)\n+"#, options: [.caseInsensitive, .anchorsMatchLines]
+    )
+
+    /// Anchors with nothing after them to jump to.
+    private static let trailingAnchorsRegex = try! NSRegularExpression(
+        pattern: #"(?:\s*\[anchor\])+\s*$"#, options: [.caseInsensitive]
+    )
 
     /// The tag for an image in the store.
     static func imageTag(name: String) -> String {
@@ -98,13 +124,27 @@ enum TeleprompterParser {
     /// Parse script content for teleprompter display
     static func parseNotes(_ notes: String) -> TeleprompterContent {
         // A script written as cards reads straight through, a card to a line.
-        let cleanedNotes = cleanText(CueCards.removingSeparators(from: notes))
+        let cleanedNotes = attachingAnchors(in: cleanText(CueCards.removingSeparators(from: notes)))
 
         return TeleprompterContent(
             fullText: cleanedNotes,
             words: extractWords(from: cleanedNotes),
             cues: cueMatches(in: cleanedNotes),
-            hasImages: !imageMatches(in: cleanedNotes).isEmpty
+            hasImages: !imageMatches(in: cleanedNotes).isEmpty,
+            hasAnchors: !anchorRanges(in: cleanedNotes).isEmpty
+        )
+    }
+
+    /// An anchor written on a line of its own moved onto the start of the
+    /// line after it, so it doesn't leave a blank line behind when reading.
+    /// Anchors at the very end mark nothing and are dropped.
+    private static func attachingAnchors(in text: String) -> String {
+        let attached = anchorLineRegex.stringByReplacingMatches(
+            in: text, options: [], range: NSRange(location: 0, length: (text as NSString).length), withTemplate: "$1"
+        )
+        return trailingAnchorsRegex.stringByReplacingMatches(
+            in: attached, options: [], range: NSRange(location: 0, length: (attached as NSString).length),
+            withTemplate: ""
         )
     }
 
@@ -181,6 +221,25 @@ enum TeleprompterParser {
         return result as String
     }
 
+    /// Every anchor tag in the text, in order. One written inside a cue
+    /// belongs to the cue's text.
+    static func anchorRanges(in text: String) -> [NSRange] {
+        let cues = cueMatches(in: text).map(\.range)
+        return anchorRegex
+            .matches(in: text, options: [], range: NSRange(location: 0, length: (text as NSString).length))
+            .map(\.range)
+            .filter { range in !cues.contains { NSIntersectionRange($0, range).length > 0 } }
+    }
+
+    /// The text with its anchor tags taken out, for a preview or a search.
+    static func removingAnchors(from text: String) -> String {
+        let result = NSMutableString(string: text)
+        for range in anchorRanges(in: text).reversed() {
+            result.replaceCharacters(in: range, with: "")
+        }
+        return result as String
+    }
+
     /// The cue tag the caret is sitting inside, if it is inside one.
     ///
     /// A caret resting against either bracket counts as outside: that's a spot a
@@ -191,13 +250,14 @@ enum TeleprompterParser {
         }
     }
 
-    /// Split a single line into spoken text, cue and image runs.
+    /// Split a single line into spoken text, cue, image and anchor runs.
     ///
     /// Shared by the teleprompter and the PiP overlay so both render cues identically.
     static func segments(in line: String) -> [CueSegment] {
         let nsLine = line as NSString
         let tags = (cueMatches(in: line).map { ($0.range, CueSegment.cue($0.content)) }
-            + imageMatches(in: line).map { ($0.range, CueSegment.image($0.name)) })
+            + imageMatches(in: line).map { ($0.range, CueSegment.image($0.name)) }
+            + anchorRanges(in: line).map { ($0, CueSegment.anchor) })
             .sorted { $0.0.location < $1.0.location }
 
         if tags.isEmpty {
@@ -253,7 +313,7 @@ enum TeleprompterParser {
                     for word in RichText.plain(textContent).split(whereSeparator: \.isWhitespace) {
                         words.append(WordInfo(text: String(word), isCue: false))
                     }
-                case .image:
+                case .image, .anchor:
                     break
                 }
             }

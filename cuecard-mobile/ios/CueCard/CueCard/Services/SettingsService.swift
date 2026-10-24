@@ -200,9 +200,17 @@ struct TeleprompterSettings: Codable, Equatable {
     /// Play and pause on the teleprompter start and pause the camera's
     /// recording, and the camera's buttons play and pause the teleprompter.
     var syncsCamera: Bool
-    /// The teleprompter and floating window draw the text flipped, for reading
-    /// off a teleprompter's glass.
+    /// The teleprompter and floating window draw the text flipped left to
+    /// right, for reading off a teleprompter's glass.
     var mirrorsText: Bool
+    /// The teleprompter and floating window draw the text upside down, for a
+    /// glass that reflects a screen lying the other way up.
+    var flipsTextVertically: Bool
+    /// The teleprompter draws a pointer on the reading line, which the reader
+    /// drags up or down to read wherever suits their eyes.
+    var showsReadingGuide: Bool
+    /// Where the reading line sits, as a fraction of the teleprompter's height.
+    var readingGuidePosition: Double
 
     static let `default` = TeleprompterSettings(
         editorFontSize: ScreenTextScale.scaled(16, by: ScreenTextScale.editor),
@@ -227,7 +235,12 @@ struct TeleprompterSettings: Codable, Equatable {
             timerSeconds: 0
         ),
         syncsCamera: true,
-        mirrorsText: false
+        mirrorsText: false,
+        flipsTextVertically: false,
+        showsReadingGuide: true,
+        // Just above centre: high enough to leave the next few lines in view,
+        // low enough to read as the middle of the screen rather than the top.
+        readingGuidePosition: 0.45
     )
 
     /// Scroll speed range (multiplier)
@@ -345,6 +358,9 @@ struct TeleprompterSettings: Codable, Equatable {
         case cards
         case syncsCamera
         case mirrorsText
+        case flipsTextVertically
+        case showsReadingGuide
+        case readingGuidePosition
     }
 
     init(
@@ -364,7 +380,10 @@ struct TeleprompterSettings: Codable, Equatable {
         watch: WatchSettings,
         cards: CardsSettings,
         syncsCamera: Bool,
-        mirrorsText: Bool
+        mirrorsText: Bool,
+        flipsTextVertically: Bool,
+        showsReadingGuide: Bool,
+        readingGuidePosition: Double
     ) {
         self.editorFontSize = editorFontSize
         self.fontSize = fontSize
@@ -383,6 +402,9 @@ struct TeleprompterSettings: Codable, Equatable {
         self.cards = cards
         self.syncsCamera = syncsCamera
         self.mirrorsText = mirrorsText
+        self.flipsTextVertically = flipsTextVertically
+        self.showsReadingGuide = showsReadingGuide
+        self.readingGuidePosition = readingGuidePosition
     }
 
     init(from decoder: Decoder) throws {
@@ -440,6 +462,12 @@ struct TeleprompterSettings: Codable, Equatable {
             ?? TeleprompterSettings.default.syncsCamera
         mirrorsText = try container.decodeIfPresent(Bool.self, forKey: .mirrorsText)
             ?? TeleprompterSettings.default.mirrorsText
+        flipsTextVertically = try container.decodeIfPresent(Bool.self, forKey: .flipsTextVertically)
+            ?? TeleprompterSettings.default.flipsTextVertically
+        showsReadingGuide = try container.decodeIfPresent(Bool.self, forKey: .showsReadingGuide)
+            ?? TeleprompterSettings.default.showsReadingGuide
+        readingGuidePosition = min(max(try container.decodeIfPresent(Double.self, forKey: .readingGuidePosition)
+            ?? TeleprompterSettings.default.readingGuidePosition, 0), 1)
     }
 
     static func clamp(_ value: Int, to range: ClosedRange<Int>) -> Int {
@@ -465,6 +493,9 @@ struct TeleprompterSettings: Codable, Equatable {
         try container.encode(cards, forKey: .cards)
         try container.encode(syncsCamera, forKey: .syncsCamera)
         try container.encode(mirrorsText, forKey: .mirrorsText)
+        try container.encode(flipsTextVertically, forKey: .flipsTextVertically)
+        try container.encode(showsReadingGuide, forKey: .showsReadingGuide)
+        try container.encode(readingGuidePosition, forKey: .readingGuidePosition)
     }
 }
 
@@ -645,23 +676,27 @@ class SettingsService: ObservableObject {
     static let defaultNoteText = String(localized: """
 Hi everyone.
 
-I'm excited to be here today to talk about CueCard's teleprompter.
+I'm excited to be here today to talk about CueCard's *teleprompter*.
 
 [cue smile and pause]
 
-It scrolls your script at your pace, so your eyes stay up and your words stay on track.
+It scrolls your script at _your_ pace, so your eyes stay up and your words stay on track.
 
 [cue pause]
+
+[anchor]
 
 Leave the app and it keeps going in a floating window, right over your camera or your video call.
 
 [cue slow down]
 
-Lost your place? Drag the script back. Running long? Skip ahead.
+Lost your place? Drag the script back. Running long? Skip ahead to the next anchor.
 
-And the timer turns yellow near the end… and red if you get a little too passionate.
+And the timer turns yellow near the end… and red if you get a _little_ too passionate.
 
 [cue light chuckle]
+
+[anchor]
 
 You can even play or pause from your Apple Watch, or with the Action Button.
 
@@ -669,30 +704,32 @@ And these colored words?
 
 [cue emphasize]
 
-Those are your cues. Reminders to smile, pause, or not panic. They're never meant to be read out.
+Those are your cues. Reminders to smile, pause, or *not panic*. They're never meant to be read out.
 
 [cue pause]
 
-Try it out. I think you'll love it.
-""", comment: "Sample teleprompter script. Keep each [cue …] tag's brackets and the word cue; translate the words after it.")
+[anchor]
+
+Try it out. I think you'll *love* it.
+""", comment: "Sample teleprompter script. Keep each [anchor] tag as it is, each [cue …] tag's brackets and the word cue, and the * and _ around emphasized words; translate the words after cue and between the markers.")
 
     /// Sample text for cards mode: a short talk about cards, each card short
     /// enough for the Lock Screen.
     static let defaultCardsText = String(localized: """
-Hi everyone. Introducing Cue Cards. [cue smile]
+Hi everyone. Introducing *Cue Cards*. [cue smile]
 [separator]
-One thought per card. Swipe to the next one when you're ready.
+One thought per card. Swipe to the next one when _you're_ ready.
 [separator]
-The timer at the top keeps you honest. [cue light chuckle]
+The timer at the top keeps you *honest*. [cue light chuckle]
 [separator]
 Turn on Show on Lock Screen to read and turn your cards from there.
 [separator]
-Or turn them from your Apple Watch. [cue pause]
+Or turn them from your _Apple Watch_. [cue pause]
 [separator]
 Colored words are cues, not lines. [cue emphasize]
 [separator]
-Thanks for listening. Questions?
-""", comment: "Sample cards. Keep [separator] and each [cue …] tag's brackets and the word cue; translate the words after it. Keep each card under 120 characters.")
+Thanks for listening. *Questions?*
+""", comment: "Sample cards. Keep [separator], each [cue …] tag's brackets and the word cue, and the * and _ around emphasized words; translate the words after cue and between the markers. Keep each card under 120 characters.")
 
     private init() {
         self.hasSeenWelcome = userDefaults.bool(forKey: hasSeenWelcomeKey)

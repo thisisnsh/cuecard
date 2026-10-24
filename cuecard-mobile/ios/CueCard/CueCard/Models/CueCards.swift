@@ -109,9 +109,9 @@ enum CueCards {
     /// Count what a card shows against `limit`. Cue text counts, the `[cue`
     /// and `]` around it don't, nor do emphasis `markers`, and neither does
     /// blank space at either end. An image doesn't count, written as its tag
-    /// or held in the editor as `imageCharacter`.
+    /// or held in the editor as `imageCharacter`, and nor does an `[anchor]`.
     static func measure(_ card: NSRange, in text: NSString, cues: [CueMatch], markers: [NSRange] = [],
-                        images: [NSRange] = [], limit: Int) -> CardMeasure {
+                        images: [NSRange] = [], anchors: [NSRange] = [], limit: Int) -> CardMeasure {
         var count = 0
         var solidCount = 0
         var overflowStart: Int?
@@ -122,7 +122,8 @@ enum CueCards {
                 NSLocationInRange(range.location, $0.range) && !NSLocationInRange(range.location, $0.contentRange)
             }
             if isTagSyntax || markers.contains(where: { NSLocationInRange(range.location, $0) })
-                || images.contains(where: { NSLocationInRange(range.location, $0) }) { return }
+                || images.contains(where: { NSLocationInRange(range.location, $0) })
+                || anchors.contains(where: { NSLocationInRange(range.location, $0) }) { return }
 
             let isBlank = character.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             if isBlank && count == 0 { return }
@@ -144,7 +145,8 @@ enum CueCards {
         let cues = TeleprompterParser.cueMatches(in: card)
         return measure(NSRange(location: 0, length: nsText.length), in: nsText, cues: cues,
                        markers: RichText.markerRanges(in: card, skipping: cues.map(\.range)),
-                       images: TeleprompterParser.imageMatches(in: card).map(\.range), limit: limit)
+                       images: TeleprompterParser.imageMatches(in: card).map(\.range),
+                       anchors: TeleprompterParser.anchorRanges(in: card), limit: limit)
     }
 
     /// The cards as the editor shows them: blank ones kept, so a card just
@@ -210,6 +212,9 @@ enum CueCards {
                 case .image:
                     if !isFirst { append(" ", isCue: false) }
                     appendImage()
+                case .anchor:
+                    // Cards are turned, not jumped through.
+                    continue
                 }
                 isFirst = false
             }

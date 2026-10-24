@@ -351,6 +351,11 @@ final class CueEditorController: ObservableObject {
         coordinator?.insertEmptyCue()
     }
 
+    /// Drop an `[anchor]` at the caret, for the teleprompter to jump to.
+    func insertAnchor() {
+        coordinator?.insertAnchor()
+    }
+
     /// Select the whole script. Dragging a selection out to the end is awkward
     /// here: the editor runs on under the keyboard and the cue bar, so the edge
     /// that would scroll a drag along is out of reach.
@@ -554,11 +559,13 @@ struct CueTextEditor: UIViewRepresentable {
 
         // Separators show in either mode, quieter than the words, so a script
         // written as cards reads as one in the teleprompter's editor too.
-        for separator in CueCards.separatorRanges(in: textView.text) {
+        // Anchors are set the same way: marks in the script, not words of it.
+        let anchors = TeleprompterParser.anchorRanges(in: textView.text)
+        for tag in CueCards.separatorRanges(in: textView.text) + anchors {
             storage.addAttributes([
                 .foregroundColor: secondary,
                 .font: UIFont.systemFont(ofSize: fontSize * 0.8, weight: .bold)
-            ], range: separator)
+            ], range: tag)
         }
 
         // Each stretch takes every style written around it; an emphasis still
@@ -611,7 +618,7 @@ struct CueTextEditor: UIViewRepresentable {
             let markers = emphases.filter(\.isClosed).flatMap { [$0.open, $0.close!] }
             for card in CueCards.cardRanges(in: textView.text) {
                 guard let overflow = CueCards.measure(card, in: nsText, cues: cues, markers: markers,
-                                                      limit: cardLimit).overflow else {
+                                                      anchors: anchors, limit: cardLimit).overflow else {
                     continue
                 }
                 storage.addAttributes([
@@ -682,22 +689,47 @@ struct CueTextEditor: UIViewRepresentable {
             return true
         }
 
+        /// Where a tag goes in at the caret: past the end of a selection, so it
+        /// never eats the words it's next to — and past the end of the cue the
+        /// caret is in, since nothing goes inside a cue.
+        private func tagLocation(in textView: UITextView) -> Int {
+            let location = NSMaxRange(textView.selectedRange)
+            if let enclosing = TeleprompterParser.cueTag(containing: location, in: textView.text) {
+                return NSMaxRange(enclosing.range)
+            }
+            return location
+        }
+
         /// Write an empty cue in at the caret, as if it had been typed there.
         func insertEmptyCue() {
             guard let textView else { return }
 
-            // Past the end of a selection, so a cue never eats the words it's next
-            // to — and past the end of the cue the caret is in, since cues don't nest.
-            var location = NSMaxRange(textView.selectedRange)
-            if let enclosing = TeleprompterParser.cueTag(containing: location, in: textView.text) {
-                location = NSMaxRange(enclosing.range)
-            }
+            let location = tagLocation(in: textView)
             let insertion = (textView.text as NSString).emptyCueInsertion(at: location)
 
             replace(
                 NSRange(location: location, length: 0),
                 with: insertion.text,
                 caret: location + insertion.caretOffset,
+                in: textView
+            )
+
+            if !textView.isFirstResponder {
+                textView.becomeFirstResponder()
+            }
+        }
+
+        /// Write an anchor in at the caret, with the caret left after it.
+        func insertAnchor() {
+            guard let textView else { return }
+
+            let location = tagLocation(in: textView)
+            let insertion = (textView.text as NSString).spacedInsertion(of: TeleprompterParser.anchorTag, at: location)
+
+            replace(
+                NSRange(location: location, length: 0),
+                with: insertion.text,
+                caret: location + (insertion.text as NSString).length,
                 in: textView
             )
 
@@ -1076,6 +1108,14 @@ extension NSString {
     /// collide with the words either side of it, and how far into that text the
     /// caret belongs — between the brackets, ready for the cue to be typed.
     func emptyCueInsertion(at location: Int) -> (text: String, caretOffset: Int) {
+        let insertion = spacedInsertion(of: TeleprompterParser.emptyCueTag, at: location)
+        return (insertion.text, insertion.tagOffset + (TeleprompterParser.cueTagPrefix as NSString).length)
+    }
+
+    /// The text to splice in for `tag` at `location`, spaced so it doesn't
+    /// collide with the words either side of it, and how far into that text
+    /// the tag starts.
+    func spacedInsertion(of tag: String, at location: Int) -> (text: String, tagOffset: Int) {
         let previous = location > 0 ? substring(with: NSRange(location: location - 1, length: 1)) : ""
         let next = location < length ? substring(with: NSRange(location: location, length: 1)) : ""
 
@@ -1083,19 +1123,15 @@ extension NSString {
         let needsTrailingSpace = !next.isEmpty && next.rangeOfCharacter(from: .whitespacesAndNewlines) == nil
 
         let leading = needsLeadingSpace ? " " : ""
-        let text = leading + TeleprompterParser.emptyCueTag + (needsTrailingSpace ? " " : "")
-        let caretOffset = (leading as NSString).length
-            + (TeleprompterParser.cueTagPrefix as NSString).length
-
-        return (text, caretOffset)
+        return (leading + tag + (needsTrailingSpace ? " " : ""), (leading as NSString).length)
     }
 }
 
 // MARK: - Cue bar
 
 /// The strip above the keyboard while a script is being written: buttons to drop
-/// a cue or an image in at the caret, to bold or italicize, and to select the
-/// whole script, and one to get the keyboard out of the way.
+/// a cue, an anchor or an image in at the caret, to bold or italicize, and to
+/// select the whole script, and one to get the keyboard out of the way.
 struct CueBar: View {
     /// The bar's height. The editor keeps this much room clear at the bottom so
     /// the line being typed never hides behind it.
@@ -1103,6 +1139,8 @@ struct CueBar: View {
 
     let colorScheme: ColorScheme
     var onAddCue: () -> Void
+    /// Nil where anchors aren't used, which leaves the button out.
+    var onAddAnchor: (() -> Void)?
     var onAddImage: () -> Void
     var onFormat: (EmphasisStyle) -> Void
     var onSelectAll: () -> Void
@@ -1113,8 +1151,9 @@ struct CueBar: View {
             // The buttons don't fit a small phone with their full names, so
             // they shorten when they have to.
             ViewThatFits(in: .horizontal) {
-                buttons(short: false)
-                buttons(short: true)
+                buttons(.full)
+                buttons(.short)
+                buttons(.tight)
             }
 
             Spacer(minLength: 0)
@@ -1138,27 +1177,33 @@ struct CueBar: View {
         }
     }
 
-    private func buttons(short: Bool) -> some View {
-        HStack(spacing: 10) {
-            addButton(short ? "Cue" : "Add Cue", accessibilityLabel: "Add Cue", action: onAddCue)
+    /// How much room the buttons get: full names, short ones, or short ones
+    /// packed closer for a small phone with every button showing.
+    private enum Fit {
+        case full, short, tight
 
-            Button(action: onAddImage) {
-                Image(systemName: "photo")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                    .frame(width: 34, height: 34)
-                    .glassedEffect(in: Circle())
+        var spacing: CGFloat { self == .tight ? 6 : 10 }
+        var padding: CGFloat { self == .tight ? 12 : 16 }
+    }
+
+    private func buttons(_ fit: Fit) -> some View {
+        HStack(spacing: fit.spacing) {
+            addButton(fit == .full ? "Add Cue" : "Cue", accessibilityLabel: "Add Cue",
+                      padding: fit.padding, action: onAddCue)
+
+            if let onAddAnchor {
+                iconButton("bookmark", accessibilityLabel: "Add Anchor", action: onAddAnchor)
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Add Image")
+
+            iconButton("photo", accessibilityLabel: "Add Image", action: onAddImage)
 
             formatButtons
 
             Button(action: onSelectAll) {
-                Text(short ? "All" : "Select All")
+                Text(fit == .full ? "Select All" : "All")
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                    .padding(.horizontal, 16)
+                    .padding(.horizontal, fit.padding)
                     .frame(height: 34)
                     .glassedEffect(in: Capsule())
             }
@@ -1166,6 +1211,19 @@ struct CueBar: View {
             .accessibilityLabel("Select All")
         }
         .fixedSize()
+    }
+
+    private func iconButton(_ systemImage: String, accessibilityLabel: LocalizedStringKey,
+                            action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                .frame(width: 34, height: 34)
+                .glassedEffect(in: Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(accessibilityLabel)
     }
 
     /// Bold and italic, sharing one capsule.
@@ -1191,7 +1249,8 @@ struct CueBar: View {
         .accessibilityLabel(label)
     }
 
-    private func addButton(_ title: LocalizedStringKey, accessibilityLabel: LocalizedStringKey, action: @escaping () -> Void) -> some View {
+    private func addButton(_ title: LocalizedStringKey, accessibilityLabel: LocalizedStringKey,
+                           padding: CGFloat, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 6) {
                 Image(systemName: "plus")
@@ -1200,7 +1259,7 @@ struct CueBar: View {
                     .font(.subheadline.weight(.semibold))
             }
             .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-            .padding(.horizontal, 16)
+            .padding(.horizontal, padding)
             .frame(height: 34)
             .glassedEffect(in: Capsule())
         }

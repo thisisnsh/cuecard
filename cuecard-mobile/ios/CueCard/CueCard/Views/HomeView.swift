@@ -294,6 +294,12 @@ struct HomeView: View {
         editorController.insertCue()
     }
 
+    /// Mark the caret's spot as an anchor the teleprompter can jump to.
+    private func insertAnchor() {
+        AnalyticsEvents.logButtonClick("insert_anchor", screen: "home")
+        editorController.insertAnchor()
+    }
+
     /// Bold or italicize the selection, or the word at the caret.
     private func format(_ style: EmphasisStyle) {
         AnalyticsEvents.logButtonClick(style == .bold ? "format_bold" : "format_italic", screen: "home")
@@ -385,6 +391,9 @@ struct HomeView: View {
                     CueBar(
                         colorScheme: colorScheme,
                         onAddCue: insertCue,
+                        // Anchors are for jumping through the teleprompter;
+                        // cards are turned one at a time.
+                        onAddAnchor: isCardsMode ? nil : insertAnchor,
                         onAddImage: {
                             AnalyticsEvents.logButtonClick("insert_image", screen: "home")
                             showingImagePicker = true
@@ -1005,8 +1014,8 @@ struct SavedNotesView: View {
 
         return sorted.filter {
             $0.title.localizedStandardContains(trimmed)
-                || TeleprompterParser.removingImages(from: CueCards.removingSeparators(from: $0.content))
-                    .localizedStandardContains(trimmed)
+                || TeleprompterParser.removingAnchors(from: TeleprompterParser.removingImages(
+                    from: CueCards.removingSeparators(from: $0.content))).localizedStandardContains(trimmed)
         }
     }
 
@@ -1018,9 +1027,10 @@ struct SavedNotesView: View {
     }()
 
     /// The start of a note, with card breaks read as spaces, and emphasis
-    /// markers and images left out.
+    /// markers, images and anchors left out.
     private func preview(of note: SavedNote) -> String {
-        let text = TeleprompterParser.removingImages(from: CueCards.removingSeparators(from: note.content))
+        let text = TeleprompterParser.removingAnchors(from: TeleprompterParser.removingImages(
+            from: CueCards.removingSeparators(from: note.content)))
             .trimmingCharacters(in: .whitespacesAndNewlines)
         return String(RichText.plain(text).prefix(120))
             .replacingOccurrences(of: "\n", with: " ")

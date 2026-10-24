@@ -7,6 +7,230 @@
     " %@ " : {
       "shouldTranslate" : false
     },
+    "Add Anchor" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir ancla"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter une ancre"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adicionar âncora"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавить якорь"
+          }
+        }
+      }
+    },
+    "Next Anchor" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ancla siguiente"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ancre suivante"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Próxima âncora"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Следующий якорь"
+          }
+        }
+      }
+    },
+    "Previous Anchor" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ancla anterior"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ancre précédente"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Âncora anterior"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Предыдущий якорь"
+          }
+        }
+      }
+    },
+    "Flip Horizontally" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invertir horizontalmente"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inverser horizontalement"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inverter horizontalmente"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отразить по горизонтали"
+          }
+        }
+      }
+    },
+    "Flip the teleprompter and floating window text to read it off a teleprompter's glass." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invierte el texto del teleprompter y de la ventana flotante para leerlo en el cristal de un teleprompter."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inversez le texte du prompteur et de la fenêtre flottante pour le lire sur la vitre d'un prompteur."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inverta o texto do teleprompter e da janela flutuante para lê-lo no vidro de um teleprompter."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отразите текст телесуфлёра и плавающего окна, чтобы читать его со стекла телесуфлёра."
+          }
+        }
+      }
+    },
+    "Flip Vertically" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invertir verticalmente"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inverser verticalement"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inverter verticalmente"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отразить по вертикали"
+          }
+        }
+      }
+    },
+    "Mirror" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Espejo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Miroir"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Espelho"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зеркало"
+          }
+        }
+      }
+    },
+    "Turn on Flip Horizontally or Flip Vertically under Mirror in Settings to flip the text for a teleprompter's glass. The floating window uses the same settings. Both are off by default." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activa Invertir horizontalmente o Invertir verticalmente en Espejo, en Ajustes, para invertir el texto y leerlo en el cristal de un teleprompter. La ventana flotante usa los mismos ajustes. Ambos están desactivados de forma predeterminada."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activez Inverser horizontalement ou Inverser verticalement sous Miroir dans Réglages pour inverser le texte et le lire sur la vitre d'un prompteur. La fenêtre flottante utilise les mêmes réglages. Les deux sont désactivés par défaut."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ative Inverter horizontalmente ou Inverter verticalmente em Espelho, nos Ajustes, para inverter o texto e lê-lo no vidro de um teleprompter. A janela flutuante usa os mesmos ajustes. Ambos ficam desativados por padrão."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Включите «Отразить по горизонтали» или «Отразить по вертикали» в разделе «Зеркало» в настройках, чтобы отразить текст для чтения со стекла телесуфлёра. Эти настройки действуют и в плавающем окне. По умолчанию обе выключены."
+          }
+        }
+      }
+    },
     "“%@” couldn't be deleted from the notes folder. Its note stays deleted." : {
       "localizations" : {
         "es" : {
@@ -3870,60 +4094,60 @@
         }
       }
     },
-    "Hi everyone.\n\nI'm excited to be here today to talk about CueCard's teleprompter.\n\n[cue smile and pause]\n\nIt scrolls your script at your pace, so your eyes stay up and your words stay on track.\n\n[cue pause]\n\nLeave the app and it keeps going in a floating window, right over your camera or your video call.\n\n[cue slow down]\n\nLost your place? Drag the script back. Running long? Skip ahead.\n\nAnd the timer turns yellow near the end… and red if you get a little too passionate.\n\n[cue light chuckle]\n\nYou can even play or pause from your Apple Watch, or with the Action Button.\n\nAnd these colored words?\n\n[cue emphasize]\n\nThose are your cues. Reminders to smile, pause, or not panic. They're never meant to be read out.\n\n[cue pause]\n\nTry it out. I think you'll love it." : {
-      "comment" : "Sample teleprompter script. Keep each [cue …] tag's brackets and the word cue; translate the words after it.",
+    "Hi everyone.\n\nI'm excited to be here today to talk about CueCard's *teleprompter*.\n\n[cue smile and pause]\n\nIt scrolls your script at _your_ pace, so your eyes stay up and your words stay on track.\n\n[cue pause]\n\n[anchor]\n\nLeave the app and it keeps going in a floating window, right over your camera or your video call.\n\n[cue slow down]\n\nLost your place? Drag the script back. Running long? Skip ahead to the next anchor.\n\nAnd the timer turns yellow near the end… and red if you get a _little_ too passionate.\n\n[cue light chuckle]\n\n[anchor]\n\nYou can even play or pause from your Apple Watch, or with the Action Button.\n\nAnd these colored words?\n\n[cue emphasize]\n\nThose are your cues. Reminders to smile, pause, or *not panic*. They're never meant to be read out.\n\n[cue pause]\n\n[anchor]\n\nTry it out. I think you'll *love* it." : {
+      "comment" : "Sample teleprompter script. Keep each [anchor] tag as it is, each [cue …] tag's brackets and the word cue, and the * and _ around emphasized words; translate the words after cue and between the markers.",
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hola a todos.\n\nMe alegra estar aquí hoy para hablaros del teleprompter de CueCard.\n\n[cue sonríe y haz una pausa]\n\nDesplaza tu guion a tu ritmo, para que mantengas la mirada al frente y no pierdas el hilo.\n\n[cue pausa]\n\nSal de la app y sigue en una ventana flotante, justo encima de tu cámara o tu videollamada.\n\n[cue más despacio]\n\n¿Te has perdido? Arrastra el guion hacia atrás. ¿Vas largo? Salta hacia delante.\n\nY el temporizador se pone amarillo cerca del final… y rojo si te emocionas demasiado.\n\n[cue risa suave]\n\nIncluso puedes reproducir o pausar desde tu Apple Watch o con el botón de acción.\n\n¿Y estas palabras de colores?\n\n[cue enfatiza]\n\nSon tus indicaciones. Recordatorios para sonreír, hacer una pausa o no entrar en pánico. Nunca se leen en voz alta.\n\n[cue pausa]\n\nPruébalo. Creo que te va a encantar."
+            "value" : "Hola a todos.\n\nMe alegra estar aquí hoy para hablaros del *teleprompter* de CueCard.\n\n[cue sonríe y haz una pausa]\n\nDesplaza tu guion a _tu_ ritmo, para que mantengas la mirada al frente y no pierdas el hilo.\n\n[cue pausa]\n\n[anchor]\n\nSal de la app y sigue en una ventana flotante, justo encima de tu cámara o tu videollamada.\n\n[cue más despacio]\n\n¿Te has perdido? Arrastra el guion hacia atrás. ¿Vas largo? Salta al ancla siguiente.\n\nY el temporizador se pone amarillo cerca del final… y rojo si te emocionas _un poco_ demasiado.\n\n[cue risa suave]\n\n[anchor]\n\nIncluso puedes reproducir o pausar desde tu Apple Watch o con el botón de acción.\n\n¿Y estas palabras de colores?\n\n[cue enfatiza]\n\nSon tus indicaciones. Recordatorios para sonreír, hacer una pausa o *no entrar en pánico*. Nunca se leen en voz alta.\n\n[cue pausa]\n\n[anchor]\n\nPruébalo. Creo que te va a *encantar*."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bonjour à tous.\n\nJe suis ravi d'être ici aujourd'hui pour vous parler du prompteur de CueCard.\n\n[cue sourire et pause]\n\nIl fait défiler votre script à votre rythme : vos yeux restent levés et votre discours reste sur les rails.\n\n[cue pause]\n\nQuittez l'app et il continue dans une fenêtre flottante, juste au-dessus de votre caméra ou de votre visio.\n\n[cue ralentir]\n\nPerdu ? Faites glisser le script en arrière. Trop long ? Sautez un passage.\n\nEt le minuteur passe au jaune vers la fin… puis au rouge si vous vous emballez un peu trop.\n\n[cue petit rire]\n\nVous pouvez même lancer ou mettre en pause depuis votre Apple Watch, ou avec le bouton Action.\n\nEt ces mots en couleur ?\n\n[cue insister]\n\nCe sont vos repères. Des rappels pour sourire, faire une pause ou ne pas paniquer. Ils ne sont jamais lus à voix haute.\n\n[cue pause]\n\nEssayez-le. Je pense que vous allez l'adorer."
+            "value" : "Bonjour à tous.\n\nJe suis ravi d'être ici aujourd'hui pour vous parler du *prompteur* de CueCard.\n\n[cue sourire et pause]\n\nIl fait défiler votre script à _votre_ rythme : vos yeux restent levés et votre discours reste sur les rails.\n\n[cue pause]\n\n[anchor]\n\nQuittez l'app et il continue dans une fenêtre flottante, juste au-dessus de votre caméra ou de votre visio.\n\n[cue ralentir]\n\nPerdu ? Faites glisser le script en arrière. Trop long ? Sautez à l'ancre suivante.\n\nEt le minuteur passe au jaune vers la fin… puis au rouge si vous vous emballez _un peu_ trop.\n\n[cue petit rire]\n\n[anchor]\n\nVous pouvez même lancer ou mettre en pause depuis votre Apple Watch, ou avec le bouton Action.\n\nEt ces mots en couleur ?\n\n[cue insister]\n\nCe sont vos repères. Des rappels pour sourire, faire une pause ou *ne pas paniquer*. Ils ne sont jamais lus à voix haute.\n\n[cue pause]\n\n[anchor]\n\nEssayez-le. Je pense que vous allez l'*adorer*."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Olá a todos.\n\nEstou animado por estar aqui hoje para falar sobre o teleprompter do CueCard.\n\n[cue sorria e pause]\n\nEle rola seu roteiro no seu ritmo, para você manter o olhar à frente e não perder o fio da fala.\n\n[cue pausa]\n\nSaia do app e ele continua em uma janela flutuante, bem em cima da sua câmera ou da sua videochamada.\n\n[cue mais devagar]\n\nSe perdeu? Arraste o roteiro de volta. Passando do tempo? Pule para a frente.\n\nE o timer fica amarelo perto do fim… e vermelho se você se empolgar um pouco demais.\n\n[cue risada leve]\n\nVocê pode até reproduzir ou pausar pelo Apple Watch, ou com o Botão de Ação.\n\nE essas palavras coloridas?\n\n[cue enfatize]\n\nSão as suas deixas. Lembretes para sorrir, pausar ou não entrar em pânico. Elas nunca devem ser lidas em voz alta.\n\n[cue pausa]\n\nExperimente. Acho que você vai adorar."
+            "value" : "Olá a todos.\n\nEstou animado por estar aqui hoje para falar sobre o *teleprompter* do CueCard.\n\n[cue sorria e pause]\n\nEle rola seu roteiro no _seu_ ritmo, para você manter o olhar à frente e não perder o fio da fala.\n\n[cue pausa]\n\n[anchor]\n\nSaia do app e ele continua em uma janela flutuante, bem em cima da sua câmera ou da sua videochamada.\n\n[cue mais devagar]\n\nSe perdeu? Arraste o roteiro de volta. Passando do tempo? Pule para a próxima âncora.\n\nE o timer fica amarelo perto do fim… e vermelho se você se empolgar _um pouco_ demais.\n\n[cue risada leve]\n\n[anchor]\n\nVocê pode até reproduzir ou pausar pelo Apple Watch, ou com o Botão de Ação.\n\nE essas palavras coloridas?\n\n[cue enfatize]\n\nSão as suas deixas. Lembretes para sorrir, pausar ou *não entrar em pânico*. Elas nunca devem ser lidas em voz alta.\n\n[cue pausa]\n\n[anchor]\n\nExperimente. Acho que você vai *adorar*."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Всем привет.\n\nСегодня я расскажу о телесуфлёре CueCard.\n\n[cue улыбка и пауза]\n\nОн прокручивает ваш сценарий в вашем темпе, чтобы вы смотрели вперёд и не сбивались с мысли.\n\n[cue пауза]\n\nВыйдите из приложения — и он продолжит работу в плавающем окне, прямо поверх камеры или видеозвонка.\n\n[cue помедленнее]\n\nСбились? Потяните сценарий назад. Не укладываетесь? Перемотайте вперёд.\n\nА таймер желтеет ближе к концу… и краснеет, если вы слишком увлечётесь.\n\n[cue лёгкий смешок]\n\nМожно даже запускать и ставить на паузу с Apple Watch или кнопкой действия.\n\nА эти цветные слова?\n\n[cue подчеркните голосом]\n\nЭто ваши подсказки. Напоминания улыбнуться, сделать паузу или не паниковать. Их никогда не читают вслух.\n\n[cue пауза]\n\nПопробуйте. Думаю, вам понравится."
+            "value" : "Всем привет.\n\nСегодня я расскажу о *телесуфлёре* CueCard.\n\n[cue улыбка и пауза]\n\nОн прокручивает ваш сценарий в _вашем_ темпе, чтобы вы смотрели вперёд и не сбивались с мысли.\n\n[cue пауза]\n\n[anchor]\n\nВыйдите из приложения — и он продолжит работу в плавающем окне, прямо поверх камеры или видеозвонка.\n\n[cue помедленнее]\n\nСбились? Потяните сценарий назад. Не укладываетесь? Перейдите к следующему якорю.\n\nА таймер желтеет ближе к концу… и краснеет, если вы _слишком_ увлечётесь.\n\n[cue лёгкий смешок]\n\n[anchor]\n\nМожно даже запускать и ставить на паузу с Apple Watch или кнопкой действия.\n\nА эти цветные слова?\n\n[cue подчеркните голосом]\n\nЭто ваши подсказки. Напоминания улыбнуться, сделать паузу или *не паниковать*. Их никогда не читают вслух.\n\n[cue пауза]\n\n[anchor]\n\nПопробуйте. Думаю, вам *понравится*."
           }
         }
       }
     },
-    "Hi everyone. Introducing Cue Cards. [cue smile]\n[separator]\nOne thought per card. Swipe to the next one when you're ready.\n[separator]\nThe timer at the top keeps you honest. [cue light chuckle]\n[separator]\nTurn on Show on Lock Screen to read and turn your cards from there.\n[separator]\nOr turn them from your Apple Watch. [cue pause]\n[separator]\nColored words are cues, not lines. [cue emphasize]\n[separator]\nThanks for listening. Questions?" : {
-      "comment" : "Sample cards. Keep [separator] and each [cue …] tag's brackets and the word cue; translate the words after it. Keep each card under 120 characters.",
+    "Hi everyone. Introducing *Cue Cards*. [cue smile]\n[separator]\nOne thought per card. Swipe to the next one when _you're_ ready.\n[separator]\nThe timer at the top keeps you *honest*. [cue light chuckle]\n[separator]\nTurn on Show on Lock Screen to read and turn your cards from there.\n[separator]\nOr turn them from your _Apple Watch_. [cue pause]\n[separator]\nColored words are cues, not lines. [cue emphasize]\n[separator]\nThanks for listening. *Questions?*" : {
+      "comment" : "Sample cards. Keep [separator], each [cue …] tag's brackets and the word cue, and the * and _ around emphasized words; translate the words after cue and between the markers. Keep each card under 120 characters.",
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hola a todos. Os presento el modo Tarjetas. [cue sonríe]\n[separator]\nUna idea por tarjeta. Desliza a la siguiente cuando estés listo.\n[separator]\nEl temporizador de arriba te mantiene a raya. [cue risa suave]\n[separator]\nActiva Mostrar en pantalla bloqueada para leer y pasar tarjetas desde allí.\n[separator]\nO pásalas desde tu Apple Watch. [cue pausa]\n[separator]\nLas palabras de colores son indicaciones, no palabras para leer en voz alta. [cue enfatiza]\n[separator]\nGracias por escuchar. ¿Preguntas?"
+            "value" : "Hola a todos. Os presento el modo *Tarjetas*. [cue sonríe]\n[separator]\nUna idea por tarjeta. Desliza a la siguiente cuando _estés_ listo.\n[separator]\nEl temporizador de arriba te mantiene *a raya*. [cue risa suave]\n[separator]\nActiva Mostrar en pantalla bloqueada para leer y pasar tarjetas desde allí.\n[separator]\nO pásalas desde tu _Apple Watch_. [cue pausa]\n[separator]\nLas palabras de colores son indicaciones, no palabras para leer en voz alta. [cue enfatiza]\n[separator]\nGracias por escuchar. *¿Preguntas?*"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bonjour à tous. Voici le mode Fiches. [cue sourire]\n[separator]\nUne idée par fiche. Balayez vers la suivante quand vous êtes prêt.\n[separator]\nLe minuteur en haut vous garde dans les temps. [cue petit rire]\n[separator]\nActivez Afficher sur l'écran verrouillé pour lire et tourner vos fiches depuis là.\n[separator]\nOu tournez-les depuis votre Apple Watch. [cue pause]\n[separator]\nLes mots en couleur sont des repères, pas des mots à lire à voix haute. [cue insister]\n[separator]\nMerci de votre attention. Des questions ?"
+            "value" : "Bonjour à tous. Voici le mode *Fiches*. [cue sourire]\n[separator]\nUne idée par fiche. Balayez vers la suivante quand _vous_ êtes prêt.\n[separator]\nLe minuteur en haut vous garde *dans les temps*. [cue petit rire]\n[separator]\nActivez Afficher sur l'écran verrouillé pour lire et tourner vos fiches depuis là.\n[separator]\nOu tournez-les depuis votre _Apple Watch_. [cue pause]\n[separator]\nLes mots en couleur sont des repères, pas des mots à lire à voix haute. [cue insister]\n[separator]\nMerci de votre attention. *Des questions ?*"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Olá a todos. Apresento o modo Cartões. [cue sorria]\n[separator]\nUma ideia por cartão. Deslize para o próximo quando estiver pronto.\n[separator]\nO timer no topo mantém você no horário. [cue risada leve]\n[separator]\nAtive Mostrar na Tela Bloqueada para ler e virar os cartões por lá.\n[separator]\nOu vire pelo Apple Watch. [cue pausa]\n[separator]\nPalavras coloridas são deixas, não falas. [cue enfatize]\n[separator]\nObrigado pela atenção. Perguntas?"
+            "value" : "Olá a todos. Apresento o modo *Cartões*. [cue sorria]\n[separator]\nUma ideia por cartão. Deslize para o próximo quando _você_ estiver pronto.\n[separator]\nO timer no topo mantém você *no horário*. [cue risada leve]\n[separator]\nAtive Mostrar na Tela Bloqueada para ler e virar os cartões por lá.\n[separator]\nOu vire pelo _Apple Watch_. [cue pausa]\n[separator]\nPalavras coloridas são deixas, não falas. [cue enfatize]\n[separator]\nObrigado pela atenção. *Perguntas?*"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Всем привет. Представляю режим «Карточки». [cue улыбка]\n[separator]\nОдна мысль на карточку. Смахните к следующей, когда будете готовы.\n[separator]\nТаймер наверху не даст затянуть. [cue лёгкий смешок]\n[separator]\nВключите «Показывать на экране блокировки», чтобы читать и листать карточки прямо там.\n[separator]\nИли листайте их с Apple Watch. [cue пауза]\n[separator]\nЦветные слова — это подсказки, а не слова для чтения вслух. [cue подчеркните голосом]\n[separator]\nСпасибо за внимание. Вопросы?"
+            "value" : "Всем привет. Представляю режим *«Карточки»*. [cue улыбка]\n[separator]\nОдна мысль на карточку. Смахните к следующей, когда будете _готовы_.\n[separator]\nТаймер наверху *не даст затянуть*. [cue лёгкий смешок]\n[separator]\nВключите «Показывать на экране блокировки», чтобы читать и листать карточки прямо там.\n[separator]\nИли листайте их с _Apple Watch_. [cue пауза]\n[separator]\nЦветные слова — это подсказки, а не слова для чтения вслух. [cue подчеркните голосом]\n[separator]\nСпасибо за внимание. *Вопросы?*"
           }
         }
       }
@@ -4408,6 +4632,34 @@
         }
       }
     },
+    "Keep Your Place" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No pierdas el hilo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ne perdez pas le fil"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não perca o fio"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не теряйте строку"
+          }
+        }
+      }
+    },
     "Know When Time Is Running Out" : {
       "localizations" : {
         "es" : {
@@ -4837,34 +5089,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Свернуть телесуфлёр"
-          }
-        }
-      }
-    },
-    "Mirror Text" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reflejar texto"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Texte en miroir"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Espelhar texto"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Отразить текст"
           }
         }
       }
@@ -6682,6 +6906,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Читайте с экрана блокировки"
+          }
+        }
+      }
+    },
+    "Reading Guide" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guía de lectura"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Repère de lecture"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guia de leitura"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Линия чтения"
           }
         }
       }
@@ -9052,6 +9304,34 @@
         }
       }
     },
+    "Swipe up or down to move it." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desliza hacia arriba o hacia abajo para moverlo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Balayez vers le haut ou vers le bas pour le déplacer."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deslize para cima ou para baixo para movê-lo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Смахните вверх или вниз, чтобы переместить."
+          }
+        }
+      }
+    },
     "Swipe, or tap Back and Next. The dots at the top show which card you're on." : {
       "localizations" : {
         "es" : {
@@ -10213,6 +10493,34 @@
         }
       }
     },
+    "The pointer at the side of the script marks the line to read. Drag it up or down to read where it suits your eyes, and the script lines up with it. Turn off Reading Guide in Settings to hide it." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El puntero al lado del guion marca la línea que hay que leer. Arrástralo hacia arriba o hacia abajo para leer donde te resulte más cómodo, y el guion se alinea con él. Desactiva Guía de lectura en Ajustes para ocultarlo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le pointeur à côté du script indique la ligne à lire. Faites-le glisser vers le haut ou vers le bas pour lire là où c'est le plus confortable, et le script s'aligne dessus. Désactivez Repère de lecture dans Réglages pour le masquer."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O ponteiro ao lado do roteiro marca a linha a ser lida. Arraste-o para cima ou para baixo para ler onde for mais confortável, e o roteiro se alinha a ele. Desative Guia de leitura em Ajustes para ocultá-lo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Указатель сбоку от сценария отмечает строку, которую нужно читать. Перетащите его вверх или вниз, чтобы читать там, где удобнее глазам, и сценарий выровняется по нему. Выключите «Линия чтения» в настройках, чтобы скрыть его."
+          }
+        }
+      }
+    },
     "The small Lock Screen widget shows a preview. Interactive buttons require iOS 17 or later." : {
       "localizations" : {
         "es" : {
@@ -10827,34 +11135,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Перелистнуть карточку"
-          }
-        }
-      }
-    },
-    "Turn on Mirror Text in Settings to flip the text horizontally for a teleprompter mirror. The floating window uses the same setting. It's off by default." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Activa Reflejar texto en Ajustes para invertir el texto horizontalmente y leerlo en un espejo de teleprompter. La ventana flotante usa el mismo ajuste. Está desactivado de forma predeterminada."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Activez Texte en miroir dans Réglages pour inverser le texte horizontalement et le lire dans un miroir de prompteur. La fenêtre flottante utilise le même réglage. Il est désactivé par défaut."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ative Espelhar texto em Ajustes para inverter o texto horizontalmente e lê-lo em um espelho de teleprompter. A janela flutuante usa o mesmo ajuste. Fica desativado por padrão."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Включите «Отразить текст» в настройках, чтобы отразить текст по горизонтали для чтения через зеркало телесуфлёра. Эта настройка действует и в плавающем окне. По умолчанию она выключена."
           }
         }
       }

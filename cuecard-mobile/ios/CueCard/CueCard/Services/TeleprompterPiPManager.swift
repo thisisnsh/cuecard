@@ -128,6 +128,7 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
             || newSettings.timerDurationSeconds != settings.timerDurationSeconds
             || newSettings.timerStyle != settings.timerStyle
             || newSettings.mirrorsText != settings.mirrorsText
+            || newSettings.flipsTextVertically != settings.flipsTextVertically
             || newIsDarkMode != isDarkMode
         let speedChanged = newSettings.linesPerMinute != settings.linesPerMinute
         settings = newSettings
@@ -238,12 +239,52 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         seek(toScriptTime: min(playback.scriptTime, scriptDuration) + seconds)
     }
 
-    private func seek(toScriptTime seconds: Double) {
+    /// The full-screen line each `[anchor]` in the script is on, in order.
+    private var anchorLines: [Double] {
+        (renderer?.anchorPositions ?? []).map {
+            TeleprompterTextLayout.linePosition(forCharacter: Double($0), starts: referenceLineStarts).rounded(.down)
+        }
+    }
+
+    /// The line the script shows on the reading line now. Past the last line
+    /// the text rests there.
+    private var currentLine: Double {
+        min(playback.scriptTime, scriptDuration) * linesPerSecond
+    }
+
+    /// The anchor the next jump forward lands on, if there's one ahead.
+    private var nextAnchorLine: Double? {
+        let current = currentLine
+        return anchorLines.first { $0 > current + 0.05 }
+    }
+
+    /// Where a jump back lands: the start of the stretch being read, or —
+    /// within its first line — the anchor before that. The start of the
+    /// script counts as one.
+    private var previousAnchorLine: Double? {
+        let current = currentLine
+        return ([0] + anchorLines).last { $0 < current - 1 }
+    }
+
+    var canJumpToNextAnchor: Bool { nextAnchorLine != nil }
+    var canJumpToPreviousAnchor: Bool { previousAnchorLine != nil }
+
+    /// Move the script to the next `[anchor]`, or back to the one before. Like a
+    /// drag, the timer is left as it is.
+    func jumpToAnchor(forward: Bool) {
+        advanceClock()
+        guard let line = forward ? nextAnchorLine : previousAnchorLine, linesPerSecond > 0 else { return }
+        seek(toScriptTime: line / linesPerSecond, snaps: false)
+    }
+
+    /// - Parameter snaps: Whether the script settles there at once. Otherwise
+    ///   it scrolls there, so the reader sees which way it went.
+    private func seek(toScriptTime seconds: Double, snaps: Bool = true) {
         guard seconds.isFinite else { return }
         advanceClock()
         var state = playback
         state.scriptTime = min(max(seconds, 0), scriptDuration)
-        state.snapToken += 1
+        if snaps { state.snapToken += 1 }
         playback = state
         reanchorPlayback()
         repaintOverlay()
@@ -434,7 +475,8 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         if !renderingPiP && !force {
             guard hostNow - lastFrameTime >= 0.2 else { return }
         }
-        contentView.present(linePosition: overlayLine(for: playback), state: playback, isMirrored: settings.mirrorsText)
+        contentView.present(linePosition: overlayLine(for: playback), state: playback,
+                            isMirrored: settings.mirrorsText, isFlippedVertically: settings.flipsTextVertically)
         #if DEBUG
         os_signpost(.event, log: pipPerformanceLog, name: "PiP frame submitted")
         #endif
@@ -660,6 +702,7 @@ private final class TeleprompterPiPContentView: UIView {
     private var linePosition: Double = 0
     private var state = TeleprompterPlaybackState()
     private var isMirrored = false
+    private var isFlippedVertically = false
 
     init(renderer: TeleprompterOverlayRenderer) {
         self.renderer = renderer
@@ -672,11 +715,13 @@ private final class TeleprompterPiPContentView: UIView {
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
-    func present(linePosition: Double, state: TeleprompterPlaybackState, isMirrored: Bool) {
-        guard linePosition != self.linePosition || state != self.state || isMirrored != self.isMirrored else { return }
+    func present(linePosition: Double, state: TeleprompterPlaybackState, isMirrored: Bool, isFlippedVertically: Bool) {
+        guard linePosition != self.linePosition || state != self.state || isMirrored != self.isMirrored
+            || isFlippedVertically != self.isFlippedVertically else { return }
         self.linePosition = linePosition
         self.state = state
         self.isMirrored = isMirrored
+        self.isFlippedVertically = isFlippedVertically
         setNeedsDisplay()
     }
 
@@ -691,7 +736,8 @@ private final class TeleprompterPiPContentView: UIView {
         context.translateBy(x: (bounds.width - size.width * scale) / 2,
                             y: (bounds.height - size.height * scale) / 2)
         context.scaleBy(x: scale, y: scale)
-        renderer.draw(in: context, linePosition: linePosition, state: state, isMirrored: isMirrored)
+        renderer.draw(in: context, linePosition: linePosition, state: state,
+                      isMirrored: isMirrored, isFlippedVertically: isFlippedVertically)
         context.restoreGState()
     }
 }
@@ -721,12 +767,19 @@ enum TeleprompterTextLayout {
             .font: UIFont.cue(ofSize: fontSize * 0.72),
             .foregroundColor: cueColor.uiColor(isDarkMode: isDarkMode)
         ]
+        // An anchor takes no room. It marks whatever is written after it.
+        var anchors: [Int] = []
+        var isAnchorPending = false
         for (paragraphIndex, paragraph) in text.components(separatedBy: "\n\n").enumerated() {
             if paragraphIndex > 0 { result.append(NSAttributedString(string: "\n")) }
             for (lineIndex, line) in paragraph.components(separatedBy: "\n").enumerated() {
                 if lineIndex > 0 { result.append(NSAttributedString(string: "\n")) }
                 var follows: CueSegment?
                 for segment in TeleprompterParser.segments(in: line) {
+                    if case .anchor = segment {
+                        isAnchorPending = true
+                        continue
+                    }
                     switch (follows, segment) {
                     case (nil, _): break
                     case (.image, _), (_, .image):
@@ -735,6 +788,10 @@ enum TeleprompterTextLayout {
                         result.append(NSAttributedString(string: " ", attributes: textAttributes))
                     }
                     follows = segment
+                    if isAnchorPending {
+                        isAnchorPending = false
+                        if anchors.last != result.length { anchors.append(result.length) }
+                    }
                     switch segment {
                     case .text(let text):
                         for run in RichText.styled(text).runs {
@@ -752,9 +809,15 @@ enum TeleprompterTextLayout {
                         image.addAttributes(textAttributes, range: NSRange(location: 0, length: image.length))
                         imageRanges.append(NSRange(location: result.length, length: image.length))
                         result.append(image)
+                    case .anchor:
+                        break
                     }
                 }
             }
+        }
+        // Each its own value, so anchors on neighboring characters stay apart.
+        for (index, anchor) in anchors.enumerated() where anchor < result.length {
+            result.addAttribute(anchorKey, value: index, range: NSRange(location: anchor, length: 1))
         }
         let paragraphStyle = NSParagraphStyle.script(ofSize: fontSize, isWide: text.hasWideScript,
                                                      lineSpacing: fontSize * 0.18, paragraphSpacing: fontSize * 0.45)
@@ -766,6 +829,18 @@ enum TeleprompterTextLayout {
             }
         }
         return result
+    }
+
+    /// Marks the character an `[anchor]` in the script points at.
+    private static let anchorKey = NSAttributedString.Key("CueCardScriptAnchor")
+
+    /// Where each anchor in a script set by `attributedString` points, in order.
+    static func anchorPositions(in text: NSAttributedString) -> [Int] {
+        var positions: [Int] = []
+        text.enumerateAttribute(anchorKey, in: NSRange(location: 0, length: text.length)) { value, range, _ in
+            if value != nil { positions.append(range.location) }
+        }
+        return positions
     }
 
     /// The reading lines a laid-out line of the script holds, each with the
@@ -830,6 +905,8 @@ private final class TeleprompterOverlayRenderer {
     private var lineStarts: [Int] = []
     private var lineOffsets: [CGFloat] = []
     var lineCount: Int { lineStarts.count }
+    /// Where each `[anchor]` points, in characters of the script.
+    let anchorPositions: [Int]
     private let timerDuration: Int
     private let timerStyle: TimerStyle
     private let timerFont: UIFont
@@ -862,10 +939,12 @@ private final class TeleprompterOverlayRenderer {
         }
         // An image fits the space under the timer, as `draw` lays it out.
         let viewportHeight = logicalSize.height - (6 + ceil(timerFont.lineHeight) + 6) - 8
-        textStorage = NSTextStorage(attributedString: TeleprompterTextLayout.attributedString(
+        let script = TeleprompterTextLayout.attributedString(
             text: text, fontSize: CGFloat(settings.pipFontSize), cueColor: settings.cueColor, isDarkMode: isDarkMode,
             maxImageHeight: floor(viewportHeight * 0.8)
-        ))
+        )
+        textStorage = NSTextStorage(attributedString: script)
+        anchorPositions = TeleprompterTextLayout.anchorPositions(in: script)
         textContainer = NSTextContainer(size: CGSize(width: 296, height: CGFloat.greatestFiniteMagnitude))
         textContainer.lineFragmentPadding = 0
         layoutManager.addTextContainer(textContainer)
@@ -891,7 +970,8 @@ private final class TeleprompterOverlayRenderer {
 
     /// Draw the script with `linePosition` (fractional, in this layout's lines)
     /// on the reading line, into a context already scaled to `logicalSize`.
-    func draw(in context: CGContext, linePosition: Double, state: TeleprompterPlaybackState, isMirrored: Bool) {
+    func draw(in context: CGContext, linePosition: Double, state: TeleprompterPlaybackState,
+              isMirrored: Bool, isFlippedVertically: Bool) {
         context.setFillColor(backgroundColor.cgColor)
         context.fill(CGRect(origin: .zero, size: logicalSize))
         let remaining = timerDuration > 0 ? timerDuration - Int(state.elapsedTime) : Int(state.elapsedTime)
@@ -922,11 +1002,18 @@ private final class TeleprompterOverlayRenderer {
         }
         context.saveGState()
         context.clip(to: viewport)
-        context.translateBy(x: viewport.minX, y: viewport.minY + readingY - offset)
+        context.translateBy(x: viewport.minX, y: viewport.minY)
         if isMirrored {
             context.translateBy(x: viewport.width, y: 0)
             context.scaleBy(x: -1, y: 1)
         }
+        // Flipped about the viewport, as the in-app script is about its view, so
+        // the reading line lands where the glass reflects it back into place.
+        if isFlippedVertically {
+            context.translateBy(x: 0, y: viewport.height)
+            context.scaleBy(x: 1, y: -1)
+        }
+        context.translateBy(x: 0, y: readingY - offset)
         let visibleRect = CGRect(x: 0, y: offset - readingY, width: viewport.width, height: viewport.height)
         let glyphs = layoutManager.glyphRange(forBoundingRect: visibleRect, in: textContainer)
         layoutManager.drawBackground(forGlyphRange: glyphs, at: .zero)
