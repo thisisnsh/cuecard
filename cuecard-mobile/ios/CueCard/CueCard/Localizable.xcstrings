@@ -270,7 +270,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Repère de lecture : faites glisser le pointeur pour garder les yeux sur la ligne que vous lisez."
+            "value" : "Guide de lecture : faites glisser le pointeur pour garder les yeux sur la ligne que vous lisez."
           }
         },
         "pt-BR" : {
@@ -6947,7 +6947,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Repère de lecture"
+            "value" : "Guide de lecture"
           }
         },
         "pt-BR" : {
@@ -10501,7 +10501,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Le pointeur à côté du script indique la ligne à lire. Faites-le glisser vers le haut ou vers le bas pour lire là où c'est le plus confortable, et le script s'aligne dessus. Désactivez Repère de lecture dans Réglages pour le masquer."
+            "value" : "Le pointeur à côté du script indique la ligne à lire. Faites-le glisser vers le haut ou vers le bas pour lire là où c'est le plus confortable, et le script s'aligne dessus. Désactivez Guide de lecture dans Réglages pour le masquer."
           }
         },
         "pt-BR" : {
