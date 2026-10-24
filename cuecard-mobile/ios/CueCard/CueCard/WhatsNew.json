@@ -1,9 +1,9 @@
 {
-  "1.12.0": {
+  "1.13.0": {
     "features": [
-        "Record Videos: Film yourself right from the teleprompter or your cards.",
-        "Mirror Text: Flip the teleprompter's text to read it through a mirror.",
-        "Improved Takes: A new look, and videos recorded with your cards are saved too."
+        "Reading Guide: Drag the pointer to keep your eyes on the line you're reading.",
+        "Anchors: Mark spots in your script and jump between them while you read.",
+        "Flip Vertically: Turn the text upside down for any teleprompter glass."
     ]
   }
 }
