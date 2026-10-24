@@ -2,8 +2,8 @@
 <resources>
     <string name="share_message">Confira %1$s</string>
     <string name="translation_report_body">Onde no app:\n\nO que está escrito:\n\nO que deveria estar escrito:\n</string>
-    <string name="sample_teleprompter">Olá a todos.\n\nEstou animado por estar aqui hoje para falar sobre o teleprompter do CueCard.\n\n[cue sorria e pause]\n\nEle rola seu roteiro no seu ritmo, para você manter o olhar à frente e não perder o fio da fala.\n\n[cue pausa]\n\nSaia do app e ele continua em uma janela flutuante, bem em cima da sua câmera ou da sua videochamada.\n\n[cue mais devagar]\n\nSe perdeu? Arraste o roteiro de volta. Passando do tempo? Pule para a frente.\n\nE o timer fica amarelo perto do fim… e vermelho se você se empolgar um pouco demais.\n\n[cue risada leve]\n\nE essas palavras coloridas?\n\n[cue enfatize]\n\nSão as suas deixas. Lembretes para sorrir, pausar ou não entrar em pânico. Elas nunca devem ser lidas em voz alta.\n\n[cue pausa]\n\nExperimente. Acho que você vai adorar.</string>
-    <string name="sample_cards">Olá a todos. Apresento o modo Cartões. [cue sorria]\n[separator]\nUma ideia por cartão. Deslize para o próximo quando estiver pronto.\n[separator]\nO timer no topo mantém você no horário. [cue risada leve]\n[separator]\nPalavras coloridas são deixas, não falas. [cue enfatize]\n[separator]\nObrigado pela atenção. Perguntas?</string>
+    <string name="sample_teleprompter">Olá a todos.\n\nEstou animado por estar aqui hoje para falar sobre o *teleprompter* do CueCard.\n\n[cue sorria e pause]\n\nEle rola seu roteiro no _seu_ ritmo, para você manter o olhar à frente e não perder o fio da fala.\n\n[cue pausa]\n\n[anchor]\n\nSaia do app e ele continua em uma janela flutuante, bem em cima da sua câmera ou da sua videochamada.\n\n[cue mais devagar]\n\nSe perdeu? Arraste o roteiro de volta. Passando do tempo? Pule para a próxima âncora.\n\nE o timer fica amarelo perto do fim… e vermelho se você se empolgar _um pouco_ demais.\n\n[cue risada leve]\n\n[anchor]\n\nE essas palavras coloridas?\n\n[cue enfatize]\n\nSão as suas deixas. Lembretes para sorrir, pausar ou *não entrar em pânico*. Elas nunca devem ser lidas em voz alta.\n\n[cue pausa]\n\n[anchor]\n\nExperimente. Acho que você vai *adorar*.</string>
+    <string name="sample_cards">Olá a todos. Apresento o modo *Cartões*. [cue sorria]\n[separator]\nUma ideia por cartão. Deslize para o próximo quando _você_ estiver pronto.\n[separator]\nO timer no topo mantém você *no horário*. [cue risada leve]\n[separator]\nPalavras coloridas são deixas, não falas. [cue enfatize]\n[separator]\nObrigado pela atenção. *Perguntas?*</string>
     <string name="theme_system">Sistema</string>
     <string name="theme_light">Claro</string>
     <string name="theme_dark">Escuro</string>
@@ -275,8 +275,6 @@
     <string name="help_change_language_title">Alterar o idioma</string>
     <string name="help_change_language_detail">Toque na engrenagem no topo e depois em Idioma. O CueCard está em inglês, francês, português, russo e espanhol.</string>
     <string name="help_count_up_title">Conte o tempo sem timer</string>
-    <string name="mirror_text">Espelhar texto</string>
-    <string name="help_mirror_text_detail">Ative Espelhar texto em Ajustes para inverter o texto horizontalmente e lê-lo em um espelho de teleprompter. A janela flutuante usa o mesmo ajuste. Fica desativado por padrão.</string>
     <string name="takes">Takes</string>
     <plurals name="takes_count">
         <item quantity="one">%1$d take</item>
@@ -348,4 +346,17 @@
     <string name="help_add_images_detail">Toque na foto acima do teclado para adicionar imagens da sua galeria.</string>
     <string name="package_too_large">Esse arquivo tem mais de 100 MB, então não pode ser importado.</string>
     <string name="script_couldnt_be_shared">Não foi possível compartilhar este roteiro. Tente novamente.</string>
+    <string name="reading_guide">Guia de leitura</string>
+    <string name="mirror">Espelho</string>
+    <string name="mirror_footer">Inverta o texto do teleprompter e da janela flutuante para lê-lo no vidro de um teleprompter.</string>
+    <string name="flip_horizontally">Inverter horizontalmente</string>
+    <string name="flip_vertically">Inverter verticalmente</string>
+    <string name="help_mirror_detail">Ative Inverter horizontalmente ou Inverter verticalmente em Espelho, nos Ajustes, para inverter o texto e lê-lo no vidro de um teleprompter. A janela flutuante usa os mesmos ajustes. Ambos ficam desativados por padrão.</string>
+    <string name="help_keep_your_place_title">Não perca o fio</string>
+    <string name="help_keep_your_place_detail">O ponteiro ao lado do roteiro marca a linha a ser lida. Arraste-o para cima ou para baixo para ler onde for mais confortável, e o roteiro se alinha a ele. Desative Guia de leitura em Ajustes para ocultá-lo.</string>
+    <string name="add_anchor">Adicionar âncora</string>
+    <string name="next_anchor">Próxima âncora</string>
+    <string name="previous_anchor">Âncora anterior</string>
+    <string name="move_up">Mover para cima</string>
+    <string name="move_down">Mover para baixo</string>
 </resources>

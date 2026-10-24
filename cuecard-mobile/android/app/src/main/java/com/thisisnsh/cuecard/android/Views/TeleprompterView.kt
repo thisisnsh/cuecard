@@ -120,6 +120,20 @@ import androidx.compose.ui.unit.TextUnit
 import com.thisisnsh.cuecard.android.services.ScriptImages
 import kotlin.math.abs
 import kotlin.math.exp
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.layout.offset
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.unit.IntOffset
+import com.thisisnsh.cuecard.android.services.SettingsService
+import kotlin.math.roundToInt
+import kotlinx.coroutines.launch
 
 /**
  * How far the script fades into the background at each end. The reading line
@@ -129,14 +143,16 @@ private val TOP_FADE = 96.dp
 private val BOTTOM_FADE = 140.dp
 
 /**
- * Where on screen the line being read sits, as a fraction of the view height.
- * Just above centre: high enough to leave the next few lines in view, low enough
- * to read as the middle of the screen rather than the top of it.
+ * Where on screen the line being read sits, as a fraction of the view height,
+ * without the reading guide to move it, and in the floating window.
  *
  * It doubles as the script's top inset, so the first line starts on the reading
  * line and a line's scroll target is its own position in the text.
  */
-private const val READING_LINE_FRACTION = 0.45f
+private val READING_LINE_FRACTION = TeleprompterSettings.DEFAULT.readingGuidePosition
+
+/** How tall a line of the script is, against its text size. */
+private const val LINE_HEIGHT_RATIO = 1.18f
 
 /**
  * How fast the script closes on where it should be. Playback moves the target in
@@ -264,6 +280,19 @@ fun TeleprompterView(
     var isUserScrolling by remember { mutableStateOf(false) }
     /** Set when the script should arrive at its target without easing. */
     var settleNext by remember { mutableStateOf(true) }
+    /** The full-screen reading line each `[anchor]` in the script is on, in order. */
+    var anchorLines by remember { mutableStateOf(emptyList<Double>()) }
+
+    /**
+     * Where the reading guide sits, as a fraction of the view height. Kept here
+     * as well as in Settings, which saves it a moment later, so the script lines
+     * up with the guide in the same frame it's let go.
+     */
+    var readingGuidePosition by remember { mutableFloatStateOf(settings.readingGuidePosition) }
+    LaunchedEffect(settings.readingGuidePosition) { readingGuidePosition = settings.readingGuidePosition }
+    /** Where the reading guide is while it's being dragged, in pixels from the top. */
+    var draggedReadingLine by remember { mutableStateOf<Float?>(null) }
+    val scope = rememberCoroutineScope()
 
     val timerDuration = settings.timerDurationSeconds
 
@@ -450,9 +479,11 @@ fun TeleprompterView(
 
     val scrollableState = rememberScrollableState { delta ->
         isUserScrolling = true
+        // Upside down, the script follows the finger the other way.
+        val direction = if (settings.flipsTextVertically) -1f else 1f
         val previous = scrollPx
-        scrollPx = (scrollPx - delta).coerceIn(0f, maxScroll())
-        previous - scrollPx
+        scrollPx = (scrollPx - delta * direction).coerceIn(0f, maxScroll())
+        (previous - scrollPx) * direction
     }
 
     /**
@@ -487,6 +518,84 @@ fun TeleprompterView(
                 scriptClock.doubleValue = linePosition(scrollPx) * 60.0 / settings.linesPerMinute
             }
         }
+    }
+
+    // MARK: - Anchors
+
+    /** The line the script shows on the reading line now. Past the last line the text rests there. */
+    fun currentLine(): Double =
+        minOf(scriptClock.doubleValue, scriptDuration()) * settings.linesPerMinute / 60.0
+
+    /** The anchor the next jump forward lands on, if there's one ahead. */
+    fun nextAnchorLine(): Double? {
+        val current = currentLine()
+        return anchorLines.firstOrNull { it > current + 0.05 }
+    }
+
+    /**
+     * Where a jump back lands: the start of the stretch being read, or — within
+     * its first line — the anchor before that. The start of the script counts
+     * as one.
+     */
+    fun previousAnchorLine(): Double? {
+        val current = currentLine()
+        return (listOf(0.0) + anchorLines).lastOrNull { it < current - 1 }
+    }
+
+    // Derived, so the buttons only recompose when one is reached, not every frame.
+    // Remade with the settings, which the line count is read through.
+    val canJumpToNextAnchor by remember(settings) { derivedStateOf { nextAnchorLine() != null } }
+    val canJumpToPreviousAnchor by remember(settings) { derivedStateOf { previousAnchorLine() != null } }
+
+    /**
+     * Move the script to the next `[anchor]`, or back to the one before. Like a
+     * drag, the timer is left as it is, and the script scrolls there so the
+     * reader sees which way it went.
+     */
+    fun jumpToAnchor(forward: Boolean) {
+        val line = (if (forward) nextAnchorLine() else previousAnchorLine()) ?: return
+        if (settings.linesPerMinute <= 0) return
+        scriptClock.doubleValue = line * 60.0 / settings.linesPerMinute
+        showControls = true
+    }
+
+    // MARK: - Reading guide
+
+    val lineHeightPx = with(density) { (settings.fontSize * LINE_HEIGHT_RATIO).sp.toPx() }
+    val topFadePx = with(density) { TOP_FADE.toPx() }
+    val bottomFadePx = with(density) { BOTTOM_FADE.toPx() }
+
+    /** Keeps the line on the reading guide clear of the fades at both ends. */
+    fun clampedReadingLine(line: Float): Float {
+        val lowest = maxOf(topFadePx, viewportHeightPx - bottomFadePx - lineHeightPx)
+        return line.coerceIn(topFadePx, lowest)
+    }
+
+    /**
+     * How far down the view the top of the line being read sits: wherever the
+     * reader has put the reading guide, or the default spot without it.
+     */
+    fun readingLine(): Float =
+        if (settings.showsReadingGuide) {
+            clampedReadingLine(viewportHeightPx * readingGuidePosition)
+        } else {
+            viewportHeightPx * READING_LINE_FRACTION
+        }
+
+    /**
+     * Put the reading line at `line`. The script stays where it is on screen,
+     * and the line now on the reading line is the one being read.
+     */
+    fun moveReadingLine(line: Float) {
+        if (viewportHeightPx <= 0f) return
+        val shift = line - readingLine()
+        scrollPx = (scrollPx + shift).coerceIn(0f, maxScroll())
+        if (settings.linesPerMinute > 0) {
+            scriptClock.doubleValue = linePosition(scrollPx) * 60.0 / settings.linesPerMinute
+        }
+        val position = line / viewportHeightPx
+        readingGuidePosition = position
+        scope.launch { SettingsService.getInstance(context).update { it.copy(readingGuidePosition = position) } }
     }
 
     // One loop drives everything that moves: the clock, the countdown, the
@@ -594,6 +703,7 @@ fun TeleprompterView(
             timerColor = timerColor,
             timerFontSize = settings.pipFontSize * TIMER_TO_TEXT_RATIO,
             isMirrored = settings.mirrorsText,
+            isFlippedVertically = settings.flipsTextVertically,
             isDark = isDark
         )
         return
@@ -696,11 +806,15 @@ fun TeleprompterView(
                         // Held back while the overlay is closing, so the script
                         // arrives on the blank page rather than being there waiting
                         // behind it. See `scriptVisible`.
-                        .graphicsLayer { alpha = scriptAlpha }
+                        // Upside down about the view, inside the fades, which stay
+                        // where they are on screen.
+                        .graphicsLayer {
+                            alpha = scriptAlpha
+                            scaleY = if (settings.flipsTextVertically) -1f else 1f
+                        }
                 ) {
-                    val topPadding = with(density) { (viewportHeightPx * READING_LINE_FRACTION).toDp() }
-                    val bottomPadding =
-                        with(density) { (viewportHeightPx * (1 - READING_LINE_FRACTION)).toDp() }
+                    val topPadding = with(density) { readingLine().toDp() }
+                    val bottomPadding = with(density) { (viewportHeightPx - readingLine()).toDp() }
 
                     Column(
                         modifier = Modifier
@@ -725,11 +839,37 @@ fun TeleprompterView(
                                     lineOffsets = offsets
                                     settleNext = true
                                 }
+                                anchorLines = script.anchorLines(layout)
                             }
                         )
 
                         Spacer(modifier = Modifier.height(bottomPadding))
                     }
+                }
+
+                // Stays up while the buttons fade: it's there to read by.
+                if (settings.showsReadingGuide && viewportHeightPx > 0f) {
+                    val line = draggedReadingLine ?: readingLine()
+                    ReadingGuide(
+                        y = line + lineHeightPx / 2,
+                        isDark = isDark,
+                        onDrag = { amount ->
+                            draggedReadingLine = clampedReadingLine((draggedReadingLine ?: readingLine()) + amount)
+                        },
+                        onDragEnd = {
+                            draggedReadingLine?.let(::moveReadingLine)
+                            draggedReadingLine = null
+                        },
+                        onStep = { lines -> moveReadingLine(clampedReadingLine(readingLine() + lineHeightPx * lines)) },
+                        isFlippedVertically = settings.flipsTextVertically,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            // Flipped with the script, so it stays beside the same line.
+                            .graphicsLayer {
+                                scaleX = if (settings.mirrorsText) -1f else 1f
+                                scaleY = if (settings.flipsTextVertically) -1f else 1f
+                            }
+                    )
                 }
 
                 AnimatedVisibility(
@@ -740,7 +880,9 @@ fun TeleprompterView(
                 ) {
                     Row(
                         modifier = Modifier.padding(bottom = 48.dp),
-                        horizontalArrangement = Arrangement.spacedBy(24.dp),
+                        // Closer together with the anchor buttons in, so the row
+                        // still fits a small phone.
+                        horizontalArrangement = Arrangement.spacedBy(if (content.hasAnchors) 14.dp else 24.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         // Kept in the row even when PiP is unavailable — taking it
@@ -787,6 +929,13 @@ fun TeleprompterView(
                                 tint = AppColors.textPrimary(isDark),
                                 modifier = Modifier.size(20.dp)
                             )
+                        }
+
+                        if (content.hasAnchors) {
+                            AnchorButton(forward = false, isEnabled = canJumpToPreviousAnchor, isDark = isDark) {
+                                AnalyticsEvents.logButtonClick("previous_anchor", "teleprompter")
+                                jumpToAnchor(forward = false)
+                            }
                         }
 
                         // During the countdown the button shows the seconds left, on
@@ -837,6 +986,13 @@ fun TeleprompterView(
                                         modifier = Modifier.size(28.dp)
                                     )
                                 }
+                            }
+                        }
+
+                        if (content.hasAnchors) {
+                            AnchorButton(forward = true, isEnabled = canJumpToNextAnchor, isDark = isDark) {
+                                AnalyticsEvents.logButtonClick("next_anchor", "teleprompter")
+                                jumpToAnchor(forward = true)
                             }
                         }
 
@@ -892,6 +1048,103 @@ internal fun CameraButton(isOn: Boolean, isDark: Boolean, onClick: () -> Unit) {
     )
 }
 
+/** Jumps to the next `[anchor]` in the script, or back to the one before. */
+@Composable
+private fun AnchorButton(forward: Boolean, isEnabled: Boolean, isDark: Boolean, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(52.dp)
+            .alpha(if (isEnabled) 1f else 0.4f)
+            .glassed(CircleShape, isDark)
+            .clickableWithoutRipple { if (isEnabled) onClick() },
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = if (forward) Icons.Filled.SkipNext else Icons.Filled.SkipPrevious,
+            contentDescription = stringResource(if (forward) R.string.next_anchor else R.string.previous_anchor),
+            tint = AppColors.textPrimary(isDark),
+            modifier = Modifier.size(22.dp)
+        )
+    }
+}
+
+/**
+ * A pointer in the margin beside the line being read, with a faint rule across
+ * the script. Only the pointer takes touches, so the script under the rule still
+ * scrolls by hand.
+ */
+@Composable
+private fun ReadingGuide(
+    /** Where the pointer's tip sits, in pixels from the top. */
+    y: Float,
+    isDark: Boolean,
+    /** How far the pointer has been dragged since the last call, in pixels down the script. */
+    onDrag: (Float) -> Unit,
+    onDragEnd: () -> Unit,
+    /** Moves the guide by this many lines, for TalkBack. */
+    onStep: (Int) -> Unit,
+    /** Turns TalkBack's up and down around to match the screen. */
+    isFlippedVertically: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val density = LocalDensity.current
+    val touchSize = 44.dp
+    val touchPx = with(density) { touchSize.toPx() }
+    val ruleColor = AppColors.textPrimary(isDark).copy(alpha = 0.15f)
+    val pointerColor = AppColors.green(isDark)
+    val label = stringResource(R.string.reading_guide)
+    val moveUp = stringResource(R.string.move_up)
+    val moveDown = stringResource(R.string.move_down)
+    val up = if (isFlippedVertically) 1 else -1
+
+    Box(modifier = modifier) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 20.dp)
+                .height(1.dp)
+                .offset { IntOffset(0, (y - 0.5f).roundToInt()) }
+                .background(ruleColor)
+        )
+
+        // Centred in the script's 24 dp margin, with the touch area running off
+        // the edge of the screen. Dragged in the guide's own coordinates, which
+        // flip with it, so a drag always follows the finger.
+        Box(
+            modifier = Modifier
+                .offset { IntOffset((12.dp.toPx() - touchPx / 2).roundToInt(), (y - touchPx / 2).roundToInt()) }
+                .size(touchSize)
+                .pointerInput(Unit) {
+                    detectVerticalDragGestures(
+                        onDragEnd = onDragEnd,
+                        onDragCancel = onDragEnd
+                    ) { change, amount ->
+                        change.consume()
+                        onDrag(amount)
+                    }
+                }
+                .semantics {
+                    contentDescription = label
+                    customActions = listOf(
+                        CustomAccessibilityAction(moveUp) { onStep(up); true },
+                        CustomAccessibilityAction(moveDown) { onStep(-up); true }
+                    )
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Canvas(modifier = Modifier.size(width = 11.dp, height = 13.dp)) {
+                val path = Path().apply {
+                    moveTo(0f, 0f)
+                    lineTo(size.width, size.height / 2)
+                    lineTo(0f, size.height)
+                    close()
+                }
+                drawPath(path, pointerColor)
+            }
+        }
+    }
+}
+
 /**
  * The overlay form of the same screen: the timer above the script, and nothing
  * else. The window is small, so everything in it is smaller.
@@ -911,6 +1164,7 @@ private fun TeleprompterOverlay(
     timerColor: Color,
     timerFontSize: Float,
     isMirrored: Boolean,
+    isFlippedVertically: Boolean,
     isDark: Boolean
 ) {
     val density = LocalDensity.current
@@ -991,6 +1245,8 @@ private fun TeleprompterOverlay(
                     viewportWidthPx = it.width.toFloat()
                 }
                 .scriptEdgeFade(isDark = isDark, top = 40.dp, bottom = 40.dp)
+                // Upside down about the window, inside the fades.
+                .graphicsLayer { scaleY = if (isFlippedVertically) -1f else 1f }
         ) {
             // The reading line sits where it does on the full screen, and the
             // script is inset from the top by exactly that — so the first line
@@ -1031,7 +1287,9 @@ private class ScriptText(
     val text: AnnotatedString,
     val inlineContent: Map<String, InlineTextContent>,
     /** Where each image sits in the text, and the reading lines it takes. */
-    val imageLines: Map<Int, Int>
+    val imageLines: Map<Int, Int>,
+    /** Where each `[anchor]` points in the text, in order. */
+    val anchors: List<Int>
 ) {
     /**
      * The scroll offset that puts each reading line on the reading line. A
@@ -1048,6 +1306,21 @@ private class ScriptText(
             for (step in 0 until count) offsets.add(top + height * step / count)
         }
         return offsets.toFloatArray()
+    }
+
+    /** The reading line each anchor is on, counted as `readingLineOffsets` counts them. */
+    fun anchorLines(layout: TextLayoutResult): List<Double> {
+        if (anchors.isEmpty()) return emptyList()
+        // The first reading line of each laid-out line.
+        val firstReadingLine = IntArray(layout.lineCount)
+        var count = 0
+        for (line in 0 until layout.lineCount) {
+            firstReadingLine[line] = count
+            count += imageLines[layout.getLineStart(line)] ?: 1
+        }
+        return anchors
+            .filter { it < layout.layoutInput.text.length }
+            .map { firstReadingLine[layout.getLineForOffset(it)].toDouble() }
     }
 }
 
@@ -1082,9 +1355,9 @@ private fun buildScript(
     )
     // Chinese, Japanese and Korean lines get at least the room their glyphs need.
     val lineHeight = if (content.fullText.hasWideScript) {
-        maxOf(fontSize * 1.18f, WideScript.lineHeight(fontSize))
+        maxOf(fontSize * LINE_HEIGHT_RATIO, WideScript.lineHeight(fontSize))
     } else {
-        fontSize * 1.18f
+        fontSize * LINE_HEIGHT_RATIO
     }
     val bodyParagraph = ParagraphStyle(lineHeight = lineHeight.sp)
     // The gap between paragraphs, as its own short line — the nearest Compose has
@@ -1094,6 +1367,9 @@ private fun buildScript(
 
     val inlineContent = mutableMapOf<String, InlineTextContent>()
     val imageLines = mutableMapOf<Int, Int>()
+    // An anchor takes no room. It marks whatever is written after it.
+    val anchors = mutableListOf<Int>()
+    var isAnchorPending = false
 
     val text = buildAnnotatedString {
         // Lines of text share a paragraph; an image is a paragraph of its own,
@@ -1127,10 +1403,21 @@ private fun buildScript(
                     continue
                 }
 
+                fun markAnchor() {
+                    if (!isAnchorPending) return
+                    isAnchorPending = false
+                    if (anchors.lastOrNull() != length) anchors.add(length)
+                }
+
                 var lineStarted = false
                 for (segment in TeleprompterParser.segments(line)) {
+                    if (segment is CueSegment.Anchor) {
+                        isAnchorPending = true
+                        continue
+                    }
                     if (segment is CueSegment.Image) {
                         closeBody()
+                        markAnchor()
                         val id = "image:${inlineContent.size}"
                         val aspect = ScriptImages.aspectRatio(segment.name)
                         val height = minOf(imageWidth.value * aspect, maxImageHeight.value)
@@ -1153,6 +1440,7 @@ private fun buildScript(
                         withStyle(textStyle) { append(" ") }
                     }
                     owesBreak = true
+                    markAnchor()
 
                     when (segment) {
                         is CueSegment.Cue -> withStyle(cueStyle) { append(segment.text) }
@@ -1161,7 +1449,7 @@ private fun buildScript(
                                 withStyle(run.style.spanStyle()) { append(run.text) }
                             }
                         }
-                        is CueSegment.Image -> Unit
+                        is CueSegment.Image, CueSegment.Anchor -> Unit
                     }
                 }
             }
@@ -1169,7 +1457,7 @@ private fun buildScript(
         closeBody()
     }
 
-    return ScriptText(text, inlineContent, imageLines)
+    return ScriptText(text, inlineContent, imageLines, anchors)
 }
 
 /**

@@ -14,7 +14,9 @@ data class TeleprompterContent(
     /** Every cue tag found in the text, for styling */
     val cues: List<CueMatch>,
     /** Whether the text places any images */
-    val hasImages: Boolean = false
+    val hasImages: Boolean = false,
+    /** Whether the text marks any anchors to jump between */
+    val hasAnchors: Boolean = false
 )
 
 /** Information about a single word */
@@ -41,12 +43,14 @@ data class ImageMatch(
     val name: String
 )
 
-/** A run of a single line: spoken text, a delivery cue, or an image */
+/** A run of a single line: spoken text, a delivery cue, an image, or an anchor */
 sealed class CueSegment {
     data class Text(val text: String) : CueSegment()
     data class Cue(val text: String) : CueSegment()
     /** `name` is the image's file name. */
     data class Image(val name: String) : CueSegment()
+    /** A spot the teleprompter can jump to. It takes no room of its own. */
+    data object Anchor : CueSegment()
 }
 
 /**
@@ -67,6 +71,9 @@ sealed class CueSegment {
  * `[image 3fa9….jpg]` places an image, named for its file in the app's image
  * store. The editor shows it as the image itself, and so does everything that
  * reads the script.
+ *
+ * `[anchor]` marks a spot the teleprompter can jump to, the way a link jumps to
+ * an anchor on a web page. It isn't shown while reading, and cards leave it out.
  */
 object TeleprompterParser {
 
@@ -78,6 +85,22 @@ object TeleprompterParser {
      * it's always a plain file name and never a path.
      */
     private val imageRegex = Regex("""\[image[ \t]+([A-Za-z0-9-]+\.[A-Za-z0-9]+)\]""")
+
+    /** The tag that marks an anchor. */
+    const val ANCHOR_TAG = "[anchor]"
+
+    private val anchorRegex = Regex("""\[anchor\]""", RegexOption.IGNORE_CASE)
+
+    /**
+     * An anchor alone on its line, with the blank lines after it, so it can be
+     * moved onto the line it marks.
+     */
+    private val anchorLineRegex = Regex(
+        """^[ \t]*((?:\[anchor\][ \t]*)+)\n+""", setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE)
+    )
+
+    /** Anchors with nothing after them to jump to. */
+    private val trailingAnchorsRegex = Regex("""(?:\s*\[anchor\])+\s*$""", RegexOption.IGNORE_CASE)
 
     /** The tag for an image in the store. */
     fun imageTag(name: String): String = "[image $name]"
@@ -98,15 +121,24 @@ object TeleprompterParser {
     /** Parse script content for teleprompter display */
     fun parseNotes(notes: String): TeleprompterContent {
         // A script written as cards reads straight through, a card to a line.
-        val cleanedNotes = cleanText(CueCards.removingSeparators(notes))
+        val cleanedNotes = attachingAnchors(cleanText(CueCards.removingSeparators(notes)))
 
         return TeleprompterContent(
             fullText = cleanedNotes,
             words = extractWords(cleanedNotes),
             cues = cueMatches(cleanedNotes),
-            hasImages = imageMatches(cleanedNotes).isNotEmpty()
+            hasImages = imageMatches(cleanedNotes).isNotEmpty(),
+            hasAnchors = anchorRanges(cleanedNotes).isNotEmpty()
         )
     }
+
+    /**
+     * An anchor written on a line of its own moved onto the start of the line
+     * after it, so it doesn't leave a blank line behind when reading. Anchors
+     * at the very end mark nothing and are dropped.
+     */
+    private fun attachingAnchors(text: String): String =
+        trailingAnchorsRegex.replace(anchorLineRegex.replace(text, "$1"), "")
 
     /** Clean text for display */
     private fun cleanText(text: String): String =
@@ -159,6 +191,28 @@ object TeleprompterParser {
             .toList()
     }
 
+    /**
+     * Every anchor tag in the text, in order. One written inside a cue belongs
+     * to the cue's text.
+     */
+    fun anchorRanges(text: String): List<IntRange> {
+        if (!text.contains("[anchor", ignoreCase = true)) return emptyList()
+        val cues = cueMatches(text).map { it.range }
+        return anchorRegex.findAll(text)
+            .map { it.range }
+            .filter { range -> cues.none { it.first <= range.last && range.first <= it.last } }
+            .toList()
+    }
+
+    /** The text with its anchor tags taken out, for a preview or a search. */
+    fun removingAnchors(text: String): String {
+        val result = StringBuilder(text)
+        for (range in anchorRanges(text).reversed()) {
+            result.delete(range.first, range.last + 1)
+        }
+        return result.toString()
+    }
+
     /** The names of the images the text places, each once. */
     fun imageNames(text: String): Set<String> = imageMatches(text).map { it.name }.toSet()
 
@@ -183,13 +237,14 @@ object TeleprompterParser {
         }
 
     /**
-     * Split a single line into spoken text, cue and image runs.
+     * Split a single line into spoken text, cue, image and anchor runs.
      *
      * Shared by the teleprompter and the overlay so both render cues identically.
      */
     fun segments(line: String): List<CueSegment> {
         val tags = (cueMatches(line).map { it.range to CueSegment.Cue(it.content) } +
-            imageMatches(line).map { it.range to CueSegment.Image(it.name) })
+            imageMatches(line).map { it.range to CueSegment.Image(it.name) } +
+            anchorRanges(line).map { it to CueSegment.Anchor })
             .sortedBy { it.first.first }
 
         if (tags.isEmpty()) {
@@ -244,7 +299,7 @@ object TeleprompterParser {
                         RichText.plain(segment.text).split(Regex("\\s+")).filter { it.isNotEmpty() }.forEach {
                             words.add(WordInfo(text = it, isCue = false))
                         }
-                    is CueSegment.Image -> Unit
+                    is CueSegment.Image, CueSegment.Anchor -> Unit
                 }
             }
         }

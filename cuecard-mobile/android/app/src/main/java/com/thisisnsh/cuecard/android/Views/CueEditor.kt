@@ -21,6 +21,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.FormatBold
 import androidx.compose.material.icons.filled.FormatItalic
 import androidx.compose.material.icons.filled.Image
@@ -116,6 +117,7 @@ val CUE_EDITOR_EDGE_FADE = 28.dp
  */
 class CueEditorController {
     internal var onInsertCue: (() -> Unit)? = null
+    internal var onInsertAnchor: (() -> Unit)? = null
     internal var onSelectAll: (() -> Unit)? = null
     internal var onToggleStyle: ((EmphasisStyle) -> Unit)? = null
     internal var onInsertImages: ((List<String>) -> Unit)? = null
@@ -137,6 +139,11 @@ class CueEditorController {
     /** Drop an empty cue at the caret and leave the caret inside it. */
     fun insertCue() {
         onInsertCue?.invoke()
+    }
+
+    /** Drop an `[anchor]` at the caret, for the teleprompter to jump to. */
+    fun insertAnchor() {
+        onInsertAnchor?.invoke()
     }
 
     /**
@@ -349,18 +356,30 @@ private fun bindController(
 ) {
     controller.onInsertCue = {
         val value = currentValue()
-        // Past the end of a selection, so a cue never eats the words it's next
-        // to — and past the end of the cue the caret is in, since cues don't nest.
-        var location = value.selection.max
-        TeleprompterParser.cueTagContaining(location, value.text)?.let {
-            location = it.range.last + 1
-        }
+        val location = tagLocation(value)
         val insertion = emptyCueInsertion(value.text, location)
 
         apply(
             TextFieldValue(
                 text = value.text.replaceRange(location, location, insertion.first),
                 selection = TextRange(location + insertion.second)
+            )
+        )
+
+        if (!isFocused) {
+            onFocusChange(true)
+        }
+    }
+
+    controller.onInsertAnchor = {
+        val value = currentValue()
+        val location = tagLocation(value)
+        val insertion = spacedInsertion(value.text, TeleprompterParser.ANCHOR_TAG, location).first
+
+        apply(
+            TextFieldValue(
+                text = value.text.replaceRange(location, location, insertion),
+                selection = TextRange(location + insertion.length)
             )
         )
 
@@ -430,7 +449,9 @@ private fun highlighted(
 
         // Separators show in either mode, quieter than the words, so a script
         // written as cards reads as one in the teleprompter's editor too.
-        for (separator in CueCards.separatorRanges(text)) {
+        // Anchors are set the same way: marks in the script, not words of it.
+        val anchors = TeleprompterParser.anchorRanges(text)
+        for (separator in CueCards.separatorRanges(text) + anchors) {
             addStyle(
                 SpanStyle(
                     color = secondary,
@@ -507,7 +528,7 @@ private fun highlighted(
             val markers = emphases.filter { it.isClosed }.flatMap { listOf(it.open, it.close!!) }
             val imageRanges = TeleprompterParser.imageMatches(text).map { it.range }
             for (card in CueCards.cardRanges(text)) {
-                val overflow = CueCards.measure(card, text, cues, markers, imageRanges, cardLimit).overflow ?: continue
+                val overflow = CueCards.measure(card, text, cues, markers, imageRanges, anchors, cardLimit).overflow ?: continue
                 addStyle(
                     SpanStyle(color = red, background = red.copy(alpha = 0.14f)),
                     overflow.first,
@@ -739,6 +760,25 @@ private fun rewritingBrackets(old: TextFieldValue, candidate: TextFieldValue): T
  * belongs — between the brackets, ready for the cue to be typed.
  */
 private fun emptyCueInsertion(text: String, location: Int): Pair<String, Int> {
+    val (insertion, tagOffset) = spacedInsertion(text, TeleprompterParser.EMPTY_CUE_TAG, location)
+    return insertion to tagOffset + TeleprompterParser.CUE_TAG_PREFIX.length
+}
+
+/**
+ * Where a tag goes in at the caret: past the end of a selection, so it never
+ * eats the words it's next to — and past the end of the cue the caret is in,
+ * since nothing goes inside a cue.
+ */
+private fun tagLocation(value: TextFieldValue): Int {
+    val location = value.selection.max
+    return TeleprompterParser.cueTagContaining(location, value.text)?.let { it.range.last + 1 } ?: location
+}
+
+/**
+ * The text to splice in for `tag` at `location`, spaced so it doesn't collide
+ * with the words either side of it, and how far into that text the tag starts.
+ */
+private fun spacedInsertion(text: String, tag: String, location: Int): Pair<String, Int> {
     val previous = if (location > 0) text[location - 1] else null
     val next = if (location < text.length) text[location] else null
 
@@ -746,18 +786,15 @@ private fun emptyCueInsertion(text: String, location: Int): Pair<String, Int> {
     val needsTrailingSpace = next != null && !next.isWhitespace()
 
     val leading = if (needsLeadingSpace) " " else ""
-    val insertion = leading + TeleprompterParser.EMPTY_CUE_TAG + (if (needsTrailingSpace) " " else "")
-    val caretOffset = leading.length + TeleprompterParser.CUE_TAG_PREFIX.length
-
-    return insertion to caretOffset
+    return leading + tag + (if (needsTrailingSpace) " " else "") to leading.length
 }
 
 // MARK: - Cue bar
 
 /**
  * The strip above the keyboard while a script is being written: buttons to drop
- * a cue in at the caret, to bold or italicize, and to select the whole script,
- * and one to get the keyboard out of the way.
+ * a cue, an anchor or an image in at the caret, to bold or italicize, and to
+ * select the whole script, and one to get the keyboard out of the way.
  */
 val CUE_BAR_HEIGHT = 54.dp
 
@@ -765,6 +802,8 @@ val CUE_BAR_HEIGHT = 54.dp
 fun CueBar(
     isDark: Boolean,
     onAddCue: () -> Unit,
+    /** Null where anchors aren't used, which leaves the button out. */
+    onAddAnchor: (() -> Unit)?,
     onAddImage: () -> Unit,
     onFormat: (EmphasisStyle) -> Unit,
     onSelectAll: () -> Unit,
@@ -790,8 +829,8 @@ fun CueBar(
         // shorten when they have to.
         FirstThatFits(
             modifier = Modifier.weight(1f),
-            full = { CueBarButtons(isDark, short = false, onAddCue, onAddImage, onFormat, onSelectAll) },
-            short = { CueBarButtons(isDark, short = true, onAddCue, onAddImage, onFormat, onSelectAll) }
+            full = { CueBarButtons(isDark, short = false, onAddCue, onAddAnchor, onAddImage, onFormat, onSelectAll) },
+            short = { CueBarButtons(isDark, short = true, onAddCue, onAddAnchor, onAddImage, onFormat, onSelectAll) }
         )
 
         Box(
@@ -816,6 +855,7 @@ private fun CueBarButtons(
     isDark: Boolean,
     short: Boolean,
     onAddCue: () -> Unit,
+    onAddAnchor: (() -> Unit)?,
     onAddImage: () -> Unit,
     onFormat: (EmphasisStyle) -> Unit,
     onSelectAll: () -> Unit
@@ -868,13 +908,18 @@ private fun CueBarButtons(
             }
         }
 
-        Box(
+        // An anchor and an image share a capsule too, so the bar still fits a
+        // small phone with the anchor in.
+        Row(
             modifier = Modifier
                 .height(34.dp)
                 .glassed(Capsule, isDark)
                 .padding(horizontal = 4.dp),
-            contentAlignment = Alignment.Center
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            if (onAddAnchor != null) {
+                FormatButton(Icons.Filled.BookmarkBorder, stringResource(R.string.add_anchor), isDark, onAddAnchor)
+            }
             FormatButton(Icons.Filled.Image, stringResource(R.string.add_image), isDark, onAddImage)
         }
 

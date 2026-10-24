@@ -213,10 +213,10 @@ private fun TeleprompterSections(
         )
 
         ToggleRow(
-            label = stringResource(R.string.mirror_text),
-            isOn = settings.mirrorsText,
+            label = stringResource(R.string.reading_guide),
+            isOn = settings.showsReadingGuide,
             isDark = isDark,
-            onChange = { isOn -> update { it.copy(mirrorsText = isOn) } }
+            onChange = { isOn -> update { it.copy(showsReadingGuide = isOn) } }
         )
     }
 
@@ -236,6 +236,26 @@ private fun TeleprompterSections(
             optionLabel = { it.label },
             isDark = isDark,
             onSelect = { ratio -> update { it.copy(overlayAspectRatio = ratio) } }
+        )
+    }
+
+    SettingsSection(
+        title = stringResource(R.string.mirror),
+        footer = stringResource(R.string.mirror_footer),
+        isDark = isDark
+    ) {
+        ToggleRow(
+            label = stringResource(R.string.flip_horizontally),
+            isOn = settings.mirrorsText,
+            isDark = isDark,
+            onChange = { isOn -> update { it.copy(mirrorsText = isOn) } }
+        )
+
+        ToggleRow(
+            label = stringResource(R.string.flip_vertically),
+            isOn = settings.flipsTextVertically,
+            isDark = isDark,
+            onChange = { isOn -> update { it.copy(flipsTextVertically = isOn) } }
         )
     }
 

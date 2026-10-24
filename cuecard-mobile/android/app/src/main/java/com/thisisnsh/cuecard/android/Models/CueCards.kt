@@ -117,7 +117,7 @@ object CueCards {
     /**
      * Count what a card shows against `limit`. Cue text counts, the `[cue` and
      * `]` around it don't, nor do emphasis `markers`, and neither does blank
-     * space at either end. An image doesn't count.
+     * space at either end. An image doesn't count, and nor does an `[anchor]`.
      */
     fun measure(
         card: IntRange,
@@ -125,6 +125,7 @@ object CueCards {
         cues: List<CueMatch>,
         markers: List<IntRange> = emptyList(),
         images: List<IntRange> = emptyList(),
+        anchors: List<IntRange> = emptyList(),
         limit: Int
     ): CardMeasure {
         var count = 0
@@ -142,7 +143,9 @@ object CueCards {
             start = end
 
             val isTagSyntax = cues.any { location in it.range && location !in it.contentRange }
-            if (isTagSyntax || markers.any { location in it } || images.any { location in it }) continue
+            if (isTagSyntax || markers.any { location in it } || images.any { location in it } ||
+                anchors.any { location in it }
+            ) continue
 
             val isBlank = character.isBlank()
             if (isBlank && count == 0) continue
@@ -164,6 +167,7 @@ object CueCards {
             card.indices, card, cues,
             markers = RichText.markerRanges(card, skipping = cues.map { it.range }),
             images = TeleprompterParser.imageMatches(card).map { it.range },
+            anchors = TeleprompterParser.anchorRanges(card),
             limit = limit
         )
     }
@@ -221,6 +225,8 @@ object CueCards {
                     }
                     // Drawn as a block of its own; see `CardBlock`.
                     is CueSegment.Image -> continue
+                    // Cards are turned, not jumped through.
+                    CueSegment.Anchor -> continue
                 }
                 isFirst = false
             }

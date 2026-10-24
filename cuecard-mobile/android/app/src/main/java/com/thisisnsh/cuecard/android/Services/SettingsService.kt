@@ -11,6 +11,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.doublePreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -173,6 +174,22 @@ data class TeleprompterSettings(
     val cueColor: CueColor = CueColor.DEFAULT,
     /** Flips the teleprompter's text left to right, for reading off a mirror. */
     val mirrorsText: Boolean = false,
+    /**
+     * Turns the teleprompter's text upside down, for a glass that reflects a
+     * screen lying the other way up.
+     */
+    val flipsTextVertically: Boolean = false,
+    /**
+     * The teleprompter draws a pointer on the reading line, which the reader
+     * drags up or down to read wherever suits their eyes.
+     */
+    val showsReadingGuide: Boolean = true,
+    /**
+     * Where the reading line sits, as a fraction of the teleprompter's height.
+     * Just above centre by default: high enough to leave the next few lines in
+     * view, low enough to read as the middle of the screen rather than the top.
+     */
+    val readingGuidePosition: Float = 0.45f,
     /**
      * The teleprompter's play and pause start and pause the floating camera's
      * recording, and the camera's own buttons play and pause the script.
@@ -342,6 +359,9 @@ class SettingsService(private val context: Context) {
         private val CUE_COLOR = stringPreferencesKey("cue_color")
         private val SCRIPT_MODE = stringPreferencesKey("script_mode")
         private val MIRRORS_TEXT = booleanPreferencesKey("mirrors_text")
+        private val FLIPS_TEXT_VERTICALLY = booleanPreferencesKey("flips_text_vertically")
+        private val SHOWS_READING_GUIDE = booleanPreferencesKey("shows_reading_guide")
+        private val READING_GUIDE_POSITION = floatPreferencesKey("reading_guide_position")
         private val SYNCS_CAMERA = booleanPreferencesKey("syncs_camera")
         private val CARDS = stringPreferencesKey("cards")
         /** The teleprompter's script. Named from when it was the only one. */
@@ -488,6 +508,9 @@ class SettingsService(private val context: Context) {
             countdownSeconds = prefs[COUNTDOWN_SECONDS] ?: 5,
             cueColor = cueColor,
             mirrorsText = prefs[MIRRORS_TEXT] ?: defaults.mirrorsText,
+            flipsTextVertically = prefs[FLIPS_TEXT_VERTICALLY] ?: defaults.flipsTextVertically,
+            showsReadingGuide = prefs[SHOWS_READING_GUIDE] ?: defaults.showsReadingGuide,
+            readingGuidePosition = (prefs[READING_GUIDE_POSITION] ?: defaults.readingGuidePosition).coerceIn(0f, 1f),
             syncsCamera = prefs[SYNCS_CAMERA] ?: defaults.syncsCamera,
             scriptMode = ScriptMode.fromString(prefs[SCRIPT_MODE]),
             // From before cards kept their own: start them on what both used.
@@ -564,6 +587,9 @@ class SettingsService(private val context: Context) {
             prefs[CUE_COLOR] = newSettings.cueColor.rawValue
             prefs[SCRIPT_MODE] = newSettings.scriptMode.rawValue
             prefs[MIRRORS_TEXT] = newSettings.mirrorsText
+            prefs[FLIPS_TEXT_VERTICALLY] = newSettings.flipsTextVertically
+            prefs[SHOWS_READING_GUIDE] = newSettings.showsReadingGuide
+            prefs[READING_GUIDE_POSITION] = newSettings.readingGuidePosition
             prefs[SYNCS_CAMERA] = newSettings.syncsCamera
             prefs[CARDS] = json.encodeToString(newSettings.cards)
             prefs.remove(RETIRED_WORDS_PER_MINUTE)

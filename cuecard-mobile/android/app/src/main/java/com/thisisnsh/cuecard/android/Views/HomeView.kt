@@ -659,6 +659,14 @@ fun HomeView(
                             AnalyticsEvents.logButtonClick("insert_cue", "home")
                             editorController.insertCue()
                         },
+                        // Anchors are for jumping through the teleprompter;
+                        // cards are turned one at a time.
+                        onAddAnchor = if (isCardsMode) null else {
+                            {
+                                AnalyticsEvents.logButtonClick("insert_anchor", "home")
+                                editorController.insertAnchor()
+                            }
+                        },
                         onAddImage = {
                             AnalyticsEvents.logButtonClick("insert_image", "home")
                             imagePicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
@@ -1532,8 +1540,9 @@ fun SavedNotesView(
         } else {
             sorted.filter {
                 it.title.contains(trimmed, ignoreCase = true) ||
-                    TeleprompterParser.removingImages(CueCards.removingSeparators(it.content))
-                        .contains(trimmed, ignoreCase = true)
+                    TeleprompterParser.removingAnchors(
+                        TeleprompterParser.removingImages(CueCards.removingSeparators(it.content))
+                    ).contains(trimmed, ignoreCase = true)
             }
         }
     }
@@ -2086,9 +2095,13 @@ private fun SavedNoteRow(
             }
 
             // The start of a note, with card breaks read as spaces, and emphasis
-            // markers and images left out.
+            // markers, images and anchors left out.
             Text(
-                text = RichText.plain(TeleprompterParser.removingImages(CueCards.removingSeparators(note.content)).trim())
+                text = RichText.plain(
+                    TeleprompterParser.removingAnchors(
+                        TeleprompterParser.removingImages(CueCards.removingSeparators(note.content))
+                    ).trim()
+                )
                     .take(120).replace("\n", " "),
                 fontSize = 15.sp,
                 color = AppColors.textSecondary(isDark),

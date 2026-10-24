@@ -3,8 +3,8 @@
     <string name="app_name" translatable="false">CueCard</string>
     <string name="share_message">Check out %1$s</string>
     <string name="translation_report_body">Where in the app:\n\nWhat it says:\n\nWhat it should say:\n</string>
-    <string name="sample_teleprompter">Hi everyone.\n\nI\'m excited to be here today to talk about CueCard\'s teleprompter.\n\n[cue smile and pause]\n\nIt scrolls your script at your pace, so your eyes stay up and your words stay on track.\n\n[cue pause]\n\nLeave the app and it keeps going in a floating window, right over your camera or your video call.\n\n[cue slow down]\n\nLost your place? Drag the script back. Running long? Skip ahead.\n\nAnd the timer turns yellow near the end… and red if you get a little too passionate.\n\n[cue light chuckle]\n\nAnd these colored words?\n\n[cue emphasize]\n\nThose are your cues. Reminders to smile, pause, or not panic. They\'re never meant to be read out.\n\n[cue pause]\n\nTry it out. I think you\'ll love it.</string>
-    <string name="sample_cards">Hi everyone. Introducing Cue Cards. [cue smile]\n[separator]\nOne thought per card. Swipe to the next one when you\'re ready.\n[separator]\nThe timer at the top keeps you honest. [cue light chuckle]\n[separator]\nColored words are cues, not lines. [cue emphasize]\n[separator]\nThanks for listening. Questions?</string>
+    <string name="sample_teleprompter">Hi everyone.\n\nI\'m excited to be here today to talk about CueCard\'s *teleprompter*.\n\n[cue smile and pause]\n\nIt scrolls your script at _your_ pace, so your eyes stay up and your words stay on track.\n\n[cue pause]\n\n[anchor]\n\nLeave the app and it keeps going in a floating window, right over your camera or your video call.\n\n[cue slow down]\n\nLost your place? Drag the script back. Running long? Skip ahead to the next anchor.\n\nAnd the timer turns yellow near the end… and red if you get a _little_ too passionate.\n\n[cue light chuckle]\n\n[anchor]\n\nAnd these colored words?\n\n[cue emphasize]\n\nThose are your cues. Reminders to smile, pause, or *not panic*. They\'re never meant to be read out.\n\n[cue pause]\n\n[anchor]\n\nTry it out. I think you\'ll *love* it.</string>
+    <string name="sample_cards">Hi everyone. Introducing *Cue Cards*. [cue smile]\n[separator]\nOne thought per card. Swipe to the next one when _you\'re_ ready.\n[separator]\nThe timer at the top keeps you *honest*. [cue light chuckle]\n[separator]\nColored words are cues, not lines. [cue emphasize]\n[separator]\nThanks for listening. *Questions?*</string>
     <string name="theme_system">System</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
@@ -273,8 +273,6 @@
     <string name="help_change_language_title">Change the Language</string>
     <string name="help_change_language_detail">Tap the gear at the top, then Language. CueCard is in English, French, Portuguese, Russian and Spanish.</string>
     <string name="help_count_up_title">Count Up Without a Timer</string>
-    <string name="mirror_text">Mirror Text</string>
-    <string name="help_mirror_text_detail">Turn on Mirror Text in Settings to flip the text horizontally for a teleprompter mirror. The floating window uses the same setting. It\'s off by default.</string>
     <string name="takes">Takes</string>
     <plurals name="takes_count">
         <item quantity="one">%1$d Take</item>
@@ -345,4 +343,17 @@
     <string name="help_add_images_detail">Tap the photo above the keyboard to add images from your gallery.</string>
     <string name="package_too_large">That file is larger than 100 MB, so it can\'t be imported.</string>
     <string name="script_couldnt_be_shared">This script couldn\'t be shared. Try again.</string>
+    <string name="reading_guide">Reading Guide</string>
+    <string name="mirror">Mirror</string>
+    <string name="mirror_footer">Flip the teleprompter and floating window text to read it off a teleprompter\'s glass.</string>
+    <string name="flip_horizontally">Flip Horizontally</string>
+    <string name="flip_vertically">Flip Vertically</string>
+    <string name="help_mirror_detail">Turn on Flip Horizontally or Flip Vertically under Mirror in Settings to flip the text for a teleprompter\'s glass. The floating window uses the same settings. Both are off by default.</string>
+    <string name="help_keep_your_place_title">Keep Your Place</string>
+    <string name="help_keep_your_place_detail">The pointer at the side of the script marks the line to read. Drag it up or down to read where it suits your eyes, and the script lines up with it. Turn off Reading Guide in Settings to hide it.</string>
+    <string name="add_anchor">Add Anchor</string>
+    <string name="next_anchor">Next Anchor</string>
+    <string name="previous_anchor">Previous Anchor</string>
+    <string name="move_up">Move Up</string>
+    <string name="move_down">Move Down</string>
 </resources>

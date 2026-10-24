@@ -2,8 +2,8 @@
 <resources>
     <string name="share_message">Echa un vistazo a %1$s</string>
     <string name="translation_report_body">Dónde en la app:\n\nQué dice:\n\nQué debería decir:\n</string>
-    <string name="sample_teleprompter">Hola a todos.\n\nMe alegra estar aquí hoy para hablaros del teleprompter de CueCard.\n\n[cue sonríe y haz una pausa]\n\nDesplaza tu guion a tu ritmo, para que mantengas la mirada al frente y no pierdas el hilo.\n\n[cue pausa]\n\nSal de la app y sigue en una ventana flotante, justo encima de tu cámara o tu videollamada.\n\n[cue más despacio]\n\n¿Te has perdido? Arrastra el guion hacia atrás. ¿Vas largo? Salta hacia delante.\n\nY el temporizador se pone amarillo cerca del final… y rojo si te emocionas demasiado.\n\n[cue risa suave]\n\n¿Y estas palabras de colores?\n\n[cue enfatiza]\n\nSon tus indicaciones. Recordatorios para sonreír, hacer una pausa o no entrar en pánico. Nunca se leen en voz alta.\n\n[cue pausa]\n\nPruébalo. Creo que te va a encantar.</string>
-    <string name="sample_cards">Hola a todos. Os presento el modo Tarjetas. [cue sonríe]\n[separator]\nUna idea por tarjeta. Desliza a la siguiente cuando estés listo.\n[separator]\nEl temporizador de arriba te mantiene a raya. [cue risa suave]\n[separator]\nLas palabras de colores son indicaciones, no palabras para leer en voz alta. [cue enfatiza]\n[separator]\nGracias por escuchar. ¿Preguntas?</string>
+    <string name="sample_teleprompter">Hola a todos.\n\nMe alegra estar aquí hoy para hablaros del *teleprompter* de CueCard.\n\n[cue sonríe y haz una pausa]\n\nDesplaza tu guion a _tu_ ritmo, para que mantengas la mirada al frente y no pierdas el hilo.\n\n[cue pausa]\n\n[anchor]\n\nSal de la app y sigue en una ventana flotante, justo encima de tu cámara o tu videollamada.\n\n[cue más despacio]\n\n¿Te has perdido? Arrastra el guion hacia atrás. ¿Vas largo? Salta al ancla siguiente.\n\nY el temporizador se pone amarillo cerca del final… y rojo si te emocionas _un poco_ demasiado.\n\n[cue risa suave]\n\n[anchor]\n\n¿Y estas palabras de colores?\n\n[cue enfatiza]\n\nSon tus indicaciones. Recordatorios para sonreír, hacer una pausa o *no entrar en pánico*. Nunca se leen en voz alta.\n\n[cue pausa]\n\n[anchor]\n\nPruébalo. Creo que te va a *encantar*.</string>
+    <string name="sample_cards">Hola a todos. Os presento el modo *Tarjetas*. [cue sonríe]\n[separator]\nUna idea por tarjeta. Desliza a la siguiente cuando _estés_ listo.\n[separator]\nEl temporizador de arriba te mantiene *a raya*. [cue risa suave]\n[separator]\nLas palabras de colores son indicaciones, no palabras para leer en voz alta. [cue enfatiza]\n[separator]\nGracias por escuchar. *¿Preguntas?*</string>
     <string name="theme_system">Sistema</string>
     <string name="theme_light">Claro</string>
     <string name="theme_dark">Oscuro</string>
@@ -275,8 +275,6 @@
     <string name="help_change_language_title">Cambia el idioma</string>
     <string name="help_change_language_detail">Toca el engranaje arriba y luego Idioma. CueCard está en inglés, francés, portugués, ruso y español.</string>
     <string name="help_count_up_title">Cuenta hacia arriba sin temporizador</string>
-    <string name="mirror_text">Reflejar texto</string>
-    <string name="help_mirror_text_detail">Activa Reflejar texto en Ajustes para invertir el texto horizontalmente y leerlo en un espejo de teleprompter. La ventana flotante usa el mismo ajuste. Está desactivado de forma predeterminada.</string>
     <string name="takes">Tomas</string>
     <plurals name="takes_count">
         <item quantity="one">%1$d toma</item>
@@ -348,4 +346,17 @@
     <string name="help_add_images_detail">Toca la foto encima del teclado para añadir imágenes de tu galería.</string>
     <string name="package_too_large">Ese archivo ocupa más de 100 MB, así que no se puede importar.</string>
     <string name="script_couldnt_be_shared">No se ha podido compartir este guion. Inténtalo de nuevo.</string>
+    <string name="reading_guide">Guía de lectura</string>
+    <string name="mirror">Espejo</string>
+    <string name="mirror_footer">Invierte el texto del teleprompter y de la ventana flotante para leerlo en el cristal de un teleprompter.</string>
+    <string name="flip_horizontally">Invertir horizontalmente</string>
+    <string name="flip_vertically">Invertir verticalmente</string>
+    <string name="help_mirror_detail">Activa Invertir horizontalmente o Invertir verticalmente en Espejo, en Ajustes, para invertir el texto y leerlo en el cristal de un teleprompter. La ventana flotante usa los mismos ajustes. Ambos están desactivados de forma predeterminada.</string>
+    <string name="help_keep_your_place_title">No pierdas el hilo</string>
+    <string name="help_keep_your_place_detail">El puntero al lado del guion marca la línea que hay que leer. Arrástralo hacia arriba o hacia abajo para leer donde te resulte más cómodo, y el guion se alinea con él. Desactiva Guía de lectura en Ajustes para ocultarlo.</string>
+    <string name="add_anchor">Añadir ancla</string>
+    <string name="next_anchor">Ancla siguiente</string>
+    <string name="previous_anchor">Ancla anterior</string>
+    <string name="move_up">Mover arriba</string>
+    <string name="move_down">Mover abajo</string>
 </resources>

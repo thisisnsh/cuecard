@@ -2,8 +2,8 @@
 <resources>
     <string name="share_message">Découvrez %1$s</string>
     <string name="translation_report_body">Où dans l\'app :\n\nCe qui est écrit :\n\nCe qui devrait être écrit :\n</string>
-    <string name="sample_teleprompter">Bonjour à tous.\n\nJe suis ravi d\'être ici aujourd\'hui pour vous parler du prompteur de CueCard.\n\n[cue sourire et pause]\n\nIl fait défiler votre script à votre rythme : vos yeux restent levés et votre discours reste sur les rails.\n\n[cue pause]\n\nQuittez l\'app et il continue dans une fenêtre flottante, juste au-dessus de votre caméra ou de votre visio.\n\n[cue ralentir]\n\nPerdu ? Faites glisser le script en arrière. Trop long ? Sautez un passage.\n\nEt le minuteur passe au jaune vers la fin… puis au rouge si vous vous emballez un peu trop.\n\n[cue petit rire]\n\nEt ces mots en couleur ?\n\n[cue insister]\n\nCe sont vos repères. Des rappels pour sourire, faire une pause ou ne pas paniquer. Ils ne sont jamais lus à voix haute.\n\n[cue pause]\n\nEssayez-le. Je pense que vous allez l\'adorer.</string>
-    <string name="sample_cards">Bonjour à tous. Voici le mode Fiches. [cue sourire]\n[separator]\nUne idée par fiche. Balayez vers la suivante quand vous êtes prêt.\n[separator]\nLe minuteur en haut vous garde dans les temps. [cue petit rire]\n[separator]\nLes mots en couleur sont des repères, pas des mots à lire à voix haute. [cue insister]\n[separator]\nMerci de votre attention. Des questions ?</string>
+    <string name="sample_teleprompter">Bonjour à tous.\n\nJe suis ravi d\'être ici aujourd\'hui pour vous parler du *prompteur* de CueCard.\n\n[cue sourire et pause]\n\nIl fait défiler votre script à _votre_ rythme : vos yeux restent levés et votre discours reste sur les rails.\n\n[cue pause]\n\n[anchor]\n\nQuittez l\'app et il continue dans une fenêtre flottante, juste au-dessus de votre caméra ou de votre visio.\n\n[cue ralentir]\n\nPerdu ? Faites glisser le script en arrière. Trop long ? Sautez à l\'ancre suivante.\n\nEt le minuteur passe au jaune vers la fin… puis au rouge si vous vous emballez _un peu_ trop.\n\n[cue petit rire]\n\n[anchor]\n\nEt ces mots en couleur ?\n\n[cue insister]\n\nCe sont vos repères. Des rappels pour sourire, faire une pause ou *ne pas paniquer*. Ils ne sont jamais lus à voix haute.\n\n[cue pause]\n\n[anchor]\n\nEssayez-le. Je pense que vous allez l\'*adorer*.</string>
+    <string name="sample_cards">Bonjour à tous. Voici le mode *Fiches*. [cue sourire]\n[separator]\nUne idée par fiche. Balayez vers la suivante quand _vous_ êtes prêt.\n[separator]\nLe minuteur en haut vous garde *dans les temps*. [cue petit rire]\n[separator]\nLes mots en couleur sont des repères, pas des mots à lire à voix haute. [cue insister]\n[separator]\nMerci de votre attention. *Des questions ?*</string>
     <string name="theme_system">Système</string>
     <string name="theme_light">Clair</string>
     <string name="theme_dark">Sombre</string>
@@ -275,8 +275,6 @@
     <string name="help_change_language_title">Changer de langue</string>
     <string name="help_change_language_detail">Touchez l\'engrenage en haut, puis Langue. CueCard est disponible en anglais, français, portugais, russe et espagnol.</string>
     <string name="help_count_up_title">Compter sans minuteur</string>
-    <string name="mirror_text">Texte en miroir</string>
-    <string name="help_mirror_text_detail">Activez Texte en miroir dans Réglages pour inverser le texte horizontalement et le lire dans un miroir de prompteur. La fenêtre flottante utilise le même réglage. Il est désactivé par défaut.</string>
     <string name="takes">Prises</string>
     <plurals name="takes_count">
         <item quantity="one">%1$d prise</item>
@@ -348,4 +346,17 @@
     <string name="help_add_images_detail">Touchez la photo au-dessus du clavier pour ajouter des images de votre galerie.</string>
     <string name="package_too_large">Ce fichier dépasse 100 Mo et ne peut donc pas être importé.</string>
     <string name="script_couldnt_be_shared">Ce script n\'a pas pu être partagé. Réessayez.</string>
+    <string name="reading_guide">Guide de lecture</string>
+    <string name="mirror">Miroir</string>
+    <string name="mirror_footer">Inversez le texte du prompteur et de la fenêtre flottante pour le lire sur la vitre d\'un prompteur.</string>
+    <string name="flip_horizontally">Inverser horizontalement</string>
+    <string name="flip_vertically">Inverser verticalement</string>
+    <string name="help_mirror_detail">Activez Inverser horizontalement ou Inverser verticalement sous Miroir dans Réglages pour inverser le texte et le lire sur la vitre d\'un prompteur. La fenêtre flottante utilise les mêmes réglages. Les deux sont désactivés par défaut.</string>
+    <string name="help_keep_your_place_title">Ne perdez pas le fil</string>
+    <string name="help_keep_your_place_detail">Le pointeur à côté du script indique la ligne à lire. Faites-le glisser vers le haut ou vers le bas pour lire là où c\'est le plus confortable, et le script s\'aligne dessus. Désactivez Guide de lecture dans Réglages pour le masquer.</string>
+    <string name="add_anchor">Ajouter une ancre</string>
+    <string name="next_anchor">Ancre suivante</string>
+    <string name="previous_anchor">Ancre précédente</string>
+    <string name="move_up">Déplacer vers le haut</string>
+    <string name="move_down">Déplacer vers le bas</string>
 </resources>
