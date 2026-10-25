@@ -1517,6 +1517,34 @@
         }
       }
     },
+    "Anchor" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ancla"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ancre"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Âncora"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Якорь"
+          }
+        }
+      }
+    },
     "An image couldn't be added. Try again." : {
       "localizations" : {
         "es" : {

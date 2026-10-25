@@ -1176,7 +1176,8 @@ struct CueBar: View {
                       padding: fit.padding, action: onAddCue)
 
             if let onAddAnchor {
-                iconButton("bookmark", accessibilityLabel: "Add Anchor", action: onAddAnchor)
+                addButton(fit == .full ? "Add Anchor" : "Anchor", accessibilityLabel: "Add Anchor",
+                          padding: fit.padding, action: onAddAnchor)
             }
 
             iconButton("photo", accessibilityLabel: "Add Image", action: onAddImage)
