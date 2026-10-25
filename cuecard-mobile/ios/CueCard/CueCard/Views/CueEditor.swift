@@ -552,13 +552,26 @@ struct CueTextEditor: UIViewRepresentable {
 
         // Separators show in either mode, quieter than the words, so a script
         // written as cards reads as one in the teleprompter's editor too.
-        // Anchors are set the same way: marks in the script, not words of it.
-        let anchors = TeleprompterParser.anchorRanges(in: textView.text)
-        for tag in CueCards.separatorRanges(in: textView.text) + anchors {
+        for tag in CueCards.separatorRanges(in: textView.text) {
             storage.addAttributes([
                 .foregroundColor: secondary,
                 .font: UIFont.systemFont(ofSize: fontSize * 0.8, weight: .bold)
             ], range: tag)
+        }
+
+        // Anchors are set like cues, in grey rather than the cue color: marks
+        // in the script, not words of it.
+        let anchors = TeleprompterParser.anchorRanges(in: textView.text)
+        for tag in anchors {
+            storage.addAttributes([
+                .foregroundColor: secondary.withAlphaComponent(0.45),
+                .font: UIFont.cue(ofSize: fontSize * 0.85, weight: .medium)
+            ], range: tag)
+
+            storage.addAttributes([
+                .foregroundColor: secondary,
+                .font: UIFont.cue(ofSize: fontSize * 0.85)
+            ], range: NSRange(location: tag.location + 1, length: tag.length - 2))
         }
 
         // Each stretch takes every style written around it; an emphasis still
