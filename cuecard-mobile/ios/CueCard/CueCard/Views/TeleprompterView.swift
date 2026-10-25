@@ -845,6 +845,9 @@ struct AttributedTextView: UIViewRepresentable {
         textView.delegate = context.coordinator
         textView.showsVerticalScrollIndicator = false
         textView.alwaysBounceVertical = true
+        // A tap on the status bar would jump the script back to the first line
+        // without telling playback, which then pulls it back down.
+        textView.scrollsToTop = false
         textView.textContainerInset = UIEdgeInsets(top: topPadding, left: 24, bottom: bottomPadding, right: 24)
         textView.textContainer.lineFragmentPadding = 0
 
