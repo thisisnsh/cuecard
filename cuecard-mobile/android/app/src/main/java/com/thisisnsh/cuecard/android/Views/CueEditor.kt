@@ -29,10 +29,13 @@ import androidx.compose.material.icons.filled.KeyboardHide
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,6 +58,8 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -101,6 +106,12 @@ import com.thisisnsh.cuecard.android.models.WideScript
 import com.thisisnsh.cuecard.android.models.hasWideScript
 import com.thisisnsh.cuecard.android.modifiers.Capsule
 import com.thisisnsh.cuecard.android.modifiers.glassed
+import android.net.Uri
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * How far the script fades into the background at the top and bottom edges.
@@ -235,6 +246,49 @@ fun CueTextEditor(
         }
     }
 
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var isPastingImages by remember { mutableStateOf(false) }
+    var pasteFailed by remember { mutableStateOf(false) }
+    val onPasteImages = rememberUpdatedState<(List<Uri>) -> Unit> { uris ->
+        if (!isPastingImages) {
+            val insertionPoint = value
+            isPastingImages = true
+            scope.launch {
+                try {
+                    val names = withContext(Dispatchers.IO) {
+                        uris.mapNotNull { ScriptImages.add(context, it) }
+                    }
+                    // An image belongs to the editor where Paste was used,
+                    // even if another card gets focus while it is decoded.
+                    // Never overwrite typing or a note loaded in the meantime.
+                    if (value.text == insertionPoint.text) {
+                        if (names.isNotEmpty()) apply(insertingImages(insertionPoint, names))
+                        pasteFailed = names.size != uris.size
+                    } else {
+                        pasteFailed = true
+                    }
+                } finally {
+                    isPastingImages = false
+                }
+            }
+        }
+    }
+    val systemClipboard = LocalClipboardManager.current
+    val scriptClipboard = remember(context, systemClipboard) {
+        ScriptClipboard(context, systemClipboard) { onPasteImages.value(it) }
+    }
+
+    if (pasteFailed) {
+        AlertDialog(
+            onDismissRequest = { pasteFailed = false },
+            text = { Text(stringResource(R.string.image_not_added)) },
+            confirmButton = {
+                TextButton(onClick = { pasteFailed = false }) { Text(stringResource(R.string.ok)) }
+            }
+        )
+    }
+
     // With a card editor for every card, the cue bar writes into the one being
     // typed in.
     if (isFocused || controller.onInsertCue == null) {
@@ -259,46 +313,48 @@ fun CueTextEditor(
     )
 
     val field: @Composable (Modifier) -> Unit = { fieldModifier ->
-        BasicTextField(
-            value = value,
-            onValueChange = { candidate -> apply(keepingImagesWhole(value, rewritingBrackets(value, candidate))) },
-            onTextLayout = { layout = it },
-            modifier = fieldModifier
-                .fillMaxWidth()
-                .onSizeChanged { fieldWidth = it.width }
-                // Each image over the line its tag holds open for it.
-                .drawWithContent {
-                    drawContent()
-                    val laidOut = layout ?: return@drawWithContent
-                    for (image in images) drawEditorImage(image, laidOut)
-                }
-                .focusRequester(focusRequester)
-                // Ctrl+B and Ctrl+I on a hardware keyboard write the markers too.
-                .onPreviewKeyEvent { event ->
-                    if (event.type != KeyEventType.KeyDown || !event.isCtrlPressed) return@onPreviewKeyEvent false
-                    val style = when (event.key) {
-                        Key.B -> EmphasisStyle.BOLD
-                        Key.I -> EmphasisStyle.ITALIC
-                        else -> return@onPreviewKeyEvent false
+        CompositionLocalProvider(LocalClipboardManager provides scriptClipboard) {
+            BasicTextField(
+                value = value,
+                onValueChange = { candidate -> apply(keepingImagesWhole(value, rewritingBrackets(value, candidate))) },
+                onTextLayout = { layout = it },
+                modifier = fieldModifier
+                    .fillMaxWidth()
+                    .onSizeChanged { fieldWidth = it.width }
+                    // Each image over the line its tag holds open for it.
+                    .drawWithContent {
+                        drawContent()
+                        val laidOut = layout ?: return@drawWithContent
+                        for (image in images) drawEditorImage(image, laidOut)
                     }
-                    toggledEmphasis(value, style)?.let(::apply)
-                    true
-                }
-                .onFocusChanged { state ->
-                    hasFocus = state.isFocused
-                    if (state.isFocused != isFocused) {
-                        onFocusChange(state.isFocused)
+                    .focusRequester(focusRequester)
+                    // Ctrl+B and Ctrl+I on a hardware keyboard write the markers too.
+                    .onPreviewKeyEvent { event ->
+                        if (event.type != KeyEventType.KeyDown || !event.isCtrlPressed) return@onPreviewKeyEvent false
+                        val style = when (event.key) {
+                            Key.B -> EmphasisStyle.BOLD
+                            Key.I -> EmphasisStyle.ITALIC
+                            else -> return@onPreviewKeyEvent false
+                        }
+                        toggledEmphasis(value, style)?.let(::apply)
+                        true
                     }
-                },
-            textStyle = baseStyle,
-            cursorBrush = SolidColor(AppColors.textPrimary(isDark)),
-            visualTransformation = { original ->
-                androidx.compose.ui.text.input.TransformedText(
-                    highlighted(original.text, cueColor, isDark, fontSize, cardLimit, images, density),
-                    androidx.compose.ui.text.input.OffsetMapping.Identity
-                )
-            }
-        )
+                    .onFocusChanged { state ->
+                        hasFocus = state.isFocused
+                        if (state.isFocused != isFocused) {
+                            onFocusChange(state.isFocused)
+                        }
+                    },
+                textStyle = baseStyle,
+                cursorBrush = SolidColor(AppColors.textPrimary(isDark)),
+                visualTransformation = { original ->
+                    androidx.compose.ui.text.input.TransformedText(
+                        highlighted(original.text, cueColor, isDark, fontSize, cardLimit, images, density),
+                        androidx.compose.ui.text.input.OffsetMapping.Identity
+                    )
+                }
+            )
+        }
     }
 
     // A small spinner at the start of the line images are on their way to:
@@ -307,7 +363,7 @@ fun CueTextEditor(
         Box(modifier = fieldModifier) {
             field(Modifier)
             val laidOut = layout
-            if (controller.isAddingImages && isFocused && laidOut != null) {
+            if ((isPastingImages || (controller.isAddingImages && isFocused)) && laidOut != null) {
                 val location = imageLocation(value)
                 val line = laidOut.getLineForOffset(location.coerceIn(0, value.text.length))
                 val atLineStart = location == 0 || value.text.getOrNull(location - 1) == '\n'
@@ -396,22 +452,7 @@ private fun bindController(
     }
 
     controller.onInsertImages = { names ->
-        val value = currentValue()
-        val text = value.text
-        val location = imageLocation(value)
-        val insertion = StringBuilder()
-        if (location > 0 && text[location - 1] != '\n') insertion.append('\n')
-        insertion.append(names.joinToString("\n") { TeleprompterParser.imageTag(it) })
-        // A line break already there does for the one after the images.
-        val endsLine = location < text.length && text[location] == '\n'
-        if (!endsLine) insertion.append('\n')
-        val caret = location + insertion.length + (if (endsLine) 1 else 0)
-        apply(
-            TextFieldValue(
-                text = text.replaceRange(location, location, insertion),
-                selection = TextRange(caret.coerceAtMost(text.length + insertion.length))
-            )
-        )
+        apply(insertingImages(currentValue(), names))
         if (!isFocused) {
             onFocusChange(true)
         }
@@ -424,6 +465,24 @@ private fun bindController(
             onFocusChange(true)
         }
     }
+}
+
+/** Insert pictures on their own lines, after the selection or enclosing cue. */
+internal fun insertingImages(value: TextFieldValue, names: List<String>): TextFieldValue {
+    if (names.isEmpty()) return value
+    val text = value.text
+    val location = imageLocation(value)
+    val insertion = buildString {
+        if (location > 0 && text[location - 1] != '\n') append('\n')
+        append(names.joinToString("\n") { TeleprompterParser.imageTag(it) })
+        if (location == text.length || text[location] != '\n') append('\n')
+    }
+    val endsLine = location < text.length && text[location] == '\n'
+    val caret = location + insertion.length + (if (endsLine) 1 else 0)
+    return TextFieldValue(
+        text = text.replaceRange(location, location, insertion),
+        selection = TextRange(caret.coerceAtMost(text.length + insertion.length))
+    )
 }
 
 /**

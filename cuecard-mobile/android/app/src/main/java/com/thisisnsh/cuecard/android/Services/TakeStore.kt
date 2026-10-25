@@ -94,8 +94,10 @@ class TakeStore private constructor(context: Context) {
     fun begin(scriptId: String) {
         end()
         val now = System.currentTimeMillis()
-        openScriptId = scriptId
+        // Read from disk before marking this script open. Otherwise sessions()
+        // returns the empty in-memory list and older takes disappear on reopen.
         openSessions = sessions(scriptId) + TeleprompterSession(now, now)
+        openScriptId = scriptId
         writeOpenSessions()
 
         heartbeat = scope.launch {

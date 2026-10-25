@@ -1,15 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- What's New text as WhatsNew.json writes it. Each one's translation is
-         at the same place in whats_new_text, in strings.xml. -->
-    <string-array name="whats_new_english" translatable="false">
-        <item>More Languages Supported: Chinese, French, German, Hindi, Italian, Japanese, Korean, Portuguese, and Spanish.</item>
-        <item>Rich Text: Make words bold or italic in your script.</item>
-        <item>Improved with New Features</item>
-        <item>Text sizes set in points, with presets scaled to your screen.</item>
-        <item>Select All in the editor\'s cue bar.</item>
-        <item>The play button counts down before your script starts.</item>
-        <item>The floating window\'s timer grows with its text.</item>
-        <item>Separate Settings for the editor and the teleprompter, with a way to share CueCard.</item>
-    </string-array>
+    <!-- No release notes for the first release. Future entries match whats_new_text. -->
+    <string-array name="whats_new_english" translatable="false" />
 </resources>

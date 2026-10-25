@@ -241,16 +241,7 @@
     <string name="timer_description">Timer, %1$s</string>
     <string name="timer_not_set">Timer, não definido</string>
     <string name="open_cards">Abrir cartões</string>
-    <string-array name="whats_new_text">
-        <item>Mais idiomas compatíveis: chinês, francês, alemão, hindi, italiano, japonês, coreano, português e espanhol.</item>
-        <item>Texto formatado: deixe palavras em negrito ou itálico no seu roteiro.</item>
-        <item>Melhorias e novos recursos</item>
-        <item>Tamanhos de texto definidos em pontos, com opções predefinidas ajustadas à sua tela.</item>
-        <item>Selecionar Tudo na barra de deixas do editor.</item>
-        <item>O botão de reprodução mostra a contagem regressiva antes de o roteiro começar.</item>
-        <item>O timer da janela flutuante aumenta com o tamanho do texto.</item>
-        <item>Ajustes separados para o editor e o teleprompter, com uma opção para compartilhar o CueCard.</item>
-    </string-array>
+    <string-array name="whats_new_text" />
     <string name="note_couldnt_be_saved">Não foi possível salvar sua nota. Tente novamente.</string>
     <string name="file_opened_not_saved">O arquivo foi aberto, mas não foi possível salvá-lo como nota. Tente salvá-lo novamente.</string>
     <string name="note_couldnt_be_renamed">Não foi possível renomear a nota. Tente novamente.</string>
@@ -343,7 +334,7 @@
     <string name="add_image">Adicionar imagem</string>
     <string name="image_not_added">Não foi possível adicionar uma imagem. Tente novamente.</string>
     <string name="help_add_images_title">Adicionar imagens</string>
-    <string name="help_add_images_detail">Toque na foto acima do teclado para adicionar imagens da sua galeria.</string>
+    <string name="help_add_images_detail">Toque na foto acima do teclado para adicionar imagens da sua galeria, ou cole uma. Copie uma imagem para colá-la em outro app.</string>
     <string name="package_too_large">Esse arquivo tem mais de 100 MB, então não pode ser importado.</string>
     <string name="script_couldnt_be_shared">Não foi possível compartilhar este roteiro. Tente novamente.</string>
     <string name="reading_guide">Guia de leitura</string>

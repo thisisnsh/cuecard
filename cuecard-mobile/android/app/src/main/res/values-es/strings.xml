@@ -241,16 +241,7 @@
     <string name="timer_description">Temporizador, %1$s</string>
     <string name="timer_not_set">Temporizador, sin definir</string>
     <string name="open_cards">Abrir tarjetas</string>
-    <string-array name="whats_new_text">
-        <item>Más idiomas compatibles: chino, francés, alemán, hindi, italiano, japonés, coreano, portugués y español.</item>
-        <item>Texto enriquecido: pon palabras en negrita o cursiva en tu guion.</item>
-        <item>Mejoras y nuevas funciones</item>
-        <item>Tamaños de texto en puntos, con opciones predefinidas adaptadas a tu pantalla.</item>
-        <item>Seleccionar todo en la barra de indicaciones del editor.</item>
-        <item>El botón de reproducción muestra la cuenta atrás antes de que empiece el guion.</item>
-        <item>El temporizador de la ventana flotante crece con el tamaño del texto.</item>
-        <item>Ajustes independientes para el editor y el teleprompter, con una opción para compartir CueCard.</item>
-    </string-array>
+    <string-array name="whats_new_text" />
     <string name="note_couldnt_be_saved">No se ha podido guardar la nota. Inténtalo de nuevo.</string>
     <string name="file_opened_not_saved">El archivo se ha abierto, pero no se ha podido guardar como nota. Intenta guardarlo de nuevo.</string>
     <string name="note_couldnt_be_renamed">No se ha podido renombrar la nota. Inténtalo de nuevo.</string>
@@ -343,7 +334,7 @@
     <string name="add_image">Añadir imagen</string>
     <string name="image_not_added">No se ha podido añadir una imagen. Inténtalo de nuevo.</string>
     <string name="help_add_images_title">Añadir imágenes</string>
-    <string name="help_add_images_detail">Toca la foto encima del teclado para añadir imágenes de tu galería.</string>
+    <string name="help_add_images_detail">Toca la foto encima del teclado para añadir imágenes de tu galería, o pega una. Copia una imagen para pegarla en otra app.</string>
     <string name="package_too_large">Ese archivo ocupa más de 100 MB, así que no se puede importar.</string>
     <string name="script_couldnt_be_shared">No se ha podido compartir este guion. Inténtalo de nuevo.</string>
     <string name="reading_guide">Guía de lectura</string>

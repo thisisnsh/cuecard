@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- What the app hands to other apps: scripts shared as TextPacks. -->
+<!-- Scripts shared as TextPacks, and individual images copied to the clipboard. -->
 <paths>
     <cache-path name="shared" path="shared/" />
+    <files-path name="script_images" path="ScriptImages/" />
 </paths>

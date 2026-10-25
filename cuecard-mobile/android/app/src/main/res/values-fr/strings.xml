@@ -241,16 +241,7 @@
     <string name="timer_description">Minuteur, %1$s</string>
     <string name="timer_not_set">Minuteur, non défini</string>
     <string name="open_cards">Ouvrir les fiches</string>
-    <string-array name="whats_new_text">
-        <item>Plus de langues prises en charge : chinois, français, allemand, hindi, italien, japonais, coréen, portugais et espagnol.</item>
-        <item>Texte enrichi : mettez des mots en gras ou en italique dans votre script.</item>
-        <item>Des améliorations et de nouvelles fonctionnalités</item>
-        <item>Tailles du texte définies en points, avec des préréglages adaptés à votre écran.</item>
-        <item>Tout sélectionner dans la barre de repères de l’éditeur.</item>
-        <item>Le bouton de lecture affiche le compte à rebours avant le démarrage du script.</item>
-        <item>Le minuteur de la fenêtre flottante grandit avec la taille du texte.</item>
-        <item>Des réglages distincts pour l’éditeur et le prompteur, avec une option pour partager CueCard.</item>
-    </string-array>
+    <string-array name="whats_new_text" />
     <string name="note_couldnt_be_saved">Votre note n\'a pas pu être enregistrée. Réessayez.</string>
     <string name="file_opened_not_saved">Le fichier a été ouvert, mais n\'a pas pu être enregistré comme note. Essayez de l\'enregistrer à nouveau.</string>
     <string name="note_couldnt_be_renamed">La note n\'a pas pu être renommée. Réessayez.</string>
@@ -343,7 +334,7 @@
     <string name="add_image">Ajouter une image</string>
     <string name="image_not_added">Une image n\'a pas pu être ajoutée. Réessayez.</string>
     <string name="help_add_images_title">Ajouter des images</string>
-    <string name="help_add_images_detail">Touchez la photo au-dessus du clavier pour ajouter des images de votre galerie.</string>
+    <string name="help_add_images_detail">Touchez la photo au-dessus du clavier pour ajouter des images de votre galerie, ou collez-en une. Copiez une image pour la coller dans une autre app.</string>
     <string name="package_too_large">Ce fichier dépasse 100 Mo et ne peut donc pas être importé.</string>
     <string name="script_couldnt_be_shared">Ce script n\'a pas pu être partagé. Réessayez.</string>
     <string name="reading_guide">Guide de lecture</string>
