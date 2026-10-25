@@ -1066,6 +1066,34 @@
         }
       }
     },
+    "Add Anchors" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir anclas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter des ancres"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adicionar âncoras"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавьте якоря"
+          }
+        }
+      }
+    },
     "Add a Tag" : {
       "localizations" : {
         "es" : {
@@ -1541,6 +1569,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Якорь"
+          }
+        }
+      }
+    },
+    "Anchors mark spots in your script, like [anchor]. Type one or tap Add Anchor above the keyboard. In the teleprompter, the buttons at the far left and right jump to the anchor before or after." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las anclas marcan puntos de tu guion, como [anchor]. Escribe una o toca Añadir ancla encima del teclado. En el teleprompter, los botones de los extremos izquierdo y derecho saltan al ancla anterior o a la siguiente."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les ancres marquent des endroits de votre script, comme [anchor]. Tapez-en une ou touchez Ajouter une ancre au-dessus du clavier. Dans le prompteur, les boutons tout à gauche et tout à droite passent à l'ancre précédente ou suivante."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Âncoras marcam pontos do seu roteiro, como [anchor]. Digite uma ou toque em Adicionar âncora acima do teclado. No teleprompter, os botões nas pontas esquerda e direita pulam para a âncora anterior ou a próxima."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Якоря отмечают места в сценарии, например [anchor]. Введите его или коснитесь «Добавить якорь» над клавиатурой. В телесуфлёре кнопки с краю слева и справа переходят к предыдущему или следующему якорю."
           }
         }
       }

@@ -72,6 +72,8 @@ private enum AllHelp {
                   detail: "Cues are reminders like [cue pause], shown in color and not read out. Type [ or tap Add Cue above the keyboard."),
         HelpTopic("Bold and Italic",
                   detail: "Select words and tap B or I above the keyboard. Or type *bold* or _italic_."),
+        HelpTopic("Add Anchors",
+                  detail: "Anchors mark spots in your script, like [anchor]. Type one or tap Add Anchor above the keyboard. In the teleprompter, the buttons at the far left and right jump to the anchor before or after."),
         HelpTopic("Add Images",
                   detail: "Tap the photo above the keyboard to add images from your library, or paste one in. The Lock Screen and Apple Watch show a photo symbol in their place."),
         HelpTopic("Add Cards",
