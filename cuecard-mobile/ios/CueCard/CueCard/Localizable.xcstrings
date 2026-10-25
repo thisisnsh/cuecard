@@ -7,314 +7,6 @@
     " %@ " : {
       "shouldTranslate" : false
     },
-    "Add Anchor" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Añadir ancla"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ajouter une ancre"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Adicionar âncora"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Добавить якорь"
-          }
-        }
-      }
-    },
-    "Anchors: Mark spots in your script and jump between them while you read." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anclas: marca puntos en tu guion y salta entre ellos mientras lees."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ancres : marquez des repères dans votre script et passez de l'un à l'autre pendant la lecture."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Âncoras: marque pontos no seu roteiro e pule entre eles enquanto lê."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Якоря: отмечайте места в сценарии и переходите между ними во время чтения."
-          }
-        }
-      }
-    },
-    "Flip Vertically: Turn the text upside down for any teleprompter glass." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Invertir verticalmente: pon el texto boca abajo para cualquier cristal de teleprompter."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Inverser verticalement : retournez le texte pour n'importe quelle vitre de prompteur."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Inverter verticalmente: vire o texto de cabeça para baixo para qualquer vidro de teleprompter."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Отразить по вертикали: переворачивайте текст для любого стекла телесуфлёра."
-          }
-        }
-      }
-    },
-    "Next Anchor" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ancla siguiente"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ancre suivante"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Próxima âncora"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Следующий якорь"
-          }
-        }
-      }
-    },
-    "Previous Anchor" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ancla anterior"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ancre précédente"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Âncora anterior"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Предыдущий якорь"
-          }
-        }
-      }
-    },
-    "Flip Horizontally" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Invertir horizontalmente"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Inverser horizontalement"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Inverter horizontalmente"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Отразить по горизонтали"
-          }
-        }
-      }
-    },
-    "Flip the teleprompter and floating window text to read it off a teleprompter's glass." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Invierte el texto del teleprompter y de la ventana flotante para leerlo en el cristal de un teleprompter."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Inversez le texte du prompteur et de la fenêtre flottante pour le lire sur la vitre d'un prompteur."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Inverta o texto do teleprompter e da janela flutuante para lê-lo no vidro de um teleprompter."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Отразите текст телесуфлёра и плавающего окна, чтобы читать его со стекла телесуфлёра."
-          }
-        }
-      }
-    },
-    "Flip Vertically" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Invertir verticalmente"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Inverser verticalement"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Inverter verticalmente"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Отразить по вертикали"
-          }
-        }
-      }
-    },
-    "Mirror" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Espejo"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Miroir"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Espelho"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Зеркало"
-          }
-        }
-      }
-    },
-    "Reading Guide: Drag the pointer to keep your eyes on the line you're reading." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Guía de lectura: arrastra el puntero para no perder de vista la línea que estás leyendo."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Guide de lecture : faites glisser le pointeur pour garder les yeux sur la ligne que vous lisez."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Guia de leitura: arraste o ponteiro para manter os olhos na linha que você está lendo."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Линия чтения: перетаскивайте указатель, чтобы не терять строку, которую читаете."
-          }
-        }
-      }
-    },
-    "Turn on Flip Horizontally or Flip Vertically under Mirror in Settings to flip the text for a teleprompter's glass. The floating window uses the same settings. Both are off by default." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Activa Invertir horizontalmente o Invertir verticalmente en Espejo, en Ajustes, para invertir el texto y leerlo en el cristal de un teleprompter. La ventana flotante usa los mismos ajustes. Ambos están desactivados de forma predeterminada."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Activez Inverser horizontalement ou Inverser verticalement sous Miroir dans Réglages pour inverser le texte et le lire sur la vitre d'un prompteur. La fenêtre flottante utilise les mêmes réglages. Les deux sont désactivés par défaut."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ative Inverter horizontalmente ou Inverter verticalmente em Espelho, nos Ajustes, para inverter o texto e lê-lo no vidro de um teleprompter. A janela flutuante usa os mesmos ajustes. Ambos ficam desativados por padrão."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Включите «Отразить по горизонтали» или «Отразить по вертикали» в разделе «Зеркало» в настройках, чтобы отразить текст для чтения со стекла телесуфлёра. Эти настройки действуют и в плавающем окне. По умолчанию обе выключены."
-          }
-        }
-      }
-    },
     "“%@” couldn't be deleted from the notes folder. Its note stays deleted." : {
       "localizations" : {
         "es" : {
@@ -1066,34 +758,6 @@
         }
       }
     },
-    "Add Anchors" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Añadir anclas"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ajouter des ancres"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Adicionar âncoras"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Добавьте якоря"
-          }
-        }
-      }
-    },
     "Add a Tag" : {
       "localizations" : {
         "es" : {
@@ -1118,6 +782,62 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Добавить тег"
+          }
+        }
+      }
+    },
+    "Add Anchor" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir ancla"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter une ancre"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adicionar âncora"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавить якорь"
+          }
+        }
+      }
+    },
+    "Add Anchors" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Añadir anclas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajouter des ancres"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Adicionar âncoras"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Добавьте якоря"
           }
         }
       }
@@ -1573,34 +1293,6 @@
         }
       }
     },
-    "Anchors mark spots in your script, like [anchor]. Type one or tap Add Anchor above the keyboard. In the teleprompter, the buttons at the far left and right jump to the anchor before or after." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Las anclas marcan puntos de tu guion, como [anchor]. Escribe una o toca Añadir ancla encima del teclado. En el teleprompter, los botones de los extremos izquierdo y derecho saltan al ancla anterior o a la siguiente."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Les ancres marquent des endroits de votre script, comme [anchor]. Tapez-en une ou touchez Ajouter une ancre au-dessus du clavier. Dans le prompteur, les boutons tout à gauche et tout à droite passent à l'ancre précédente ou suivante."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Âncoras marcam pontos do seu roteiro, como [anchor]. Digite uma ou toque em Adicionar âncora acima do teclado. No teleprompter, os botões nas pontas esquerda e direita pulam para a âncora anterior ou a próxima."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Якоря отмечают места в сценарии, например [anchor]. Введите его или коснитесь «Добавить якорь» над клавиатурой. В телесуфлёре кнопки с краю слева и справа переходят к предыдущему или следующему якорю."
-          }
-        }
-      }
-    },
     "An image couldn't be added. Try again." : {
       "localizations" : {
         "es" : {
@@ -1625,6 +1317,63 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Не удалось добавить изображение. Попробуйте ещё раз."
+          }
+        }
+      }
+    },
+    "Anchors: Mark spots in your script and jump between them while you read." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anclas: marca puntos en tu guion y salta entre ellos mientras lees."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ancres : marquez des repères dans votre script et passez de l'un à l'autre pendant la lecture."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Âncoras: marque pontos no seu roteiro e pule entre eles enquanto lê."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Якоря: отмечайте места в сценарии и переходите между ними во время чтения."
+          }
+        }
+      }
+    },
+    "Anchors mark spots in your script, like [anchor]. Type one or tap Add Anchor above the keyboard. In the teleprompter, the buttons at the far left and right jump to the anchor before or after." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las anclas marcan puntos de tu guion, como [anchor]. Escribe una o toca Añadir ancla encima del teclado. En el teleprompter, los botones de los extremos izquierdo y derecho saltan al ancla anterior o a la siguiente."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Les ancres marquent des endroits de votre script, comme [anchor]. Tapez-en une ou touchez Ajouter une ancre au-dessus du clavier. Dans le prompteur, les boutons tout à gauche et tout à droite passent à l'ancre précédente ou suivante."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Âncoras marcam pontos do seu roteiro, como [anchor]. Digite uma ou toque em Adicionar âncora acima do teclado. No teleprompter, os botões nas pontas esquerda e direita pulam para a âncora anterior ou a próxima."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Якоря отмечают места в сценарии, например [anchor]. Введите его или коснитесь «Добавить якорь» над клавиатурой. В телесуфлёре кнопки с краю слева и справа переходят к предыдущему или следующему якорю."
           }
         }
       }
@@ -4038,6 +3787,119 @@
         }
       }
     },
+    "Flip Horizontally" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invertir horizontalmente"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inverser horizontalement"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inverter horizontalmente"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отразить по горизонтали"
+          }
+        }
+      }
+    },
+    "Flip the teleprompter and floating window text to read it off a teleprompter's glass." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invierte el texto del teleprompter y de la ventana flotante para leerlo en el cristal de un teleprompter."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inversez le texte du prompteur et de la fenêtre flottante pour le lire sur la vitre d'un prompteur."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inverta o texto do teleprompter e da janela flutuante para lê-lo no vidro de um teleprompter."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отразите текст телесуфлёра и плавающего окна, чтобы читать его со стекла телесуфлёра."
+          }
+        }
+      }
+    },
+    "Flip Vertically" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invertir verticalmente"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inverser verticalement"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inverter verticalmente"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отразить по вертикали"
+          }
+        }
+      }
+    },
+    "Flip Vertically: Turn the text upside down for any teleprompter glass." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invertir verticalmente: pon el texto boca abajo para cualquier cristal de teleprompter."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inverser verticalement : retournez le texte pour n'importe quelle vitre de prompteur."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inverter verticalmente: vire o texto de cabeça para baixo para qualquer vidro de teleprompter."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Отразить по вертикали: переворачивайте текст для любого стекла телесуфлёра."
+          }
+        }
+      }
+    },
     "Floating Teleprompter" : {
       "localizations" : {
         "es" : {
@@ -5204,6 +5066,34 @@
         }
       }
     },
+    "Mirror" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Espejo"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Miroir"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Espelho"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Зеркало"
+          }
+        }
+      }
+    },
     "Mode" : {
       "localizations" : {
         "es" : {
@@ -5574,6 +5464,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Новый альбом"
+          }
+        }
+      }
+    },
+    "Next Anchor" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ancla siguiente"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ancre suivante"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Próxima âncora"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Следующий якорь"
           }
         }
       }
@@ -6765,6 +6683,34 @@
         }
       }
     },
+    "Previous Anchor" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ancla anterior"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ancre précédente"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Âncora anterior"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Предыдущий якорь"
+          }
+        }
+      }
+    },
     "Previous Card" : {
       "localizations" : {
         "es" : {
@@ -7016,6 +6962,35 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Линия чтения"
+          }
+        }
+      }
+    },
+    "Reading Guide: Drag the pointer to keep your eyes on the line you're reading." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guía de lectura: arrastra el puntero para no perder de vista la línea que estás leyendo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guide de lecture : faites glisser le pointeur pour garder les yeux sur la ligne que vous lisez."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Guia de leitura: arraste o ponteiro para manter os olhos na linha que você está lendo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Линия чтения: перетаскивайте указатель, чтобы не терять строку, которую читаете."
           }
         }
       }
@@ -11188,6 +11163,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Перелистнуть карточку"
+          }
+        }
+      }
+    },
+    "Turn on Flip Horizontally or Flip Vertically under Mirror in Settings to flip the text for a teleprompter's glass. The floating window uses the same settings. Both are off by default." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activa Invertir horizontalmente o Invertir verticalmente en Espejo, en Ajustes, para invertir el texto y leerlo en el cristal de un teleprompter. La ventana flotante usa los mismos ajustes. Ambos están desactivados de forma predeterminada."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activez Inverser horizontalement ou Inverser verticalement sous Miroir dans Réglages pour inverser le texte et le lire sur la vitre d'un prompteur. La fenêtre flottante utilise les mêmes réglages. Les deux sont désactivés par défaut."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ative Inverter horizontalmente ou Inverter verticalmente em Espelho, nos Ajustes, para inverter o texto e lê-lo no vidro de um teleprompter. A janela flutuante usa os mesmos ajustes. Ambos ficam desativados por padrão."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Включите «Отразить по горизонтали» или «Отразить по вертикали» в разделе «Зеркало» в настройках, чтобы отразить текст для чтения со стекла телесуфлёра. Эти настройки действуют и в плавающем окне. По умолчанию обе выключены."
           }
         }
       }
