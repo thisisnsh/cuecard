@@ -4184,7 +4184,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hola a todos.\n\nMe alegra estar aquí hoy para hablaros del *teleprompter* de CueCard.\n\n[cue sonríe y haz una pausa]\n\nDesplaza tu guion a _tu_ ritmo, para que mantengas la mirada al frente y no pierdas el hilo.\n\n[cue pausa]\n\n[anchor]\n\nSal de la app y sigue en una ventana flotante, justo encima de tu cámara o tu videollamada.\n\n[cue más despacio]\n\n¿Te has perdido? Arrastra el guion hacia atrás. ¿Vas largo? Salta al ancla siguiente.\n\nY el temporizador se pone amarillo cerca del final… y rojo si te emocionas _un poco_ demasiado.\n\n[cue risa suave]\n\n[anchor]\n\nIncluso puedes reproducir o pausar desde tu Apple Watch o con el botón de acción.\n\n¿Y estas palabras de colores?\n\n[cue enfatiza]\n\nSon tus indicaciones. Recordatorios para sonreír, hacer una pausa o *no entrar en pánico*. Nunca se leen en voz alta.\n\n[cue pausa]\n\n[anchor]\n\nPruébalo. Creo que te va a *encantar*."
+            "value" : "Hola a todos.\n\nMe alegra estar aquí hoy para hablaros del *teleprompter* de CueCard.\n\n[cue sonríe y haz una pausa]\n\nDesplaza tu guion a _tu_ ritmo, para que mantengas la mirada al frente y no pierdas el hilo.\n\n[cue pausa]\n\n[anchor]\n\nSal de la app y sigue en una ventana flotante, justo encima de tu cámara o tu videollamada.\n\n[cue más despacio]\n\n¿Te has perdido? Arrastra el guion hacia atrás. ¿Te estás alargando? Salta al ancla siguiente.\n\nY el temporizador se pone amarillo cerca del final… y rojo si te emocionas _un poco_ demasiado.\n\n[cue risa suave]\n\n[anchor]\n\nIncluso puedes reproducir o pausar desde tu Apple Watch o con el botón de acción.\n\n¿Y estas palabras de colores?\n\n[cue enfatiza]\n\nSon tus indicaciones. Recordatorios para sonreír, hacer una pausa o *no entrar en pánico*. Nunca se leen en voz alta.\n\n[cue pausa]\n\n[anchor]\n\nPruébalo. Creo que te va a *encantar*."
           }
         },
         "fr" : {
@@ -11808,7 +11808,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Когда камера открыта, «Пуск» начинает запись, а «Пауза» ставит её на паузу. Запись или пауза на камере запускает или ставит на паузу сценарий, а остановка записи ставит его на паузу. Выключите «Синхронизацию с телесуфлёром» в настройках, чтобы управлять ими по отдельности."
+            "value" : "Когда камера открыта, «Пуск» начинает запись, а «Пауза» ставит её на паузу. Запись или пауза на камере запускает или ставит на паузу сценарий, а остановка записи ставит его на паузу. Выключите настройку «Синхронизация с телесуфлёром», чтобы управлять ими по отдельности."
           }
         }
       }
