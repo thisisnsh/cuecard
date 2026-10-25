@@ -331,6 +331,8 @@
     <string name="image">Image</string>
     <string name="add_image">Ajouter une image</string>
     <string name="image_not_added">Une image n\'a pas pu être ajoutée. Réessayez.</string>
+    <string name="help_add_anchors_title">Ajouter des ancres</string>
+    <string name="help_add_anchors_detail">Les ancres marquent des endroits de votre script, comme [anchor]. Tapez-en une ou touchez Ajouter une ancre au-dessus du clavier. Dans le prompteur, les boutons tout à gauche et tout à droite passent à l\'ancre précédente ou suivante.</string>
     <string name="help_add_images_title">Ajouter des images</string>
     <string name="help_add_images_detail">Touchez la photo au-dessus du clavier pour ajouter des images de votre galerie, ou collez-en une. Copiez une image pour la coller dans une autre app.</string>
     <string name="package_too_large">Ce fichier dépasse 100 Mo et ne peut donc pas être importé.</string>

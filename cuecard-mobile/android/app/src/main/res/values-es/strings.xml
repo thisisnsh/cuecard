@@ -331,6 +331,8 @@
     <string name="image">Imagen</string>
     <string name="add_image">Añadir imagen</string>
     <string name="image_not_added">No se ha podido añadir una imagen. Inténtalo de nuevo.</string>
+    <string name="help_add_anchors_title">Añadir anclas</string>
+    <string name="help_add_anchors_detail">Las anclas marcan puntos de tu guion, como [anchor]. Escribe una o toca Añadir ancla encima del teclado. En el teleprompter, los botones de los extremos izquierdo y derecho saltan al ancla anterior o a la siguiente.</string>
     <string name="help_add_images_title">Añadir imágenes</string>
     <string name="help_add_images_detail">Toca la foto encima del teclado para añadir imágenes de tu galería, o pega una. Copia una imagen para pegarla en otra app.</string>
     <string name="package_too_large">Ese archivo ocupa más de 100 MB, así que no se puede importar.</string>

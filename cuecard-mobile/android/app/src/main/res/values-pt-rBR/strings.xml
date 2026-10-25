@@ -331,6 +331,8 @@
     <string name="image">Imagem</string>
     <string name="add_image">Adicionar imagem</string>
     <string name="image_not_added">Não foi possível adicionar uma imagem. Tente novamente.</string>
+    <string name="help_add_anchors_title">Adicionar âncoras</string>
+    <string name="help_add_anchors_detail">Âncoras marcam pontos do seu roteiro, como [anchor]. Digite uma ou toque em Adicionar âncora acima do teclado. No teleprompter, os botões nas pontas esquerda e direita pulam para a âncora anterior ou a próxima.</string>
     <string name="help_add_images_title">Adicionar imagens</string>
     <string name="help_add_images_detail">Toque na foto acima do teclado para adicionar imagens da sua galeria, ou cole uma. Copie uma imagem para colá-la em outro app.</string>
     <string name="package_too_large">Esse arquivo tem mais de 100 MB, então não pode ser importado.</string>

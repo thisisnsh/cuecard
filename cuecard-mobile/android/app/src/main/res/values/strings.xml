@@ -328,6 +328,8 @@
     <string name="image">Image</string>
     <string name="add_image">Add Image</string>
     <string name="image_not_added">An image couldn\'t be added. Try again.</string>
+    <string name="help_add_anchors_title">Add Anchors</string>
+    <string name="help_add_anchors_detail">Anchors mark spots in your script, like [anchor]. Type one or tap Add Anchor above the keyboard. In the teleprompter, the buttons at the far left and right jump to the anchor before or after.</string>
     <string name="help_add_images_title">Add Images</string>
     <string name="help_add_images_detail">Tap the photo above the keyboard to add images from your gallery, or paste one in. Copy an image to paste it into another app.</string>
     <string name="package_too_large">That file is larger than 100 MB, so it can\'t be imported.</string>

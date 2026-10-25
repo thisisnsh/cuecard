@@ -128,6 +128,7 @@ private object AllHelp {
             HelpTopic(R.string.help_pick_a_mode_title, R.string.help_pick_a_mode_detail),
             HelpTopic(R.string.help_add_cues_title, R.string.help_add_cues_detail),
             HelpTopic(R.string.help_bold_and_italic_title, R.string.help_bold_and_italic_detail),
+            HelpTopic(R.string.help_add_anchors_title, R.string.help_add_anchors_detail),
             HelpTopic(R.string.help_add_images_title, R.string.help_add_images_detail),
             HelpTopic(R.string.help_add_cards_title, R.string.help_add_cards_detail)
         )
