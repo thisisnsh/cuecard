@@ -306,11 +306,6 @@ struct HomeView: View {
         editorController.toggle(style)
     }
 
-    private func selectAllText() {
-        AnalyticsEvents.logButtonClick("select_all", screen: "home")
-        editorController.selectAll()
-    }
-
     /// Keep the images picked from the library and place them at the caret.
     private func addPickedImages() {
         let items = pickedImages
@@ -399,7 +394,6 @@ struct HomeView: View {
                             showingImagePicker = true
                         },
                         onFormat: format,
-                        onSelectAll: selectAllText,
                         onDismissKeyboard: { isEditorFocused = false }
                     )
                     .transition(.move(edge: .bottom).combined(with: .opacity))
