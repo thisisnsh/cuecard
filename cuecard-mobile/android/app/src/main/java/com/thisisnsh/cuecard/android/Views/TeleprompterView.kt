@@ -887,6 +887,15 @@ fun TeleprompterView(
                         horizontalArrangement = Arrangement.spacedBy(if (content.hasAnchors) 14.dp else 24.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        // The anchor buttons go at the ends, so the usual
+                        // buttons keep their places around Play.
+                        if (content.hasAnchors) {
+                            AnchorButton(forward = false, isEnabled = canJumpToPreviousAnchor, isDark = isDark) {
+                                AnalyticsEvents.logButtonClick("previous_anchor", "teleprompter")
+                                jumpToAnchor(forward = false)
+                            }
+                        }
+
                         // Kept in the row even when PiP is unavailable — taking it
                         // out shifts the play button off centre — and only made
                         // invisible and untouchable.
@@ -931,13 +940,6 @@ fun TeleprompterView(
                                 tint = AppColors.textPrimary(isDark),
                                 modifier = Modifier.size(20.dp)
                             )
-                        }
-
-                        if (content.hasAnchors) {
-                            AnchorButton(forward = false, isEnabled = canJumpToPreviousAnchor, isDark = isDark) {
-                                AnalyticsEvents.logButtonClick("previous_anchor", "teleprompter")
-                                jumpToAnchor(forward = false)
-                            }
                         }
 
                         // During the countdown the button shows the seconds left, on
@@ -991,13 +993,6 @@ fun TeleprompterView(
                             }
                         }
 
-                        if (content.hasAnchors) {
-                            AnchorButton(forward = true, isEnabled = canJumpToNextAnchor, isDark = isDark) {
-                                AnalyticsEvents.logButtonClick("next_anchor", "teleprompter")
-                                jumpToAnchor(forward = true)
-                            }
-                        }
-
                         Box(
                             modifier = Modifier
                                 .size(52.dp)
@@ -1014,6 +1009,13 @@ fun TeleprompterView(
                                 tint = AppColors.textPrimary(isDark),
                                 modifier = Modifier.size(20.dp)
                             )
+                        }
+
+                        if (content.hasAnchors) {
+                            AnchorButton(forward = true, isEnabled = canJumpToNextAnchor, isDark = isDark) {
+                                AnalyticsEvents.logButtonClick("next_anchor", "teleprompter")
+                                jumpToAnchor(forward = true)
+                            }
                         }
                     }
                 }
