@@ -7020,6 +7020,34 @@
         }
       }
     },
+    "Reading Guide Line" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Línea guía de lectura"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ligne guide de lecture"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Linha-guia de leitura"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Линия чтения"
+          }
+        }
+      }
+    },
     "Record a video while the teleprompter is open, even with it floating over the camera, and it shows up here." : {
       "localizations" : {
         "es" : {
@@ -10518,24 +10546,24 @@
         }
       }
     },
-    "The pointer at the side of the script marks the line to read. Drag it up or down to read where it suits your eyes, and the script lines up with it. Turn off Reading Guide in Settings to hide it." : {
+    "The pointer at the side of the script marks the line to read. Drag it up or down to read where it suits your eyes, and the script lines up with it. Turn off Reading Guide Line in Settings to hide it." : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "El puntero al lado del guion marca la línea que hay que leer. Arrástralo hacia arriba o hacia abajo para leer donde te resulte más cómodo, y el guion se alinea con él. Desactiva Guía de lectura en Ajustes para ocultarlo."
+            "value" : "El puntero al lado del guion marca la línea que hay que leer. Arrástralo hacia arriba o hacia abajo para leer donde te resulte más cómodo, y el guion se alinea con él. Desactiva Línea guía de lectura en Ajustes para ocultarlo."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Le pointeur à côté du script indique la ligne à lire. Faites-le glisser vers le haut ou vers le bas pour lire là où c'est le plus confortable, et le script s'aligne dessus. Désactivez Guide de lecture dans Réglages pour le masquer."
+            "value" : "Le pointeur à côté du script indique la ligne à lire. Faites-le glisser vers le haut ou vers le bas pour lire là où c'est le plus confortable, et le script s'aligne dessus. Désactivez Ligne guide de lecture dans Réglages pour le masquer."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "O ponteiro ao lado do roteiro marca a linha a ser lida. Arraste-o para cima ou para baixo para ler onde for mais confortável, e o roteiro se alinha a ele. Desative Guia de leitura em Ajustes para ocultá-lo."
+            "value" : "O ponteiro ao lado do roteiro marca a linha a ser lida. Arraste-o para cima ou para baixo para ler onde for mais confortável, e o roteiro se alinha a ele. Desative Linha-guia de leitura em Ajustes para ocultá-lo."
           }
         },
         "ru" : {

@@ -335,13 +335,14 @@
     <string name="package_too_large">That file is larger than 100 MB, so it can\'t be imported.</string>
     <string name="script_couldnt_be_shared">This script couldn\'t be shared. Try again.</string>
     <string name="reading_guide">Reading Guide</string>
+    <string name="reading_guide_line">Reading Guide Line</string>
     <string name="mirror">Mirror</string>
     <string name="mirror_footer">Flip the teleprompter and floating window text to read it off a teleprompter\'s glass.</string>
     <string name="flip_horizontally">Flip Horizontally</string>
     <string name="flip_vertically">Flip Vertically</string>
     <string name="help_mirror_detail">Turn on Flip Horizontally or Flip Vertically under Mirror in Settings to flip the text for a teleprompter\'s glass. The floating window uses the same settings. Both are off by default.</string>
     <string name="help_keep_your_place_title">Keep Your Place</string>
-    <string name="help_keep_your_place_detail">The pointer at the side of the script marks the line to read. Drag it up or down to read where it suits your eyes, and the script lines up with it. Turn off Reading Guide in Settings to hide it.</string>
+    <string name="help_keep_your_place_detail">The pointer at the side of the script marks the line to read. Drag it up or down to read where it suits your eyes, and the script lines up with it. Turn off Reading Guide Line in Settings to hide it.</string>
     <string name="add_anchor">Add Anchor</string>
     <string name="anchor_short">Anchor</string>
     <string name="next_anchor">Next Anchor</string>

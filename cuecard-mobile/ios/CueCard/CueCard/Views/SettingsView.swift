@@ -69,7 +69,7 @@ struct EditorSettingsView: View {
                 presets: TeleprompterSettings.fontSizePresets
             )
 
-            Toggle("Reading Guide", isOn: $settingsService.settings.showsReadingGuide)
+            Toggle("Reading Guide Line", isOn: $settingsService.settings.showsReadingGuide)
         }
 
         Section("Floating Window") {

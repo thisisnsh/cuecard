@@ -338,13 +338,14 @@
     <string name="package_too_large">Ese archivo ocupa más de 100 MB, así que no se puede importar.</string>
     <string name="script_couldnt_be_shared">No se ha podido compartir este guion. Inténtalo de nuevo.</string>
     <string name="reading_guide">Guía de lectura</string>
+    <string name="reading_guide_line">Línea guía de lectura</string>
     <string name="mirror">Espejo</string>
     <string name="mirror_footer">Invierte el texto del teleprompter y de la ventana flotante para leerlo en el cristal de un teleprompter.</string>
     <string name="flip_horizontally">Invertir horizontalmente</string>
     <string name="flip_vertically">Invertir verticalmente</string>
     <string name="help_mirror_detail">Activa Invertir horizontalmente o Invertir verticalmente en Espejo, en Ajustes, para invertir el texto y leerlo en el cristal de un teleprompter. La ventana flotante usa los mismos ajustes. Ambos están desactivados de forma predeterminada.</string>
     <string name="help_keep_your_place_title">No pierdas el hilo</string>
-    <string name="help_keep_your_place_detail">El puntero al lado del guion marca la línea que hay que leer. Arrástralo hacia arriba o hacia abajo para leer donde te resulte más cómodo, y el guion se alinea con él. Desactiva Guía de lectura en Ajustes para ocultarlo.</string>
+    <string name="help_keep_your_place_detail">El puntero al lado del guion marca la línea que hay que leer. Arrástralo hacia arriba o hacia abajo para leer donde te resulte más cómodo, y el guion se alinea con él. Desactiva Línea guía de lectura en Ajustes para ocultarlo.</string>
     <string name="add_anchor">Añadir ancla</string>
     <string name="anchor_short">Ancla</string>
     <string name="next_anchor">Ancla siguiente</string>

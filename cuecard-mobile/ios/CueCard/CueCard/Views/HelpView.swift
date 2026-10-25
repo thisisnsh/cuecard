@@ -126,7 +126,7 @@ private enum AllHelp {
         HelpTopic("Mirror",
                   detail: "Turn on Flip Horizontally or Flip Vertically under Mirror in Settings to flip the text for a teleprompter's glass. The floating window uses the same settings. Both are off by default."),
         HelpTopic("Keep Your Place",
-                  detail: "The pointer at the side of the script marks the line to read. Drag it up or down to read where it suits your eyes, and the script lines up with it. Turn off Reading Guide in Settings to hide it."),
+                  detail: "The pointer at the side of the script marks the line to read. Drag it up or down to read where it suits your eyes, and the script lines up with it. Turn off Reading Guide Line in Settings to hide it."),
         HelpTopic("Use Over Other Apps",
                   detail: "Leave CueCard while the teleprompter is open and your script keeps going in a floating window, handy on video calls. It doesn't open while the camera is on."),
         HelpTopic("Know When Time Is Running Out",

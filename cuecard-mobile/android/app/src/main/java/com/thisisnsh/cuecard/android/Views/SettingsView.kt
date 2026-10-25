@@ -213,7 +213,7 @@ private fun TeleprompterSections(
         )
 
         ToggleRow(
-            label = stringResource(R.string.reading_guide),
+            label = stringResource(R.string.reading_guide_line),
             isOn = settings.showsReadingGuide,
             isDark = isDark,
             onChange = { isOn -> update { it.copy(showsReadingGuide = isOn) } }

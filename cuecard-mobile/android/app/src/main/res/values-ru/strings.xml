@@ -342,6 +342,7 @@
     <string name="package_too_large">Этот файл больше 100 МБ, поэтому его нельзя импортировать.</string>
     <string name="script_couldnt_be_shared">Не удалось поделиться этим сценарием. Попробуйте ещё раз.</string>
     <string name="reading_guide">Линия чтения</string>
+    <string name="reading_guide_line">Линия чтения</string>
     <string name="mirror">Зеркало</string>
     <string name="mirror_footer">Отразите текст телесуфлёра и плавающего окна, чтобы читать его со стекла телесуфлёра.</string>
     <string name="flip_horizontally">Отразить по горизонтали</string>

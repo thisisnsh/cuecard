@@ -338,13 +338,14 @@
     <string name="package_too_large">Esse arquivo tem mais de 100 MB, então não pode ser importado.</string>
     <string name="script_couldnt_be_shared">Não foi possível compartilhar este roteiro. Tente novamente.</string>
     <string name="reading_guide">Guia de leitura</string>
+    <string name="reading_guide_line">Linha-guia de leitura</string>
     <string name="mirror">Espelho</string>
     <string name="mirror_footer">Inverta o texto do teleprompter e da janela flutuante para lê-lo no vidro de um teleprompter.</string>
     <string name="flip_horizontally">Inverter horizontalmente</string>
     <string name="flip_vertically">Inverter verticalmente</string>
     <string name="help_mirror_detail">Ative Inverter horizontalmente ou Inverter verticalmente em Espelho, nos Ajustes, para inverter o texto e lê-lo no vidro de um teleprompter. A janela flutuante usa os mesmos ajustes. Ambos ficam desativados por padrão.</string>
     <string name="help_keep_your_place_title">Não perca o fio</string>
-    <string name="help_keep_your_place_detail">O ponteiro ao lado do roteiro marca a linha a ser lida. Arraste-o para cima ou para baixo para ler onde for mais confortável, e o roteiro se alinha a ele. Desative Guia de leitura em Ajustes para ocultá-lo.</string>
+    <string name="help_keep_your_place_detail">O ponteiro ao lado do roteiro marca a linha a ser lida. Arraste-o para cima ou para baixo para ler onde for mais confortável, e o roteiro se alinha a ele. Desative Linha-guia de leitura em Ajustes para ocultá-lo.</string>
     <string name="add_anchor">Adicionar âncora</string>
     <string name="anchor_short">Âncora</string>
     <string name="next_anchor">Próxima âncora</string>
