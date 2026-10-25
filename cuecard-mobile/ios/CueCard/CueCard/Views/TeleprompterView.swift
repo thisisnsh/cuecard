@@ -372,7 +372,7 @@ struct TeleprompterView: View {
             pipManager.jumpToAnchor(forward: forward)
             resetControlsTimer()
         }) {
-            Image(systemName: forward ? "forward.end.fill" : "backward.end.fill")
+            Image(systemName: forward ? "forward.end" : "backward.end")
                 .font(.system(size: 18, weight: .semibold))
                 .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                 .frame(width: 52, height: 52)

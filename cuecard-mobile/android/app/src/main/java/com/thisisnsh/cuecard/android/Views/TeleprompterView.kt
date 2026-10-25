@@ -123,8 +123,8 @@ import kotlin.math.exp
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.offset
-import androidx.compose.material.icons.filled.SkipNext
-import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.material.icons.outlined.SkipNext
+import androidx.compose.material.icons.outlined.SkipPrevious
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.graphics.Path
@@ -1064,7 +1064,7 @@ private fun AnchorButton(forward: Boolean, isEnabled: Boolean, isDark: Boolean, 
         contentAlignment = Alignment.Center
     ) {
         Icon(
-            imageVector = if (forward) Icons.Filled.SkipNext else Icons.Filled.SkipPrevious,
+            imageVector = if (forward) Icons.Outlined.SkipNext else Icons.Outlined.SkipPrevious,
             contentDescription = stringResource(if (forward) R.string.next_anchor else R.string.previous_anchor),
             tint = AppColors.textPrimary(isDark),
             modifier = Modifier.size(22.dp)
