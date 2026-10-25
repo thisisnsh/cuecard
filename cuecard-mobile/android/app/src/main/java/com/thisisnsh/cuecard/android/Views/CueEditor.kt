@@ -129,7 +129,6 @@ val CUE_EDITOR_EDGE_FADE = 28.dp
 class CueEditorController {
     internal var onInsertCue: (() -> Unit)? = null
     internal var onInsertAnchor: (() -> Unit)? = null
-    internal var onSelectAll: (() -> Unit)? = null
     internal var onToggleStyle: ((EmphasisStyle) -> Unit)? = null
     internal var onInsertImages: ((List<String>) -> Unit)? = null
 
@@ -155,15 +154,6 @@ class CueEditorController {
     /** Drop an `[anchor]` at the caret, for the teleprompter to jump to. */
     fun insertAnchor() {
         onInsertAnchor?.invoke()
-    }
-
-    /**
-     * Select the whole script. Dragging a selection out to the end is awkward
-     * here: the editor runs on under the keyboard and the cue bar, so the edge
-     * that would scroll a drag along is out of reach.
-     */
-    fun selectAll() {
-        onSelectAll?.invoke()
     }
 
     /**
@@ -453,14 +443,6 @@ private fun bindController(
 
     controller.onInsertImages = { names ->
         apply(insertingImages(currentValue(), names))
-        if (!isFocused) {
-            onFocusChange(true)
-        }
-    }
-
-    controller.onSelectAll = {
-        val value = currentValue()
-        setValue(value.copy(selection = TextRange(0, value.text.length)))
         if (!isFocused) {
             onFocusChange(true)
         }
@@ -852,8 +834,8 @@ private fun spacedInsertion(text: String, tag: String, location: Int): Pair<Stri
 
 /**
  * The strip above the keyboard while a script is being written: buttons to drop
- * a cue, an anchor or an image in at the caret, to bold or italicize, and to
- * select the whole script, and one to get the keyboard out of the way.
+ * a cue, an anchor or an image in at the caret and to bold or italicize, and
+ * one to get the keyboard out of the way.
  */
 val CUE_BAR_HEIGHT = 54.dp
 
@@ -865,7 +847,6 @@ fun CueBar(
     onAddAnchor: (() -> Unit)?,
     onAddImage: () -> Unit,
     onFormat: (EmphasisStyle) -> Unit,
-    onSelectAll: () -> Unit,
     onDismissKeyboard: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -888,8 +869,8 @@ fun CueBar(
         // shorten when they have to.
         FirstThatFits(
             modifier = Modifier.weight(1f),
-            full = { CueBarButtons(isDark, short = false, onAddCue, onAddAnchor, onAddImage, onFormat, onSelectAll) },
-            short = { CueBarButtons(isDark, short = true, onAddCue, onAddAnchor, onAddImage, onFormat, onSelectAll) }
+            full = { CueBarButtons(isDark, short = false, onAddCue, onAddAnchor, onAddImage, onFormat) },
+            short = { CueBarButtons(isDark, short = true, onAddCue, onAddAnchor, onAddImage, onFormat) }
         )
 
         Box(
@@ -916,11 +897,9 @@ private fun CueBarButtons(
     onAddCue: () -> Unit,
     onAddAnchor: (() -> Unit)?,
     onAddImage: () -> Unit,
-    onFormat: (EmphasisStyle) -> Unit,
-    onSelectAll: () -> Unit
+    onFormat: (EmphasisStyle) -> Unit
 ) {
     val addCue = stringResource(R.string.add_cue)
-    val selectAll = stringResource(R.string.select_all)
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
@@ -980,25 +959,6 @@ private fun CueBarButtons(
                 FormatButton(Icons.Filled.BookmarkBorder, stringResource(R.string.add_anchor), isDark, onAddAnchor)
             }
             FormatButton(Icons.Filled.Image, stringResource(R.string.add_image), isDark, onAddImage)
-        }
-
-        Box(
-            modifier = Modifier
-                .height(34.dp)
-                .glassed(Capsule, isDark)
-                .clickableWithoutRipple(onSelectAll)
-                .semantics(mergeDescendants = true) { contentDescription = selectAll }
-                .padding(horizontal = 16.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = if (short) stringResource(R.string.select_all_short) else selectAll,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = AppColors.textPrimary(isDark),
-                maxLines = 1,
-                softWrap = false
-            )
         }
     }
 }

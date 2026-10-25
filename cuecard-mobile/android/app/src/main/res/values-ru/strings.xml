@@ -22,11 +22,9 @@
     <string name="speech">Выступление</string>
     <string name="hide_keyboard">Скрыть клавиатуру</string>
     <string name="add_cue">Добавить подсказку</string>
-    <string name="select_all">Выбрать все</string>
     <string name="cue_short">Подсказка</string>
     <string name="bold">Жирный</string>
     <string name="italic">Курсив</string>
-    <string name="select_all_short">Все</string>
     <string name="cards_settings">Настройки карточек</string>
     <string name="teleprompter_settings">Настройки телесуфлёра</string>
     <string name="editor">Редактор</string>

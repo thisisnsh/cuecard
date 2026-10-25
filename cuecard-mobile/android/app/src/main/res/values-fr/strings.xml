@@ -22,11 +22,9 @@
     <string name="speech">Discours</string>
     <string name="hide_keyboard">Masquer le clavier</string>
     <string name="add_cue">Ajouter un repère</string>
-    <string name="select_all">Tout sélectionner</string>
     <string name="cue_short">Repère</string>
     <string name="bold">Gras</string>
     <string name="italic">Italique</string>
-    <string name="select_all_short">Tout</string>
     <string name="cards_settings">Réglages des fiches</string>
     <string name="teleprompter_settings">Réglages du prompteur</string>
     <string name="editor">Éditeur</string>

@@ -677,10 +677,6 @@ fun HomeView(
                             )
                             editorController.toggle(style)
                         },
-                        onSelectAll = {
-                            AnalyticsEvents.logButtonClick("select_all", "home")
-                            editorController.selectAll()
-                        },
                         onDismissKeyboard = { isEditorFocused = false },
                         modifier = Modifier
                             .align(Alignment.BottomCenter)

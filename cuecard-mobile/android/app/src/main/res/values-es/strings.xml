@@ -22,11 +22,9 @@
     <string name="speech">Discurso</string>
     <string name="hide_keyboard">Ocultar teclado</string>
     <string name="add_cue">Añadir indicación</string>
-    <string name="select_all">Seleccionar todo</string>
     <string name="cue_short">Indicación</string>
     <string name="bold">Negrita</string>
     <string name="italic">Cursiva</string>
-    <string name="select_all_short">Todo</string>
     <string name="cards_settings">Ajustes de tarjetas</string>
     <string name="teleprompter_settings">Ajustes del teleprompter</string>
     <string name="editor">Editor</string>

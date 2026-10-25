@@ -23,11 +23,9 @@
     <string name="speech">Speech</string>
     <string name="hide_keyboard">Hide keyboard</string>
     <string name="add_cue">Add Cue</string>
-    <string name="select_all">Select All</string>
     <string name="cue_short">Cue</string>
     <string name="bold">Bold</string>
     <string name="italic">Italic</string>
-    <string name="select_all_short">All</string>
     <string name="cards_settings">Cards Settings</string>
     <string name="teleprompter_settings">Teleprompter Settings</string>
     <string name="editor">Editor</string>
