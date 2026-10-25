@@ -3,6 +3,7 @@ package com.thisisnsh.cuecard.android.views
 import com.thisisnsh.cuecard.android.R
 import androidx.compose.ui.res.stringResource
 import android.app.Activity
+import android.content.pm.PackageManager
 import android.view.WindowManager
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
@@ -1038,9 +1039,12 @@ fun TeleprompterView(
     }
 }
 
-/** Opens the floating camera over a reader, or closes it. */
+/** Opens the floating camera over a reader, or closes it. Not shown on a device without a camera. */
 @Composable
 internal fun CameraButton(isOn: Boolean, isDark: Boolean, onClick: () -> Unit) {
+    val context = LocalContext.current
+    val hasCamera = remember { context.packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY) }
+    if (!hasCamera) return
     Icon(
         imageVector = if (isOn) Icons.Filled.Videocam else Icons.Outlined.Videocam,
         contentDescription = stringResource(if (isOn) R.string.close_camera else R.string.record_video),
