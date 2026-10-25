@@ -165,6 +165,12 @@ struct TeleprompterView: View {
                             // Closer together with the anchor buttons in, so the
                             // row still fits a small phone.
                             HStack(spacing: content.hasAnchors ? 14 : 24) {
+                                // The anchor buttons go at the ends, so the
+                                // usual buttons keep their places around Play.
+                                if content.hasAnchors {
+                                    anchorButton(forward: false)
+                                }
+
                                 // PiP toggle button. Kept in the stack even when
                                 // PiP is unavailable — taking it out shifts the
                                 // play button off centre — and only made invisible.
@@ -182,10 +188,6 @@ struct TeleprompterView: View {
                                 .opacity(pipManager.isPiPPossible ? 1 : 0)
                                 .disabled(!pipManager.isPiPPossible)
                                 .accessibilityHidden(!pipManager.isPiPPossible)
-
-                                if content.hasAnchors {
-                                    anchorButton(forward: false)
-                                }
 
                                 // Play/Pause button
                                 Button(action: {
@@ -219,10 +221,6 @@ struct TeleprompterView: View {
                                                     ? "Pause, starting in \(countdownValue)"
                                                     : (isPlaying ? "Pause" : "Play"))
 
-                                if content.hasAnchors {
-                                    anchorButton(forward: true)
-                                }
-
                                 // Restart button
                                 Button(action: {
                                     AnalyticsEvents.logButtonClick("restart", screen: "teleprompter")
@@ -233,6 +231,10 @@ struct TeleprompterView: View {
                                         .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                                         .frame(width: 52, height: 52)
                                         .glassedEffect(in: Circle())
+                                }
+
+                                if content.hasAnchors {
+                                    anchorButton(forward: true)
                                 }
                             }
                             .padding(.bottom, 48)
