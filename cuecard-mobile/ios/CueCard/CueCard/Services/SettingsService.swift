@@ -238,9 +238,9 @@ struct TeleprompterSettings: Codable, Equatable {
         mirrorsText: false,
         flipsTextVertically: false,
         showsReadingGuide: true,
-        // Just above centre: high enough to leave the next few lines in view,
-        // low enough to read as the middle of the screen rather than the top.
-        readingGuidePosition: 0.45
+        // As high as the guide goes — the teleprompter holds it just below the
+        // top fade — so the most of the script is in view under it.
+        readingGuidePosition: 0
     )
 
     /// Scroll speed range (multiplier)

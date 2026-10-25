@@ -144,12 +144,14 @@ private val BOTTOM_FADE = 140.dp
 
 /**
  * Where on screen the line being read sits, as a fraction of the view height,
- * without the reading guide to move it, and in the floating window.
+ * without the reading guide to move it, and in the floating window. Just above
+ * centre: high enough to leave the next few lines in view, low enough to read as
+ * the middle of the screen rather than the top.
  *
  * It doubles as the script's top inset, so the first line starts on the reading
  * line and a line's scroll target is its own position in the text.
  */
-private val READING_LINE_FRACTION = TeleprompterSettings.DEFAULT.readingGuidePosition
+private const val READING_LINE_FRACTION = 0.45f
 
 /** How tall a line of the script is, against its text size. */
 private const val LINE_HEIGHT_RATIO = 1.18f

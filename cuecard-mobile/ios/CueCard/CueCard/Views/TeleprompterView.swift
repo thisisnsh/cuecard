@@ -73,6 +73,11 @@ struct TeleprompterView: View {
     private static let topFade: CGFloat = 96
     private static let bottomFade: CGFloat = 140
 
+    /// Where the reading line sits, as a fraction of the height, with the guide
+    /// turned off. Just above centre: high enough to leave the next few lines in
+    /// view, low enough to read as the middle of the screen rather than the top.
+    private static let unguidedReadingLine: CGFloat = 0.45
+
     /// How tall one line of the script is, so the guide can point at the middle
     /// of the line on the reading line rather than its top.
     private var lineHeight: CGFloat { UIFont.script(ofSize: CGFloat(settings.fontSize)).lineHeight }
@@ -84,7 +89,7 @@ struct TeleprompterView: View {
     /// reading line and a line's scroll target is its own position in the text.
     private func readingLine(in height: CGFloat) -> CGFloat {
         guard settings.showsReadingGuide else {
-            return height * CGFloat(TeleprompterSettings.default.readingGuidePosition)
+            return height * Self.unguidedReadingLine
         }
         return clampedReadingLine(height * CGFloat(settings.readingGuidePosition), in: height)
     }

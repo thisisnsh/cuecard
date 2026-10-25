@@ -186,10 +186,10 @@ data class TeleprompterSettings(
     val showsReadingGuide: Boolean = true,
     /**
      * Where the reading line sits, as a fraction of the teleprompter's height.
-     * Just above centre by default: high enough to leave the next few lines in
-     * view, low enough to read as the middle of the screen rather than the top.
+     * As high as the guide goes by default — the teleprompter holds it just
+     * below the top fade — so the most of the script is in view under it.
      */
-    val readingGuidePosition: Float = 0.45f,
+    val readingGuidePosition: Float = 0f,
     /**
      * The teleprompter's play and pause start and pause the floating camera's
      * recording, and the camera's own buttons play and pause the script.
