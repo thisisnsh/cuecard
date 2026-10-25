@@ -489,9 +489,7 @@ private fun highlighted(
 
         // Separators show in either mode, quieter than the words, so a script
         // written as cards reads as one in the teleprompter's editor too.
-        // Anchors are set the same way: marks in the script, not words of it.
-        val anchors = TeleprompterParser.anchorRanges(text)
-        for (separator in CueCards.separatorRanges(text) + anchors) {
+        for (separator in CueCards.separatorRanges(text)) {
             addStyle(
                 SpanStyle(
                     color = secondary,
@@ -500,6 +498,27 @@ private fun highlighted(
                 ),
                 separator.first,
                 separator.last + 1
+            )
+        }
+
+        // Anchors are set like cues, in grey rather than the cue color: marks
+        // in the script, not words of it.
+        val anchors = TeleprompterParser.anchorRanges(text)
+        for (anchor in anchors) {
+            addStyle(
+                SpanStyle(
+                    color = secondary.copy(alpha = 0.45f),
+                    fontWeight = FontWeight.Medium,
+                    fontFamily = CueFontFamily,
+                    fontSize = fontSize * 0.85f
+                ),
+                anchor.first,
+                anchor.last + 1
+            )
+            addStyle(
+                SpanStyle(color = secondary, fontWeight = FontWeight.SemiBold, fontFamily = CueFontFamily),
+                anchor.first + 1,
+                anchor.last
             )
         }
 
