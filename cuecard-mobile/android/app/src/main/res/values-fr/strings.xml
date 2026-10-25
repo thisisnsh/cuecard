@@ -344,6 +344,7 @@
     <string name="help_keep_your_place_title">Ne perdez pas le fil</string>
     <string name="help_keep_your_place_detail">Le pointeur à côté du script indique la ligne à lire. Faites-le glisser vers le haut ou vers le bas pour lire là où c\'est le plus confortable, et le script s\'aligne dessus. Désactivez Guide de lecture dans Réglages pour le masquer.</string>
     <string name="add_anchor">Ajouter une ancre</string>
+    <string name="anchor_short">Ancre</string>
     <string name="next_anchor">Ancre suivante</string>
     <string name="previous_anchor">Ancre précédente</string>
     <string name="move_up">Déplacer vers le haut</string>

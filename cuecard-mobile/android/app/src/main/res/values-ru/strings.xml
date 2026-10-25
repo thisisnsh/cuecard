@@ -348,6 +348,7 @@
     <string name="help_keep_your_place_title">Не теряйте строку</string>
     <string name="help_keep_your_place_detail">Указатель сбоку от сценария отмечает строку, которую нужно читать. Перетащите его вверх или вниз, чтобы читать там, где удобнее глазам, и сценарий выровняется по нему. Выключите «Линия чтения» в настройках, чтобы скрыть его.</string>
     <string name="add_anchor">Добавить якорь</string>
+    <string name="anchor_short">Якорь</string>
     <string name="next_anchor">Следующий якорь</string>
     <string name="previous_anchor">Предыдущий якорь</string>
     <string name="move_up">Переместить вверх</string>

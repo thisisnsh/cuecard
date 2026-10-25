@@ -341,6 +341,7 @@
     <string name="help_keep_your_place_title">Keep Your Place</string>
     <string name="help_keep_your_place_detail">The pointer at the side of the script marks the line to read. Drag it up or down to read where it suits your eyes, and the script lines up with it. Turn off Reading Guide in Settings to hide it.</string>
     <string name="add_anchor">Add Anchor</string>
+    <string name="anchor_short">Anchor</string>
     <string name="next_anchor">Next Anchor</string>
     <string name="previous_anchor">Previous Anchor</string>
     <string name="move_up">Move Up</string>

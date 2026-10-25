@@ -21,7 +21,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.FormatBold
 import androidx.compose.material.icons.filled.FormatItalic
 import androidx.compose.material.icons.filled.Image
@@ -899,34 +898,15 @@ private fun CueBarButtons(
     onAddImage: () -> Unit,
     onFormat: (EmphasisStyle) -> Unit
 ) {
-    val addCue = stringResource(R.string.add_cue)
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        Row(
-            modifier = Modifier
-                .height(34.dp)
-                .glassed(Capsule, isDark)
-                .clickableWithoutRipple(onAddCue)
-                .semantics(mergeDescendants = true) { contentDescription = addCue }
-                .padding(horizontal = 16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Add,
-                contentDescription = null,
-                tint = AppColors.textPrimary(isDark),
-                modifier = Modifier.size(13.dp)
-            )
-            Text(
-                text = if (short) stringResource(R.string.cue_short) else addCue,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = AppColors.textPrimary(isDark),
-                maxLines = 1,
-                softWrap = false
+        AddButton(stringResource(R.string.add_cue), stringResource(R.string.cue_short), short, isDark, onAddCue)
+
+        if (onAddAnchor != null) {
+            AddButton(
+                stringResource(R.string.add_anchor), stringResource(R.string.anchor_short), short, isDark, onAddAnchor
             )
         }
 
@@ -946,8 +926,6 @@ private fun CueBarButtons(
             }
         }
 
-        // An anchor and an image share a capsule too, so the bar still fits a
-        // small phone with the anchor in.
         Row(
             modifier = Modifier
                 .height(34.dp)
@@ -955,11 +933,38 @@ private fun CueBarButtons(
                 .padding(horizontal = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            if (onAddAnchor != null) {
-                FormatButton(Icons.Filled.BookmarkBorder, stringResource(R.string.add_anchor), isDark, onAddAnchor)
-            }
             FormatButton(Icons.Filled.Image, stringResource(R.string.add_image), isDark, onAddImage)
         }
+    }
+}
+
+/** A capsule with a plus and a name, shortened to `shortTitle` on a small phone. */
+@Composable
+private fun AddButton(title: String, shortTitle: String, short: Boolean, isDark: Boolean, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .height(34.dp)
+            .glassed(Capsule, isDark)
+            .clickableWithoutRipple(onClick)
+            .semantics(mergeDescendants = true) { contentDescription = title }
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Add,
+            contentDescription = null,
+            tint = AppColors.textPrimary(isDark),
+            modifier = Modifier.size(13.dp)
+        )
+        Text(
+            text = if (short) shortTitle else title,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = AppColors.textPrimary(isDark),
+            maxLines = 1,
+            softWrap = false
+        )
     }
 }
 

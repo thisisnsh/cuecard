@@ -344,6 +344,7 @@
     <string name="help_keep_your_place_title">No pierdas el hilo</string>
     <string name="help_keep_your_place_detail">El puntero al lado del guion marca la línea que hay que leer. Arrástralo hacia arriba o hacia abajo para leer donde te resulte más cómodo, y el guion se alinea con él. Desactiva Guía de lectura en Ajustes para ocultarlo.</string>
     <string name="add_anchor">Añadir ancla</string>
+    <string name="anchor_short">Ancla</string>
     <string name="next_anchor">Ancla siguiente</string>
     <string name="previous_anchor">Ancla anterior</string>
     <string name="move_up">Mover arriba</string>

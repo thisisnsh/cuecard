@@ -344,6 +344,7 @@
     <string name="help_keep_your_place_title">Não perca o fio</string>
     <string name="help_keep_your_place_detail">O ponteiro ao lado do roteiro marca a linha a ser lida. Arraste-o para cima ou para baixo para ler onde for mais confortável, e o roteiro se alinha a ele. Desative Guia de leitura em Ajustes para ocultá-lo.</string>
     <string name="add_anchor">Adicionar âncora</string>
+    <string name="anchor_short">Âncora</string>
     <string name="next_anchor">Próxima âncora</string>
     <string name="previous_anchor">Âncora anterior</string>
     <string name="move_up">Mover para cima</string>
