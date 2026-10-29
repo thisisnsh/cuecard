@@ -6,6 +6,7 @@ import FirebaseAnalytics
 /// The screens with a help button. Every one shows the same help; the page
 /// only tells analytics where it was opened.
 enum HelpPage: String {
+    case library
     case writingTeleprompter = "home_teleprompter"
     case writingCards = "home_cards"
     case settings

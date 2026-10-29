@@ -7,7 +7,7 @@ struct ContentView: View {
     var body: some View {
         Group {
             if settingsService.hasSeenWelcome {
-                HomeView()
+                LibraryView()
             } else {
                 WelcomeView()
             }

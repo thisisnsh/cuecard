@@ -1,13 +1,13 @@
 import SwiftUI
 import StoreKit
 import PhotosUI
-import UniformTypeIdentifiers
 import FirebaseAnalytics
 import FirebaseCrashlytics
 
+/// The editor, opened from the library on one script: written in its mode,
+/// played from here, and saved back to the library.
 struct HomeView: View {
     @EnvironmentObject var settingsService: SettingsService
-    @EnvironmentObject var notifications: RemoteNotificationService
     @Environment(\.colorScheme) var colorScheme
     @State private var showingSettings = false
     @State private var showingHelp = false
@@ -16,20 +16,18 @@ struct HomeView: View {
     /// The cards showing were opened from the watch, not from the editor.
     @State private var cardsOpenedOnWatch = false
     @State private var showingTimer = false
-    @State private var showingSavedNotes = false
     @State private var showingVersions = false
     @State private var showingTakes = false
     @State private var showingSaveDialog = false
     @State private var saveNoteTitle = ""
-    @State private var showingImporter = false
+    @State private var showingRename = false
+    @State private var renameTitle = ""
     @State private var showingImagePicker = false
     @State private var pickedImages: [PhotosPickerItem] = []
     /// "Saved" shows for a moment after a save, where "Unsaved" was.
     @State private var showsSaved = false
     @State private var savedTask: Task<Void, Never>?
     @State private var errorMessage: String?
-    /// What's waiting on the user to agree to lose the unsaved script.
-    @State private var confirmingDiscard: Discarding?
     @State private var isEditorFocused = false
     @StateObject private var editorController = CueEditorController()
     /// Suggestions from the on-device model, while they're open.
@@ -54,10 +52,7 @@ struct HomeView: View {
 
     /// How far the editor reaches up under the top bar: to its middle, so the
     /// script fades out from there down, as gently as it does at the bottom.
-    /// Not while a banner sits between the two.
-    private var editorTopOverlap: CGFloat {
-        notifications.notification(for: .homeBanner) == nil ? 22 : 0
-    }
+    private static let editorTopOverlap: CGFloat = 22
 
     private var hasNotes: Bool {
         !settingsService.notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -71,45 +66,43 @@ struct HomeView: View {
         return (settingsService.versionCounts[id] ?? 1) > 1
     }
 
-    /// Teleprompter or cards: what the editor writes and the Play button opens.
-    /// The bar shows only the chosen mode's icon, so a long name at a large text
-    /// size can't push the buttons on the right off the bar. The menu names
-    /// each mode and checks the one that's on.
-    private var modeMenu: some View {
-        let current = settingsService.settings.scriptMode
-        let selection = Binding<ScriptMode>(
-            get: { settingsService.settings.scriptMode },
-            set: { mode in
-                AnalyticsEvents.logButtonClick("mode_\(mode.rawValue)", screen: "home")
-                isEditorFocused = false
-                settingsService.settings.scriptMode = mode
-            }
-        )
+    /// The script's title, or what it is while it has none. A saved one
+    /// opens to be renamed. The mode is picked when the script is started,
+    /// in the library, so it shows here only as the symbol beside the title.
+    private var titleControl: some View {
+        let mode = settingsService.settings.scriptMode
+        let note = settingsService.currentNote
+        let title = note?.title
+            ?? (mode == .cards ? String(localized: "New Deck") : String(localized: "New Script"))
 
-        return Menu {
-            Picker("Mode", selection: selection) {
-                ForEach(ScriptMode.allCases) { mode in
-                    Label(mode.displayName, systemImage: mode.systemImage).tag(mode)
-                }
-            }
-            .pickerStyle(.inline)
+        return Button {
+            guard let note else { return }
+            AnalyticsEvents.logButtonClick("rename_note", screen: "home")
+            isEditorFocused = false
+            renameTitle = note.title
+            showingRename = true
         } label: {
             HStack(spacing: 6) {
-                Image(systemName: current.systemImage)
-                    .font(.body)
-                Image(systemName: "chevron.down")
-                    .font(.system(size: 12, weight: .semibold))
+                Image(systemName: mode.systemImage)
+                    .font(.footnote.weight(.semibold))
                     .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                Text(title)
+                    .font(.headline)
+                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                    .lineLimit(1)
+                    .truncationMode(.tail)
             }
-            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-            .fixedSize()
+            .frame(maxWidth: 220)
         }
-        .accessibilityLabel("Mode: \(current.displayName)")
+        .buttonStyle(.plain)
+        .disabled(note == nil)
+        .accessibilityLabel("\(mode.displayName): \(title)")
+        .accessibilityHint(note == nil ? "" : String(localized: "Renames the script"))
     }
 
     private func showCardsOpenedOnWatch() {
         guard scenePhase == .active, !cardsSession.cards.isEmpty, !showingCards,
-              !showingTeleprompter, !showingSettings, !showingSavedNotes, !showingHelp,
+              !showingTeleprompter, !showingSettings, !showingHelp,
               !showingTimer, !showingTakes else { return }
         cardsOpenedOnWatch = true
         showingCards = true
@@ -240,30 +233,6 @@ struct HomeView: View {
         }
     }
 
-    /// The script as it would be written to a file, with cues in `[…]` form.
-    private var shareText: String {
-        TeleprompterParser.normalizingTags(in: settingsService.notes)
-    }
-
-    /// The script as text, or — with images in it — as a TextPack, so they
-    /// go with it.
-    @ViewBuilder
-    private var shareButton: some View {
-        let title = settingsService.currentNote?.title ?? String(localized: "Speech")
-        let notes = settingsService.notes
-        if notes.contains("[image"), !TeleprompterParser.imageMatches(in: notes).isEmpty {
-            ShareLink(item: ScriptPackage(title: settingsService.currentNote?.title, content: notes),
-                      subject: Text(title), preview: SharePreview(title)) {
-                Label("Share", systemImage: "square.and.arrow.up")
-            }
-        } else {
-            ShareLink(item: shareText, subject: Text(title)) {
-                Label("Share", systemImage: "square.and.arrow.up")
-            }
-            .disabled(!hasNotes)
-        }
-    }
-
     /// Save to the open note, or ask for a title if the script isn't one yet.
     private func save() {
         AnalyticsEvents.logButtonClick("save_note", screen: "home")
@@ -308,47 +277,6 @@ struct HomeView: View {
             .allowsHitTesting(isUnsaved)
             .accessibilityHint(isUnsaved ? "Saves your changes" : "")
             .transition(.opacity)
-        }
-    }
-
-    /// Open a text file in the editor, kept as a new saved note.
-    private func handleImport(_ result: Result<URL, Error>) {
-        switch result {
-        case .success(let url):
-            do {
-                let text = try ScriptFile.readText(from: url)
-                guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                    errorMessage = String(localized: "That file is empty.")
-                    return
-                }
-                let title = ScriptFile.title(for: url)
-                let content = TeleprompterParser.normalizingTags(in: text)
-                if settingsService.hasUnsavedChanges {
-                    confirmingDiscard = .import(title: title, content: content)
-                } else {
-                    importNote(title: title, content: content)
-                }
-            } catch let error as ScriptFile.FileTooLarge {
-                errorMessage = TextPack.isPackage(url)
-                    ? String(localized: "That file is larger than 100 MB, so it can't be imported.")
-                    : String(localized: "That file is larger than 10 MB, so it can't be imported.")
-                Analytics.logEvent("file_too_large", parameters: [
-                    "source": "import",
-                    "size_mb": error.size / (1024 * 1024)
-                ])
-            } catch {
-                errorMessage = String(localized: "This file couldn't be read as text.")
-            }
-        case .failure(let error):
-            errorMessage = error.localizedDescription
-        }
-    }
-
-    private func importNote(title: String, content: String) {
-        if let note = settingsService.importNote(title: title, content: content, folder: nil) {
-            settingsService.loadNote(note)
-        } else {
-            errorMessage = String(localized: "The file was opened but couldn't be saved as a note. Try saving it again.")
         }
     }
 
@@ -429,7 +357,7 @@ struct HomeView: View {
         } else {
         VStack(spacing: 12) {
         // What's written since the last save is kept on this device,
-        // but isn't in Saved Notes until it's saved. Laid over the
+        // but isn't in the library until it's saved. Laid over the
         // bottom of the script, so nothing moves when this comes or goes.
         saveStatus
             .animation(.easeInOut(duration: 0.2), value: settingsService.hasUnsavedChanges)
@@ -525,263 +453,102 @@ struct HomeView: View {
     }
 
     private var home: some View {
-        NavigationStack {
-            ZStack {
-                // Background - matches TeleprompterView
-                AppColors.background(for: colorScheme)
-                    .ignoresSafeArea()
+        ZStack {
+            // Background - matches TeleprompterView
+            AppColors.background(for: colorScheme)
+                .ignoresSafeArea()
 
-                VStack(spacing: 0) {
-                    // Anything the worker wants people to see, above the script.
-                    // Nothing to show is the normal case, and then this is a
-                    // zero-height view the layout never notices.
-                    if let notification = notifications.notification(for: .homeBanner) {
-                        NotificationBanner(notification: notification)
-                            .padding(.horizontal, 16)
-                            .padding(.top, 12)
-                            .transition(.move(edge: .top).combined(with: .opacity))
-                    }
-
-                    Group {
-                        if isCardsMode {
-                            CardsEditorView(
-                                text: $settingsService.notes,
-                                isFocused: $isEditorFocused,
-                                controller: editorController,
-                                cueColor: settingsService.settings.cards.cueColor,
-                                colorScheme: colorScheme,
-                                fontSize: CGFloat(settingsService.settings.cards.editorFontSize),
-                                cardLimit: settingsService.settings.cards.characterLimit,
-                                bottomInset: isEditorFocused ? CueBar.height : Self.controlsHeight,
-                                topOverlap: editorTopOverlap
-                            )
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        } else {
-                            // Notes editor
-                            NotesEditorView(
-                                text: $settingsService.notes,
-                                isFocused: $isEditorFocused,
-                                controller: editorController,
-                                cueColor: settingsService.settings.cueColor,
-                                colorScheme: colorScheme,
-                                fontSize: CGFloat(settingsService.settings.editorFontSize),
-                                keyboardOverlayHeight: CueBar.height,
-                                restingOverlayHeight: review.isActive ? reviewPanelHeight + 24 : Self.controlsHeight,
-                                topOverlap: editorTopOverlap,
-                                suggestionMarks: suggestionMarks
-                            )
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            // The editor makes its own room for the keyboard, as scroll
-                            // inset. SwiftUI's avoidance would resize it instead, and the
-                            // gap it leaves behind on dismissal cuts the script off.
-                            .ignoresSafeArea(.keyboard, edges: .bottom)
-                        }
-                    }
-                }
-                .animation(.easeInOut(duration: 0.25), value: notifications.dismissedIDs)
-            }
-            .overlay(alignment: .bottom) {
-                bottomControls
-            }
-            .animation(.easeInOut(duration: 0.2), value: isEditorFocused)
-            .navigationBarTitleDisplayMode(.inline)
-            // No bar background: the script's fade shows through its lower half.
-            .toolbarBackground(.hidden, for: .navigationBar)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    modeMenu
-                }
-
-                // Only once the note has an older version to go back to.
-                if hasVersionHistory {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button(action: {
-                            AnalyticsEvents.logButtonClick("version_history", screen: "home")
-                            isEditorFocused = false
-                            showingVersions = true
-                        }) {
-                            Image(systemName: "clock.arrow.circlepath")
-                                .font(.title3)
-                                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                        }
-                        .accessibilityLabel("Version History")
-                    }
-                }
-
-                // ••• and Settings share a glass of their own; Help has the edge.
-                // One item, so the two sit as close as a pair: as items of their
-                // own, each takes a full button's width inside the glass.
-                if #available(iOS 26.0, *) {
-                    ToolbarSpacer(.fixed, placement: .topBarTrailing)
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    HStack(spacing: 8) {
-                        Menu {
-                            if settingsService.hasUnsavedChanges {
-                                Button(action: save) {
-                                    Label("Save", systemImage: "square.and.arrow.down")
-                                }
-
-                                Divider()
-                            }
-
-                            Button(action: {
-                                AnalyticsEvents.logButtonClick("new_note", screen: "home")
-                                if settingsService.hasUnsavedChanges {
-                                    confirmingDiscard = .new
-                                } else {
-                                    settingsService.createNewNote(mode: settingsService.settings.scriptMode)
-                                }
-                            }) {
-                                Label("New", systemImage: "square.and.pencil")
-                            }
-
-                            Button(action: {
-                                AnalyticsEvents.logButtonClick("saved_notes", screen: "home")
-                                isEditorFocused = false
-                                showingSavedNotes = true
-                            }) {
-                                Label("Open", systemImage: "folder")
-                            }
-
-                            Divider()
-
-                            Button(action: {
-                                AnalyticsEvents.logButtonClick("import_file", screen: "home")
-                                showingImporter = true
-                            }) {
-                                Label("Import", systemImage: "arrow.down.doc")
-                            }
-
-                            shareButton
-
-                            if watch.isWatchAppInstalled, let note = settingsService.currentNote {
-                                let isOnWatch = settingsService.watchNoteIDs.contains(note.id)
-                                Divider()
-                                Button(action: {
-                                    AnalyticsEvents.logButtonClick(isOnWatch ? "watch_remove_note" : "watch_add_note",
-                                                                   screen: "home")
-                                    settingsService.setOnWatch(!isOnWatch, noteID: note.id)
-                                }) {
-                                    Label(isOnWatch ? "Remove from Apple Watch" : "Keep on Apple Watch",
-                                          systemImage: isOnWatch ? "applewatch.slash" : "applewatch")
-                                }
-                            }
-                        } label: {
-                            Image(systemName: "ellipsis.circle")
-                                .font(.title3)
-                                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                        }
-                        .menuActionDismissBehavior(.enabled)
-                        .accessibilityLabel("More")
-
-                        Button(action: {
-                            AnalyticsEvents.logButtonClick("settings", screen: "home")
-                            showingSettings = true
-                        }) {
-                            Image(systemName: "gearshape")
-                                .font(.title3)
-                                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                        }
-                        .accessibilityLabel("Settings")
-                    }
-                }
-
-                HelpToolbarItem(page: .writing(settingsService.settings.scriptMode), isPresented: $showingHelp)
-            }
-            .helpSheet(for: .writing(settingsService.settings.scriptMode), isPresented: $showingHelp)
-            .sheet(isPresented: $showingSettings) {
-                EditorSettingsView()
-            }
-            .sheet(isPresented: $showingSavedNotes) {
-                SavedNotesView()
-            }
-            .sheet(isPresented: $showingVersions) {
-                if let id = settingsService.currentNoteId {
-                    NoteVersionsView(noteID: id)
+            Group {
+                if isCardsMode {
+                    CardsEditorView(
+                        text: $settingsService.notes,
+                        isFocused: $isEditorFocused,
+                        controller: editorController,
+                        cueColor: settingsService.settings.cards.cueColor,
+                        colorScheme: colorScheme,
+                        fontSize: CGFloat(settingsService.settings.cards.editorFontSize),
+                        cardLimit: settingsService.settings.cards.characterLimit,
+                        bottomInset: isEditorFocused ? CueBar.height : Self.controlsHeight,
+                        topOverlap: Self.editorTopOverlap
+                    )
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    // Notes editor
+                    NotesEditorView(
+                        text: $settingsService.notes,
+                        isFocused: $isEditorFocused,
+                        controller: editorController,
+                        cueColor: settingsService.settings.cueColor,
+                        colorScheme: colorScheme,
+                        fontSize: CGFloat(settingsService.settings.editorFontSize),
+                        keyboardOverlayHeight: CueBar.height,
+                        restingOverlayHeight: review.isActive ? reviewPanelHeight + 24 : Self.controlsHeight,
+                        topOverlap: Self.editorTopOverlap,
+                        suggestionMarks: suggestionMarks
+                    )
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    // The editor makes its own room for the keyboard, as scroll
+                    // inset. SwiftUI's avoidance would resize it instead, and the
+                    // gap it leaves behind on dismissal cuts the script off.
+                    .ignoresSafeArea(.keyboard, edges: .bottom)
                 }
             }
-            .sheet(isPresented: $showingTimer) {
-                TimerSheet()
+        }
+        .overlay(alignment: .bottom) {
+            bottomControls
+        }
+        .animation(.easeInOut(duration: 0.2), value: isEditorFocused)
+        .navigationBarTitleDisplayMode(.inline)
+        // No bar background: the script's fade shows through its lower half.
+        .toolbarBackground(.hidden, for: .navigationBar)
+        .toolbar { toolbar }
+        .helpSheet(for: .writing(settingsService.settings.scriptMode), isPresented: $showingHelp)
+        .sheet(isPresented: $showingSettings) {
+            EditorSettingsView()
+        }
+        .sheet(isPresented: $showingVersions) {
+            if let id = settingsService.currentNoteId {
+                NoteVersionsView(noteID: id)
             }
-            .sheet(isPresented: $showingTakes) {
-                TakesView(library: takes, scriptTitle: settingsService.currentNote?.title)
-                    .zoomsFromTakes(in: takesTransition)
-            }
-            .fileImporter(isPresented: $showingImporter,
-                          allowedContentTypes: ScriptFile.importableContentTypes) { result in
-                handleImport(result)
-            }
-            .photosPicker(isPresented: $showingImagePicker, selection: $pickedImages,
-                          maxSelectionCount: 10, matching: .images)
-            .onChange(of: pickedImages) {
-                addPickedImages()
-            }
-            .alert("Something Went Wrong", isPresented: Binding(
-                get: { errorMessage != nil },
-                set: { if !$0 { errorMessage = nil } }
-            )) {
-                Button("OK", role: .cancel) { errorMessage = nil }
-            } message: {
-                Text(errorMessage ?? "")
-            }
-            .alert("Discard Unsaved Changes?", isPresented: Binding(
-                get: { confirmingDiscard != nil },
-                set: { if !$0 { confirmingDiscard = nil } }
-            ), presenting: confirmingDiscard) { discarding in
-                Button("Cancel", role: .cancel) { }
-                Button("Discard Changes", role: .destructive) {
-                    switch discarding {
-                    case .new:
-                        settingsService.createNewNote(mode: settingsService.settings.scriptMode)
-                    case .import(let title, let content):
-                        importNote(title: title, content: content)
-                    }
-                }
-            } message: { _ in
-                Text("The editor has changes that aren't saved. They'll be lost.")
-            }
-            .alert("Save Note", isPresented: $showingSaveDialog) {
-                TextField("Note title", text: $saveNoteTitle)
-                Button("Cancel", role: .cancel) { }
-                Button("Save") {
-                    let title = saveNoteTitle.trimmingCharacters(in: .whitespacesAndNewlines)
-                    if !title.isEmpty {
-                        if settingsService.saveCurrentNote(title: title) {
-                            flashSaved()
-                        } else {
-                            errorMessage = String(localized: "Your note couldn't be saved. Try again.")
-                        }
-                    }
-                }
-            } message: {
-                Text("Enter a title for your note")
-            }
-            .fullScreenCover(isPresented: $showingTeleprompter, onDismiss: teleprompterDidClose) {
-                TeleprompterView(content: TeleprompterParser.parseNotes(settingsService.notes))
-                    // Passed on by hand: as an iPad app on a Mac, a full screen
-                    // cover doesn't inherit environment objects.
-                    .environmentObject(settingsService)
-            }
-            .fullScreenCover(isPresented: $showingCards, onDismiss: {
-                takes.reload()
-            }) {
-                CueCardsView(cards: cardsOpenedOnWatch ? nil : CueCards.cards(in: settingsService.notes),
-                             title: settingsService.currentNote?.title ?? String(localized: "Cards"),
-                             deckID: settingsService.currentNoteId)
-                    .environmentObject(settingsService)
-            }
-            // A deck opened from the watch comes up here too, if nothing else is.
-            .onChange(of: cardsSession.sessionID) {
-                showCardsOpenedOnWatch()
-            }
-            .onChange(of: scenePhase) {
-                showCardsOpenedOnWatch()
-                if scenePhase == .active { takes.reload() }
-            }
-            .onChange(of: settingsService.currentScriptID) {
-                takes.load(scriptID: settingsService.currentScriptID)
-            }
+        }
+        .sheet(isPresented: $showingTimer) {
+            TimerSheet()
+        }
+        .sheet(isPresented: $showingTakes) {
+            TakesView(library: takes, scriptTitle: settingsService.currentNote?.title)
+                .zoomsFromTakes(in: takesTransition)
+        }
+        .photosPicker(isPresented: $showingImagePicker, selection: $pickedImages,
+                      maxSelectionCount: 10, matching: .images)
+        .onChange(of: pickedImages) {
+            addPickedImages()
+        }
+        .modifier(EditorAlerts(editor: self))
+        .fullScreenCover(isPresented: $showingTeleprompter, onDismiss: teleprompterDidClose) {
+            TeleprompterView(content: TeleprompterParser.parseNotes(settingsService.notes))
+                // Passed on by hand: as an iPad app on a Mac, a full screen
+                // cover doesn't inherit environment objects.
+                .environmentObject(settingsService)
+        }
+        .fullScreenCover(isPresented: $showingCards, onDismiss: {
+            takes.reload()
+        }) {
+            CueCardsView(cards: cardsOpenedOnWatch ? nil : CueCards.cards(in: settingsService.notes),
+                         title: cardsOpenedOnWatch ? cardsSession.title
+                            : settingsService.currentNote?.title ?? String(localized: "Cards"),
+                         deckID: cardsOpenedOnWatch ? cardsSession.deckID : settingsService.currentNoteId)
+                .environmentObject(settingsService)
+        }
+        // A deck opened from the watch comes up here too, if nothing else is.
+        .onChange(of: cardsSession.sessionID) {
+            showCardsOpenedOnWatch()
+        }
+        .onChange(of: scenePhase) {
+            showCardsOpenedOnWatch()
+            if scenePhase == .active { takes.reload() }
+        }
+        .onChange(of: settingsService.currentScriptID) {
+            takes.load(scriptID: settingsService.currentScriptID)
         }
         .onAppear {
             takes.load(scriptID: settingsService.currentScriptID)
@@ -790,6 +557,136 @@ struct HomeView: View {
                 AnalyticsParameterScreenName: "home",
                 AnalyticsParameterScreenClass: "HomeView"
             ])
+        }
+    }
+
+    /// The back button to the library leads; the title sits in the middle.
+    @ToolbarContentBuilder
+    private var toolbar: some ToolbarContent {
+        ToolbarItem(placement: .principal) {
+            titleControl
+        }
+
+        // Only once the note has an older version to go back to.
+        if hasVersionHistory {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(action: {
+                    AnalyticsEvents.logButtonClick("version_history", screen: "home")
+                    isEditorFocused = false
+                    showingVersions = true
+                }) {
+                    Image(systemName: "clock.arrow.circlepath")
+                        .font(.title3)
+                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                }
+                .accessibilityLabel("Version History")
+            }
+        }
+
+        // ••• and Settings share a glass of their own; Help has the edge.
+        // One item, so the two sit as close as a pair: as items of their
+        // own, each takes a full button's width inside the glass.
+        if #available(iOS 26.0, *) {
+            ToolbarSpacer(.fixed, placement: .topBarTrailing)
+        }
+        ToolbarItem(placement: .topBarTrailing) {
+            HStack(spacing: 8) {
+                moreMenu
+
+                Button(action: {
+                    AnalyticsEvents.logButtonClick("settings", screen: "home")
+                    showingSettings = true
+                }) {
+                    Image(systemName: "gearshape")
+                        .font(.title3)
+                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                }
+                .accessibilityLabel("Settings")
+            }
+        }
+
+        HelpToolbarItem(page: .writing(settingsService.settings.scriptMode), isPresented: $showingHelp)
+    }
+
+    /// What's done to the script as a whole. Starting, opening and importing
+    /// another is done from the library.
+    private var moreMenu: some View {
+        Menu {
+            if settingsService.hasUnsavedChanges {
+                Button(action: save) {
+                    Label("Save", systemImage: "square.and.arrow.down")
+                }
+
+                Divider()
+            }
+
+            ScriptShareLink(title: settingsService.currentNote?.title, content: settingsService.notes)
+
+            if watch.isWatchAppInstalled, let note = settingsService.currentNote {
+                let isOnWatch = settingsService.watchNoteIDs.contains(note.id)
+                Divider()
+                Button(action: {
+                    AnalyticsEvents.logButtonClick(isOnWatch ? "watch_remove_note" : "watch_add_note",
+                                                   screen: "home")
+                    settingsService.setOnWatch(!isOnWatch, noteID: note.id)
+                }) {
+                    Label(isOnWatch ? "Remove from Apple Watch" : "Keep on Apple Watch",
+                          systemImage: isOnWatch ? "applewatch.slash" : "applewatch")
+                }
+            }
+        } label: {
+            Image(systemName: "ellipsis.circle")
+                .font(.title3)
+                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+        }
+        .menuActionDismissBehavior(.enabled)
+        .accessibilityLabel("More")
+    }
+
+    /// The editor's alerts, kept apart from the rest of it, which is already
+    /// as much as the compiler takes at once.
+    private struct EditorAlerts: ViewModifier {
+        let editor: HomeView
+
+        private var settingsService: SettingsService { editor.settingsService }
+
+        func body(content: Content) -> some View {
+            content
+                .alert("Something Went Wrong", isPresented: Binding(
+                    get: { editor.errorMessage != nil },
+                    set: { if !$0 { editor.errorMessage = nil } }
+                )) {
+                    Button("OK", role: .cancel) { editor.errorMessage = nil }
+                } message: {
+                    Text(editor.errorMessage ?? "")
+                }
+                .alert("Save Note", isPresented: editor.$showingSaveDialog) {
+                    TextField("Note title", text: editor.$saveNoteTitle)
+                    Button("Cancel", role: .cancel) { }
+                    Button("Save") {
+                        let title = editor.saveNoteTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+                        if !title.isEmpty {
+                            if settingsService.saveCurrentNote(title: title) {
+                                editor.flashSaved()
+                            } else {
+                                editor.errorMessage = String(localized: "Your note couldn't be saved. Try again.")
+                            }
+                        }
+                    }
+                } message: {
+                    Text("Enter a title for your note")
+                }
+                .alert("Rename Script", isPresented: editor.$showingRename) {
+                    TextField("Title", text: editor.$renameTitle)
+                    Button("Cancel", role: .cancel) { }
+                    Button("Rename") {
+                        let title = editor.renameTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+                        if let id = settingsService.currentNoteId, !title.isEmpty,
+                           !settingsService.updateNote(id: id, title: title) {
+                            editor.errorMessage = String(localized: "The note couldn't be renamed. Try again.")
+                        }
+                    }
+                }
         }
     }
 }
@@ -1097,440 +994,9 @@ struct CardsEditorView: View {
     }
 }
 
-/// What replaces the script in the editor once its unsaved changes are let go.
-private enum Discarding {
-    case new
-    case `import`(title: String, content: String)
-}
-
-/// View for displaying and managing saved notes
-struct SavedNotesView: View {
-    @EnvironmentObject var settingsService: SettingsService
-    @Environment(\.dismiss) var dismiss
-    @Environment(\.colorScheme) var colorScheme
-    @State private var noteToRename: SavedNote?
-    @State private var renameTitle = ""
-    @State private var showingFolderPicker = false
-    @State private var showingDeleteAll = false
-    @State private var showingStopFolder = false
-    @State private var showingStopFolderFailed = false
-    @State private var errorMessage: String?
-    /// A note waiting on the user to agree to lose the unsaved script it replaces.
-    @State private var noteToOpen: SavedNote?
-    @State private var query = ""
-    /// The mode whose notes are listed. Starts on the home screen's mode.
-    @State private var modeFilter: ScriptMode = .teleprompter
-
-    /// Saved notes of the chosen mode, newest first, narrowed to those whose
-    /// title or text match the search.
-    private var notes: [SavedNote] {
-        let sorted = settingsService.savedNotes
-            .filter { $0.mode == modeFilter }
-            .sorted { $0.updatedAt > $1.updatedAt }
-        let trimmed = query.trimmingCharacters(in: .whitespaces)
-        guard !trimmed.isEmpty else { return sorted }
-
-        return sorted.filter {
-            $0.title.localizedStandardContains(trimmed)
-                || TeleprompterParser.removingAnchors(from: TeleprompterParser.removingImages(
-                    from: CueCards.removingSeparators(from: $0.content))).localizedStandardContains(trimmed)
-        }
-    }
-
-    private let dateFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .short
-        return formatter
-    }()
-
-    /// The start of a note, with card breaks read as spaces, and emphasis
-    /// markers, images and anchors left out.
-    private func preview(of note: SavedNote) -> String {
-        let text = TeleprompterParser.removingAnchors(from: TeleprompterParser.removingImages(
-            from: CueCards.removingSeparators(from: note.content)))
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        return String(RichText.plain(text).prefix(120))
-            .replacingOccurrences(of: "\n", with: " ")
-    }
-
-    /// When a note was last saved, and how many versions it has.
-    private func detail(of note: SavedNote) -> String {
-        let versions = settingsService.versionCounts[note.id] ?? 1
-        let count = String(localized: "\(versions) Versions", comment: "How many versions a saved note has")
-        return "\(dateFormatter.string(from: note.updatedAt)) · \(count)"
-    }
-
-    private var countLabel: String {
-        let count = settingsService.savedNotes.count
-        return String(localized: "\(count) notes", comment: "How many saved notes there are")
-    }
-
-    /// Where saved notes are kept, shown whether or not there are any.
-    private var storageNote: some View {
-        VStack(spacing: 8) {
-            if let warning = oversizedFilesWarning {
-                Label(warning, systemImage: "exclamationmark.triangle.fill")
-                    .foregroundStyle(AppColors.yellow(for: colorScheme))
-            }
-            if let warning = undeletedFilesWarning {
-                Label(warning, systemImage: "exclamationmark.triangle.fill")
-                    .foregroundStyle(AppColors.yellow(for: colorScheme))
-            }
-            storageLabel
-                .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-        }
-        .font(.caption)
-        .multilineTextAlignment(.center)
-    }
-
-    /// Files in the notes folder that were too large to bring in, if any.
-    private var oversizedFilesWarning: String? {
-        let files = settingsService.notesFolderOversizedFiles
-        guard let first = files.first else { return nil }
-        if files.count == 1 {
-            return String(localized: "“\(first)” is larger than 10 MB, so it wasn't added to your notes.")
-        }
-        return String(localized: "\(files.count) files in the notes folder are larger than 10 MB, so they weren't added to your notes.")
-    }
-
-    /// Files of deleted notes still in the notes folder, if any.
-    private var undeletedFilesWarning: String? {
-        let files = settingsService.notesFolderUndeletedFiles
-        guard let first = files.first else { return nil }
-        if files.count == 1 {
-            return String(localized: "“\(first)” couldn't be deleted from the notes folder. Its note stays deleted.")
-        }
-        return String(localized: "\(files.count) files couldn't be deleted from the notes folder. Their notes stay deleted.")
-    }
-
-    /// Why deleting notes left files behind in the notes folder.
-    private func undeletedFilesMessage(count: Int) -> String {
-        if let folder = settingsService.notesFolderName {
-            return count == 1
-                ? String(localized: "Its file in “\(folder)” folder couldn't be deleted. CueCard will try again, and won't bring it back as notes.")
-                : String(localized: "Their files in “\(folder)” folder couldn't be deleted. CueCard will try again, and won't bring them back as notes.")
-        }
-        return count == 1
-            ? String(localized: "Its file will be deleted from the notes folder once it can be reached.")
-            : String(localized: "Their files will be deleted from the notes folder once it can be reached.")
-    }
-
-    /// Notes never leave the device, so the lock stays whatever the folder.
-    private var storageLabel: some View {
-        Label {
-            storageText
-        } icon: {
-            Image(systemName: "lock.fill")
-        }
-    }
-
-    private var storageText: Text {
-        if let folder = settingsService.notesFolderName {
-            Text("Notes stay on this device, also as files in “\(folder)” folder, so they're kept even if the app is removed.")
-        } else if settingsService.hasNotesFolder {
-            Text("Notes stay on this device. The notes folder can't be reached, so they're only kept here until it's back.")
-        } else {
-            Text("Notes stay on this device and are deleted if the app is removed. Choose a notes folder in \(Image(systemName: "ellipsis.circle")) to keep them.")
-        }
-    }
-
-    private func handleFolderPick(_ result: Result<URL, Error>) {
-        switch result {
-        case .success(let url):
-            do {
-                try settingsService.chooseNotesFolder(url)
-            } catch {
-                errorMessage = String(localized: "This folder can't be used for notes.")
-            }
-        case .failure(let error):
-            errorMessage = error.localizedDescription
-        }
-    }
-
-    var body: some View {
-        NavigationStack {
-            Group {
-                if settingsService.savedNotes.isEmpty {
-                    VStack(spacing: 16) {
-                        Image(systemName: "folder")
-                            .font(.system(size: 48))
-                            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-
-                        Text("Nothing Saved Yet")
-                            .font(.headline)
-                            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-
-                        Text("Save your scripts and cards to open them later.")
-                            .font(.subheadline)
-                            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                            .multilineTextAlignment(.center)
-                    }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(AppColors.background(for: colorScheme))
-                    .safeAreaInset(edge: .bottom) {
-                        storageNote
-                            .padding(.horizontal, 24)
-                            .padding(.top, 8)
-                            .padding(.bottom, 16)
-                    }
-                } else {
-                    List {
-                        Section {
-                            ForEach(notes) { note in
-                                Button(action: {
-                                    AnalyticsEvents.logButtonClick("load_note", screen: "saved_notes")
-                                    // Opening replaces the script of the note's own mode.
-                                    if settingsService.hasUnsavedChanges(in: note.mode) {
-                                        noteToOpen = note
-                                    } else {
-                                        open(note)
-                                    }
-                                }) {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        HStack(spacing: 8) {
-                                            Text(note.title)
-                                                .font(.headline)
-                                                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                                                .lineLimit(1)
-                                                .truncationMode(.tail)
-
-                                            // The note open in the editor.
-                                            if note.id == settingsService.currentNoteId {
-                                                Text("Current")
-                                                    .font(.caption2.weight(.semibold))
-                                                    .foregroundStyle(AppColors.blue(for: colorScheme))
-                                                    .padding(.horizontal, 8)
-                                                    .padding(.vertical, 3)
-                                                    .background(Capsule().fill(AppColors.blue(for: colorScheme).opacity(0.15)))
-                                                    .fixedSize()
-                                            }
-                                        }
-
-                                        Text(preview(of: note))
-                                            .font(.subheadline)
-                                            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                                            .lineLimit(2)
-
-                                        Text(detail(of: note))
-                                            .font(.caption)
-                                            .foregroundStyle(AppColors.textSecondary(for: colorScheme).opacity(0.7))
-                                    }
-                                    .padding(.vertical, 4)
-                                }
-                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                    Button(role: .destructive) {
-                                        AnalyticsEvents.logButtonClick("delete_note", screen: "saved_notes")
-                                        if !settingsService.deleteNote(id: note.id) {
-                                            errorMessage = String(localized: "The note was deleted. \(undeletedFilesMessage(count: 1))")
-                                        }
-                                    } label: {
-                                        Label("Delete", systemImage: "trash")
-                                    }
-                                }
-                                .swipeActions(edge: .leading, allowsFullSwipe: false) {
-                                    Button {
-                                        AnalyticsEvents.logButtonClick("rename_note", screen: "saved_notes")
-                                        renameTitle = note.title
-                                        noteToRename = note
-                                    } label: {
-                                        Label("Rename", systemImage: "pencil")
-                                    }
-                                    .tint(.orange)
-                                }
-                            }
-                        } header: {
-                            Picker("Mode", selection: $modeFilter) {
-                                ForEach(ScriptMode.allCases) { mode in
-                                    Text(mode.displayName).tag(mode)
-                                }
-                            }
-                            .pickerStyle(.segmented)
-                            .fixedSize()
-                            .frame(maxWidth: .infinity)
-                            .padding(.bottom, 8)
-                            .textCase(nil)
-                        } footer: {
-                            // At the end of the list, so it never covers a note.
-                            storageNote
-                                .frame(maxWidth: .infinity)
-                                .padding(.horizontal, 8)
-                                .padding(.top, 24)
-                                .padding(.bottom, 16)
-                                .listRowInsets(EdgeInsets())
-                        }
-                    }
-                    .overlay {
-                        if notes.isEmpty {
-                            if query.trimmingCharacters(in: .whitespaces).isEmpty {
-                                ContentUnavailableView("Nothing Saved Yet", systemImage: modeFilter.systemImage)
-                            } else {
-                                ContentUnavailableView.search(text: query)
-                            }
-                        }
-                    }
-                    .searchable(text: $query, prompt: "Search")
-                }
-            }
-            .navigationTitle("Saved Notes")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    VStack(spacing: 1) {
-                        Text("Saved Notes")
-                            .font(.headline)
-                            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                        if !settingsService.savedNotes.isEmpty {
-                            Text(countLabel)
-                                .font(.caption2)
-                                .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                        }
-                    }
-                }
-
-                ToolbarItem(placement: .topBarLeading) {
-                    Menu {
-                        Button(action: {
-                            AnalyticsEvents.logButtonClick("choose_notes_folder", screen: "saved_notes")
-                            showingFolderPicker = true
-                        }) {
-                            Label(settingsService.hasNotesFolder ? "Change Notes Folder" : "Choose Notes Folder",
-                                  systemImage: "folder.badge.plus")
-                        }
-
-                        if settingsService.hasNotesFolder {
-                            Button(action: {
-                                AnalyticsEvents.logButtonClick("stop_notes_folder", screen: "saved_notes")
-                                showingStopFolder = true
-                            }) {
-                                Label("Stop Using Folder", systemImage: "folder.badge.minus")
-                            }
-                        }
-
-                        Divider()
-
-                        Button(role: .destructive, action: {
-                            AnalyticsEvents.logButtonClick("delete_all_notes", screen: "saved_notes")
-                            showingDeleteAll = true
-                        }) {
-                            Label("Delete All", systemImage: "trash")
-                        }
-                        .disabled(settingsService.savedNotes.isEmpty)
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
-                    }
-                }
-
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") {
-                        AnalyticsEvents.logButtonClick("done", screen: "saved_notes")
-                        dismiss()
-                    }
-                }
-            }
-            .onAppear {
-                modeFilter = settingsService.settings.scriptMode
-                settingsService.syncNotesFolder()
-            }
-            .fileImporter(isPresented: $showingFolderPicker, allowedContentTypes: [.folder]) { result in
-                handleFolderPick(result)
-            }
-            // Alerts rather than confirmation dialogs, which leave Cancel out
-            // where they open as a popover.
-            .alert("Stop Using Notes Folder?", isPresented: $showingStopFolder) {
-                Button("Cancel", role: .cancel) { }
-                Button("Stop Using Folder", role: .destructive) {
-                    if !settingsService.stopUsingNotesFolder() {
-                        showingStopFolderFailed = true
-                    }
-                }
-            } message: {
-                if let folder = settingsService.notesFolderName {
-                    Text("The note files in “\(folder)” folder will be deleted. Your notes stay on this device.")
-                } else {
-                    Text("Your notes stay on this device.")
-                }
-            }
-            .alert("Delete All Saved Notes?", isPresented: $showingDeleteAll) {
-                Button("Cancel", role: .cancel) { }
-                Button("Delete All", role: .destructive) {
-                    let count = settingsService.savedNotes.count
-                    if !settingsService.deleteAllNotes() {
-                        errorMessage = String(localized: "Your notes were deleted. \(undeletedFilesMessage(count: count))")
-                    }
-                }
-            } message: {
-                if let folder = settingsService.notesFolderName {
-                    Text("Every saved note and its file in “\(folder)” folder will be deleted. This can't be undone.")
-                } else {
-                    Text("Every saved note will be deleted. This can't be undone.")
-                }
-            }
-            .alert("Couldn't Delete Note Files", isPresented: $showingStopFolderFailed) {
-                Button("Keep Using Folder", role: .cancel) { }
-                Button("Stop Anyway") {
-                    settingsService.stopUsingNotesFolderKeepingFiles()
-                }
-            } message: {
-                if let folder = settingsService.notesFolderName {
-                    Text("Some note files in “\(folder)” folder couldn't be deleted, so it's still in use. You can stop using it anyway and leave the files there.")
-                } else {
-                    Text("The notes folder can't be reached, so its note files couldn't be deleted. You can stop using it anyway and leave the files there.")
-                }
-            }
-            .alert("Something Went Wrong", isPresented: Binding(
-                get: { errorMessage != nil },
-                set: { if !$0 { errorMessage = nil } }
-            )) {
-                Button("OK", role: .cancel) { errorMessage = nil }
-            } message: {
-                Text(errorMessage ?? "")
-            }
-            .alert("Discard Unsaved Changes?", isPresented: Binding(
-                get: { noteToOpen != nil },
-                set: { if !$0 { noteToOpen = nil } }
-            ), presenting: noteToOpen) { note in
-                Button("Cancel", role: .cancel) { }
-                Button("Discard Changes", role: .destructive) { open(note) }
-            } message: { _ in
-                Text("The editor has changes that aren't saved. They'll be lost.")
-            }
-            .alert("Rename Note", isPresented: Binding(
-                get: { noteToRename != nil },
-                set: { if !$0 { noteToRename = nil } }
-            )) {
-                TextField("Note title", text: $renameTitle)
-                Button("Cancel", role: .cancel) {
-                    noteToRename = nil
-                }
-                Button("Rename") {
-                    if let note = noteToRename {
-                        let title = renameTitle.trimmingCharacters(in: .whitespacesAndNewlines)
-                        if !title.isEmpty, !settingsService.updateNote(id: note.id, title: title) {
-                            errorMessage = String(localized: "The note couldn't be renamed. Try again.")
-                        }
-                    }
-                    noteToRename = nil
-                }
-            } message: {
-                Text("Enter a new title for your note")
-            }
-        }
-    }
-
-    private func open(_ note: SavedNote) {
-        settingsService.loadNote(note)
-        dismiss()
-    }
-}
-
 #Preview {
-    HomeView()
-        .environmentObject(SettingsService.shared)
-        .environmentObject(RemoteNotificationService.shared)
-}
-
-#Preview("Saved Notes") {
-    SavedNotesView()
-        .environmentObject(SettingsService.shared)
+    NavigationStack {
+        HomeView()
+    }
+    .environmentObject(SettingsService.shared)
 }

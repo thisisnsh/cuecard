@@ -34,7 +34,7 @@ final class TakesLibrary: NSObject, ObservableObject {
 
     /// The longest a recording is taken to run. A video started further back
     /// than this before the teleprompter opened isn't looked at.
-    private static let longestRecording: TimeInterval = 6 * 60 * 60
+    nonisolated private static let longestRecording: TimeInterval = 6 * 60 * 60
 
     var canRead: Bool { status == .authorized || status == .limited }
 
@@ -157,7 +157,7 @@ final class TakesLibrary: NSObject, ObservableObject {
     }
 
     /// Videos whose recording overlaps a session, oldest first.
-    private static func videos(recordedDuring sessions: [TeleprompterSession]) -> [PHAsset] {
+    nonisolated static func videos(recordedDuring sessions: [TeleprompterSession]) -> [PHAsset] {
         // A recording that overlaps a session started before it ended, and no
         // longer than the longest recording before it began. Overlapping
         // stretches are merged to keep the query short.
@@ -187,6 +187,67 @@ final class TakesLibrary: NSObject, ObservableObject {
             }
         }
         return videos
+    }
+}
+
+/// How many takes each script has, for the library to show beside it.
+@MainActor
+final class TakeCounts: NSObject, ObservableObject {
+    /// Scripts with no takes aren't in here.
+    @Published private(set) var counts: [UUID: Int] = [:]
+
+    private var isObservingLibrary = false
+    private var pendingReload: Task<Void, Never>?
+    private var loading: Task<Void, Never>?
+
+    deinit {
+        PHPhotoLibrary.shared().unregisterChangeObserver(self)
+    }
+
+    func count(for scriptID: UUID) -> Int {
+        counts[scriptID] ?? 0
+    }
+
+    /// Count again, for a session just ended or a video just recorded. Only
+    /// once Photos can be read: the library never asks for access itself.
+    func reload() {
+        let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
+        guard status == .authorized || status == .limited else {
+            counts = [:]
+            return
+        }
+        if !isObservingLibrary {
+            isObservingLibrary = true
+            PHPhotoLibrary.shared().register(self)
+        }
+
+        let sessions = TakeStore.shared.scriptIDsWithSessions().map { ($0, TakeStore.shared.sessions(for: $0)) }
+        loading?.cancel()
+        loading = Task {
+            let counted = await Task.detached(priority: .userInitiated) {
+                var counts: [UUID: Int] = [:]
+                for (id, sessions) in sessions where !sessions.isEmpty {
+                    let count = TakesLibrary.videos(recordedDuring: sessions).count
+                    if count > 0 { counts[id] = count }
+                }
+                return counts
+            }.value
+            guard !Task.isCancelled, counted != counts else { return }
+            counts = counted
+        }
+    }
+}
+
+extension TakeCounts: PHPhotoLibraryChangeObserver {
+    nonisolated func photoLibraryDidChange(_ changeInstance: PHChange) {
+        Task { @MainActor in
+            pendingReload?.cancel()
+            pendingReload = Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 300_000_000)
+                guard !Task.isCancelled else { return }
+                reload()
+            }
+        }
     }
 }
 

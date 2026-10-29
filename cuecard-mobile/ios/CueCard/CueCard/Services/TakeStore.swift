@@ -56,6 +56,14 @@ final class TakeStore {
         return (try? JSONDecoder().decode([TeleprompterSession].self, from: data)) ?? []
     }
 
+    /// Every script the teleprompter or cards have been open on.
+    func scriptIDsWithSessions() -> [UUID] {
+        var ids = Set((try? fileManager.contentsOfDirectory(atPath: root?.path ?? ""))?
+            .compactMap(UUID.init(uuidString:)) ?? [])
+        if let open { ids.insert(open.scriptID) }
+        return Array(ids)
+    }
+
     /// The tags and notes of a script's takes, by take ID.
     func details(for scriptID: UUID) -> [String: TakeDetails] {
         guard let url = detailsFile(of: scriptID), let data = try? Data(contentsOf: url) else { return [:] }

@@ -987,8 +987,15 @@ Thanks for listening. *Questions?*
     /// they couldn't be saved.
     @discardableResult
     func saveChangesToCurrentNote() -> Bool {
-        guard let id = currentNoteId else { return false }
-        return updateNote(id: id, content: notes)
+        saveChanges(in: settings.scriptMode)
+    }
+
+    /// Save what's written in `mode` to the note open in it, whichever mode
+    /// the editor is in. False if there's no note or it couldn't be saved.
+    @discardableResult
+    func saveChanges(in mode: ScriptMode) -> Bool {
+        guard let id = noteId(for: mode) else { return false }
+        return updateNote(id: id, content: notes(for: mode))
     }
 
     /// A saved note's versions, oldest first.
