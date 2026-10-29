@@ -68,7 +68,7 @@ private enum AllHelp {
                                     summary: "Modes, cues, formatting, images and cards",
                                     systemImage: "pencil", topics: [
         HelpTopic("Pick a Mode",
-                  detail: "Tap the mode name at the top. Teleprompter scrolls your whole script. Cards shows it one card at a time."),
+                  detail: "In your library, tap New and pick Teleprompter Script or Cards Deck. Teleprompter scrolls your whole script. Cards shows it one card at a time."),
         HelpTopic("Add Cues",
                   detail: "Cues are reminders like [pause], shown in color and not read out. Type [ or tap Add Cue above the keyboard."),
         HelpTopic("Bold and Italic",
@@ -83,34 +83,40 @@ private enum AllHelp {
                   detail: "Tap the sparkles above the timer to have Apple Intelligence read your teleprompter script on this iPhone. It suggests spelling fixes, cues, anchors and bold or italic words. Accept or reject each one, or accept them all. Needs an iPhone with Apple Intelligence turned on.")
     ])
 
-    static let notes = HelpSection("notes", title: "Notes & Saving",
-                                    summary: "Save, open, import, versions and sharing",
+    static let notes = HelpSection("notes", title: "Library & Saving",
+                                    summary: "Folders, saving, import, versions and sharing",
                                     systemImage: "folder", topics: [
+        HelpTopic("Open a Script",
+                  detail: "CueCard opens on your library, with every script and deck you saved. Tap one to write in it, and tap back to return. Show All, Teleprompter or Cards at the top."),
         HelpTopic("Save Your Work",
-                  detail: "Unsaved above Play means there are changes to save. Tap it to save, or tap ••• › Save."),
-        HelpTopic("Open Saved Notes",
-                  detail: "Tap ••• › Open to see everything you saved. Swipe to rename or delete."),
+                  detail: "Unsaved above Play means there are changes to save. Tap it to save, or tap ••• › Save. A new script you haven't saved shows in the library as a draft."),
+        HelpTopic("Rename, Duplicate or Delete",
+                  detail: "In your library, touch and hold a script, or swipe it. In the editor, tap the title at the top to rename it."),
+        HelpTopic("Organize in Folders",
+                  detail: "In your library, tap ••• › New Folder. Touch and hold a script and tap Move to Folder to file it. Tap ••• › Sort By to change the order."),
         HelpTopic("Import a Text File",
-                  detail: "Tap ••• › Import to open a text file or a TextPack. It opens in the editor and is kept as a saved note."),
+                  detail: "In your library, tap New › Import File to add a text file or a TextPack as a script."),
         HelpTopic("Go Back to an Older Version",
                   detail: "Every save is a new version. Once a note has more than one, tap the clock at the top to compare changes and restore one."),
-        HelpTopic("Keep Notes if the App Is Removed",
-                  detail: "Notes stay on this device and are deleted with the app. In Saved Notes, choose a notes folder from ••• to keep them as files."),
+        HelpTopic("Keep Scripts if the App Is Removed",
+                  detail: "Until you choose a storage folder, scripts are kept only in CueCard and are deleted with the app. In your library, tap ••• › Choose Storage Folder. Each script is kept there as a text file and each folder as a folder. Pick one in iCloud Drive to keep them there too."),
+        HelpTopic("Your Privacy",
+                  detail: "There's no account, and CueCard doesn't upload your scripts. They're kept on this iPhone, and in the storage folder if you choose one."),
         HelpTopic("Share a Script",
-                  detail: "Tap ••• › Share to send it as text, cues included. A script with images is sent as a TextPack, with its images.")
+                  detail: "Tap ••• › Share in the editor, or touch and hold a script in your library. It's sent as text, cues included. A script with images is sent as a TextPack, with its images.")
     ])
 
     static let settings = HelpSection("settings", title: "Settings & Timer",
                                     summary: "Text size, colors, timer and language",
                                     systemImage: "gearshape", topics: [
         HelpTopic("Change Text Size and Colors",
-                  detail: "Tap the gear at the top. Each mode keeps its own sizes and cue color."),
+                  detail: "Open a script and tap the gear at the top. Each mode keeps its own sizes and cue color."),
         HelpTopic("Set a Timer",
                   detail: "Tap the timer next to Play to set how long you have, when it warns you, and the colors it turns."),
         HelpTopic("Count Down Before Scrolling",
                   detail: "In the teleprompter's timer, set a Countdown to get a few seconds before the script starts scrolling."),
         HelpTopic("Change the Language",
-                  detail: "Tap the gear at the top, then Language. CueCard is in English, French, Portuguese, Russian and Spanish.")
+                  detail: "Open a script, tap the gear at the top, then Language. CueCard is in English, French, Portuguese, Russian and Spanish.")
     ])
 
     static let teleprompter = HelpSection("teleprompter", title: "Teleprompter",
@@ -155,7 +161,7 @@ private enum AllHelp {
                                     summary: "The videos you record with a script",
                                     systemImage: "film.stack", topics: [
         HelpTopic("Find Your Takes",
-                  detail: "Videos you record in CueCard with a script or deck open are kept as its takes, and so are videos you record in another app while the teleprompter floats over it. Tap the film button next to Play to see them."),
+                  detail: "Videos you record in CueCard with a script or deck open are kept as its takes, and so are videos you record in another app while the teleprompter floats over it. Tap the film button next to Play to see them, or the takes count beside a script in your library."),
         HelpTopic("Move the Camera Window",
                   detail: "Drag the camera window to any corner. Pinch or double-tap it to change its size, and tap it to hide or show its buttons. Use the buttons to zoom or flip the camera."),
         HelpTopic("Play a Take",
@@ -180,7 +186,7 @@ private enum AllHelp {
         HelpTopic("Read Cards on Your Wrist",
                   detail: "Open a deck on your iPhone and it shows on the watch too. Turning a card on either one moves both."),
         HelpTopic("Keep Decks on the Watch",
-                  detail: "Open a saved deck and tap ••• › Keep on Apple Watch. Then you can read it without your iPhone."),
+                  detail: "Touch and hold a saved deck in your library, or open it and tap ••• › Keep on Apple Watch. Then you can read it without your iPhone."),
         HelpTopic("Stay on Screen",
                   detail: "The watch goes back to the clock after a while. In the Watch app, go to General › Return to Clock › CueCard and set it to 1 hour.")
     ])

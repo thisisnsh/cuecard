@@ -208,6 +208,29 @@
         }
       }
     },
+    "%lld cards" : {
+      "comment" : "How many cards a deck has",
+      "localizations" : {
+        "en" : {
+          "variations" : {
+            "plural" : {
+              "one" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld card"
+                }
+              },
+              "other" : {
+                "stringUnit" : {
+                  "state" : "translated",
+                  "value" : "%lld cards"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "%lld notes" : {
       "comment" : "How many saved notes there are",
       "localizations" : {
