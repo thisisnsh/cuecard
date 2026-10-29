@@ -106,7 +106,7 @@ enum CueCards {
     /// `[image …]` tag.
     static let imageCharacter = "\u{FFFC}"
 
-    /// Count what a card shows against `limit`. Cue text counts, the `[cue`
+    /// Count what a card shows against `limit`. Cue text counts, the `[`
     /// and `]` around it don't, nor do emphasis `markers`, and neither does
     /// blank space at either end. An image doesn't count, written as its tag
     /// or held in the editor as `imageCharacter`, and nor does an `[anchor]`.

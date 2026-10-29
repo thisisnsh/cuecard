@@ -346,9 +346,9 @@ final class CueTextView: UITextView {
 final class CueEditorController: ObservableObject {
     fileprivate weak var coordinator: CueTextEditor.Coordinator?
 
-    /// Drop an empty cue at the caret and leave the caret inside it.
+    /// Drop a new `[cue]` at the caret with its text selected to type over.
     func insertCue() {
-        coordinator?.insertEmptyCue()
+        coordinator?.insertNewCue()
     }
 
     /// Drop an `[anchor]` at the caret, for the teleprompter to jump to.
@@ -379,7 +379,7 @@ final class CueEditorController: ObservableObject {
     }
 }
 
-/// Script editor that renders `[cue …]` tags in the cue color while you type, and
+/// Script editor that renders `[…]` cues in the cue color while you type, and
 /// writes the brackets for you: pressing `[` drops in a whole empty cue with the
 /// caret inside it, so a cue is never left half-open — except inside a cue, where
 /// there is nothing left for it to open.
@@ -663,9 +663,9 @@ struct CueTextEditor: UIViewRepresentable {
             self.parent = parent
         }
 
-        /// Writes both brackets on `[`, and takes them both back away again on the
-        /// backspace that follows, so a `[` meant literally costs one extra keystroke
-        /// instead of six.
+        /// Writes both brackets on `[`, and takes the closing one back away again
+        /// on the backspace that follows, so a `[` meant literally costs one extra
+        /// keystroke.
         func textView(
             _ textView: UITextView,
             shouldChangeTextIn range: NSRange,
@@ -706,17 +706,19 @@ struct CueTextEditor: UIViewRepresentable {
             return location
         }
 
-        /// Write an empty cue in at the caret, as if it had been typed there.
-        func insertEmptyCue() {
+        /// Write a new cue in at the caret, as if it had been typed there, with
+        /// its placeholder text selected so typing replaces it.
+        func insertNewCue() {
             guard let textView else { return }
 
             let location = tagLocation(in: textView)
-            let insertion = (textView.text as NSString).emptyCueInsertion(at: location)
+            let insertion = (textView.text as NSString).newCueInsertion(at: location)
 
             replace(
                 NSRange(location: location, length: 0),
                 with: insertion.text,
-                caret: location + insertion.caretOffset,
+                selecting: NSRange(location: location + insertion.placeholder.location,
+                                   length: insertion.placeholder.length),
                 in: textView
             )
 
@@ -744,8 +746,8 @@ struct CueTextEditor: UIViewRepresentable {
             }
         }
 
-        /// The range of an untouched `[cue ]` the caret is sitting inside, if this
-        /// backspace is the one deleting its trailing space. A cue with anything
+        /// The range of an untouched `[]` the caret is sitting inside, if this
+        /// backspace is the one deleting its opening bracket. A cue with anything
         /// written in it deletes a character at a time like ordinary text.
         private func emptyCueSurrounding(_ range: NSRange, in textView: UITextView) -> NSRange? {
             let prefixLength = (TeleprompterParser.cueTagPrefix as NSString).length
@@ -1102,12 +1104,14 @@ private extension NSTextAttachment {
 // MARK: - Cue insertion
 
 extension NSString {
-    /// The text to splice in for an empty cue at `location`, spaced so it doesn't
-    /// collide with the words either side of it, and how far into that text the
-    /// caret belongs — between the brackets, ready for the cue to be typed.
-    func emptyCueInsertion(at location: Int) -> (text: String, caretOffset: Int) {
-        let insertion = spacedInsertion(of: TeleprompterParser.emptyCueTag, at: location)
-        return (insertion.text, insertion.tagOffset + (TeleprompterParser.cueTagPrefix as NSString).length)
+    /// The text to splice in for a new cue at `location`, spaced so it doesn't
+    /// collide with the words either side of it, and where in that text its
+    /// placeholder is — to be selected, ready for the cue to be typed over it.
+    func newCueInsertion(at location: Int) -> (text: String, placeholder: NSRange) {
+        let placeholder = TeleprompterParser.placeholderCueText
+        let insertion = spacedInsertion(of: TeleprompterParser.cueTag(text: placeholder), at: location)
+        let start = insertion.tagOffset + (TeleprompterParser.cueTagPrefix as NSString).length
+        return (insertion.text, NSRange(location: start, length: (placeholder as NSString).length))
     }
 
     /// The text to splice in for `tag` at `location`, spaced so it doesn't

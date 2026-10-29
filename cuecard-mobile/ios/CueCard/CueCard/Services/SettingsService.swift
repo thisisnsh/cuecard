@@ -122,7 +122,7 @@ struct CardsSettings: Codable, Equatable {
     var editorFontSize: Int
     /// Text size on a card being read, in points.
     var fontSize: Int
-    /// The color every `[cue …]` on a card is drawn in.
+    /// The color every cue on a card is drawn in.
     var cueColor: CueColor
     var timerMinutes: Int
     var timerSeconds: Int
@@ -188,7 +188,7 @@ struct TeleprompterSettings: Codable, Equatable {
     var timerStyle: TimerStyle
     var themePreference: ThemePreference
     var countdownSeconds: Int
-    /// The color every `[cue …]` in every script is drawn in.
+    /// The color every cue in every script is drawn in.
     var cueColor: CueColor
     /// What the editor writes and the Play button opens. Chosen on the home
     /// screen, like the timer.
@@ -555,6 +555,9 @@ class SettingsService: ObservableObject {
     /// Cues used to be saved in a library. They're written straight into the
     /// script now, so the stored library is cleared out on the way past.
     private let retiredCuesKey = "cuecard_cues"
+    /// Set once the scripts kept here have had their `[cue …]` tags rewritten
+    /// to `[…]`.
+    private let bareCuesKey = "cuecard_bare_cues"
     private let noteStore = NoteStore()
     private let noteFolder = NoteFolder()
     private let noteVersions = NoteVersions()
@@ -678,23 +681,23 @@ Hi everyone.
 
 I'm excited to be here today to talk about CueCard's *teleprompter*.
 
-[cue smile and pause]
+[smile and pause]
 
 It scrolls your script at _your_ pace, so your eyes stay up and your words stay on track.
 
-[cue pause]
+[pause]
 
 [anchor]
 
 Leave the app and it keeps going in a floating window, right over your camera or your video call.
 
-[cue slow down]
+[slow down]
 
 Lost your place? Drag the script back. Running long? Skip ahead to the next anchor.
 
 And the timer turns yellow near the end… and red if you get a _little_ too passionate.
 
-[cue light chuckle]
+[light chuckle]
 
 [anchor]
 
@@ -702,34 +705,34 @@ You can even play or pause from your Apple Watch, or with the Action Button.
 
 And these colored words?
 
-[cue emphasize]
+[emphasize]
 
 Those are your cues. Reminders to smile, pause, or *not panic*. They're never meant to be read out.
 
-[cue pause]
+[pause]
 
 [anchor]
 
 Try it out. I think you'll *love* it.
-""", comment: "Sample teleprompter script. Keep each [anchor] tag as it is, each [cue …] tag's brackets and the word cue, and the * and _ around emphasized words; translate the words after cue and between the markers.")
+""", comment: "Sample teleprompter script. Keep each [anchor] tag as it is, the brackets around each cue, and the * and _ around emphasized words; translate the words inside a cue's brackets and between the markers.")
 
     /// Sample text for cards mode: a short talk about cards, each card short
     /// enough for the Lock Screen.
     static let defaultCardsText = String(localized: """
-Hi everyone. Introducing *Cue Cards*. [cue smile]
+Hi everyone. Introducing *Cue Cards*. [smile]
 [separator]
 One thought per card. Swipe to the next one when _you're_ ready.
 [separator]
-The timer at the top keeps you *honest*. [cue light chuckle]
+The timer at the top keeps you *honest*. [light chuckle]
 [separator]
 Turn on Show on Lock Screen to read and turn your cards from there.
 [separator]
-Or turn them from your _Apple Watch_. [cue pause]
+Or turn them from your _Apple Watch_. [pause]
 [separator]
-Colored words are cues, not lines. [cue emphasize]
+Colored words are cues, not lines. [emphasize]
 [separator]
 Thanks for listening. *Questions?*
-""", comment: "Sample cards. Keep [separator], each [cue …] tag's brackets and the word cue, and the * and _ around emphasized words; translate the words after cue and between the markers. Keep each card under 120 characters.")
+""", comment: "Sample cards. Keep [separator], the brackets around each cue, and the * and _ around emphasized words; translate the words inside a cue's brackets and between the markers. Keep each card under 120 characters.")
 
     private init() {
         self.hasSeenWelcome = userDefaults.bool(forKey: hasSeenWelcomeKey)
@@ -787,6 +790,26 @@ Thanks for listening. *Questions?*
            let decoded = try? JSONDecoder().decode([SavedNote].self, from: data),
            noteStore.save(decoded) {
             userDefaults.removeObject(forKey: savedNotesKey)
+        }
+
+        // Cues used to be written `[cue …]`. Bring the drafts and saved notes
+        // up to `[…]`, keeping each note's date so nothing looks edited.
+        if !userDefaults.bool(forKey: bareCuesKey) {
+            // Observers don't run in here, so the drafts are written back by hand.
+            self.teleprompterNotes = TeleprompterParser.normalizingTags(in: teleprompterNotes)
+            self.cardsNotes = TeleprompterParser.normalizingTags(in: cardsNotes)
+            userDefaults.set(teleprompterNotes, forKey: notesKey)
+            userDefaults.set(cardsNotes, forKey: cardsNotesKey)
+            let rewritten = noteStore.fetchAll().compactMap { note -> SavedNote? in
+                let content = TeleprompterParser.normalizingTags(in: note.content)
+                guard content != note.content else { return nil }
+                var note = note
+                note.content = content
+                return note
+            }
+            if rewritten.isEmpty || noteStore.save(rewritten) {
+                userDefaults.set(true, forKey: bareCuesKey)
+            }
         }
         self.savedNotes = noteStore.fetchAll()
         self.versionCounts = noteVersions.counts()

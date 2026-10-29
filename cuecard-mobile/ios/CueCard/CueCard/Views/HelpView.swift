@@ -69,7 +69,7 @@ private enum AllHelp {
         HelpTopic("Pick a Mode",
                   detail: "Tap the mode name at the top. Teleprompter scrolls your whole script. Cards shows it one card at a time."),
         HelpTopic("Add Cues",
-                  detail: "Cues are reminders like [cue pause], shown in color and not read out. Type [ or tap Add Cue above the keyboard."),
+                  detail: "Cues are reminders like [pause], shown in color and not read out. Type [ or tap Add Cue above the keyboard."),
         HelpTopic("Bold and Italic",
                   detail: "Select words and tap B or I above the keyboard. Or type *bold* or _italic_."),
         HelpTopic("Add Anchors",

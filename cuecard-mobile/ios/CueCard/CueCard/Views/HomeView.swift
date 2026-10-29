@@ -182,7 +182,7 @@ struct HomeView: View {
         }
     }
 
-    /// The script as it would be written to a file, with cues in `[cue …]` form.
+    /// The script as it would be written to a file, with cues in `[…]` form.
     private var shareText: String {
         TeleprompterParser.normalizingTags(in: settingsService.notes)
     }
@@ -292,8 +292,8 @@ struct HomeView: View {
         }
     }
 
-    /// Drop an empty cue in at the caret and leave the caret inside it, so the user
-    /// can write the cue without hunting for their place.
+    /// Drop a `[cue]` in at the caret with its text selected, so the user can
+    /// type the cue over it without hunting for their place.
     private func insertCue() {
         AnalyticsEvents.logButtonClick("insert_cue", screen: "home")
         editorController.insertCue()
@@ -701,7 +701,7 @@ struct NotesEditorView: View {
             if text.isEmpty {
                 // Set on the editor's own font and insets, so the first line sits
                 // exactly where the caret waiting in front of it does.
-                Text("Add your script here...\n\nTap Add Cue to drop in a delivery reminder, or type [ to write one yourself.\n\nFor example: Welcome everyone [cue smile and pause]")
+                Text("Add your script here...\n\nTap Add Cue to drop in a delivery reminder, or type [ to write one yourself.\n\nFor example: Welcome everyone [smile and pause]")
                     .font(.system(size: fontSize, weight: .medium))
                     .foregroundStyle(AppColors.textSecondary(for: colorScheme).opacity(0.6))
                     .padding(.horizontal, 20)
@@ -905,8 +905,8 @@ struct CardsEditorView: View {
     /// thought, since by then it's clear what a card is.
     private func placeholder(forCardNumber number: Int) -> String {
         number == 1
-            ? String(localized: "One thought per card.\n\nType [ or tap Add Cue for reminders like [cue pause].",
-                     comment: "Keep [cue …] as written; translate the word after cue.")
+            ? String(localized: "One thought per card.\n\nType [ or tap Add Cue for reminders like [pause].",
+                     comment: "Keep the brackets around [pause]; translate the word inside them.")
             : String(localized: "Your next thought…")
     }
 

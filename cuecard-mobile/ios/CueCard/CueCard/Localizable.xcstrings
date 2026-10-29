@@ -1094,30 +1094,30 @@
         }
       }
     },
-    "Add your script here...\n\nTap Add Cue to drop in a delivery reminder, or type [ to write one yourself.\n\nFor example: Welcome everyone [cue smile and pause]" : {
+    "Add your script here...\n\nTap Add Cue to drop in a delivery reminder, or type [ to write one yourself.\n\nFor example: Welcome everyone [smile and pause]" : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Añade tu guion aquí...\n\nToca Añadir indicación para insertar un recordatorio, o escribe [ para crear uno tú.\n\nPor ejemplo: Bienvenidos a todos [cue sonríe y haz una pausa]"
+            "value" : "Añade tu guion aquí...\n\nToca Añadir indicación para insertar un recordatorio, o escribe [ para crear uno tú.\n\nPor ejemplo: Bienvenidos a todos [sonríe y haz una pausa]"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ajoutez votre script ici...\n\nTouchez Ajouter un repère pour insérer un rappel, ou tapez [ pour en écrire un vous-même.\n\nPar exemple : Bienvenue à tous [cue sourire et pause]"
+            "value" : "Ajoutez votre script ici...\n\nTouchez Ajouter un repère pour insérer un rappel, ou tapez [ pour en écrire un vous-même.\n\nPar exemple : Bienvenue à tous [sourire et pause]"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Adicione seu roteiro aqui...\n\nToque em Adicionar deixa para inserir um lembrete, ou digite [ para escrever um você mesmo.\n\nPor exemplo: Bem-vindos a todos [cue sorria e pause]"
+            "value" : "Adicione seu roteiro aqui...\n\nToque em Adicionar deixa para inserir um lembrete, ou digite [ para escrever um você mesmo.\n\nPor exemplo: Bem-vindos a todos [sorria e pause]"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Добавьте сюда свой сценарий...\n\nКоснитесь «Добавить подсказку», чтобы вставить напоминание, или введите [, чтобы написать его самостоятельно.\n\nНапример: Добро пожаловать [cue улыбка и пауза]"
+            "value" : "Добавьте сюда свой сценарий...\n\nКоснитесь «Добавить подсказку», чтобы вставить напоминание, или введите [, чтобы написать его самостоятельно.\n\nНапример: Добро пожаловать [улыбка и пауза]"
           }
         }
       }
@@ -2796,30 +2796,30 @@
         }
       }
     },
-    "Cues are reminders like [cue pause], shown in color and not read out. Type [ or tap Add Cue above the keyboard." : {
+    "Cues are reminders like [pause], shown in color and not read out. Type [ or tap Add Cue above the keyboard." : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Las indicaciones son recordatorios como [cue pausa], se muestran en color y no se leen. Escribe [ o toca Añadir indicación encima del teclado."
+            "value" : "Las indicaciones son recordatorios como [pausa], se muestran en color y no se leen. Escribe [ o toca Añadir indicación encima del teclado."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Les repères sont des rappels comme [cue pause], affichés en couleur et non lus. Tapez [ ou touchez Ajouter un repère au-dessus du clavier."
+            "value" : "Les repères sont des rappels comme [pause], affichés en couleur et non lus. Tapez [ ou touchez Ajouter un repère au-dessus du clavier."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Deixas são lembretes como [cue pausa], mostrados em cor e não lidos em voz alta. Digite [ ou toque em Adicionar deixa acima do teclado."
+            "value" : "Deixas são lembretes como [pausa], mostrados em cor e não lidos em voz alta. Digite [ ou toque em Adicionar deixa acima do teclado."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Подсказки — это напоминания вроде [cue пауза]: они выделены цветом и не читаются вслух. Введите [ или коснитесь «Добавить подсказку» над клавиатурой."
+            "value" : "Подсказки — это напоминания вроде [пауза]: они выделены цветом и не читаются вслух. Введите [ или коснитесь «Добавить подсказку» над клавиатурой."
           }
         }
       }
@@ -4096,60 +4096,60 @@
         }
       }
     },
-    "Hi everyone.\n\nI'm excited to be here today to talk about CueCard's *teleprompter*.\n\n[cue smile and pause]\n\nIt scrolls your script at _your_ pace, so your eyes stay up and your words stay on track.\n\n[cue pause]\n\n[anchor]\n\nLeave the app and it keeps going in a floating window, right over your camera or your video call.\n\n[cue slow down]\n\nLost your place? Drag the script back. Running long? Skip ahead to the next anchor.\n\nAnd the timer turns yellow near the end… and red if you get a _little_ too passionate.\n\n[cue light chuckle]\n\n[anchor]\n\nYou can even play or pause from your Apple Watch, or with the Action Button.\n\nAnd these colored words?\n\n[cue emphasize]\n\nThose are your cues. Reminders to smile, pause, or *not panic*. They're never meant to be read out.\n\n[cue pause]\n\n[anchor]\n\nTry it out. I think you'll *love* it." : {
-      "comment" : "Sample teleprompter script. Keep each [anchor] tag as it is, each [cue …] tag's brackets and the word cue, and the * and _ around emphasized words; translate the words after cue and between the markers.",
+    "Hi everyone.\n\nI'm excited to be here today to talk about CueCard's *teleprompter*.\n\n[smile and pause]\n\nIt scrolls your script at _your_ pace, so your eyes stay up and your words stay on track.\n\n[pause]\n\n[anchor]\n\nLeave the app and it keeps going in a floating window, right over your camera or your video call.\n\n[slow down]\n\nLost your place? Drag the script back. Running long? Skip ahead to the next anchor.\n\nAnd the timer turns yellow near the end… and red if you get a _little_ too passionate.\n\n[light chuckle]\n\n[anchor]\n\nYou can even play or pause from your Apple Watch, or with the Action Button.\n\nAnd these colored words?\n\n[emphasize]\n\nThose are your cues. Reminders to smile, pause, or *not panic*. They're never meant to be read out.\n\n[pause]\n\n[anchor]\n\nTry it out. I think you'll *love* it." : {
+      "comment" : "Sample teleprompter script. Keep each [anchor] tag as it is, the brackets around each cue, and the * and _ around emphasized words; translate the words inside a cue's brackets and between the markers.",
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hola a todos.\n\nMe alegra estar aquí hoy para hablaros del *teleprompter* de CueCard.\n\n[cue sonríe y haz una pausa]\n\nDesplaza tu guion a _tu_ ritmo, para que mantengas la mirada al frente y no pierdas el hilo.\n\n[cue pausa]\n\n[anchor]\n\nSal de la app y sigue en una ventana flotante, justo encima de tu cámara o tu videollamada.\n\n[cue más despacio]\n\n¿Te has perdido? Arrastra el guion hacia atrás. ¿Te estás alargando? Salta al ancla siguiente.\n\nY el temporizador se pone amarillo cerca del final… y rojo si te emocionas _un poco_ demasiado.\n\n[cue risa suave]\n\n[anchor]\n\nIncluso puedes reproducir o pausar desde tu Apple Watch o con el botón de acción.\n\n¿Y estas palabras de colores?\n\n[cue enfatiza]\n\nSon tus indicaciones. Recordatorios para sonreír, hacer una pausa o *no entrar en pánico*. Nunca se leen en voz alta.\n\n[cue pausa]\n\n[anchor]\n\nPruébalo. Creo que te va a *encantar*."
+            "value" : "Hola a todos.\n\nMe alegra estar aquí hoy para hablaros del *teleprompter* de CueCard.\n\n[sonríe y haz una pausa]\n\nDesplaza tu guion a _tu_ ritmo, para que mantengas la mirada al frente y no pierdas el hilo.\n\n[pausa]\n\n[anchor]\n\nSal de la app y sigue en una ventana flotante, justo encima de tu cámara o tu videollamada.\n\n[más despacio]\n\n¿Te has perdido? Arrastra el guion hacia atrás. ¿Te estás alargando? Salta al ancla siguiente.\n\nY el temporizador se pone amarillo cerca del final… y rojo si te emocionas _un poco_ demasiado.\n\n[risa suave]\n\n[anchor]\n\nIncluso puedes reproducir o pausar desde tu Apple Watch o con el botón de acción.\n\n¿Y estas palabras de colores?\n\n[enfatiza]\n\nSon tus indicaciones. Recordatorios para sonreír, hacer una pausa o *no entrar en pánico*. Nunca se leen en voz alta.\n\n[pausa]\n\n[anchor]\n\nPruébalo. Creo que te va a *encantar*."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bonjour à tous.\n\nJe suis ravi d'être ici aujourd'hui pour vous parler du *prompteur* de CueCard.\n\n[cue sourire et pause]\n\nIl fait défiler votre script à _votre_ rythme : vos yeux restent levés et votre discours reste sur les rails.\n\n[cue pause]\n\n[anchor]\n\nQuittez l'app et il continue dans une fenêtre flottante, juste au-dessus de votre caméra ou de votre visio.\n\n[cue ralentir]\n\nPerdu ? Faites glisser le script en arrière. Trop long ? Sautez à l'ancre suivante.\n\nEt le minuteur passe au jaune vers la fin… puis au rouge si vous vous emballez _un peu_ trop.\n\n[cue petit rire]\n\n[anchor]\n\nVous pouvez même lancer ou mettre en pause depuis votre Apple Watch, ou avec le bouton Action.\n\nEt ces mots en couleur ?\n\n[cue insister]\n\nCe sont vos repères. Des rappels pour sourire, faire une pause ou *ne pas paniquer*. Ils ne sont jamais lus à voix haute.\n\n[cue pause]\n\n[anchor]\n\nEssayez-le. Je pense que vous allez l'*adorer*."
+            "value" : "Bonjour à tous.\n\nJe suis ravi d'être ici aujourd'hui pour vous parler du *prompteur* de CueCard.\n\n[sourire et pause]\n\nIl fait défiler votre script à _votre_ rythme : vos yeux restent levés et votre discours reste sur les rails.\n\n[pause]\n\n[anchor]\n\nQuittez l'app et il continue dans une fenêtre flottante, juste au-dessus de votre caméra ou de votre visio.\n\n[ralentir]\n\nPerdu ? Faites glisser le script en arrière. Trop long ? Sautez à l'ancre suivante.\n\nEt le minuteur passe au jaune vers la fin… puis au rouge si vous vous emballez _un peu_ trop.\n\n[petit rire]\n\n[anchor]\n\nVous pouvez même lancer ou mettre en pause depuis votre Apple Watch, ou avec le bouton Action.\n\nEt ces mots en couleur ?\n\n[insister]\n\nCe sont vos repères. Des rappels pour sourire, faire une pause ou *ne pas paniquer*. Ils ne sont jamais lus à voix haute.\n\n[pause]\n\n[anchor]\n\nEssayez-le. Je pense que vous allez l'*adorer*."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Olá a todos.\n\nEstou animado por estar aqui hoje para falar sobre o *teleprompter* do CueCard.\n\n[cue sorria e pause]\n\nEle rola seu roteiro no _seu_ ritmo, para você manter o olhar à frente e não perder o fio da fala.\n\n[cue pausa]\n\n[anchor]\n\nSaia do app e ele continua em uma janela flutuante, bem em cima da sua câmera ou da sua videochamada.\n\n[cue mais devagar]\n\nSe perdeu? Arraste o roteiro de volta. Passando do tempo? Pule para a próxima âncora.\n\nE o timer fica amarelo perto do fim… e vermelho se você se empolgar _um pouco_ demais.\n\n[cue risada leve]\n\n[anchor]\n\nVocê pode até reproduzir ou pausar pelo Apple Watch, ou com o Botão de Ação.\n\nE essas palavras coloridas?\n\n[cue enfatize]\n\nSão as suas deixas. Lembretes para sorrir, pausar ou *não entrar em pânico*. Elas nunca devem ser lidas em voz alta.\n\n[cue pausa]\n\n[anchor]\n\nExperimente. Acho que você vai *adorar*."
+            "value" : "Olá a todos.\n\nEstou animado por estar aqui hoje para falar sobre o *teleprompter* do CueCard.\n\n[sorria e pause]\n\nEle rola seu roteiro no _seu_ ritmo, para você manter o olhar à frente e não perder o fio da fala.\n\n[pausa]\n\n[anchor]\n\nSaia do app e ele continua em uma janela flutuante, bem em cima da sua câmera ou da sua videochamada.\n\n[mais devagar]\n\nSe perdeu? Arraste o roteiro de volta. Passando do tempo? Pule para a próxima âncora.\n\nE o timer fica amarelo perto do fim… e vermelho se você se empolgar _um pouco_ demais.\n\n[risada leve]\n\n[anchor]\n\nVocê pode até reproduzir ou pausar pelo Apple Watch, ou com o Botão de Ação.\n\nE essas palavras coloridas?\n\n[enfatize]\n\nSão as suas deixas. Lembretes para sorrir, pausar ou *não entrar em pânico*. Elas nunca devem ser lidas em voz alta.\n\n[pausa]\n\n[anchor]\n\nExperimente. Acho que você vai *adorar*."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Всем привет.\n\nСегодня я расскажу о *телесуфлёре* CueCard.\n\n[cue улыбка и пауза]\n\nОн прокручивает ваш сценарий в _вашем_ темпе, чтобы вы смотрели вперёд и не сбивались с мысли.\n\n[cue пауза]\n\n[anchor]\n\nВыйдите из приложения — и он продолжит работу в плавающем окне, прямо поверх камеры или видеозвонка.\n\n[cue помедленнее]\n\nСбились? Потяните сценарий назад. Не укладываетесь? Перейдите к следующему якорю.\n\nА таймер желтеет ближе к концу… и краснеет, если вы _слишком_ увлечётесь.\n\n[cue лёгкий смешок]\n\n[anchor]\n\nМожно даже запускать и ставить на паузу с Apple Watch или кнопкой действия.\n\nА эти цветные слова?\n\n[cue подчеркните голосом]\n\nЭто ваши подсказки. Напоминания улыбнуться, сделать паузу или *не паниковать*. Их никогда не читают вслух.\n\n[cue пауза]\n\n[anchor]\n\nПопробуйте. Думаю, вам *понравится*."
+            "value" : "Всем привет.\n\nСегодня я расскажу о *телесуфлёре* CueCard.\n\n[улыбка и пауза]\n\nОн прокручивает ваш сценарий в _вашем_ темпе, чтобы вы смотрели вперёд и не сбивались с мысли.\n\n[пауза]\n\n[anchor]\n\nВыйдите из приложения — и он продолжит работу в плавающем окне, прямо поверх камеры или видеозвонка.\n\n[помедленнее]\n\nСбились? Потяните сценарий назад. Не укладываетесь? Перейдите к следующему якорю.\n\nА таймер желтеет ближе к концу… и краснеет, если вы _слишком_ увлечётесь.\n\n[лёгкий смешок]\n\n[anchor]\n\nМожно даже запускать и ставить на паузу с Apple Watch или кнопкой действия.\n\nА эти цветные слова?\n\n[подчеркните голосом]\n\nЭто ваши подсказки. Напоминания улыбнуться, сделать паузу или *не паниковать*. Их никогда не читают вслух.\n\n[пауза]\n\n[anchor]\n\nПопробуйте. Думаю, вам *понравится*."
           }
         }
       }
     },
-    "Hi everyone. Introducing *Cue Cards*. [cue smile]\n[separator]\nOne thought per card. Swipe to the next one when _you're_ ready.\n[separator]\nThe timer at the top keeps you *honest*. [cue light chuckle]\n[separator]\nTurn on Show on Lock Screen to read and turn your cards from there.\n[separator]\nOr turn them from your _Apple Watch_. [cue pause]\n[separator]\nColored words are cues, not lines. [cue emphasize]\n[separator]\nThanks for listening. *Questions?*" : {
-      "comment" : "Sample cards. Keep [separator], each [cue …] tag's brackets and the word cue, and the * and _ around emphasized words; translate the words after cue and between the markers. Keep each card under 120 characters.",
+    "Hi everyone. Introducing *Cue Cards*. [smile]\n[separator]\nOne thought per card. Swipe to the next one when _you're_ ready.\n[separator]\nThe timer at the top keeps you *honest*. [light chuckle]\n[separator]\nTurn on Show on Lock Screen to read and turn your cards from there.\n[separator]\nOr turn them from your _Apple Watch_. [pause]\n[separator]\nColored words are cues, not lines. [emphasize]\n[separator]\nThanks for listening. *Questions?*" : {
+      "comment" : "Sample cards. Keep [separator], the brackets around each cue, and the * and _ around emphasized words; translate the words inside a cue's brackets and between the markers. Keep each card under 120 characters.",
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Hola a todos. Os presento el modo *Tarjetas*. [cue sonríe]\n[separator]\nUna idea por tarjeta. Desliza a la siguiente cuando _estés_ listo.\n[separator]\nEl temporizador de arriba te mantiene *a raya*. [cue risa suave]\n[separator]\nActiva Mostrar en pantalla bloqueada para leer y pasar tarjetas desde allí.\n[separator]\nO pásalas desde tu _Apple Watch_. [cue pausa]\n[separator]\nLas palabras de colores son indicaciones, no palabras para leer en voz alta. [cue enfatiza]\n[separator]\nGracias por escuchar. *¿Preguntas?*"
+            "value" : "Hola a todos. Os presento el modo *Tarjetas*. [sonríe]\n[separator]\nUna idea por tarjeta. Desliza a la siguiente cuando _estés_ listo.\n[separator]\nEl temporizador de arriba te mantiene *a raya*. [risa suave]\n[separator]\nActiva Mostrar en pantalla bloqueada para leer y pasar tarjetas desde allí.\n[separator]\nO pásalas desde tu _Apple Watch_. [pausa]\n[separator]\nLas palabras de colores son indicaciones, no palabras para leer en voz alta. [enfatiza]\n[separator]\nGracias por escuchar. *¿Preguntas?*"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bonjour à tous. Voici le mode *Fiches*. [cue sourire]\n[separator]\nUne idée par fiche. Balayez vers la suivante quand _vous_ êtes prêt.\n[separator]\nLe minuteur en haut vous garde *dans les temps*. [cue petit rire]\n[separator]\nActivez Afficher sur l'écran verrouillé pour lire et tourner vos fiches depuis là.\n[separator]\nOu tournez-les depuis votre _Apple Watch_. [cue pause]\n[separator]\nLes mots en couleur sont des repères, pas des mots à lire à voix haute. [cue insister]\n[separator]\nMerci de votre attention. *Des questions ?*"
+            "value" : "Bonjour à tous. Voici le mode *Fiches*. [sourire]\n[separator]\nUne idée par fiche. Balayez vers la suivante quand _vous_ êtes prêt.\n[separator]\nLe minuteur en haut vous garde *dans les temps*. [petit rire]\n[separator]\nActivez Afficher sur l'écran verrouillé pour lire et tourner vos fiches depuis là.\n[separator]\nOu tournez-les depuis votre _Apple Watch_. [pause]\n[separator]\nLes mots en couleur sont des repères, pas des mots à lire à voix haute. [insister]\n[separator]\nMerci de votre attention. *Des questions ?*"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Olá a todos. Apresento o modo *Cartões*. [cue sorria]\n[separator]\nUma ideia por cartão. Deslize para o próximo quando _você_ estiver pronto.\n[separator]\nO timer no topo mantém você *no horário*. [cue risada leve]\n[separator]\nAtive Mostrar na Tela Bloqueada para ler e virar os cartões por lá.\n[separator]\nOu vire pelo _Apple Watch_. [cue pausa]\n[separator]\nPalavras coloridas são deixas, não falas. [cue enfatize]\n[separator]\nObrigado pela atenção. *Perguntas?*"
+            "value" : "Olá a todos. Apresento o modo *Cartões*. [sorria]\n[separator]\nUma ideia por cartão. Deslize para o próximo quando _você_ estiver pronto.\n[separator]\nO timer no topo mantém você *no horário*. [risada leve]\n[separator]\nAtive Mostrar na Tela Bloqueada para ler e virar os cartões por lá.\n[separator]\nOu vire pelo _Apple Watch_. [pausa]\n[separator]\nPalavras coloridas são deixas, não falas. [enfatize]\n[separator]\nObrigado pela atenção. *Perguntas?*"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Всем привет. Представляю режим *«Карточки»*. [cue улыбка]\n[separator]\nОдна мысль на карточку. Смахните к следующей, когда будете _готовы_.\n[separator]\nТаймер наверху *не даст затянуть*. [cue лёгкий смешок]\n[separator]\nВключите «Показывать на экране блокировки», чтобы читать и листать карточки прямо там.\n[separator]\nИли листайте их с _Apple Watch_. [cue пауза]\n[separator]\nЦветные слова — это подсказки, а не слова для чтения вслух. [cue подчеркните голосом]\n[separator]\nСпасибо за внимание. *Вопросы?*"
+            "value" : "Всем привет. Представляю режим *«Карточки»*. [улыбка]\n[separator]\nОдна мысль на карточку. Смахните к следующей, когда будете _готовы_.\n[separator]\nТаймер наверху *не даст затянуть*. [лёгкий смешок]\n[separator]\nВключите «Показывать на экране блокировки», чтобы читать и листать карточки прямо там.\n[separator]\nИли листайте их с _Apple Watch_. [пауза]\n[separator]\nЦветные слова — это подсказки, а не слова для чтения вслух. [подчеркните голосом]\n[separator]\nСпасибо за внимание. *Вопросы?*"
           }
         }
       }
@@ -6003,31 +6003,31 @@
         }
       }
     },
-    "One thought per card.\n\nType [ or tap Add Cue for reminders like [cue pause]." : {
-      "comment" : "Keep [cue …] as written; translate the word after cue.",
+    "One thought per card.\n\nType [ or tap Add Cue for reminders like [pause]." : {
+      "comment" : "Keep the brackets around [pause]; translate the word inside them.",
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Una idea por tarjeta.\n\nEscribe [ o toca Añadir indicación para recordatorios como [cue pausa]."
+            "value" : "Una idea por tarjeta.\n\nEscribe [ o toca Añadir indicación para recordatorios como [pausa]."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Une idée par fiche.\n\nTapez [ ou touchez Ajouter un repère pour des rappels comme [cue pause]."
+            "value" : "Une idée par fiche.\n\nTapez [ ou touchez Ajouter un repère pour des rappels comme [pause]."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Uma ideia por cartão.\n\nDigite [ ou toque em Adicionar deixa para lembretes como [cue pausa]."
+            "value" : "Uma ideia por cartão.\n\nDigite [ ou toque em Adicionar deixa para lembretes como [pausa]."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Одна мысль на карточку.\n\nВведите [ или коснитесь «Добавить подсказку», чтобы добавить напоминание вроде [cue пауза]."
+            "value" : "Одна мысль на карточку.\n\nВведите [ или коснитесь «Добавить подсказку», чтобы добавить напоминание вроде [пауза]."
           }
         }
       }

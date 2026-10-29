@@ -23,7 +23,7 @@ struct WordInfo: Identifiable {
     let isCue: Bool
 }
 
-/// A `[cue …]` tag located in a piece of text
+/// A `[…]` cue tag located in a piece of text
 struct CueMatch {
     /// The whole tag, brackets included
     let range: NSRange
@@ -50,13 +50,16 @@ enum CueSegment {
     case anchor
 }
 
-/// Parser for teleprompter scripts with `[cue …]` delivery cues
+/// Parser for teleprompter scripts with `[…]` delivery cues
 ///
-/// `[cue smile]` is the form to write. `[note smile]` is the older spelling and
-/// means exactly the same thing, so scripts written before the rename keep
-/// working; importing or exporting rewrites them to `[cue …]`.
+/// `[smile]` is the form to write: anything in brackets is a cue, except the
+/// `[anchor]`, `[separator]` and `[image …]` tags. `[cue smile]` and
+/// `[note smile]` are older spellings and mean exactly the same thing, so
+/// scripts written before keep working; importing, exporting or opening the
+/// app rewrites them to `[smile]`. A bare `[cue]` is a cue that says "cue",
+/// the one Add Cue writes for the user to type over.
 ///
-/// A tag only counts once its closing bracket is there — `[cue smi` is still
+/// A tag only counts once its closing bracket is there — `[smi` is still
 /// plain text, so nothing changes under the user mid-word. Cues can't span lines
 /// for the same reason: a stray `[` shouldn't swallow the paragraphs after it.
 ///
@@ -73,10 +76,17 @@ enum CueSegment {
 /// leave it out.
 enum TeleprompterParser {
 
-    /// `[cue]` / `[note]`, an optional legacy `:color`, then the cue text
-    private static let cuePattern = #"\[(?:cue|note)(?::[A-Za-z]+)?(?:[ \t]+([^\]\n]*))?\]"#
+    /// Anything in brackets on one line, but for the tags that aren't cues
+    private static let cuePattern =
+        #"\[(?!(?i:anchor|separator)\]|image[ \t]+[A-Za-z0-9-]+\.[A-Za-z0-9]+\])([^\]\n]*)\]"#
 
     private static let cueRegex = try! NSRegularExpression(pattern: cuePattern, options: [])
+
+    /// The `cue ` / `note ` an older cue opens with, with its optional legacy
+    /// `:color`. A bare `cue` or `note` is the cue's text, not a prefix.
+    private static let legacyPrefixRegex = try! NSRegularExpression(
+        pattern: #"^(?:cue|note)(?::[A-Za-z]+(?:[ \t]+|$)|[ \t]+)"#, options: []
+    )
 
     /// `[image name.ext]`. The name is kept to letters, digits and dashes, so
     /// it's always a plain file name and never a path.
@@ -107,13 +117,16 @@ enum TeleprompterParser {
         "[image \(name)]"
     }
 
-    /// What an empty cue opens with, and closes with. Typing `[` writes both at
-    /// once, leaving the caret between them.
-    static let cueTagPrefix = "[cue "
+    /// What a cue opens with, and closes with. Typing `[` writes both at once,
+    /// leaving the caret between them.
+    static let cueTagPrefix = "["
     static let cueTagSuffix = "]"
 
-    /// The tag inserted for a cue that hasn't been written yet.
+    /// The tag typing `[` writes, for a cue that hasn't been written yet.
     static let emptyCueTag = cueTagPrefix + cueTagSuffix
+
+    /// What Add Cue writes in a new cue, selected for the user to type over.
+    static let placeholderCueText = "cue"
 
     /// Build the tag for a cue.
     static func cueTag(text: String) -> String {
@@ -156,7 +169,7 @@ enum TeleprompterParser {
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    /// Rewrite every cue tag into the canonical `[cue …]` spelling, and every
+    /// Rewrite every cue tag into the canonical `[…]` spelling, and every
     /// card separator into `[separator]`.
     ///
     /// Used at the file boundary, so a script that leaves the app carries the
@@ -166,7 +179,11 @@ enum TeleprompterParser {
 
         // Back to front, so replacing a tag doesn't shift the ones still to come.
         for match in cueMatches(in: result as String).reversed() {
-            result.replaceCharacters(in: match.range, with: cueTag(text: match.content))
+            let tag = cueTag(text: match.content)
+            // A cue that says "anchor" would come back as an anchor, so it
+            // keeps the spelling it has.
+            guard cueMatches(in: tag).count == 1 else { continue }
+            result.replaceCharacters(in: match.range, with: tag)
         }
 
         return result as String
@@ -182,11 +199,12 @@ enum TeleprompterParser {
         )
 
         return matches.map { match in
-            // `[cue]` carries no text group at all; treat it as an empty cue
-            // sitting just inside the closing bracket.
-            let contentRange = match.range(at: 1).location == NSNotFound
-                ? NSRange(location: NSMaxRange(match.range) - 1, length: 0)
-                : match.range(at: 1)
+            // An older `[cue …]` keeps its prefix as tag syntax, outside the text.
+            var contentRange = match.range(at: 1)
+            if let prefix = legacyPrefixRegex.firstMatch(in: text, options: [], range: contentRange) {
+                contentRange = NSRange(location: NSMaxRange(prefix.range),
+                                       length: NSMaxRange(contentRange) - NSMaxRange(prefix.range))
+            }
 
             return CueMatch(
                 range: match.range,
