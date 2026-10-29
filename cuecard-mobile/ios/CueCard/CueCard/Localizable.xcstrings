@@ -4238,6 +4238,35 @@
         }
       }
     },
+    "Images: Add photos to your scripts and cards, and share them with your script." : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imágenes: añade fotos a tus guiones y tarjetas, y compártelas con tu guion."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Images : ajoutez des photos à vos scripts et fiches, et partagez-les avec votre script."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Imagens: adicione fotos aos seus roteiros e cartões e compartilhe-as com o roteiro."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Изображения: добавляйте фото в сценарии и карточки и делитесь ими вместе со сценарием."
+          }
+        }
+      }
+    },
     "Import" : {
       "localizations" : {
         "es" : {

@@ -1,6 +1,7 @@
 {
   "1.13.0": {
     "features": [
+        "Images: Add photos to your scripts and cards, and share them with your script.",
         "Reading Guide: Drag the pointer to keep your eyes on the line you're reading.",
         "Anchors: Mark spots in your script and jump between them while you read.",
         "Flip Vertically: Turn the text upside down for any teleprompter glass."
