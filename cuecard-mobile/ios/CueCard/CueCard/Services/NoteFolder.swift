@@ -6,11 +6,17 @@ import Foundation
 ///
 /// The images the notes place are kept beside them, in a hidden folder of
 /// CueCard's own, so they come back with the notes too.
+///
+/// The library's folders are folders in here, one level deep, with the notes
+/// filed in them inside. Folders and files moved between them outside the
+/// app are moved in the library too.
 @MainActor
 final class NoteFolder {
     /// What's needed to match a file to its note, kept in a hidden index in
     /// the folder so a reinstalled app can pick the notes back up.
     private struct Entry: Codable {
+        /// The file's path in the folder: its name, or a library folder's
+        /// name and its name.
         var file: String
         var title: String
         var mode: ScriptMode
@@ -29,10 +35,16 @@ final class NoteFolder {
         var tooLarge: [String] = []
         /// Files of notes deleted in the app that couldn't be deleted yet, by name.
         var undeletable: [String] = []
+        /// The library's folders once the folders on disk are taken in, or
+        /// nil if they couldn't be looked at.
+        var folders: [String]?
     }
 
     private let bookmarkKey = "cuecard_notes_folder_bookmark"
     private let pendingDeletionsKey = "cuecard_notes_folder_pending_deletions"
+    /// The library folders last seen on disk, to tell one deleted outside the
+    /// app from one made in it that isn't on disk yet.
+    private let knownFoldersKey = "cuecard_notes_folder_known_folders"
     private let indexName = ".cuecard.json"
     /// Only CueCard writes in here, and it deletes what no note places.
     private let imagesFolderName = ".cuecard-images"
@@ -65,16 +77,29 @@ final class NoteFolder {
         }
     }
 
+    private var knownFolders: [String] {
+        get { UserDefaults.standard.stringArray(forKey: knownFoldersKey) ?? [] }
+        set {
+            if newValue.isEmpty {
+                UserDefaults.standard.removeObject(forKey: knownFoldersKey)
+            } else {
+                UserDefaults.standard.set(newValue, forKey: knownFoldersKey)
+            }
+        }
+    }
+
     /// Start keeping notes in `url`, a folder picked with the document picker.
     func choose(_ url: URL) throws {
         try saveBookmark(for: url)
         pendingDeletions = []
+        knownFolders = []
     }
 
     /// Stop using the folder. The files in it are left alone.
     func forget() {
         UserDefaults.standard.removeObject(forKey: bookmarkKey)
         pendingDeletions = []
+        knownFolders = []
     }
 
     /// Write a note to its file, renaming the file if the title changed.
@@ -115,6 +140,10 @@ final class NoteFolder {
             let images = folder.appendingPathComponent(imagesFolderName, isDirectory: true)
             let imagesDeleted = !fileManager.fileExists(atPath: images.path)
                 || (try? fileManager.removeItem(at: images)) != nil
+            // Library folders CueCard made go too, once nothing else is in them.
+            for name in knownFolders {
+                removeIfEmpty(name, in: folder)
+            }
             return kept.isEmpty && imagesDeleted
         } ?? false
         if released { forget() }
@@ -122,17 +151,18 @@ final class NoteFolder {
     }
 
     /// Bring the folder and the app's notes in step: files edited, added,
-    /// renamed or deleted outside the app come back as `Changes`, and notes the
-    /// folder doesn't have yet are written to it. Whichever side changed last wins.
-    func sync(_ notes: [SavedNote]) -> Changes {
+    /// renamed, moved or deleted outside the app come back as `Changes`, and
+    /// notes the folder doesn't have yet are written to it. Whichever side
+    /// changed last wins. The library's `folders` are brought in step the same way.
+    func sync(_ notes: [SavedNote], folders: [String]) -> Changes {
         withFolder { folder in
-            sync(notes, in: folder)
+            sync(notes, folders: folders, in: folder)
         } ?? Changes()
     }
 
     // MARK: - Syncing
 
-    private func sync(_ notes: [SavedNote], in folder: URL) -> Changes {
+    private func sync(_ notes: [SavedNote], folders: [String], in folder: URL) -> Changes {
         // If the folder can't be listed, nothing can be told about it, so
         // nothing is changed on either side.
         guard let names = try? fileManager.contentsOfDirectory(atPath: folder.path) else { return Changes() }
@@ -144,17 +174,25 @@ final class NoteFolder {
         let undeletable = deletePending(from: &index, in: folder)
         changes.undeletable = undeletable.values.map(\.file).sorted()
         let appNotes = Dictionary(notes.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
-        let files = Set(names.filter { !$0.hasPrefix(".") && textExtensions.contains(fileExtension($0)) })
+        // Everything at the top of the folder and in the library folders in it.
+        let paths = names + subfolders(in: folder, names: names).flatMap { subfolder in
+            ((try? fileManager.contentsOfDirectory(atPath: folder.appendingPathComponent(subfolder).path)) ?? [])
+                .map { "\(subfolder)/\($0)" }
+        }
+        let files = Set(paths.filter {
+            !fileName(of: $0).hasPrefix(".") && textExtensions.contains(fileExtension($0))
+        })
         // Reading one of these fails, which leaves it and its note as they are.
         changes.tooLarge = files.filter { ScriptFile.isTooLarge(folder.appendingPathComponent($0)) }.sorted()
 
         // Files in iCloud Drive that aren't downloaded show up as
         // ".Name.txt.icloud". They're still there, so they're asked for and
         // left as they are until they arrive.
-        let pending = Set(names.compactMap { name -> String? in
+        let pending = Set(paths.compactMap { path -> String? in
+            let name = fileName(of: path)
             guard name.hasPrefix("."), name.hasSuffix(".icloud") else { return nil }
-            try? fileManager.startDownloadingUbiquitousItem(at: folder.appendingPathComponent(name))
-            return String(name.dropFirst().dropLast(".icloud".count))
+            try? fileManager.startDownloadingUbiquitousItem(at: folder.appendingPathComponent(path))
+            return self.path(String(name.dropFirst().dropLast(".icloud".count)), in: folderName(ofFile: path))
         })
 
         var claimed = Set<String>()
@@ -184,11 +222,16 @@ final class NoteFolder {
                 // yet, as after the app is reinstalled.
                 guard let content = readContent(of: url) else { continue }
                 let note = SavedNote(id: id, title: entry.title, content: content, mode: entry.mode,
-                                     createdAt: entry.createdAt,
+                                     folder: folderName(ofFile: entry.file), createdAt: entry.createdAt,
                                      updatedAt: fileChanged ? (modified ?? Date()) : entry.noteUpdatedAt)
                 if app != note { changes.updated.append(note) }
                 index[id]?.noteUpdatedAt = note.updatedAt
                 index[id]?.fileModifiedAt = modified
+            } else if let app, !sameFolder(app.folder, folderName(ofFile: entry.file)) {
+                // Moved to another library folder while this one couldn't be
+                // reached. A file moved outside the app is found by its text
+                // below instead, as its old path is gone.
+                write(app, into: &index, in: folder)
             }
         }
 
@@ -201,7 +244,7 @@ final class NoteFolder {
         if !missing.isEmpty, !files.isEmpty {
             for id in missing {
                 guard let entry = index[id] else { continue }
-                // A file renamed outside the app still holds the same text.
+                // A file renamed or moved outside the app still holds the same text.
                 let content = appNotes[id]?.content
                 if let content, let renamed = unknown.sorted().first(where: {
                     readContent(of: folder.appendingPathComponent($0)) == content
@@ -210,6 +253,7 @@ final class NoteFolder {
                     guard var note = appNotes[id] else { continue }
                     let url = folder.appendingPathComponent(renamed)
                     note.title = ScriptFile.title(for: url)
+                    note.folder = folderName(ofFile: renamed)
                     changes.updated.append(note)
                     index[id] = Entry(file: renamed, title: note.title, mode: entry.mode,
                                       createdAt: entry.createdAt, noteUpdatedAt: note.updatedAt,
@@ -229,7 +273,7 @@ final class NoteFolder {
             let created = (try? url.resourceValues(forKeys: [.creationDateKey]).creationDate) ?? modified
             let mode: ScriptMode = CueCards.separatorRanges(in: content).isEmpty ? .teleprompter : .cards
             let note = SavedNote(title: ScriptFile.title(for: url), content: content, mode: mode,
-                                 createdAt: created, updatedAt: modified)
+                                 folder: folderName(ofFile: file), createdAt: created, updatedAt: modified)
             changes.updated.append(note)
             index[note.id] = Entry(file: file, title: note.title, mode: mode, createdAt: created,
                                    noteUpdatedAt: modified, fileModifiedAt: modificationDate(of: url))
@@ -245,6 +289,9 @@ final class NoteFolder {
             writeIndex(index, in: folder)
         }
 
+        // Last, so folders the notes were just moved out of can go.
+        changes.folders = syncFolders(folders, in: folder, listsAnything: !names.isEmpty)
+
         // Every note as it stands after the sync, for the images they place.
         let updated = Dictionary(changes.updated.map { ($0.id, $0) }, uniquingKeysWith: { _, last in last })
         let contents = notes.filter { !deleted.contains($0.id) }.map { updated[$0.id]?.content ?? $0.content }
@@ -254,6 +301,69 @@ final class NoteFolder {
         let readAll = pending.isEmpty && changes.tooLarge.isEmpty && (!files.isEmpty || originalIndex.isEmpty)
         syncImages(placedIn: contents, in: folder, deletingUnplaced: readAll)
         return changes
+    }
+
+    // MARK: - Library folders
+
+    /// Bring the library's folders and the folders on disk in step, and
+    /// return the library's. A folder made on either side is made on the
+    /// other, and one deleted on either side is deleted on the other — on
+    /// disk only once nothing is left in it.
+    private func syncFolders(_ folders: [String], in folder: URL, listsAnything: Bool) -> [String]? {
+        guard let names = try? fileManager.contentsOfDirectory(atPath: folder.path) else { return nil }
+        let onDisk = subfolders(in: folder, names: names)
+        var library = folders
+        var known = knownFolders
+
+        // Made outside the app, or there before the folder was chosen.
+        for name in onDisk where !known.containsFolder(name) {
+            if !library.containsFolder(name) { library.append(name) }
+            known.append(name)
+        }
+        for name in known where !onDisk.containsFolder(name) {
+            // Gone from disk. As with files, a folder that lists nothing at
+            // all is more likely one that hasn't loaded than one emptied.
+            guard listsAnything else { continue }
+            library.removeFolder(name)
+            known.removeFolder(name)
+        }
+        for name in known where !library.containsFolder(name) {
+            // Deleted in the app.
+            if removeIfEmpty(name, in: folder) { known.removeFolder(name) }
+        }
+        for name in library where !known.containsFolder(name) {
+            // Made in the app while the folder couldn't be reached.
+            let url = folder.appendingPathComponent(name, isDirectory: true)
+            if (try? fileManager.createDirectory(at: url, withIntermediateDirectories: true)) != nil {
+                known.append(name)
+            }
+        }
+
+        knownFolders = known
+        return library
+    }
+
+    /// The folders at the top of the folder that hold library folders' notes:
+    /// not hidden, and not a TextBundle or other package.
+    private func subfolders(in folder: URL, names: [String]) -> [String] {
+        names.filter { name in
+            guard !name.hasPrefix("."), !["textbundle", "textpack"].contains(fileExtension(name)) else { return false }
+            let values = try? folder.appendingPathComponent(name)
+                .resourceValues(forKeys: [.isDirectoryKey, .isPackageKey])
+            return values?.isDirectory == true && values?.isPackage != true
+        }.sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+    }
+
+    /// Delete a library folder from disk if nothing but Finder's leftovers
+    /// is in it. True once it's gone.
+    @discardableResult
+    private func removeIfEmpty(_ name: String, in folder: URL) -> Bool {
+        let url = folder.appendingPathComponent(name, isDirectory: true)
+        guard let contents = try? fileManager.contentsOfDirectory(atPath: url.path) else {
+            return !fileManager.fileExists(atPath: url.path)
+        }
+        guard contents.allSatisfy({ $0 == ".DS_Store" }) else { return false }
+        return (try? fileManager.removeItem(at: url)) != nil
     }
 
     // MARK: - Images
@@ -322,7 +432,7 @@ final class NoteFolder {
     /// Delete a file, and its placeholder if it's in iCloud Drive and not
     /// downloaded. True once neither is there.
     private func delete(_ file: String, in folder: URL) -> Bool {
-        [file, ".\(file).icloud"].allSatisfy { name in
+        [file, path(".\(fileName(of: file)).icloud", in: folderName(ofFile: file))].allSatisfy { name in
             let url = folder.appendingPathComponent(name)
             guard fileManager.fileExists(atPath: url.path) else { return true }
             return (try? fileManager.removeItem(at: url)) != nil
@@ -331,18 +441,35 @@ final class NoteFolder {
 
     private func write(_ note: SavedNote, into index: inout [UUID: Entry], in folder: URL) {
         let existing = index[note.id]
+        let subfolder = note.folder
+        if let subfolder {
+            try? fileManager.createDirectory(at: folder.appendingPathComponent(subfolder, isDirectory: true),
+                                             withIntermediateDirectories: true)
+        }
+        let titleBase = ScriptFile.suggestedFileName(title: note.title, content: note.content)
         var file = existing?.file
-        if let current = file, existing?.title != note.title {
-            // Renamed in the app, so the file follows, keeping its extension.
-            let taken = takenNames(in: folder, index: index).subtracting([current.lowercased()])
-            let renamed = uniqueName(for: note, extension: fileExtension(current), taken: taken)
-            if renamed != current,
-               (try? fileManager.moveItem(at: folder.appendingPathComponent(current),
-                                          to: folder.appendingPathComponent(renamed))) != nil {
-                file = renamed
+        if let current = file {
+            let isMoved = !sameFolder(folderName(ofFile: current), subfolder)
+            let isRenamed = existing?.title != note.title
+            if isMoved || isRenamed {
+                // Renamed or moved in the app, so the file follows, keeping its
+                // extension, and its name if it only moved.
+                let currentName = fileName(of: current)
+                var taken = takenNames(in: folder, subfolder: subfolder, index: index)
+                if !isMoved { taken.remove(currentName.lowercased()) }
+                let base = isRenamed ? titleBase : (currentName as NSString).deletingPathExtension
+                let target = path(uniqueName(base: base, extension: fileExtension(current), taken: taken),
+                                  in: subfolder)
+                if target != current,
+                   (try? fileManager.moveItem(at: folder.appendingPathComponent(current),
+                                              to: folder.appendingPathComponent(target))) != nil {
+                    file = target
+                }
             }
         }
-        let name = file ?? uniqueName(for: note, extension: "txt", taken: takenNames(in: folder, index: index))
+        let name = file ?? path(uniqueName(base: titleBase, extension: "txt",
+                                           taken: takenNames(in: folder, subfolder: subfolder, index: index)),
+                                in: subfolder)
         let url = folder.appendingPathComponent(name)
         writeImages(placedIn: note.content, in: folder)
         guard (try? Data(note.content.utf8).write(to: url, options: .atomic)) != nil else { return }
@@ -350,14 +477,17 @@ final class NoteFolder {
                                noteUpdatedAt: note.updatedAt, fileModifiedAt: modificationDate(of: url))
     }
 
-    private func takenNames(in folder: URL, index: [UUID: Entry]) -> Set<String> {
-        let onDisk = (try? fileManager.contentsOfDirectory(atPath: folder.path)) ?? []
-        return Set(onDisk.map { $0.lowercased() } + index.values.map { $0.file.lowercased() })
+    /// The names in use in a library folder, or at the top, lowercased.
+    private func takenNames(in folder: URL, subfolder: String?, index: [UUID: Entry]) -> Set<String> {
+        let directory = subfolder.map { folder.appendingPathComponent($0, isDirectory: true) } ?? folder
+        let onDisk = (try? fileManager.contentsOfDirectory(atPath: directory.path)) ?? []
+        let indexed = index.values.filter { sameFolder(folderName(ofFile: $0.file), subfolder) }
+            .map { fileName(of: $0.file) }
+        return Set((onDisk + indexed).map { $0.lowercased() })
     }
 
-    /// The note's title as a file name, numbered if another file has it.
-    private func uniqueName(for note: SavedNote, extension ext: String, taken: Set<String>) -> String {
-        let base = ScriptFile.suggestedFileName(title: note.title, content: note.content)
+    /// `base` as a file name, numbered if another file has it.
+    private func uniqueName(base: String, extension ext: String, taken: Set<String>) -> String {
         var name = "\(base).\(ext)"
         var number = 2
         while taken.contains(name.lowercased()) {
@@ -378,6 +508,27 @@ final class NoteFolder {
 
     private func fileExtension(_ name: String) -> String {
         (name as NSString).pathExtension.lowercased()
+    }
+
+    /// The library folder a file's path is in, or nil for the top.
+    private func folderName(ofFile path: String) -> String? {
+        let parts = path.split(separator: "/", maxSplits: 1)
+        return parts.count == 2 ? String(parts[0]) : nil
+    }
+
+    /// The file's own name, without its library folder.
+    private func fileName(of path: String) -> String {
+        path.split(separator: "/").last.map(String.init) ?? path
+    }
+
+    private func path(_ name: String, in subfolder: String?) -> String {
+        subfolder.map { "\($0)/\(name)" } ?? name
+    }
+
+    /// Folder names are matched as the disk matches them, whatever their case.
+    private func sameFolder(_ a: String?, _ b: String?) -> Bool {
+        guard let a, let b else { return a == nil && b == nil }
+        return a.caseInsensitiveCompare(b) == .orderedSame
     }
 
     /// Dates read back from the index can be off in the last fraction.
@@ -403,8 +554,16 @@ final class NoteFolder {
               let index = try? JSONDecoder().decode([UUID: Entry].self, from: data) else { return [:] }
         // The index sits in the folder, where anything else with access can
         // rewrite it. An entry naming a path rather than a file in the folder
-        // could have files elsewhere moved or deleted, so it's dropped.
-        return index.filter { isPlainFileName($0.value.file) }
+        // could have files elsewhere moved or deleted, so it's dropped. A
+        // file in a library folder is the one path allowed.
+        return index.filter { isNotePath($0.value.file) }
+    }
+
+    /// A file's name, or a visible folder's name and a file's name.
+    private func isNotePath(_ path: String) -> Bool {
+        let parts = path.split(separator: "/", omittingEmptySubsequences: false).map(String.init)
+        guard parts.allSatisfy(isPlainFileName) else { return false }
+        return parts.count == 1 || (parts.count == 2 && !parts[0].hasPrefix("."))
     }
 
     private func isPlainFileName(_ name: String) -> Bool {
@@ -440,5 +599,16 @@ final class NoteFolder {
         var isDirectory: ObjCBool = false
         guard fileManager.fileExists(atPath: url.path, isDirectory: &isDirectory), isDirectory.boolValue else { return nil }
         return body(url)
+    }
+}
+
+extension Array where Element == String {
+    /// Whether a folder of this name is in the list, whatever its case.
+    func containsFolder(_ name: String) -> Bool {
+        contains { $0.caseInsensitiveCompare(name) == .orderedSame }
+    }
+
+    mutating func removeFolder(_ name: String) {
+        removeAll { $0.caseInsensitiveCompare(name) == .orderedSame }
     }
 }

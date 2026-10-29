@@ -8,6 +8,8 @@ final class StoredNote {
     var title: String = ""
     var content: String = ""
     var mode: String = ScriptMode.teleprompter.rawValue
+    /// The folder it's filed in, or nil for the top of the library.
+    var folder: String? = nil
     var createdAt: Date = Date()
     var updatedAt: Date = Date()
 
@@ -21,12 +23,13 @@ final class StoredNote {
         title = note.title
         content = note.content
         mode = note.mode.rawValue
+        folder = note.folder
         updatedAt = note.updatedAt
     }
 
     var savedNote: SavedNote {
         SavedNote(id: id, title: title, content: content,
-                  mode: ScriptMode(rawValue: mode) ?? .teleprompter,
+                  mode: ScriptMode(rawValue: mode) ?? .teleprompter, folder: folder,
                   createdAt: createdAt, updatedAt: updatedAt)
     }
 }

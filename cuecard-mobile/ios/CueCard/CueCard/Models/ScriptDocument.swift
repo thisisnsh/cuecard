@@ -134,6 +134,17 @@ enum ScriptFile {
         return String(localized: "Speech")
     }
 
+    /// A name for a library folder, kept to what can name a folder on disk
+    /// too, so it's the same in the notes folder. Empty if nothing's left.
+    static func folderName(from name: String) -> String {
+        var cleaned = sanitized(name)
+        // A leading dot would hide the folder on disk.
+        while cleaned.hasPrefix(".") {
+            cleaned = String(cleaned.dropFirst()).trimmingCharacters(in: .whitespaces)
+        }
+        return String(cleaned.prefix(40)).trimmingCharacters(in: .whitespaces)
+    }
+
     private static func sanitized(_ name: String) -> String {
         let illegal = CharacterSet(charactersIn: "/\\:?%*|\"<>")
         return name

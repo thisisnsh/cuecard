@@ -345,7 +345,9 @@ struct HomeView: View {
     }
 
     private func importNote(title: String, content: String) {
-        if !settingsService.importNote(title: title, content: content) {
+        if let note = settingsService.importNote(title: title, content: content, folder: nil) {
+            settingsService.loadNote(note)
+        } else {
             errorMessage = String(localized: "The file was opened but couldn't be saved as a note. Try saving it again.")
         }
     }
@@ -628,7 +630,7 @@ struct HomeView: View {
                                 if settingsService.hasUnsavedChanges {
                                     confirmingDiscard = .new
                                 } else {
-                                    settingsService.createNewNote()
+                                    settingsService.createNewNote(mode: settingsService.settings.scriptMode)
                                 }
                             }) {
                                 Label("New", systemImage: "square.and.pencil")
@@ -731,7 +733,7 @@ struct HomeView: View {
                 Button("Discard Changes", role: .destructive) {
                     switch discarding {
                     case .new:
-                        settingsService.createNewNote()
+                        settingsService.createNewNote(mode: settingsService.settings.scriptMode)
                     case .import(let title, let content):
                         importNote(title: title, content: content)
                     }
