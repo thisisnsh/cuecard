@@ -68,7 +68,7 @@ private enum AllHelp {
                                     summary: "Modes, cues, formatting, images and cards",
                                     systemImage: "pencil", topics: [
         HelpTopic("Pick a Mode",
-                  detail: "In your library, tap New and pick Teleprompter Script or Cards Deck. Teleprompter scrolls your whole script. Cards shows it one card at a time."),
+                  detail: "In your library, tap + and pick Teleprompter Script or Cards Deck. Teleprompter scrolls your whole script. Cards shows it one card at a time."),
         HelpTopic("Add Cues",
                   detail: "Cues are reminders like [pause], shown in color and not read out. Type [ or tap Add Cue above the keyboard."),
         HelpTopic("Bold and Italic",
@@ -87,15 +87,17 @@ private enum AllHelp {
                                     summary: "Folders, saving, import, versions and sharing",
                                     systemImage: "folder", topics: [
         HelpTopic("Open a Script",
-                  detail: "CueCard opens on your library, with every script and deck you saved. Tap one to write in it, and tap back to return. Show All, Teleprompter or Cards at the top."),
+                  detail: "CueCard opens on your library, with every script and deck you saved. Tap one to write in it, and tap back to return. Switch between Teleprompter and Cards at the top."),
+        HelpTopic("Ask About Your Scripts",
+                  detail: "In your library, tap the sparkles next to Search and ask, like which script mentions pricing. Apple Intelligence reads your saved scripts on this iPhone to answer. Needs an iPhone with Apple Intelligence turned on."),
         HelpTopic("Save Your Work",
-                  detail: "Unsaved above Play means there are changes to save. Tap it to save, or tap ••• › Save. A new script you haven't saved shows in the library as a draft."),
+                  detail: "Unsaved above the timer means there are changes to save. Tap it to save. A new script you haven't saved shows in the library as a draft."),
         HelpTopic("Rename, Duplicate or Delete",
                   detail: "In your library, touch and hold a script, or swipe it. In the editor, tap the title at the top to rename it."),
         HelpTopic("Organize in Folders",
-                  detail: "In your library, tap ••• › New Folder. Touch and hold a script and tap Move to Folder to file it. Tap ••• › Sort By to change the order."),
+                  detail: "In your library, tap New Folder beside your folders, or ••• › New Folder. Touch and hold a script and tap Move to Folder to file it. Tap ••• › Sort By to change the order."),
         HelpTopic("Import a Text File",
-                  detail: "In your library, tap New › Import File to add a text file or a TextPack as a script."),
+                  detail: "In your library, tap + › Import File to add a text file or a TextPack as a script."),
         HelpTopic("Go Back to an Older Version",
                   detail: "Every save is a new version. Once a note has more than one, tap the clock at the top to compare changes and restore one."),
         HelpTopic("Keep Scripts if the App Is Removed",
@@ -103,7 +105,7 @@ private enum AllHelp {
         HelpTopic("Your Privacy",
                   detail: "There's no account, and CueCard doesn't upload your scripts. They're kept on this iPhone, and in the storage folder if you choose one."),
         HelpTopic("Share a Script",
-                  detail: "Tap ••• › Share in the editor, or touch and hold a script in your library. It's sent as text, cues included. A script with images is sent as a TextPack, with its images.")
+                  detail: "In your library, touch and hold a script and tap Share. It's sent as text, cues included. A script with images is sent as a TextPack, with its images.")
     ])
 
     static let settings = HelpSection("settings", title: "Settings & Timer",
@@ -186,7 +188,7 @@ private enum AllHelp {
         HelpTopic("Read Cards on Your Wrist",
                   detail: "Open a deck on your iPhone and it shows on the watch too. Turning a card on either one moves both."),
         HelpTopic("Keep Decks on the Watch",
-                  detail: "Touch and hold a saved deck in your library, or open it and tap ••• › Keep on Apple Watch. Then you can read it without your iPhone."),
+                  detail: "Touch and hold a saved deck in your library and tap Keep on Apple Watch. Then you can read it without your iPhone."),
         HelpTopic("Stay on Screen",
                   detail: "The watch goes back to the clock after a while. In the Watch app, go to General › Return to Clock › CueCard and set it to 1 hour.")
     ])
