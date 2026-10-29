@@ -64,26 +64,31 @@ struct HomeView: View {
     }
 
     /// Teleprompter or cards: what the editor writes and the Play button opens.
-    /// The bar shows the chosen mode's name.
+    /// The bar shows only the chosen mode's icon, so a long name at a large text
+    /// size can't push the buttons on the right off the bar. The menu names
+    /// each mode and checks the one that's on.
     private var modeMenu: some View {
         let current = settingsService.settings.scriptMode
+        let selection = Binding<ScriptMode>(
+            get: { settingsService.settings.scriptMode },
+            set: { mode in
+                AnalyticsEvents.logButtonClick("mode_\(mode.rawValue)", screen: "home")
+                isEditorFocused = false
+                settingsService.settings.scriptMode = mode
+            }
+        )
 
-        // Plain buttons rather than a picker, so the menu shows no checkmark:
-        // the bar already says which mode is on.
         return Menu {
-            ForEach(ScriptMode.allCases) { mode in
-                Button {
-                    AnalyticsEvents.logButtonClick("mode_\(mode.rawValue)", screen: "home")
-                    isEditorFocused = false
-                    settingsService.settings.scriptMode = mode
-                } label: {
-                    Text(mode.displayName)
+            Picker("Mode", selection: selection) {
+                ForEach(ScriptMode.allCases) { mode in
+                    Label(mode.displayName, systemImage: mode.systemImage).tag(mode)
                 }
             }
+            .pickerStyle(.inline)
         } label: {
             HStack(spacing: 6) {
-                Text(current.displayName)
-                    .font(.headline)
+                Image(systemName: current.systemImage)
+                    .font(.body)
                 Image(systemName: "chevron.down")
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(AppColors.textSecondary(for: colorScheme))
