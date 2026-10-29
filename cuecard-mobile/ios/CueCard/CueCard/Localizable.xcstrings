@@ -1265,6 +1265,34 @@
         }
       }
     },
+    "An image couldn't be added. Try again." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No se ha podido añadir una imagen. Inténtalo de nuevo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Une image n'a pas pu être ajoutée. Réessayez."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Não foi possível adicionar uma imagem. Tente novamente."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось добавить изображение. Попробуйте ещё раз."
+          }
+        }
+      }
+    },
     "Anchor" : {
       "localizations" : {
         "es" : {
@@ -1293,30 +1321,30 @@
         }
       }
     },
-    "An image couldn't be added. Try again." : {
+    "Anchors mark spots in your script, like [anchor]. Type one or tap Add Anchor above the keyboard. In the teleprompter, the buttons at the far left and right jump to the anchor before or after." : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No se ha podido añadir una imagen. Inténtalo de nuevo."
+            "value" : "Las anclas marcan puntos de tu guion, como [anchor]. Escribe una o toca Añadir ancla encima del teclado. En el teleprompter, los botones de los extremos izquierdo y derecho saltan al ancla anterior o a la siguiente."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Une image n'a pas pu être ajoutée. Réessayez."
+            "value" : "Les ancres marquent des endroits de votre script, comme [anchor]. Tapez-en une ou touchez Ajouter une ancre au-dessus du clavier. Dans le prompteur, les boutons tout à gauche et tout à droite passent à l'ancre précédente ou suivante."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Não foi possível adicionar uma imagem. Tente novamente."
+            "value" : "Âncoras marcam pontos do seu roteiro, como [anchor]. Digite uma ou toque em Adicionar âncora acima do teclado. No teleprompter, os botões nas pontas esquerda e direita pulam para a âncora anterior ou a próxima."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Не удалось добавить изображение. Попробуйте ещё раз."
+            "value" : "Якоря отмечают места в сценарии, например [anchor]. Введите эту метку или коснитесь «Добавить якорь» над клавиатурой. В телесуфлёре кнопки с краю слева и справа переходят к предыдущему или следующему якорю."
           }
         }
       }
@@ -1346,34 +1374,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Якоря: отмечайте места в сценарии и переходите между ними во время чтения."
-          }
-        }
-      }
-    },
-    "Anchors mark spots in your script, like [anchor]. Type one or tap Add Anchor above the keyboard. In the teleprompter, the buttons at the far left and right jump to the anchor before or after." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Las anclas marcan puntos de tu guion, como [anchor]. Escribe una o toca Añadir ancla encima del teclado. En el teleprompter, los botones de los extremos izquierdo y derecho saltan al ancla anterior o a la siguiente."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Les ancres marquent des endroits de votre script, comme [anchor]. Tapez-en une ou touchez Ajouter une ancre au-dessus du clavier. Dans le prompteur, les boutons tout à gauche et tout à droite passent à l'ancre précédente ou suivante."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Âncoras marcam pontos do seu roteiro, como [anchor]. Digite uma ou toque em Adicionar âncora acima do teclado. No teleprompter, os botões nas pontas esquerda e direita pulam para a âncora anterior ou a próxima."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Якоря отмечают места в сценарии, например [anchor]. Введите эту метку или коснитесь «Добавить якорь» над клавиатурой. В телесуфлёре кнопки с краю слева и справа переходят к предыдущему или следующему якорю."
           }
         }
       }
@@ -6995,6 +6995,34 @@
         }
       }
     },
+    "Reading Guide Line" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Línea guía de lectura"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ligne guide de lecture"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Linha-guia de leitura"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Линия чтения"
+          }
+        }
+      }
+    },
     "Reading Guide: Drag the pointer to keep your eyes on the line you're reading." : {
       "extractionState" : "stale",
       "localizations" : {
@@ -7020,34 +7048,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Линия чтения: перетаскивайте указатель, чтобы не терять строку, которую читаете."
-          }
-        }
-      }
-    },
-    "Reading Guide Line" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Línea guía de lectura"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ligne guide de lecture"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Linha-guia de leitura"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Линия чтения"
           }
         }
       }
@@ -10069,6 +10069,10 @@
           }
         }
       }
+    },
+    "Teleprompter Teleprompter" : {
+      "comment" : "Display name for the teleprompter script mode.",
+      "isCommentAutoGenerated" : true
     },
     "Teleprompter text can be set from %lld to %lld, floating window text from %lld to %lld, and editor text from %lld to %lld." : {
       "localizations" : {
