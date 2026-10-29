@@ -18,6 +18,13 @@ struct LibraryView: View {
     @ObservedObject private var cardsSession = CueCardsSession.shared
     /// A deck opened from the watch, while the editor isn't open to show it.
     @State private var showingWatchCards = false
+    /// The app went to the background since it was last opened.
+    @State private var wasInBackground = false
+    @AppStorage(LibraryStorageWarning.dismissedKey) private var warningDismissed = false
+    @AppStorage(LibraryStorageWarning.opensKey) private var opensSinceDismissed = 0
+
+    /// The launch's open is counted once, however often this appears.
+    private static var hasCountedLaunch = false
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -40,14 +47,28 @@ struct LibraryView: View {
         .onAppear {
             takeCounts.reload()
             showCardsOpenedOnWatch()
+            if !Self.hasCountedLaunch {
+                Self.hasCountedLaunch = true
+                countOpen()
+            }
         }
         .onChange(of: cardsSession.sessionID) {
             showCardsOpenedOnWatch()
         }
         .onChange(of: scenePhase) {
-            guard scenePhase == .active else { return }
-            takeCounts.reload()
-            showCardsOpenedOnWatch()
+            switch scenePhase {
+            case .background:
+                wasInBackground = true
+            case .active:
+                takeCounts.reload()
+                showCardsOpenedOnWatch()
+                if wasInBackground {
+                    wasInBackground = false
+                    countOpen()
+                }
+            default:
+                break
+            }
         }
         // Back from the editor, there may be new takes or a new note.
         .onChange(of: path) {
@@ -61,9 +82,28 @@ struct LibraryView: View {
               !showingWatchCards else { return }
         showingWatchCards = true
     }
+
+    /// A put-away warning about having no storage folder comes back every
+    /// tenth time the app is opened.
+    private func countOpen() {
+        guard warningDismissed, !settingsService.hasNotesFolder else { return }
+        opensSinceDismissed += 1
+        if opensSinceDismissed >= LibraryStorageWarning.opensBetweenReminders {
+            warningDismissed = false
+            opensSinceDismissed = 0
+        }
+    }
 }
 
-// MARK: - Sorting and filtering
+/// The warning that scripts are lost with the app until there's a storage
+/// folder, and when it's shown again after being put away.
+enum LibraryStorageWarning {
+    static let dismissedKey = "library_folder_tip_dismissed"
+    static let opensKey = "library_opens_since_folder_tip_dismissed"
+    static let opensBetweenReminders = 10
+}
+
+// MARK: - Sorting
 
 private enum LibrarySort: String, CaseIterable, Identifiable {
     case edited, created, title
@@ -76,24 +116,6 @@ private enum LibrarySort: String, CaseIterable, Identifiable {
         case .created: return "Date Created"
         case .title: return "Title"
         }
-    }
-}
-
-private enum LibraryFilter: String, CaseIterable, Identifiable {
-    case all, teleprompter, cards
-
-    var id: String { rawValue }
-
-    var mode: ScriptMode? {
-        switch self {
-        case .all: return nil
-        case .teleprompter: return .teleprompter
-        case .cards: return .cards
-        }
-    }
-
-    var displayName: String {
-        mode?.displayName ?? String(localized: "All")
     }
 }
 
@@ -125,8 +147,8 @@ private struct TakesTarget: Identifiable {
 
 // MARK: - List
 
-/// The top of the library, or one of its folders: the scripts in it, the
-/// drafts started in it, and at the top, the folders.
+/// The top of the library, or one of its folders: the scripts or decks in
+/// it, the drafts started in it, and at the top, the folders.
 private struct LibraryList: View {
     /// The folder shown, or nil for the top of the library.
     let folder: String?
@@ -139,13 +161,14 @@ private struct LibraryList: View {
     @ObservedObject private var watch = WatchSessionService.shared
 
     @AppStorage("library_sort") private var sort: LibrarySort = .edited
-    @AppStorage("library_filter") private var filter: LibraryFilter = .all
-    /// The card about the notes folder was put away. The footer still says
-    /// what happens without one.
-    @AppStorage("library_folder_tip_dismissed") private var folderTipDismissed = false
+    @AppStorage("library_mode") private var mode: ScriptMode = .teleprompter
+    @AppStorage(LibraryStorageWarning.dismissedKey) private var warningDismissed = false
+    @AppStorage(LibraryStorageWarning.opensKey) private var opensSinceDismissed = 0
 
     @State private var query = ""
+    @FocusState private var isSearching: Bool
     @State private var showingHelp = false
+    @State private var showingAssistant = false
     @State private var showingImporter = false
     @State private var showingFolderPicker = false
     @State private var showingStopFolder = false
@@ -167,6 +190,7 @@ private struct LibraryList: View {
     @State private var errorMessage: String?
 
     private static let screen = "library"
+    private static let rowInsets = EdgeInsets(top: 6, leading: 20, bottom: 6, trailing: 20)
 
     private var isRoot: Bool { folder == nil }
 
@@ -177,12 +201,16 @@ private struct LibraryList: View {
     /// Searching from the top looks through every folder.
     private var isSearchingAll: Bool { isRoot && !trimmedQuery.isEmpty }
 
+    private var showsAssistant: Bool {
+        OnDeviceModelAvailability.current != .unsupported
+    }
+
     /// The saved notes shown: this folder's, or every one that matches the
     /// search from the top, of the chosen mode, in the chosen order.
     private var notes: [SavedNote] {
         let shown = settingsService.savedNotes.filter { note in
             (isSearchingAll || note.folder == folder)
-                && (filter.mode == nil || note.mode == filter.mode)
+                && note.mode == mode
                 && matches(title: note.title, content: note.content)
         }
         switch sort {
@@ -192,25 +220,19 @@ private struct LibraryList: View {
         }
     }
 
-    /// Modes with a new script that isn't saved yet, started here.
-    private var drafts: [ScriptMode] {
-        ScriptMode.allCases.filter { mode in
-            let text = settingsService.notes(for: mode)
-            return settingsService.noteId(for: mode) == nil
-                && !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                && (isSearchingAll || settingsService.draftFolder(for: mode) == folder)
-                && (filter.mode == nil || filter.mode == mode)
-                && matches(title: "", content: text)
-        }
+    /// A new script of the chosen mode that isn't saved yet, if it was
+    /// started here.
+    private var hasDraft: Bool {
+        let text = settingsService.notes(for: mode)
+        return settingsService.noteId(for: mode) == nil
+            && !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && (isSearchingAll || settingsService.draftFolder(for: mode) == folder)
+            && matches(title: "", content: text)
     }
 
     private var folders: [String] {
         guard isRoot, trimmedQuery.isEmpty else { return [] }
         return settingsService.folders.sorted { $0.localizedStandardCompare($1) == .orderedAscending }
-    }
-
-    private var isEmpty: Bool {
-        notes.isEmpty && drafts.isEmpty && folders.isEmpty
     }
 
     private func matches(title: String, content: String) -> Bool {
@@ -219,100 +241,86 @@ private struct LibraryList: View {
             || LibraryText.plain(content).localizedStandardContains(trimmedQuery)
     }
 
+    /// What the chosen mode's scripts are called.
+    private var kindName: String {
+        mode == .cards ? String(localized: "Decks") : String(localized: "Scripts")
+    }
+
     var body: some View {
         List {
             if isRoot, let notification = notifications.notification(for: .homeBanner) {
-                Section {
-                    NotificationBanner(notification: notification)
-                        .listRowInsets(EdgeInsets())
-                        .listRowBackground(Color.clear)
-                }
+                NotificationBanner(notification: notification)
+                    .plainRow(insets: Self.rowInsets)
             }
 
-            if isRoot, trimmedQuery.isEmpty, needsFolderCard {
-                Section {
-                    LibraryStorageCard(
-                        isUnreachable: settingsService.hasNotesFolder,
-                        colorScheme: colorScheme,
-                        onChoose: {
-                            AnalyticsEvents.logButtonClick("choose_notes_folder", screen: Self.screen)
-                            showingFolderPicker = true
-                        },
-                        onDismiss: settingsService.hasNotesFolder ? nil : {
-                            AnalyticsEvents.logButtonClick("dismiss_folder_tip", screen: Self.screen)
-                            withAnimation { folderTipDismissed = true }
+            if isRoot, trimmedQuery.isEmpty, showsStorageWarning {
+                LibraryStorageBanner(
+                    isUnreachable: settingsService.hasNotesFolder,
+                    colorScheme: colorScheme,
+                    onChoose: {
+                        AnalyticsEvents.logButtonClick("choose_notes_folder", screen: Self.screen)
+                        showingFolderPicker = true
+                    },
+                    onDismiss: settingsService.hasNotesFolder ? nil : {
+                        AnalyticsEvents.logButtonClick("dismiss_folder_tip", screen: Self.screen)
+                        withAnimation {
+                            warningDismissed = true
+                            opensSinceDismissed = 0
                         }
-                    )
-                    .listRowInsets(EdgeInsets())
-                    .listRowBackground(Color.clear)
-                }
+                    }
+                )
+                .plainRow(insets: Self.rowInsets)
             }
 
-            Section {
+            LibraryModePicker(selection: $mode, colorScheme: colorScheme)
+                .plainRow(insets: EdgeInsets(top: 8, leading: 20, bottom: 12, trailing: 20))
+
+            if !folders.isEmpty {
+                sectionLabel(String(localized: "Folders"))
+                folderChips
+                    .plainRow(insets: EdgeInsets(top: 2, leading: 0, bottom: 14, trailing: 0))
+            }
+
+            if hasDraft || !notes.isEmpty {
                 if !folders.isEmpty {
-                    ForEach(folders, id: \.self) { name in
-                        folderRow(name)
-                    }
+                    sectionLabel(kindName)
                 }
-            } header: {
-                filterPicker
+                if hasDraft {
+                    draftRow(mode)
+                }
+                ForEach(notes) { note in
+                    noteRow(note)
+                }
+            } else {
+                emptyState
+                    .padding(.vertical, 32)
+                    .frame(maxWidth: .infinity)
+                    .plainRow(insets: Self.rowInsets)
             }
 
-            if !drafts.isEmpty || !notes.isEmpty {
-                Section {
-                    ForEach(drafts) { mode in
-                        draftRow(mode)
-                    }
-                    ForEach(notes) { note in
-                        noteRow(note)
-                    }
-                } header: {
-                    if !folders.isEmpty {
-                        Text("Scripts")
-                    }
-                }
-            } else if isRoot, trimmedQuery.isEmpty, folders.isEmpty {
-                // In the list, not over it, so the storage card stays in view.
-                Section {
-                    emptyState
-                        .padding(.vertical, 24)
-                        .listRowBackground(Color.clear)
-                }
-            }
-
-            if isRoot {
-                Section {
-                } footer: {
-                    footer
-                }
+            if isRoot, trimmedQuery.isEmpty {
+                footer
+                    .plainRow(insets: EdgeInsets(top: 10, leading: 24, bottom: 16, trailing: 24))
             }
         }
-        .listStyle(.insetGrouped)
+        .listStyle(.plain)
         .scrollContentBackground(.hidden)
+        .scrollDismissesKeyboard(.immediately)
         .background(AppColors.background(for: colorScheme).ignoresSafeArea())
-        .overlay {
-            if !isRoot || !trimmedQuery.isEmpty { emptyState }
-        }
-        .safeAreaInset(edge: .bottom) {
-            HStack {
-                Spacer()
-                newButton
-            }
-            .padding(.horizontal, 20)
-            .padding(.bottom, 8)
-        }
-        .searchable(text: $query, prompt: searchPrompt)
-        .navigationTitle(folder ?? String(localized: "Library"))
-        .navigationBarTitleDisplayMode(isRoot ? .large : .inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                moreMenu
-            }
-            HelpToolbarItem(page: .library, isPresented: $showingHelp)
-        }
+        .animation(.easeInOut(duration: 0.2), value: mode)
+        .animation(.easeInOut(duration: 0.2), value: showsStorageWarning)
+        .safeAreaInset(edge: .bottom) { searchRow }
+        .navigationTitle(folder ?? "")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar { toolbar }
         .helpSheet(for: .library, isPresented: $showingHelp)
         .sheet(item: $takesTarget, onDismiss: takeCounts.reload) { target in
             ScriptTakesSheet(scriptID: target.id, title: target.title)
+        }
+        .sheet(isPresented: $showingAssistant) {
+            NavigationStack {
+                HelpAssistantView(topic: .scripts) { showingAssistant = false }
+            }
         }
         .fileImporter(isPresented: $showingImporter, allowedContentTypes: ScriptFile.importableContentTypes) { result in
             handleImport(result)
@@ -332,53 +340,132 @@ private struct LibraryList: View {
 
     // MARK: Pieces
 
-    private var searchPrompt: String {
-        folder.map { String(localized: "Search \($0)", comment: "Search a library folder") }
-            ?? String(localized: "Search All Scripts")
+    /// Shown until there's a storage folder, unless put away, and whenever
+    /// the folder there is can't be reached.
+    private var showsStorageWarning: Bool {
+        settingsService.hasNotesFolder ? settingsService.notesFolderName == nil : !warningDismissed
     }
 
-    /// Shown until there's a notes folder, unless put away, and whenever the
-    /// folder there is can't be reached.
-    private var needsFolderCard: Bool {
-        settingsService.hasNotesFolder ? settingsService.notesFolderName == nil : !folderTipDismissed
-    }
-
-    private var filterPicker: some View {
-        Picker("Show", selection: $filter) {
-            ForEach(LibraryFilter.allCases) { filter in
-                Text(filter.displayName).tag(filter)
+    @ToolbarContentBuilder
+    private var toolbar: some ToolbarContent {
+        // The app's name at the top, where it stays: no large title to
+        // shrink into the bar on scrolling.
+        if isRoot {
+            ToolbarItem(placement: .topBarLeading) {
+                Text("CueCard")
+                    .font(.title2.weight(.bold))
+                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                    .fixedSize()
+                    .accessibilityAddTraits(.isHeader)
             }
+            .sharedBackgroundHidden()
         }
-        .pickerStyle(.segmented)
-        .textCase(nil)
-        .padding(.bottom, 4)
-        .listRowInsets(EdgeInsets())
+
+        ToolbarItem(placement: .topBarTrailing) {
+            newMenu
+        }
+
+        if #available(iOS 26.0, *) {
+            ToolbarSpacer(.fixed, placement: .topBarTrailing)
+        }
+        ToolbarItem(placement: .topBarTrailing) {
+            moreMenu
+        }
+
+        HelpToolbarItem(page: .library, isPresented: $showingHelp)
+    }
+
+    private func sectionLabel(_ text: String) -> some View {
+        Text(text)
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+            .plainRow(insets: EdgeInsets(top: 4, leading: 24, bottom: 4, trailing: 24))
     }
 
     @ViewBuilder
     private var emptyState: some View {
-        if isEmpty {
+        let secondary = AppColors.textSecondary(for: colorScheme)
+        VStack(spacing: 6) {
             if !trimmedQuery.isEmpty {
-                ContentUnavailableView.search(text: trimmedQuery)
-            } else if filter != .all, !settingsService.savedNotes.isEmpty {
-                ContentUnavailableView("No \(filter.displayName) Scripts", systemImage: filter.mode?.systemImage ?? "doc")
-            } else if !isRoot {
-                ContentUnavailableView("Empty Folder", systemImage: "folder",
-                                       description: Text("Tap New to write in here, or move scripts in from the library."))
+                Text("No Results")
+                    .font(.headline)
+                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                Text("Nothing in your \(kindName.lowercased()) matches “\(trimmedQuery)”.")
+                    .font(.subheadline)
+                    .foregroundStyle(secondary)
             } else {
-                ContentUnavailableView("No Scripts Yet", systemImage: "text.alignleft",
-                                       description: Text("Tap New to write a script for the teleprompter, or a deck of cards."))
+                Text(mode == .cards ? "No Decks Yet" : "No Scripts Yet")
+                    .font(.headline)
+                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                Text(mode == .cards
+                     ? "Tap + at the top to start a deck of cards."
+                     : "Tap + at the top to write a script for the teleprompter.")
+                    .font(.subheadline)
+                    .foregroundStyle(secondary)
             }
         }
+        .multilineTextAlignment(.center)
     }
 
     private var footer: some View {
         LibraryFooter(colorScheme: colorScheme)
-            .frame(maxWidth: .infinity)
-            .padding(.top, 20)
+            .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var newButton: some View {
+    /// Search, with the assistant beside it to ask about the scripts instead.
+    private var searchRow: some View {
+        HStack(spacing: 12) {
+            if showsAssistant {
+                Button {
+                    AnalyticsEvents.logButtonClick("ask_scripts", screen: Self.screen)
+                    isSearching = false
+                    showingAssistant = true
+                } label: {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(AppColors.purple(for: colorScheme))
+                        .frame(width: 52, height: 52)
+                        .glassedEffect(in: Circle(), interactive: true)
+                        .shadow(color: Color.black.opacity(0.1), radius: 10)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Ask About Your Scripts")
+            }
+
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                    .accessibilityHidden(true)
+                TextField(searchPrompt, text: $query)
+                    .focused($isSearching)
+                    .submitLabel(.search)
+                    .autocorrectionDisabled()
+                if !query.isEmpty {
+                    Button {
+                        query = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Clear Search")
+                }
+            }
+            .padding(.horizontal, 18)
+            .frame(height: 52)
+            .glassedEffect(in: Capsule(), interactive: true)
+            .shadow(color: Color.black.opacity(0.1), radius: 10)
+        }
+        .padding(.horizontal, 20)
+        .padding(.bottom, 8)
+    }
+
+    private var searchPrompt: String {
+        folder.map { String(localized: "Search \($0)", comment: "Search a library folder") }
+            ?? String(localized: "Search")
+    }
+
+    private var newMenu: some View {
         Menu {
             Button {
                 startNew(.teleprompter)
@@ -398,16 +485,11 @@ private struct LibraryList: View {
                 Label("Import File", systemImage: "arrow.down.doc")
             }
         } label: {
-            Label("New", systemImage: "plus")
-                .font(.headline)
-                .foregroundStyle(colorScheme == .dark ? .black : .white)
-                .padding(.horizontal, 22)
-                .frame(height: 52)
-                .background(Capsule().fill(AppColors.green(for: colorScheme)))
-                .glassedEffect(in: Capsule())
-                .shadow(color: Color.black.opacity(0.1), radius: 10)
+            Image(systemName: "plus")
+                .font(.body.weight(.semibold))
+                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
         }
-        .accessibilityLabel("New Script")
+        .accessibilityLabel("New")
     }
 
     private var moreMenu: some View {
@@ -426,9 +508,7 @@ private struct LibraryList: View {
             if isRoot {
                 Button {
                     AnalyticsEvents.logButtonClick("new_folder", screen: Self.screen)
-                    noteForNewFolder = nil
-                    newFolderName = ""
-                    showingNewFolder = true
+                    beginNewFolder(for: nil)
                 } label: {
                     Label("New Folder", systemImage: "folder.badge.plus")
                 }
@@ -446,13 +526,6 @@ private struct LibraryList: View {
                 } label: {
                     Label("Delete Folder", systemImage: "trash")
                 }
-            }
-
-            Button {
-                AnalyticsEvents.logButtonClick("import_file", screen: Self.screen)
-                showingImporter = true
-            } label: {
-                Label("Import File", systemImage: "arrow.down.doc")
             }
 
             if isRoot {
@@ -492,23 +565,64 @@ private struct LibraryList: View {
         .accessibilityLabel("More")
     }
 
+    private func beginNewFolder(for note: SavedNote?) {
+        noteForNewFolder = note
+        newFolderName = ""
+        showingNewFolder = true
+    }
+
     // MARK: Rows
 
-    private func folderRow(_ name: String) -> some View {
-        let count = settingsService.savedNotes.filter { $0.folder == name }.count
-        return NavigationLink(value: LibraryRoute.folder(name)) {
-            HStack(spacing: 14) {
-                LibraryTile(systemImage: "folder.fill", color: AppColors.blue(for: colorScheme))
+    /// The folders side by side, scrolling sideways, with one to make another.
+    private var folderChips: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 10) {
+                ForEach(folders, id: \.self) { name in
+                    folderChip(name)
+                }
+                Button {
+                    AnalyticsEvents.logButtonClick("new_folder", screen: Self.screen)
+                    beginNewFolder(for: nil)
+                } label: {
+                    Text("New Folder")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                        .padding(.horizontal, 16)
+                        .frame(height: 40)
+                        .overlay(
+                            Capsule().stroke(AppColors.textSecondary(for: colorScheme).opacity(0.4),
+                                             style: StrokeStyle(lineWidth: 1, dash: [5, 5]))
+                        )
+                        .contentShape(Capsule())
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 4)
+        }
+    }
+
+    private func folderChip(_ name: String) -> some View {
+        let count = settingsService.savedNotes.filter { $0.folder == name && $0.mode == mode }.count
+        return Button {
+            AnalyticsEvents.logButtonClick("open_folder", screen: Self.screen)
+            path.append(.folder(name))
+        } label: {
+            HStack(spacing: 8) {
                 Text(name)
-                    .font(.body.weight(.medium))
+                    .font(.subheadline.weight(.semibold))
                     .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                     .lineLimit(1)
-                Spacer(minLength: 8)
                 Text("\(count)")
                     .font(.subheadline.monospacedDigit())
                     .foregroundStyle(AppColors.textSecondary(for: colorScheme))
             }
+            .padding(.horizontal, 16)
+            .frame(height: 40)
+            .glassedEffect(in: Capsule(), interactive: true)
+            .contentShape(Capsule())
         }
+        .buttonStyle(.plain)
         .contextMenu {
             Button {
                 folderTitle = name
@@ -522,44 +636,24 @@ private struct LibraryList: View {
                 Label("Delete Folder", systemImage: "trash")
             }
         }
-        .swipeActions(edge: .trailing) {
-            Button {
-                folderToDelete = name
-            } label: {
-                Label("Delete", systemImage: "trash")
-            }
-            .tint(AppColors.red(for: colorScheme))
-            Button {
-                folderTitle = name
-                folderToRename = name
-            } label: {
-                Label("Rename", systemImage: "pencil")
-            }
-            .tint(.orange)
-        }
+        .accessibilityLabel("\(name), \(count)")
+        .accessibilityHint("Opens the folder")
     }
 
     private func draftRow(_ mode: ScriptMode) -> some View {
-        LibraryScriptRow(
-            title: mode == .cards ? String(localized: "New Deck") : String(localized: "New Script"),
-            mode: mode,
+        let scriptID = mode == .cards ? settingsService.cardsScriptID : settingsService.teleprompterScriptID
+        let title = mode == .cards ? String(localized: "New Deck") : String(localized: "New Script")
+        return LibraryScriptRow(
+            title: title,
             preview: LibraryText.preview(of: settingsService.notes(for: mode)),
             detail: String(localized: "Not saved yet"),
             badge: String(localized: "Draft"),
-            isOnWatch: false,
-            takes: takeCounts.count(for: mode == .cards ? settingsService.cardsScriptID
-                                                        : settingsService.teleprompterScriptID),
+            takes: takeCounts.count(for: scriptID),
             colorScheme: colorScheme,
-            onTakes: {
-                takesTarget = TakesTarget(id: mode == .cards ? settingsService.cardsScriptID
-                                                             : settingsService.teleprompterScriptID,
-                                          title: mode == .cards ? String(localized: "New Deck")
-                                                                : String(localized: "New Script"))
-            }
+            onTakes: { takesTarget = TakesTarget(id: scriptID, title: title) }
         )
-        .contentShape(Rectangle())
         .onTapGesture { openDraft(mode) }
-        .accessibilityAddTraits(.isButton)
+        .plainRow(insets: Self.rowInsets)
         .contextMenu {
             Button {
                 openDraft(mode)
@@ -586,11 +680,9 @@ private struct LibraryList: View {
         let isOpen = settingsService.noteId(for: note.mode) == note.id
         return LibraryScriptRow(
             title: note.title,
-            mode: note.mode,
             preview: LibraryText.preview(of: note.content),
             detail: detail(of: note),
             badge: isOpen && settingsService.hasUnsavedChanges(in: note.mode) ? String(localized: "Unsaved") : nil,
-            isOnWatch: settingsService.watchNoteIDs.contains(note.id),
             takes: takeCounts.count(for: note.id),
             colorScheme: colorScheme,
             onTakes: {
@@ -598,9 +690,8 @@ private struct LibraryList: View {
                 takesTarget = TakesTarget(id: note.id, title: note.title)
             }
         )
-        .contentShape(Rectangle())
         .onTapGesture { open(note) }
-        .accessibilityAddTraits(.isButton)
+        .plainRow(insets: Self.rowInsets)
         .contextMenu { noteMenu(note) }
         .swipeActions(edge: .trailing) {
             Button {
@@ -655,18 +746,16 @@ private struct LibraryList: View {
                 get: { note.folder },
                 set: { move(note, to: $0) }
             )) {
-                Label("Library", systemImage: "tray").tag(String?.none)
+                Text("None").tag(String?.none)
                 ForEach(settingsService.folders.sorted { $0.localizedStandardCompare($1) == .orderedAscending },
                         id: \.self) { name in
-                    Label(name, systemImage: "folder").tag(String?.some(name))
+                    Text(name).tag(String?.some(name))
                 }
             }
             .pickerStyle(.inline)
 
             Button {
-                noteForNewFolder = note
-                newFolderName = ""
-                showingNewFolder = true
+                beginNewFolder(for: note)
             } label: {
                 Label("New Folder", systemImage: "folder.badge.plus")
             }
@@ -696,13 +785,16 @@ private struct LibraryList: View {
         }
     }
 
-    /// When it was last edited, how many cards a deck has, and, in search
-    /// results from every folder, the folder it's in.
+    /// When it was last edited, how many cards a deck has, whether it's on
+    /// the watch, and, in search results from every folder, its folder.
     private func detail(of note: SavedNote) -> String {
         var parts = [LibraryText.date(note.updatedAt)]
         if note.mode == .cards {
             let count = CueCards.cards(in: note.content).count
             parts.append(String(localized: "\(count) cards", comment: "How many cards a deck has"))
+        }
+        if settingsService.watchNoteIDs.contains(note.id) {
+            parts.append(String(localized: "On Apple Watch"))
         }
         if isSearchingAll, let folder = note.folder {
             parts.append(folder)
@@ -1044,100 +1136,133 @@ private struct LibraryList: View {
 
 // MARK: - Rows
 
-/// A mode's or a folder's symbol on a tinted square, leading each row.
-private struct LibraryTile: View {
-    let systemImage: String
-    let color: Color
-
-    var body: some View {
-        Image(systemName: systemImage)
-            .font(.system(size: 17, weight: .semibold))
-            .foregroundStyle(color)
-            .frame(width: 40, height: 40)
-            .background(RoundedRectangle(cornerRadius: 11, style: .continuous).fill(color.opacity(0.15)))
-            .accessibilityHidden(true)
+private extension View {
+    /// A row of the library's list drawn on its own, with no background or
+    /// separator from the list.
+    func plainRow(insets: EdgeInsets) -> some View {
+        listRowInsets(insets)
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
     }
 }
 
-/// A script or deck: its title, how it starts, when it was edited, and the
-/// takes recorded with it, which open from here.
+/// Teleprompter or cards: whose scripts the library shows. A glass track
+/// with the chosen one lifted out of it.
+private struct LibraryModePicker: View {
+    @Binding var selection: ScriptMode
+    let colorScheme: ColorScheme
+    @Namespace private var thumb
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(ScriptMode.allCases) { mode in
+                let isSelected = mode == selection
+                Button {
+                    AnalyticsEvents.logButtonClick("library_mode_\(mode.rawValue)", screen: "library")
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) { selection = mode }
+                } label: {
+                    Text(mode.displayName)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(isSelected ? AppColors.textPrimary(for: colorScheme)
+                                                    : AppColors.textSecondary(for: colorScheme))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 38)
+                        .background {
+                            if isSelected {
+                                Capsule()
+                                    .fill(colorScheme == .dark ? Color(white: 0.28) : Color.white)
+                                    .shadow(color: Color.black.opacity(0.12), radius: 6, y: 2)
+                                    .matchedGeometryEffect(id: "thumb", in: thumb)
+                            }
+                        }
+                        .contentShape(Capsule())
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(isSelected ? [.isSelected] : [])
+            }
+        }
+        .padding(4)
+        .glassedEffect(in: Capsule())
+    }
+}
+
+/// A script or deck as a card: its title, how it starts, when it was
+/// edited, and the takes recorded with it, which open from here.
 private struct LibraryScriptRow: View {
     let title: String
-    let mode: ScriptMode
     let preview: String
     let detail: String
     /// Draft or Unsaved, beside the title.
     let badge: String?
-    let isOnWatch: Bool
     let takes: Int
     let colorScheme: ColorScheme
     let onTakes: () -> Void
 
+    static let cornerRadius: CGFloat = 22
+
     private var secondary: Color { AppColors.textSecondary(for: colorScheme) }
 
-    private var tint: Color {
-        mode == .cards ? AppColors.purple(for: colorScheme) : AppColors.blue(for: colorScheme)
-    }
-
     var body: some View {
-        HStack(alignment: .top, spacing: 14) {
-            LibraryTile(systemImage: mode == .cards ? "rectangle.stack.fill" : "text.alignleft", color: tint)
-
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 6) {
-                    Text(title)
-                        .font(.headline)
-                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                        .lineLimit(1)
-                    if isOnWatch {
-                        Image(systemName: "applewatch")
-                            .font(.caption)
-                            .foregroundStyle(secondary)
-                            .accessibilityLabel("On Apple Watch")
-                    }
-                    Spacer(minLength: 4)
-                    if let badge {
-                        Text(badge)
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(AppColors.yellow(for: colorScheme))
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 3)
-                            .background(Capsule().fill(AppColors.yellow(for: colorScheme).opacity(0.15)))
-                            .fixedSize()
-                    }
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text(title)
+                    .font(.headline)
+                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                    .lineLimit(1)
+                Spacer(minLength: 4)
+                if let badge {
+                    Text(badge)
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(AppColors.yellow(for: colorScheme))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Capsule().fill(AppColors.yellow(for: colorScheme).opacity(0.15)))
+                        .fixedSize()
                 }
-
-                if !preview.isEmpty {
-                    Text(preview)
-                        .font(.subheadline)
-                        .foregroundStyle(secondary)
-                        .lineLimit(2)
-                }
-
-                HStack(spacing: 8) {
-                    Text(detail)
-                        .font(.caption)
-                        .foregroundStyle(secondary.opacity(0.8))
-                        .lineLimit(1)
-                    Spacer(minLength: 0)
-                    if takes > 0 {
-                        Button(action: onTakes) {
-                            Label(String(localized: "\(takes) Takes", comment: "How many videos were recorded with a script"),
-                                  systemImage: "film.stack")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 5)
-                                .background(Capsule().fill(secondary.opacity(0.15)))
-                        }
-                        .buttonStyle(.borderless)
-                    }
-                }
-                .padding(.top, 2)
             }
+
+            if !preview.isEmpty {
+                Text(preview)
+                    .font(.subheadline)
+                    .foregroundStyle(secondary)
+                    .lineLimit(2)
+            }
+
+            HStack(spacing: 8) {
+                Text(detail)
+                    .font(.caption)
+                    .foregroundStyle(secondary.opacity(0.85))
+                    .lineLimit(1)
+                Spacer(minLength: 0)
+                if takes > 0 {
+                    Button(action: onTakes) {
+                        Text(String(localized: "\(takes) Takes", comment: "How many videos were recorded with a script"))
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(Capsule().fill(secondary.opacity(0.15)))
+                    }
+                    .buttonStyle(.borderless)
+                }
+            }
+            .padding(.top, 2)
         }
-        .padding(.vertical, 6)
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous)
+                .fill(colorScheme == .dark ? Color(white: 0.11) : Color.white)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous)
+                .stroke(secondary.opacity(0.2), lineWidth: 0.7)
+        )
+        .contentShape(RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous))
         .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isButton)
         .accessibilityActions {
             if takes > 0 {
                 Button(String(localized: "Show Takes"), action: onTakes)
@@ -1148,10 +1273,10 @@ private struct LibraryScriptRow: View {
 
 // MARK: - Storage
 
-/// Says plainly that scripts are lost with the app until there's a folder
-/// to keep them in, and offers to choose one. Or, with a folder that can't
-/// be reached, says that.
-private struct LibraryStorageCard: View {
+/// Says plainly that scripts are lost with the app until there's a storage
+/// folder, and offers to choose one. Put away, it comes back every tenth
+/// time the app is opened. With a folder that can't be reached, says that.
+private struct LibraryStorageBanner: View {
     /// There's a folder, but it can't be reached.
     let isUnreachable: Bool
     let colorScheme: ColorScheme
@@ -1161,18 +1286,13 @@ private struct LibraryStorageCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .top, spacing: 12) {
-                Image(systemName: isUnreachable ? "externaldrive.badge.exclamationmark" : "exclamationmark.triangle.fill")
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(AppColors.yellow(for: colorScheme))
-                    .frame(width: 28)
-
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(isUnreachable ? "Storage Folder Can't Be Reached" : "Only in This App")
+                    Text(isUnreachable ? "Storage Folder Can't Be Reached" : "Your Scripts Aren't Backed Up")
                         .font(.headline)
                         .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                     Text(isUnreachable
                          ? "Your scripts are only kept in CueCard until it's back. Choose it again if it moved."
-                         : "If CueCard is deleted, your scripts go with it. Choose a folder to keep each one as a file, on this iPhone or in iCloud Drive.")
+                         : "If CueCard is deleted, your scripts go with it. Choose a folder on this iPhone or in iCloud Drive to keep each one as a file.")
                         .font(.subheadline)
                         .foregroundStyle(AppColors.textSecondary(for: colorScheme))
                         .fixedSize(horizontal: false, vertical: true)
@@ -1195,40 +1315,34 @@ private struct LibraryStorageCard: View {
             Button(action: onChoose) {
                 Text(isUnreachable ? "Choose Folder Again" : "Choose Folder")
                     .font(.subheadline.weight(.semibold))
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 40)
+                    .padding(.horizontal, 18)
+                    .frame(height: 38)
                     .foregroundStyle(colorScheme == .dark ? .black : .white)
                     .background(Capsule().fill(AppColors.textPrimary(for: colorScheme)))
             }
             .buttonStyle(.borderless)
-
-            if !isUnreachable {
-                Text("Pick an empty folder or one made for your scripts. Text files in it become scripts, and the folders in it become folders here.")
-                    .font(.caption)
-                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                    .fixedSize(horizontal: false, vertical: true)
-            }
         }
         .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(AppColors.yellow(for: colorScheme).opacity(colorScheme == .dark ? 0.12 : 0.1))
+            RoundedRectangle(cornerRadius: LibraryScriptRow.cornerRadius, style: .continuous)
+                .fill(AppColors.yellow(for: colorScheme).opacity(colorScheme == .dark ? 0.14 : 0.12))
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .stroke(AppColors.yellow(for: colorScheme).opacity(0.35), lineWidth: 1)
+            RoundedRectangle(cornerRadius: LibraryScriptRow.cornerRadius, style: .continuous)
+                .stroke(AppColors.yellow(for: colorScheme).opacity(0.4), lineWidth: 1)
         )
     }
 }
 
-/// Where scripts are kept and what CueCard does with them, at the end of the
-/// library, with anything the storage folder couldn't take.
+/// Where scripts are kept, at the end of the library, with anything the
+/// storage folder couldn't take.
 private struct LibraryFooter: View {
     @EnvironmentObject var settingsService: SettingsService
     let colorScheme: ColorScheme
 
     var body: some View {
-        VStack(spacing: 10) {
+        VStack(alignment: .leading, spacing: 8) {
             if let warning = oversizedFilesWarning {
                 Label(warning, systemImage: "exclamationmark.triangle.fill")
                     .foregroundStyle(AppColors.yellow(for: colorScheme))
@@ -1244,18 +1358,16 @@ private struct LibraryFooter: View {
             }
             .foregroundStyle(AppColors.textSecondary(for: colorScheme))
         }
-        .font(.caption)
-        .multilineTextAlignment(.center)
-        .textCase(nil)
+        .font(.subheadline)
     }
 
     private var storageText: Text {
         if let folder = settingsService.notesFolderName {
-            Text("No account, and nothing uploaded by CueCard. Your scripts are kept on this iPhone and as files in “\(folder)” folder, so they stay if the app is removed.")
+            Text("Your scripts are kept on this iPhone and as files in “\(folder)” folder, so they stay if the app is removed.")
         } else if settingsService.hasNotesFolder {
-            Text("No account, and nothing uploaded by CueCard. The storage folder can't be reached, so your scripts are only kept on this iPhone until it's back.")
+            Text("The storage folder can't be reached, so your scripts are only kept on this iPhone until it's back.")
         } else {
-            Text("No account, and nothing uploaded by CueCard. Your scripts are kept only on this iPhone, and are deleted if the app is removed.")
+            Text("Your scripts are kept only on this iPhone, and are deleted if the app is removed.")
         }
     }
 

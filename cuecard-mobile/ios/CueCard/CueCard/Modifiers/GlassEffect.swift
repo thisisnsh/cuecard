@@ -119,3 +119,15 @@ private struct EdgeFade: View {
         .allowsHitTesting(false)
     }
 }
+
+extension ToolbarContent {
+    /// On iOS 26, leave the item out of the bar's glass, as for a title.
+    @ToolbarContentBuilder
+    func sharedBackgroundHidden() -> some ToolbarContent {
+        if #available(iOS 26.0, *) {
+            sharedBackgroundVisibility(.hidden)
+        } else {
+            self
+        }
+    }
+}
