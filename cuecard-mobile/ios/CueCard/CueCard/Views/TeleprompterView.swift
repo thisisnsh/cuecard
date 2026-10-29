@@ -10,6 +10,8 @@ struct TeleprompterView: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.colorScheme) var colorScheme
     @StateObject private var pipManager = TeleprompterPiPManager.shared
+    /// Listens for Follow My Voice, which moves the script with the reader's words.
+    @StateObject private var voice = VoiceFollower()
 
     private var isPlaying: Bool { pipManager.playback.isPlaying }
     private var elapsedTime: Double { pipManager.playback.elapsedTime }
@@ -162,6 +164,11 @@ struct TeleprompterView: View {
                         VStack {
                             Spacer()
 
+                            if settings.followsVoice {
+                                voiceStatus
+                                    .padding(.bottom, 16)
+                            }
+
                             // Closer together with the anchor buttons in, so the
                             // row still fits a small phone.
                             HStack(spacing: content.hasAnchors ? 14 : 24) {
@@ -189,37 +196,11 @@ struct TeleprompterView: View {
                                 .disabled(!pipManager.isPiPPossible)
                                 .accessibilityHidden(!pipManager.isPiPPossible)
 
-                                // Play/Pause button
-                                Button(action: {
-                                    AnalyticsEvents.logButtonClick((isPlaying || isCountingDown) ? "pause" : "play", screen: "teleprompter")
-                                    togglePlayPause()
-                                }) {
-                                    ZStack {
-                                        if showsCountdownNumber {
-                                            Text("\(countdownValue)")
-                                                .font(.system(size: 30, weight: .bold, design: .rounded))
-                                                .monospacedDigit()
-                                                .transition(.opacity)
-                                        } else {
-                                            Image(systemName: (isPlaying || isCountingDown) ? "pause.fill" : "play.fill")
-                                                .font(.system(size: 28, weight: .semibold))
-                                                .transition(.opacity)
-                                        }
-                                    }
-                                    .foregroundStyle(colorScheme == .dark ? .black : .white)
-                                    .frame(width: 72, height: 72)
-                                    .background(
-                                        Circle()
-                                            .fill(showsCountdownNumber
-                                                  ? settings.timerStyle.countdownColor.color(for: colorScheme)
-                                                  : AppColors.green(for: colorScheme))
-                                    )
-                                    .glassedEffect(in: Circle())
-                                    .animation(.easeInOut(duration: 0.12), value: showsCountdownNumber)
+                                if settings.followsVoice {
+                                    listenButton
+                                } else {
+                                    playButton
                                 }
-                                .accessibilityLabel(isCountingDown
-                                                    ? "Pause, starting in \(countdownValue)"
-                                                    : (isPlaying ? "Pause" : "Play"))
 
                                 // Restart button
                                 Button(action: {
@@ -243,6 +224,7 @@ struct TeleprompterView: View {
                     }
                     .onAppear {
                         setupPiP()
+                        if settings.followsVoice { startFollowingVoice() }
                         // A video recorded from now until the teleprompter closes
                         // is a take of this script.
                         TakeStore.shared.begin(scriptID: settingsService.teleprompterScriptID)
@@ -276,6 +258,21 @@ struct TeleprompterView: View {
                         }
                         ToolbarItem(placement: .topBarTrailing) {
                             Button {
+                                AnalyticsEvents.logButtonClick(settings.followsVoice ? "follow_voice_off" : "follow_voice_on",
+                                                               screen: "teleprompter")
+                                settingsService.settings.followsVoice.toggle()
+                            } label: {
+                                Image(systemName: settings.followsVoice ? "waveform.circle.fill" : "waveform.circle")
+                                    .font(.system(size: 17, weight: .semibold))
+                                    .foregroundStyle(settings.followsVoice
+                                                     ? AppColors.purple(for: colorScheme)
+                                                     : AppColors.textPrimary(for: colorScheme))
+                            }
+                            .accessibilityLabel("Follow My Voice")
+                            .accessibilityValue(settings.followsVoice ? "On" : "Off")
+                        }
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button {
                                 AnalyticsEvents.logButtonClick("camera", screen: "teleprompter")
                                 stopControlsTimer()
                                 showingCamera.toggle()
@@ -304,6 +301,7 @@ struct TeleprompterView: View {
         }
         .persistentSystemOverlays(.hidden)
         .onDisappear {
+            voice.stop()
             stopControlsTimer()
             TakeStore.shared.end()
             UIApplication.shared.isIdleTimerDisabled = false
@@ -330,6 +328,144 @@ struct TeleprompterView: View {
         }
         .onChange(of: isPlaying) { _, playing in
             if playing { resetControlsTimer() } else { stopControlsTimer() }
+        }
+        .onChange(of: settings.followsVoice) { _, follows in
+            if follows {
+                startFollowingVoice()
+            } else {
+                stopFollowingVoice()
+            }
+        }
+    }
+
+    // MARK: - Play
+
+    private var playButton: some View {
+        Button(action: {
+            AnalyticsEvents.logButtonClick((isPlaying || isCountingDown) ? "pause" : "play", screen: "teleprompter")
+            togglePlayPause()
+        }) {
+            ZStack {
+                if showsCountdownNumber {
+                    Text("\(countdownValue)")
+                        .font(.system(size: 30, weight: .bold, design: .rounded))
+                        .monospacedDigit()
+                        .transition(.opacity)
+                } else {
+                    Image(systemName: (isPlaying || isCountingDown) ? "pause.fill" : "play.fill")
+                        .font(.system(size: 28, weight: .semibold))
+                        .transition(.opacity)
+                }
+            }
+            .foregroundStyle(colorScheme == .dark ? .black : .white)
+            .frame(width: 72, height: 72)
+            .background(
+                Circle()
+                    .fill(showsCountdownNumber
+                          ? settings.timerStyle.countdownColor.color(for: colorScheme)
+                          : AppColors.green(for: colorScheme))
+            )
+            .glassedEffect(in: Circle())
+            .animation(.easeInOut(duration: 0.12), value: showsCountdownNumber)
+        }
+        .accessibilityLabel(isCountingDown
+                            ? "Pause, starting in \(countdownValue)"
+                            : (isPlaying ? "Pause" : "Play"))
+    }
+
+    // MARK: - Follow My Voice
+
+    /// In place of Play while following the reader's voice: the microphone,
+    /// listening or not. The script only moves as words are said.
+    private var listenButton: some View {
+        Button(action: {
+            AnalyticsEvents.logButtonClick(voice.isListening ? "follow_voice_stop" : "follow_voice_listen",
+                                           screen: "teleprompter")
+            if voice.isListening {
+                voice.stop()
+                pipManager.pause()
+            } else {
+                listen()
+            }
+            resetControlsTimer()
+        }) {
+            Image(systemName: voice.isListening ? "mic.fill" : "mic.slash.fill")
+                .font(.system(size: 26, weight: .semibold))
+                .foregroundStyle(colorScheme == .dark ? .black : .white)
+                .frame(width: 72, height: 72)
+                .background(Circle().fill(voice.isListening
+                                          ? AppColors.purple(for: colorScheme)
+                                          : AppColors.textSecondary(for: colorScheme)))
+                .glassedEffect(in: Circle())
+        }
+        .accessibilityLabel(voice.isListening ? "Stop Listening" : "Listen")
+    }
+
+    /// What Follow My Voice is doing, or why it can't.
+    @ViewBuilder
+    private var voiceStatus: some View {
+        let label: (text: String, icon: String) = switch voice.status {
+        case .unavailable(let reason): (reason, "exclamationmark.triangle")
+        case .listening where !pipManager.playback.hasStarted:
+            (String(localized: "Start reading. The script follows your voice."), "waveform")
+        case .listening: (String(localized: "Listening"), "waveform")
+        case .idle: (String(localized: "Not listening"), "mic.slash")
+        }
+        HStack(spacing: 8) {
+            Image(systemName: label.icon)
+                .symbolEffect(.variableColor.iterative, isActive: voice.isListening)
+            Text(label.text)
+                .lineLimit(3)
+            BetaBadge()
+        }
+        .font(.footnote.weight(.semibold))
+        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        .glassedEffect(in: Capsule())
+        .padding(.horizontal, 24)
+    }
+
+    /// Hand the script's movement to the reader's voice, and start listening.
+    private func startFollowingVoice() {
+        pipManager.pause()
+        pipManager.setFollowsVoice(true)
+        voice.readingCharacter = { pipManager.readingCharacter }
+        voice.onProgress = { character in
+            // The first words said start the clock, without a countdown:
+            // the reader has already begun.
+            if !pipManager.playback.isPlaying { pipManager.play(countsDown: false) }
+            pipManager.follow(toCharacter: character)
+        }
+        listen()
+    }
+
+    private func listen() {
+        let text = pipManager.readingText ?? content.fullText
+        Task {
+            await voice.start(text: text)
+            // Picking up again after a stop carries the clock on at once.
+            if voice.isListening, pipManager.playback.hasStarted, !isPlaying {
+                pipManager.play(countsDown: false)
+            }
+        }
+    }
+
+    /// Back to scrolling at the set speed, paused.
+    private func stopFollowingVoice() {
+        voice.stop()
+        pipManager.pause()
+        pipManager.setFollowsVoice(false)
+    }
+
+    /// After a session long enough to judge, ask how it went.
+    private func finishFollowingVoice() {
+        guard settings.followsVoice else { return }
+        voice.stop()
+        let metrics = voice.metrics
+        Analytics.logEvent("follow_voice_session", parameters: VoiceFeedback.parameters(for: metrics))
+        if metrics.listenedSeconds >= VoiceFeedback.minimumSeconds {
+            VoiceFeedback.shared.pending = metrics
         }
     }
 
@@ -436,6 +572,7 @@ struct TeleprompterView: View {
     }
 
     private func restart() {
+        voice.restart()
         withAnimation(controlsFade) { pipManager.restart() }
         Analytics.logEvent("teleprompter_restart", parameters: nil)
     }
@@ -445,6 +582,7 @@ struct TeleprompterView: View {
     }
 
     private func stopAndDismiss() {
+        finishFollowingVoice()
         pipManager.cleanup()
         TakeStore.shared.end()
         Analytics.logEvent("teleprompter_closed", parameters: ["elapsed_time": Int(elapsedTime)])

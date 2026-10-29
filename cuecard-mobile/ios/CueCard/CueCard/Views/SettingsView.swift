@@ -72,6 +72,17 @@ struct EditorSettingsView: View {
             Toggle("Reading Guide Line", isOn: $settingsService.settings.showsReadingGuide)
         }
 
+        Section {
+            Toggle(isOn: $settingsService.settings.followsVoice) {
+                HStack(spacing: 8) {
+                    Text("Follow My Voice")
+                    BetaBadge()
+                }
+            }
+        } footer: {
+            Text("The script moves as you speak instead of at a set speed. Your voice is understood on this iPhone and never leaves it.")
+        }
+
         Section("Floating Window") {
             SizePresetPicker(
                 title: "Text Size",

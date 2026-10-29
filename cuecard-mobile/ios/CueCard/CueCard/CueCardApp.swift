@@ -95,6 +95,16 @@ enum AppLinks {
         body: String(localized: "What happened:\n\nWhat you expected:\n\nSteps to reproduce:\n")
     )
 
+    /// An email to support about Follow My Voice, with how the session went.
+    static func followVoiceReport(metrics: VoiceSessionMetrics, stars: Int) -> URL {
+        let session = "Follow My Voice (beta) · \(Int(metrics.listenedSeconds))s listened · "
+            + "\(Int((metrics.progress * 100).rounded()))% of script" + (stars > 0 ? " · \(stars)/5" : "")
+        return supportEmail(
+            subject: "CueCard Follow My Voice Issue",
+            body: String(localized: "What happened:\n\nWhat you expected:\n") + "\n" + session
+        )
+    }
+
     /// An email to support asking for something new.
     static let featureRequest = supportEmail(
         subject: "CueCard Feature Request",

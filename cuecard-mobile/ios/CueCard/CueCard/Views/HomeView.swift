@@ -38,6 +38,8 @@ struct HomeView: View {
     @State private var suggestionsUnavailable: String?
     /// How tall the suggestions panel stands, for the script to keep clear of.
     @State private var reviewPanelHeight: CGFloat = 0
+    /// A Follow My Voice session to ask the reader about.
+    @State private var voiceFeedback: VoiceSessionMetrics?
     @ObservedObject private var watch = WatchSessionService.shared
     @ObservedObject private var cardsSession = CueCardsSession.shared
     @StateObject private var takes = TakesLibrary()
@@ -167,6 +169,19 @@ struct HomeView: View {
                     .frame(height: 52)
                     .glassedEffect(in: Capsule())
             }
+        }
+    }
+
+    /// Back from the teleprompter: anything recorded while it was open is a
+    /// take now. After Follow My Voice, the reader is asked how it went —
+    /// in place of the review prompt, so it's one question at a time.
+    private func teleprompterDidClose() {
+        takes.reload()
+        if let metrics = VoiceFeedback.shared.pending {
+            VoiceFeedback.shared.pending = nil
+            voiceFeedback = metrics
+        } else {
+            requestReviewIfEarned()
         }
     }
 
@@ -474,6 +489,14 @@ struct HomeView: View {
 
     var body: some View {
         handlingSuggestions(home)
+            .sheet(isPresented: Binding(
+                get: { voiceFeedback != nil },
+                set: { if !$0 { voiceFeedback = nil } }
+            )) {
+                if let voiceFeedback {
+                    VoiceFeedbackSheet(metrics: voiceFeedback)
+                }
+            }
     }
 
     /// What the suggestions need from the screen around them, kept apart from
@@ -732,11 +755,7 @@ struct HomeView: View {
             } message: {
                 Text("Enter a title for your note")
             }
-            .fullScreenCover(isPresented: $showingTeleprompter, onDismiss: {
-                // Anything recorded while it was open is a take now.
-                takes.reload()
-                requestReviewIfEarned()
-            }) {
+            .fullScreenCover(isPresented: $showingTeleprompter, onDismiss: teleprompterDidClose) {
                 TeleprompterView(content: TeleprompterParser.parseNotes(settingsService.notes))
                     // Passed on by hand: as an iPad app on a Mac, a full screen
                     // cover doesn't inherit environment objects.

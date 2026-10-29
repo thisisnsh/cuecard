@@ -68,30 +68,30 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "CueCard uses your microphone to record audio with your videos."
+            "value" : "CueCard uses your microphone to record audio with your videos, and to follow your voice through your script."
           }
         },
         "es" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "CueCard usa el micrófono para grabar el audio de tus vídeos."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "CueCard utilise le micro pour enregistrer le son de vos vidéos."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "O CueCard usa o microfone para gravar o áudio dos seus vídeos."
           }
         },
         "ru" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "CueCard использует микрофон, чтобы записывать звук для ваших видео."
           }
         }
@@ -165,6 +165,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "CueCard находит видео, которые вы записываете при открытом телесуфлёре, чтобы каждый дубль оставался со своим сценарием."
+          }
+        }
+      }
+    },
+    "NSSpeechRecognitionUsageDescription" : {
+      "comment" : "Privacy - Speech Recognition Usage Description",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "CueCard recognizes your speech on this iPhone to keep your script in step with your voice."
           }
         }
       }

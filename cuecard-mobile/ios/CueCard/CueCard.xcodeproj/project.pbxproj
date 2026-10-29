@@ -96,6 +96,8 @@
 		D1E000000000000000000001 /* TimerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1E000000000000000000002 /* TimerSheet.swift */; };
 		A1A000000000000000000001 /* ScriptSuggestions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1A000000000000000000002 /* ScriptSuggestions.swift */; };
 		A1A000000000000000000003 /* SuggestionsPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1A000000000000000000004 /* SuggestionsPanel.swift */; };
+		A1A000000000000000000005 /* VoiceFollower.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1A000000000000000000006 /* VoiceFollower.swift */; };
+		A1A000000000000000000007 /* VoiceFeedbackSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1A000000000000000000008 /* VoiceFeedbackSheet.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -217,6 +219,8 @@
 		D1E000000000000000000002 /* TimerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerSheet.swift; sourceTree = "<group>"; };
 		A1A000000000000000000002 /* ScriptSuggestions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptSuggestions.swift; sourceTree = "<group>"; };
 		A1A000000000000000000004 /* SuggestionsPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionsPanel.swift; sourceTree = "<group>"; };
+		A1A000000000000000000006 /* VoiceFollower.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceFollower.swift; sourceTree = "<group>"; };
+		A1A000000000000000000008 /* VoiceFeedbackSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceFeedbackSheet.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -281,6 +285,7 @@
 				CA4E4A000000000000000004 /* CameraRecordingView.swift */,
 				140 /* CueCardsView.swift */,
 				D1E000000000000000000002 /* TimerSheet.swift */,
+				A1A000000000000000000008 /* VoiceFeedbackSheet.swift */,
 				A1A000000000000000000004 /* SuggestionsPanel.swift */,
 				102 /* ContentView.swift */,
 				103 /* WelcomeView.swift */,
@@ -319,6 +324,7 @@
 				128 /* DeviceModel.swift */,
 				119 /* RemoteNotificationService.swift */,
 				121 /* WhatsNewService.swift */,
+				A1A000000000000000000006 /* VoiceFollower.swift */,
 				A1A000000000000000000002 /* ScriptSuggestions.swift */,
 			);
 			path = Services;
@@ -575,6 +581,8 @@
 				055 /* CueCardRun.swift in Sources */,
 				051 /* CueCardsView.swift in Sources */,
 				D1E000000000000000000001 /* TimerSheet.swift in Sources */,
+				A1A000000000000000000007 /* VoiceFeedbackSheet.swift in Sources */,
+				A1A000000000000000000005 /* VoiceFollower.swift in Sources */,
 				A1A000000000000000000003 /* SuggestionsPanel.swift in Sources */,
 				A1A000000000000000000001 /* ScriptSuggestions.swift in Sources */,
 				049 /* CueCardsSession.swift in Sources */,
@@ -814,7 +822,8 @@
 				INFOPLIST_KEY_CFBundleDisplayName = CueCard;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSCameraUsageDescription = "CueCard uses your camera to record videos while you read your script or cards.";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "CueCard uses your microphone to record audio with your videos.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "CueCard uses your microphone to record audio with your videos, and to follow your voice through your script.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "CueCard recognizes your speech on this iPhone to keep your script in step with your voice.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "CueCard saves the videos you record to your photo library.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "CueCard finds the videos you record while the teleprompter is open, so each take stays with its script.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
@@ -853,7 +862,8 @@
 				INFOPLIST_KEY_CFBundleDisplayName = CueCard;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSCameraUsageDescription = "CueCard uses your camera to record videos while you read your script or cards.";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "CueCard uses your microphone to record audio with your videos.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "CueCard uses your microphone to record audio with your videos, and to follow your voice through your script.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "CueCard recognizes your speech on this iPhone to keep your script in step with your voice.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "CueCard saves the videos you record to your photo library.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "CueCard finds the videos you record while the teleprompter is open, so each take stays with its script.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;

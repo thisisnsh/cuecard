@@ -57,6 +57,9 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
     private var lastFrameTime: CFTimeInterval = 0
     /// What the watch was last told, so it is only told again on a change.
     private var watchTimer: TeleprompterTimerState?
+    /// The script moves with the reader's voice, not the clock. The clock
+    /// still runs, for the timer.
+    private(set) var followsVoice = false
 
     /// The overlay is repainted on the clock's tick. It is a view rather than a
     /// video, so there is no queue to fill ahead of time: each tick draws the
@@ -180,10 +183,12 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
     }
 
     /// Native PiP Play and the in-app Play button follow the same start delay.
-    func play() {
+    /// Following a voice, the reader starting to speak is the start, so
+    /// there's no delay to count down.
+    func play(countsDown: Bool = true) {
         guard !playback.isPlaying, !playback.isCountingDown else { return }
         var state = playback
-        if !state.hasStarted && settings.countdownSeconds > 0 {
+        if countsDown && !state.hasStarted && settings.countdownSeconds > 0 {
             state.isCountingDown = true
             state.countdownValue = settings.countdownSeconds
             countdownDeadline = CACurrentMediaTime() + Double(settings.countdownSeconds)
@@ -226,6 +231,29 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
     func seek(toLine line: Double) {
         guard line.isFinite, linesPerSecond > 0 else { return }
         seek(toScriptTime: line / linesPerSecond)
+    }
+
+    /// Move the script with the reader's voice instead of the clock, or back.
+    func setFollowsVoice(_ follows: Bool) {
+        guard follows != followsVoice else { return }
+        advanceClock()
+        followsVoice = follows
+        reanchorPlayback()
+    }
+
+    /// The script as the teleprompter sets it, which reading positions count
+    /// characters of.
+    var readingText: String? { renderer?.string }
+
+    /// Where the reading line is in `readingText`.
+    var readingCharacter: Double { characterPosition }
+
+    /// Bring the character the reader's voice has reached to the reading
+    /// line, scrolling there rather than jumping.
+    func follow(toCharacter character: Double) {
+        guard linesPerSecond > 0, referenceLineStarts.count > 1 else { return }
+        let line = TeleprompterTextLayout.linePosition(forCharacter: character, starts: referenceLineStarts)
+        seek(toScriptTime: line / linesPerSecond, snaps: false)
     }
 
     /// A script is open in the teleprompter, so there is playback to control.
@@ -406,14 +434,16 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         }
         let elapsed = max(0, hostTime - anchor)
         state.elapsedTime = elapsedBase + elapsed
+        // Following a voice, the script stays where the voice last put it.
+        let scrolled = followsVoice ? 0 : elapsed
         if overlayDrives {
-            let line = overlayBase + overlayLinesPerSecond * elapsed
+            let line = overlayBase + overlayLinesPerSecond * scrolled
             state.scriptTime = scriptTime(forOverlayLine: line)
             return Projection(state: state, overlayLine: line)
         }
         // Deliberately unbounded. Only the rendered text clamps at its last
         // line; reaching it must not pause the video or the session clock.
-        state.scriptTime = scriptBase + elapsed
+        state.scriptTime = scriptBase + scrolled
         return Projection(state: state, overlayLine: overlayLine(for: state))
     }
 
@@ -563,6 +593,7 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         isPiPPossible = false
         isStartingPiP = false
         isCameraPresented = false
+        followsVoice = false
         lastFrameTime = 0
         syncWatch()
     }
@@ -905,6 +936,8 @@ private final class TeleprompterOverlayRenderer {
     private var lineStarts: [Int] = []
     private var lineOffsets: [CGFloat] = []
     var lineCount: Int { lineStarts.count }
+    /// The script as set, which positions in it count characters of.
+    var string: String { textStorage.string }
     /// Where each `[anchor]` points, in characters of the script.
     let anchorPositions: [Int]
     private let timerDuration: Int
