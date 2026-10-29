@@ -98,6 +98,7 @@
 		A1A000000000000000000003 /* SuggestionsPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1A000000000000000000004 /* SuggestionsPanel.swift */; };
 		A1A000000000000000000005 /* VoiceFollower.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1A000000000000000000006 /* VoiceFollower.swift */; };
 		A1A000000000000000000007 /* VoiceFeedbackSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1A000000000000000000008 /* VoiceFeedbackSheet.swift */; };
+		A1A000000000000000000009 /* HelpAssistantView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1A00000000000000000000A /* HelpAssistantView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -221,6 +222,7 @@
 		A1A000000000000000000004 /* SuggestionsPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionsPanel.swift; sourceTree = "<group>"; };
 		A1A000000000000000000006 /* VoiceFollower.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceFollower.swift; sourceTree = "<group>"; };
 		A1A000000000000000000008 /* VoiceFeedbackSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceFeedbackSheet.swift; sourceTree = "<group>"; };
+		A1A00000000000000000000A /* HelpAssistantView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpAssistantView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -285,6 +287,7 @@
 				CA4E4A000000000000000004 /* CameraRecordingView.swift */,
 				140 /* CueCardsView.swift */,
 				D1E000000000000000000002 /* TimerSheet.swift */,
+				A1A00000000000000000000A /* HelpAssistantView.swift */,
 				A1A000000000000000000008 /* VoiceFeedbackSheet.swift */,
 				A1A000000000000000000004 /* SuggestionsPanel.swift */,
 				102 /* ContentView.swift */,
@@ -581,6 +584,7 @@
 				055 /* CueCardRun.swift in Sources */,
 				051 /* CueCardsView.swift in Sources */,
 				D1E000000000000000000001 /* TimerSheet.swift in Sources */,
+				A1A000000000000000000009 /* HelpAssistantView.swift in Sources */,
 				A1A000000000000000000007 /* VoiceFeedbackSheet.swift in Sources */,
 				A1A000000000000000000005 /* VoiceFollower.swift in Sources */,
 				A1A000000000000000000003 /* SuggestionsPanel.swift in Sources */,

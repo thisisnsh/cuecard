@@ -20,23 +20,24 @@ struct ScriptSuggestion: Identifiable, Equatable {
     let replacement: String
 }
 
-/// Whether this iPhone can make suggestions, and if not, whether the user
-/// could do something about that.
-enum SuggestionsAvailability: Equatable {
+/// Whether this iPhone has Apple's on-device model to ask — for suggestions
+/// and for answers in Help — and if not, whether the user could do
+/// something about that.
+enum OnDeviceModelAvailability: Equatable {
     case available
-    /// Apple Intelligence is off, or still getting ready: the button shows,
+    /// Apple Intelligence is off, or still getting ready: what uses it shows,
     /// and says why it can't help yet.
     case unavailable(String)
     /// No on-device model on this iPhone or this version of iOS.
     case unsupported
 
-    static var current: SuggestionsAvailability {
+    static var current: OnDeviceModelAvailability {
         guard #available(iOS 26.0, *) else { return .unsupported }
         switch SystemLanguageModel.default.availability {
         case .available:
             return .available
         case .unavailable(.appleIntelligenceNotEnabled):
-            return .unavailable(String(localized: "Turn on Apple Intelligence in Settings to get suggestions for your script."))
+            return .unavailable(String(localized: "Turn on Apple Intelligence in Settings to use this."))
         case .unavailable(.modelNotReady):
             return .unavailable(String(localized: "Apple Intelligence is still getting ready on this iPhone. Try again in a little while."))
         case .unavailable:

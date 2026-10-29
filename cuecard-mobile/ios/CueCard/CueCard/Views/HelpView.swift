@@ -77,7 +77,9 @@ private enum AllHelp {
         HelpTopic("Add Images",
                   detail: "Tap the photo above the keyboard to add images from your library, or paste one in. The Lock Screen and Apple Watch show a photo symbol in their place."),
         HelpTopic("Add Cards",
-                  detail: "Each box in the editor is one card. Tap Create New Card to add another.")
+                  detail: "Each box in the editor is one card. Tap Create New Card to add another."),
+        HelpTopic("Get Suggestions",
+                  detail: "Tap the sparkles above the timer to have Apple Intelligence read your teleprompter script on this iPhone. It suggests spelling fixes, cues, anchors and bold or italic words. Accept or reject each one, or accept them all. Needs an iPhone with Apple Intelligence turned on.")
     ])
 
     static let notes = HelpSection("notes", title: "Notes & Saving",
@@ -130,7 +132,9 @@ private enum AllHelp {
         HelpTopic("Use Over Other Apps",
                   detail: "Leave CueCard while the teleprompter is open and your script keeps going in a floating window, handy on video calls. It doesn't open while the camera is on."),
         HelpTopic("Know When Time Is Running Out",
-                  detail: "The timer changes color when you're near the end and again once you're over time. Pick the colors in the timer.")
+                  detail: "The timer changes color when you're near the end and again once you're over time. Pick the colors in the timer."),
+        HelpTopic("Follow My Voice (Beta)",
+                  detail: "Tap the waveform at the top of the teleprompter, or turn on Follow My Voice in Settings. The script moves as you read it aloud, instead of at a set speed, and the timer starts with your first words. Tap the microphone to stop or start listening. Your voice is understood on this iPhone and never leaves it.")
     ])
 
     static let cards = HelpSection("cards", title: "Cards",
@@ -193,6 +197,13 @@ private enum AllHelp {
 
     static var sections: [HelpSection] {
         [writing, notes, settings, teleprompter, cards, takes, appleWatch] + (actionButton.map { [$0] } ?? [])
+    }
+}
+
+/// Every help topic with the section it's in, for answering questions from.
+enum HelpLibrary {
+    static var topics: [(section: String, topic: HelpTopic)] {
+        AllHelp.sections.flatMap { section in section.topics.map { (section.title, $0) } }
     }
 }
 
@@ -263,6 +274,30 @@ struct HelpView: View {
 
     @ViewBuilder
     private var frontPage: some View {
+        // Only where the iPhone has Apple Intelligence to answer with.
+        if OnDeviceModelAvailability.current != .unsupported {
+            Section {
+                NavigationLink {
+                    HelpAssistantView(close: close)
+                } label: {
+                    HStack(spacing: 14) {
+                        Image(systemName: "sparkles")
+                            .font(.system(size: 17, weight: .medium))
+                            .foregroundStyle(AppColors.purple(for: colorScheme))
+                            .frame(width: 28)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Ask a Question")
+                                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                            Text("Answered on this iPhone with Apple Intelligence")
+                                .font(.footnote)
+                                .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                        }
+                    }
+                    .padding(.vertical, 2)
+                }
+            }
+        }
+
         Section {
             Button {
                 AnalyticsEvents.logButtonClick("report_bug", screen: Self.screen)

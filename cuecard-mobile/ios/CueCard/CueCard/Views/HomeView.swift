@@ -189,7 +189,7 @@ struct HomeView: View {
     /// the teleprompter. Not shown where this iPhone has no model to ask.
     @ViewBuilder
     private var suggestionsControl: some View {
-        let availability = SuggestionsAvailability.current
+        let availability = OnDeviceModelAvailability.current
         if hasNotes, !isCardsMode, availability != .unsupported {
             SuggestionsButton(colorScheme: colorScheme) {
                 AnalyticsEvents.logButtonClick("suggestions", screen: "home")
