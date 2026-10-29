@@ -327,6 +327,28 @@ final class CueTextView: UITextView {
         setContentOffsetY(contentOffset.y)
     }
 
+    /// Bring `range` to the middle of what's in view, unless it's well in
+    /// view already: the suggestion being looked at.
+    func reveal(_ range: NSRange) {
+        guard isScrollEnabled,
+              let start = position(from: beginningOfDocument, offset: range.location),
+              let end = position(from: start, offset: range.length),
+              let textRange = textRange(from: start, to: end) else { return }
+        let rect = firstRect(for: textRange)
+        guard !rect.isNull, rect.minY.isFinite, rect.maxY.isFinite else { return }
+
+        // The top bar and the fade under it cover as much as the text starts down.
+        let coveredTop = textContainerInset.top
+        let visibleTop = contentOffset.y + coveredTop
+        let visibleHeight = bounds.height - coveredTop - adjustedContentInset.bottom
+        guard rect.minY < visibleTop || rect.maxY > visibleTop + visibleHeight else { return }
+
+        let lowest = -adjustedContentInset.top
+        let highest = max(lowest, contentSize.height + adjustedContentInset.bottom - bounds.height)
+        let target = min(max(rect.midY - coveredTop - visibleHeight / 2, lowest), highest)
+        setContentOffset(CGPoint(x: contentOffset.x, y: target), animated: true)
+    }
+
     /// Scroll to `y`, clamped to the ends of the text.
     private func setContentOffsetY(_ y: CGFloat) {
         let lowest = -adjustedContentInset.top
@@ -360,6 +382,13 @@ final class CueEditorController: ObservableObject {
     /// or take that style back off if it has it.
     func toggle(_ style: EmphasisStyle) {
         coordinator?.toggle(style)
+    }
+
+    /// Make an edit to the script where it sits in the editor: a suggestion
+    /// accepted. False if there's no editor to make it in.
+    func replace(_ range: NSRange, with replacement: String) -> Bool {
+        guard let coordinator else { return false }
+        return coordinator.replaceScript(range, with: replacement)
     }
 
     /// The editor showing a spinner for images still on their way in.
@@ -408,6 +437,9 @@ struct CueTextEditor: UIViewRepresentable {
     /// How far down the script starts. More than `edgeFade` where the editor
     /// reaches up under the top bar and the fade starts inside it.
     var topInset: CGFloat = Self.edgeFade
+    /// Suggestions being reviewed, marked in the text. The text can't be
+    /// typed in meanwhile; a tap picks the suggestion under it.
+    var suggestionMarks: SuggestionMarks?
 
     /// How far the script fades into the background at the top and bottom edges.
     /// The text starts and ends this far in, so no line sits inside a fade.
@@ -425,6 +457,11 @@ struct CueTextEditor: UIViewRepresentable {
         textView.onToggleStyle = { [weak coordinator = context.coordinator] in coordinator?.toggle($0) }
         textView.onPasteImages = { [weak coordinator = context.coordinator] in coordinator?.pasteImages($0) }
         textView.onPasteScript = { [weak coordinator = context.coordinator] in coordinator?.pasteScript($0) }
+        let tap = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.tapped(_:)))
+        tap.delegate = context.coordinator
+        tap.isEnabled = false
+        textView.addGestureRecognizer(tap)
+        context.coordinator.suggestionTap = tap
         context.coordinator.textView = textView
         textView.backgroundColor = .clear
         textView.textContainer.lineFragmentPadding = 0
@@ -463,10 +500,17 @@ struct CueTextEditor: UIViewRepresentable {
             textView.textContainerInset.top = topInset
         }
 
+        let isReviewing = suggestionMarks != nil
+        if textView.isEditable == isReviewing { textView.isEditable = !isReviewing }
+        context.coordinator.suggestionTap?.isEnabled = isReviewing
+
         let styleChanged = context.coordinator.appliedColorScheme != colorScheme
             || context.coordinator.appliedCueColor != cueColor
             || context.coordinator.appliedFontSize != fontSize
             || context.coordinator.appliedCardLimit != cardLimit
+            || context.coordinator.appliedSuggestions != suggestionMarks?.ranges
+            || context.coordinator.appliedFocus != suggestionMarks?.focused
+        let focusChanged = context.coordinator.appliedFocus != suggestionMarks?.focused
 
         if ScriptImageAttachment.script(from: textView.textStorage) != text {
             textView.attributedText = ScriptImageAttachment.editorText(for: text, maxHeight: imageMaxHeight)
@@ -480,6 +524,11 @@ struct CueTextEditor: UIViewRepresentable {
         context.coordinator.appliedCueColor = cueColor
         context.coordinator.appliedFontSize = fontSize
         context.coordinator.appliedCardLimit = cardLimit
+        context.coordinator.appliedSuggestions = suggestionMarks?.ranges
+        context.coordinator.appliedFocus = suggestionMarks?.focused
+        if focusChanged, let focused = suggestionMarks?.focused {
+            textView.reveal(Self.editorRange(for: focused, in: text))
+        }
 
         // SwiftUI's .focused() doesn't reach into a UIViewRepresentable, so drive
         // first responder status from the binding instead — but after this update
@@ -517,14 +566,43 @@ struct CueTextEditor: UIViewRepresentable {
     // MARK: - Highlighting
 
     func applyHighlighting(to textView: UITextView) {
+        guard let suggestionMarks else {
+            Self.applyHighlighting(to: textView, cueColor: cueColor, colorScheme: colorScheme,
+                                   fontSize: fontSize, cardLimit: cardLimit)
+            return
+        }
+        let script = ScriptImageAttachment.script(from: textView.textStorage)
         Self.applyHighlighting(to: textView, cueColor: cueColor, colorScheme: colorScheme,
-                               fontSize: fontSize, cardLimit: cardLimit)
+                               fontSize: fontSize, cardLimit: cardLimit,
+                               suggestions: suggestionMarks.ranges.map { Self.editorRange(for: $0, in: script) },
+                               focusedSuggestion: suggestionMarks.focused.map { Self.editorRange(for: $0, in: script) })
+    }
+
+    /// Where `range` of the script is in the editor's text, which holds each
+    /// `[image …]` tag as a single character.
+    static func editorRange(for range: NSRange, in script: String) -> NSRange {
+        var location = range.location
+        for image in TeleprompterParser.imageMatches(in: script) where NSMaxRange(image.range) <= range.location {
+            location -= image.range.length - 1
+        }
+        return NSRange(location: location, length: range.length)
+    }
+
+    /// Where a spot in the editor's text is in the script.
+    static func scriptLocation(forEditor location: Int, in script: String) -> Int {
+        var shift = 0
+        for image in TeleprompterParser.imageMatches(in: script) {
+            guard image.range.location - shift < location else { break }
+            shift += image.range.length - 1
+        }
+        return location + shift
     }
 
     /// Styles the script as it reads: cues apart from the words, and emphasis
     /// applied with its markers left showing, quieter, so they can be edited.
     static func applyHighlighting(to textView: UITextView, cueColor: CueColor, colorScheme: ColorScheme,
-                                  fontSize: CGFloat, cardLimit: Int?) {
+                                  fontSize: CGFloat, cardLimit: Int?, suggestions: [NSRange] = [],
+                                  focusedSuggestion: NSRange? = nil) {
         // Recoloring mid-composition would drop the in-progress marked text.
         guard textView.markedTextRange == nil else { return }
 
@@ -633,6 +711,19 @@ struct CueTextEditor: UIViewRepresentable {
                 ], range: overflow)
             }
         }
+
+        // Suggestions waiting on the user, the one being looked at underlined.
+        let tint = isDarkMode ? AppColors.UIColors.Dark.purple : AppColors.UIColors.Light.purple
+        for range in suggestions where NSMaxRange(range) <= fullRange.length {
+            let isFocused = range == focusedSuggestion
+            storage.addAttribute(.backgroundColor, value: tint.withAlphaComponent(isFocused ? 0.3 : 0.12), range: range)
+            if isFocused {
+                storage.addAttributes([
+                    .underlineStyle: NSUnderlineStyle.thick.rawValue,
+                    .underlineColor: tint
+                ], range: range)
+            }
+        }
         storage.endEditing()
 
         textView.typingAttributes = baseAttributes
@@ -651,13 +742,16 @@ struct CueTextEditor: UIViewRepresentable {
 
     // MARK: - Coordinator
 
-    class Coordinator: NSObject, UITextViewDelegate {
+    class Coordinator: NSObject, UITextViewDelegate, UIGestureRecognizerDelegate {
         var parent: CueTextEditor
         weak var textView: CueTextView?
         var appliedColorScheme: ColorScheme?
         var appliedCueColor: CueColor?
         var appliedFontSize: CGFloat?
         var appliedCardLimit: Int?
+        var appliedSuggestions: [NSRange]?
+        var appliedFocus: NSRange?
+        weak var suggestionTap: UITapGestureRecognizer?
 
         init(parent: CueTextEditor) {
             self.parent = parent
@@ -869,6 +963,33 @@ struct CueTextEditor: UIViewRepresentable {
                     in: textView)
         }
 
+        // MARK: Suggestions
+
+        /// Put an accepted suggestion in, at its place in the script.
+        func replaceScript(_ range: NSRange, with replacement: String) -> Bool {
+            guard let textView, textView.markedTextRange == nil else { return false }
+            let script = ScriptImageAttachment.script(from: textView.textStorage)
+            guard NSMaxRange(range) <= (script as NSString).length else { return false }
+            let editorRange = CueTextEditor.editorRange(for: range, in: script)
+            replace(editorRange, with: replacement,
+                    caret: editorRange.location + (replacement as NSString).length, in: textView)
+            return true
+        }
+
+        /// A tap on the text while suggestions are open picks the one under it.
+        @objc func tapped(_ gesture: UITapGestureRecognizer) {
+            guard let textView, let marks = parent.suggestionMarks,
+                  let position = textView.closestPosition(to: gesture.location(in: textView)) else { return }
+            let offset = textView.offset(from: textView.beginningOfDocument, to: position)
+            marks.onTap(CueTextEditor.scriptLocation(forEditor: offset,
+                                                     in: ScriptImageAttachment.script(from: textView.textStorage)))
+        }
+
+        func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
+                               shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool {
+            true
+        }
+
         // MARK: Images
 
         /// Place images from the store after the selection — or after the cue
@@ -1003,6 +1124,16 @@ struct CueTextEditor: UIViewRepresentable {
             parent.isFocused = false
         }
     }
+}
+
+/// The suggestions being reviewed, as the editor marks them.
+struct SuggestionMarks {
+    /// Where each is in the script.
+    var ranges: [NSRange]
+    /// The one being looked at.
+    var focused: NSRange?
+    /// A tap in the text, at this spot in the script.
+    var onTap: (Int) -> Void
 }
 
 // MARK: - Script fonts

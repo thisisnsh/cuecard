@@ -32,6 +32,12 @@ struct HomeView: View {
     @State private var confirmingDiscard: Discarding?
     @State private var isEditorFocused = false
     @StateObject private var editorController = CueEditorController()
+    /// Suggestions from the on-device model, while they're open.
+    @StateObject private var review = ScriptReview()
+    /// Why Suggestions can't help yet, once its button has been tapped.
+    @State private var suggestionsUnavailable: String?
+    /// How tall the suggestions panel stands, for the script to keep clear of.
+    @State private var reviewPanelHeight: CGFloat = 0
     @ObservedObject private var watch = WatchSessionService.shared
     @ObservedObject private var cardsSession = CueCardsSession.shared
     @StateObject private var takes = TakesLibrary()
@@ -162,6 +168,43 @@ struct HomeView: View {
                     .glassedEffect(in: Capsule())
             }
         }
+    }
+
+    /// Suggestions from Apple's on-device model, for a script being written for
+    /// the teleprompter. Not shown where this iPhone has no model to ask.
+    @ViewBuilder
+    private var suggestionsControl: some View {
+        let availability = SuggestionsAvailability.current
+        if hasNotes, !isCardsMode, availability != .unsupported {
+            SuggestionsButton(colorScheme: colorScheme) {
+                AnalyticsEvents.logButtonClick("suggestions", screen: "home")
+                isEditorFocused = false
+                if case .unavailable(let reason) = availability {
+                    suggestionsUnavailable = reason
+                } else {
+                    review.start(script: settingsService.notes)
+                }
+            }
+            .transition(.scale.combined(with: .opacity))
+        }
+    }
+
+    /// Put an accepted suggestion into the script, through the editor so it
+    /// stays where it's scrolled to.
+    private func applySuggestion(_ edit: (range: NSRange, replacement: String)) {
+        guard !editorController.replace(edit.range, with: edit.replacement) else { return }
+        settingsService.notes = (settingsService.notes as NSString)
+            .replacingCharacters(in: edit.range, with: edit.replacement)
+    }
+
+    /// The suggestions being reviewed, for the editor to mark.
+    private var suggestionMarks: SuggestionMarks? {
+        guard review.isActive else { return nil }
+        return SuggestionMarks(
+            ranges: review.suggestions.map(\.range),
+            focused: review.focused?.range,
+            onTap: { review.focus(at: $0) }
+        )
     }
 
     /// The videos recorded while the teleprompter or cards were open on the script. Once
@@ -331,7 +374,132 @@ struct HomeView: View {
         }
     }
 
+    /// What floats over the bottom of the script: the cue bar while writing,
+    /// the suggestions while they're open, the timer and Play otherwise.
+    @ViewBuilder
+    private var bottomControls: some View {
+        if isEditorFocused {
+            CueBar(
+                colorScheme: colorScheme,
+                onAddCue: insertCue,
+                // Anchors are for jumping through the teleprompter;
+                // cards are turned one at a time.
+                onAddAnchor: isCardsMode ? nil : insertAnchor,
+                onAddImage: {
+                    AnalyticsEvents.logButtonClick("insert_image", screen: "home")
+                    showingImagePicker = true
+                },
+                onFormat: format,
+                onDismissKeyboard: { isEditorFocused = false }
+            )
+            .transition(.move(edge: .bottom).combined(with: .opacity))
+        } else if review.isActive {
+            SuggestionsPanel(
+                review: review,
+                colorScheme: colorScheme,
+                cueColor: settingsService.settings.cueColor,
+                onAccept: { suggestion in
+                    if let edit = review.accept(suggestion.id) { applySuggestion(edit) }
+                },
+                onAcceptAll: {
+                    review.acceptAll().forEach(applySuggestion)
+                }
+            )
+            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { reviewPanelHeight = $0 }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 24)
+            .transition(.move(edge: .bottom).combined(with: .opacity))
+        } else {
+        VStack(spacing: 12) {
+        // What's written since the last save is kept on this device,
+        // but isn't in Saved Notes until it's saved. Laid over the
+        // bottom of the script, so nothing moves when this comes or goes.
+        saveStatus
+            .animation(.easeInOut(duration: 0.2), value: settingsService.hasUnsavedChanges)
+            .animation(.easeInOut(duration: 0.2), value: showsSaved)
+
+        HStack(alignment: .bottom, spacing: 12) {
+            VStack(alignment: .leading, spacing: 12) {
+                suggestionsControl
+                timerControl
+            }
+
+            Spacer(minLength: isCardsMode ? 0 : 12)
+
+            takesControl
+
+            Button(action: {
+                isEditorFocused = false
+                if isCardsMode {
+                    AnalyticsEvents.logButtonClick("start_cards", screen: "home")
+                    cardsOpenedOnWatch = false
+                    showingCards = true
+                } else {
+                    AnalyticsEvents.logButtonClick("start_teleprompter", screen: "home")
+                    showingTeleprompter = true
+                }
+            }) {
+                if isCardsMode {
+                    Label("Read Cards", systemImage: "rectangle.stack.fill")
+                        .font(.subheadline.weight(.semibold))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                        .foregroundStyle(colorScheme == .dark ? .black : .white)
+                        .padding(.horizontal, 16)
+                        .frame(height: 52)
+                        .background(Capsule().fill(AppColors.green(for: colorScheme)))
+                        .glassedEffect(in: Capsule())
+                } else {
+                    Image(systemName: "play.fill")
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundStyle(colorScheme == .dark ? .black : .white)
+                        .frame(width: 52, height: 52)
+                        .background(
+                            Circle()
+                                .fill(AppColors.green(for: colorScheme))
+                        )
+                        .glassedEffect(in: Circle())
+                }
+            }
+            .disabled(isCardsMode ? CueCards.cards(in: settingsService.notes).isEmpty : !hasNotes)
+            .opacity(hasNotes ? 1.0 : 0.6)
+            .accessibilityLabel(isCardsMode ? "Open Cards" : "Start Teleprompter")
+        }
+        .animation(.spring(response: 0.35, dampingFraction: 0.8), value: takes.takes.map(\.id))
+        }
+        .padding(.horizontal, 20)
+        .padding(.bottom, 24)
+        }
+    }
+
     var body: some View {
+        handlingSuggestions(home)
+    }
+
+    /// What the suggestions need from the screen around them, kept apart from
+    /// the rest of it, which is already as much as the compiler takes at once.
+    private func handlingSuggestions(_ content: some View) -> some View {
+        content
+            .animation(.easeInOut(duration: 0.25), value: review.isActive)
+            // Anything but an accepted suggestion changing the script — another
+            // note opened — leaves the suggestions pointing at the wrong words.
+            .onChange(of: settingsService.notes) {
+                review.scriptDidChange(to: settingsService.notes)
+            }
+            .onChange(of: isCardsMode) {
+                review.end()
+            }
+            .alert("Suggestions", isPresented: Binding(
+                get: { suggestionsUnavailable != nil || review.errorMessage != nil },
+                set: { if !$0 { suggestionsUnavailable = nil; review.errorMessage = nil } }
+            )) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(suggestionsUnavailable ?? review.errorMessage ?? "")
+            }
+    }
+
+    private var home: some View {
         NavigationStack {
             ZStack {
                 // Background - matches TeleprompterView
@@ -373,8 +541,9 @@ struct HomeView: View {
                                 colorScheme: colorScheme,
                                 fontSize: CGFloat(settingsService.settings.editorFontSize),
                                 keyboardOverlayHeight: CueBar.height,
-                                restingOverlayHeight: Self.controlsHeight,
-                                topOverlap: editorTopOverlap
+                                restingOverlayHeight: review.isActive ? reviewPanelHeight + 24 : Self.controlsHeight,
+                                topOverlap: editorTopOverlap,
+                                suggestionMarks: suggestionMarks
                             )
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                             // The editor makes its own room for the keyboard, as scroll
@@ -387,81 +556,7 @@ struct HomeView: View {
                 .animation(.easeInOut(duration: 0.25), value: notifications.dismissedIDs)
             }
             .overlay(alignment: .bottom) {
-                if isEditorFocused {
-                    CueBar(
-                        colorScheme: colorScheme,
-                        onAddCue: insertCue,
-                        // Anchors are for jumping through the teleprompter;
-                        // cards are turned one at a time.
-                        onAddAnchor: isCardsMode ? nil : insertAnchor,
-                        onAddImage: {
-                            AnalyticsEvents.logButtonClick("insert_image", screen: "home")
-                            showingImagePicker = true
-                        },
-                        onFormat: format,
-                        onDismissKeyboard: { isEditorFocused = false }
-                    )
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-                } else {
-                VStack(spacing: 12) {
-                // What's written since the last save is kept on this device,
-                // but isn't in Saved Notes until it's saved. Laid over the
-                // bottom of the script, so nothing moves when this comes or goes.
-                saveStatus
-                    .animation(.easeInOut(duration: 0.2), value: settingsService.hasUnsavedChanges)
-                    .animation(.easeInOut(duration: 0.2), value: showsSaved)
-
-                HStack(alignment: .bottom, spacing: 12) {
-                    VStack(alignment: .leading, spacing: 12) {
-                        timerControl
-                    }
-
-                    Spacer(minLength: isCardsMode ? 0 : 12)
-
-                    takesControl
-
-                    Button(action: {
-                        isEditorFocused = false
-                        if isCardsMode {
-                            AnalyticsEvents.logButtonClick("start_cards", screen: "home")
-                            cardsOpenedOnWatch = false
-                            showingCards = true
-                        } else {
-                            AnalyticsEvents.logButtonClick("start_teleprompter", screen: "home")
-                            showingTeleprompter = true
-                        }
-                    }) {
-                        if isCardsMode {
-                            Label("Read Cards", systemImage: "rectangle.stack.fill")
-                                .font(.subheadline.weight(.semibold))
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.8)
-                                .foregroundStyle(colorScheme == .dark ? .black : .white)
-                                .padding(.horizontal, 16)
-                                .frame(height: 52)
-                                .background(Capsule().fill(AppColors.green(for: colorScheme)))
-                                .glassedEffect(in: Capsule())
-                        } else {
-                            Image(systemName: "play.fill")
-                                .font(.system(size: 20, weight: .semibold))
-                                .foregroundStyle(colorScheme == .dark ? .black : .white)
-                                .frame(width: 52, height: 52)
-                                .background(
-                                    Circle()
-                                        .fill(AppColors.green(for: colorScheme))
-                                )
-                                .glassedEffect(in: Circle())
-                        }
-                    }
-                    .disabled(isCardsMode ? CueCards.cards(in: settingsService.notes).isEmpty : !hasNotes)
-                    .opacity(hasNotes ? 1.0 : 0.6)
-                    .accessibilityLabel(isCardsMode ? "Open Cards" : "Start Teleprompter")
-                }
-                .animation(.spring(response: 0.35, dampingFraction: 0.8), value: takes.takes.map(\.id))
-                }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 24)
-                }
+                bottomControls
             }
             .animation(.easeInOut(duration: 0.2), value: isEditorFocused)
             .navigationBarTitleDisplayMode(.inline)
@@ -692,6 +787,8 @@ struct NotesEditorView: View {
     var restingOverlayHeight: CGFloat = 0
     /// How far the editor reaches up under the top bar, for the fade to start there.
     var topOverlap: CGFloat = 0
+    /// Suggestions being reviewed, marked in the script.
+    var suggestionMarks: SuggestionMarks?
 
     private var topFade: CGFloat { CueTextEditor.edgeFade + topOverlap }
 
@@ -718,7 +815,8 @@ struct NotesEditorView: View {
                 fontSize: fontSize,
                 keyboardOverlayHeight: keyboardOverlayHeight,
                 restingOverlayHeight: restingOverlayHeight,
-                topInset: topFade
+                topInset: topFade,
+                suggestionMarks: suggestionMarks
             )
             .padding(.horizontal, 4)
         }
