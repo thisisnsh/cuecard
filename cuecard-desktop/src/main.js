@@ -39,7 +39,7 @@ const LINKS = {
 };
 
 const PLACEHOLDER =
-  'Write your script here…\n\nType [ to add a cue — a note to yourself like “[cue smile and pause]” that you read but never say out loud.';
+  'Write your script here…\n\nType [ to add a cue — a note to yourself like “[smile and pause]” that you read but never say out loud.';
 
 const app = {
   /** Which script the detail pane is showing: your own, or the live deck. */
@@ -254,7 +254,7 @@ async function importScript() {
     if (!picked) return;
     if (!picked.text.trim()) return ui.showError('That file is empty.');
 
-    // Whatever spelling the file was written in, it arrives as [cue ...].
+    // Whatever spelling the file was written in, it arrives as [...].
     await notes.importScript(titleForFileName(picked.path), normalizingTags(picked.text));
     editor.setText(notes.state.draft);
     editor.reset();

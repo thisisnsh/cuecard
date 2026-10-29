@@ -16,6 +16,7 @@ import {
   cueTagContaining,
   emptyCueInsertion,
   emptyCueSurrounding,
+  newCueInsertion,
 } from './parser.js';
 import { escapeHtml } from './ui.js';
 
@@ -63,9 +64,9 @@ export function createEditor(root, { onChange, onFocusChange } = {}) {
   };
 
   /** Edit the text ourselves, then run everything a keystroke would have. */
-  function replace(start, end, replacement, caret) {
+  function replace(start, end, replacement, caret, selectionEnd = caret) {
     input.setRangeText(replacement, start, end, 'end');
-    input.selectionStart = input.selectionEnd = caret;
+    input.setSelectionRange(caret, selectionEnd);
     paint();
     onChange?.(input.value);
   }
@@ -78,8 +79,8 @@ export function createEditor(root, { onChange, onFocusChange } = {}) {
   input.addEventListener('focus', () => onFocusChange?.(true));
   input.addEventListener('blur', () => onFocusChange?.(false));
 
-  // `[` writes both brackets, and the backspace that follows takes them both
-  // back, so a `[` meant literally costs one extra keystroke instead of six.
+  // `[` writes both brackets, and the backspace that follows takes the closing
+  // one back, so a `[` meant literally costs one extra keystroke.
   input.addEventListener('keydown', (event) => {
     if (event.metaKey || event.ctrlKey || event.altKey) return;
     if (input.selectionStart !== input.selectionEnd) return;
@@ -121,14 +122,14 @@ export function createEditor(root, { onChange, onFocusChange } = {}) {
       placeholder.textContent = text;
     },
 
-    /** Drop an empty cue in at the caret and leave the caret inside it. */
+    /** Drop a `[cue]` in at the caret with its text selected to type over. */
     insertCue() {
       input.focus();
       let at = input.selectionEnd;
       const enclosing = cueTagContaining(at, input.value);
       if (enclosing) at = enclosing.index + enclosing.length;
-      const insertion = emptyCueInsertion(input.value, at);
-      replace(at, at, insertion.text, at + insertion.caretOffset);
+      const insertion = newCueInsertion(input.value, at);
+      replace(at, at, insertion.text, at + insertion.selectionStart, at + insertion.selectionEnd);
     },
 
     /** Put the caret at the end and show the start of the script. */

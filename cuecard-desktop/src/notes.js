@@ -6,35 +6,36 @@
  */
 
 import { getStored, setStored } from './tauri.js';
-import { withoutTags } from './parser.js';
+import { normalizingTags, withoutTags } from './parser.js';
 
 const KEY_DRAFT = 'add_notes_content';
 const KEY_SAVED = 'saved_notes';
 const KEY_CURRENT = 'current_note_id';
 const KEY_MIGRATED_TIME = 'migrated_time_tags';
+const KEY_MIGRATED_BARE_CUES = 'migrated_bare_cues';
 
 /** What Add Sample Text writes, word for word as the phone app writes it. */
 export const DEFAULT_NOTE_TEXT = `Welcome everyone.
 
 I'm excited to be here today to talk about CueCard.
 
-[cue smile and pause]
+[smile and pause]
 
 It keeps your speaker notes visible above all apps, so you can use your existing camera apps and still read your notes.
 
-[cue pause]
+[pause]
 
 It has a timer so you know if you're being brief… or too passionate.
 
-[cue light chuckle]
+[light chuckle]
 
 And the colored highlights?
 
-[cue emphasize]
+[emphasize]
 
 Those are your secret cues — reminders to smile, pause, or not panic.
 
-[cue pause]
+[pause]
 
 Try it out. I think you'll love it.`;
 
@@ -99,6 +100,7 @@ export async function loadNotes({ seedTimer } = {}) {
 
   await migrateNoteTitles();
   await migrateTimeTags(seedTimer);
+  await migrateBareCues();
 
   if (state.currentId && !currentNote()) state.currentId = null;
   changed();
@@ -144,6 +146,26 @@ async function migrateTimeTags(seedTimer) {
 
   if (seconds > 0) seedTimer?.(seconds);
   await setStored(KEY_MIGRATED_TIME, true);
+}
+
+/**
+ * Cues used to be written `[cue …]`. The draft and every saved script are
+ * brought up to `[…]` — once — keeping each note's date so nothing looks edited.
+ */
+async function migrateBareCues() {
+  if (await getStored(KEY_MIGRATED_BARE_CUES)) return;
+
+  if (state.draft) {
+    state.draft = normalizingTags(state.draft);
+    await setStored(KEY_DRAFT, state.draft);
+  }
+  const rewritten = state.saved.map((note) => ({ ...note, content: normalizingTags(note.content || '') }));
+  if (rewritten.some((note, index) => note.content !== (state.saved[index].content || ''))) {
+    state.saved = rewritten;
+    await setStored(KEY_SAVED, state.saved);
+  }
+
+  await setStored(KEY_MIGRATED_BARE_CUES, true);
 }
 
 function firstLine(content) {
