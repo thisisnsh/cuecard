@@ -6,6 +6,7 @@ import android.net.Uri
 import android.content.Context
 import android.app.Activity
 import android.app.Application
+import android.os.Build
 import android.os.Bundle
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -134,7 +135,12 @@ object AppLinks {
      * whatever the language.
      */
     private fun supportEmail(subject: String, body: String): String =
-        "mailto:support@cuecard.dev?subject=" + Uri.encode(subject) + "&body=" + Uri.encode(body)
+        "mailto:support@cuecard.dev?subject=" + Uri.encode(subject) +
+            "&body=" + Uri.encode(body + "\n\n—\n" + emailFooter)
+
+    /** The app's version and platform, so support knows what the sender runs. */
+    private val emailFooter: String
+        get() = "CueCard ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE}) · Android ${Build.VERSION.RELEASE}"
 
     /** What goes out when someone shares the app. */
     val shareMessage: String get() = AppStrings.get(R.string.share_message, PLAY_STORE)

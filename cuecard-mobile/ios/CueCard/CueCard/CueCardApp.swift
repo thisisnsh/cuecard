@@ -109,9 +109,18 @@ enum AppLinks {
         components.path = "support@cuecard.dev"
         components.queryItems = [
             URLQueryItem(name: "subject", value: subject),
-            URLQueryItem(name: "body", value: body)
+            URLQueryItem(name: "body", value: body + "\n\n—\n" + emailFooter)
         ]
         return components.url ?? supportEmail
+    }
+
+    /// The app's version and platform, so support knows what the sender runs.
+    private static var emailFooter: String {
+        let info = Bundle.main.infoDictionary
+        let version = info?["CFBundleShortVersionString"] as? String ?? "?"
+        let build = info?["CFBundleVersion"] as? String ?? "?"
+        let device = UIDevice.current
+        return "CueCard \(version) (\(build)) · \(device.systemName) \(device.systemVersion)"
     }
 
     /// What goes out when someone shares the app.
