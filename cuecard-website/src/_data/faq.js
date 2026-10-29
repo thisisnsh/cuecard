@@ -67,7 +67,7 @@ const mobile = [
   {
     question: "What are cue tags?",
     answer:
-      "A cue is a note to yourself in the middle of the script — <code>[cue smile]</code>, <code>[cue slow down]</code>, <code>[cue hold for two]</code>. CueCard draws it in its own colour so you take it in as a direction rather than reading it aloud. Tap Add Cue, or just type <code>[</code>, and the tag is written for you. Pick the colour every cue is drawn in from Settings."
+      "A cue is a note to yourself in the middle of the script — <code>[smile]</code>, <code>[slow down]</code>, <code>[hold for two]</code>. CueCard draws it in its own colour so you take it in as a direction rather than reading it aloud. Tap Add Cue, or just type <code>[</code>, and the tag is written for you. Pick the colour every cue is drawn in from Settings."
   },
   {
     question: "How fast should the teleprompter scroll?",
@@ -212,7 +212,7 @@ const desktop = [
   {
     question: "How do cue tags work?",
     answer:
-      "A cue is a reminder to yourself about how to say the next part, rather than another line to read. Write <code>[cue slow down]</code> or <code>[cue pause here]</code> in the middle of your notes and CueCard draws it in colour, so you take it in as a direction instead of reading it out. Cues are optional."
+      "A cue is a reminder to yourself about how to say the next part, rather than another line to read. Write <code>[slow down]</code> or <code>[pause here]</code> in the middle of your notes and CueCard draws it in colour, so you take it in as a direction instead of reading it out. Cues are optional."
   },
   {
     question: "Is there a timer for my slot?",

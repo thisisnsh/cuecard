@@ -20,28 +20,28 @@ module.exports = [
       {
         id: "instagram-reel", title: "Instagram Reel: teach one useful thing",
         description: "Use a problem, a small change and a demonstration. Replace this filming tip with a lesson from your own work, and show the result while you explain it.",
-        text: "[cue look at the lens]\nIf your videos feel rushed, try this before your next take.\n\nPut one idea on each line of your script.\nRead the first line, then leave a breath.\n[cue pause]\nYou can still keep the video short.\nYou are just giving each idea room to land.\n\n[cue smile]\nTry it with the opening of your next Reel.\nSave this so you can find it when you film.",
+        text: "[look at the lens]\nIf your videos feel rushed, try this before your next take.\n\nPut one idea on each line of your script.\nRead the first line, then leave a breath.\n[pause]\nYou can still keep the video short.\nYou are just giving each idea room to land.\n\n[smile]\nTry it with the opening of your next Reel.\nSave this so you can find it when you film.",
         link: "/mobile/instagram/#how-to", linkLabel: "Set up the Instagram teleprompter",
         tip: "Put the floating text close to the lens and finish each thought before looking away. If the line feels awkward, rewrite it instead of reading faster."
       },
       {
         id: "tiktok-demo", title: "TikTok: show a before and after",
         description: "Let viewers see the change early. This example compares two opening lines; substitute a real result you can demonstrate without making unsupported promises.",
-        text: "Here are two ways to start the same video.\n[cue show the first version]\nToday I want to talk about organizing a desk.\n\nNow try this.\n[cue show the second version]\nThis is the one thing I move before I start working.\n\nThe second opening gives you something specific to look for.\n[cue pause]\nTake your next topic and turn it into one visible action.\nWhich opening would make you keep watching?",
+        text: "Here are two ways to start the same video.\n[show the first version]\nToday I want to talk about organizing a desk.\n\nNow try this.\n[show the second version]\nThis is the one thing I move before I start working.\n\nThe second opening gives you something specific to look for.\n[pause]\nTake your next topic and turn it into one visible action.\nWhich opening would make you keep watching?",
         link: "/mobile/tiktok/#how-to", linkLabel: "Set up the TikTok teleprompter",
         tip: "Leave blank lines around actions so you can see where to stop speaking. Pause the prompter yourself when a demonstration takes longer than the script."
       },
       {
         id: "snapchat-story", title: "Snapchat Story: a behind-the-scenes update",
         description: "Give one detail, show what changed, and ask a question. Record these three beats as separate Snaps if you want to show the work between camera updates.",
-        text: "[cue smile]\nA quick look at what I am making today.\nThis is the first sketch.\n\n[cue show the detail]\nI was trying to fit too much into one frame.\nSo I took one thing out and gave the main idea more space.\n\n[cue look up]\nHere is the version I am keeping.\nWould you leave it like this, or add something back?",
+        text: "[smile]\nA quick look at what I am making today.\nThis is the first sketch.\n\n[show the detail]\nI was trying to fit too much into one frame.\nSo I took one thing out and gave the main idea more space.\n\n[look up]\nHere is the version I am keeping.\nWould you leave it like this, or add something back?",
         link: "/mobile/snapchat/#how-to", linkLabel: "Set up the Snapchat teleprompter",
         tip: "Keep Snapchat’s Camera button clear of the floating window. Review a short camera recording before sharing; a screen recording can include the overlay."
       },
       {
         id: "youtube-short", title: "YouTube Short: answer one question",
         description: "Say the question, give a direct answer, then show one example. This format also works as the introduction to a longer tutorial.",
-        text: "How much should you write before recording a short tutorial?\n[cue pause]\nStart with three things.\nThe question you are answering.\nOne example that makes the answer clear.\nAnd the next thing the viewer can try.\n\nIf your topic is better lighting, show one camera angle before and after moving a lamp.\n[cue show the comparison]\nExplain what you changed.\nThen stop there.\n\nA clear example gives you enough for one useful video.",
+        text: "How much should you write before recording a short tutorial?\n[pause]\nStart with three things.\nThe question you are answering.\nOne example that makes the answer clear.\nAnd the next thing the viewer can try.\n\nIf your topic is better lighting, show one camera angle before and after moving a lamp.\n[show the comparison]\nExplain what you changed.\nThen stop there.\n\nA clear example gives you enough for one useful video.",
         link: "/mobile/youtube/#how-to", linkLabel: "Set up the YouTube teleprompter",
         tip: "Record in your phone’s Camera app when you want a reusable video file for several platforms. Review the finished clip before uploading it."
       }

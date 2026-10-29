@@ -25,7 +25,7 @@ const products = {
       "Apple Watch app: teleprompter remote, cards on the wrist, decks kept on the watch",
       "Timer with a warning time, overtime and colors you choose",
       "Countdown before the script starts scrolling",
-      "Colored [cue ...] reminders",
+      "Colored [...] reminders",
       "Play or pause from the Action Button or Control Center",
       "Saved scripts and decks with search by title or text, file import and text sharing",
       "Version history to compare changes and restore earlier saves",

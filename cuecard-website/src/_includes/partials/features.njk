@@ -31,10 +31,10 @@
                     <h3 class="feature-title">What you write</h3>
                 </div>
                 <p class="feature-desc">
-                    Ordinary text, with <code>[cue]</code> added wherever it helps.
+                    Ordinary text, with cues like <code>[pause]</code> added wherever it helps.
                 </p>
                 <div class="notes-preview notes-preview-raw" aria-label="Sample of a raw CueCard script">
-                    <div class="notes-content">{% for l in sample %}{% if l.cue %}[cue {{ l.cue }}] {% else %}{{ l.t }}
+                    <div class="notes-content">{% for l in sample %}{% if l.cue %}[{{ l.cue }}] {% else %}{{ l.t }}
 {% endif %}{% endfor %}</div>
                 </div>
             </div>

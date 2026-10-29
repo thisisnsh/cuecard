@@ -108,10 +108,10 @@ function forDesktopRole(name, audience, firstUse) {
 
 /** The stock script again, as the home page's cards: one thought a card. */
 const standardCards = [
-  "Here is one small idea to try today. [cue look up and pause]",
-  "Write down the one thing you want people to remember. [cue slow down]",
-  "Give it a short example. Leave room for a breath. [cue smile]",
-  "Then finish with a clear next step. [cue pause]",
+  "Here is one small idea to try today. [look up and pause]",
+  "Write down the one thing you want people to remember. [slow down]",
+  "Give it a short example. Leave room for a breath. [smile]",
+  "Then finish with a clear next step. [pause]",
   "A few useful words can be enough.",
 ];
 
@@ -123,7 +123,7 @@ function toCards(lines) {
   const cards = [];
   for (const line of lines || []) {
     if (line.t) cards.push(line.t);
-    else if (line.cue && cards.length) cards[cards.length - 1] += ` [cue ${line.cue}]`;
+    else if (line.cue && cards.length) cards[cards.length - 1] += ` [${line.cue}]`;
   }
   return cards;
 }
@@ -133,7 +133,7 @@ function fromCards(cards) {
   const lines = [];
   for (const card of cards || []) {
     const cues = [];
-    const text = card.replace(/\[cue\s+([^\]]+)\]/gi, (_, cue) => { cues.push(cue.trim()); return ""; }).trim();
+    const text = card.replace(/\[([^\]\n]+)\]/g, (_, cue) => { cues.push(cue.trim()); return ""; }).trim();
     if (text) lines.push({ t: text });
     for (const cue of cues) lines.push({ cue });
   }

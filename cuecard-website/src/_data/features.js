@@ -59,7 +59,7 @@ const mobile = [
   },
   {
     h: "Cues you read but never say",
-    p: "Reminders like [cue smile] show in color, telling you how to say the next line.",
+    p: "Reminders like [smile] show in color, telling you how to say the next line.",
   },
   {
     h: "Find a script or bring back an earlier draft",
@@ -92,7 +92,7 @@ const desktop = [
   },
   {
     h: "Cues you read but never say",
-    p: "Reminders like [cue slow down] show in color, telling you how to say the next part.",
+    p: "Reminders like [slow down] show in color, telling you how to say the next part.",
   },
   {
     h: "A timer for your slot",
@@ -145,7 +145,7 @@ function forApp(name, kind) {
     },
     {
       h: "Cues for how to say it",
-      p: "Reminders like [cue smile] show in color as they pass.",
+      p: "Reminders like [smile] show in color as they pass.",
     },
     {
       h: `Shaped to fit the ${name} frame`,
@@ -177,7 +177,7 @@ function forRole(name, audience, kind) {
       },
       {
         h: "Cues for how to say it",
-        p: "Reminders like [cue slow down] show in color as they pass.",
+        p: "Reminders like [slow down] show in color as they pass.",
       },
       {
         h: "A countdown and a timer",
@@ -205,7 +205,7 @@ function forRole(name, audience, kind) {
     },
     {
       h: "Cues you read but never say",
-      p: "Reminders like [cue take a breath] show in color.",
+      p: "Reminders like [take a breath] show in color.",
     },
     {
       h: "A timer for your slot",

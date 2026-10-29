@@ -20,7 +20,7 @@
     {% if guide.sample %}
     <details class="sample-script">
       <summary>{{ "A short deck to try" if guide.sampleIntro else "A short script to try" }} {{ icon("chevron", 15) }}</summary>
-      <p>{% if guide.sampleIntro %}{{ guide.sampleIntro }}{% else %}Select and copy this into CueCard. The <code>[cue ...]</code> tags are reminders to yourself; you leave the pause when you speak.{% endif %}</p>
+      <p>{% if guide.sampleIntro %}{{ guide.sampleIntro }}{% else %}Select and copy this into CueCard. The <code>[...]</code> tags are reminders to yourself; you leave the pause when you speak.{% endif %}</p>
       <pre tabindex="0" aria-label="Example {{ 'deck' if guide.sampleIntro else 'script' }}">{{ guide.sample }}</pre>
     </details>
     {% endif %}

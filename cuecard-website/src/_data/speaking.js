@@ -6,7 +6,7 @@
 // SettingsView, TimerSheet, HelpView, CueCards and the watch app) on
 // 2026-10-01. Change a label in the app and change it here.
 //
-// A card in `cards` is a string; [cue ...] in it is drawn in the cue color. A
+// A card in `cards` is a string; [...] in it is drawn in the cue color. A
 // line in `deck` is { t } or { cue }, as in _data/deck.js.
 
 const site = require("./site");
@@ -71,7 +71,7 @@ const teleprompter = {
     },
     {
       h: "Cues you read but never say",
-      p: "Reminders like [cue smile] show in color as they pass, telling you how to say the next line.",
+      p: "Reminders like [smile] show in color as they pass, telling you how to say the next line.",
     },
   ],
   shotIds: ["teleprompter"],
@@ -106,7 +106,7 @@ const teleprompter = {
       },
     ],
     sample:
-      "Hi, I'm Sam, and this is the one thing I wish I'd known sooner. [cue smile]\nYou don't need to memorise a script to sound natural on camera. [cue slow down]\nPut it right under the lens and let it scroll at the pace you talk. [cue pause]\nYour eyes stay on the camera, and your words stay yours.\nTry it on your next take.",
+      "Hi, I'm Sam, and this is the one thing I wish I'd known sooner. [smile]\nYou don't need to memorise a script to sound natural on camera. [slow down]\nPut it right under the lens and let it scroll at the pace you talk. [pause]\nYour eyes stay on the camera, and your words stay yours.\nTry it on your next take.",
   },
   faq: [
     {
@@ -165,11 +165,11 @@ const cards = {
     "Write your talk as a deck of short cards and swipe through them one at a time, in the app, on your Lock Screen or on your Apple Watch. A timer keeps you on time, and cues remind you how to say each point.",
   demo: "cards",
   cards: [
-    "Good evening, everyone. Thank you for coming. [cue smile]",
-    "Three years ago this was an idea on a napkin. [cue pause]",
+    "Good evening, everyone. Thank you for coming. [smile]",
+    "Three years ago this was an idea on a napkin. [pause]",
     "Tonight it has 40 people and its first customers.",
-    "Thank you to the team, who made the napkin real. [cue look at them]",
-    "Now, the part you came for: the food. [cue raise glass]",
+    "Thank you to the team, who made the napkin real. [look at them]",
+    "Now, the part you came for: the food. [raise glass]",
   ],
   rowsHeading: "Everything Cards does",
   rows: [
@@ -199,7 +199,7 @@ const cards = {
     },
     {
       h: "Cues on every card",
-      p: "Reminders like [cue pause] show in color wherever you read the card.",
+      p: "Reminders like [pause] show in color wherever you read the card.",
     },
     {
       h: "Saved decks, as plain text",
@@ -222,7 +222,7 @@ const cards = {
       },
       {
         title: "Add cues and save the deck",
-        body: "Type [ or tap Add Cue for reminders like [cue pause]. Choose Save in the ••• menu to keep the deck in Saved Notes.",
+        body: "Type [ or tap Add Cue for reminders like [pause]. Choose Save in the ••• menu to keep the deck in Saved Notes.",
       },
       {
         title: "Set a timer",
@@ -237,9 +237,9 @@ const cards = {
         body: "Tap the gear for Cards Settings and turn on Show on Lock Screen, then lock your iPhone and turn cards from there. With the watch app installed, the deck is on your wrist as well.",
       },
     ],
-    sampleIntro: "One card per paragraph: type each into its own box in CueCard. The [cue ...] tags are reminders to yourself, not words to say.",
+    sampleIntro: "One card per paragraph: type each into its own box in CueCard. The [...] tags are reminders to yourself, not words to say.",
     sample:
-      "Good evening, everyone. Thank you for coming. [cue smile]\n\nThree years ago this was an idea on a napkin. [cue pause]\n\nTonight it has 40 people and its first customers.\n\nThank you to the team, who made the napkin real. [cue look at them]\n\nNow, the part you came for: the food. [cue raise glass]",
+      "Good evening, everyone. Thank you for coming. [smile]\n\nThree years ago this was an idea on a napkin. [pause]\n\nTonight it has 40 people and its first customers.\n\nThank you to the team, who made the napkin real. [look at them]\n\nNow, the part you came for: the food. [raise glass]",
   },
   faq: [
     {
@@ -297,10 +297,10 @@ const watch = {
     "The CueCard app for Apple Watch is a remote for the teleprompter and a place to read your cue cards. Glance down, turn a card, and keep talking with your phone out of sight.",
   demo: "watch",
   cards: [
-    "Open with the story about the lost keys. [cue smile]",
+    "Open with the story about the lost keys. [smile]",
     "Why it matters: we spend 12 minutes a day looking for things.",
-    "The fix fits on a key ring. [cue hold it up]",
-    "Ask: who's lost their keys this week? [cue pause]",
+    "The fix fits on a key ring. [hold it up]",
+    "Ask: who's lost their keys this week? [pause]",
   ],
   rowsHeading: "What the watch app does",
   rows: [
@@ -399,7 +399,7 @@ const speechSteps = (first, second) => [
   second,
   {
     title: "Add cues where you rush",
-    body: "Type [ or tap Add Cue for reminders like [cue pause] or [cue look up]. They show in color and are never read out.",
+    body: "Type [ or tap Add Cue for reminders like [pause] or [look up]. They show in color and are never read out.",
   },
   {
     title: "Set a timer with a warning",
@@ -430,11 +430,11 @@ const speeches = [
     lede:
       "A best man, maid of honor or parent's speech is three to five minutes of stories you know by heart and lines you don't. Put each on its own card, swipe through them with a glass in the other hand, and let a timer tell you when to raise it.",
     cards: [
-      "For those who don't know me, I'm Jess, Emma's sister. [cue smile]",
+      "For those who don't know me, I'm Jess, Emma's sister. [smile]",
       "Story: Emma, age nine, and the hamster in the post box.",
       "Then she met Tom. First thing she told me: he fixed my bike.",
-      "What I love about them together: they still laugh at the same things. [cue look at them]",
-      "Please raise your glasses: to Emma and Tom. [cue raise glass]",
+      "What I love about them together: they still laugh at the same things. [look at them]",
+      "Please raise your glasses: to Emma and Tom. [raise glass]",
     ],
     rowsHeading: "Why cards beat paper at a wedding",
     rows: [
@@ -470,7 +470,7 @@ const speeches = [
       ),
       sampleIntro: "One card per paragraph: type each into its own box in CueCard.",
       sample:
-        "For those who don't know me, I'm Jess, Emma's sister. [cue smile]\n\nStory: Emma, age nine, and the hamster in the post box.\n\nThen she met Tom. First thing she told me: he fixed my bike.\n\nWhat I love about them together: they still laugh at the same things. [cue look at them]\n\nPlease raise your glasses: to Emma and Tom. [cue raise glass]",
+        "For those who don't know me, I'm Jess, Emma's sister. [smile]\n\nStory: Emma, age nine, and the hamster in the post box.\n\nThen she met Tom. First thing she told me: he fixed my bike.\n\nWhat I love about them together: they still laugh at the same things. [look at them]\n\nPlease raise your glasses: to Emma and Tom. [raise glass]",
     },
     faq: [
       {
@@ -504,11 +504,11 @@ const speeches = [
     lede:
       "A class presentation is usually a set time, a set of slides and a teacher who marks you on eye contact. Put one point per card, swipe with your slides, and let the timer tell you when to wrap up.",
     cards: [
-      "Slide 1: The water cycle in three steps. [cue look up]",
+      "Slide 1: The water cycle in three steps. [look up]",
       "Evaporation: the sun heats water, it rises as vapour.",
-      "Condensation: vapour cools into clouds. [cue point to diagram]",
+      "Condensation: vapour cools into clouds. [point to diagram]",
       "Precipitation: rain, snow, hail. Back to the start.",
-      "Question for the class: where did today's rain start? [cue pause]",
+      "Question for the class: where did today's rain start? [pause]",
     ],
     rowsHeading: "Why cards work for a presentation",
     rows: [
@@ -544,7 +544,7 @@ const speeches = [
       ),
       sampleIntro: "One card per paragraph: type each into its own box in CueCard.",
       sample:
-        "Slide 1: The water cycle in three steps. [cue look up]\n\nEvaporation: the sun heats water, it rises as vapour.\n\nCondensation: vapour cools into clouds. [cue point to diagram]\n\nPrecipitation: rain, snow, hail. Back to the start.\n\nQuestion for the class: where did today's rain start? [cue pause]",
+        "Slide 1: The water cycle in three steps. [look up]\n\nEvaporation: the sun heats water, it rises as vapour.\n\nCondensation: vapour cools into clouds. [point to diagram]\n\nPrecipitation: rain, snow, hail. Back to the start.\n\nQuestion for the class: where did today's rain start? [pause]",
     },
     faq: [
       {
@@ -578,11 +578,11 @@ const speeches = [
     lede:
       "A talk at a meetup, a conference slot or a toast at work goes better when you know the next point without having to remember it. Put each on a card, and keep the deck on your phone, your Lock Screen or your wrist.",
     cards: [
-      "Open: the 3 a.m. pager alert. [cue pause]",
+      "Open: the 3 a.m. pager alert. [pause]",
       "Point 1: most outages start with a change we made.",
       "Point 2: small changes, shipped often, break less.",
-      "Point 3: make rollback the easiest button. [cue slow down]",
-      "Close: sleep through the night. Questions? [cue smile]",
+      "Point 3: make rollback the easiest button. [slow down]",
+      "Close: sleep through the night. Questions? [smile]",
     ],
     rowsHeading: "Speaking notes that help, not distract",
     rows: [
@@ -618,7 +618,7 @@ const speeches = [
       ),
       sampleIntro: "One card per paragraph: type each into its own box in CueCard.",
       sample:
-        "Open: the 3 a.m. pager alert. [cue pause]\n\nPoint 1: most outages start with a change we made.\n\nPoint 2: small changes, shipped often, break less.\n\nPoint 3: make rollback the easiest button. [cue slow down]\n\nClose: sleep through the night. Questions? [cue smile]",
+        "Open: the 3 a.m. pager alert. [pause]\n\nPoint 1: most outages start with a change we made.\n\nPoint 2: small changes, shipped often, break less.\n\nPoint 3: make rollback the easiest button. [slow down]\n\nClose: sleep through the night. Questions? [smile]",
     },
     faq: [
       {
@@ -652,11 +652,11 @@ const speeches = [
     lede:
       "Preach from a deck of short cards on your iPhone, iPad or Apple Watch: the passage, each point and its illustration, with a timer so the service runs on time and cues for where to pause.",
     cards: [
-      "Read: Luke 15:11–24. [cue pause]",
+      "Read: Luke 15:11–24. [pause]",
       "1. The son leaves: we all wander.",
       "Illustration: the lost dog in the snow.",
-      "2. The father runs: grace moves first. [cue slow down]",
-      "3. The feast: joy is the point. Pray. [cue look up]",
+      "2. The father runs: grace moves first. [slow down]",
+      "3. The feast: joy is the point. Pray. [look up]",
     ],
     rowsHeading: "Sermon notes that stay out of the way",
     rows: [
@@ -692,7 +692,7 @@ const speeches = [
       ),
       sampleIntro: "One card per paragraph: type each into its own box in CueCard.",
       sample:
-        "Read: Luke 15:11–24. [cue pause]\n\n1. The son leaves: we all wander.\n\nIllustration: the lost dog in the snow.\n\n2. The father runs: grace moves first. [cue slow down]\n\n3. The feast: joy is the point. Pray. [cue look up]",
+        "Read: Luke 15:11–24. [pause]\n\n1. The son leaves: we all wander.\n\nIllustration: the lost dog in the snow.\n\n2. The father runs: grace moves first. [slow down]\n\n3. The feast: joy is the point. Pray. [look up]",
     },
     faq: [
       {
