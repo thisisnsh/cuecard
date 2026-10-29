@@ -114,13 +114,26 @@ enum AppLinks {
         return components.url ?? supportEmail
     }
 
-    /// The app's version and platform, so support knows what the sender runs.
+    /// The app's version, platform and device, so support knows what the sender runs.
     private static var emailFooter: String {
         let info = Bundle.main.infoDictionary
         let version = info?["CFBundleShortVersionString"] as? String ?? "?"
         let build = info?["CFBundleVersion"] as? String ?? "?"
         let device = UIDevice.current
-        return "CueCard \(version) (\(build)) · \(device.systemName) \(device.systemVersion)"
+        return "CueCard \(version) (\(build)) · \(device.systemName) \(device.systemVersion) · \(deviceModel)"
+    }
+
+    /// The hardware identifier, such as "iPhone16,2". `UIDevice.model` only
+    /// says "iPhone", and the device's own name needs an entitlement.
+    private static var deviceModel: String {
+        if let simulated = ProcessInfo.processInfo.environment["SIMULATOR_MODEL_IDENTIFIER"] {
+            return simulated
+        }
+        var system = utsname()
+        uname(&system)
+        return withUnsafeBytes(of: &system.machine) { raw in
+            String(decoding: raw.prefix { $0 != 0 }, as: UTF8.self)
+        }
     }
 
     /// What goes out when someone shares the app.

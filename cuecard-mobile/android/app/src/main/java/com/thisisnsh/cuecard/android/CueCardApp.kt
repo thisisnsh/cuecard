@@ -138,9 +138,9 @@ object AppLinks {
         "mailto:support@cuecard.dev?subject=" + Uri.encode(subject) +
             "&body=" + Uri.encode(body + "\n\n—\n" + emailFooter)
 
-    /** The app's version and platform, so support knows what the sender runs. */
+    /** The app's version, platform and device, so support knows what the sender runs. */
     private val emailFooter: String
-        get() = "CueCard ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE}) · Android ${Build.VERSION.RELEASE}"
+        get() = "CueCard ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE}) · Android ${Build.VERSION.RELEASE} · ${Build.MANUFACTURER} ${Build.MODEL}"
 
     /** What goes out when someone shares the app. */
     val shareMessage: String get() = AppStrings.get(R.string.share_message, PLAY_STORE)
