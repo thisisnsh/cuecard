@@ -38,7 +38,6 @@ struct HomeView: View {
     @State private var reviewPanelHeight: CGFloat = 0
     /// A Follow My Voice session to ask the reader about.
     @State private var voiceFeedback: VoiceSessionMetrics?
-    @ObservedObject private var watch = WatchSessionService.shared
     @ObservedObject private var cardsSession = CueCardsSession.shared
     @StateObject private var takes = TakesLibrary()
     @Namespace private var takesTransition
@@ -66,9 +65,8 @@ struct HomeView: View {
         return (settingsService.versionCounts[id] ?? 1) > 1
     }
 
-    /// The script's title, or what it is while it has none. A saved one
-    /// opens to be renamed. The mode is picked when the script is started,
-    /// in the library, so it shows here only as the symbol beside the title.
+    /// The script's title, or what it is while it has none, beside the back
+    /// button. A saved one opens to be renamed.
     private var titleControl: some View {
         let mode = settingsService.settings.scriptMode
         let note = settingsService.currentNote
@@ -82,21 +80,16 @@ struct HomeView: View {
             renameTitle = note.title
             showingRename = true
         } label: {
-            HStack(spacing: 6) {
-                Image(systemName: mode.systemImage)
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                Text(title)
-                    .font(.headline)
-                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-            }
-            .frame(maxWidth: 220)
+            Text(title)
+                .font(.headline)
+                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                .lineLimit(1)
+                .truncationMode(.tail)
+                .frame(maxWidth: 200, alignment: .leading)
         }
         .buttonStyle(.plain)
         .disabled(note == nil)
-        .accessibilityLabel("\(mode.displayName): \(title)")
+        .accessibilityLabel(title)
         .accessibilityHint(note == nil ? "" : String(localized: "Renames the script"))
     }
 
@@ -180,10 +173,14 @@ struct HomeView: View {
 
     /// Suggestions from Apple's on-device model, for a script being written for
     /// the teleprompter. Not shown where this iPhone has no model to ask.
+    private var showsSuggestions: Bool {
+        hasNotes && !isCardsMode && OnDeviceModelAvailability.current != .unsupported
+    }
+
     @ViewBuilder
     private var suggestionsControl: some View {
         let availability = OnDeviceModelAvailability.current
-        if hasNotes, !isCardsMode, availability != .unsupported {
+        if showsSuggestions {
             SuggestionsButton(colorScheme: colorScheme) {
                 AnalyticsEvents.logButtonClick("suggestions", screen: "home")
                 isEditorFocused = false
@@ -355,17 +352,19 @@ struct HomeView: View {
             .padding(.bottom, 24)
             .transition(.move(edge: .bottom).combined(with: .opacity))
         } else {
-        VStack(spacing: 12) {
-        // What's written since the last save is kept on this device,
-        // but isn't in the library until it's saved. Laid over the
-        // bottom of the script, so nothing moves when this comes or goes.
-        saveStatus
-            .animation(.easeInOut(duration: 0.2), value: settingsService.hasUnsavedChanges)
-            .animation(.easeInOut(duration: 0.2), value: showsSaved)
-
         HStack(alignment: .bottom, spacing: 12) {
             VStack(alignment: .leading, spacing: 12) {
-                suggestionsControl
+                // What's written since the last save is kept on this device,
+                // but isn't in the library until it's saved. Beside
+                // Suggestions, above the timer.
+                if showsSuggestions || settingsService.hasUnsavedChanges || showsSaved {
+                    HStack(spacing: 10) {
+                        suggestionsControl
+                        saveStatus
+                    }
+                    .animation(.easeInOut(duration: 0.2), value: settingsService.hasUnsavedChanges)
+                    .animation(.easeInOut(duration: 0.2), value: showsSaved)
+                }
                 timerControl
             }
 
@@ -411,7 +410,6 @@ struct HomeView: View {
             .accessibilityLabel(isCardsMode ? "Open Cards" : "Start Teleprompter")
         }
         .animation(.spring(response: 0.35, dampingFraction: 0.8), value: takes.takes.map(\.id))
-        }
         .padding(.horizontal, 20)
         .padding(.bottom, 24)
         }
@@ -560,12 +558,13 @@ struct HomeView: View {
         }
     }
 
-    /// The back button to the library leads; the title sits in the middle.
+    /// The title follows the back button to the library.
     @ToolbarContentBuilder
     private var toolbar: some ToolbarContent {
-        ToolbarItem(placement: .principal) {
+        ToolbarItem(placement: .topBarLeading) {
             titleControl
         }
+        .sharedBackgroundHidden()
 
         // Only once the note has an older version to go back to.
         if hasVersionHistory {
@@ -583,64 +582,23 @@ struct HomeView: View {
             }
         }
 
-        // ••• and Settings share a glass of their own; Help has the edge.
-        // One item, so the two sit as close as a pair: as items of their
-        // own, each takes a full button's width inside the glass.
+        // Settings has a glass of its own; Help has the edge.
         if #available(iOS 26.0, *) {
             ToolbarSpacer(.fixed, placement: .topBarTrailing)
         }
         ToolbarItem(placement: .topBarTrailing) {
-            HStack(spacing: 8) {
-                moreMenu
-
-                Button(action: {
-                    AnalyticsEvents.logButtonClick("settings", screen: "home")
-                    showingSettings = true
-                }) {
-                    Image(systemName: "gearshape")
-                        .font(.title3)
-                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                }
-                .accessibilityLabel("Settings")
+            Button(action: {
+                AnalyticsEvents.logButtonClick("settings", screen: "home")
+                showingSettings = true
+            }) {
+                Image(systemName: "gearshape")
+                    .font(.title3)
+                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
             }
+            .accessibilityLabel("Settings")
         }
 
         HelpToolbarItem(page: .writing(settingsService.settings.scriptMode), isPresented: $showingHelp)
-    }
-
-    /// What's done to the script as a whole. Starting, opening and importing
-    /// another is done from the library.
-    private var moreMenu: some View {
-        Menu {
-            if settingsService.hasUnsavedChanges {
-                Button(action: save) {
-                    Label("Save", systemImage: "square.and.arrow.down")
-                }
-
-                Divider()
-            }
-
-            ScriptShareLink(title: settingsService.currentNote?.title, content: settingsService.notes)
-
-            if watch.isWatchAppInstalled, let note = settingsService.currentNote {
-                let isOnWatch = settingsService.watchNoteIDs.contains(note.id)
-                Divider()
-                Button(action: {
-                    AnalyticsEvents.logButtonClick(isOnWatch ? "watch_remove_note" : "watch_add_note",
-                                                   screen: "home")
-                    settingsService.setOnWatch(!isOnWatch, noteID: note.id)
-                }) {
-                    Label(isOnWatch ? "Remove from Apple Watch" : "Keep on Apple Watch",
-                          systemImage: isOnWatch ? "applewatch.slash" : "applewatch")
-                }
-            }
-        } label: {
-            Image(systemName: "ellipsis.circle")
-                .font(.title3)
-                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-        }
-        .menuActionDismissBehavior(.enabled)
-        .accessibilityLabel("More")
     }
 
     /// The editor's alerts, kept apart from the rest of it, which is already
