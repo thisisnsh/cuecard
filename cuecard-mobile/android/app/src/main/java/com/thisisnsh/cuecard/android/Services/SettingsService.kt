@@ -140,7 +140,7 @@ data class CardsSettings(
     val editorFontSize: Int = ScreenTextScale.scaled(16, ScreenTextScale.editor),
     /** Text size on a card being read, in sp. */
     val fontSize: Int = ScreenTextScale.scaled(28, ScreenTextScale.teleprompter),
-    /** The color every `[cue …]` on a card is drawn in. */
+    /** The color every cue on a card is drawn in. */
     val cueColor: CueColor = CueColor.DEFAULT,
     val timerMinutes: Int = 1,
     val timerSeconds: Int = 0,
@@ -170,7 +170,7 @@ data class TeleprompterSettings(
     val timerStyle: TimerStyle = TimerStyle.DEFAULT,
     val themePreference: ThemePreference = ThemePreference.SYSTEM,
     val countdownSeconds: Int = 5,
-    /** The color every `[cue …]` in every script is drawn in. */
+    /** The color every cue in every script is drawn in. */
     val cueColor: CueColor = CueColor.DEFAULT,
     /** Flips the teleprompter's text left to right, for reading off a mirror. */
     val mirrorsText: Boolean = false,
@@ -373,6 +373,8 @@ class SettingsService(private val context: Context) {
         private val CARDS_NOTE_ID = stringPreferencesKey("cards_note_id")
         private val TELEPROMPTER_DRAFT_ID = stringPreferencesKey("teleprompter_draft_id")
         private val CARDS_DRAFT_ID = stringPreferencesKey("cards_draft_id")
+        /** Set once the scripts kept here have had their `[cue …]` tags rewritten to `[…]`. */
+        private val BARE_CUES = booleanPreferencesKey("bare_cues")
 
         /**
          * Speed used to be set in words a minute, back when a highlight ran along
@@ -553,6 +555,7 @@ class SettingsService(private val context: Context) {
                 _savedNotes.value = emptyList()
             }
         }
+        if (prefs[BARE_CUES] != true) rewriteCueTags()
         _versionCounts.value = withContext(Dispatchers.IO) { noteVersions.counts() }
         removeUnusedImages()
         _hasNotesFolder.value = noteFolder.isChosen
@@ -562,6 +565,34 @@ class SettingsService(private val context: Context) {
         // straight away, so the retired keys are gone before anything else reads them.
         if (prefs[LINES_PER_MINUTE] == null || prefs[FONT_SIZE] == null) {
             saveSettings(loaded)
+        }
+    }
+
+    /**
+     * Cues used to be written `[cue …]`. Bring the drafts and saved notes up to
+     * `[…]`, keeping each note's date so nothing looks edited.
+     */
+    private suspend fun rewriteCueTags() {
+        teleprompterNotes = TeleprompterParser.normalizingTags(teleprompterNotes)
+        cardsNotes = TeleprompterParser.normalizingTags(cardsNotes)
+        _notes.value = if (_settings.value.scriptMode == ScriptMode.CARDS) cardsNotes else teleprompterNotes
+        val rewritten = _savedNotes.value.map { it.copy(content = TeleprompterParser.normalizingTags(it.content)) }
+        // Only written back if a note changed, so notes that couldn't be read are left alone.
+        val savedNotesJson = if (rewritten != _savedNotes.value) {
+            _savedNotes.value = rewritten
+            json.encodeToString(rewritten.map { SavedNoteJson.fromSavedNote(it) })
+        } else {
+            null
+        }
+        try {
+            context.dataStore.edit { prefs ->
+                prefs[NOTES] = teleprompterNotes
+                prefs[CARDS_NOTES] = cardsNotes
+                savedNotesJson?.let { prefs[SAVED_NOTES] = it }
+                prefs[BARE_CUES] = true
+            }
+        } catch (e: IOException) {
+            // Tried again on the next launch; the old tags read the same meanwhile.
         }
     }
 

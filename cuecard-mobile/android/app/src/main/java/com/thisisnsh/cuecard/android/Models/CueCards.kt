@@ -115,7 +115,7 @@ object CueCards {
     fun normalizingSeparators(text: String): String = separatorRegex.replace(text, SEPARATOR_TAG)
 
     /**
-     * Count what a card shows against `limit`. Cue text counts, the `[cue` and
+     * Count what a card shows against `limit`. Cue text counts, the `[` and
      * `]` around it don't, nor do emphasis `markers`, and neither does blank
      * space at either end. An image doesn't count, and nor does an `[anchor]`.
      */

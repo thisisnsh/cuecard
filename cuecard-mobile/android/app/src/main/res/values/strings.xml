@@ -3,8 +3,8 @@
     <string name="app_name" translatable="false">CueCard</string>
     <string name="share_message">Check out %1$s</string>
     <string name="translation_report_body">Where in the app:\n\nWhat it says:\n\nWhat it should say:\n</string>
-    <string name="sample_teleprompter">Hi everyone.\n\nI\'m excited to be here today to talk about CueCard\'s *teleprompter*.\n\n[cue smile and pause]\n\nIt scrolls your script at _your_ pace, so your eyes stay up and your words stay on track.\n\n[cue pause]\n\n[anchor]\n\nLeave the app and it keeps going in a floating window, right over your camera or your video call.\n\n[cue slow down]\n\nLost your place? Drag the script back. Running long? Skip ahead to the next anchor.\n\nAnd the timer turns yellow near the end… and red if you get a _little_ too passionate.\n\n[cue light chuckle]\n\n[anchor]\n\nAnd these colored words?\n\n[cue emphasize]\n\nThose are your cues. Reminders to smile, pause, or *not panic*. They\'re never meant to be read out.\n\n[cue pause]\n\n[anchor]\n\nTry it out. I think you\'ll *love* it.</string>
-    <string name="sample_cards">Hi everyone. Introducing *Cue Cards*. [cue smile]\n[separator]\nOne thought per card. Swipe to the next one when _you\'re_ ready.\n[separator]\nThe timer at the top keeps you *honest*. [cue light chuckle]\n[separator]\nColored words are cues, not lines. [cue emphasize]\n[separator]\nThanks for listening. *Questions?*</string>
+    <string name="sample_teleprompter">Hi everyone.\n\nI\'m excited to be here today to talk about CueCard\'s *teleprompter*.\n\n[smile and pause]\n\nIt scrolls your script at _your_ pace, so your eyes stay up and your words stay on track.\n\n[pause]\n\n[anchor]\n\nLeave the app and it keeps going in a floating window, right over your camera or your video call.\n\n[slow down]\n\nLost your place? Drag the script back. Running long? Skip ahead to the next anchor.\n\nAnd the timer turns yellow near the end… and red if you get a _little_ too passionate.\n\n[light chuckle]\n\n[anchor]\n\nAnd these colored words?\n\n[emphasize]\n\nThose are your cues. Reminders to smile, pause, or *not panic*. They\'re never meant to be read out.\n\n[pause]\n\n[anchor]\n\nTry it out. I think you\'ll *love* it.</string>
+    <string name="sample_cards">Hi everyone. Introducing *Cue Cards*. [smile]\n[separator]\nOne thought per card. Swipe to the next one when _you\'re_ ready.\n[separator]\nThe timer at the top keeps you *honest*. [light chuckle]\n[separator]\nColored words are cues, not lines. [emphasize]\n[separator]\nThanks for listening. *Questions?*</string>
     <string name="theme_system">System</string>
     <string name="theme_light">Light</string>
     <string name="theme_dark">Dark</string>
@@ -121,7 +121,7 @@
     <string name="help_pick_a_mode_title">Pick a Mode</string>
     <string name="help_pick_a_mode_detail">Tap the mode name at the top. Teleprompter scrolls your whole script. Cards shows it one card at a time.</string>
     <string name="help_add_cues_title">Add Cues</string>
-    <string name="help_add_cues_detail">Cues are reminders like [cue pause], shown in color and not read out. Type [ or tap Add Cue above the keyboard.</string>
+    <string name="help_add_cues_detail">Cues are reminders like [pause], shown in color and not read out. Type [ or tap Add Cue above the keyboard.</string>
     <string name="help_set_a_timer_title">Set a Timer</string>
     <string name="help_set_a_timer_detail">Tap the timer next to Play to set how long you have, when it warns you, and the colors it turns.</string>
     <string name="help_save_your_work_title">Save Your Work</string>
@@ -181,11 +181,11 @@
     <string name="no_timer">No Timer</string>
     <string name="read_cards">Read Cards</string>
     <string name="start_teleprompter">Start Teleprompter</string>
-    <string name="editor_placeholder">Add your script here...\n\nTap Add Cue to drop in a delivery reminder, or type [ to write one yourself.\n\nFor example: Welcome everyone [cue smile and pause]</string>
+    <string name="editor_placeholder">Add your script here...\n\nTap Add Cue to drop in a delivery reminder, or type [ to write one yourself.\n\nFor example: Welcome everyone [smile and pause]</string>
     <string name="remove">Remove</string>
     <string name="create_new_card">Create New Card</string>
     <string name="card_number">Card %1$d</string>
-    <string name="first_card_placeholder">One thought per card.\n\nType [ or tap Add Cue for reminders like [cue pause].</string>
+    <string name="first_card_placeholder">One thought per card.\n\nType [ or tap Add Cue for reminders like [pause].</string>
     <string name="next_card_placeholder">Your next thought…</string>
     <string name="note_title">Note title</string>
     <string name="undeleted_file_in_folder">Its file in “%1$s” folder couldn\'t be deleted. CueCard will try again, and won\'t bring it back as notes.</string>

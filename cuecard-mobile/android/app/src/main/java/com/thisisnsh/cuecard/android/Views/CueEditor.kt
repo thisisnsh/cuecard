@@ -145,7 +145,7 @@ class CueEditorController {
         if (names.isNotEmpty()) onInsertImages?.invoke(names)
     }
 
-    /** Drop an empty cue at the caret and leave the caret inside it. */
+    /** Drop a new `[cue]` at the caret with its text selected to type over. */
     fun insertCue() {
         onInsertCue?.invoke()
     }
@@ -165,7 +165,7 @@ class CueEditorController {
 }
 
 /**
- * Script editor that renders `[cue …]` tags in the cue color while you type, and
+ * Script editor that renders `[…]` cues in the cue color while you type, and
  * writes the brackets for you: pressing `[` drops in a whole empty cue with the
  * caret inside it, so a cue is never left half-open — except inside a cue, where
  * there is nothing left for it to open.
@@ -402,12 +402,12 @@ private fun bindController(
     controller.onInsertCue = {
         val value = currentValue()
         val location = tagLocation(value)
-        val insertion = emptyCueInsertion(value.text, location)
+        val (insertion, placeholder) = newCueInsertion(value.text, location)
 
         apply(
             TextFieldValue(
-                text = value.text.replaceRange(location, location, insertion.first),
-                selection = TextRange(location + insertion.second)
+                text = value.text.replaceRange(location, location, insertion),
+                selection = TextRange(location + placeholder.first, location + placeholder.last + 1)
             )
         )
 
@@ -764,9 +764,9 @@ private fun Emphasis.isAround(selectionStart: Int, selectionEnd: Int): Boolean {
 }
 
 /**
- * Writes both brackets on `[`, and takes them both back away again on the
- * backspace that follows, so a `[` meant literally costs one extra keystroke
- * instead of six.
+ * Writes both brackets on `[`, and takes the closing one back away again on
+ * the backspace that follows, so a `[` meant literally costs one extra
+ * keystroke.
  */
 private fun rewritingBrackets(old: TextFieldValue, candidate: TextFieldValue): TextFieldValue {
     val oldText = old.text
@@ -791,7 +791,7 @@ private fun rewritingBrackets(old: TextFieldValue, candidate: TextFieldValue): T
         }
     }
 
-    // The backspace deleting the trailing space of an untouched `[cue ]`.
+    // The backspace deleting the opening bracket of an untouched `[]`.
     if (newText.length == oldText.length - 1 && candidate.selection.collapsed) {
         val deletedAt = candidate.selection.start
         if (deletedAt >= 0 && deletedAt < oldText.length &&
@@ -814,13 +814,15 @@ private fun rewritingBrackets(old: TextFieldValue, candidate: TextFieldValue): T
 }
 
 /**
- * The text to splice in for an empty cue at `location`, spaced so it doesn't
- * collide with the words either side of it, and how far into that text the caret
- * belongs — between the brackets, ready for the cue to be typed.
+ * The text to splice in for a new cue at `location`, spaced so it doesn't
+ * collide with the words either side of it, and where in that text its
+ * placeholder is — to be selected, ready for the cue to be typed over it.
  */
-private fun emptyCueInsertion(text: String, location: Int): Pair<String, Int> {
-    val (insertion, tagOffset) = spacedInsertion(text, TeleprompterParser.EMPTY_CUE_TAG, location)
-    return insertion to tagOffset + TeleprompterParser.CUE_TAG_PREFIX.length
+private fun newCueInsertion(text: String, location: Int): Pair<String, IntRange> {
+    val placeholder = TeleprompterParser.PLACEHOLDER_CUE_TEXT
+    val (insertion, tagOffset) = spacedInsertion(text, TeleprompterParser.cueTag(placeholder), location)
+    val start = tagOffset + TeleprompterParser.CUE_TAG_PREFIX.length
+    return insertion to (start until start + placeholder.length)
 }
 
 /**

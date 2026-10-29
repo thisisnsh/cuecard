@@ -26,7 +26,7 @@ data class WordInfo(
     val isCue: Boolean
 )
 
-/** A `[cue …]` tag located in a piece of text */
+/** A `[…]` cue tag located in a piece of text */
 data class CueMatch(
     /** The whole tag, brackets included */
     val range: IntRange,
@@ -54,13 +54,16 @@ sealed class CueSegment {
 }
 
 /**
- * Parser for teleprompter scripts with `[cue …]` delivery cues
+ * Parser for teleprompter scripts with `[…]` delivery cues
  *
- * `[cue smile]` is the form to write. `[note smile]` is the older spelling and
- * means exactly the same thing, so scripts written before the rename keep
- * working; importing or exporting rewrites them to `[cue …]`.
+ * `[smile]` is the form to write: anything in brackets is a cue, except the
+ * `[anchor]`, `[separator]` and `[image …]` tags. `[cue smile]` and
+ * `[note smile]` are older spellings and mean exactly the same thing, so
+ * scripts written before keep working; importing, exporting or opening the
+ * app rewrites them to `[smile]`. A bare `[cue]` is a cue that says "cue", the
+ * one Add Cue writes for the user to type over.
  *
- * A tag only counts once its closing bracket is there — `[cue smi` is still
+ * A tag only counts once its closing bracket is there — `[smi` is still
  * plain text, so nothing changes under the user mid-word. Cues can't span lines
  * for the same reason: a stray `[` shouldn't swallow the paragraphs after it.
  *
@@ -77,8 +80,15 @@ sealed class CueSegment {
  */
 object TeleprompterParser {
 
-    /** `[cue]` / `[note]`, an optional legacy `:color`, then the cue text */
-    private val cueRegex = Regex("""\[(?:cue|note)(?::[A-Za-z]+)?(?:[ \t]+([^\]\n]*))?\]""")
+    /** Anything in brackets on one line, but for the tags that aren't cues */
+    private val cueRegex =
+        Regex("""\[(?!(?i:anchor|separator)\]|image[ \t]+[A-Za-z0-9-]+\.[A-Za-z0-9]+\])([^\]\n]*)\]""")
+
+    /**
+     * The `cue ` / `note ` an older cue opens with, with its optional legacy
+     * `:color`. A bare `cue` or `note` is the cue's text, not a prefix.
+     */
+    private val legacyPrefixRegex = Regex("""^(?:cue|note)(?::[A-Za-z]+(?:[ \t]+|$)|[ \t]+)""")
 
     /**
      * `[image name.ext]`. The name is kept to letters, digits and dashes, so
@@ -106,14 +116,17 @@ object TeleprompterParser {
     fun imageTag(name: String): String = "[image $name]"
 
     /**
-     * What an empty cue opens with, and closes with. Typing `[` writes both at
-     * once, leaving the caret between them.
+     * What a cue opens with, and closes with. Typing `[` writes both at once,
+     * leaving the caret between them.
      */
-    const val CUE_TAG_PREFIX = "[cue "
+    const val CUE_TAG_PREFIX = "["
     const val CUE_TAG_SUFFIX = "]"
 
-    /** The tag inserted for a cue that hasn't been written yet. */
+    /** The tag typing `[` writes, for a cue that hasn't been written yet. */
     const val EMPTY_CUE_TAG = CUE_TAG_PREFIX + CUE_TAG_SUFFIX
+
+    /** What Add Cue writes in a new cue, selected for the user to type over. */
+    const val PLACEHOLDER_CUE_TEXT = "cue"
 
     /** Build the tag for a cue. */
     fun cueTag(text: String): String = CUE_TAG_PREFIX + text.trim() + CUE_TAG_SUFFIX
@@ -145,7 +158,7 @@ object TeleprompterParser {
         text.replace("\r\n", "\n").replace("\r", "\n").trim()
 
     /**
-     * Rewrite every cue tag into the canonical `[cue …]` spelling, and every
+     * Rewrite every cue tag into the canonical `[…]` spelling, and every
      * card separator into `[separator]`.
      *
      * Used at the file boundary, so a script that leaves the app carries the
@@ -157,7 +170,11 @@ object TeleprompterParser {
 
         // Back to front, so replacing a tag doesn't shift the ones still to come.
         for (match in cueMatches(separated).reversed()) {
-            result.replace(match.range.first, match.range.last + 1, cueTag(match.content))
+            val tag = cueTag(match.content)
+            // A cue that says "anchor" would come back as an anchor, so it
+            // keeps the spelling it has.
+            if (cueMatches(tag).size != 1) continue
+            result.replace(match.range.first, match.range.last + 1, tag)
         }
 
         return result.toString()
@@ -166,15 +183,15 @@ object TeleprompterParser {
     /** Find every cue tag in the text, in order */
     fun cueMatches(text: String): List<CueMatch> =
         cueRegex.findAll(text).map { match ->
-            // `[cue]` carries no text group at all; treat it as an empty cue
-            // sitting just inside the closing bracket.
-            val group = match.groups[1]
-            val contentRange = group?.range ?: (match.range.last until match.range.last)
+            // An older `[cue …]` keeps its prefix as tag syntax, outside the text.
+            val inside = match.range.first + 1 until match.range.last
+            val prefix = legacyPrefixRegex.find(text.substring(inside.first, inside.last + 1))?.value?.length ?: 0
+            val contentRange = inside.first + prefix..inside.last
 
             CueMatch(
                 range = match.range,
                 contentRange = contentRange,
-                content = group?.value ?: ""
+                content = text.substring(contentRange.first, contentRange.last + 1)
             )
         }.toList()
 

@@ -2,8 +2,8 @@
 <resources>
     <string name="share_message">Echa un vistazo a %1$s</string>
     <string name="translation_report_body">Dónde en la app:\n\nQué dice:\n\nQué debería decir:\n</string>
-    <string name="sample_teleprompter">Hola a todos.\n\nMe alegra estar aquí hoy para hablaros del *teleprompter* de CueCard.\n\n[cue sonríe y haz una pausa]\n\nDesplaza tu guion a _tu_ ritmo, para que mantengas la mirada al frente y no pierdas el hilo.\n\n[cue pausa]\n\n[anchor]\n\nSal de la app y sigue en una ventana flotante, justo encima de tu cámara o tu videollamada.\n\n[cue más despacio]\n\n¿Te has perdido? Arrastra el guion hacia atrás. ¿Vas largo? Salta al ancla siguiente.\n\nY el temporizador se pone amarillo cerca del final… y rojo si te emocionas _un poco_ demasiado.\n\n[cue risa suave]\n\n[anchor]\n\n¿Y estas palabras de colores?\n\n[cue enfatiza]\n\nSon tus indicaciones. Recordatorios para sonreír, hacer una pausa o *no entrar en pánico*. Nunca se leen en voz alta.\n\n[cue pausa]\n\n[anchor]\n\nPruébalo. Creo que te va a *encantar*.</string>
-    <string name="sample_cards">Hola a todos. Os presento el modo *Tarjetas*. [cue sonríe]\n[separator]\nUna idea por tarjeta. Desliza a la siguiente cuando _estés_ listo.\n[separator]\nEl temporizador de arriba te mantiene *a raya*. [cue risa suave]\n[separator]\nLas palabras de colores son indicaciones, no palabras para leer en voz alta. [cue enfatiza]\n[separator]\nGracias por escuchar. *¿Preguntas?*</string>
+    <string name="sample_teleprompter">Hola a todos.\n\nMe alegra estar aquí hoy para hablaros del *teleprompter* de CueCard.\n\n[sonríe y haz una pausa]\n\nDesplaza tu guion a _tu_ ritmo, para que mantengas la mirada al frente y no pierdas el hilo.\n\n[pausa]\n\n[anchor]\n\nSal de la app y sigue en una ventana flotante, justo encima de tu cámara o tu videollamada.\n\n[más despacio]\n\n¿Te has perdido? Arrastra el guion hacia atrás. ¿Vas largo? Salta al ancla siguiente.\n\nY el temporizador se pone amarillo cerca del final… y rojo si te emocionas _un poco_ demasiado.\n\n[risa suave]\n\n[anchor]\n\n¿Y estas palabras de colores?\n\n[enfatiza]\n\nSon tus indicaciones. Recordatorios para sonreír, hacer una pausa o *no entrar en pánico*. Nunca se leen en voz alta.\n\n[pausa]\n\n[anchor]\n\nPruébalo. Creo que te va a *encantar*.</string>
+    <string name="sample_cards">Hola a todos. Os presento el modo *Tarjetas*. [sonríe]\n[separator]\nUna idea por tarjeta. Desliza a la siguiente cuando _estés_ listo.\n[separator]\nEl temporizador de arriba te mantiene *a raya*. [risa suave]\n[separator]\nLas palabras de colores son indicaciones, no palabras para leer en voz alta. [enfatiza]\n[separator]\nGracias por escuchar. *¿Preguntas?*</string>
     <string name="theme_system">Sistema</string>
     <string name="theme_light">Claro</string>
     <string name="theme_dark">Oscuro</string>
@@ -121,7 +121,7 @@
     <string name="help_pick_a_mode_title">Elige un modo</string>
     <string name="help_pick_a_mode_detail">Toca el nombre del modo arriba. Teleprompter desplaza todo tu guion. Tarjetas lo muestra tarjeta a tarjeta.</string>
     <string name="help_add_cues_title">Añadir indicaciones</string>
-    <string name="help_add_cues_detail">Las indicaciones son recordatorios como [cue pausa], se muestran en color y no se leen. Escribe [ o toca Añadir indicación encima del teclado.</string>
+    <string name="help_add_cues_detail">Las indicaciones son recordatorios como [pausa], se muestran en color y no se leen. Escribe [ o toca Añadir indicación encima del teclado.</string>
     <string name="help_set_a_timer_title">Pon un temporizador</string>
     <string name="help_set_a_timer_detail">Toca el temporizador junto a Reproducir para indicar cuánto tiempo tienes, cuándo avisarte y de qué colores se pone.</string>
     <string name="help_save_your_work_title">Guarda tu trabajo</string>
@@ -181,11 +181,11 @@
     <string name="no_timer">Sin temporizador</string>
     <string name="read_cards">Leer tarjetas</string>
     <string name="start_teleprompter">Iniciar teleprompter</string>
-    <string name="editor_placeholder">Añade tu guion aquí...\n\nToca Añadir indicación para insertar un recordatorio, o escribe [ para crear uno tú.\n\nPor ejemplo: Bienvenidos a todos [cue sonríe y haz una pausa]</string>
+    <string name="editor_placeholder">Añade tu guion aquí...\n\nToca Añadir indicación para insertar un recordatorio, o escribe [ para crear uno tú.\n\nPor ejemplo: Bienvenidos a todos [sonríe y haz una pausa]</string>
     <string name="remove">Quitar</string>
     <string name="create_new_card">Crear tarjeta</string>
     <string name="card_number">Tarjeta %1$d</string>
-    <string name="first_card_placeholder">Una idea por tarjeta.\n\nEscribe [ o toca Añadir indicación para recordatorios como [cue pausa].</string>
+    <string name="first_card_placeholder">Una idea por tarjeta.\n\nEscribe [ o toca Añadir indicación para recordatorios como [pausa].</string>
     <string name="next_card_placeholder">Tu siguiente idea…</string>
     <string name="note_title">Título de la nota</string>
     <string name="undeleted_file_in_folder">Su archivo en la carpeta “%1$s” no se ha podido eliminar. CueCard lo volverá a intentar y no lo recuperará como nota.</string>

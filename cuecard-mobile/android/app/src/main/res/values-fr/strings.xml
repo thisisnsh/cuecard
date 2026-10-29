@@ -2,8 +2,8 @@
 <resources>
     <string name="share_message">Découvrez %1$s</string>
     <string name="translation_report_body">Où dans l\'app :\n\nCe qui est écrit :\n\nCe qui devrait être écrit :\n</string>
-    <string name="sample_teleprompter">Bonjour à tous.\n\nJe suis ravi d\'être ici aujourd\'hui pour vous parler du *prompteur* de CueCard.\n\n[cue sourire et pause]\n\nIl fait défiler votre script à _votre_ rythme : vos yeux restent levés et votre discours reste sur les rails.\n\n[cue pause]\n\n[anchor]\n\nQuittez l\'app et il continue dans une fenêtre flottante, juste au-dessus de votre caméra ou de votre visio.\n\n[cue ralentir]\n\nPerdu ? Faites glisser le script en arrière. Trop long ? Sautez à l\'ancre suivante.\n\nEt le minuteur passe au jaune vers la fin… puis au rouge si vous vous emballez _un peu_ trop.\n\n[cue petit rire]\n\n[anchor]\n\nEt ces mots en couleur ?\n\n[cue insister]\n\nCe sont vos repères. Des rappels pour sourire, faire une pause ou *ne pas paniquer*. Ils ne sont jamais lus à voix haute.\n\n[cue pause]\n\n[anchor]\n\nEssayez-le. Je pense que vous allez l\'*adorer*.</string>
-    <string name="sample_cards">Bonjour à tous. Voici le mode *Fiches*. [cue sourire]\n[separator]\nUne idée par fiche. Balayez vers la suivante quand _vous_ êtes prêt.\n[separator]\nLe minuteur en haut vous garde *dans les temps*. [cue petit rire]\n[separator]\nLes mots en couleur sont des repères, pas des mots à lire à voix haute. [cue insister]\n[separator]\nMerci de votre attention. *Des questions ?*</string>
+    <string name="sample_teleprompter">Bonjour à tous.\n\nJe suis ravi d\'être ici aujourd\'hui pour vous parler du *prompteur* de CueCard.\n\n[sourire et pause]\n\nIl fait défiler votre script à _votre_ rythme : vos yeux restent levés et votre discours reste sur les rails.\n\n[pause]\n\n[anchor]\n\nQuittez l\'app et il continue dans une fenêtre flottante, juste au-dessus de votre caméra ou de votre visio.\n\n[ralentir]\n\nPerdu ? Faites glisser le script en arrière. Trop long ? Sautez à l\'ancre suivante.\n\nEt le minuteur passe au jaune vers la fin… puis au rouge si vous vous emballez _un peu_ trop.\n\n[petit rire]\n\n[anchor]\n\nEt ces mots en couleur ?\n\n[insister]\n\nCe sont vos repères. Des rappels pour sourire, faire une pause ou *ne pas paniquer*. Ils ne sont jamais lus à voix haute.\n\n[pause]\n\n[anchor]\n\nEssayez-le. Je pense que vous allez l\'*adorer*.</string>
+    <string name="sample_cards">Bonjour à tous. Voici le mode *Fiches*. [sourire]\n[separator]\nUne idée par fiche. Balayez vers la suivante quand _vous_ êtes prêt.\n[separator]\nLe minuteur en haut vous garde *dans les temps*. [petit rire]\n[separator]\nLes mots en couleur sont des repères, pas des mots à lire à voix haute. [insister]\n[separator]\nMerci de votre attention. *Des questions ?*</string>
     <string name="theme_system">Système</string>
     <string name="theme_light">Clair</string>
     <string name="theme_dark">Sombre</string>
@@ -121,7 +121,7 @@
     <string name="help_pick_a_mode_title">Choisir un mode</string>
     <string name="help_pick_a_mode_detail">Touchez le nom du mode en haut. Prompteur fait défiler tout votre script. Fiches l\'affiche une fiche à la fois.</string>
     <string name="help_add_cues_title">Ajouter des repères</string>
-    <string name="help_add_cues_detail">Les repères sont des rappels comme [cue pause], affichés en couleur et non lus. Tapez [ ou touchez Ajouter un repère au-dessus du clavier.</string>
+    <string name="help_add_cues_detail">Les repères sont des rappels comme [pause], affichés en couleur et non lus. Tapez [ ou touchez Ajouter un repère au-dessus du clavier.</string>
     <string name="help_set_a_timer_title">Régler un minuteur</string>
     <string name="help_set_a_timer_detail">Touchez le minuteur à côté de Lire pour définir votre durée, le moment de l\'alerte et les couleurs qu\'il prend.</string>
     <string name="help_save_your_work_title">Enregistrer votre travail</string>
@@ -181,11 +181,11 @@
     <string name="no_timer">Aucun minuteur</string>
     <string name="read_cards">Lire les fiches</string>
     <string name="start_teleprompter">Lancer le prompteur</string>
-    <string name="editor_placeholder">Ajoutez votre script ici...\n\nTouchez Ajouter un repère pour insérer un rappel, ou tapez [ pour en écrire un vous-même.\n\nPar exemple : Bienvenue à tous [cue sourire et pause]</string>
+    <string name="editor_placeholder">Ajoutez votre script ici...\n\nTouchez Ajouter un repère pour insérer un rappel, ou tapez [ pour en écrire un vous-même.\n\nPar exemple : Bienvenue à tous [sourire et pause]</string>
     <string name="remove">Retirer</string>
     <string name="create_new_card">Créer une fiche</string>
     <string name="card_number">Fiche %1$d</string>
-    <string name="first_card_placeholder">Une idée par fiche.\n\nTapez [ ou touchez Ajouter un repère pour des rappels comme [cue pause].</string>
+    <string name="first_card_placeholder">Une idée par fiche.\n\nTapez [ ou touchez Ajouter un repère pour des rappels comme [pause].</string>
     <string name="next_card_placeholder">Votre idée suivante…</string>
     <string name="note_title">Titre de la note</string>
     <string name="undeleted_file_in_folder">Son fichier dans le dossier « %1$s » n\'a pas pu être supprimé. CueCard réessaiera et ne le réimportera pas comme note.</string>

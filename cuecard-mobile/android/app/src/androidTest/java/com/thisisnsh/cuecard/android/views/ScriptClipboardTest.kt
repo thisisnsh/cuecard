@@ -79,13 +79,13 @@ class ScriptClipboardTest {
 
     @Test fun pictureWithSourceLinkGoesAfterTheCueWithoutChangingItsText() {
         val (name, uri) = image(android.graphics.Color.RED)
-        editor("Hi [cue smile] there")
+        editor("Hi [smile] there")
         val clip = ClipData("image", arrayOf("image/png", "text/plain"),
             ClipData.Item("https://example.com/photo", null, uri))
         paste(clip, TextRange(9))
         compose.waitUntil(5_000) { script.value.contains("[image") }
         compose.runOnIdle {
-            assertEquals("Hi [cue smile]\n[image $name]\n there", script.value)
+            assertEquals("Hi [smile]\n[image $name]\n there", script.value)
         }
     }
 

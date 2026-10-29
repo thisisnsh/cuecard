@@ -2,8 +2,8 @@
 <resources>
     <string name="share_message">Confira %1$s</string>
     <string name="translation_report_body">Onde no app:\n\nO que está escrito:\n\nO que deveria estar escrito:\n</string>
-    <string name="sample_teleprompter">Olá a todos.\n\nEstou animado por estar aqui hoje para falar sobre o *teleprompter* do CueCard.\n\n[cue sorria e pause]\n\nEle rola seu roteiro no _seu_ ritmo, para você manter o olhar à frente e não perder o fio da fala.\n\n[cue pausa]\n\n[anchor]\n\nSaia do app e ele continua em uma janela flutuante, bem em cima da sua câmera ou da sua videochamada.\n\n[cue mais devagar]\n\nSe perdeu? Arraste o roteiro de volta. Passando do tempo? Pule para a próxima âncora.\n\nE o timer fica amarelo perto do fim… e vermelho se você se empolgar _um pouco_ demais.\n\n[cue risada leve]\n\n[anchor]\n\nE essas palavras coloridas?\n\n[cue enfatize]\n\nSão as suas deixas. Lembretes para sorrir, pausar ou *não entrar em pânico*. Elas nunca devem ser lidas em voz alta.\n\n[cue pausa]\n\n[anchor]\n\nExperimente. Acho que você vai *adorar*.</string>
-    <string name="sample_cards">Olá a todos. Apresento o modo *Cartões*. [cue sorria]\n[separator]\nUma ideia por cartão. Deslize para o próximo quando _você_ estiver pronto.\n[separator]\nO timer no topo mantém você *no horário*. [cue risada leve]\n[separator]\nPalavras coloridas são deixas, não falas. [cue enfatize]\n[separator]\nObrigado pela atenção. *Perguntas?*</string>
+    <string name="sample_teleprompter">Olá a todos.\n\nEstou animado por estar aqui hoje para falar sobre o *teleprompter* do CueCard.\n\n[sorria e pause]\n\nEle rola seu roteiro no _seu_ ritmo, para você manter o olhar à frente e não perder o fio da fala.\n\n[pausa]\n\n[anchor]\n\nSaia do app e ele continua em uma janela flutuante, bem em cima da sua câmera ou da sua videochamada.\n\n[mais devagar]\n\nSe perdeu? Arraste o roteiro de volta. Passando do tempo? Pule para a próxima âncora.\n\nE o timer fica amarelo perto do fim… e vermelho se você se empolgar _um pouco_ demais.\n\n[risada leve]\n\n[anchor]\n\nE essas palavras coloridas?\n\n[enfatize]\n\nSão as suas deixas. Lembretes para sorrir, pausar ou *não entrar em pânico*. Elas nunca devem ser lidas em voz alta.\n\n[pausa]\n\n[anchor]\n\nExperimente. Acho que você vai *adorar*.</string>
+    <string name="sample_cards">Olá a todos. Apresento o modo *Cartões*. [sorria]\n[separator]\nUma ideia por cartão. Deslize para o próximo quando _você_ estiver pronto.\n[separator]\nO timer no topo mantém você *no horário*. [risada leve]\n[separator]\nPalavras coloridas são deixas, não falas. [enfatize]\n[separator]\nObrigado pela atenção. *Perguntas?*</string>
     <string name="theme_system">Sistema</string>
     <string name="theme_light">Claro</string>
     <string name="theme_dark">Escuro</string>
@@ -121,7 +121,7 @@
     <string name="help_pick_a_mode_title">Escolha um modo</string>
     <string name="help_pick_a_mode_detail">Toque no nome do modo no topo. Teleprompter rola o roteiro inteiro. Cartões mostra um cartão por vez.</string>
     <string name="help_add_cues_title">Adicionar deixas</string>
-    <string name="help_add_cues_detail">Deixas são lembretes como [cue pausa], mostrados em cor e não lidos em voz alta. Digite [ ou toque em Adicionar deixa acima do teclado.</string>
+    <string name="help_add_cues_detail">Deixas são lembretes como [pausa], mostrados em cor e não lidos em voz alta. Digite [ ou toque em Adicionar deixa acima do teclado.</string>
     <string name="help_set_a_timer_title">Definir um timer</string>
     <string name="help_set_a_timer_detail">Toque no timer ao lado de Reproduzir para definir quanto tempo você tem, quando ele avisa e as cores que ele assume.</string>
     <string name="help_save_your_work_title">Salve seu trabalho</string>
@@ -181,11 +181,11 @@
     <string name="no_timer">Sem timer</string>
     <string name="read_cards">Ler cartões</string>
     <string name="start_teleprompter">Iniciar teleprompter</string>
-    <string name="editor_placeholder">Adicione seu roteiro aqui...\n\nToque em Adicionar deixa para inserir um lembrete, ou digite [ para escrever um você mesmo.\n\nPor exemplo: Bem-vindos a todos [cue sorria e pause]</string>
+    <string name="editor_placeholder">Adicione seu roteiro aqui...\n\nToque em Adicionar deixa para inserir um lembrete, ou digite [ para escrever um você mesmo.\n\nPor exemplo: Bem-vindos a todos [sorria e pause]</string>
     <string name="remove">Remover</string>
     <string name="create_new_card">Criar cartão</string>
     <string name="card_number">Cartão %1$d</string>
-    <string name="first_card_placeholder">Uma ideia por cartão.\n\nDigite [ ou toque em Adicionar deixa para lembretes como [cue pausa].</string>
+    <string name="first_card_placeholder">Uma ideia por cartão.\n\nDigite [ ou toque em Adicionar deixa para lembretes como [pausa].</string>
     <string name="next_card_placeholder">Sua próxima ideia…</string>
     <string name="note_title">Título da nota</string>
     <string name="undeleted_file_in_folder">O arquivo dela na pasta “%1$s” não pôde ser apagado. O CueCard tentará de novo e não o trará de volta como nota.</string>

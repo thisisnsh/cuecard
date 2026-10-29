@@ -346,7 +346,7 @@ fun HomeView(
 
     /**
      * Hand the script to the share sheet as it would be written to a file, with
-     * cues in `[cue …]` form — or, with images in it, as a TextPack, so they go
+     * cues in `[…]` form — or, with images in it, as a TextPack, so they go
      * with it.
      */
     fun shareScript() {
@@ -1085,7 +1085,7 @@ private fun StartButton(isCardsMode: Boolean, isEnabled: Boolean, isDark: Boolea
 }
 
 /**
- * Notes editor with live syntax highlighting for `[cue …]` tags, and the
+ * Notes editor with live syntax highlighting for `[…]` cues, and the
  * placeholder that says how to write one.
  */
 @Composable
