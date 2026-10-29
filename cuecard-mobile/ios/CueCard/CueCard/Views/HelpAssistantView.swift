@@ -1,18 +1,35 @@
 import SwiftUI
 import FoundationModels
 
-/// Ask a question about CueCard and get an answer from Apple's on-device
-/// model, drawn from the help topics. Nothing asked leaves the iPhone.
+/// What the assistant answers from.
+enum AssistantTopic {
+    /// How to use CueCard, from the help topics.
+    case help
+    /// The user's own saved scripts.
+    case scripts
+}
+
+/// Ask a question and get an answer from Apple's on-device model, drawn from
+/// the help topics or from the user's scripts. Nothing asked leaves the iPhone.
 struct HelpAssistantView: View {
     @Environment(\.colorScheme) private var colorScheme
-    @StateObject private var assistant = HelpAssistant()
+    @StateObject private var assistant: HelpAssistant
     @State private var question = ""
     @FocusState private var isAsking: Bool
 
+    let topic: AssistantTopic
     /// Done, from the page this was opened from: closes the whole sheet.
     let close: () -> Void
 
-    private static let screen = "help_assistant"
+    init(topic: AssistantTopic = .help, close: @escaping () -> Void) {
+        self.topic = topic
+        self.close = close
+        _assistant = StateObject(wrappedValue: HelpAssistant(topic: topic))
+    }
+
+    private var screen: String {
+        topic == .help ? "help_assistant" : "scripts_assistant"
+    }
 
     private var trimmedQuestion: String {
         question.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -47,7 +64,7 @@ struct HelpAssistantView: View {
             }
         }
         .onAppear {
-            AnalyticsEvents.logButtonClick("open", screen: Self.screen)
+            AnalyticsEvents.logButtonClick("open", screen: screen)
             isAsking = assistant.availability == .available
         }
         .onDisappear { assistant.stop() }
@@ -60,7 +77,7 @@ struct HelpAssistantView: View {
             HStack(spacing: 8) {
                 Image(systemName: "sparkles")
                     .foregroundStyle(AppColors.purple(for: colorScheme))
-                Text("Ask anything about using CueCard.")
+                Text(topic == .help ? "Ask anything about using CueCard." : "Ask anything about your scripts.")
                     .font(.headline)
                     .foregroundStyle(AppColors.textPrimary(for: colorScheme))
             }
@@ -70,14 +87,16 @@ struct HelpAssistantView: View {
                     .font(.subheadline)
                     .foregroundStyle(AppColors.textSecondary(for: colorScheme))
             } else {
-                Text("Answers come from Apple Intelligence on this iPhone, using CueCard's help. They can be wrong.")
+                Text(topic == .help
+                     ? "Answers come from Apple Intelligence on this iPhone, using CueCard's help. They can be wrong."
+                     : "Answers come from Apple Intelligence on this iPhone, reading your saved scripts. Nothing leaves this iPhone. Answers can be wrong.")
                     .font(.subheadline)
                     .foregroundStyle(AppColors.textSecondary(for: colorScheme))
 
                 VStack(alignment: .leading, spacing: 8) {
-                    ForEach(Self.examples, id: \.self) { example in
+                    ForEach(examples, id: \.self) { example in
                         Button {
-                            AnalyticsEvents.logButtonClick("example", screen: Self.screen)
+                            AnalyticsEvents.logButtonClick("example", screen: screen)
                             ask(example)
                         } label: {
                             Text(example)
@@ -94,12 +113,21 @@ struct HelpAssistantView: View {
         }
     }
 
-    private static var examples: [String] {
-        [
-            String(localized: "How do I add a pause to my script?"),
-            String(localized: "How does Follow My Voice work?"),
-            String(localized: "How do I record a video while I read?")
-        ]
+    private var examples: [String] {
+        switch topic {
+        case .help:
+            return [
+                String(localized: "How do I add a pause to my script?"),
+                String(localized: "How does Follow My Voice work?"),
+                String(localized: "How do I record a video while I read?")
+            ]
+        case .scripts:
+            return [
+                String(localized: "Which script talks about pricing?"),
+                String(localized: "Summarize my latest script."),
+                String(localized: "Which of my scripts is the longest?")
+            ]
+        }
     }
 
     private func exchangeView(_ exchange: HelpAssistant.Exchange) -> some View {
@@ -169,7 +197,7 @@ struct HelpAssistantView: View {
 
     private func ask(_ text: String) {
         guard !text.isEmpty, !assistant.isAnswering else { return }
-        AnalyticsEvents.logButtonClick("ask", screen: Self.screen, parameters: ["length": text.count])
+        AnalyticsEvents.logButtonClick("ask", screen: screen, parameters: ["length": text.count])
         question = ""
         assistant.ask(text)
     }
@@ -191,7 +219,12 @@ final class HelpAssistant: ObservableObject {
 
     @Published private(set) var exchanges: [Exchange] = []
     let availability = OnDeviceModelAvailability.current
+    let topic: AssistantTopic
     private var task: Task<Void, Never>?
+
+    init(topic: AssistantTopic = .help) {
+        self.topic = topic
+    }
 
     var isAnswering: Bool { exchanges.last?.isAnswering ?? false }
 
@@ -209,9 +242,12 @@ final class HelpAssistant: ObservableObject {
         exchanges.append(Exchange(question: question))
         let index = exchanges.count - 1
 
+        let answers = topic == .help
+            ? HelpAnswerer.answer(question)
+            : ScriptsAnswerer.answer(question, notes: SettingsService.shared.savedNotes)
         task = Task { [weak self] in
             do {
-                for try await answer in HelpAnswerer.answer(question) {
+                for try await answer in answers {
                     self?.exchanges[index].answer = answer
                 }
                 self?.exchanges[index].isAnswering = false
@@ -295,5 +331,90 @@ private enum HelpAnswerer {
             }
         }
         return String(localized: "No answer could be found right now. Try again in a little while.")
+    }
+}
+
+@available(iOS 26.0, *)
+private enum ScriptsAnswerer {
+    private static let instructions = """
+        You answer questions about the user's own scripts, written in CueCard to read from a \
+        teleprompter or from cards. Answer only from the scripts in the prompt, naming each script \
+        you mean by its title in quotes. Be brief: one to four sentences. If the scripts don't answer \
+        the question, say you couldn't find it in them. Answer in the language of the question.
+        """
+
+    /// About how much of the scripts goes in with a question: a list of them
+    /// all, then the text of those that look most relevant. The model's
+    /// context holds a few thousand tokens, instructions and answer included.
+    private static let listLength = 800
+    private static let textLength = 2000
+    private static let textPerScript = 700
+
+    static func answer(_ question: String, notes: [SavedNote]) -> AsyncThrowingStream<String, Error> {
+        let prompt = prompt(for: question, notes: notes)
+        return AsyncThrowingStream { continuation in
+            let task = Task {
+                do {
+                    let session = LanguageModelSession(model: SystemLanguageModel.default, instructions: instructions)
+                    for try await snapshot in session.streamResponse(to: prompt) {
+                        continuation.yield(snapshot.content)
+                    }
+                    continuation.finish()
+                } catch {
+                    continuation.finish(throwing: error)
+                }
+            }
+            continuation.onTermination = { _ in task.cancel() }
+        }
+    }
+
+    private static func prompt(for question: String, notes: [SavedNote]) -> String {
+        let newest = notes.sorted { $0.updatedAt > $1.updatedAt }
+        guard !newest.isEmpty else {
+            return "The user has no saved scripts.\n\nQuestion: \(question)"
+        }
+
+        var list = ""
+        for note in newest {
+            let kind = note.mode == .cards ? "cards" : "teleprompter"
+            let words = LibraryText.plain(note.content).split(whereSeparator: \.isWhitespace).count
+            let folder = note.folder.map { ", folder \"\($0)\"" } ?? ""
+            let line = "- \"\(note.title)\" (\(kind), \(words) words\(folder), edited "
+                + "\(note.updatedAt.formatted(date: .abbreviated, time: .omitted)))\n"
+            guard list.count + line.count <= listLength else { break }
+            list += line
+        }
+
+        // The newest first among those sharing as many words with the question.
+        let asked = words(in: question)
+        let overlap: [UUID: Int] = Dictionary(newest.map { note in
+            (note.id, asked.intersection(words(in: note.title + " " + note.content)).count)
+        }, uniquingKeysWith: { first, _ in first })
+        // A stable sort, so ties keep newest first.
+        let ranked: [SavedNote] = newest.enumerated()
+            .sorted { lhs, rhs in
+                let left = overlap[lhs.element.id] ?? 0
+                let right = overlap[rhs.element.id] ?? 0
+                return left != right ? left > right : lhs.offset < rhs.offset
+            }
+            .map(\.element)
+        var texts = ""
+        for note in ranked {
+            let text = String(LibraryText.plain(note.content).prefix(textPerScript))
+            let entry = "## \"\(note.title)\"\n\(text)\n\n"
+            guard texts.count + entry.count <= textLength else { continue }
+            texts += entry
+        }
+
+        return "Scripts, newest first:\n\(list)\nTheir text:\n\(texts)Question: \(question)"
+    }
+
+    private static func words(in text: String) -> Set<String> {
+        var words = Set<String>()
+        text.enumerateSubstrings(in: text.startIndex..., options: .byWords) { word, _, _, _ in
+            guard let word, word.count >= 4 else { return }
+            words.insert(word.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: nil))
+        }
+        return words
     }
 }
