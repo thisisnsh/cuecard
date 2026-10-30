@@ -80,7 +80,7 @@ private enum AllHelp {
         HelpTopic("Add Cards",
                   detail: "Each box in the editor is one card. Tap Create New Card to add another."),
         HelpTopic("Get Suggestions (Beta)",
-                  detail: "Tap the sparkles above the timer to have Apple Intelligence read your teleprompter script on this iPhone. It suggests spelling fixes, cues, anchors and bold or italic words. Accept or reject each one, or accept them all. Needs an iPhone with Apple Intelligence turned on.")
+                  detail: "Tap the sparkles above the timer to have Apple Intelligence read your script or deck on this iPhone. It suggests spelling fixes, cues, anchors and bold or italic words. In a deck it leaves out anchors, and only adds a cue where a card has room. Accept or reject each one, or accept them all. Needs an iPhone with Apple Intelligence turned on.")
     ])
 
     static let notes = HelpSection("notes", title: "Library & Saving",

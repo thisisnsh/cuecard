@@ -187,7 +187,7 @@ struct HomeView: View {
     /// Suggestions from Apple's on-device model, for a script being written for
     /// the teleprompter. Not shown where this iPhone has no model to ask.
     private var showsSuggestions: Bool {
-        hasNotes && !isCardsMode && OnDeviceModelAvailability.current != .unsupported
+        hasNotes && OnDeviceModelAvailability.current != .unsupported
     }
 
     @ViewBuilder
@@ -199,6 +199,8 @@ struct HomeView: View {
                 isEditorFocused = false
                 if case .unavailable(let reason) = availability {
                     suggestionsUnavailable = reason
+                } else if isCardsMode {
+                    startDeckReview()
                 } else {
                     review.start(script: settingsService.notes)
                 }
@@ -207,10 +209,21 @@ struct HomeView: View {
         }
     }
 
+    /// Review the deck as the cards editor writes it, so where each card
+    /// starts in the script is where the editor puts it. A deck written
+    /// some other way — imported, say — is brought to that form first;
+    /// its cards stay the same.
+    private func startDeckReview() {
+        let deck = CueCards.script(for: CueCards.editableCards(in: settingsService.notes))
+        if deck != settingsService.notes { settingsService.notes = deck }
+        review.start(script: deck, cardLimit: settingsService.settings.cards.characterLimit)
+    }
+
     /// Put an accepted suggestion into the script, through the editor so it
-    /// stays where it's scrolled to.
+    /// stays where it's scrolled to. A deck's editor is a card at a time,
+    /// so a deck's script is changed itself, and its cards follow.
     private func applySuggestion(_ edit: (range: NSRange, replacement: String)) {
-        guard !editorController.replace(edit.range, with: edit.replacement) else { return }
+        guard isCardsMode || !editorController.replace(edit.range, with: edit.replacement) else { return }
         settingsService.notes = (settingsService.notes as NSString)
             .replacingCharacters(in: edit.range, with: edit.replacement)
     }
@@ -352,7 +365,7 @@ struct HomeView: View {
             SuggestionsPanel(
                 review: review,
                 colorScheme: colorScheme,
-                cueColor: settingsService.settings.cueColor,
+                cueColor: settingsService.settings.activeCueColor,
                 onAccept: { suggestion in
                     if let edit = review.accept(suggestion.id) { applySuggestion(edit) }
                 },
@@ -479,8 +492,10 @@ struct HomeView: View {
                         colorScheme: colorScheme,
                         fontSize: CGFloat(settingsService.settings.cards.editorFontSize),
                         cardLimit: settingsService.settings.cards.characterLimit,
-                        bottomInset: isEditorFocused ? CueBar.height : Self.controlsHeight,
-                        topOverlap: Self.editorTopOverlap
+                        bottomInset: isEditorFocused ? CueBar.height
+                            : review.isActive ? reviewPanelHeight + 24 : Self.controlsHeight,
+                        topOverlap: Self.editorTopOverlap,
+                        suggestionMarks: suggestionMarks
                     )
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
@@ -739,6 +754,11 @@ struct CardsEditorView: View {
     let bottomInset: CGFloat
     /// How far the list reaches up under the top bar, for the fade to start there.
     var topOverlap: CGFloat = 0
+    /// Suggestions being reviewed, marked in the cards they're on. The deck
+    /// can't be changed meanwhile, other than by taking one.
+    var suggestionMarks: SuggestionMarks?
+
+    private var isReviewing: Bool { suggestionMarks != nil }
 
     private struct EditableCard: Identifiable {
         let id = UUID()
@@ -760,17 +780,19 @@ struct CardsEditorView: View {
         ScrollViewReader { proxy in
             List {
                 ForEach(Array(cards.enumerated()), id: \.element.id) { index, card in
-                    cardRow(card, number: index + 1)
+                    cardRow(card, number: index + 1, marks: marks(forCardAt: index))
                         .id(card.id)
                         .listRowInsets(EdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 20))
                         .listRowSeparator(.hidden)
                         .listRowBackground(Color.clear)
                         .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                            Button(role: .destructive) {
-                                AnalyticsEvents.logButtonClick("remove_card", screen: "home")
-                                remove(card.id)
-                            } label: {
-                                Label("Remove", systemImage: "trash")
+                            if !isReviewing {
+                                Button(role: .destructive) {
+                                    AnalyticsEvents.logButtonClick("remove_card", screen: "home")
+                                    remove(card.id)
+                                } label: {
+                                    Label("Remove", systemImage: "trash")
+                                }
                             }
                         }
                 }
@@ -792,6 +814,8 @@ struct CardsEditorView: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .disabled(isReviewing)
+                .opacity(isReviewing ? 0.4 : 1)
                 .id(Self.newCardButtonID)
                 .listRowInsets(EdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 20))
                 .listRowSeparator(.hidden)
@@ -803,6 +827,13 @@ struct CardsEditorView: View {
             .topScrollEdgeEffectHidden()
             .contentMargins(.top, topOverlap + Self.topFade - 8, for: .scrollContent)
             .contentMargins(.bottom, bottomInset + 16, for: .scrollContent)
+            // The card with the suggestion being looked at comes into view.
+            .onChange(of: suggestionMarks?.focused) {
+                guard let focused = suggestionMarks?.focused,
+                      let index = cardStarts.lastIndex(where: { $0 <= focused.location }),
+                      cards.indices.contains(index) else { return }
+                withAnimation { proxy.scrollTo(cards[index].id, anchor: .center) }
+            }
         }
         // A list draws on past its frame into the home indicator's strip, below
         // where the fade ends. Kept inside it, the cards fade out before the
@@ -830,7 +861,37 @@ struct CardsEditorView: View {
         }
     }
 
-    private func cardRow(_ card: EditableCard, number: Int) -> some View {
+    /// Where each card starts in the script the editor writes.
+    private var cardStarts: [Int] {
+        let separator = ("\n\(CueCards.separatorTag)\n" as NSString).length
+        var starts: [Int] = []
+        var location = 0
+        for card in cards {
+            starts.append(location)
+            location += (card.text as NSString).length + separator
+        }
+        return starts
+    }
+
+    /// The suggestions on one card, moved from where they are in the script
+    /// to where they are in the card. Every card gets marks while reviewing,
+    /// none or some, so none can be typed in.
+    private func marks(forCardAt index: Int) -> SuggestionMarks? {
+        guard let suggestionMarks else { return nil }
+        let start = cardStarts[index]
+        let end = start + (cards[index].text as NSString).length
+        func local(_ range: NSRange) -> NSRange? {
+            guard range.location >= start, NSMaxRange(range) <= end else { return nil }
+            return NSRange(location: range.location - start, length: range.length)
+        }
+        return SuggestionMarks(
+            ranges: suggestionMarks.ranges.compactMap(local),
+            focused: suggestionMarks.focused.flatMap(local),
+            onTap: { suggestionMarks.onTap($0 + start) }
+        )
+    }
+
+    private func cardRow(_ card: EditableCard, number: Int, marks: SuggestionMarks?) -> some View {
         let measure = CueCards.measure(card: card.text, limit: cardLimit)
         let isOver = measure.overflow != nil
         // The count only shows once a card is getting close to full.
@@ -868,7 +929,8 @@ struct CardsEditorView: View {
                     fontSize: fontSize,
                     cardLimit: cardLimit,
                     growsWithText: true,
-                    keyboardOverlayHeight: CueBar.height
+                    keyboardOverlayHeight: CueBar.height,
+                    suggestionMarks: marks
                 )
             }
             .frame(minHeight: fontSize * 3, alignment: .topLeading)
@@ -885,8 +947,9 @@ struct CardsEditorView: View {
                         lineWidth: isOver ? 1 : 0.7)
         )
         .contentShape(RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous))
-        // A tap on the card around the text still starts writing in it.
-        .onTapGesture { focusedCard = card.id }
+        // A tap on the card around the text still starts writing in it,
+        // unless suggestions are open.
+        .onTapGesture { if !isReviewing { focusedCard = card.id } }
     }
 
     /// The first card explains the deck. Later ones only ask for the next

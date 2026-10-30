@@ -82,7 +82,9 @@ final class ScriptReview: ObservableObject {
         suggestions.firstIndex { $0.id == focusedID }
     }
 
-    func start(script: String) {
+    /// Review `script`. A deck of cards comes with the characters a card
+    /// holds, so nothing suggested runs a card past it.
+    func start(script: String, cardLimit: Int? = nil) {
         guard #available(iOS 26.0, *) else { return }
         end()
         self.script = script
@@ -91,7 +93,7 @@ final class ScriptReview: ObservableObject {
 
         task = Task { [weak self] in
             do {
-                for try await found in ScriptSuggester.suggestions(for: script) {
+                for try await found in ScriptSuggester.suggestions(for: script, cardLimit: cardLimit) {
                     self?.add(found)
                 }
             } catch is CancellationError {
@@ -250,19 +252,22 @@ enum ScriptSuggester {
     /// few thousand tokens, instructions and answer included.
     private static let passageLength = 1500
 
-    /// Suggestions for each passage, as the model finishes it.
-    static func suggestions(for script: String) -> AsyncThrowingStream<[ScriptSuggestion], Error> {
+    /// Suggestions for each passage, as the model finishes it. For a deck,
+    /// `cardLimit` is the characters a card holds.
+    static func suggestions(for script: String, cardLimit: Int? = nil) -> AsyncThrowingStream<[ScriptSuggestion], Error> {
         AsyncThrowingStream { continuation in
             let task = Task {
                 let protected = protectedRanges(in: script)
                 let emphases = RichText.emphases(in: script, skipping: TeleprompterParser.cueMatches(in: script).map(\.range))
+                var cards = cardLimit.map { CardBudget(script: script, limit: $0) }
                 do {
                     for passage in passages(in: script) {
                         try Task.checkCancellation()
                         do {
-                            let review = try await review(of: (script as NSString).substring(with: passage))
+                            let review = try await review(of: (script as NSString).substring(with: passage),
+                                                          isDeck: cardLimit != nil)
                             let found = validated(review.changes, in: passage, of: script,
-                                                  protected: protected, emphases: emphases)
+                                                  protected: protected, emphases: emphases, cards: &cards)
                             if !found.isEmpty { continuation.yield(found) }
                         } catch let error as LanguageModelSession.GenerationError {
                             switch error {
@@ -295,6 +300,26 @@ enum ScriptSuggester {
         You review a script someone will read aloud from a teleprompter, and suggest a few small \
         changes to it. Most passages need few changes or none. When a passage is fine, suggest nothing.
 
+
+        """ + markup + spellingAndCues + """
+
+        - anchor: the first words of a new major section in a long script. value is empty.
+        """ + emphasisAndRules
+
+    /// For a deck of cards: no anchors, which are for jumping through the
+    /// teleprompter, and only the cues a card has room for.
+    private static let deckInstructions = """
+        You review a deck of cue cards someone will read aloud, one short card at a time, and suggest \
+        a few small changes to it. Most passages need few changes or none. When a passage is fine, \
+        suggest nothing. A line with [separator] ends one card and starts the next.
+
+
+        """ + markup + spellingAndCues + emphasisAndRules + """
+
+        - Never suggest an anchor. Cards are short: suggest a cue only where a card has room for it.
+        """
+
+    private static let markup = """
         The script has its own markup:
         - Words in square brackets, like [pause] or [smile], are a delivery cue for the speaker. \
         They aren't read aloud.
@@ -302,12 +327,19 @@ enum ScriptSuggester {
         - *words* are bold and _words_ are italic.
 
         The kinds of change:
+        """
+
+    private static let spellingAndCues = """
+
         - spelling: a misspelled word or a clear grammar slip. text is the wrong words; value is \
         the same words corrected. Never reword or rewrite a sentence.
         - cue: a delivery cue at a natural moment, such as pause, breathe, smile, slow down or look up. \
         text is the words the cue comes right after; value is the cue's words, one to four, without brackets. \
         At most one or two in a passage.
-        - anchor: the first words of a new major section in a long script. value is empty.
+        """
+
+    private static let emphasisAndRules = """
+
         - bold: a word or short phrase to stress strongly. value is empty. Rare.
         - italic: a word or short phrase to say with lighter emphasis. value is empty. Rare.
 
@@ -317,8 +349,9 @@ enum ScriptSuggester {
         - Keep to the script's language.
         """
 
-    private static func review(of passage: String) async throws -> ModelReview {
-        let session = LanguageModelSession(model: SystemLanguageModel.default, instructions: instructions)
+    private static func review(of passage: String, isDeck: Bool) async throws -> ModelReview {
+        let session = LanguageModelSession(model: SystemLanguageModel.default,
+                                           instructions: isDeck ? deckInstructions : instructions)
         let response = try await session.respond(
             to: "Passage:\n\(passage)",
             generating: ModelReview.self,
@@ -387,13 +420,16 @@ enum ScriptSuggester {
     ]
 
     private static func validated(_ changes: [ModelChange], in passage: NSRange, of script: String,
-                                  protected: [NSRange], emphases: [Emphasis]) -> [ScriptSuggestion] {
+                                  protected: [NSRange], emphases: [Emphasis],
+                                  cards: inout CardBudget?) -> [ScriptSuggestion] {
         let text = script as NSString
         var kept: [ScriptSuggestion] = []
         var counts: [ScriptSuggestion.Kind: Int] = [:]
 
         for change in changes {
             let kind = change.kind.kind
+            // Cards are turned, not jumped through.
+            if cards != nil, kind == .anchor { continue }
             guard counts[kind, default: 0] < limits[kind, default: 0],
                   var range = locate(change.text, in: passage, of: text) else { continue }
             if kind == .bold || kind == .italic { range = text.trimmingPunctuation(in: range) }
@@ -401,7 +437,8 @@ enum ScriptSuggester {
                   !protected.contains(where: { NSIntersectionRange($0, range).length > 0 }),
                   !kept.contains(where: { NSIntersectionRange($0.range, range).length > 0 }),
                   let suggestion = suggestion(kind, at: range, value: change.value, in: text,
-                                              protected: protected, emphases: emphases)
+                                              protected: protected, emphases: emphases),
+                  cards?.takes(suggestion) ?? true
             else { continue }
             kept.append(suggestion)
             counts[kind, default: 0] += 1
@@ -476,6 +513,36 @@ enum ScriptSuggester {
     /// A tag right at `location`, give or take a space, so another isn't put beside it.
     private static func hasTag(near location: Int, in text: NSString, protected: [NSRange]) -> Bool {
         protected.contains { $0.location <= location + 2 && location - 2 <= NSMaxRange($0) }
+    }
+}
+
+// MARK: - Cards
+
+/// How much more each card of a deck can hold, so the suggestions for it,
+/// taken together, never run it past its limit.
+private struct CardBudget {
+    private let cards: [NSRange]
+    private var room: [Int]
+
+    init(script: String, limit: Int) {
+        let text = script as NSString
+        cards = CueCards.cardRanges(in: script)
+        room = cards.map { limit - CueCards.measure(card: text.substring(with: $0), limit: limit).length }
+    }
+
+    /// Whether the card the suggestion is on has room for what it adds, and
+    /// if so, count it as taken. A suggestion that adds nothing always fits.
+    mutating func takes(_ suggestion: ScriptSuggestion) -> Bool {
+        guard let index = cards.firstIndex(where: {
+            $0.location <= suggestion.range.location && NSMaxRange(suggestion.range) <= NSMaxRange($0)
+        }) else { return false }
+        let limit = Int.max / 2
+        let added = CueCards.measure(card: suggestion.replacement, limit: limit).length
+            - CueCards.measure(card: suggestion.original, limit: limit).length
+        guard added > 0 else { return true }
+        guard added <= room[index] else { return false }
+        room[index] -= added
+        return true
     }
 }
 
