@@ -79,7 +79,7 @@ private enum AllHelp {
                   detail: "Tap the photo above the keyboard to add images from your library, or paste one in. The Lock Screen and Apple Watch show a photo symbol in their place."),
         HelpTopic("Add Cards",
                   detail: "Each box in the editor is one card. Tap Create New Card to add another."),
-        HelpTopic("Get Suggestions",
+        HelpTopic("Get Suggestions (Beta)",
                   detail: "Tap the sparkles above the timer to have Apple Intelligence read your teleprompter script on this iPhone. It suggests spelling fixes, cues, anchors and bold or italic words. Accept or reject each one, or accept them all. Needs an iPhone with Apple Intelligence turned on.")
     ])
 
@@ -88,7 +88,7 @@ private enum AllHelp {
                                     systemImage: "folder", topics: [
         HelpTopic("Open a Script",
                   detail: "CueCard opens on your library, with every script and deck you saved. Tap one to write in it, and tap back to return. Switch between Teleprompter and Cards at the top."),
-        HelpTopic("Ask About Your Scripts",
+        HelpTopic("Ask About Your Scripts (Beta)",
                   detail: "In your library, tap the sparkles next to Search and ask, like which script mentions pricing. Apple Intelligence reads your saved scripts on this iPhone to answer. Needs an iPhone with Apple Intelligence turned on."),
         HelpTopic("Save Your Work",
                   detail: "Unsaved above the timer means there are changes to save. Tap it to save. A new script you haven't saved shows in the library as a draft."),
@@ -218,19 +218,66 @@ enum HelpLibrary {
 
 // MARK: - Help Sheet
 
-/// The same help on every page: a front page of sections, each opening to
-/// its topics, with a search across all of them.
+/// The same help on every page. Where Apple Intelligence can answer, it
+/// opens on asking a question, with the sections to browse below; otherwise
+/// on the sections, with a search across all of them.
 struct HelpView: View {
     @Environment(\.dismiss) private var dismiss
+
+    let page: HelpPage
+
+    static let screen = "help"
+
+    private var asksFirst: Bool {
+        OnDeviceModelAvailability.current == .available
+    }
+
+    var body: some View {
+        NavigationStack {
+            if asksFirst {
+                HelpAssistantView(topic: .help, browse: AnyView(HelpBrowseCards(close: close)), close: close)
+                    .toolbar {
+                        ToolbarItem(placement: .topBarLeading) {
+                            NavigationLink {
+                                HelpTopicsList(showsAsk: false, close: close)
+                            } label: {
+                                Text("All Topics")
+                            }
+                        }
+                    }
+            } else {
+                HelpTopicsList(showsAsk: true, close: close)
+            }
+        }
+        .onAppear {
+            Analytics.logEvent(AnalyticsEventScreenView, parameters: [
+                AnalyticsParameterScreenName: Self.screen,
+                AnalyticsParameterScreenClass: "HelpView",
+                "page": page.rawValue
+            ])
+        }
+    }
+
+    /// Closes the whole sheet, from the front page or a section.
+    private func close() {
+        AnalyticsEvents.logButtonClick("done", screen: Self.screen)
+        dismiss()
+    }
+}
+
+/// Every section, with the links to report a bug, ask for a feature and see
+/// what's new, and a search across all the topics.
+private struct HelpTopicsList: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.openURL) private var openURL
     @ObservedObject private var whatsNew = WhatsNewService.shared
 
-    let page: HelpPage
+    /// Offer asking a question first: where Apple Intelligence isn't ready,
+    /// the assistant says why.
+    let showsAsk: Bool
+    let close: () -> Void
 
     @State private var query = ""
-
-    fileprivate static let screen = "help"
 
     private var trimmedQuery: String {
         query.trimmingCharacters(in: .whitespaces)
@@ -244,47 +291,38 @@ struct HelpView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            List {
-                if trimmedQuery.isEmpty {
-                    frontPage
-                } else {
-                    ForEach(results) { section in
-                        Section(section.title) {
-                            ForEach(section.topics) { topic in
-                                HelpTopicRow(topic: topic, isExpanded: true)
-                            }
+        List {
+            if trimmedQuery.isEmpty {
+                frontPage
+            } else {
+                ForEach(results) { section in
+                    Section(section.title) {
+                        ForEach(section.topics) { topic in
+                            HelpTopicRow(topic: topic, isExpanded: true)
                         }
                     }
                 }
             }
-            .overlay {
-                if !trimmedQuery.isEmpty && results.isEmpty {
-                    ContentUnavailableView.search(text: trimmedQuery)
-                }
-            }
-            .searchable(text: $query, prompt: "Search Help")
-            .navigationTitle("Help")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done", action: close)
-                }
+        }
+        .overlay {
+            if !trimmedQuery.isEmpty && results.isEmpty {
+                ContentUnavailableView.search(text: trimmedQuery)
             }
         }
-        .onAppear {
-            Analytics.logEvent(AnalyticsEventScreenView, parameters: [
-                AnalyticsParameterScreenName: Self.screen,
-                AnalyticsParameterScreenClass: "HelpView",
-                "page": page.rawValue
-            ])
+        .searchable(text: $query, prompt: "Search Help")
+        .navigationTitle(showsAsk ? "Help" : "All Topics")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Done", action: close)
+            }
         }
     }
 
     @ViewBuilder
     private var frontPage: some View {
         // Only where the iPhone has Apple Intelligence to answer with.
-        if OnDeviceModelAvailability.current != .unsupported {
+        if showsAsk, OnDeviceModelAvailability.current != .unsupported {
             Section {
                 NavigationLink {
                     HelpAssistantView(close: close)
@@ -295,8 +333,11 @@ struct HelpView: View {
                             .foregroundStyle(AppColors.purple(for: colorScheme))
                             .frame(width: 28)
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Ask a Question")
-                                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                            HStack(spacing: 8) {
+                                Text("Ask a Question")
+                                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                                BetaBadge()
+                            }
                             Text("Answered on this iPhone with Apple Intelligence")
                                 .font(.footnote)
                                 .foregroundStyle(AppColors.textSecondary(for: colorScheme))
@@ -309,14 +350,14 @@ struct HelpView: View {
 
         Section {
             Button {
-                AnalyticsEvents.logButtonClick("report_bug", screen: Self.screen)
+                AnalyticsEvents.logButtonClick("report_bug", screen: HelpView.screen)
                 openURL(AppLinks.bugReport)
             } label: {
                 linkRow("Report a Bug", systemImage: "ladybug")
             }
 
             Button {
-                AnalyticsEvents.logButtonClick("request_feature", screen: Self.screen)
+                AnalyticsEvents.logButtonClick("request_feature", screen: HelpView.screen)
                 openURL(AppLinks.featureRequest)
             } label: {
                 linkRow("Request a Feature", systemImage: "lightbulb")
@@ -326,7 +367,7 @@ struct HelpView: View {
         Section {
             if whatsNew.release != nil {
                 Button {
-                    AnalyticsEvents.logButtonClick("whats_new", screen: Self.screen)
+                    AnalyticsEvents.logButtonClick("whats_new", screen: HelpView.screen)
                     whatsNew.show()
                 } label: {
                     linkRow("What's New in \(whatsNew.version)", systemImage: "sparkles")
@@ -339,19 +380,31 @@ struct HelpView: View {
                 NavigationLink {
                     HelpSectionView(section: section, close: close)
                 } label: {
-                    sectionRow(section)
+                    HelpSectionLabel(section: section)
                 }
             }
         }
     }
 
-    /// Closes the whole sheet, from the front page or a section.
-    private func close() {
-        AnalyticsEvents.logButtonClick("done", screen: Self.screen)
-        dismiss()
+    private func linkRow(_ title: LocalizedStringKey, systemImage: String) -> some View {
+        HStack {
+            Text(title)
+                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+            Spacer()
+            Image(systemName: systemImage)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+        }
+        .contentShape(Rectangle())
     }
+}
 
-    private func sectionRow(_ section: HelpSection) -> some View {
+/// A section's symbol, title and what's in it.
+private struct HelpSectionLabel: View {
+    @Environment(\.colorScheme) private var colorScheme
+    let section: HelpSection
+
+    var body: some View {
         HStack(spacing: 14) {
             Image(systemName: section.systemImage)
                 .font(.system(size: 17, weight: .medium))
@@ -367,17 +420,97 @@ struct HelpView: View {
         }
         .padding(.vertical, 2)
     }
+}
 
-    private func linkRow(_ title: LocalizedStringKey, systemImage: String) -> some View {
+/// The help to browse, under the question on the asking page: the sections,
+/// then the links, each group on a card of its own.
+private struct HelpBrowseCards: View {
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.openURL) private var openURL
+    @ObservedObject private var whatsNew = WhatsNewService.shared
+
+    let close: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Or Browse Help")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                .padding(.top, 12)
+
+            card {
+                ForEach(Array(AllHelp.sections.enumerated()), id: \.element.id) { index, section in
+                    if index > 0 { divider }
+                    NavigationLink {
+                        HelpSectionView(section: section, close: close)
+                    } label: {
+                        row { HelpSectionLabel(section: section) }
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+
+            card {
+                link("Report a Bug", systemImage: "ladybug", event: "report_bug") {
+                    openURL(AppLinks.bugReport)
+                }
+                divider
+                link("Request a Feature", systemImage: "lightbulb", event: "request_feature") {
+                    openURL(AppLinks.featureRequest)
+                }
+                if whatsNew.release != nil {
+                    divider
+                    link("What's New in \(whatsNew.version)", systemImage: "sparkles", event: "whats_new") {
+                        whatsNew.show()
+                    }
+                }
+            }
+        }
+    }
+
+    private func card<Content: View>(@ViewBuilder _ content: () -> Content) -> some View {
+        VStack(spacing: 0, content: content)
+            .background(RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .fill(Color(.secondarySystemBackground)))
+    }
+
+    private var divider: some View {
+        Divider().padding(.leading, 58)
+    }
+
+    private func row<Label: View>(@ViewBuilder _ label: () -> Label) -> some View {
         HStack {
-            Text(title)
-                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-            Spacer()
-            Image(systemName: systemImage)
+            label()
+            Spacer(minLength: 8)
+            Image(systemName: "chevron.right")
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(AppColors.textSecondary(for: colorScheme))
         }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
         .contentShape(Rectangle())
+    }
+
+    private func link(_ title: LocalizedStringKey, systemImage: String, event: String,
+                      action: @escaping () -> Void) -> some View {
+        Button {
+            AnalyticsEvents.logButtonClick(event, screen: HelpView.screen)
+            action()
+        } label: {
+            HStack(spacing: 14) {
+                Image(systemName: systemImage)
+                    .font(.system(size: 17, weight: .medium))
+                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                    .frame(width: 28)
+                Text(title)
+                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                Spacer(minLength: 8)
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 13)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 }
 

@@ -18,11 +18,15 @@ struct HelpAssistantView: View {
     @FocusState private var isAsking: Bool
 
     let topic: AssistantTopic
+    /// More to read under the examples, before anything is asked: the help
+    /// to browse, where this is Help's front page.
+    let browse: AnyView?
     /// Done, from the page this was opened from: closes the whole sheet.
     let close: () -> Void
 
-    init(topic: AssistantTopic = .help, close: @escaping () -> Void) {
+    init(topic: AssistantTopic = .help, browse: AnyView? = nil, close: @escaping () -> Void) {
         self.topic = topic
+        self.browse = browse
         self.close = close
         _assistant = StateObject(wrappedValue: HelpAssistant(topic: topic))
     }
@@ -41,6 +45,7 @@ struct HelpAssistantView: View {
                 VStack(alignment: .leading, spacing: 14) {
                     if assistant.exchanges.isEmpty {
                         introduction
+                        if let browse { browse }
                     }
                     ForEach(assistant.exchanges) { exchange in
                         exchangeView(exchange)
@@ -56,7 +61,7 @@ struct HelpAssistantView: View {
             }
         }
         .safeAreaInset(edge: .bottom) { askBar }
-        .navigationTitle("Ask")
+        .navigationTitle(browse == nil ? "Ask" : "Help")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -65,7 +70,8 @@ struct HelpAssistantView: View {
         }
         .onAppear {
             AnalyticsEvents.logButtonClick("open", screen: screen)
-            isAsking = assistant.availability == .available
+            // As Help's front page, the help to browse stays in view.
+            isAsking = assistant.availability == .available && browse == nil
         }
         .onDisappear { assistant.stop() }
     }
@@ -80,6 +86,7 @@ struct HelpAssistantView: View {
                 Text(topic == .help ? "Ask anything about using CueCard." : "Ask anything about your scripts.")
                     .font(.headline)
                     .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                BetaBadge()
             }
 
             if case .unavailable(let reason) = assistant.availability {

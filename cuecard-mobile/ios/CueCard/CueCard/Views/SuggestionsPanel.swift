@@ -61,6 +61,8 @@ struct SuggestionsPanel: View {
             .font(.subheadline.weight(.semibold))
             .foregroundStyle(secondary)
 
+            BetaBadge()
+
             Spacer(minLength: 8)
 
             if review.suggestions.count > 1 {
