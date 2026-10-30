@@ -3,17 +3,22 @@ import SwiftUI
 /// The button that asks the on-device model for suggestions on the script.
 struct SuggestionsButton: View {
     let colorScheme: ColorScheme
+    var compact = false
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            Image(systemName: "sparkles")
-                .font(.system(size: 18, weight: .semibold))
+            Group {
+                if compact { Image(systemName: "sparkles") }
+                else { Label("Suggestions", systemImage: "sparkles") }
+            }
+                .font(.subheadline.weight(.semibold))
                 .foregroundStyle(AppColors.purple(for: colorScheme))
-                .frame(width: 52, height: 52)
-                .glassedEffect(in: Circle())
-                .aiGlow()
-                .shadow(color: Color.black.opacity(0.1), radius: 10)
+                .padding(.horizontal, compact ? 0 : 12)
+                .frame(width: compact ? 44 : nil)
+                .frame(minHeight: 44)
+                .fixedSize(horizontal: true, vertical: false)
+                .glassedEffect(in: Capsule())
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Suggestions")
@@ -89,15 +94,25 @@ struct SuggestionsPanel: View {
     }
 
     private var header: some View {
-        HStack(spacing: 8) {
-            if review.isRunning {
-                ProgressView()
-                    .controlSize(.small)
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 8) {
+                reviewStatus
+                Spacer(minLength: 8)
+                reviewActions
             }
+            VStack(alignment: .leading, spacing: 8) {
+                reviewStatus
+                HStack { Spacer(minLength: 0); reviewActions }
+            }
+        }
+    }
+
+    private var reviewStatus: some View {
+        HStack(spacing: 8) {
+            if review.isRunning { ProgressView().controlSize(.small) }
             Group {
                 if let index = review.focusedIndex {
-                    Text("\(index + 1) of \(review.suggestions.count)")
-                        .monospacedDigit()
+                    Text("\(index + 1) of \(review.suggestions.count)").monospacedDigit()
                 } else if review.isRunning {
                     Text("Reviewing…")
                 } else {
@@ -106,20 +121,21 @@ struct SuggestionsPanel: View {
             }
             .font(.subheadline.weight(.semibold))
             .foregroundStyle(secondary)
-
             BetaBadge()
+        }
+        .fixedSize(horizontal: true, vertical: false)
+    }
 
-            Spacer(minLength: 8)
-
-            if review.suggestions.count > 1 {
-                smallButton("Accept All", action: onAcceptAll)
-            }
+    private var reviewActions: some View {
+        HStack(spacing: 8) {
+            if review.suggestions.count > 1 { smallButton("Accept All", action: onAcceptAll) }
             smallButton(review.isRunning ? "Stop" : "Done") {
                 AnalyticsEvents.logButtonClick("suggestions_done", screen: "home",
                                                parameters: ["left": review.suggestions.count])
                 review.end()
             }
         }
+        .fixedSize(horizontal: true, vertical: false)
     }
 
     @ViewBuilder
@@ -152,7 +168,7 @@ struct SuggestionsPanel: View {
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(primary)
                             .frame(maxWidth: .infinity)
-                            .frame(height: 44)
+                            .frame(minHeight: 44)
                             .glassedEffect(in: Capsule(), interactive: true)
                     }
                     .buttonStyle(.plain)
@@ -164,7 +180,7 @@ struct SuggestionsPanel: View {
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(colorScheme == .dark ? .black : .white)
                             .frame(maxWidth: .infinity)
-                            .frame(height: 44)
+                            .frame(minHeight: 44)
                             .background(Capsule().fill(AppColors.green(for: colorScheme)))
                     }
                     .buttonStyle(.plain)
@@ -232,7 +248,7 @@ struct SuggestionsPanel: View {
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(primary)
                 .padding(.horizontal, 14)
-                .frame(height: 34)
+                .frame(minHeight: 44)
                 .glassedEffect(in: Capsule(), interactive: true)
         }
         .buttonStyle(.plain)
@@ -243,7 +259,7 @@ struct SuggestionsPanel: View {
             Image(systemName: systemImage)
                 .font(.system(size: 13, weight: .bold))
                 .foregroundStyle(primary)
-                .frame(width: 32, height: 32)
+                .frame(width: 44, height: 44)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

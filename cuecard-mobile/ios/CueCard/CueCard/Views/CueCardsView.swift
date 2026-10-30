@@ -74,6 +74,8 @@ struct CueCardsView: View {
                                 .padding(.top, 12)
 
                             controls
+                                .frame(maxWidth: 600)
+                                .frame(maxWidth: .infinity)
                                 .padding(.horizontal, 20)
                                 .padding(.top, 16)
                                 .padding(.bottom, 16)
@@ -111,31 +113,30 @@ struct CueCardsView: View {
                     }
                     ToolbarItem(placement: .topBarTrailing) {
                         Button {
-                            AnalyticsEvents.logButtonClick(followsVoice ? "follow_voice_off" : "follow_voice_on",
-                                                           screen: "cards")
-                            settingsService.settings.cards.followsVoice.toggle()
-                        } label: {
-                            Image(systemName: followsVoice ? "waveform.circle.fill" : "waveform.circle")
-                                .font(.system(size: 17, weight: .semibold))
-                                .foregroundStyle(followsVoice
-                                                 ? AppColors.purple(for: colorScheme)
-                                                 : AppColors.textPrimary(for: colorScheme))
-                        }
-                        .accessibilityLabel("Follow My Voice")
-                        .accessibilityValue(followsVoice ? "On" : "Off")
-                    }
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Button {
                             AnalyticsEvents.logButtonClick("camera", screen: "cards")
                             showingCamera.toggle()
                         } label: {
                             Image(systemName: showingCamera ? "camera.fill" : "camera")
-                                .font(.system(size: 15, weight: .semibold))
                                 .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                         }
                         .accessibilityLabel(showingCamera ? "Close Camera" : "Record Video")
                     }
-                    HelpToolbarItem(page: .cards, isPresented: $showingHelp)
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Menu {
+                            Button {
+                                AnalyticsEvents.logButtonClick(followsVoice ? "follow_voice_off" : "follow_voice_on", screen: "cards")
+                                settingsService.settings.cards.followsVoice.toggle()
+                            } label: {
+                                Label(followsVoice ? "Turn Off Follow My Voice" : "Follow My Voice",
+                                      systemImage: followsVoice ? "waveform.circle.fill" : "waveform.circle")
+                            }
+                            HelpMenuButton(page: .cards, isPresented: $showingHelp)
+                        } label: {
+                            Image(systemName: "ellipsis")
+                                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                        }
+                        .accessibilityLabel("Reading Options")
+                    }
                 }
                 .helpSheet(for: .cards, isPresented: $showingHelp)
                 .sheet(isPresented: $showingLockScreenHelp) {
@@ -513,7 +514,7 @@ struct CueCardsView: View {
 
     // MARK: - Controls
 
-    /// Back and Next, each sized to its label like Read Cards on the editor.
+    /// A stable back control and a wider primary action, within thumb reach.
     private var controls: some View {
         HStack(spacing: 12) {
             Button(action: {
@@ -530,8 +531,6 @@ struct CueCardsView: View {
             .disabled(session.index == 0)
             .opacity(session.index == 0 ? 0.4 : 1)
             .accessibilityLabel("Previous Card")
-
-            Spacer(minLength: 0)
 
             Button(action: {
                 if session.isFinished {
@@ -551,7 +550,7 @@ struct CueCardsView: View {
                 .lineLimit(1)
                 .foregroundStyle(colorScheme == .dark ? .black : .white)
                 .padding(.horizontal, 16)
-                .frame(height: 52)
+                .frame(maxWidth: .infinity, minHeight: 52)
                 .background(Capsule().fill(AppColors.green(for: colorScheme)))
                 .glassedEffect(in: Capsule())
             }
@@ -674,6 +673,7 @@ private struct CueCardFace: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(Self.padding)
             }
+            .scrollEdgeFade(length: Self.padding, insetContent: false)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .clipShape(RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous))

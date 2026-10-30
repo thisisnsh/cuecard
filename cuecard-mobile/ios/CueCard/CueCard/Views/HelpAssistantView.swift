@@ -55,6 +55,7 @@ struct HelpAssistantView: View {
                 .padding(16)
             }
             .scrollDismissesKeyboard(.interactively)
+            .scrollEdgeFade(enabled: topic == .scripts)
             .onChange(of: assistant.exchanges.last?.answer) {
                 guard let last = assistant.exchanges.last else { return }
                 withAnimation { proxy.scrollTo(last.id, anchor: .bottom) }
@@ -169,15 +170,14 @@ struct HelpAssistantView: View {
     }
 
     private var askBar: some View {
-        HStack(spacing: 10) {
+        HStack(alignment: .bottom, spacing: 8) {
             TextField("Ask a question", text: $question, axis: .vertical)
                 .lineLimit(1...4)
                 .focused($isAsking)
                 .submitLabel(.send)
                 .onSubmit { ask(trimmedQuestion) }
-                .padding(.horizontal, 16)
+                .padding(.leading, 16)
                 .padding(.vertical, 12)
-                .glassedEffect(in: RoundedRectangle(cornerRadius: 22, style: .continuous))
 
             Button {
                 ask(trimmedQuestion)
@@ -193,8 +193,10 @@ struct HelpAssistantView: View {
             .opacity(canAsk ? 1 : 0.4)
             .accessibilityLabel("Ask")
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 10)
+        .padding(6)
+        .glassedEffect(in: RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .padding(.horizontal, 20)
+        .padding(.vertical, 12)
         .disabled(assistant.availability != .available)
     }
 

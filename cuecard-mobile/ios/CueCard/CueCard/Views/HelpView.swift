@@ -68,19 +68,19 @@ private enum AllHelp {
                                     summary: "Modes, cues, formatting, images and cards",
                                     systemImage: "pencil", topics: [
         HelpTopic("Pick a Mode",
-                  detail: "In your library, tap + and pick Teleprompter Script or Cards Deck. Teleprompter scrolls your whole script. Cards shows it one card at a time."),
+                  detail: "In your library, choose Teleprompter or Cards at the top, then tap New Script or New Deck below. The arrow beside it offers both modes and Import File. Teleprompter scrolls your whole script. Cards shows it one card at a time."),
         HelpTopic("Add Cues",
-                  detail: "Cues are reminders like [pause], shown in color and not read out. Type [ or tap Add Cue above the keyboard."),
+                  detail: "Cues are reminders like [pause], shown in color and not read out. Type [ or tap Cue above the keyboard."),
         HelpTopic("Bold and Italic",
                   detail: "Select words and tap B or I above the keyboard. Or type *bold* or _italic_."),
         HelpTopic("Add Anchors",
-                  detail: "Anchors mark spots in your script, like [anchor]. Type one or tap Add Anchor above the keyboard. In the teleprompter, the buttons at the far left and right jump to the anchor before or after."),
+                  detail: "Anchors mark spots in your script, like [anchor]. Type one or tap Insert (+) above the keyboard, then Add Anchor. In the teleprompter, the buttons beside Play jump to the anchor before or after."),
         HelpTopic("Add Images",
-                  detail: "Tap the photo above the keyboard to add images from your library, or paste one in. The Lock Screen and Apple Watch show a photo symbol in their place."),
+                  detail: "Tap Insert (+) above the keyboard, then Add Image, or paste an image in. The Lock Screen and Apple Watch show a photo symbol in their place."),
         HelpTopic("Add Cards",
                   detail: "Each box in the editor is one card. Tap Create New Card to add another."),
         HelpTopic("Get Suggestions (Beta)",
-                  detail: "Tap the sparkles above the timer to have Apple Intelligence read your script or deck on this iPhone. It suggests spelling fixes, cues, anchors and bold or italic words. In a deck it leaves out anchors, and only adds a cue where a card has room. Accept or reject each one, or accept them all. Needs an iPhone with Apple Intelligence turned on.")
+                  detail: "Tap Suggestions above the timer to have Apple Intelligence read your script or deck on this iPhone. It suggests spelling fixes, cues, anchors and bold or italic words. In a deck it leaves out anchors, and only adds a cue where a card has room. Accept or reject each one, or accept them all. Needs an iPhone with Apple Intelligence turned on.")
     ])
 
     static let notes = HelpSection("notes", title: "Library & Saving",
@@ -91,15 +91,15 @@ private enum AllHelp {
         HelpTopic("Ask About Your Scripts (Beta)",
                   detail: "In your library, tap the sparkles next to Search and ask, like which script mentions pricing. Apple Intelligence reads your saved scripts on this iPhone to answer. Needs an iPhone with Apple Intelligence turned on."),
         HelpTopic("Save Your Work",
-                  detail: "Unsaved above the timer means there are changes to save. Tap it to save. A new script you haven't saved shows in the library as a draft."),
+                  detail: "Save above the reading controls appears when there are changes to save. Tap it to save. A new script you haven't saved shows in the library as a draft."),
         HelpTopic("Rename, Duplicate or Delete",
                   detail: "In your library, touch and hold a script, or swipe it. In the editor, tap the title at the top to rename it."),
         HelpTopic("Organize in Folders",
-                  detail: "In your library, tap New Folder beside your folders, or ••• › New Folder. Touch and hold a script and tap Move to Folder to file it. Tap ••• › Sort By to change the order."),
+                  detail: "In your library, tap New Folder beside your folders, or the arrow beside New Script or New Deck, then New Folder. Touch and hold a script and tap Move to Folder to file it. Tap Sort By beside Search to change the order."),
         HelpTopic("Import a Text File",
-                  detail: "In your library, tap + › Import File to add a text file or a TextPack as a script."),
+                  detail: "In your library, tap the arrow beside New Script or New Deck, then Import File to add a text file or a TextPack as a script."),
         HelpTopic("Go Back to an Older Version",
-                  detail: "Every save is a new version. Once a note has more than one, tap the clock at the top to compare changes and restore one."),
+                  detail: "Every save is a new version. Once a note has more than one, open ••• at the top of the editor, then Version History, to compare changes and restore one."),
         HelpTopic("Keep Scripts if the App Is Removed",
                   detail: "Until you choose a storage folder, scripts are kept only in CueCard and are deleted with the app. In your library, tap ••• › Choose Storage Folder. Each script is kept there as a text file and each folder as a folder. Pick one in iCloud Drive to keep them there too."),
         HelpTopic("Your Privacy",
@@ -114,7 +114,7 @@ private enum AllHelp {
         HelpTopic("Change Text Size and Colors",
                   detail: "Open a script and tap the gear at the top. Each mode keeps its own sizes and cue color."),
         HelpTopic("Set a Timer",
-                  detail: "Tap the timer next to Play to set how long you have, when it warns you, and the colors it turns."),
+                  detail: "Tap the timer next to Start Reading or Read Cards to set how long you have, when it warns you, and the colors it turns."),
         HelpTopic("Count Down Before Scrolling",
                   detail: "In the teleprompter's timer, set a Countdown to get a few seconds before the script starts scrolling."),
         HelpTopic("Change the Language",
@@ -131,7 +131,7 @@ private enum AllHelp {
         HelpTopic("Change Speed",
                   detail: "Scroll Speed in Settings sets how many lines pass each minute."),
         HelpTopic("Record in CueCard",
-                  detail: "Tap the camera next to Help, tapping the screen first if the buttons are hidden. The camera opens in a small window over your script. Tap the red button to record and again to pause, then tap stop to save the video to Photos. Your script stays out of the video."),
+                  detail: "Tap the camera at the top, tapping the screen first if the buttons are hidden. The camera opens in a small window over your script. Tap the red button to record and again to pause, then tap stop to save the video to Photos. Your script stays out of the video."),
         HelpTopic("Record in Step with the Script",
                   detail: "With the camera open, Play starts recording and Pause pauses it. Recording or pausing on the camera plays or pauses the script, and stopping pauses it. Turn off Sync with Teleprompter in Settings to use them separately."),
         HelpTopic("Mirror",
@@ -143,7 +143,7 @@ private enum AllHelp {
         HelpTopic("Know When Time Is Running Out",
                   detail: "The timer changes color when you're near the end and again once you're over time. Pick the colors in the timer."),
         HelpTopic("Follow My Voice (Beta)",
-                  detail: "Tap the waveform at the top of the teleprompter, or turn on Follow My Voice in Settings. The script moves as you read it aloud, instead of at a set speed, and the timer starts with your first words. Tap the microphone to stop or start listening. Your voice is understood on this iPhone and never leaves it.")
+                  detail: "Open ••• at the top of the teleprompter and choose Follow My Voice, or turn it on in Settings. The script moves as you read it aloud, instead of at a set speed, and the timer starts with your first words. Tap the microphone to stop or start listening. Your voice is understood on this iPhone and never leaves it.")
     ])
 
     static let cards = HelpSection("cards", title: "Cards",
@@ -152,11 +152,11 @@ private enum AllHelp {
         HelpTopic("Turn Cards",
                   detail: "Swipe, or tap Back and Next. The dots at the top show which card you're on."),
         HelpTopic("Record with Cards",
-                  detail: "Tap the camera next to Help. The camera opens in a small window over your cards. Tap the red button to record and again to pause, then tap stop to save the video to Photos. Keep turning cards while you record."),
+                  detail: "Tap the camera at the top. The camera opens in a small window over your cards. Tap the red button to record and again to pause, then tap stop to save the video to Photos. Keep turning cards while you record."),
         HelpTopic("Read from the Lock Screen",
                   detail: "Turn on Show on Lock Screen in Settings. Then lock your iPhone and turn cards right from the Lock Screen."),
         HelpTopic("Follow My Voice (Beta)",
-                  detail: "Tap the waveform at the top of the cards, or turn on Follow My Voice in Settings. Read each card aloud and it turns on its own once you've said its last words. Tap the listening note below the cards to stop or start. Your voice is understood on this iPhone and never leaves it."),
+                  detail: "Open ••• at the top of the cards and choose Follow My Voice, or turn it on in Settings. Read each card aloud and it turns on its own once you've said its last words. Tap the listening note below the cards to stop or start. Your voice is understood on this iPhone and never leaves it."),
         HelpTopic("Count Up Without a Timer",
                   detail: "The time at the top counts down your timer. With no timer set, it counts up from when you started.")
     ])
@@ -165,7 +165,7 @@ private enum AllHelp {
                                     summary: "The videos you record with a script",
                                     systemImage: "film.stack", topics: [
         HelpTopic("Find Your Takes",
-                  detail: "Videos you record in CueCard with a script or deck open are kept as its takes, and so are videos you record in another app while the teleprompter floats over it. Tap the film button next to Play to see them, or the takes count beside a script in your library."),
+                  detail: "Videos you record in CueCard with a script or deck open are kept as its takes, and so are videos you record in another app while the teleprompter floats over it. Tap Takes above the reading controls to see them, or the takes count beside a script in your library."),
         HelpTopic("Move the Camera Window",
                   detail: "Drag the camera window to any corner. Pinch or double-tap it to change its size, and tap it to hide or show its buttons. Use the buttons to zoom or flip the camera."),
         HelpTopic("Play a Take",
@@ -311,7 +311,7 @@ private struct HelpTopicsList: View {
                 ContentUnavailableView.search(text: trimmedQuery)
             }
         }
-        .searchable(text: $query, prompt: "Search Help")
+        .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search Help")
         .navigationTitle(showsAsk ? "Help" : "All Topics")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -580,26 +580,8 @@ private struct HelpTopicRow: View {
 
 // MARK: - Help Button
 
-/// The question mark at the top right of a page, in a glass of its own rather
-/// than grouped with the buttons beside it. Put last among the page's trailing
-/// items, so it sits at the edge.
-struct HelpToolbarItem: ToolbarContent {
-    let page: HelpPage
-    @Binding var isPresented: Bool
-
-    var body: some ToolbarContent {
-        if #available(iOS 26.0, *) {
-            ToolbarSpacer(.fixed, placement: .topBarTrailing)
-        }
-        ToolbarItem(placement: .topBarTrailing) {
-            HelpButton(page: page, isPresented: $isPresented)
-        }
-    }
-}
-
-private struct HelpButton: View {
-    @Environment(\.colorScheme) private var colorScheme
-
+/// Help lives with the secondary actions on each screen.
+struct HelpMenuButton: View {
     let page: HelpPage
     @Binding var isPresented: Bool
 
@@ -608,16 +590,13 @@ private struct HelpButton: View {
             AnalyticsEvents.logButtonClick("help", screen: page.rawValue)
             isPresented = true
         } label: {
-            Image(systemName: "questionmark")
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+            Label("Help", systemImage: "questionmark.circle")
         }
-        .accessibilityLabel("Help")
     }
 }
 
 extension View {
-    /// The help sheet for `page`, opened by its `HelpToolbarItem`. Kept on the
+    /// The help sheet for `page`, opened by its menu. Kept on the
     /// page rather than the button, so the sheet stays up if the button fades.
     func helpSheet(for page: HelpPage, isPresented: Binding<Bool>) -> some View {
         sheet(isPresented: isPresented) {

@@ -44,8 +44,8 @@ final class CueTextView: UITextView {
         }
     }
 
-    /// Breathing room left between the caret and whatever sits below it.
-    private static let caretPadding: CGFloat = 8
+    /// Keep the active line above the fade leading into the keyboard toolbar.
+    private static let caretPadding: CGFloat = CueTextEditor.edgeFade + 8
     /// In a card, room for the rest of the card below the caret as well.
     private static let cardCaretPadding: CGFloat = 28
 
@@ -1268,7 +1268,7 @@ extension NSString {
 struct CueBar: View {
     /// The bar's height. The editor keeps this much room clear at the bottom so
     /// the line being typed never hides behind it.
-    static let height: CGFloat = 54
+    static let height: CGFloat = 60
 
     let colorScheme: ColorScheme
     var onAddCue: () -> Void
@@ -1279,113 +1279,82 @@ struct CueBar: View {
     var onDismissKeyboard: () -> Void
 
     var body: some View {
+        ViewThatFits(in: .horizontal) {
+            buttons(showsCueLabel: true)
+            buttons(showsCueLabel: false)
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+        .padding(.horizontal, 12)
+        .frame(height: Self.height)
+        .background(AppColors.background(for: colorScheme))
+        .background(alignment: .top) {
+            LinearGradient(colors: [.clear, AppColors.background(for: colorScheme)],
+                           startPoint: .top, endPoint: .bottom)
+                .frame(height: CueTextEditor.edgeFade)
+                .offset(y: -CueTextEditor.edgeFade)
+                .allowsHitTesting(false)
+        }
+    }
+
+    private func buttons(showsCueLabel: Bool) -> some View {
         HStack(spacing: 10) {
-            // The buttons don't fit a small phone with their full names, so
-            // they shorten when they have to.
-            ViewThatFits(in: .horizontal) {
-                buttons(.full)
-                buttons(.short)
-                buttons(.tight)
+            Button(action: onAddCue) {
+                Group {
+                    if showsCueLabel {
+                        Label("Cue", systemImage: "plus")
+                            .font(.subheadline.weight(.semibold))
+                            .padding(.horizontal, 12)
+                            .fixedSize()
+                    } else {
+                        Image(systemName: "text.bubble")
+                            .font(.system(size: 18, weight: .semibold))
+                            .frame(width: 44)
+                    }
+                }
+                .frame(minHeight: 44)
+                .glassedEffect(in: Capsule())
             }
+            .accessibilityLabel("Add Cue")
+
+            Menu {
+                if let onAddAnchor {
+                    Button(action: onAddAnchor) { Label("Add Anchor", systemImage: "bookmark") }
+                }
+                Button(action: onAddImage) { Label("Add Image", systemImage: "photo") }
+            } label: {
+                Image(systemName: "plus.circle")
+                    .font(.system(size: 18, weight: .semibold))
+                    .frame(width: 44, height: 44)
+                    .glassedEffect(in: Circle())
+            }
+            .accessibilityLabel("Insert")
+
+            HStack(spacing: 0) {
+                formatButton("bold", label: "Bold", style: .bold)
+                formatButton("italic", label: "Italic", style: .italic)
+            }
+            .glassedEffect(in: Capsule())
 
             Spacer(minLength: 0)
 
             Button(action: onDismissKeyboard) {
                 Image(systemName: "keyboard.chevron.compact.down")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                    .frame(width: 34, height: 34)
+                    .font(.system(size: 17, weight: .semibold))
+                    .frame(width: 44, height: 44)
                     .glassedEffect(in: Circle())
             }
             .accessibilityLabel("Hide keyboard")
         }
-        .padding(.horizontal, 12)
-        .frame(height: Self.height)
-        .background(AppColors.background(for: colorScheme).opacity(0.94))
-        .overlay(alignment: .top) {
-            Rectangle()
-                .fill(AppColors.textSecondary(for: colorScheme).opacity(0.15))
-                .frame(height: 0.5)
-        }
-    }
-
-    /// How much room the buttons get: full names, short ones, or short ones
-    /// packed closer for a small phone with every button showing.
-    private enum Fit {
-        case full, short, tight
-
-        var spacing: CGFloat { self == .tight ? 6 : 10 }
-        var padding: CGFloat { self == .tight ? 12 : 16 }
-    }
-
-    private func buttons(_ fit: Fit) -> some View {
-        HStack(spacing: fit.spacing) {
-            addButton(fit == .full ? "Add Cue" : "Cue", accessibilityLabel: "Add Cue",
-                      padding: fit.padding, action: onAddCue)
-
-            if let onAddAnchor {
-                addButton(fit == .full ? "Add Anchor" : "Anchor", accessibilityLabel: "Add Anchor",
-                          padding: fit.padding, action: onAddAnchor)
-            }
-
-            iconButton("photo", accessibilityLabel: "Add Image", action: onAddImage)
-
-            formatButtons
-        }
-        .fixedSize()
-    }
-
-    private func iconButton(_ systemImage: String, accessibilityLabel: LocalizedStringKey,
-                            action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: systemImage)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                .frame(width: 34, height: 34)
-                .glassedEffect(in: Circle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(accessibilityLabel)
-    }
-
-    /// Bold and italic, sharing one capsule.
-    private var formatButtons: some View {
-        HStack(spacing: 0) {
-            formatButton("bold", label: "Bold", style: .bold)
-            formatButton("italic", label: "Italic", style: .italic)
-        }
-        .padding(.horizontal, 4)
-        .frame(height: 34)
-        .glassedEffect(in: Capsule())
     }
 
     private func formatButton(_ systemImage: String, label: LocalizedStringKey, style: EmphasisStyle) -> some View {
         Button { onFormat(style) } label: {
             Image(systemName: systemImage)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                .frame(width: 32, height: 34)
+                .font(.system(size: 16, weight: .semibold))
+                .frame(width: 44, height: 44)
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
         .accessibilityLabel(label)
-    }
-
-    private func addButton(_ title: LocalizedStringKey, accessibilityLabel: LocalizedStringKey,
-                           padding: CGFloat, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: 6) {
-                Image(systemName: "plus")
-                    .font(.system(size: 13, weight: .bold))
-                Text(title)
-                    .font(.subheadline.weight(.semibold))
-            }
-            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-            .padding(.horizontal, padding)
-            .frame(height: 34)
-            .glassedEffect(in: Capsule())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(accessibilityLabel)
     }
 }

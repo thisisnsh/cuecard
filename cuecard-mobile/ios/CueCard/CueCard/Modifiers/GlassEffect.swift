@@ -49,7 +49,73 @@ extension Shape {
     }
 }
 
-// MARK: - Script Edge Fade
+// MARK: - Scroll Edge Fades
+
+extension View {
+    /// Apply to the scrolling view, before its fixed header or footer. SwiftUI
+    /// sizes the mask to the visible area between the bars and keyboard.
+    @ViewBuilder
+    func scrollEdgeFade(axis: Axis = .vertical, length: CGFloat = 24,
+                        insetContent: Bool = true, enabled: Bool = true) -> some View {
+        if enabled {
+            modifier(ScrollEdgeFade(axis: axis, length: length, insetContent: insetContent))
+        } else {
+            self
+        }
+    }
+}
+
+private struct ScrollEdgeFade: ViewModifier {
+    let axis: Axis
+    let length: CGFloat
+    let insetContent: Bool
+
+    private var edges: Edge.Set { axis == .vertical ? .vertical : .horizontal }
+
+    func body(content: Content) -> some View {
+        padded(content)
+            .systemScrollEdgesHidden(edges)
+            .mask {
+                GeometryReader { geometry in
+                    let size = axis == .vertical ? geometry.size.height : geometry.size.width
+                    // The mask is already inside the safe area. Padding by the
+                    // inherited safe-area insets here would subtract it twice.
+                    let fraction = min(max(length, 0) / max(size, 1), 0.5)
+
+                    LinearGradient(stops: [
+                        .init(color: .clear, location: 0),
+                        .init(color: .black.opacity(0.1), location: fraction * 0.45),
+                        .init(color: .black, location: fraction),
+                        .init(color: .black, location: 1 - fraction),
+                        .init(color: .black.opacity(0.1), location: 1 - fraction * 0.45),
+                        .init(color: .clear, location: 1)
+                    ], startPoint: axis == .vertical ? .top : .leading,
+                       endPoint: axis == .vertical ? .bottom : .trailing)
+                }
+            }
+    }
+
+    @ViewBuilder
+    private func padded(_ content: Content) -> some View {
+        if insetContent {
+            // First and last items can scroll completely clear of the fades.
+            content.contentMargins(edges, length, for: .scrollContent)
+        } else {
+            content
+        }
+    }
+}
+
+private extension View {
+    @ViewBuilder
+    func systemScrollEdgesHidden(_ edges: Edge.Set) -> some View {
+        if #available(iOS 26.0, *) {
+            scrollEdgeEffectHidden(true, for: edges)
+        } else {
+            self
+        }
+    }
+}
 
 extension View {
     /// Fades a scrolling script into the background at its top and bottom edges,

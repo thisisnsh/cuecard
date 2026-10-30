@@ -24,20 +24,18 @@ struct HomeView: View {
     @State private var renameTitle = ""
     @State private var showingImagePicker = false
     @State private var pickedImages: [PhotosPickerItem] = []
-    /// "Saved" shows for a moment after a save, where "Unsaved" was.
+    /// Brief confirmation after the Save action.
     @State private var showsSaved = false
     @State private var savedTask: Task<Void, Never>?
     @State private var errorMessage: String?
-    /// How wide the screen is, for the title to take what the buttons leave.
-    @State private var screenWidth: CGFloat = 0
     @State private var isEditorFocused = false
     @StateObject private var editorController = CueEditorController()
     /// Suggestions from the on-device model, while they're open.
     @StateObject private var review = ScriptReview()
     /// Why Suggestions can't help yet, once its button has been tapped.
     @State private var suggestionsUnavailable: String?
-    /// How tall the suggestions panel stands, for the script to keep clear of.
-    @State private var reviewPanelHeight: CGFloat = 0
+    /// Measured so every line stays clear of the controls, including larger text.
+    @State private var bottomControlsHeight: CGFloat = 128
     /// A Follow My Voice session to ask the reader about.
     @State private var voiceFeedback: VoiceSessionMetrics?
     @ObservedObject private var cardsSession = CueCardsSession.shared
@@ -45,11 +43,6 @@ struct HomeView: View {
     @Namespace private var takesTransition
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.requestReview) private var requestReview
-
-    /// How much of the editor's bottom the controls row covers: the play button
-    /// and the timer beside it, plus the gap they sit above. The script keeps this
-    /// much room clear so its last line never rests underneath them.
-    private static let controlsHeight: CGFloat = 52 + 24
 
     /// How far the editor reaches up under the top bar: to its middle, so the
     /// script fades out from there down, as gently as it does at the bottom.
@@ -65,16 +58,6 @@ struct HomeView: View {
     private var hasVersionHistory: Bool {
         guard let id = settingsService.currentNoteId else { return false }
         return (settingsService.versionCounts[id] ?? 1) > 1
-    }
-
-    /// The room the title has beside the back button: the screen, less the
-    /// bar's edges and every button on it. The buttons come first; the
-    /// title shows whole where it fits, and is cut short where it doesn't.
-    private var titleWidth: CGFloat {
-        let buttonWidth: CGFloat = 52
-        let trailingButtons: CGFloat = hasVersionHistory ? 3 : 2
-        let reserved = 16 * 2 + buttonWidth + 8 + trailingButtons * buttonWidth + 24
-        return max(80, screenWidth - reserved)
     }
 
     /// The script's title, or what it is while it has none, beside the back
@@ -97,8 +80,7 @@ struct HomeView: View {
                 .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                 .lineLimit(1)
                 .truncationMode(.tail)
-                .frame(maxWidth: titleWidth, alignment: .leading)
-                .fixedSize(horizontal: true, vertical: false)
+                .frame(maxWidth: .infinity)
         }
         .buttonStyle(.plain)
         .disabled(note == nil)
@@ -165,7 +147,7 @@ struct HomeView: View {
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                     .padding(.horizontal, 16)
-                    .frame(height: 52)
+                    .frame(maxWidth: .infinity, minHeight: 52)
                     .glassedEffect(in: Capsule())
             }
         }
@@ -201,10 +183,10 @@ struct HomeView: View {
     }
 
     @ViewBuilder
-    private var suggestionsControl: some View {
+    private func suggestionsControl(compact: Bool) -> some View {
         let availability = OnDeviceModelAvailability.current
         if showsSuggestions {
-            SuggestionsButton(colorScheme: colorScheme) {
+            SuggestionsButton(colorScheme: colorScheme, compact: compact) {
                 AnalyticsEvents.logButtonClick("suggestions", screen: "home")
                 isEditorFocused = false
                 if case .unavailable(let reason) = availability {
@@ -251,7 +233,7 @@ struct HomeView: View {
     /// The videos recorded while the teleprompter or cards were open on the script. Once
     /// it has been, and before Photos can be read, a button to go find them.
     @ViewBuilder
-    private var takesControl: some View {
+    private func takesControl(compact: Bool) -> some View {
         let canFind = takes.hasSessions && (takes.status == .notDetermined || takes.status == .limited)
         if !takes.takes.isEmpty || canFind {
             Button {
@@ -259,7 +241,7 @@ struct HomeView: View {
                 isEditorFocused = false
                 showingTakes = true
             } label: {
-                TakesIcon(count: takes.takes.count, colorScheme: colorScheme, transition: takesTransition)
+                TakesIcon(count: takes.takes.count, colorScheme: colorScheme, transition: takesTransition, compact: compact)
             }
             .buttonStyle(.plain)
             .transition(.scale.combined(with: .opacity))
@@ -291,23 +273,23 @@ struct HomeView: View {
         }
     }
 
-    /// "Unsaved" while there are changes to save, which a tap saves, then
-    /// "Saved" for a moment once they are.
+    /// An explicit save action while there are changes, then brief confirmation.
     @ViewBuilder
     private var saveStatus: some View {
         let isUnsaved = settingsService.hasUnsavedChanges
         if isUnsaved || showsSaved {
             Button(action: save) {
-                Text(isUnsaved ? "Unsaved" : "Saved")
+                Label(isUnsaved ? "Save" : "Saved", systemImage: isUnsaved ? "square.and.arrow.down" : "checkmark")
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 6)
+                    .padding(.horizontal, 12)
+                    .frame(minHeight: 44)
+                    .fixedSize(horizontal: true, vertical: false)
                     .glassedEffect(in: Capsule(), interactive: isUnsaved)
                     .contentShape(Capsule())
             }
             .buttonStyle(.plain)
-            .allowsHitTesting(isUnsaved)
+            .disabled(!isUnsaved)
             .accessibilityHint(isUnsaved ? "Saves your changes" : "")
             .transition(.opacity)
         }
@@ -383,72 +365,78 @@ struct HomeView: View {
                     review.acceptAll().forEach(applySuggestion)
                 }
             )
-            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { reviewPanelHeight = $0 }
             .padding(.horizontal, 20)
             .padding(.bottom, 24)
             .transition(.move(edge: .bottom).combined(with: .opacity))
         } else {
-        HStack(alignment: .bottom, spacing: 12) {
-            VStack(alignment: .leading, spacing: 12) {
-                // What's written since the last save is kept on this device,
-                // but isn't in the library until it's saved. Beside
-                // Suggestions, above the timer.
-                if showsSuggestions || settingsService.hasUnsavedChanges || showsSaved {
-                    HStack(spacing: 10) {
-                        suggestionsControl
-                        saveStatus
+            VStack(spacing: 12) {
+                if showsSuggestions || hasTakes || settingsService.hasUnsavedChanges || showsSaved {
+                    ViewThatFits(in: .horizontal) {
+                        editorTools(compact: false)
+                        editorTools(compact: true)
                     }
-                    .animation(.easeInOut(duration: 0.2), value: settingsService.hasUnsavedChanges)
-                    .animation(.easeInOut(duration: 0.2), value: showsSaved)
                 }
-                timerControl
-            }
-
-            Spacer(minLength: isCardsMode ? 0 : 12)
-
-            takesControl
-
-            Button(action: {
-                isEditorFocused = false
-                if isCardsMode {
-                    AnalyticsEvents.logButtonClick("start_cards", screen: "home")
-                    cardsOpenedOnWatch = false
-                    showingCards = true
+                if hasNotes {
+                    ViewThatFits(in: .horizontal) {
+                        HStack(spacing: 12) {
+                            timerControl
+                            startButton
+                        }
+                        VStack(alignment: .leading, spacing: 12) {
+                            timerControl
+                            startButton
+                        }
+                    }
                 } else {
-                    AnalyticsEvents.logButtonClick("start_teleprompter", screen: "home")
-                    showingTeleprompter = true
-                }
-            }) {
-                if isCardsMode {
-                    Label("Read Cards", systemImage: "rectangle.stack.fill")
-                        .font(.subheadline.weight(.semibold))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
-                        .foregroundStyle(colorScheme == .dark ? .black : .white)
-                        .padding(.horizontal, 16)
-                        .frame(height: 52)
-                        .background(Capsule().fill(AppColors.green(for: colorScheme)))
-                        .glassedEffect(in: Capsule())
-                } else {
-                    Image(systemName: "play.fill")
-                        .font(.system(size: 20, weight: .semibold))
-                        .foregroundStyle(colorScheme == .dark ? .black : .white)
-                        .frame(width: 52, height: 52)
-                        .background(
-                            Circle()
-                                .fill(AppColors.green(for: colorScheme))
-                        )
-                        .glassedEffect(in: Circle())
+                    timerControl
                 }
             }
-            .disabled(isCardsMode ? CueCards.cards(in: settingsService.notes).isEmpty : !hasNotes)
-            .opacity(hasNotes ? 1.0 : 0.6)
-            .accessibilityLabel(isCardsMode ? "Open Cards" : "Start Teleprompter")
+            .animation(.easeInOut(duration: 0.2), value: settingsService.hasUnsavedChanges)
+            .animation(.easeInOut(duration: 0.2), value: showsSaved)
+            .padding(.horizontal, 20)
+            .padding(.top, 12)
+            .padding(.bottom, 12)
         }
-        .animation(.spring(response: 0.35, dampingFraction: 0.8), value: takes.takes.map(\.id))
-        .padding(.horizontal, 20)
-        .padding(.bottom, 24)
+    }
+
+    private var hasTakes: Bool {
+        !takes.takes.isEmpty || (takes.hasSessions && (takes.status == .notDetermined || takes.status == .limited))
+    }
+
+    private func editorTools(compact: Bool) -> some View {
+        HStack(spacing: 10) {
+            suggestionsControl(compact: compact)
+            takesControl(compact: compact)
+            Spacer(minLength: 0)
+            saveStatus
         }
+    }
+
+    private var startButton: some View {
+        Button {
+            isEditorFocused = false
+            if isCardsMode {
+                AnalyticsEvents.logButtonClick("start_cards", screen: "home")
+                cardsOpenedOnWatch = false
+                showingCards = true
+            } else {
+                AnalyticsEvents.logButtonClick("start_teleprompter", screen: "home")
+                showingTeleprompter = true
+            }
+        } label: {
+            Label(isCardsMode ? "Read Cards" : "Start Reading",
+                  systemImage: isCardsMode ? "rectangle.stack.fill" : "play.fill")
+                .font(.subheadline.weight(.semibold))
+                .fixedSize(horizontal: true, vertical: false)
+                .foregroundStyle(colorScheme == .dark ? .black : .white)
+                .padding(.horizontal, 16)
+                .frame(maxWidth: .infinity, minHeight: 52)
+                .background(Capsule().fill(AppColors.green(for: colorScheme)))
+        }
+        .buttonStyle(.plain)
+        .disabled(isCardsMode ? CueCards.cards(in: settingsService.notes).isEmpty : !hasNotes)
+        .opacity(hasNotes ? 1 : 0.4)
+        .accessibilityLabel(isCardsMode ? "Open Cards" : "Start Teleprompter")
     }
 
     var body: some View {
@@ -503,7 +491,7 @@ struct HomeView: View {
                         fontSize: CGFloat(settingsService.settings.cards.editorFontSize),
                         cardLimit: settingsService.settings.cards.characterLimit,
                         bottomInset: isEditorFocused ? CueBar.height
-                            : review.isActive ? reviewPanelHeight + 24 : Self.controlsHeight,
+                            : bottomControlsHeight,
                         topOverlap: Self.editorTopOverlap,
                         suggestionMarks: suggestionMarks
                     )
@@ -518,7 +506,7 @@ struct HomeView: View {
                         colorScheme: colorScheme,
                         fontSize: CGFloat(settingsService.settings.editorFontSize),
                         keyboardOverlayHeight: CueBar.height,
-                        restingOverlayHeight: review.isActive ? reviewPanelHeight + 24 : Self.controlsHeight,
+                        restingOverlayHeight: bottomControlsHeight,
                         topOverlap: Self.editorTopOverlap,
                         suggestionMarks: suggestionMarks
                     )
@@ -532,8 +520,11 @@ struct HomeView: View {
         }
         .overlay(alignment: .bottom) {
             bottomControls
+                .frame(maxWidth: 680)
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+                    if !isEditorFocused { bottomControlsHeight = height }
+                }
         }
-        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { screenWidth = $0 }
         .animation(.easeInOut(duration: 0.2), value: isEditorFocused)
         .navigationBarTitleDisplayMode(.inline)
         // No bar background: the script's fade shows through its lower half.
@@ -595,47 +586,50 @@ struct HomeView: View {
         }
     }
 
-    /// The title follows the back button to the library.
+    /// Let the navigation bar fit the title between navigation and actions.
     @ToolbarContentBuilder
     private var toolbar: some ToolbarContent {
-        ToolbarItem(placement: .topBarLeading) {
+        ToolbarItem(placement: .principal) {
             titleControl
         }
         .sharedBackgroundHidden()
 
-        // Only once the note has an older version to go back to.
-        if hasVersionHistory {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button(action: {
-                    AnalyticsEvents.logButtonClick("version_history", screen: "home")
-                    isEditorFocused = false
-                    showingVersions = true
-                }) {
-                    Image(systemName: "clock.arrow.circlepath")
-                        .font(.title3)
-                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                }
-                .accessibilityLabel("Version History")
-            }
-        }
-
-        // Settings has a glass of its own; Help has the edge.
-        if #available(iOS 26.0, *) {
-            ToolbarSpacer(.fixed, placement: .topBarTrailing)
-        }
         ToolbarItem(placement: .topBarTrailing) {
             Button(action: {
                 AnalyticsEvents.logButtonClick("settings", screen: "home")
+                isEditorFocused = false
                 showingSettings = true
             }) {
                 Image(systemName: "gearshape")
-                    .font(.title3)
+                    .font(.system(size: 18, weight: .medium))
                     .foregroundStyle(AppColors.textPrimary(for: colorScheme))
             }
             .accessibilityLabel("Settings")
         }
 
-        HelpToolbarItem(page: .writing(settingsService.settings.scriptMode), isPresented: $showingHelp)
+        ToolbarItem(placement: .topBarTrailing) {
+            Menu {
+                if hasVersionHistory {
+                    Button {
+                        AnalyticsEvents.logButtonClick("version_history", screen: "home")
+                        isEditorFocused = false
+                        showingVersions = true
+                    } label: {
+                        Label("Version History", systemImage: "clock.arrow.circlepath")
+                    }
+                }
+                Button(action: save) {
+                    Label("Save", systemImage: "square.and.arrow.down")
+                }
+                .disabled(!settingsService.hasUnsavedChanges)
+                HelpMenuButton(page: .writing(settingsService.settings.scriptMode), isPresented: $showingHelp)
+            } label: {
+                Image(systemName: "ellipsis")
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+            }
+            .accessibilityLabel("Script Options")
+        }
     }
 
     /// The editor's alerts, kept apart from the rest of it, which is already
@@ -711,7 +705,7 @@ struct NotesEditorView: View {
             if text.isEmpty {
                 // Set on the editor's own font and insets, so the first line sits
                 // exactly where the caret waiting in front of it does.
-                Text("Add your script here...\n\nTap Add Cue to drop in a delivery reminder, or type [ to write one yourself.\n\nFor example: Welcome everyone [smile and pause]")
+                Text("Add your script here...\n\nTap Cue to drop in a delivery reminder, or type [ to write one yourself.\n\nFor example: Welcome everyone [smile and pause]")
                     .font(.system(size: fontSize, weight: .medium))
                     .foregroundStyle(AppColors.textSecondary(for: colorScheme).opacity(0.6))
                     .padding(.horizontal, 20)
@@ -735,7 +729,8 @@ struct NotesEditorView: View {
         }
         // Lines arrive and leave through a fade instead of being cut off against
         // the toolbar above and the controls below.
-        .scriptEdgeFade(for: colorScheme, top: topFade, bottom: Self.bottomFade)
+        .scriptEdgeFade(for: colorScheme, top: topFade,
+                        bottom: isFocused ? Self.bottomFade : max(Self.bottomFade, restingOverlayHeight))
         .padding(.top, -topOverlap)
     }
 

@@ -166,59 +166,13 @@ struct TeleprompterView: View {
 
                             if settings.followsVoice {
                                 voiceStatus
-                                    .padding(.bottom, 16)
+                                    .padding(.horizontal, 20)
+                                    .padding(.bottom, 12)
                             }
 
-                            // Closer together with the anchor buttons in, so the
-                            // row still fits a small phone.
-                            HStack(spacing: content.hasAnchors ? 14 : 24) {
-                                // The anchor buttons go at the ends, so the
-                                // usual buttons keep their places around Play.
-                                if content.hasAnchors {
-                                    anchorButton(forward: false)
-                                }
-
-                                // PiP toggle button. Kept in the stack even when
-                                // PiP is unavailable — taking it out shifts the
-                                // play button off centre — and only made invisible.
-                                Button(action: {
-                                    AnalyticsEvents.logButtonClick(pipManager.isPiPActive ? "pip_exit" : "pip_enter", screen: "teleprompter")
-                                    togglePiP()
-                                }) {
-                                    Image(systemName: pipManager.isPiPActive ? "pip.exit" : "pip.enter")
-                                        .font(.system(size: 20, weight: .semibold))
-                                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                                        .frame(width: 52, height: 52)
-                                        .glassedEffect(in: Circle())
-                                }
-                                .accessibilityLabel(pipManager.isPiPActive ? "Close Overlay" : "Start Overlay")
-                                .opacity(pipManager.isPiPPossible ? 1 : 0)
-                                .disabled(!pipManager.isPiPPossible)
-                                .accessibilityHidden(!pipManager.isPiPPossible)
-
-                                if settings.followsVoice {
-                                    listenButton
-                                } else {
-                                    playButton
-                                }
-
-                                // Restart button
-                                Button(action: {
-                                    AnalyticsEvents.logButtonClick("restart", screen: "teleprompter")
-                                    restart()
-                                }) {
-                                    Image(systemName: "arrow.counterclockwise")
-                                        .font(.system(size: 20, weight: .semibold))
-                                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                                        .frame(width: 52, height: 52)
-                                        .glassedEffect(in: Circle())
-                                }
-
-                                if content.hasAnchors {
-                                    anchorButton(forward: true)
-                                }
-                            }
-                            .padding(.bottom, 48)
+                            playbackControls
+                                .padding(.horizontal, 20)
+                                .padding(.bottom, 20)
                         }
                         .fadedOut(!showControls)
                     }
@@ -258,32 +212,32 @@ struct TeleprompterView: View {
                         }
                         ToolbarItem(placement: .topBarTrailing) {
                             Button {
-                                AnalyticsEvents.logButtonClick(settings.followsVoice ? "follow_voice_off" : "follow_voice_on",
-                                                               screen: "teleprompter")
-                                settingsService.settings.followsVoice.toggle()
-                            } label: {
-                                Image(systemName: settings.followsVoice ? "waveform.circle.fill" : "waveform.circle")
-                                    .font(.system(size: 17, weight: .semibold))
-                                    .foregroundStyle(settings.followsVoice
-                                                     ? AppColors.purple(for: colorScheme)
-                                                     : AppColors.textPrimary(for: colorScheme))
-                            }
-                            .accessibilityLabel("Follow My Voice")
-                            .accessibilityValue(settings.followsVoice ? "On" : "Off")
-                        }
-                        ToolbarItem(placement: .topBarTrailing) {
-                            Button {
                                 AnalyticsEvents.logButtonClick("camera", screen: "teleprompter")
                                 stopControlsTimer()
                                 showingCamera.toggle()
                             } label: {
                                 Image(systemName: showingCamera ? "camera.fill" : "camera")
-                                    .font(.system(size: 15, weight: .semibold))
                                     .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                             }
                             .accessibilityLabel(showingCamera ? "Close Camera" : "Record Video")
                         }
-                        HelpToolbarItem(page: .teleprompter, isPresented: $showingHelp)
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Menu {
+                                Button {
+                                    AnalyticsEvents.logButtonClick(settings.followsVoice ? "follow_voice_off" : "follow_voice_on", screen: "teleprompter")
+                                    settingsService.settings.followsVoice.toggle()
+                                } label: {
+                                    Label(settings.followsVoice ? "Turn Off Follow My Voice" : "Follow My Voice",
+                                          systemImage: settings.followsVoice ? "waveform.circle.fill" : "waveform.circle")
+                                }
+                                HelpMenuButton(page: .teleprompter, isPresented: $showingHelp)
+                            } label: {
+                                Image(systemName: "ellipsis")
+                                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                            }
+                            .accessibilityLabel("Reading Options")
+                            .simultaneousGesture(TapGesture().onEnded { stopControlsTimer() })
+                        }
                     }
                     ToolbarItem(placement: .principal) {
                         Text(timeDisplay)
@@ -338,6 +292,48 @@ struct TeleprompterView: View {
         }
     }
 
+    /// Playback stays centered; restart and floating-window controls keep their sides.
+    private var playbackControls: some View {
+        HStack(spacing: 12) {
+            Button {
+                AnalyticsEvents.logButtonClick("restart", screen: "teleprompter")
+                restart()
+                resetControlsTimer()
+            } label: {
+                Image(systemName: "arrow.counterclockwise")
+                    .font(.system(size: 18, weight: .semibold))
+                    .frame(width: 44, height: 44)
+                    .glassedEffect(in: Circle())
+            }
+            .accessibilityLabel("Restart")
+
+            Spacer(minLength: 0)
+            HStack(spacing: 8) {
+                if content.hasAnchors { anchorButton(forward: false) }
+                if settings.followsVoice { listenButton } else { playButton }
+                if content.hasAnchors { anchorButton(forward: true) }
+            }
+            Spacer(minLength: 0)
+
+            Button {
+                AnalyticsEvents.logButtonClick(pipManager.isPiPActive ? "pip_exit" : "pip_enter", screen: "teleprompter")
+                togglePiP()
+            } label: {
+                Image(systemName: pipManager.isPiPActive ? "pip.exit" : "pip.enter")
+                    .font(.system(size: 18, weight: .semibold))
+                    .frame(width: 44, height: 44)
+                    .glassedEffect(in: Circle())
+            }
+            .accessibilityLabel(pipManager.isPiPActive ? "Close Overlay" : "Start Overlay")
+            .opacity(pipManager.isPiPPossible ? 1 : 0)
+            .disabled(!pipManager.isPiPPossible)
+            .accessibilityHidden(!pipManager.isPiPPossible)
+        }
+        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+        .frame(maxWidth: 480)
+        .frame(maxWidth: .infinity)
+    }
+
     // MARK: - Play
 
     private var playButton: some View {
@@ -358,7 +354,7 @@ struct TeleprompterView: View {
                 }
             }
             .foregroundStyle(colorScheme == .dark ? .black : .white)
-            .frame(width: 72, height: 72)
+            .frame(width: 64, height: 64)
             .background(
                 Circle()
                     .fill(showsCountdownNumber
@@ -392,7 +388,7 @@ struct TeleprompterView: View {
             Image(systemName: voice.isListening ? "mic.fill" : "mic.slash.fill")
                 .font(.system(size: 26, weight: .semibold))
                 .foregroundStyle(colorScheme == .dark ? .black : .white)
-                .frame(width: 72, height: 72)
+                .frame(width: 64, height: 64)
                 .background(Circle().fill(voice.isListening
                                           ? AppColors.purple(for: colorScheme)
                                           : AppColors.textSecondary(for: colorScheme)))
@@ -511,7 +507,7 @@ struct TeleprompterView: View {
             Image(systemName: forward ? "forward.end" : "backward.end")
                 .font(.system(size: 18, weight: .semibold))
                 .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                .frame(width: 52, height: 52)
+                .frame(width: 44, height: 44)
                 .glassedEffect(in: Circle())
         }
         .opacity(isEnabled ? 1 : 0.4)

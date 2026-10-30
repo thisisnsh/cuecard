@@ -48,6 +48,7 @@ struct WhatsNewView: View {
             ScrollView(showsIndicators: false) {
                 content
             }
+            .scrollEdgeFade(length: 28, insetContent: false)
         }
         .frame(maxWidth: 380)
         // The stars show faintly through the glass rather than filling it.

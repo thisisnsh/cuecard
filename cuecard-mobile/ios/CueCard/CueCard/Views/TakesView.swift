@@ -37,13 +37,20 @@ struct TakesIcon: View {
     let colorScheme: ColorScheme
     /// The Takes list grows out of this button, and closes back into it.
     let transition: Namespace.ID
+    var compact = false
 
     var body: some View {
-        Image(systemName: "film.stack")
-            .font(.system(size: 18, weight: .semibold))
+        Group {
+            if compact { Image(systemName: "film.stack") }
+            else { Label("Takes", systemImage: "film.stack") }
+        }
+            .font(.subheadline.weight(.semibold))
             .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-            .frame(width: 52, height: 52)
-            .glassedEffect(in: Circle())
+            .padding(.horizontal, compact ? 0 : 12)
+            .frame(width: compact ? 44 : nil)
+            .frame(minHeight: 44)
+            .fixedSize(horizontal: true, vertical: false)
+            .glassedEffect(in: Capsule())
             .takesTransitionSource(in: transition)
             .accessibilityLabel(count == 0
                                 ? String(localized: "Takes")
@@ -103,6 +110,7 @@ struct TakesView: View {
                             .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                         if let scriptTitle {
                             Text(scriptTitle)
+                                .lineLimit(1)
                                 .font(.caption2)
                                 .foregroundStyle(AppColors.textSecondary(for: colorScheme))
                         }
@@ -170,6 +178,8 @@ struct TakesView: View {
                 .padding(.top, 16)
             }
         }
+        .scrollEdgeFade()
+        .background(Color(.systemGroupedBackground))
     }
 
     private func play(_ take: Take) {
@@ -409,6 +419,8 @@ private struct TakePlayerView: View {
             .accessibilityLabel("Close")
 
             Spacer()
+            deleteButton
+                .glassedEffect(in: Circle(), interactive: true)
         }
         .overlay {
             VStack(spacing: 1) {
@@ -427,32 +439,23 @@ private struct TakePlayerView: View {
         .padding(.vertical, 8)
     }
 
-    /// What can be done with the take, floating under the video as in Photos:
-    /// the heart and the bin on their own, the details together between them.
+    /// Frequent organization tools sit together, with labels to explain each action.
     private var bottomBar: some View {
-        HStack {
-            FavoriteButton(take: current, library: library, size: 48, screen: "take_player",
+        HStack(spacing: 12) {
+            FavoriteButton(take: current, library: library, size: 52, screen: "take_player",
                            colorScheme: colorScheme, unfilledColor: .white)
                 .glassedEffect(in: Circle(), interactive: true)
 
-            Spacer(minLength: 12)
-
-            HStack(spacing: 4) {
+            HStack(spacing: 0) {
                 panelButton(.details, title: "Tags and Notes", systemImage: "tag", event: "take_details")
-                panelButton(.albums, title: "Add to Album", systemImage: "rectangle.stack.badge.plus",
-                            event: "album_take")
+                Divider().frame(height: 24)
+                panelButton(.albums, title: "Albums", systemImage: "rectangle.stack.badge.plus", event: "album_take")
             }
-            .padding(.horizontal, 8)
             .glassedEffect(in: Capsule(), interactive: true)
-
-            Spacer(minLength: 12)
-
-            deleteButton
-                .glassedEffect(in: Circle(), interactive: true)
         }
-        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
+        .frame(maxWidth: 600)
         .padding(.horizontal, 20)
-        .padding(.vertical, 8)
+        .padding(.vertical, 12)
     }
 
     private func panelButton(_ panel: Panel, title: LocalizedStringKey, systemImage: String,
@@ -461,10 +464,15 @@ private struct TakePlayerView: View {
             AnalyticsEvents.logButtonClick(event, screen: "take_player")
             self.panel = panel
         } label: {
-            Image(systemName: systemImage)
-                .font(.title3)
-                .frame(width: 48, height: 48)
-                .contentShape(Rectangle())
+            VStack(spacing: 4) {
+                Image(systemName: systemImage).font(.body)
+                Text(title).font(.caption.weight(.semibold))
+            }
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 8)
+            .frame(maxWidth: .infinity, minHeight: 52)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(title)
@@ -479,6 +487,8 @@ private struct TakePlayerView: View {
                 notesSection
             }
             .scrollDismissesKeyboard(.interactively)
+            .scrollEdgeFade()
+            .background(Color(.systemGroupedBackground))
             .navigationTitle("Take \(take.number)")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -543,7 +553,7 @@ private struct TakePlayerView: View {
     private var notesSection: some View {
         Section("Notes") {
             TextField("What worked, and what to change next time", text: $details.note, axis: .vertical)
-                .lineLimit(3...8)
+                .lineLimit(3...)
                 .accessibilityLabel("Notes")
         }
     }
@@ -646,6 +656,8 @@ private struct AlbumPicker: View {
                     }
                 }
             }
+            .scrollEdgeFade()
+            .background(Color(.systemGroupedBackground))
             .navigationTitle("Add to Album")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

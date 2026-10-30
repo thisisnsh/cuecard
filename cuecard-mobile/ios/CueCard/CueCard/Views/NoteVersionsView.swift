@@ -91,6 +91,8 @@ struct NoteVersionsView: View {
                     row(for: version)
                 }
             }
+            .scrollEdgeFade()
+            .background(Color(.systemGroupedBackground))
             .navigationTitle("Version History")
             .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(for: Int.self) { number in
@@ -268,6 +270,7 @@ private struct VersionDiffView: View {
             }
             .padding(.vertical, 12)
         }
+        .scrollEdgeFade()
         // The sheet's own color, as in the list of versions it's pushed from.
         .background(Color(.systemGroupedBackground))
         .navigationTitle("Compare Changes")
