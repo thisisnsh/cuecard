@@ -12,11 +12,57 @@ struct SuggestionsButton: View {
                 .foregroundStyle(AppColors.purple(for: colorScheme))
                 .frame(width: 52, height: 52)
                 .glassedEffect(in: Circle())
+                .aiGlow()
                 .shadow(color: Color.black.opacity(0.1), radius: 10)
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Suggestions")
         .accessibilityHint("Suggests fixes, cues and emphasis for your script, on this iPhone")
+    }
+}
+
+/// A slow ring of Apple Intelligence's colors around a round button, so
+/// what it does stands out from the buttons beside it. Still where motion
+/// is reduced.
+private struct AIGlow: ViewModifier {
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var isTurning = false
+
+    private var colors: [Color] {
+        [AppColors.purple(for: colorScheme), AppColors.pink(for: colorScheme), .orange,
+         AppColors.blue(for: colorScheme), AppColors.purple(for: colorScheme)]
+    }
+
+    func body(content: Content) -> some View {
+        let ring = AngularGradient(colors: colors, center: .center)
+        content
+            .background {
+                Circle()
+                    .stroke(ring, lineWidth: 5)
+                    .blur(radius: 7)
+                    .opacity(colorScheme == .dark ? 0.8 : 0.6)
+                    .rotationEffect(.degrees(isTurning ? 360 : 0))
+            }
+            .overlay {
+                Circle()
+                    .strokeBorder(ring, lineWidth: 1.5)
+                    .rotationEffect(.degrees(isTurning ? 360 : 0))
+                    .allowsHitTesting(false)
+            }
+            .onAppear {
+                guard !reduceMotion else { return }
+                withAnimation(.linear(duration: 6).repeatForever(autoreverses: false)) {
+                    isTurning = true
+                }
+            }
+    }
+}
+
+extension View {
+    /// Mark a round button as Apple Intelligence's.
+    func aiGlow() -> some View {
+        modifier(AIGlow())
     }
 }
 

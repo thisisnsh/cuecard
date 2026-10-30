@@ -426,6 +426,7 @@ private struct LibraryList: View {
                         .foregroundStyle(AppColors.purple(for: colorScheme))
                         .frame(width: 52, height: 52)
                         .glassedEffect(in: Circle(), interactive: true)
+                        .aiGlow()
                         .shadow(color: Color.black.opacity(0.1), radius: 10)
                 }
                 .buttonStyle(.plain)
