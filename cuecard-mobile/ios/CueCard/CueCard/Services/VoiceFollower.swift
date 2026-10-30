@@ -27,7 +27,7 @@ final class VoiceFollower: ObservableObject {
         didSet { metrics.mode = screen }
     }
 
-    private let audioEngine = AVAudioEngine()
+    private let microphone = Microphone()
     private var recognizer: SFSpeechRecognizer?
     private var request: SFSpeechAudioBufferRecognitionRequest?
     private var task: SFSpeechRecognitionTask?
@@ -35,8 +35,9 @@ final class VoiceFollower: ObservableObject {
     private var contextualWords: [String] = []
     private var listeningSince: Date?
     private var configurationObserver: NSObjectProtocol?
-    /// Bumped for every recognition task, so a late result from a task that
-    /// was replaced is ignored.
+    /// Bumped for every start, stop and recognition task, so a late result
+    /// from a task that was replaced is ignored, and a start still waiting on
+    /// the microphone gives up if it was stopped or started again.
     private var generation = 0
 
     /// Called with each character of the script the voice has reached.
@@ -48,6 +49,8 @@ final class VoiceFollower: ObservableObject {
     /// Start listening for `text`, the script as the teleprompter sets it.
     func start(text: String) async {
         guard !isListening else { return }
+        generation += 1
+        let current = generation
         if tracker?.text != text {
             tracker = VoiceTracker(text: text)
             contextualWords = VoiceTracker.distinctiveWords(in: text)
@@ -58,6 +61,7 @@ final class VoiceFollower: ObservableObject {
             log("denied")
             return
         }
+        guard current == generation else { return }
         guard let recognizer = Self.recognizer(for: text) else {
             status = .unavailable(String(localized: "Your voice can't be followed in this script's language on this iPhone yet."))
             log("unsupported_language")
@@ -66,17 +70,10 @@ final class VoiceFollower: ObservableObject {
         self.recognizer = recognizer
 
         do {
-            let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.playAndRecord, mode: .default,
-                                    options: [.mixWithOthers, .defaultToSpeaker, .allowBluetoothHFP])
-            try session.setActive(true)
-            let input = audioEngine.inputNode
-            input.removeTap(onBus: 0)
-            input.installTap(onBus: 0, bufferSize: 1024, format: input.outputFormat(forBus: 0),
-                             block: Self.tap(into: audioTarget))
-            audioEngine.prepare()
-            try audioEngine.start()
+            try await microphone.start(into: audioTarget)
+            guard current == generation else { return }
         } catch {
+            guard current == generation else { return }
             stop()
             status = .unavailable(String(localized: "The microphone couldn't be started. Close anything else using it and try again."))
             log("audio_failed")
@@ -85,14 +82,16 @@ final class VoiceFollower: ObservableObject {
 
         // Another recorder taking the microphone — the camera — restarts the engine.
         configurationObserver = NotificationCenter.default.addObserver(
-            forName: .AVAudioEngineConfigurationChange, object: audioEngine, queue: .main
+            forName: .AVAudioEngineConfigurationChange, object: microphone.engine, queue: .main
         ) { [weak self] _ in
-            Task { @MainActor in self?.restartEngine() }
+            Task { @MainActor in await self?.restartEngine() }
         }
 
         status = .listening
         listeningSince = Date()
         beginRecognition()
+        // A change while the microphone was starting came before anyone was watching.
+        await restartEngine()
     }
 
     /// Stop listening. What's been heard so far still counts toward the session.
@@ -107,8 +106,7 @@ final class VoiceFollower: ObservableObject {
         request?.endAudio()
         request = nil
         audioTarget.set(nil)
-        audioEngine.inputNode.removeTap(onBus: 0)
-        audioEngine.stop()
+        microphone.stop()
         if let configurationObserver { NotificationCenter.default.removeObserver(configurationObserver) }
         configurationObserver = nil
         if isListening { status = .idle }
@@ -151,11 +149,6 @@ final class VoiceFollower: ObservableObject {
         })
     }
 
-    /// Hands the microphone's audio to the recognition request, on the audio thread.
-    nonisolated private static func tap(into target: AudioTarget) -> AVAudioNodeTapBlock {
-        { buffer, _ in target.append(buffer) }
-    }
-
     /// The words recognized so far, and whether this task is over, from
     /// whatever queue the recognizer calls back on.
     nonisolated private static func results(
@@ -179,12 +172,14 @@ final class VoiceFollower: ObservableObject {
         self.tracker = tracker
     }
 
-    private func restartEngine() {
-        guard isListening, !audioEngine.isRunning else { return }
+    private func restartEngine() async {
+        guard isListening else { return }
+        let session = listeningSince
         do {
-            audioEngine.prepare()
-            try audioEngine.start()
+            try await microphone.restart()
         } catch {
+            // Listening has since been stopped, or started over.
+            guard listeningSince == session else { return }
             stop()
             status = .unavailable(String(localized: "The microphone stopped. Tap the microphone to listen again."))
             log("audio_interrupted")
@@ -233,6 +228,53 @@ struct VoiceSessionMetrics {
     var moves = 0
     /// How far through the script the voice got, from 0 to 1.
     var progress: Double = 0
+}
+
+/// The audio session and engine, worked on one call at a time on their own
+/// queue: these calls can hang the main thread. A stop always lands after any
+/// start before it, so the microphone ends up off however the two overlap.
+private final class Microphone: @unchecked Sendable {
+    /// Only for watching its configuration changes from outside the queue.
+    let engine = AVAudioEngine()
+    private let queue = DispatchQueue(label: "com.thisisnsh.cuecard.microphone", qos: .userInitiated)
+
+    func start(into target: AudioTarget) async throws {
+        try await perform {
+            let session = AVAudioSession.sharedInstance()
+            try session.setCategory(.playAndRecord, mode: .default,
+                                    options: [.mixWithOthers, .defaultToSpeaker, .allowBluetoothHFP])
+            try session.setActive(true)
+            let input = self.engine.inputNode
+            input.removeTap(onBus: 0)
+            input.installTap(onBus: 0, bufferSize: 1024, format: input.outputFormat(forBus: 0)) { buffer, _ in
+                target.append(buffer)
+            }
+            self.engine.prepare()
+            try self.engine.start()
+        }
+    }
+
+    /// Start the engine again, if something has stopped it.
+    func restart() async throws {
+        try await perform {
+            guard !self.engine.isRunning else { return }
+            self.engine.prepare()
+            try self.engine.start()
+        }
+    }
+
+    func stop() {
+        queue.async {
+            self.engine.inputNode.removeTap(onBus: 0)
+            self.engine.stop()
+        }
+    }
+
+    private func perform(_ work: @escaping @Sendable () throws -> Void) async throws {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            queue.async { continuation.resume(with: Result(catching: work)) }
+        }
+    }
 }
 
 /// The request the microphone's audio goes to, set on the main thread and
