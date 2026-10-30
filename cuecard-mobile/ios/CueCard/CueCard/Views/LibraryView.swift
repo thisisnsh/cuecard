@@ -273,6 +273,7 @@ private struct LibraryList: View {
             }
 
             LibraryModePicker(selection: $mode, colorScheme: colorScheme)
+                .frame(maxWidth: .infinity)
                 .plainRow(insets: EdgeInsets(top: 8, leading: 20, bottom: 12, trailing: 20))
 
             if !folders.isEmpty {
@@ -1147,8 +1148,9 @@ private extension View {
     }
 }
 
-/// Teleprompter or cards: whose scripts the library shows. A glass track
-/// with the chosen one lifted out of it.
+/// Teleprompter or cards: whose scripts the library shows. A small glass
+/// track with the chosen one lifted out of it, both sides as wide as the
+/// wider name.
 private struct LibraryModePicker: View {
     @Binding var selection: ScriptMode
     let colorScheme: ColorScheme
@@ -1163,13 +1165,13 @@ private struct LibraryModePicker: View {
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) { selection = mode }
                 } label: {
                     Text(mode.displayName)
-                        .font(.subheadline.weight(.semibold))
+                        .font(.footnote.weight(.semibold))
                         .foregroundStyle(isSelected ? AppColors.textPrimary(for: colorScheme)
                                                     : AppColors.textSecondary(for: colorScheme))
                         .lineLimit(1)
-                        .minimumScaleFactor(0.8)
+                        .padding(.horizontal, 14)
                         .frame(maxWidth: .infinity)
-                        .frame(height: 38)
+                        .frame(height: 30)
                         .background {
                             if isSelected {
                                 Capsule()
@@ -1184,7 +1186,8 @@ private struct LibraryModePicker: View {
                 .accessibilityAddTraits(isSelected ? [.isSelected] : [])
             }
         }
-        .padding(4)
+        .fixedSize()
+        .padding(3)
         .glassedEffect(in: Capsule())
     }
 }
