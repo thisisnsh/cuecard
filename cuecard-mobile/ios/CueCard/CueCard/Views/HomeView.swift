@@ -28,6 +28,8 @@ struct HomeView: View {
     @State private var showsSaved = false
     @State private var savedTask: Task<Void, Never>?
     @State private var errorMessage: String?
+    /// How wide the screen is, for the title to take what the buttons leave.
+    @State private var screenWidth: CGFloat = 0
     @State private var isEditorFocused = false
     @StateObject private var editorController = CueEditorController()
     /// Suggestions from the on-device model, while they're open.
@@ -65,6 +67,16 @@ struct HomeView: View {
         return (settingsService.versionCounts[id] ?? 1) > 1
     }
 
+    /// The room the title has beside the back button: the screen, less the
+    /// bar's edges and every button on it. The buttons come first; the
+    /// title shows whole where it fits, and is cut short where it doesn't.
+    private var titleWidth: CGFloat {
+        let buttonWidth: CGFloat = 52
+        let trailingButtons: CGFloat = hasVersionHistory ? 3 : 2
+        let reserved = 16 * 2 + buttonWidth + 8 + trailingButtons * buttonWidth + 24
+        return max(80, screenWidth - reserved)
+    }
+
     /// The script's title, or what it is while it has none, beside the back
     /// button. A saved one opens to be renamed.
     private var titleControl: some View {
@@ -81,11 +93,12 @@ struct HomeView: View {
             showingRename = true
         } label: {
             Text(title)
-                .font(.headline)
+                .font(.subheadline.weight(.semibold))
                 .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                 .lineLimit(1)
                 .truncationMode(.tail)
-                .frame(maxWidth: 200, alignment: .leading)
+                .frame(maxWidth: titleWidth, alignment: .leading)
+                .fixedSize(horizontal: true, vertical: false)
         }
         .buttonStyle(.plain)
         .disabled(note == nil)
@@ -495,6 +508,7 @@ struct HomeView: View {
         .overlay(alignment: .bottom) {
             bottomControls
         }
+        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { screenWidth = $0 }
         .animation(.easeInOut(duration: 0.2), value: isEditorFocused)
         .navigationBarTitleDisplayMode(.inline)
         // No bar background: the script's fade shows through its lower half.
