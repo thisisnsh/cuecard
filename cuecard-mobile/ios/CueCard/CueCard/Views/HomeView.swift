@@ -184,6 +184,16 @@ struct HomeView: View {
         }
     }
 
+    /// Back from the cards: anything recorded is a take now, and after
+    /// Follow My Voice, the reader is asked how it went.
+    private func cardsDidClose() {
+        takes.reload()
+        if let metrics = VoiceFeedback.shared.pending {
+            VoiceFeedback.shared.pending = nil
+            voiceFeedback = metrics
+        }
+    }
+
     /// Suggestions from Apple's on-device model, for a script being written for
     /// the teleprompter. Not shown where this iPhone has no model to ask.
     private var showsSuggestions: Bool {
@@ -557,9 +567,7 @@ struct HomeView: View {
                 // cover doesn't inherit environment objects.
                 .environmentObject(settingsService)
         }
-        .fullScreenCover(isPresented: $showingCards, onDismiss: {
-            takes.reload()
-        }) {
+        .fullScreenCover(isPresented: $showingCards, onDismiss: cardsDidClose) {
             CueCardsView(cards: cardsOpenedOnWatch ? nil : CueCards.cards(in: settingsService.notes),
                          title: cardsOpenedOnWatch ? cardsSession.title
                             : settingsService.currentNote?.title ?? String(localized: "Cards"),

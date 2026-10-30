@@ -20,6 +20,9 @@ struct CueCardsView: View {
     @State private var showingLockScreenHelp = false
     @State private var showingHelp = false
     @State private var showingCamera = false
+    /// Listens for Follow My Voice, which turns each card once its last words are said.
+    @StateObject private var voice = VoiceFollower()
+    @State private var deckFollower: DeckFollower?
     @Environment(\.openURL) private var openURL
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -86,6 +89,7 @@ struct CueCardsView: View {
                     ToolbarItem(placement: .topBarLeading) {
                         Button(action: {
                             AnalyticsEvents.logButtonClick("close", screen: "cards")
+                            finishFollowingVoice()
                             session.end()
                             TakeStore.shared.end()
                             dismiss()
@@ -104,6 +108,21 @@ struct CueCardsView: View {
                         }
                         .accessibilityElement(children: .combine)
                         .accessibilityValue(progress)
+                    }
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            AnalyticsEvents.logButtonClick(followsVoice ? "follow_voice_off" : "follow_voice_on",
+                                                           screen: "cards")
+                            settingsService.settings.cards.followsVoice.toggle()
+                        } label: {
+                            Image(systemName: followsVoice ? "waveform.circle.fill" : "waveform.circle")
+                                .font(.system(size: 17, weight: .semibold))
+                                .foregroundStyle(followsVoice
+                                                 ? AppColors.purple(for: colorScheme)
+                                                 : AppColors.textPrimary(for: colorScheme))
+                        }
+                        .accessibilityLabel("Follow My Voice")
+                        .accessibilityValue(followsVoice ? "On" : "Off")
                     }
                     ToolbarItem(placement: .topBarTrailing) {
                         Button {
@@ -167,8 +186,11 @@ struct CueCardsView: View {
             guard !hasOpenedDeck else { return }
             hasOpenedDeck = true
             // A video recorded from now until the deck closes is a take of it,
-            // counted once the deck below is open.
-            defer { TakeStore.shared.begin(scriptID: scriptID) }
+            // counted once the deck below is open. Listening starts then too.
+            defer {
+                TakeStore.shared.begin(scriptID: scriptID)
+                if followsVoice { startFollowingVoice() }
+            }
             guard let cards else { return }
             session.start(cards: cards, title: title, deckID: deckID,
                           showOnLockScreen: settings.cards.showOnLockScreen)
@@ -177,7 +199,99 @@ struct CueCardsView: View {
                 "on_lock_screen": settings.cards.showOnLockScreen ? 1 : 0
             ])
         }
-        .onDisappear { TakeStore.shared.end() }
+        .onDisappear {
+            voice.stop()
+            TakeStore.shared.end()
+        }
+        .onChange(of: followsVoice) { _, follows in
+            if follows {
+                startFollowingVoice()
+            } else {
+                voice.stop()
+                deckFollower = nil
+            }
+        }
+        // Another deck opened from the watch is listened for in its place.
+        .onChange(of: session.sessionID) {
+            guard followsVoice, !session.cards.isEmpty,
+                  let deckFollower, deckFollower.sessionID != session.sessionID else { return }
+            voice.stop()
+            startFollowingVoice()
+        }
+    }
+
+    // MARK: - Follow My Voice
+
+    private var followsVoice: Bool { settings.cards.followsVoice }
+
+    /// Turn the cards with the reader's voice, and start listening.
+    private func startFollowingVoice() {
+        let follower = DeckFollower(deck: SpokenDeck(cards: session.cards), sessionID: session.sessionID)
+        deckFollower = follower
+        let animation = animation
+        voice.screen = "cards"
+        voice.readingCharacter = { follower.readingCharacter(onCard: CueCardsSession.shared.index) }
+        voice.onProgress = { character in
+            follower.lastCharacter = character
+            let card = follower.deck.card(at: character)
+            let session = CueCardsSession.shared
+            let current = session.index
+            guard card != current else { return }
+            withAnimation(animation) { session.show(cardAt: card) }
+            Analytics.logEvent(card > current ? "cards_next" : "cards_previous", parameters: ["source": "voice"])
+        }
+        listen()
+    }
+
+    private func listen() {
+        guard let deckFollower else { return }
+        Task { await voice.start(text: deckFollower.deck.text) }
+    }
+
+    /// After a session long enough to judge, ask how it went.
+    private func finishFollowingVoice() {
+        guard followsVoice else { return }
+        voice.stop()
+        let metrics = voice.metrics
+        Analytics.logEvent("follow_voice_session", parameters: VoiceFeedback.parameters(for: metrics))
+        if metrics.listenedSeconds >= VoiceFeedback.minimumSeconds {
+            VoiceFeedback.shared.pending = metrics
+        }
+    }
+
+    /// What Follow My Voice is doing, or why it can't. A tap stops or
+    /// starts listening.
+    private var voiceStatus: some View {
+        let label: (text: String, icon: String) = switch voice.status {
+        case .unavailable(let reason): (reason, "exclamationmark.triangle")
+        case .listening: (String(localized: "Listening. Each card turns when you finish it."), "waveform")
+        case .idle: (String(localized: "Not listening. Tap to listen."), "mic.slash")
+        }
+        return Button {
+            AnalyticsEvents.logButtonClick(voice.isListening ? "follow_voice_stop" : "follow_voice_listen",
+                                           screen: "cards")
+            if voice.isListening {
+                voice.stop()
+            } else {
+                listen()
+            }
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: label.icon)
+                    .symbolEffect(.variableColor.iterative, isActive: voice.isListening)
+                Text(label.text)
+                    .lineLimit(3)
+                BetaBadge()
+            }
+            .font(.footnote.weight(.semibold))
+            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .glassedEffect(in: Capsule(), interactive: true)
+            .frame(minHeight: 44)
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint(voice.isListening ? "Stops listening" : "Starts listening")
     }
 
     // MARK: - Timer
@@ -377,7 +491,9 @@ struct CueCardsView: View {
         let secondary = AppColors.textSecondary(for: colorScheme)
         let unavailable = session.lockScreenUnavailable && !session.isOnLockScreen
 
-        if session.isOnLockScreen || settings.cards.showOnLockScreen {
+        if followsVoice {
+            voiceStatus
+        } else if session.isOnLockScreen || settings.cards.showOnLockScreen {
             Button { showingLockScreenHelp = true } label: {
                 Label(unavailable ? "Enable Lock Screen cards" : "Also on Lock Screen",
                       systemImage: unavailable ? "lock.slash" : "lock.fill")
@@ -441,6 +557,29 @@ struct CueCardsView: View {
             }
             .accessibilityLabel(nextLabel)
         }
+    }
+}
+
+/// Where the reader's voice has got to in the deck, and so which card it's on.
+@MainActor
+private final class DeckFollower {
+    let deck: SpokenDeck
+    /// The deck's session, so it's listened for again only when another opens.
+    let sessionID: UUID
+    /// The spot in the deck the voice last reached.
+    var lastCharacter: Double?
+
+    init(deck: SpokenDeck, sessionID: UUID) {
+        self.deck = deck
+        self.sessionID = sessionID
+    }
+
+    /// Where reading is: as far as the voice got, while that's on the card
+    /// showing. A card turned some other way — a swipe, the watch, the Lock
+    /// Screen — is read from its start.
+    func readingCharacter(onCard index: Int) -> Double {
+        if let lastCharacter, deck.card(at: lastCharacter) == index { return lastCharacter }
+        return deck.start(ofCard: index)
     }
 }
 

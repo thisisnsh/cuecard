@@ -17,6 +17,7 @@ final class VoiceFeedback: ObservableObject {
     /// The session as numbers, sent with every rating and report.
     static func parameters(for metrics: VoiceSessionMetrics) -> [String: Any] {
         [
+            "mode": metrics.mode,
             "listened_seconds": Int(metrics.listenedSeconds),
             "words_heard": metrics.wordsHeard,
             "moves": metrics.moves,

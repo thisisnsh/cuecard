@@ -155,6 +155,8 @@ private enum AllHelp {
                   detail: "Tap the camera next to Help. The camera opens in a small window over your cards. Tap the red button to record and again to pause, then tap stop to save the video to Photos. Keep turning cards while you record."),
         HelpTopic("Read from the Lock Screen",
                   detail: "Turn on Show on Lock Screen in Settings. Then lock your iPhone and turn cards right from the Lock Screen."),
+        HelpTopic("Follow My Voice (Beta)",
+                  detail: "Tap the waveform at the top of the cards, or turn on Follow My Voice in Settings. Read each card aloud and it turns on its own once you've said its last words. Tap the listening note below the cards to stop or start. Your voice is understood on this iPhone and never leaves it."),
         HelpTopic("Count Up Without a Timer",
                   detail: "The time at the top counts down your timer. With no timer set, it counts up from when you started.")
     ])

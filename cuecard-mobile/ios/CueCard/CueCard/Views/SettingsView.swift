@@ -182,6 +182,17 @@ struct EditorSettingsView: View {
             Text("Cards")
         }
 
+        Section {
+            Toggle(isOn: $settingsService.settings.cards.followsVoice) {
+                HStack(spacing: 8) {
+                    Text("Follow My Voice")
+                    BetaBadge()
+                }
+            }
+        } footer: {
+            Text("Each card turns on its own once you've said its last words. Your voice is understood on this iPhone and never leaves it.")
+        }
+
         AppleWatchSection(screen: Self.screen, mode: .cards)
 
         AppearanceSection(screen: Self.screen, cueColor: $settingsService.settings.cards.cueColor)
