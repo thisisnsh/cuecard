@@ -73,26 +73,26 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "CueCard usa el micrófono para grabar el audio de tus vídeos."
+            "state" : "translated",
+            "value" : "CueCard usa el micrófono para grabar el audio de tus vídeos y para seguir tu voz a lo largo del guion."
           }
         },
         "fr" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "CueCard utilise le micro pour enregistrer le son de vos vidéos."
+            "state" : "translated",
+            "value" : "CueCard utilise le micro pour enregistrer le son de vos vidéos et pour suivre votre voix dans votre script."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "O CueCard usa o microfone para gravar o áudio dos seus vídeos."
+            "state" : "translated",
+            "value" : "O CueCard usa o microfone para gravar o áudio dos seus vídeos e para acompanhar sua voz ao longo do roteiro."
           }
         },
         "ru" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "CueCard использует микрофон, чтобы записывать звук для ваших видео."
+            "state" : "translated",
+            "value" : "CueCard использует микрофон, чтобы записывать звук для ваших видео и следовать за вашим голосом по сценарию."
           }
         }
       }
@@ -177,6 +177,30 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "CueCard recognizes your speech on this iPhone to keep your script in step with your voice."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CueCard reconoce tu voz en este iPhone para que el guion avance a tu ritmo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CueCard utilise la reconnaissance vocale sur cet iPhone pour faire avancer votre script au rythme de votre voix."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O CueCard reconhece sua fala neste iPhone para que o roteiro acompanhe sua voz."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CueCard распознаёт вашу речь на этом iPhone, чтобы сценарий следовал за вашим голосом."
           }
         }
       }
