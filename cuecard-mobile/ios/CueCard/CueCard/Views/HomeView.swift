@@ -289,7 +289,7 @@ struct HomeView: View {
         let isUnsaved = settingsService.hasUnsavedChanges
         if isUnsaved || showsSaved {
             Button {
-                save(from: "save_note")
+                save(from: "save_note_pill")
             } label: {
                 Text(isUnsaved ? "Click to Save" : "Saved")
                     .font(.subheadline.weight(.medium))
@@ -659,7 +659,7 @@ struct HomeView: View {
                     }
                     if hasVersionHistory {
                         Button {
-                            AnalyticsEvents.logButtonClick("version_history", screen: "home")
+                            AnalyticsEvents.logButtonClick("version_history_menu", screen: "home")
                             isEditorFocused = false
                             showingVersions = true
                         } label: {
