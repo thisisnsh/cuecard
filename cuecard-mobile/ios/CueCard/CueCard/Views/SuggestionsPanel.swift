@@ -127,7 +127,7 @@ struct SuggestionsPanel: View {
             smallButton(review.isRunning ? "Stop" : "Done") {
                 AnalyticsEvents.logButtonClick(review.isRunning ? "suggestions_stop" : "suggestions_done", screen: "home",
                                                parameters: ["left": review.suggestions.count])
-                review.end()
+                review.finish()
             }
         }
         .fixedSize(horizontal: true, vertical: false)

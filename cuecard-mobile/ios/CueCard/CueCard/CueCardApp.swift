@@ -118,6 +118,17 @@ enum AppLinks {
         )
     }
 
+    /// An email to support about Suggestions, with how the review went.
+    static func suggestionsReport(metrics: SuggestionsMetrics, stars: Int) -> URL {
+        let session = "Suggestions (beta) · \(metrics.isDeck ? "cards" : "teleprompter") · "
+            + "\(metrics.found) found · \(metrics.accepted) accepted · \(metrics.rejected) rejected"
+            + (stars > 0 ? " · \(stars)/5" : "")
+        return supportEmail(
+            subject: "CueCard Suggestions Issue",
+            body: String(localized: "What happened:\n\nWhat you expected:\n") + "\n" + session
+        )
+    }
+
     /// An email to support asking for something new.
     static let featureRequest = supportEmail(
         subject: "CueCard Feature Request",

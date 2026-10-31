@@ -38,8 +38,8 @@ struct HomeView: View {
     @State private var suggestionsUnavailable: String?
     /// Measured so every line stays clear of the controls, including larger text.
     @State private var bottomControlsHeight: CGFloat = 128
-    /// A Follow My Voice session to ask the reader about.
-    @State private var voiceFeedback: VoiceSessionMetrics?
+    /// A use of a beta AI feature to ask the reader about.
+    @State private var aiExperience: AIExperience?
     @ObservedObject private var cardsSession = CueCardsSession.shared
     @StateObject private var takes = TakesLibrary()
     @Namespace private var takesTransition
@@ -163,7 +163,7 @@ struct HomeView: View {
         takes.reload()
         if let metrics = VoiceFeedback.shared.pending {
             VoiceFeedback.shared.pending = nil
-            voiceFeedback = metrics
+            aiExperience = .voice(metrics)
         } else {
             requestReviewIfEarned()
         }
@@ -473,11 +473,11 @@ struct HomeView: View {
     var body: some View {
         handlingSuggestions(home)
             .sheet(isPresented: Binding(
-                get: { voiceFeedback != nil },
-                set: { if !$0 { voiceFeedback = nil } }
+                get: { aiExperience != nil },
+                set: { if !$0 { aiExperience = nil } }
             )) {
-                if let voiceFeedback {
-                    VoiceFeedbackSheet(metrics: voiceFeedback)
+                if let aiExperience {
+                    AIFeedbackSheet(experience: aiExperience)
                 }
             }
     }
@@ -494,6 +494,12 @@ struct HomeView: View {
             }
             .onChange(of: isCardsMode) {
                 review.end()
+            }
+            // A review seen through: ask how it went.
+            .onChange(of: review.finished) {
+                guard let finished = review.finished else { return }
+                review.finished = nil
+                aiExperience = .suggestions(finished)
             }
             .alert("Suggestions", isPresented: Binding(
                 get: { suggestionsUnavailable != nil || review.errorMessage != nil },

@@ -20,6 +20,15 @@ struct ScriptSuggestion: Identifiable, Equatable {
     let replacement: String
 }
 
+/// What the reader made of a review, for the rating sent after it.
+struct SuggestionsMetrics: Equatable {
+    /// Reviewing a deck in the cards editor, not a teleprompter script.
+    var isDeck = false
+    var found = 0
+    var accepted = 0
+    var rejected = 0
+}
+
 /// Whether this iPhone has Apple's on-device model to ask — for suggestions
 /// and for answers in Help — and if not, whether the user could do
 /// something about that.
@@ -63,9 +72,13 @@ final class ScriptReview: ObservableObject {
     /// Why the review stopped short, to show the user.
     @Published var errorMessage: String?
 
+    /// A review the user saw through, waiting to be rated.
+    @Published var finished: SuggestionsMetrics?
+
+    private var metrics = SuggestionsMetrics()
     /// Anything has been suggested in this review, so running out of
     /// suggestions means they've all been decided rather than none found.
-    private(set) var hasSuggested = false
+    var hasSuggested: Bool { metrics.found > 0 }
 
     /// The script as it stands with every accepted suggestion in.
     private var script = ""
@@ -87,6 +100,7 @@ final class ScriptReview: ObservableObject {
     func start(script: String, cardLimit: Int? = nil) {
         guard #available(iOS 26.0, *) else { return }
         end()
+        metrics.isDeck = cardLimit != nil
         self.script = script
         isActive = true
         isRunning = true
@@ -115,8 +129,16 @@ final class ScriptReview: ObservableObject {
         isRunning = false
         suggestions = []
         focusedID = nil
-        hasSuggested = false
+        metrics = SuggestionsMetrics()
         edits = []
+    }
+
+    /// Close a review the user saw through. If it suggested anything, there's
+    /// something for them to rate.
+    func finish() {
+        let result = metrics
+        end()
+        if result.found > 0 { finished = result }
     }
 
     /// The script changed. Unless it's to what accepting gave it, the
@@ -131,6 +153,7 @@ final class ScriptReview: ObservableObject {
     func accept(_ id: ScriptSuggestion.ID) -> (range: NSRange, replacement: String)? {
         guard let index = suggestions.firstIndex(where: { $0.id == id }) else { return nil }
         let suggestion = suggestions.remove(at: index)
+        metrics.accepted += 1
         let delta = (suggestion.replacement as NSString).length - suggestion.range.length
         script = (script as NSString).replacingCharacters(in: suggestion.range, with: suggestion.replacement)
         edits.append((suggestion.range.location, delta))
@@ -146,6 +169,7 @@ final class ScriptReview: ObservableObject {
     /// the ones still to make where they are.
     func acceptAll() -> [(range: NSRange, replacement: String)] {
         AnalyticsEvents.logButtonClick("suggestion_accept_all", screen: "home", parameters: ["count": suggestions.count])
+        metrics.accepted += suggestions.count
         let all = suggestions.sorted { $0.range.location > $1.range.location }
         for suggestion in all {
             script = (script as NSString).replacingCharacters(in: suggestion.range, with: suggestion.replacement)
@@ -161,6 +185,7 @@ final class ScriptReview: ObservableObject {
     func reject(_ id: ScriptSuggestion.ID) {
         guard let index = suggestions.firstIndex(where: { $0.id == id }) else { return }
         let suggestion = suggestions.remove(at: index)
+        metrics.rejected += 1
         AnalyticsEvents.logButtonClick("suggestion_reject", screen: "home", parameters: ["kind": suggestion.kind.analyticsName])
         focusAfterRemoving(at: index)
     }
@@ -206,7 +231,7 @@ final class ScriptReview: ObservableObject {
                   !suggestions.contains(where: { NSIntersectionRange($0.range, suggestion.range).length > 0 })
             else { continue }
             suggestions.append(suggestion)
-            hasSuggested = true
+            metrics.found += 1
         }
         suggestions.sort { $0.range.location < $1.range.location }
         if focusedID == nil { focusedID = suggestions.first?.id }
@@ -224,7 +249,7 @@ final class ScriptReview: ObservableObject {
     /// nothing found at all, it stays open to say so.
     private func finishIfDone() {
         guard !isRunning, suggestions.isEmpty, hasSuggested else { return }
-        end()
+        finish()
     }
 }
 
