@@ -18,8 +18,6 @@ struct LibraryView: View {
     @ObservedObject private var cardsSession = CueCardsSession.shared
     /// A deck opened from the watch, while the editor isn't open to show it.
     @State private var showingWatchCards = false
-    /// A Follow My Voice session in that deck, to ask the reader about.
-    @State private var voiceFeedback: VoiceSessionMetrics?
     /// The app went to the background since it was last opened.
     @State private var wasInBackground = false
     @AppStorage(LibraryStorageWarning.dismissedKey) private var warningDismissed = false
@@ -72,14 +70,6 @@ struct LibraryView: View {
                 break
             }
         }
-        .sheet(isPresented: Binding(
-            get: { voiceFeedback != nil },
-            set: { if !$0 { voiceFeedback = nil } }
-        )) {
-            if let voiceFeedback {
-                VoiceFeedbackSheet(metrics: voiceFeedback)
-            }
-        }
         // Back from the editor, there may be new takes or a new note.
         .onChange(of: path) {
             if !path.contains(.editor) { takeCounts.reload() }
@@ -88,10 +78,6 @@ struct LibraryView: View {
 
     private func watchCardsDidClose() {
         takeCounts.reload()
-        if let metrics = VoiceFeedback.shared.pending {
-            VoiceFeedback.shared.pending = nil
-            voiceFeedback = metrics
-        }
     }
 
     /// The editor shows a deck opened from the watch itself, while it's open.

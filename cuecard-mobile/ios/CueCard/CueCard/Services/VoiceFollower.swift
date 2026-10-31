@@ -4,8 +4,7 @@ import Speech
 
 /// Follow My Voice (beta): the teleprompter listens to the reader and keeps
 /// the words being said on the reading line, instead of scrolling at a set
-/// speed; cards turn once their last words are said. Speech is recognized on
-/// the iPhone and never leaves it.
+/// speed. Speech is recognized on the iPhone and never leaves it.
 @MainActor
 final class VoiceFollower: ObservableObject {
     enum Status: Equatable {
@@ -21,11 +20,6 @@ final class VoiceFollower: ObservableObject {
 
     /// How the session went, to report alongside the reader's rating.
     private(set) var metrics = VoiceSessionMetrics()
-
-    /// The screen listening, for analytics: the teleprompter or cards.
-    var screen = "teleprompter" {
-        didSet { metrics.mode = screen }
-    }
 
     private let microphone = Microphone()
     private var recognizer: SFSpeechRecognizer?
@@ -181,13 +175,13 @@ final class VoiceFollower: ObservableObject {
             // Listening has since been stopped, or started over.
             guard listeningSince == session else { return }
             stop()
-            status = .unavailable(String(localized: "The microphone stopped. Tap the microphone to listen again."))
+            status = .unavailable(String(localized: "The microphone stopped. Tap Play to listen again."))
             log("audio_interrupted")
         }
     }
 
     private func log(_ problem: String) {
-        AnalyticsEvents.logButtonClick("follow_voice_unavailable", screen: screen, parameters: ["reason": problem])
+        AnalyticsEvents.logButtonClick("follow_voice_unavailable", screen: "teleprompter", parameters: ["reason": problem])
     }
 
     // MARK: Setup
@@ -219,8 +213,6 @@ final class VoiceFollower: ObservableObject {
 
 /// What a Follow My Voice session amounted to, for the rating sent after it.
 struct VoiceSessionMetrics {
-    /// Where it was: the teleprompter or cards.
-    var mode = "teleprompter"
     var listenedSeconds: Double = 0
     /// The most words heard in one stretch of recognition.
     var wordsHeard = 0
@@ -289,50 +281,6 @@ private final class AudioTarget: @unchecked Sendable {
 
     func append(_ buffer: AVAudioPCMBuffer) {
         lock.withLock { request }?.append(buffer)
-    }
-}
-
-// MARK: - Decks
-
-/// A deck as Follow My Voice listens for it: the words said aloud on each
-/// card, without its cues or images, one card after another, and where each
-/// card starts among them.
-struct SpokenDeck {
-    let text: String
-    /// Where each card starts in `text`.
-    let starts: [Int]
-    /// Just past the deck's last word: the voice reaching here has said it.
-    let end: Int
-
-    init(cards: [String]) {
-        var text = ""
-        var starts: [Int] = []
-        for card in cards {
-            if !text.isEmpty { text += "\n\n" }
-            starts.append((text as NSString).length)
-            text += CueCards.runs(for: card).filter { !$0.isCue && !$0.isImage }.map(\.text).joined()
-        }
-        var end = 0
-        let string = text as NSString
-        string.enumerateSubstrings(in: NSRange(location: 0, length: string.length),
-                                   options: [.byWords, .substringNotRequired]) { _, range, _, _ in
-            end = NSMaxRange(range)
-        }
-        self.text = text
-        self.starts = starts
-        self.end = end
-    }
-
-    /// The card a spot in the text is on. Past the last word is past the
-    /// last card: the number of cards, as the deck counts being done.
-    func card(at character: Double) -> Int {
-        if end > 0, character >= Double(end) { return starts.count }
-        return starts.lastIndex { Double($0) <= character } ?? 0
-    }
-
-    /// Where the card starts, or the deck's end for one past the last.
-    func start(ofCard index: Int) -> Double {
-        starts.indices.contains(index) ? Double(starts[index]) : Double(end)
     }
 }
 

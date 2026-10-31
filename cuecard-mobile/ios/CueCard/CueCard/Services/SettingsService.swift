@@ -132,9 +132,6 @@ struct CardsSettings: Codable, Equatable {
     /// keeps cards short enough to read there. Off unless turned on, since
     /// anyone who can see the phone can read the card there.
     var showOnLockScreen: Bool
-    /// Follow My Voice (beta): each card turns on its own once its last
-    /// words are said. Off unless turned on.
-    var followsVoice: Bool
 
     var timerDurationSeconds: Int {
         timerMinutes * 60 + timerSeconds
@@ -147,7 +144,7 @@ struct CardsSettings: Codable, Equatable {
 
     init(editorFontSize: Int, fontSize: Int, cueColor: CueColor,
          timerMinutes: Int, timerSeconds: Int, timerStyle: TimerStyle = .default,
-         showOnLockScreen: Bool = false, followsVoice: Bool = false) {
+         showOnLockScreen: Bool = false) {
         self.editorFontSize = editorFontSize
         self.fontSize = fontSize
         self.cueColor = cueColor
@@ -155,12 +152,10 @@ struct CardsSettings: Codable, Equatable {
         self.timerSeconds = timerSeconds
         self.timerStyle = timerStyle
         self.showOnLockScreen = showOnLockScreen
-        self.followsVoice = followsVoice
     }
 
     private enum CodingKeys: String, CodingKey {
-        case editorFontSize, fontSize, cueColor, timerMinutes, timerSeconds, timerStyle, showOnLockScreen,
-             followsVoice
+        case editorFontSize, fontSize, cueColor, timerMinutes, timerSeconds, timerStyle, showOnLockScreen
     }
 
     init(from decoder: Decoder) throws {
@@ -172,7 +167,6 @@ struct CardsSettings: Codable, Equatable {
         timerSeconds = try container.decode(Int.self, forKey: .timerSeconds)
         timerStyle = try container.decodeIfPresent(TimerStyle.self, forKey: .timerStyle) ?? .default
         showOnLockScreen = try container.decodeIfPresent(Bool.self, forKey: .showOnLockScreen) ?? false
-        followsVoice = try container.decodeIfPresent(Bool.self, forKey: .followsVoice) ?? false
     }
 }
 

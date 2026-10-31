@@ -74,7 +74,7 @@ private enum AllHelp {
         HelpTopic("Bold and Italic",
                   detail: "Select words and tap B or I above the keyboard. Or type *bold* or _italic_."),
         HelpTopic("Add Anchors",
-                  detail: "Anchors mark spots in your script, like [anchor]. Type one or tap + Anchor above the keyboard. In the teleprompter, the buttons beside Play jump to the anchor before or after."),
+                  detail: "Anchors mark spots in your script, like [anchor]. Type one or tap + Anchor above the keyboard. In the teleprompter, the buttons at the far left and right jump to the anchor before or after."),
         HelpTopic("Add Images",
                   detail: "Tap the photo button above the keyboard, or paste an image in. The Lock Screen and Apple Watch show a photo symbol in their place."),
         HelpTopic("Add Cards",
@@ -141,7 +141,7 @@ private enum AllHelp {
         HelpTopic("Know When Time Is Running Out",
                   detail: "The timer changes color when you're near the end and again once you're over time. Pick the colors in the timer."),
         HelpTopic("Follow My Voice (Beta)",
-                  detail: "Open ••• at the top of the teleprompter and choose Follow My Voice, or turn it on in Settings. The script moves as you read it aloud, instead of at a set speed, and the timer starts with your first words. Tap the microphone to stop or start listening. Your voice is understood on this iPhone and never leaves it.")
+                  detail: "Tap the waveform at the top of the teleprompter, or turn on Follow My Voice in Settings. The script moves as you read it aloud, instead of at a set speed, and the timer starts with your first words. Tap Pause to stop listening and Play to listen again. Your voice is understood on this iPhone and never leaves it.")
     ])
 
     static let cards = HelpSection("cards", title: "Cards",
@@ -153,8 +153,6 @@ private enum AllHelp {
                   detail: "Tap the camera at the top. The camera opens in a small window over your cards. Tap the red button to record and again to pause, then tap stop to save the video to Photos. Keep turning cards while you record."),
         HelpTopic("Read from the Lock Screen",
                   detail: "Turn on Show on Lock Screen in Settings. Then lock your iPhone and turn cards right from the Lock Screen."),
-        HelpTopic("Follow My Voice (Beta)",
-                  detail: "Open ••• at the top of the cards and choose Follow My Voice, or turn it on in Settings. Read each card aloud and it turns on its own once you've said its last words. Tap the listening note below the cards to stop or start. Your voice is understood on this iPhone and never leaves it."),
         HelpTopic("Count Up Without a Timer",
                   detail: "The time at the top counts down your timer. With no timer set, it counts up from when you started.")
     ])

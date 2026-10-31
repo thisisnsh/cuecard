@@ -106,150 +106,92 @@ struct TeleprompterView: View {
     var body: some View {
         CameraRecordingView(isPresented: $showingCamera, scriptID: settingsService.teleprompterScriptID,
                             link: cameraLink, onControl: followCamera) {
-            NavigationStack {
-                GeometryReader { geometry in
-                    ZStack {
-                        // Background - matches device theme
-                        AppColors.background(for: colorScheme)
-                            .ignoresSafeArea()
+            GeometryReader { geometry in
+                ZStack {
+                    // Background - matches device theme
+                    AppColors.background(for: colorScheme)
+                        .ignoresSafeArea()
 
-                        // Under the script, so the lines stay in view over it.
-                        CameraBackdrop()
+                    // Under the script, so the lines stay in view over it.
+                    CameraBackdrop()
 
-                        // The script scrolls at the reader's own pace: so many rendered
-                        // lines a minute, counted from the time on the clock.
-                        AttributedTextView(
-                            content: content,
-                            cueColor: settings.cueColor,
-                            fontSize: CGFloat(settings.fontSize),
-                            linePosition: scriptTime * Double(settings.linesPerMinute) / 60.0,
-                            colorScheme: colorScheme,
-                            seesThrough: showingCamera,
-                            topPadding: readingLine(in: geometry.size.height),
-                            bottomPadding: geometry.size.height - readingLine(in: geometry.size.height),
-                            snapToken: pipManager.playback.snapToken,
-                            restorationRequest: pipManager.restorationRequest,
-                            onRestorationReady: { request in
-                                pipManager.completeRestoration(request)
-                            },
-                            onLayoutChange: { starts in
-                                referenceLineStarts = starts
-                                pipManager.updateReferenceLayout(starts)
-                            },
-                            onHandOff: { line in
-                                handOff(toLine: line)
-                            },
-                            onTap: {
-                                withAnimation(controlsFade) {
-                                    showControls.toggle()
-                                }
-                                resetControlsTimer()
-                            }
-                        )
-                        .scaleEffect(x: isMirrored ? -1 : 1, y: isFlippedVertically ? -1 : 1)
-                        // Lines arrive and leave through a fade rather than being cut
-                        // off flat against the toolbar and the controls. A mask,
-                        // not a painted fade, so the camera behind stays clear.
-                        .scriptEdgeMask(top: Self.topFade, bottom: Self.bottomFade)
+                    // The script scrolls at the reader's own pace: so many rendered
+                    // lines a minute, counted from the time on the clock.
+                    AttributedTextView(
+                        content: content,
+                        cueColor: settings.cueColor,
+                        fontSize: CGFloat(settings.fontSize),
+                        linePosition: scriptTime * Double(settings.linesPerMinute) / 60.0,
+                        colorScheme: colorScheme,
+                        seesThrough: showingCamera,
+                        topPadding: readingLine(in: geometry.size.height),
+                        bottomPadding: geometry.size.height - readingLine(in: geometry.size.height),
+                        snapToken: pipManager.playback.snapToken,
+                        restorationRequest: pipManager.restorationRequest,
+                        onRestorationReady: { request in
+                            pipManager.completeRestoration(request)
+                        },
+                        onLayoutChange: { starts in
+                            referenceLineStarts = starts
+                            pipManager.updateReferenceLayout(starts)
+                        },
+                        onHandOff: { line in
+                            handOff(toLine: line)
+                        },
+                        onTap: toggleControls
+                    )
+                    .scaleEffect(x: isMirrored ? -1 : 1, y: isFlippedVertically ? -1 : 1)
+                    // Lines arrive and leave through a fade rather than being cut
+                    // off flat against the header and the controls. A mask,
+                    // not a painted fade, so the camera behind stays clear.
+                    .scriptEdgeMask(top: Self.topFade, bottom: Self.bottomFade)
 
-                        if settings.showsReadingGuide {
-                            readingGuide(in: geometry.size.height)
-                                // Flipped with the script, so it stays beside the same line.
-                                .scaleEffect(x: isMirrored ? -1 : 1, y: isFlippedVertically ? -1 : 1)
-                        }
+                    if settings.showsReadingGuide {
+                        readingGuide(in: geometry.size.height)
+                            // Flipped with the script, so it stays beside the same line.
+                            .scaleEffect(x: isMirrored ? -1 : 1, y: isFlippedVertically ? -1 : 1)
+                    }
 
-                        // Controls overlay. Always laid out and faded rather than
-                        // added and removed, so the glass fades with the icons
-                        // instead of popping in.
-                        VStack {
-                            Spacer()
+                    // Controls overlay. Always laid out and faded rather than
+                    // added and removed, so the glass fades with the icons
+                    // instead of popping in.
+                    VStack {
+                        Spacer()
 
-                            if settings.followsVoice {
-                                voiceStatus
-                                    .padding(.horizontal, 20)
-                                    .padding(.bottom, 12)
-                            }
-
-                            playbackControls
+                        if settings.followsVoice {
+                            voiceStatus
                                 .padding(.horizontal, 20)
-                                .padding(.bottom, 20)
+                                // Clear of the play button's glow.
+                                .padding(.bottom, 16)
                         }
-                        .fadedOut(!showControls)
+
+                        playbackControls
+                            .padding(.horizontal, 20)
+                            .padding(.bottom, 20)
                     }
-                    .onAppear {
-                        setupPiP()
-                        if settings.followsVoice { startFollowingVoice() }
-                        // A video recorded from now until the teleprompter closes
-                        // is a take of this script.
-                        TakeStore.shared.begin(scriptID: settingsService.teleprompterScriptID)
-                        // A read is a stretch of looking without touching, which is
-                        // exactly what the idle timer takes for absence. Hold the
-                        // screen for as long as the prompter is up.
-                        UIApplication.shared.isIdleTimerDisabled = true
-                        Analytics.logEvent("teleprompter_started", parameters: [
-                            "word_count": content.words.count,
-                            "timer_duration": timerDuration
-                        ])
-                    }
+                    .fadedOut(!showControls)
                 }
-                .cameraWindowArea()
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbarBackground(AppColors.background(for: colorScheme), for: .navigationBar)
-                .toolbarBackground(.visible, for: .navigationBar)
-                .toolbar {
-                    // Comes and goes with the play, restart and floating window buttons.
-                    if showControls || showingCamera {
-                        ToolbarItem(placement: .topBarLeading) {
-                            Button(action: {
-                                AnalyticsEvents.logButtonClick("teleprompter_close", screen: "teleprompter")
-                                stopAndDismiss()
-                            }) {
-                                Image(systemName: "xmark")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                            }
-                            .accessibilityLabel("Close")
-                        }
-                        ToolbarItem(placement: .topBarTrailing) {
-                            Button {
-                                AnalyticsEvents.logButtonClick("teleprompter_camera", screen: "teleprompter")
-                                stopControlsTimer()
-                                showingCamera.toggle()
-                            } label: {
-                                Image(systemName: showingCamera ? "camera.fill" : "camera")
-                                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                            }
-                            .accessibilityLabel(showingCamera ? "Close Camera" : "Record Video")
-                        }
-                        ToolbarItem(placement: .topBarTrailing) {
-                            Menu {
-                                Button {
-                                    AnalyticsEvents.logButtonClick(settings.followsVoice ? "teleprompter_follow_voice_off" : "teleprompter_follow_voice_on", screen: "teleprompter")
-                                    settingsService.settings.followsVoice.toggle()
-                                } label: {
-                                    Label(settings.followsVoice ? "Turn Off Follow My Voice" : "Follow My Voice",
-                                          systemImage: settings.followsVoice ? "waveform.circle.fill" : "waveform.circle")
-                                }
-                            } label: {
-                                Image(systemName: "ellipsis")
-                                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                            }
-                            .accessibilityLabel("Reading Options")
-                            .simultaneousGesture(TapGesture().onEnded {
-                                AnalyticsEvents.logButtonClick("teleprompter_menu", screen: "teleprompter")
-                                stopControlsTimer()
-                            })
-                        }
-                        HelpToolbarItem(page: .teleprompter, isPresented: $showingHelp)
-                    }
-                    ToolbarItem(placement: .principal) {
-                        Text(timeDisplay)
-                            .font(.system(size: 16, weight: .bold, design: .monospaced))
-                            .foregroundStyle(timerColor)
-                    }
+                .onAppear {
+                    setupPiP()
+                    if settings.followsVoice { startFollowingVoice() }
+                    // A video recorded from now until the teleprompter closes
+                    // is a take of this script.
+                    TakeStore.shared.begin(scriptID: settingsService.teleprompterScriptID)
+                    // A read is a stretch of looking without touching, which is
+                    // exactly what the idle timer takes for absence. Hold the
+                    // screen for as long as the prompter is up.
+                    UIApplication.shared.isIdleTimerDisabled = true
+                    Analytics.logEvent("teleprompter_started", parameters: [
+                        "word_count": content.words.count,
+                        "timer_duration": timerDuration
+                    ])
                 }
-                .helpSheet(for: .teleprompter, isPresented: $showingHelp)
             }
+            .cameraWindowArea()
+            // A row of its own rather than a navigation bar, which would keep
+            // taps from reaching the reader.
+            .safeAreaInset(edge: .top, spacing: 0) { header }
+            .helpSheet(for: .teleprompter, isPresented: $showingHelp)
         }
         .onChange(of: showingCamera) { _, presented in
             pipManager.setCameraPresented(presented)
@@ -295,42 +237,118 @@ struct TeleprompterView: View {
         }
     }
 
-    /// Playback stays centered; restart and floating-window controls keep their sides.
-    private var playbackControls: some View {
-        HStack(spacing: 12) {
-            Button {
-                AnalyticsEvents.logButtonClick("restart", screen: "teleprompter")
-                restart()
-                resetControlsTimer()
-            } label: {
-                Image(systemName: "arrow.counterclockwise")
-                    .font(.system(size: 18, weight: .semibold))
-                    .frame(width: 44, height: 44)
-                    .glassedEffect(in: Circle())
+    // MARK: - Header
+
+    /// Close and the timer on the left, the reading buttons on the right. The
+    /// buttons fade like the ones below, in place, so the timer doesn't move
+    /// and stays up. A tap anywhere else on the row does what a tap on the
+    /// script does.
+    private var header: some View {
+        let buttonsHidden = !showControls && !showingCamera
+        return HStack(spacing: 8) {
+            headerButton("xmark") {
+                AnalyticsEvents.logButtonClick("teleprompter_close", screen: "teleprompter")
+                stopAndDismiss()
             }
-            .accessibilityLabel("Restart")
+            .accessibilityLabel("Close")
+            .fadedOut(buttonsHidden)
+
+            Text(timeDisplay)
+                .font(.system(size: 16, weight: .bold, design: .monospaced))
+                .foregroundStyle(timerColor)
+                .lineLimit(1)
+                .fixedSize()
 
             Spacer(minLength: 0)
+
+            HStack(spacing: 8) {
+                headerButton("waveform", tint: settings.followsVoice ? AppColors.purple(for: colorScheme) : nil) {
+                    AnalyticsEvents.logButtonClick(settings.followsVoice ? "teleprompter_follow_voice_off" : "teleprompter_follow_voice_on", screen: "teleprompter")
+                    settingsService.settings.followsVoice.toggle()
+                }
+                .accessibilityLabel(settings.followsVoice ? "Turn Off Follow My Voice" : "Follow My Voice")
+
+                headerButton(showingCamera ? "camera.fill" : "camera") {
+                    AnalyticsEvents.logButtonClick("teleprompter_camera", screen: "teleprompter")
+                    stopControlsTimer()
+                    showingCamera.toggle()
+                }
+                .accessibilityLabel(showingCamera ? "Close Camera" : "Record Video")
+
+                headerButton("questionmark") {
+                    AnalyticsEvents.logButtonClick("help_teleprompter", screen: "teleprompter")
+                    showingHelp = true
+                }
+                .accessibilityLabel("Help")
+            }
+            .fadedOut(buttonsHidden)
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 4)
+        // Past the row, so a tap on the status bar's strip counts too.
+        .background { AppColors.background(for: colorScheme).ignoresSafeArea(edges: .top) }
+        .onTapGesture(perform: toggleControls)
+    }
+
+    private func headerButton(_ systemImage: String, tint: Color? = nil, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(tint ?? AppColors.textPrimary(for: colorScheme))
+                .frame(width: 44, height: 44)
+                .glassedEffect(in: Circle())
+        }
+    }
+
+    private func toggleControls() {
+        withAnimation(controlsFade) {
+            showControls.toggle()
+        }
+        resetControlsTimer()
+    }
+
+    // MARK: - Footer
+
+    /// Play stays in the center of the screen, whichever buttons are beside it:
+    /// the floating window on the left and restart on the right, with the
+    /// anchors, when the script has any, out at the edges.
+    private var playbackControls: some View {
+        ZStack {
             HStack(spacing: 8) {
                 if content.hasAnchors { anchorButton(forward: false) }
-                if settings.followsVoice { listenButton } else { playButton }
+
+                Button {
+                    AnalyticsEvents.logButtonClick(pipManager.isPiPActive ? "pip_exit" : "pip_enter", screen: "teleprompter")
+                    togglePiP()
+                } label: {
+                    Image(systemName: pipManager.isPiPActive ? "pip.exit" : "pip.enter")
+                        .font(.system(size: 18, weight: .semibold))
+                        .frame(width: 44, height: 44)
+                        .glassedEffect(in: Circle())
+                }
+                .accessibilityLabel(pipManager.isPiPActive ? "Close Overlay" : "Start Overlay")
+                .opacity(pipManager.isPiPPossible ? 1 : 0)
+                .disabled(!pipManager.isPiPPossible)
+                .accessibilityHidden(!pipManager.isPiPPossible)
+
+                Spacer(minLength: 0)
+
+                Button {
+                    AnalyticsEvents.logButtonClick("restart", screen: "teleprompter")
+                    restart()
+                    resetControlsTimer()
+                } label: {
+                    Image(systemName: "arrow.counterclockwise")
+                        .font(.system(size: 18, weight: .semibold))
+                        .frame(width: 44, height: 44)
+                        .glassedEffect(in: Circle())
+                }
+                .accessibilityLabel("Restart")
+
                 if content.hasAnchors { anchorButton(forward: true) }
             }
-            Spacer(minLength: 0)
 
-            Button {
-                AnalyticsEvents.logButtonClick(pipManager.isPiPActive ? "pip_exit" : "pip_enter", screen: "teleprompter")
-                togglePiP()
-            } label: {
-                Image(systemName: pipManager.isPiPActive ? "pip.exit" : "pip.enter")
-                    .font(.system(size: 18, weight: .semibold))
-                    .frame(width: 44, height: 44)
-                    .glassedEffect(in: Circle())
-            }
-            .accessibilityLabel(pipManager.isPiPActive ? "Close Overlay" : "Start Overlay")
-            .opacity(pipManager.isPiPPossible ? 1 : 0)
-            .disabled(!pipManager.isPiPPossible)
-            .accessibilityHidden(!pipManager.isPiPPossible)
+            if settings.followsVoice { voicePlayButton } else { playButton }
         }
         .foregroundStyle(AppColors.textPrimary(for: colorScheme))
         .frame(maxWidth: 480)
@@ -374,9 +392,9 @@ struct TeleprompterView: View {
 
     // MARK: - Follow My Voice
 
-    /// In place of Play while following the reader's voice: the microphone,
-    /// listening or not. The script only moves as words are said.
-    private var listenButton: some View {
+    /// Play and Pause while following the reader's voice, glowing to say so.
+    /// They start and stop listening: the script only moves as words are said.
+    private var voicePlayButton: some View {
         Button(action: {
             AnalyticsEvents.logButtonClick(voice.isListening ? "teleprompter_follow_voice_stop" : "teleprompter_follow_voice_listen",
                                            screen: "teleprompter")
@@ -388,19 +406,19 @@ struct TeleprompterView: View {
             }
             resetControlsTimer()
         }) {
-            Image(systemName: voice.isListening ? "mic.fill" : "mic.slash.fill")
-                .font(.system(size: 26, weight: .semibold))
-                .foregroundStyle(colorScheme == .dark ? .black : .white)
+            Image(systemName: voice.isListening ? "pause.fill" : "play.fill")
+                .font(.system(size: 28, weight: .semibold))
+                .foregroundStyle(AppColors.purple(for: colorScheme))
                 .frame(width: 64, height: 64)
-                .background(Circle().fill(voice.isListening
-                                          ? AppColors.purple(for: colorScheme)
-                                          : AppColors.textSecondary(for: colorScheme)))
                 .glassedEffect(in: Circle())
+                .aiGlow()
+                .contentShape(Circle())
         }
-        .accessibilityLabel(voice.isListening ? "Stop Listening" : "Listen")
+        .accessibilityLabel(voice.isListening ? "Pause" : "Play")
     }
 
-    /// What Follow My Voice is doing, or why it can't.
+    /// What Follow My Voice is doing, or why it can't. Floats centered over
+    /// the play button.
     @ViewBuilder
     private var voiceStatus: some View {
         let label: (text: String, icon: String) = switch voice.status {
@@ -415,6 +433,7 @@ struct TeleprompterView: View {
                 .symbolEffect(.variableColor.iterative, isActive: voice.isListening)
             Text(label.text)
                 .lineLimit(3)
+                .multilineTextAlignment(.center)
             BetaBadge()
         }
         .font(.footnote.weight(.semibold))

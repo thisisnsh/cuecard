@@ -169,14 +169,9 @@ struct HomeView: View {
         }
     }
 
-    /// Back from the cards: anything recorded is a take now, and after
-    /// Follow My Voice, the reader is asked how it went.
+    /// Back from the cards: anything recorded is a take now.
     private func cardsDidClose() {
         takes.reload()
-        if let metrics = VoiceFeedback.shared.pending {
-            VoiceFeedback.shared.pending = nil
-            voiceFeedback = metrics
-        }
     }
 
     /// Suggestions from Apple's on-device model, for a script being written for
