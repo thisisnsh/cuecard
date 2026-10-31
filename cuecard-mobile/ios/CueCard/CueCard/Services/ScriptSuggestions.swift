@@ -395,11 +395,17 @@ enum ScriptSuggester {
         if let current { passages.append(current) }
 
         return passages.filter { passage in
-            var plain = text.substring(with: passage)
-            for tag in protectedRanges(in: plain).reversed() {
-                plain = (plain as NSString).replacingCharacters(in: tag, with: "")
+            // The tags come grouped by what they are, not in script order, and
+            // can overlap, so what's left is worked out instead of cut out.
+            let plain = text.substring(with: passage) as NSString
+            var words = IndexSet(integersIn: 0..<plain.length)
+            for tag in protectedRanges(in: plain as String) {
+                guard let tag = Range(tag) else { continue }
+                words.remove(integersIn: tag)
             }
-            return plain.rangeOfCharacter(from: .letters) != nil
+            return words.rangeView.contains { run in
+                plain.substring(with: NSRange(run)).rangeOfCharacter(from: .letters) != nil
+            }
         }
     }
 
