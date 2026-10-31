@@ -186,7 +186,6 @@ private struct LibraryList: View {
     @State private var query = ""
     @FocusState private var isSearching: Bool
     @State private var showingHelp = false
-    @State private var showingAssistant = false
     @State private var showingImporter = false
     @State private var showingFolderPicker = false
     @State private var showingStopFolder = false
@@ -218,10 +217,6 @@ private struct LibraryList: View {
 
     /// Searching from the top looks through every folder.
     private var isSearchingAll: Bool { isRoot && !trimmedQuery.isEmpty }
-
-    private var showsAssistant: Bool {
-        OnDeviceModelAvailability.current != .unsupported
-    }
 
     /// The saved notes shown: this folder's, or every one that matches the
     /// search from the top, of the chosen mode, in the chosen order.
@@ -325,28 +320,13 @@ private struct LibraryList: View {
         .background(AppColors.background(for: colorScheme).ignoresSafeArea())
         .animation(.easeInOut(duration: 0.2), value: mode)
         .animation(.easeInOut(duration: 0.2), value: showsStorageWarning)
-        .safeAreaInset(edge: .top, spacing: 0) { libraryControls }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            if !isSearching {
-                creationControls
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 12)
-                    .frame(maxWidth: 600)
-                    .frame(maxWidth: .infinity)
-                    .background(AppColors.background(for: colorScheme))
-            }
-        }
+        .safeAreaInset(edge: .bottom, spacing: 0) { libraryControls }
         .navigationTitle(folder ?? "")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { toolbar }
         .helpSheet(for: .library, isPresented: $showingHelp)
         .sheet(item: $takesTarget, onDismiss: takeCounts.reload) { target in
             ScriptTakesSheet(scriptID: target.id, title: target.title)
-        }
-        .sheet(isPresented: $showingAssistant) {
-            NavigationStack {
-                HelpAssistantView(topic: .scripts) { showingAssistant = false }
-            }
         }
         .fileImporter(isPresented: $showingImporter, allowedContentTypes: ScriptFile.importableContentTypes) { result in
             handleImport(result)
@@ -374,22 +354,48 @@ private struct LibraryList: View {
 
     @ToolbarContentBuilder
     private var toolbar: some ToolbarContent {
-        // The app's name at the top, where it stays: no large title to
-        // shrink into the bar on scrolling.
-        if isRoot {
-            ToolbarItem(placement: .topBarLeading) {
-                Text("CueCard")
-                    .font(.title2.weight(.bold))
-                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                    .fixedSize()
-                    .accessibilityAddTraits(.isHeader)
-            }
-            .sharedBackgroundHidden()
+        ToolbarItem(placement: .topBarLeading) {
+            modeMenu
         }
 
         ToolbarItem(placement: .topBarTrailing) {
             moreMenu
         }
+
+        HelpToolbarItem(page: .library, isPresented: $showingHelp)
+    }
+
+    /// Teleprompter or cards: whose scripts the library shows. The bar shows
+    /// the chosen mode's name, or in a folder, whose name needs the room, its
+    /// symbol.
+    private var modeMenu: some View {
+        // Plain buttons rather than a picker, so the menu shows no checkmark:
+        // the bar already says which mode is on.
+        Menu {
+            ForEach(ScriptMode.allCases) { choice in
+                Button {
+                    AnalyticsEvents.logButtonClick("library_mode_\(choice.rawValue)", screen: Self.screen)
+                    mode = choice
+                } label: {
+                    Label(choice.displayName, systemImage: choice.systemImage)
+                }
+            }
+        } label: {
+            HStack(spacing: 6) {
+                if isRoot {
+                    Text(mode.displayName)
+                        .font(.headline)
+                } else {
+                    Image(systemName: mode.systemImage)
+                }
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+            }
+            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+            .fixedSize()
+        }
+        .accessibilityLabel("Mode: \(mode.displayName)")
     }
 
     private func sectionLabel(_ text: String) -> some View {
@@ -415,8 +421,8 @@ private struct LibraryList: View {
                     .font(.headline)
                     .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                 Text(mode == .cards
-                     ? "Tap New Deck below to start a deck of cards."
-                     : "Tap New Script below to write a script for the teleprompter.")
+                     ? "Tap + below to start a deck of cards."
+                     : "Tap + below to write a script for the teleprompter.")
                     .font(.subheadline)
                     .foregroundStyle(secondary)
             }
@@ -429,38 +435,38 @@ private struct LibraryList: View {
             .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    /// Scope and search stay together, above the content they change.
+    /// Searching and starting a script, together at the bottom. While
+    /// searching, it's only the search, above the keyboard.
     private var libraryControls: some View {
-        VStack(spacing: 12) {
-            LibraryModePicker(selection: $mode, colorScheme: colorScheme)
-            HStack(spacing: 10) {
-                searchRow
-                if !isSearching {
-                    Menu {
-                        Picker("Sort By", selection: $sort) {
-                            ForEach(LibrarySort.allCases) { Text($0.displayName).tag($0) }
-                        }
-                    } label: {
-                        Image(systemName: "arrow.up.arrow.down")
-                            .font(.body.weight(.semibold))
-                            .frame(width: 44, height: 48)
-                            .glassedEffect(in: RoundedRectangle(cornerRadius: 16))
-                    }
-                    .accessibilityLabel("Sort By")
-                    .accessibilityValue(Text(sort.displayName))
-                }
-                if isSearching {
-                    Button("Done") { isSearching = false }
-                        .font(.subheadline.weight(.semibold))
-                        .frame(minHeight: 44)
-                }
+        HStack(spacing: 10) {
+            searchRow
+            if isSearching {
+                Button("Done") { isSearching = false }
+                    .font(.subheadline.weight(.semibold))
+                    .frame(minHeight: 44)
+            } else {
+                newButton
             }
         }
         .foregroundStyle(AppColors.textPrimary(for: colorScheme))
         .padding(.horizontal, 20)
-        .padding(.top, 8)
-        .padding(.bottom, 12)
+        .padding(.vertical, 12)
+        .frame(maxWidth: 600)
+        .frame(maxWidth: .infinity)
         .background(AppColors.background(for: colorScheme))
+    }
+
+    private var newButton: some View {
+        Button { startNew(mode) } label: {
+            Image(systemName: "plus")
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundStyle(colorScheme == .dark ? .black : .white)
+                .frame(width: 48, height: 48)
+                .background(AppColors.green(for: colorScheme), in: Circle())
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(mode == .cards ? "New Deck" : "New Script")
     }
 
     private var searchRow: some View {
@@ -485,28 +491,11 @@ private struct LibraryList: View {
                 }
                 .accessibilityLabel("Clear Search")
             }
-            if showsAssistant && !isSearching {
-                Button {
-                    AnalyticsEvents.logButtonClick("ask_scripts", screen: Self.screen)
-                    isSearching = false
-                    showingAssistant = true
-                } label: {
-                    Image(systemName: "sparkles")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(AppColors.purple(for: colorScheme))
-                        .frame(width: 44, height: 48)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Ask About Your Scripts")
-            }
-
         }
         .buttonStyle(.plain)
         .padding(.trailing, 4)
         .frame(minHeight: 48)
-        .background(AppColors.textSecondary(for: colorScheme).opacity(0.08),
-                    in: RoundedRectangle(cornerRadius: 16))
+        .glassedEffect(in: Capsule())
     }
 
     private var searchPrompt: String {
@@ -514,57 +503,33 @@ private struct LibraryList: View {
             ?? String(localized: "Search")
     }
 
-    /// Creation is one split control: tap to start, or open the adjacent menu.
-    private var creationControls: some View {
-        HStack(spacing: 0) {
-            Button { startNew(mode) } label: {
-                Label(mode == .cards ? "New Deck" : "New Script", systemImage: "plus")
-                    .frame(maxWidth: .infinity, minHeight: 52)
-                    .contentShape(Rectangle())
-            }
-            Rectangle()
-                .fill((colorScheme == .dark ? Color.black : Color.white).opacity(0.25))
-                .frame(width: 1, height: 24)
-            Menu {
-                Button { startNew(.teleprompter) } label: {
-                    Label("Teleprompter Script", systemImage: ScriptMode.teleprompter.systemImage)
-                }
-                Button { startNew(.cards) } label: {
-                    Label("Cards Deck", systemImage: ScriptMode.cards.systemImage)
-                }
-                Divider()
-                Button {
-                    AnalyticsEvents.logButtonClick("import_file", screen: Self.screen)
-                    showingImporter = true
-                } label: {
-                    Label("Import File", systemImage: "arrow.down.doc")
-                }
-                if isRoot {
-                    Button {
-                        AnalyticsEvents.logButtonClick("new_folder", screen: Self.screen)
-                        beginNewFolder(for: nil)
-                    } label: {
-                        Label("New Folder", systemImage: "folder.badge.plus")
-                    }
-                }
-            } label: {
-                Image(systemName: "chevron.down")
-                    .font(.body.weight(.semibold))
-                    .frame(width: 52, height: 52)
-                    .contentShape(Rectangle())
-            }
-            .accessibilityLabel("Create or Import")
-        }
-        .buttonStyle(.plain)
-        .font(.headline)
-        .foregroundStyle(colorScheme == .dark ? .black : .white)
-        .background(AppColors.green(for: colorScheme), in: Capsule())
-    }
-
     private var moreMenu: some View {
         Menu {
-            HelpMenuButton(page: .library, isPresented: $showingHelp)
+            Menu {
+                Picker("Sort By", selection: $sort) {
+                    ForEach(LibrarySort.allCases) { Text($0.displayName).tag($0) }
+                }
+            } label: {
+                Label("Sort By", systemImage: "arrow.up.arrow.down")
+            }
+            Button {
+                AnalyticsEvents.logButtonClick("import_file", screen: Self.screen)
+                showingImporter = true
+            } label: {
+                Label("Import File", systemImage: "arrow.down.doc")
+            }
+            if isRoot {
+                Button {
+                    AnalyticsEvents.logButtonClick("new_folder", screen: Self.screen)
+                    beginNewFolder(for: nil)
+                } label: {
+                    Label("New Folder", systemImage: "folder.badge.plus")
+                }
+            }
             if let folder {
+                Divider()
+
+
                 Button {
                     AnalyticsEvents.logButtonClick("rename_folder", screen: Self.screen)
                     folderTitle = folder
@@ -1198,49 +1163,6 @@ private extension View {
     }
 }
 
-/// Teleprompter or cards: whose scripts the library shows. A small glass
-/// track with the chosen one lifted out of it, both sides as wide as the
-/// wider name.
-private struct LibraryModePicker: View {
-    @Binding var selection: ScriptMode
-    let colorScheme: ColorScheme
-    @Namespace private var thumb
-
-    var body: some View {
-        HStack(spacing: 0) {
-            ForEach(ScriptMode.allCases) { mode in
-                let isSelected = mode == selection
-                Button {
-                    AnalyticsEvents.logButtonClick("library_mode_\(mode.rawValue)", screen: "library")
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) { selection = mode }
-                } label: {
-                    Text(mode.displayName)
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(isSelected ? AppColors.textPrimary(for: colorScheme)
-                                                    : AppColors.textSecondary(for: colorScheme))
-                        .lineLimit(1)
-                        .padding(.horizontal, 14)
-                        .frame(maxWidth: .infinity)
-                        .frame(minHeight: 44)
-                        .background {
-                            if isSelected {
-                                Capsule()
-                                    .fill(colorScheme == .dark ? Color(white: 0.28) : Color.white)
-                                    .shadow(color: Color.black.opacity(0.12), radius: 6, y: 2)
-                                    .matchedGeometryEffect(id: "thumb", in: thumb)
-                            }
-                        }
-                        .contentShape(Capsule())
-                }
-                .buttonStyle(.plain)
-                .accessibilityAddTraits(isSelected ? [.isSelected] : [])
-            }
-        }
-        .padding(3)
-        .glassedEffect(in: Capsule())
-    }
-}
-
 /// A script or deck as a card: its title, how it starts, when it was
 /// edited, and the takes recorded with it, which open from here.
 private struct LibraryScriptRow: View {
@@ -1411,16 +1333,18 @@ private struct LibraryFooter: View {
             }
             .foregroundStyle(AppColors.textSecondary(for: colorScheme))
         }
-        .font(.subheadline)
+        .font(.caption)
     }
 
     private var storageText: Text {
-        if let folder = settingsService.notesFolderName {
-            Text("Your scripts are kept on this iPhone and as files in “\(folder)” folder, so they stay if the app is removed.")
+        if settingsService.notesFolderIsInICloud {
+            Text("Your scripts stay in your iCloud Drive.")
+        } else if settingsService.notesFolderName != nil {
+            Text("Your scripts stay on your device.")
         } else if settingsService.hasNotesFolder {
-            Text("The storage folder can't be reached, so your scripts are only kept on this iPhone until it's back.")
+            Text("The storage folder can't be reached, so your scripts stay only on your device until it's back.")
         } else {
-            Text("Your scripts are kept only on this iPhone, and are deleted if the app is removed.")
+            Text("Your scripts stay on your device and are deleted along with the app.")
         }
     }
 

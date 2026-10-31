@@ -622,7 +622,6 @@ struct HomeView: View {
                     Label("Save", systemImage: "square.and.arrow.down")
                 }
                 .disabled(!settingsService.hasUnsavedChanges)
-                HelpMenuButton(page: .writing(settingsService.settings.scriptMode), isPresented: $showingHelp)
             } label: {
                 Image(systemName: "ellipsis")
                     .font(.body.weight(.semibold))
@@ -630,6 +629,8 @@ struct HomeView: View {
             }
             .accessibilityLabel("Script Options")
         }
+
+        HelpToolbarItem(page: .writing(settingsService.settings.scriptMode), isPresented: $showingHelp)
     }
 
     /// The editor's alerts, kept apart from the rest of it, which is already

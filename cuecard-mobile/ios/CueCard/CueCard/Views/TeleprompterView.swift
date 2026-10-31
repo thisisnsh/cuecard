@@ -230,7 +230,6 @@ struct TeleprompterView: View {
                                     Label(settings.followsVoice ? "Turn Off Follow My Voice" : "Follow My Voice",
                                           systemImage: settings.followsVoice ? "waveform.circle.fill" : "waveform.circle")
                                 }
-                                HelpMenuButton(page: .teleprompter, isPresented: $showingHelp)
                             } label: {
                                 Image(systemName: "ellipsis")
                                     .foregroundStyle(AppColors.textPrimary(for: colorScheme))
@@ -238,6 +237,7 @@ struct TeleprompterView: View {
                             .accessibilityLabel("Reading Options")
                             .simultaneousGesture(TapGesture().onEnded { stopControlsTimer() })
                         }
+                        HelpToolbarItem(page: .teleprompter, isPresented: $showingHelp)
                     }
                     ToolbarItem(placement: .principal) {
                         Text(timeDisplay)

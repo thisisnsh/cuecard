@@ -635,6 +635,8 @@ class SettingsService: ObservableObject {
     @Published private(set) var hasNotesFolder = false
     /// That folder's name, or nil while it can't be reached.
     @Published private(set) var notesFolderName: String?
+    /// That folder is in iCloud Drive.
+    @Published private(set) var notesFolderIsInICloud = false
     /// Files in the notes folder too large to read, by name.
     @Published private(set) var notesFolderOversizedFiles: [String] = []
     /// Files of deleted notes still in the notes folder, by name. Each sync
@@ -1113,6 +1115,7 @@ Thanks for listening. *Questions?*
     private func notesFolderStopped() {
         hasNotesFolder = false
         notesFolderName = nil
+        notesFolderIsInICloud = false
         notesFolderOversizedFiles = []
         notesFolderUndeletedFiles = []
     }
@@ -1122,6 +1125,7 @@ Thanks for listening. *Questions?*
     func syncNotesFolder() {
         hasNotesFolder = noteFolder.isChosen
         notesFolderName = noteFolder.name
+        notesFolderIsInICloud = noteFolder.isInICloud
         guard hasNotesFolder else {
             notesFolderOversizedFiles = []
             notesFolderUndeletedFiles = []

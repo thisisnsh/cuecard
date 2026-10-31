@@ -130,13 +130,13 @@ struct CueCardsView: View {
                                 Label(followsVoice ? "Turn Off Follow My Voice" : "Follow My Voice",
                                       systemImage: followsVoice ? "waveform.circle.fill" : "waveform.circle")
                             }
-                            HelpMenuButton(page: .cards, isPresented: $showingHelp)
                         } label: {
                             Image(systemName: "ellipsis")
                                 .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                         }
                         .accessibilityLabel("Reading Options")
                     }
+                    HelpToolbarItem(page: .cards, isPresented: $showingHelp)
                 }
                 .helpSheet(for: .cards, isPresented: $showingHelp)
                 .sheet(isPresented: $showingLockScreenHelp) {

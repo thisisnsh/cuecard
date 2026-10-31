@@ -60,6 +60,14 @@ final class NoteFolder {
         resolve()?.lastPathComponent
     }
 
+    /// Whether the folder is in iCloud Drive. False if it can't be reached.
+    var isInICloud: Bool {
+        guard let url = resolve() else { return false }
+        // iCloud Drive's folders are all under Mobile Documents; the system
+        // can't always say so for a folder outside the app's own containers.
+        return url.path.contains("/Mobile Documents/") || fileManager.isUbiquitousItem(at: url)
+    }
+
     /// Notes deleted in the app whose files couldn't be deleted from the
     /// folder yet. Kept outside the folder, which may not take changes, so
     /// the files aren't read back in as notes; each sync tries them again.

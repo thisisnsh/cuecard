@@ -68,7 +68,7 @@ private enum AllHelp {
                                     summary: "Modes, cues, formatting, images and cards",
                                     systemImage: "pencil", topics: [
         HelpTopic("Pick a Mode",
-                  detail: "In your library, choose Teleprompter or Cards at the top, then tap New Script or New Deck below. The arrow beside it offers both modes and Import File. Teleprompter scrolls your whole script. Cards shows it one card at a time."),
+                  detail: "In your library, choose Teleprompter or Cards from the menu at the top left, then tap + at the bottom. Teleprompter scrolls your whole script. Cards shows it one card at a time."),
         HelpTopic("Add Cues",
                   detail: "Cues are reminders like [pause], shown in color and not read out. Type [ or tap Cue above the keyboard."),
         HelpTopic("Bold and Italic",
@@ -88,16 +88,14 @@ private enum AllHelp {
                                     systemImage: "folder", topics: [
         HelpTopic("Open a Script",
                   detail: "CueCard opens on your library, with every script and deck you saved. Tap one to write in it, and tap back to return. Switch between Teleprompter and Cards at the top."),
-        HelpTopic("Ask About Your Scripts (Beta)",
-                  detail: "In your library, tap the sparkles next to Search and ask, like which script mentions pricing. Apple Intelligence reads your saved scripts on this iPhone to answer. Needs an iPhone with Apple Intelligence turned on."),
         HelpTopic("Save Your Work",
                   detail: "Save above the reading controls appears when there are changes to save. Tap it to save. A new script you haven't saved shows in the library as a draft."),
         HelpTopic("Rename, Duplicate or Delete",
                   detail: "In your library, touch and hold a script, or swipe it. In the editor, tap the title at the top to rename it."),
         HelpTopic("Organize in Folders",
-                  detail: "In your library, tap New Folder beside your folders, or the arrow beside New Script or New Deck, then New Folder. Touch and hold a script and tap Move to Folder to file it. Tap Sort By beside Search to change the order."),
+                  detail: "In your library, tap New Folder beside your folders, or ••• › New Folder. Touch and hold a script and tap Move to Folder to file it. Tap ••• › Sort By to change the order."),
         HelpTopic("Import a Text File",
-                  detail: "In your library, tap the arrow beside New Script or New Deck, then Import File to add a text file or a TextPack as a script."),
+                  detail: "In your library, tap ••• › Import File to add a text file or a TextPack as a script."),
         HelpTopic("Go Back to an Older Version",
                   detail: "Every save is a new version. Once a note has more than one, open ••• at the top of the editor, then Version History, to compare changes and restore one."),
         HelpTopic("Keep Scripts if the App Is Removed",
@@ -237,7 +235,7 @@ struct HelpView: View {
     var body: some View {
         NavigationStack {
             if asksFirst {
-                HelpAssistantView(topic: .help, browse: AnyView(HelpBrowseCards(close: close)), close: close)
+                HelpAssistantView(browse:AnyView(HelpBrowseCards(close: close)), close: close)
                     .toolbar {
                         ToolbarItem(placement: .topBarLeading) {
                             NavigationLink {
@@ -580,8 +578,26 @@ private struct HelpTopicRow: View {
 
 // MARK: - Help Button
 
-/// Help lives with the secondary actions on each screen.
-struct HelpMenuButton: View {
+/// The question mark at the top right of a page, in a glass of its own rather
+/// than grouped with the buttons beside it. Put last among the page's trailing
+/// items, so it sits at the edge.
+struct HelpToolbarItem: ToolbarContent {
+    let page: HelpPage
+    @Binding var isPresented: Bool
+
+    var body: some ToolbarContent {
+        if #available(iOS 26.0, *) {
+            ToolbarSpacer(.fixed, placement: .topBarTrailing)
+        }
+        ToolbarItem(placement: .topBarTrailing) {
+            HelpButton(page: page, isPresented: $isPresented)
+        }
+    }
+}
+
+private struct HelpButton: View {
+    @Environment(\.colorScheme) private var colorScheme
+
     let page: HelpPage
     @Binding var isPresented: Bool
 
@@ -590,13 +606,16 @@ struct HelpMenuButton: View {
             AnalyticsEvents.logButtonClick("help", screen: page.rawValue)
             isPresented = true
         } label: {
-            Label("Help", systemImage: "questionmark.circle")
+            Image(systemName: "questionmark")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
         }
+        .accessibilityLabel("Help")
     }
 }
 
 extension View {
-    /// The help sheet for `page`, opened by its menu. Kept on the
+    /// The help sheet for `page`, opened by its `HelpToolbarItem`. Kept on the
     /// page rather than the button, so the sheet stays up if the button fades.
     func helpSheet(for page: HelpPage, isPresented: Binding<Bool>) -> some View {
         sheet(isPresented: isPresented) {
