@@ -74,6 +74,19 @@ struct AnalyticsEvents {
     }
 }
 
+extension Binding {
+    /// The same value, logged as a click whenever a toggle or picker sets it.
+    func loggingClicks(_ buttonName: String, screen: String) -> Binding<Value> {
+        Binding(
+            get: { wrappedValue },
+            set: { newValue in
+                AnalyticsEvents.logButtonClick(buttonName, screen: screen)
+                wrappedValue = newValue
+            }
+        )
+    }
+}
+
 // MARK: - External Links
 enum AppLinks {
     static let sourceCode = URL(string: "https://github.com/thisisnsh/cuecard")!

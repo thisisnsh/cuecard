@@ -946,12 +946,24 @@ Thanks for listening. *Questions?*
     /// Save current notes as a new note. Returns false if it couldn't be saved.
     @discardableResult
     func saveCurrentNote(title: String) -> Bool {
+        saveCurrentNote(title: title, folder: draftFolder(for: settings.scriptMode))
+    }
+
+    /// Save what's written as a note of its own, in the same folder as the
+    /// one open, which stays as it was last saved. The editor carries on in
+    /// the new one. Returns false if it couldn't be saved.
+    @discardableResult
+    func saveCurrentNoteAsNew(title: String) -> Bool {
+        saveCurrentNote(title: title, folder: currentNote?.folder ?? draftFolder(for: settings.scriptMode))
+    }
+
+    private func saveCurrentNote(title: String, folder: String?) -> Bool {
         let trimmedContent = notes.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedContent.isEmpty else { return true }
 
         let mode = settings.scriptMode
         let note = SavedNote(id: mode == .teleprompter ? teleprompterDraftId : cardsDraftId,
-                             title: title, content: notes, mode: mode, folder: draftFolder(for: mode))
+                             title: title, content: notes, mode: mode, folder: folder)
         guard store(note) else { return false }
         currentNoteId = note.id
         startNewDraft(for: mode)

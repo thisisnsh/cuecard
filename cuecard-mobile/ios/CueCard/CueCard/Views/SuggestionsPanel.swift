@@ -3,22 +3,17 @@ import SwiftUI
 /// The button that asks the on-device model for suggestions on the script.
 struct SuggestionsButton: View {
     let colorScheme: ColorScheme
-    var compact = false
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            Group {
-                if compact { Image(systemName: "sparkles") }
-                else { Label("Suggestions", systemImage: "sparkles") }
-            }
-                .font(.subheadline.weight(.semibold))
+            Image(systemName: "sparkles")
+                .font(.system(size: 20, weight: .semibold))
                 .foregroundStyle(AppColors.purple(for: colorScheme))
-                .padding(.horizontal, compact ? 0 : 12)
-                .frame(width: compact ? 44 : nil)
-                .frame(minHeight: 44)
-                .fixedSize(horizontal: true, vertical: false)
-                .glassedEffect(in: Capsule())
+                .frame(width: 52, height: 52)
+                .glassedEffect(in: Circle())
+                .aiGlow()
+                .contentShape(Circle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Suggestions")
@@ -130,7 +125,7 @@ struct SuggestionsPanel: View {
         HStack(spacing: 8) {
             if review.suggestions.count > 1 { smallButton("Accept All", action: onAcceptAll) }
             smallButton(review.isRunning ? "Stop" : "Done") {
-                AnalyticsEvents.logButtonClick("suggestions_done", screen: "home",
+                AnalyticsEvents.logButtonClick(review.isRunning ? "suggestions_stop" : "suggestions_done", screen: "home",
                                                parameters: ["left": review.suggestions.count])
                 review.end()
             }
@@ -149,8 +144,14 @@ struct SuggestionsPanel: View {
                         .foregroundStyle(primary)
                     Spacer(minLength: 8)
                     if review.suggestions.count > 1 {
-                        stepButton("chevron.left", label: "Previous Suggestion", action: review.focusPrevious)
-                        stepButton("chevron.right", label: "Next Suggestion", action: review.focusNext)
+                        stepButton("chevron.left", label: "Previous Suggestion") {
+                            AnalyticsEvents.logButtonClick("suggestion_previous", screen: "home")
+                            review.focusPrevious()
+                        }
+                        stepButton("chevron.right", label: "Next Suggestion") {
+                            AnalyticsEvents.logButtonClick("suggestion_next", screen: "home")
+                            review.focusNext()
+                        }
                     }
                 }
                 .font(.subheadline.weight(.semibold))

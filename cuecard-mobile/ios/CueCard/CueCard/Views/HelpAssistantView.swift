@@ -64,7 +64,10 @@ struct HelpAssistantView: View {
             .sharedBackgroundHidden()
 
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Done", action: close)
+                Button("Done") {
+                    AnalyticsEvents.logButtonClick("help_ask_done", screen: screen)
+                    close()
+                }
             }
         }
         .onAppear {
@@ -99,8 +102,7 @@ struct HelpAssistantView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     ForEach(examples, id: \.self) { example in
                         Button {
-                            AnalyticsEvents.logButtonClick("example", screen: screen)
-                            ask(example)
+                            ask(example, from: "example")
                         } label: {
                             Text(example)
                                 .font(.subheadline.weight(.medium))
@@ -161,12 +163,12 @@ struct HelpAssistantView: View {
                 .lineLimit(1...4)
                 .focused($isAsking)
                 .submitLabel(.send)
-                .onSubmit { ask(trimmedQuestion) }
+                .onSubmit { ask(trimmedQuestion, from: "ask_keyboard") }
                 .padding(.leading, 16)
                 .padding(.vertical, 12)
 
             Button {
-                ask(trimmedQuestion)
+                ask(trimmedQuestion, from: "ask")
             } label: {
                 Image(systemName: "arrow.up")
                     .font(.system(size: 16, weight: .bold))
@@ -190,9 +192,9 @@ struct HelpAssistantView: View {
         !trimmedQuestion.isEmpty && !assistant.isAnswering && assistant.availability == .available
     }
 
-    private func ask(_ text: String) {
+    private func ask(_ text: String, from button: String) {
         guard !text.isEmpty, !assistant.isAnswering else { return }
-        AnalyticsEvents.logButtonClick("ask", screen: screen, parameters: ["length": text.count])
+        AnalyticsEvents.logButtonClick(button, screen: screen, parameters: ["length": text.count])
         question = ""
         assistant.ask(text)
     }

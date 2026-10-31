@@ -107,12 +107,15 @@ struct NoteVersionsView: View {
                                             restoreFailed = true
                                         }
                                     })
+                    .onAppear {
+                        AnalyticsEvents.logButtonClick("version_open", screen: "note_versions")
+                    }
                 }
             }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") {
-                        AnalyticsEvents.logButtonClick("done", screen: "note_versions")
+                        AnalyticsEvents.logButtonClick("versions_done", screen: "note_versions")
                         dismiss()
                     }
                 }
@@ -122,7 +125,9 @@ struct NoteVersionsView: View {
                 reload()
             }
             .alert("Something Went Wrong", isPresented: $restoreFailed) {
-                Button("OK", role: .cancel) { }
+                Button("OK", role: .cancel) {
+                    AnalyticsEvents.logButtonClick("versions_error_ok", screen: "note_versions")
+                }
             } message: {
                 Text("This version couldn't be restored. Try again.")
             }
@@ -242,7 +247,7 @@ private struct VersionDiffView: View {
         let lines = lines
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                Picker("Compare With", selection: $comparison) {
+                Picker("Compare With", selection: $comparison.loggingClicks("version_compare", screen: "note_versions")) {
                     if let previous {
                         Text("Version \(previous.number)").tag(Comparison.previous)
                     } else {
@@ -313,8 +318,13 @@ private struct VersionDiffView: View {
             }
         }
         .alert("Discard Unsaved Changes?", isPresented: $confirmingRestore) {
-            Button("Cancel", role: .cancel) { }
-            Button("Restore Version \(version.number)", role: .destructive, action: onRestore)
+            Button("Cancel", role: .cancel) {
+                AnalyticsEvents.logButtonClick("restore_version_cancel", screen: "note_versions")
+            }
+            Button("Restore Version \(version.number)", role: .destructive) {
+                AnalyticsEvents.logButtonClick("restore_version_confirm", screen: "note_versions")
+                onRestore()
+            }
         } message: {
             Text("The editor has changes that aren't saved. Restoring replaces them with this version.")
         }
@@ -341,6 +351,7 @@ private struct VersionDiffView: View {
             .background(line.kind == .same ? Color.clear : color(for: line.kind).opacity(0.15))
         case .folded(let start, let count):
             Button {
+                AnalyticsEvents.logButtonClick("version_expand_lines", screen: "note_versions")
                 expanded.insert(start)
             } label: {
                 Text("⋯ \(count) unchanged lines")

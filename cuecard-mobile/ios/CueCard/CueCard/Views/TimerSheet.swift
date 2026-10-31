@@ -56,7 +56,7 @@ struct TimerSheet: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") {
-                        AnalyticsEvents.logButtonClick("done", screen: Self.screen)
+                        AnalyticsEvents.logButtonClick("timer_done", screen: Self.screen)
                         dismiss()
                     }
                 }
@@ -213,14 +213,14 @@ private struct TimerColorsSection: View {
     var body: some View {
         Section {
             if showsCountdown {
-                ColorSwatchRow(title: "Countdown", selection: $style.countdownColor)
+                ColorSwatchRow(title: "Countdown", selection: $style.countdownColor.loggingClicks("timer_color_countdown", screen: screen))
             }
-            ColorSwatchRow(title: "Normal", selection: $style.normalColor)
+            ColorSwatchRow(title: "Normal", selection: $style.normalColor.loggingClicks("timer_color_normal", screen: screen))
             if isTimed {
                 if style.warningSeconds > 0 {
-                    ColorSwatchRow(title: "Warning", selection: $style.warningColor)
+                    ColorSwatchRow(title: "Warning", selection: $style.warningColor.loggingClicks("timer_color_warning", screen: screen))
                 }
-                ColorSwatchRow(title: "Overtime", selection: $style.overtimeColor)
+                ColorSwatchRow(title: "Overtime", selection: $style.overtimeColor.loggingClicks("timer_color_overtime", screen: screen))
             }
 
             if style != defaultColors {

@@ -1263,8 +1263,8 @@ extension NSString {
 // MARK: - Cue bar
 
 /// The strip above the keyboard while a script is being written: buttons to drop
-/// a cue, an anchor or an image in at the caret and to bold or italicize, and
-/// one to get the keyboard out of the way.
+/// a cue or an anchor in at the caret, a group to bold, italicize or add an
+/// image, and one to get the keyboard out of the way.
 struct CueBar: View {
     /// The bar's height. The editor keeps this much room clear at the bottom so
     /// the line being typed never hides behind it.
@@ -1280,8 +1280,8 @@ struct CueBar: View {
 
     var body: some View {
         ViewThatFits(in: .horizontal) {
-            buttons(showsCueLabel: true)
-            buttons(showsCueLabel: false)
+            buttons(showsLabels: true)
+            buttons(showsLabels: false)
         }
         .buttonStyle(.plain)
         .foregroundStyle(AppColors.textPrimary(for: colorScheme))
@@ -1297,42 +1297,20 @@ struct CueBar: View {
         }
     }
 
-    private func buttons(showsCueLabel: Bool) -> some View {
-        HStack(spacing: 10) {
-            Button(action: onAddCue) {
-                Group {
-                    if showsCueLabel {
-                        Label("Cue", systemImage: "plus")
-                            .font(.subheadline.weight(.semibold))
-                            .padding(.horizontal, 12)
-                            .fixedSize()
-                    } else {
-                        Image(systemName: "text.bubble")
-                            .font(.system(size: 18, weight: .semibold))
-                            .frame(width: 44)
-                    }
-                }
-                .frame(minHeight: 44)
-                .glassedEffect(in: Capsule())
-            }
-            .accessibilityLabel("Add Cue")
+    private func buttons(showsLabels: Bool) -> some View {
+        HStack(spacing: 8) {
+            addButton("Cue", systemImage: "text.bubble", accessibilityLabel: "Add Cue",
+                      showsLabel: showsLabels, action: onAddCue)
 
-            Menu {
-                if let onAddAnchor {
-                    Button(action: onAddAnchor) { Label("Add Anchor", systemImage: "bookmark") }
-                }
-                Button(action: onAddImage) { Label("Add Image", systemImage: "photo") }
-            } label: {
-                Image(systemName: "plus.circle")
-                    .font(.system(size: 18, weight: .semibold))
-                    .frame(width: 44, height: 44)
-                    .glassedEffect(in: Circle())
+            if let onAddAnchor {
+                addButton("Anchor", systemImage: "bookmark", accessibilityLabel: "Add Anchor",
+                          showsLabel: showsLabels, action: onAddAnchor)
             }
-            .accessibilityLabel("Insert")
 
             HStack(spacing: 0) {
-                formatButton("bold", label: "Bold", style: .bold)
-                formatButton("italic", label: "Italic", style: .italic)
+                formatButton("bold", label: "Bold") { onFormat(.bold) }
+                formatButton("italic", label: "Italic") { onFormat(.italic) }
+                formatButton("photo", label: "Add Image", action: onAddImage)
             }
             .glassedEffect(in: Capsule())
 
@@ -1348,11 +1326,37 @@ struct CueBar: View {
         }
     }
 
-    private func formatButton(_ systemImage: String, label: LocalizedStringKey, style: EmphasisStyle) -> some View {
-        Button { onFormat(style) } label: {
+    /// "+ Cue" or "+ Anchor", or just the symbol where the words won't fit.
+    private func addButton(_ title: LocalizedStringKey, systemImage: String, accessibilityLabel: LocalizedStringKey,
+                           showsLabel: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Group {
+                if showsLabel {
+                    HStack(spacing: 3) {
+                        Image(systemName: "plus")
+                            .font(.caption.weight(.bold))
+                        Text(title)
+                    }
+                    .font(.subheadline.weight(.semibold))
+                    .padding(.horizontal, 10)
+                    .fixedSize()
+                } else {
+                    Image(systemName: systemImage)
+                        .font(.system(size: 18, weight: .semibold))
+                        .frame(width: 40)
+                }
+            }
+            .frame(minHeight: 44)
+            .glassedEffect(in: Capsule())
+        }
+        .accessibilityLabel(accessibilityLabel)
+    }
+
+    private func formatButton(_ systemImage: String, label: LocalizedStringKey, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
             Image(systemName: systemImage)
                 .font(.system(size: 16, weight: .semibold))
-                .frame(width: 44, height: 44)
+                .frame(width: 40, height: 44)
                 .contentShape(Rectangle())
         }
         .accessibilityLabel(label)

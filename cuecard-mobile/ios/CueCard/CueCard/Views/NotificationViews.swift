@@ -30,6 +30,8 @@ struct NotificationBanner: View {
                     HStack(spacing: 8) {
                         ForEach(Array(notification.actions.enumerated()), id: \.offset) { index, action in
                             Button(action.label) {
+                                AnalyticsEvents.logButtonClick("notification_banner_action", screen: "notification",
+                                                               parameters: ["action": action.kind.rawValue])
                                 perform(action)
                             }
                             .buttonStyle(NotificationActionStyle(tint: accentColor, isPrimary: index == 0))
@@ -43,7 +45,10 @@ struct NotificationBanner: View {
             Spacer(minLength: 0)
 
             if notification.dismissible {
-                NotificationCloseButton(action: dismiss)
+                NotificationCloseButton {
+                    AnalyticsEvents.logButtonClick("notification_banner_dismiss", screen: "notification")
+                    dismiss()
+                }
             }
         }
         .padding(14)
@@ -108,6 +113,8 @@ struct NotificationRow: View {
 
                 if let action = primaryAction {
                     Button(action.label) {
+                        AnalyticsEvents.logButtonClick("notification_row_action", screen: "notification",
+                                                       parameters: ["action": action.kind.rawValue])
                         perform(action)
                     }
                     .buttonStyle(NotificationActionStyle(
@@ -123,6 +130,7 @@ struct NotificationRow: View {
 
             if notification.dismissible {
                 NotificationCloseButton {
+                    AnalyticsEvents.logButtonClick("notification_row_dismiss", screen: "notification")
                     withAnimation(.easeInOut(duration: 0.2)) {
                         notifications.dismiss(notification)
                     }

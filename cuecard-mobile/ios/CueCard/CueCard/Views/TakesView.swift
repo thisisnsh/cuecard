@@ -37,20 +37,13 @@ struct TakesIcon: View {
     let colorScheme: ColorScheme
     /// The Takes list grows out of this button, and closes back into it.
     let transition: Namespace.ID
-    var compact = false
 
     var body: some View {
-        Group {
-            if compact { Image(systemName: "film.stack") }
-            else { Label("Takes", systemImage: "film.stack") }
-        }
-            .font(.subheadline.weight(.semibold))
+        Image(systemName: "film.stack")
+            .font(.system(size: 18, weight: .semibold))
             .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-            .padding(.horizontal, compact ? 0 : 12)
-            .frame(width: compact ? 44 : nil)
-            .frame(minHeight: 44)
-            .fixedSize(horizontal: true, vertical: false)
-            .glassedEffect(in: Capsule())
+            .frame(width: 52, height: 52)
+            .glassedEffect(in: Circle())
             .takesTransitionSource(in: transition)
             .accessibilityLabel(count == 0
                                 ? String(localized: "Takes")
@@ -119,7 +112,7 @@ struct TakesView: View {
 
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") {
-                        AnalyticsEvents.logButtonClick("done", screen: "takes")
+                        AnalyticsEvents.logButtonClick("takes_done", screen: "takes")
                         dismiss()
                     }
                 }
@@ -154,7 +147,7 @@ struct TakesView: View {
                         }
                         .contextMenu {
                             Button {
-                                play(take)
+                                play(take, from: "play_take_menu")
                             } label: {
                                 Label("Play", systemImage: "play")
                             }
@@ -182,8 +175,8 @@ struct TakesView: View {
         .background(Color(.systemGroupedBackground))
     }
 
-    private func play(_ take: Take) {
-        AnalyticsEvents.logButtonClick("play_take", screen: "takes")
+    private func play(_ take: Take, from button: String = "play_take") {
+        AnalyticsEvents.logButtonClick(button, screen: "takes")
         playingTake = take
     }
 
@@ -194,7 +187,7 @@ struct TakesView: View {
 
     private func favoriteButton(for take: Take) -> some View {
         Button {
-            AnalyticsEvents.logButtonClick("favorite_take", screen: "takes")
+            AnalyticsEvents.logButtonClick("favorite_take_menu", screen: "takes")
             Task { await library.setFavorite(!take.isFavorite, of: take) }
         } label: {
             if take.isFavorite {
@@ -247,7 +240,7 @@ struct TakesView: View {
 
             Spacer(minLength: 0)
 
-            FavoriteButton(take: take, library: library, size: 36, screen: "takes", colorScheme: colorScheme)
+            FavoriteButton(take: take, library: library, size: 36, event: "favorite_take", screen: "takes", colorScheme: colorScheme)
         }
         .padding(.vertical, 2)
         .contentShape(Rectangle())
@@ -278,7 +271,7 @@ struct TakesView: View {
         } else {
             message(title: "Find Your Takes",
                     detail: "CueCard can't see your photos, so it can't find the videos you recorded with this script. Allow access in Settings.") {
-                settingsButton("Open Settings")
+                settingsButton("Open Settings", event: "photos_settings")
             }
         }
     }
@@ -287,14 +280,14 @@ struct TakesView: View {
         VStack(spacing: 8) {
             Text("CueCard can only see the videos you've chosen, so some takes may be missing.")
                 .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-            settingsButton("Change in Settings")
+            settingsButton("Change in Settings", event: "photos_settings_limited")
                 .font(.caption.weight(.semibold))
         }
     }
 
-    private func settingsButton(_ title: LocalizedStringKey) -> some View {
+    private func settingsButton(_ title: LocalizedStringKey, event: String) -> some View {
         Button(title) {
-            AnalyticsEvents.logButtonClick("photos_settings", screen: "takes")
+            AnalyticsEvents.logButtonClick(event, screen: "takes")
             if let url = URL(string: UIApplication.openSettingsURLString) {
                 UIApplication.shared.open(url)
             }
@@ -407,7 +400,7 @@ private struct TakePlayerView: View {
     private var header: some View {
         HStack {
             Button {
-                AnalyticsEvents.logButtonClick("close", screen: "take_player")
+                AnalyticsEvents.logButtonClick("take_player_close", screen: "take_player")
                 dismiss()
             } label: {
                 Image(systemName: "xmark")
@@ -442,14 +435,14 @@ private struct TakePlayerView: View {
     /// Frequent organization tools sit together, with labels to explain each action.
     private var bottomBar: some View {
         HStack(spacing: 12) {
-            FavoriteButton(take: current, library: library, size: 52, screen: "take_player",
+            FavoriteButton(take: current, library: library, size: 52, event: "favorite_take_player", screen: "take_player",
                            colorScheme: colorScheme, unfilledColor: .white)
                 .glassedEffect(in: Circle(), interactive: true)
 
             HStack(spacing: 0) {
                 panelButton(.details, title: "Tags and Notes", systemImage: "tag", event: "take_details")
                 Divider().frame(height: 24)
-                panelButton(.albums, title: "Albums", systemImage: "rectangle.stack.badge.plus", event: "album_take")
+                panelButton(.albums, title: "Albums", systemImage: "rectangle.stack.badge.plus", event: "album_take_player")
             }
             .glassedEffect(in: Capsule(), interactive: true)
         }
@@ -494,7 +487,7 @@ private struct TakePlayerView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") {
-                        AnalyticsEvents.logButtonClick("done", screen: "take_details")
+                        AnalyticsEvents.logButtonClick("take_details_done", screen: "take_details")
                         panel = nil
                     }
                 }
@@ -509,6 +502,7 @@ private struct TakePlayerView: View {
                 FlowLayout(spacing: 8) {
                     ForEach(details.tags, id: \.self) { tag in
                         TagButton(tag: tag, systemImage: "xmark", colorScheme: colorScheme) {
+                            AnalyticsEvents.logButtonClick("remove_tag", screen: "take_player")
                             details.tags.removeAll { $0 == tag }
                         }
                         .accessibilityLabel(String(localized: "Remove \(tag)", comment: "Takes a tag off a take"))
@@ -520,10 +514,10 @@ private struct TakePlayerView: View {
                 TextField("Add a Tag", text: $newTag)
                     .focused($isAddingTag)
                     .submitLabel(.done)
-                    .onSubmit { add(newTag) }
+                    .onSubmit { add(newTag, from: "tag_take_keyboard") }
 
                 Button {
-                    add(newTag)
+                    add(newTag, from: "tag_take")
                     isAddingTag = true
                 } label: {
                     Image(systemName: "plus.circle.fill")
@@ -541,7 +535,7 @@ private struct TakePlayerView: View {
                 FlowLayout(spacing: 8) {
                     ForEach(suggestedTags, id: \.self) { tag in
                         TagButton(tag: tag, systemImage: "plus", isSuggestion: true, colorScheme: colorScheme) {
-                            add(tag)
+                            add(tag, from: "tag_take_suggested")
                         }
                         .accessibilityLabel(String(localized: "Add \(tag)", comment: "Puts a tag on a take"))
                     }
@@ -560,7 +554,7 @@ private struct TakePlayerView: View {
 
     private var deleteButton: some View {
         Button(role: .destructive) {
-            AnalyticsEvents.logButtonClick("delete_take", screen: "take_player")
+            AnalyticsEvents.logButtonClick("delete_take_player", screen: "take_player")
             player.pause()
             Task {
                 if await library.delete(take) { dismiss() }
@@ -586,11 +580,11 @@ private struct TakePlayerView: View {
         player.play()
     }
 
-    private func add(_ tag: String) {
+    private func add(_ tag: String, from button: String) {
         let tag = String(tag.trimmingCharacters(in: .whitespacesAndNewlines).prefix(Self.longestTag))
         newTag = ""
         guard !tag.isEmpty, !details.tags.containsIgnoringCase(tag) else { return }
-        AnalyticsEvents.logButtonClick("tag_take", screen: "take_player")
+        AnalyticsEvents.logButtonClick(button, screen: "take_player")
         details.tags.append(tag)
     }
 }
@@ -600,6 +594,8 @@ private struct FavoriteButton: View {
     let take: Take
     @ObservedObject var library: TakesLibrary
     let size: CGFloat
+    /// What a tap is logged as, so each heart can be told apart.
+    let event: String
     let screen: String
     let colorScheme: ColorScheme
     /// The empty heart's color, where the usual gray would be lost.
@@ -607,7 +603,7 @@ private struct FavoriteButton: View {
 
     var body: some View {
         Button {
-            AnalyticsEvents.logButtonClick("favorite_take", screen: screen)
+            AnalyticsEvents.logButtonClick(event, screen: screen)
             Task { await library.setFavorite(!take.isFavorite, of: take) }
         } label: {
             Image(systemName: take.isFavorite ? "heart.fill" : "heart")
@@ -641,6 +637,7 @@ private struct AlbumPicker: View {
             List {
                 Section {
                     Button {
+                        AnalyticsEvents.logButtonClick("new_album_button", screen: "albums")
                         newName = ""
                         isNaming = true
                     } label: {
@@ -663,14 +660,16 @@ private struct AlbumPicker: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") {
-                        AnalyticsEvents.logButtonClick("done", screen: "albums")
+                        AnalyticsEvents.logButtonClick("albums_done", screen: "albums")
                         dismiss()
                     }
                 }
             }
             .alert("New Album", isPresented: $isNaming) {
                 TextField("Title", text: $newName)
-                Button("Cancel", role: .cancel) { }
+                Button("Cancel", role: .cancel) {
+                    AnalyticsEvents.logButtonClick("new_album_cancel", screen: "albums")
+                }
                 Button("Save") {
                     let name = newName.trimmingCharacters(in: .whitespacesAndNewlines)
                     guard !name.isEmpty else { return }

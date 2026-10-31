@@ -20,6 +20,8 @@ struct HomeView: View {
     @State private var showingTakes = false
     @State private var showingSaveDialog = false
     @State private var saveNoteTitle = ""
+    @State private var showingSaveAsNew = false
+    @State private var saveAsNewTitle = ""
     @State private var showingRename = false
     @State private var renameTitle = ""
     @State private var showingImagePicker = false
@@ -133,6 +135,7 @@ struct HomeView: View {
                 }
                 .padding(.horizontal, 16)
                 .frame(height: 52)
+                .fixedSize(horizontal: true, vertical: false)
                 .glassedEffect(in: Capsule())
                 .shadow(color: Color.black.opacity(0.1), radius: 10)
             }
@@ -183,10 +186,10 @@ struct HomeView: View {
     }
 
     @ViewBuilder
-    private func suggestionsControl(compact: Bool) -> some View {
+    private var suggestionsControl: some View {
         let availability = OnDeviceModelAvailability.current
         if showsSuggestions {
-            SuggestionsButton(colorScheme: colorScheme, compact: compact) {
+            SuggestionsButton(colorScheme: colorScheme) {
                 AnalyticsEvents.logButtonClick("suggestions", screen: "home")
                 isEditorFocused = false
                 if case .unavailable(let reason) = availability {
@@ -233,15 +236,14 @@ struct HomeView: View {
     /// The videos recorded while the teleprompter or cards were open on the script. Once
     /// it has been, and before Photos can be read, a button to go find them.
     @ViewBuilder
-    private func takesControl(compact: Bool) -> some View {
-        let canFind = takes.hasSessions && (takes.status == .notDetermined || takes.status == .limited)
-        if !takes.takes.isEmpty || canFind {
+    private var takesControl: some View {
+        if hasTakes {
             Button {
                 AnalyticsEvents.logButtonClick("takes", screen: "home")
                 isEditorFocused = false
                 showingTakes = true
             } label: {
-                TakesIcon(count: takes.takes.count, colorScheme: colorScheme, transition: takesTransition, compact: compact)
+                TakesIcon(count: takes.takes.count, colorScheme: colorScheme, transition: takesTransition)
             }
             .buttonStyle(.plain)
             .transition(.scale.combined(with: .opacity))
@@ -249,8 +251,9 @@ struct HomeView: View {
     }
 
     /// Save to the open note, or ask for a title if the script isn't one yet.
-    private func save() {
-        AnalyticsEvents.logButtonClick("save_note", screen: "home")
+    /// `button` says which of the save buttons was used.
+    private func save(from button: String) {
+        AnalyticsEvents.logButtonClick(button, screen: "home")
         if settingsService.currentNoteId != nil {
             if settingsService.saveChangesToCurrentNote() {
                 flashSaved()
@@ -273,25 +276,60 @@ struct HomeView: View {
         }
     }
 
-    /// An explicit save action while there are changes, then brief confirmation.
+    /// Keep what's written as a script of its own, named to start with after
+    /// the one open, which stays as it was last saved.
+    private func beginSaveAsNew() {
+        AnalyticsEvents.logButtonClick("save_as_new_menu", screen: "home")
+        isEditorFocused = false
+        saveAsNewTitle = settingsService.currentNote.map {
+            String(localized: "\($0.title) Copy", comment: "Title of a duplicated script")
+        } ?? ""
+        showingSaveAsNew = true
+    }
+
+    /// "Click to Save" floating over the script while there are changes to
+    /// save, then "Saved" for a moment once they are.
     @ViewBuilder
     private var saveStatus: some View {
         let isUnsaved = settingsService.hasUnsavedChanges
         if isUnsaved || showsSaved {
-            Button(action: save) {
-                Label(isUnsaved ? "Save" : "Saved", systemImage: isUnsaved ? "square.and.arrow.down" : "checkmark")
+            Button {
+                save(from: "save_note")
+            } label: {
+                Text(isUnsaved ? "Click to Save" : "Saved")
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                    .padding(.horizontal, 12)
-                    .frame(minHeight: 44)
-                    .fixedSize(horizontal: true, vertical: false)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 6)
                     .glassedEffect(in: Capsule(), interactive: isUnsaved)
                     .contentShape(Capsule())
             }
             .buttonStyle(.plain)
-            .disabled(!isUnsaved)
+            .allowsHitTesting(isUnsaved)
             .accessibilityHint(isUnsaved ? "Saves your changes" : "")
             .transition(.opacity)
+        }
+    }
+
+    /// The saved script's version, in small text under everything else. Opens
+    /// its history.
+    @ViewBuilder
+    private var versionFooter: some View {
+        if let id = settingsService.currentNoteId {
+            Button {
+                AnalyticsEvents.logButtonClick("version_history_footer", screen: "home")
+                isEditorFocused = false
+                showingVersions = true
+            } label: {
+                Text("Version \(settingsService.versionCounts[id] ?? 1)")
+                    .font(.caption2)
+                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 4)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint("Opens Version History")
         }
     }
 
@@ -350,7 +388,10 @@ struct HomeView: View {
                     showingImagePicker = true
                 },
                 onFormat: format,
-                onDismissKeyboard: { isEditorFocused = false }
+                onDismissKeyboard: {
+                    AnalyticsEvents.logButtonClick("hide_keyboard", screen: "home")
+                    isEditorFocused = false
+                }
             )
             .transition(.move(edge: .bottom).combined(with: .opacity))
         } else if review.isActive {
@@ -369,47 +410,44 @@ struct HomeView: View {
             .padding(.bottom, 24)
             .transition(.move(edge: .bottom).combined(with: .opacity))
         } else {
-            VStack(spacing: 12) {
-                if showsSuggestions || hasTakes || settingsService.hasUnsavedChanges || showsSaved {
-                    ViewThatFits(in: .horizontal) {
-                        editorTools(compact: false)
-                        editorTools(compact: true)
-                    }
-                }
+            VStack(spacing: 10) {
+                saveStatus
                 if hasNotes {
+                    // Timer and Suggestions on the left, Play on the right. With
+                    // no room for the two on one line, they stack beside Play.
                     ViewThatFits(in: .horizontal) {
                         HStack(spacing: 12) {
                             timerControl
+                            suggestionsControl
+                            Spacer(minLength: 0)
+                            takesControl
                             startButton
                         }
-                        VStack(alignment: .leading, spacing: 12) {
-                            timerControl
+                        HStack(alignment: .bottom, spacing: 12) {
+                            VStack(alignment: .leading, spacing: 12) {
+                                suggestionsControl
+                                timerControl
+                            }
+                            Spacer(minLength: 0)
+                            takesControl
                             startButton
                         }
                     }
                 } else {
                     timerControl
                 }
+                versionFooter
             }
             .animation(.easeInOut(duration: 0.2), value: settingsService.hasUnsavedChanges)
             .animation(.easeInOut(duration: 0.2), value: showsSaved)
             .padding(.horizontal, 20)
             .padding(.top, 12)
-            .padding(.bottom, 12)
+            .padding(.bottom, settingsService.currentNoteId == nil ? 12 : 2)
         }
     }
 
     private var hasTakes: Bool {
         !takes.takes.isEmpty || (takes.hasSessions && (takes.status == .notDetermined || takes.status == .limited))
-    }
-
-    private func editorTools(compact: Bool) -> some View {
-        HStack(spacing: 10) {
-            suggestionsControl(compact: compact)
-            takesControl(compact: compact)
-            Spacer(minLength: 0)
-            saveStatus
-        }
     }
 
     private var startButton: some View {
@@ -424,14 +462,12 @@ struct HomeView: View {
                 showingTeleprompter = true
             }
         } label: {
-            Label(isCardsMode ? "Read Cards" : "Start Reading",
-                  systemImage: isCardsMode ? "rectangle.stack.fill" : "play.fill")
-                .font(.subheadline.weight(.semibold))
-                .fixedSize(horizontal: true, vertical: false)
+            Image(systemName: "play.fill")
+                .font(.system(size: 20, weight: .semibold))
                 .foregroundStyle(colorScheme == .dark ? .black : .white)
-                .padding(.horizontal, 16)
-                .frame(maxWidth: .infinity, minHeight: 52)
-                .background(Capsule().fill(AppColors.green(for: colorScheme)))
+                .frame(width: 52, height: 52)
+                .background(Circle().fill(AppColors.green(for: colorScheme)))
+                .glassedEffect(in: Circle())
         }
         .buttonStyle(.plain)
         .disabled(isCardsMode ? CueCards.cards(in: settingsService.notes).isEmpty : !hasNotes)
@@ -468,7 +504,9 @@ struct HomeView: View {
                 get: { suggestionsUnavailable != nil || review.errorMessage != nil },
                 set: { if !$0 { suggestionsUnavailable = nil; review.errorMessage = nil } }
             )) {
-                Button("OK", role: .cancel) { }
+                Button("OK", role: .cancel) {
+                    AnalyticsEvents.logButtonClick("suggestions_alert_ok", screen: "home")
+                }
             } message: {
                 Text(suggestionsUnavailable ?? review.errorMessage ?? "")
             }
@@ -594,40 +632,57 @@ struct HomeView: View {
         }
         .sharedBackgroundHidden()
 
+        // One item, so the gear and ••• sit closer than two items' buttons do.
         ToolbarItem(placement: .topBarTrailing) {
-            Button(action: {
-                AnalyticsEvents.logButtonClick("settings", screen: "home")
-                isEditorFocused = false
-                showingSettings = true
-            }) {
-                Image(systemName: "gearshape")
-                    .font(.system(size: 18, weight: .medium))
-                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-            }
-            .accessibilityLabel("Settings")
-        }
+            HStack(spacing: 0) {
+                Button(action: {
+                    AnalyticsEvents.logButtonClick("settings", screen: "home")
+                    isEditorFocused = false
+                    showingSettings = true
+                }) {
+                    Image(systemName: "gearshape")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                        .frame(width: 34, height: 36)
+                        .contentShape(Rectangle())
+                }
+                .accessibilityLabel("Settings")
 
-        ToolbarItem(placement: .topBarTrailing) {
-            Menu {
-                if hasVersionHistory {
+                Menu {
                     Button {
-                        AnalyticsEvents.logButtonClick("version_history", screen: "home")
-                        isEditorFocused = false
-                        showingVersions = true
+                        save(from: "save_note_menu")
                     } label: {
-                        Label("Version History", systemImage: "clock.arrow.circlepath")
+                        Label("Save", systemImage: "square.and.arrow.down")
                     }
+                    .disabled(!settingsService.hasUnsavedChanges)
+                    // With no saved script open, Save asks for a title already.
+                    if settingsService.currentNoteId != nil {
+                        Button(action: beginSaveAsNew) {
+                            Label("Save as New", systemImage: "plus.square.on.square")
+                        }
+                        .disabled(!hasNotes)
+                    }
+                    if hasVersionHistory {
+                        Button {
+                            AnalyticsEvents.logButtonClick("version_history", screen: "home")
+                            isEditorFocused = false
+                            showingVersions = true
+                        } label: {
+                            Label("Version History", systemImage: "clock.arrow.circlepath")
+                        }
+                    }
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                        .frame(width: 34, height: 36)
+                        .contentShape(Rectangle())
                 }
-                Button(action: save) {
-                    Label("Save", systemImage: "square.and.arrow.down")
-                }
-                .disabled(!settingsService.hasUnsavedChanges)
-            } label: {
-                Image(systemName: "ellipsis")
-                    .font(.body.weight(.semibold))
-                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                .accessibilityLabel("Script Options")
+                .simultaneousGesture(TapGesture().onEnded {
+                    AnalyticsEvents.logButtonClick("editor_menu", screen: "home")
+                })
             }
-            .accessibilityLabel("Script Options")
         }
 
         HelpToolbarItem(page: .writing(settingsService.settings.scriptMode), isPresented: $showingHelp)
@@ -646,14 +701,20 @@ struct HomeView: View {
                     get: { editor.errorMessage != nil },
                     set: { if !$0 { editor.errorMessage = nil } }
                 )) {
-                    Button("OK", role: .cancel) { editor.errorMessage = nil }
+                    Button("OK", role: .cancel) {
+                        AnalyticsEvents.logButtonClick("editor_error_ok", screen: "home")
+                        editor.errorMessage = nil
+                    }
                 } message: {
                     Text(editor.errorMessage ?? "")
                 }
                 .alert("Save Note", isPresented: editor.$showingSaveDialog) {
                     TextField("Note title", text: editor.$saveNoteTitle)
-                    Button("Cancel", role: .cancel) { }
+                    Button("Cancel", role: .cancel) {
+                        AnalyticsEvents.logButtonClick("save_dialog_cancel", screen: "home")
+                    }
                     Button("Save") {
+                        AnalyticsEvents.logButtonClick("save_dialog_save", screen: "home")
                         let title = editor.saveNoteTitle.trimmingCharacters(in: .whitespacesAndNewlines)
                         if !title.isEmpty {
                             if settingsService.saveCurrentNote(title: title) {
@@ -666,10 +727,32 @@ struct HomeView: View {
                 } message: {
                     Text("Enter a title for your note")
                 }
+                .alert("Save as New", isPresented: editor.$showingSaveAsNew) {
+                    TextField("Note title", text: editor.$saveAsNewTitle)
+                    Button("Cancel", role: .cancel) {
+                        AnalyticsEvents.logButtonClick("save_as_new_cancel", screen: "home")
+                    }
+                    Button("Save") {
+                        AnalyticsEvents.logButtonClick("save_as_new_save", screen: "home")
+                        let title = editor.saveAsNewTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+                        if !title.isEmpty {
+                            if settingsService.saveCurrentNoteAsNew(title: title) {
+                                editor.flashSaved()
+                            } else {
+                                editor.errorMessage = String(localized: "Your note couldn't be saved. Try again.")
+                            }
+                        }
+                    }
+                } message: {
+                    Text("Your changes go in a new script. “\(settingsService.currentNote?.title ?? "")” stays as it was last saved.")
+                }
                 .alert("Rename Script", isPresented: editor.$showingRename) {
                     TextField("Title", text: editor.$renameTitle)
-                    Button("Cancel", role: .cancel) { }
+                    Button("Cancel", role: .cancel) {
+                        AnalyticsEvents.logButtonClick("rename_dialog_cancel", screen: "home")
+                    }
                     Button("Rename") {
+                        AnalyticsEvents.logButtonClick("rename_dialog_save", screen: "home")
                         let title = editor.renameTitle.trimmingCharacters(in: .whitespacesAndNewlines)
                         if let id = settingsService.currentNoteId, !title.isEmpty,
                            !settingsService.updateNote(id: id, title: title) {

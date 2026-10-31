@@ -31,13 +31,13 @@ struct EditorSettingsView: View {
                 case .teleprompter:
                     SizePresetPicker(
                         title: "Editor Text Size",
-                        value: $settingsService.settings.editorFontSize,
+                        value: $settingsService.settings.editorFontSize.loggingClicks("settings_editor_text_size", screen: Self.screen),
                         presets: TeleprompterSettings.editorFontSizePresets
                     )
                 case .cards:
                     SizePresetPicker(
                         title: "Editor Text Size",
-                        value: $settingsService.settings.cards.editorFontSize,
+                        value: $settingsService.settings.cards.editorFontSize.loggingClicks("settings_cards_editor_text_size", screen: Self.screen),
                         presets: TeleprompterSettings.editorFontSizePresets
                     )
                 }
@@ -65,15 +65,15 @@ struct EditorSettingsView: View {
 
             SizePresetPicker(
                 title: "Text Size",
-                value: $settingsService.settings.fontSize,
+                value: $settingsService.settings.fontSize.loggingClicks("settings_text_size", screen: Self.screen),
                 presets: TeleprompterSettings.fontSizePresets
             )
 
-            Toggle("Reading Guide Line", isOn: $settingsService.settings.showsReadingGuide)
+            Toggle("Reading Guide Line", isOn: $settingsService.settings.showsReadingGuide.loggingClicks("settings_reading_guide", screen: Self.screen))
         }
 
         Section {
-            Toggle(isOn: $settingsService.settings.followsVoice) {
+            Toggle(isOn: $settingsService.settings.followsVoice.loggingClicks("settings_follow_voice", screen: Self.screen)) {
                 HStack(spacing: 8) {
                     Text("Follow My Voice")
                     BetaBadge()
@@ -86,17 +86,17 @@ struct EditorSettingsView: View {
         Section("Floating Window") {
             SizePresetPicker(
                 title: "Text Size",
-                value: $settingsService.settings.pipFontSize,
+                value: $settingsService.settings.pipFontSize.loggingClicks("settings_floating_text_size", screen: Self.screen),
                 presets: TeleprompterSettings.pipFontSizePresets
             )
 
-            AspectRatioPicker(selection: $settingsService.settings.overlayAspectRatio)
+            AspectRatioPicker(selection: $settingsService.settings.overlayAspectRatio.loggingClicks("settings_floating_layout", screen: Self.screen))
         }
 
         Section {
-            Toggle("Flip Horizontally", isOn: $settingsService.settings.mirrorsText)
+            Toggle("Flip Horizontally", isOn: $settingsService.settings.mirrorsText.loggingClicks("settings_flip_horizontal", screen: Self.screen))
 
-            Toggle("Flip Vertically", isOn: $settingsService.settings.flipsTextVertically)
+            Toggle("Flip Vertically", isOn: $settingsService.settings.flipsTextVertically.loggingClicks("settings_flip_vertical", screen: Self.screen))
         } header: {
             Text("Mirror")
         } footer: {
@@ -104,7 +104,7 @@ struct EditorSettingsView: View {
         }
 
         Section {
-            Toggle("Sync with Teleprompter", isOn: $settingsService.settings.syncsCamera)
+            Toggle("Sync with Teleprompter", isOn: $settingsService.settings.syncsCamera.loggingClicks("settings_sync_camera", screen: Self.screen))
         } header: {
             Text("Camera")
         } footer: {
@@ -113,7 +113,7 @@ struct EditorSettingsView: View {
 
         AppleWatchSection(screen: Self.screen, mode: .teleprompter)
 
-        AppearanceSection(screen: Self.screen, cueColor: $settingsService.settings.cueColor)
+        AppearanceSection(screen: Self.screen, cueColor: $settingsService.settings.cueColor.loggingClicks("settings_cue_color", screen: Self.screen))
 
         LanguageSection(screen: Self.screen)
 
@@ -145,7 +145,7 @@ struct EditorSettingsView: View {
         Section {
             SizePresetPicker(
                 title: "Text Size",
-                value: $settingsService.settings.cards.fontSize,
+                value: $settingsService.settings.cards.fontSize.loggingClicks("settings_cards_text_size", screen: Self.screen),
                 presets: TeleprompterSettings.fontSizePresets
             )
 
@@ -170,7 +170,9 @@ struct EditorSettingsView: View {
                 }
             }
             .alert("Show Cards on Lock Screen?", isPresented: $confirmingLockScreen) {
-                Button("Cancel", role: .cancel) { }
+                Button("Cancel", role: .cancel) {
+                    AnalyticsEvents.logButtonClick("cards_lock_screen_cancel", screen: Self.screen)
+                }
                 Button("Show on Lock Screen") {
                     AnalyticsEvents.logButtonClick("cards_lock_screen_on", screen: Self.screen)
                     settingsService.settings.cards.showOnLockScreen = true
@@ -183,7 +185,7 @@ struct EditorSettingsView: View {
         }
 
         Section {
-            Toggle(isOn: $settingsService.settings.cards.followsVoice) {
+            Toggle(isOn: $settingsService.settings.cards.followsVoice.loggingClicks("settings_cards_follow_voice", screen: Self.screen)) {
                 HStack(spacing: 8) {
                     Text("Follow My Voice")
                     BetaBadge()
@@ -195,7 +197,7 @@ struct EditorSettingsView: View {
 
         AppleWatchSection(screen: Self.screen, mode: .cards)
 
-        AppearanceSection(screen: Self.screen, cueColor: $settingsService.settings.cards.cueColor)
+        AppearanceSection(screen: Self.screen, cueColor: $settingsService.settings.cards.cueColor.loggingClicks("settings_cards_cue_color", screen: Self.screen))
 
         LanguageSection(screen: Self.screen)
 
@@ -278,7 +280,7 @@ private struct SettingsScreen<Content: View>: View {
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") {
-                        AnalyticsEvents.logButtonClick("done", screen: screen)
+                        AnalyticsEvents.logButtonClick("settings_done", screen: screen)
                         dismiss()
                     }
                 }
@@ -319,7 +321,7 @@ private struct AppleWatchSection: View {
                     installButton
                 }
                 if showsCardTextSize {
-                    Picker("Card Text Size", selection: $settingsService.settings.watch.cardTextSize) {
+                    Picker("Card Text Size", selection: $settingsService.settings.watch.cardTextSize.loggingClicks("settings_watch_text_size", screen: screen)) {
                         ForEach(WatchCardTextSize.allCases, id: \.self) { size in
                             Text(size.displayName).tag(size)
                         }
@@ -358,7 +360,7 @@ private struct AppearanceSection: View {
 
     var body: some View {
         Section("Appearance") {
-            Picker("Theme", selection: $settingsService.settings.themePreference) {
+            Picker("Theme", selection: $settingsService.settings.themePreference.loggingClicks("settings_theme", screen: screen)) {
                 ForEach(ThemePreference.allCases, id: \.self) { theme in
                     Text(theme.displayName).tag(theme)
                 }
@@ -701,6 +703,7 @@ extension View {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
                 Button("Done") {
+                    AnalyticsEvents.logButtonClick("number_pad_done", screen: "settings")
                     UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                 }
             }

@@ -307,8 +307,14 @@ private struct FloatingCameraWindow: View {
         .frame(width: frame.width, height: frame.height)
         .clipShape(shape)
         .contentShape(shape)
-        .onTapGesture(count: 2) { withAnimation(snap) { placement.expanded.toggle() } }
-        .onTapGesture { withAnimation(.easeInOut(duration: 0.2)) { showsControls.toggle() } }
+        .onTapGesture(count: 2) {
+            AnalyticsEvents.logButtonClick(placement.expanded ? "camera_shrink" : "camera_expand", screen: "camera")
+            withAnimation(snap) { placement.expanded.toggle() }
+        }
+        .onTapGesture {
+            AnalyticsEvents.logButtonClick(showsControls ? "camera_hide_controls" : "camera_show_controls", screen: "camera")
+            withAnimation(.easeInOut(duration: 0.2)) { showsControls.toggle() }
+        }
         .gesture(drag.simultaneously(with: pinch))
         .offset(x: frame.minX - origin.x, y: frame.minY - origin.y)
         .accessibilityElement(children: .contain)
@@ -355,7 +361,10 @@ private struct FloatingCameraWindow: View {
         let icon: CGFloat = compact ? 15 : 18
         return VStack(spacing: 6) {
             HStack(spacing: 4) {
-                Button(action: onClose) {
+                Button {
+                    AnalyticsEvents.logButtonClick("camera_close", screen: "camera")
+                    onClose()
+                } label: {
                     circledIcon("xmark", size: 32)
                 }
                 .accessibilityLabel("Close Camera")
@@ -376,7 +385,10 @@ private struct FloatingCameraWindow: View {
                     .accessibilityAddTraits(.updatesFrequently)
             }
             HStack {
-                Button { Task { await recorder.switchCamera() } } label: {
+                Button {
+                    AnalyticsEvents.logButtonClick("camera_flip", screen: "camera")
+                    Task { await recorder.switchCamera() }
+                } label: {
                     circledIcon("arrow.triangle.2.circlepath.camera", size: 36)
                 }
                 .accessibilityLabel("Flip Camera")
@@ -385,6 +397,7 @@ private struct FloatingCameraWindow: View {
                 recordButton(diameter: compact ? 44 : 56)
                 Spacer(minLength: 0)
                 Button {
+                    AnalyticsEvents.logButtonClick("camera_stop", screen: "camera")
                     recorder.stop()
                     onControl(.stop)
                 } label: {
@@ -419,6 +432,10 @@ private struct FloatingCameraWindow: View {
 
     private func recordButton(diameter: CGFloat) -> some View {
         Button {
+            AnalyticsEvents.logButtonClick(
+                recorder.isRecording ? (recorder.isPaused ? "camera_resume" : "camera_pause") : "camera_record",
+                screen: "camera"
+            )
             let control: CameraLink.Control = recorder.isRecording && !recorder.isPaused ? .pause : .record
             if recorder.isRecording { recorder.togglePause() }
             else { recorder.start() }
@@ -456,7 +473,10 @@ private struct FloatingCameraWindow: View {
     private var zoomButton: some View {
         let steps = recorder.zoomSteps
         let next = steps.first { $0 > recorder.zoom + 0.05 } ?? steps[0]
-        return Button { recorder.setZoom(next) } label: {
+        return Button {
+            AnalyticsEvents.logButtonClick("camera_zoom", screen: "camera")
+            recorder.setZoom(next)
+        } label: {
             Text(verbatim: recorder.zoom.formatted(.number.precision(.fractionLength(0...1))) + "×")
                 .font(.caption2.monospacedDigit().weight(.bold))
                 .frame(width: 28, height: 28)

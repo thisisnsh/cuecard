@@ -70,17 +70,17 @@ private enum AllHelp {
         HelpTopic("Pick a Mode",
                   detail: "In your library, choose Teleprompter or Cards from the menu at the top left, then tap + at the bottom. Teleprompter scrolls your whole script. Cards shows it one card at a time."),
         HelpTopic("Add Cues",
-                  detail: "Cues are reminders like [pause], shown in color and not read out. Type [ or tap Cue above the keyboard."),
+                  detail: "Cues are reminders like [pause], shown in color and not read out. Type [ or tap + Cue above the keyboard."),
         HelpTopic("Bold and Italic",
                   detail: "Select words and tap B or I above the keyboard. Or type *bold* or _italic_."),
         HelpTopic("Add Anchors",
-                  detail: "Anchors mark spots in your script, like [anchor]. Type one or tap Insert (+) above the keyboard, then Add Anchor. In the teleprompter, the buttons beside Play jump to the anchor before or after."),
+                  detail: "Anchors mark spots in your script, like [anchor]. Type one or tap + Anchor above the keyboard. In the teleprompter, the buttons beside Play jump to the anchor before or after."),
         HelpTopic("Add Images",
-                  detail: "Tap Insert (+) above the keyboard, then Add Image, or paste an image in. The Lock Screen and Apple Watch show a photo symbol in their place."),
+                  detail: "Tap the photo button above the keyboard, or paste an image in. The Lock Screen and Apple Watch show a photo symbol in their place."),
         HelpTopic("Add Cards",
                   detail: "Each box in the editor is one card. Tap Create New Card to add another."),
         HelpTopic("Get Suggestions (Beta)",
-                  detail: "Tap Suggestions above the timer to have Apple Intelligence read your script or deck on this iPhone. It suggests spelling fixes, cues, anchors and bold or italic words. In a deck it leaves out anchors, and only adds a cue where a card has room. Accept or reject each one, or accept them all. Needs an iPhone with Apple Intelligence turned on.")
+                  detail: "Tap the glowing button beside the timer to have Apple Intelligence read your script or deck on this iPhone. It suggests spelling fixes, cues, anchors and bold or italic words. In a deck it leaves out anchors, and only adds a cue where a card has room. Accept or reject each one, or accept them all. Needs an iPhone with Apple Intelligence turned on.")
     ])
 
     static let notes = HelpSection("notes", title: "Library & Saving",
@@ -89,7 +89,7 @@ private enum AllHelp {
         HelpTopic("Open a Script",
                   detail: "CueCard opens on your library, with every script and deck you saved. Tap one to write in it, and tap back to return. Switch between Teleprompter and Cards at the top."),
         HelpTopic("Save Your Work",
-                  detail: "Save above the reading controls appears when there are changes to save. Tap it to save. A new script you haven't saved shows in the library as a draft."),
+                  detail: "Click to Save appears above the reading controls when there are changes to save. Tap it to save. To keep your changes as a separate script, open ••• at the top of the editor, then Save as New. A new script you haven't saved shows in the library as a draft."),
         HelpTopic("Rename, Duplicate or Delete",
                   detail: "In your library, touch and hold a script, or swipe it. In the editor, tap the title at the top to rename it."),
         HelpTopic("Organize in Folders",
@@ -97,7 +97,7 @@ private enum AllHelp {
         HelpTopic("Import a Text File",
                   detail: "In your library, tap ••• › Import File to add a text file or a TextPack as a script."),
         HelpTopic("Go Back to an Older Version",
-                  detail: "Every save is a new version. Once a note has more than one, open ••• at the top of the editor, then Version History, to compare changes and restore one."),
+                  detail: "Every save is a new version. Tap the version number at the bottom of the editor to compare changes and restore one. Once a note has more than one, it's also under ••• at the top, in Version History."),
         HelpTopic("Keep Scripts if the App Is Removed",
                   detail: "Until you choose a storage folder, scripts are kept only in CueCard and are deleted with the app. In your library, tap ••• › Choose Storage Folder. Each script is kept there as a text file and each folder as a folder. Pick one in iCloud Drive to keep them there too."),
         HelpTopic("Your Privacy",
@@ -112,7 +112,7 @@ private enum AllHelp {
         HelpTopic("Change Text Size and Colors",
                   detail: "Open a script and tap the gear at the top. Each mode keeps its own sizes and cue color."),
         HelpTopic("Set a Timer",
-                  detail: "Tap the timer next to Start Reading or Read Cards to set how long you have, when it warns you, and the colors it turns."),
+                  detail: "Tap the timer at the bottom of the editor to set how long you have, when it warns you, and the colors it turns."),
         HelpTopic("Count Down Before Scrolling",
                   detail: "In the teleprompter's timer, set a Countdown to get a few seconds before the script starts scrolling."),
         HelpTopic("Change the Language",
@@ -260,7 +260,6 @@ struct HelpView: View {
 
     /// Closes the whole sheet, from the front page or a section.
     private func close() {
-        AnalyticsEvents.logButtonClick("done", screen: Self.screen)
         dismiss()
     }
 }
@@ -278,6 +277,8 @@ private struct HelpTopicsList: View {
     let close: () -> Void
 
     @State private var query = ""
+    /// All Topics was logged as opened, which coming back to it isn't.
+    @State private var didLogOpen = false
 
     private var trimmedQuery: String {
         query.trimmingCharacters(in: .whitespaces)
@@ -314,8 +315,16 @@ private struct HelpTopicsList: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Done", action: close)
+                Button("Done") {
+                    AnalyticsEvents.logButtonClick("help_topics_done", screen: HelpView.screen)
+                    close()
+                }
             }
+        }
+        .onAppear {
+            guard !showsAsk, !didLogOpen else { return }
+            didLogOpen = true
+            AnalyticsEvents.logButtonClick("help_all_topics", screen: HelpView.screen)
         }
     }
 
@@ -378,7 +387,7 @@ private struct HelpTopicsList: View {
         Section {
             ForEach(AllHelp.sections) { section in
                 NavigationLink {
-                    HelpSectionView(section: section, close: close)
+                    HelpSectionView(section: section, event: "section_\(section.id)", close: close)
                 } label: {
                     HelpSectionLabel(section: section)
                 }
@@ -442,7 +451,7 @@ private struct HelpBrowseCards: View {
                 ForEach(Array(AllHelp.sections.enumerated()), id: \.element.id) { index, section in
                     if index > 0 { divider }
                     NavigationLink {
-                        HelpSectionView(section: section, close: close)
+                        HelpSectionView(section: section, event: "section_\(section.id)_browse", close: close)
                     } label: {
                         row { HelpSectionLabel(section: section) }
                     }
@@ -451,16 +460,16 @@ private struct HelpBrowseCards: View {
             }
 
             card {
-                link("Report a Bug", systemImage: "ladybug", event: "report_bug") {
+                link("Report a Bug", systemImage: "ladybug", event: "report_bug_browse") {
                     openURL(AppLinks.bugReport)
                 }
                 divider
-                link("Request a Feature", systemImage: "lightbulb", event: "request_feature") {
+                link("Request a Feature", systemImage: "lightbulb", event: "request_feature_browse") {
                     openURL(AppLinks.featureRequest)
                 }
                 if whatsNew.release != nil {
                     divider
-                    link("What's New in \(whatsNew.version)", systemImage: "sparkles", event: "whats_new") {
+                    link("What's New in \(whatsNew.version)", systemImage: "sparkles", event: "whats_new_browse") {
                         whatsNew.show()
                     }
                 }
@@ -517,6 +526,8 @@ private struct HelpBrowseCards: View {
 /// One section's topics, each closed to its title until it's tapped.
 private struct HelpSectionView: View {
     let section: HelpSection
+    /// What opening it is logged as, which says which list it came from.
+    let event: String
     /// Closes the sheet. The page's own dismiss would only go back.
     let close: () -> Void
 
@@ -530,11 +541,14 @@ private struct HelpSectionView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Done", action: close)
+                Button("Done") {
+                    AnalyticsEvents.logButtonClick("help_section_done", screen: HelpView.screen)
+                    close()
+                }
             }
         }
         .onAppear {
-            AnalyticsEvents.logButtonClick("section_\(section.id)", screen: HelpView.screen)
+            AnalyticsEvents.logButtonClick(event, screen: HelpView.screen)
         }
     }
 }
@@ -549,6 +563,7 @@ private struct HelpTopicRow: View {
 
     var body: some View {
         Button {
+            AnalyticsEvents.logButtonClick(isExpanded ? "help_topic_close" : "help_topic_open", screen: HelpView.screen)
             withAnimation(.snappy(duration: 0.25)) { isExpanded.toggle() }
         } label: {
             VStack(alignment: .leading, spacing: 4) {
@@ -603,7 +618,7 @@ private struct HelpButton: View {
 
     var body: some View {
         Button {
-            AnalyticsEvents.logButtonClick("help", screen: page.rawValue)
+            AnalyticsEvents.logButtonClick("help_\(page.rawValue)", screen: page.rawValue)
             isPresented = true
         } label: {
             Image(systemName: "questionmark")

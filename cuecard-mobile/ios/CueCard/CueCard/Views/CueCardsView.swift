@@ -90,7 +90,7 @@ struct CueCardsView: View {
                 .toolbar {
                     ToolbarItem(placement: .topBarLeading) {
                         Button(action: {
-                            AnalyticsEvents.logButtonClick("close", screen: "cards")
+                            AnalyticsEvents.logButtonClick("cards_close", screen: "cards")
                             finishFollowingVoice()
                             session.end()
                             TakeStore.shared.end()
@@ -113,7 +113,7 @@ struct CueCardsView: View {
                     }
                     ToolbarItem(placement: .topBarTrailing) {
                         Button {
-                            AnalyticsEvents.logButtonClick("camera", screen: "cards")
+                            AnalyticsEvents.logButtonClick("cards_camera", screen: "cards")
                             showingCamera.toggle()
                         } label: {
                             Image(systemName: showingCamera ? "camera.fill" : "camera")
@@ -124,7 +124,7 @@ struct CueCardsView: View {
                     ToolbarItem(placement: .topBarTrailing) {
                         Menu {
                             Button {
-                                AnalyticsEvents.logButtonClick(followsVoice ? "follow_voice_off" : "follow_voice_on", screen: "cards")
+                                AnalyticsEvents.logButtonClick(followsVoice ? "cards_follow_voice_off" : "cards_follow_voice_on", screen: "cards")
                                 settingsService.settings.cards.followsVoice.toggle()
                             } label: {
                                 Label(followsVoice ? "Turn Off Follow My Voice" : "Follow My Voice",
@@ -135,6 +135,9 @@ struct CueCardsView: View {
                                 .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                         }
                         .accessibilityLabel("Reading Options")
+                        .simultaneousGesture(TapGesture().onEnded {
+                            AnalyticsEvents.logButtonClick("cards_menu", screen: "cards")
+                        })
                     }
                     HelpToolbarItem(page: .cards, isPresented: $showingHelp)
                 }
@@ -157,11 +160,13 @@ struct CueCardsView: View {
                                 Text("Check that Live Activities are enabled for CueCard in Settings, then return to this deck and try again.")
                                     .foregroundStyle(.secondary)
                                 Button("Open Settings") {
+                                    AnalyticsEvents.logButtonClick("cards_lock_screen_open_settings", screen: "cards")
                                     if let url = URL(string: UIApplication.openSettingsURLString) {
                                         openURL(url)
                                     }
                                 }
                                 Button("Try Again") {
+                                    AnalyticsEvents.logButtonClick("cards_lock_screen_try_again", screen: "cards")
                                     session.showOnLockScreen()
                                     showingLockScreenHelp = false
                                 }
@@ -171,7 +176,10 @@ struct CueCardsView: View {
                         .navigationBarTitleDisplayMode(.inline)
                         .toolbar {
                             ToolbarItem(placement: .confirmationAction) {
-                                Button("Done") { showingLockScreenHelp = false }
+                                Button("Done") {
+                                    AnalyticsEvents.logButtonClick("cards_lock_screen_help_done", screen: "cards")
+                                    showingLockScreenHelp = false
+                                }
                             }
                         }
                     }
@@ -269,7 +277,7 @@ struct CueCardsView: View {
         case .idle: (String(localized: "Not listening. Tap to listen."), "mic.slash")
         }
         return Button {
-            AnalyticsEvents.logButtonClick(voice.isListening ? "follow_voice_stop" : "follow_voice_listen",
+            AnalyticsEvents.logButtonClick(voice.isListening ? "cards_follow_voice_stop" : "cards_follow_voice_listen",
                                            screen: "cards")
             if voice.isListening {
                 voice.stop()
@@ -495,7 +503,10 @@ struct CueCardsView: View {
         if followsVoice {
             voiceStatus
         } else if session.isOnLockScreen || settings.cards.showOnLockScreen {
-            Button { showingLockScreenHelp = true } label: {
+            Button {
+                AnalyticsEvents.logButtonClick("cards_lock_screen_help", screen: "cards")
+                showingLockScreenHelp = true
+            } label: {
                 Label(unavailable ? "Enable Lock Screen cards" : "Also on Lock Screen",
                       systemImage: unavailable ? "lock.slash" : "lock.fill")
                     .font(.footnote)

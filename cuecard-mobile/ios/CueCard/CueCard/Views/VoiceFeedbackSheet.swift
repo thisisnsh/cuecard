@@ -54,6 +54,7 @@ struct VoiceFeedbackSheet: View {
                 HStack(spacing: 10) {
                     ForEach(1...5, id: \.self) { star in
                         Button {
+                            AnalyticsEvents.logButtonClick("voice_rating_star", screen: "voice_feedback", parameters: ["stars": star])
                             stars = star
                         } label: {
                             Image(systemName: star <= stars ? "star.fill" : "star")
@@ -98,7 +99,10 @@ struct VoiceFeedbackSheet: View {
             .frame(maxHeight: .infinity, alignment: .top)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Not Now") { dismiss() }
+                    Button("Not Now") {
+                        AnalyticsEvents.logButtonClick("voice_rating_not_now", screen: "voice_feedback")
+                        dismiss()
+                    }
                 }
             }
         }
@@ -110,6 +114,7 @@ struct VoiceFeedbackSheet: View {
     }
 
     private func send() {
+        AnalyticsEvents.logButtonClick("voice_rating_send", screen: "voice_feedback", parameters: ["stars": stars])
         var parameters = VoiceFeedback.parameters(for: metrics)
         parameters["stars"] = stars
         Analytics.logEvent("follow_voice_rating", parameters: parameters)
@@ -118,6 +123,7 @@ struct VoiceFeedbackSheet: View {
     }
 
     private func reportIssue() {
+        AnalyticsEvents.logButtonClick("voice_rating_report", screen: "voice_feedback")
         var parameters = VoiceFeedback.parameters(for: metrics)
         if stars > 0 { parameters["stars"] = stars }
         Analytics.logEvent("follow_voice_report", parameters: parameters)

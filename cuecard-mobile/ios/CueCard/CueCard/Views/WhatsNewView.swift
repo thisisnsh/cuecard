@@ -56,7 +56,10 @@ struct WhatsNewView: View {
         .clipShape(shape)
         .glassedEffect(in: shape)
         .overlay(alignment: .topTrailing) {
-            Button(action: close) {
+            Button {
+                AnalyticsEvents.logButtonClick("whats_new_close", screen: "whats_new")
+                close()
+            } label: {
                 Image(systemName: "xmark")
                     .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(primary)

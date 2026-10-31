@@ -271,7 +271,7 @@ private struct LibraryList: View {
                     isUnreachable: settingsService.hasNotesFolder,
                     colorScheme: colorScheme,
                     onChoose: {
-                        AnalyticsEvents.logButtonClick("choose_notes_folder", screen: Self.screen)
+                        AnalyticsEvents.logButtonClick("choose_notes_folder_banner", screen: Self.screen)
                         showingFolderPicker = true
                     },
                     onDismiss: settingsService.hasNotesFolder ? nil : {
@@ -396,6 +396,9 @@ private struct LibraryList: View {
             .fixedSize()
         }
         .accessibilityLabel("Mode: \(mode.displayName)")
+        .simultaneousGesture(TapGesture().onEnded {
+            AnalyticsEvents.logButtonClick("library_mode_menu", screen: Self.screen)
+        })
     }
 
     private func sectionLabel(_ text: String) -> some View {
@@ -441,7 +444,10 @@ private struct LibraryList: View {
         HStack(spacing: 10) {
             searchRow
             if isSearching {
-                Button("Done") { isSearching = false }
+                Button("Done") {
+                    AnalyticsEvents.logButtonClick("library_search_done", screen: Self.screen)
+                    isSearching = false
+                }
                     .font(.subheadline.weight(.semibold))
                     .frame(minHeight: 44)
             } else {
@@ -483,7 +489,10 @@ private struct LibraryList: View {
                 .onSubmit { isSearching = false }
                 .accessibilityLabel(searchPrompt)
             if !query.isEmpty {
-                Button { query = "" } label: {
+                Button {
+                    AnalyticsEvents.logButtonClick("library_search_clear", screen: Self.screen)
+                    query = ""
+                } label: {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundStyle(AppColors.textSecondary(for: colorScheme))
                         .frame(width: 44, height: 48)
@@ -506,7 +515,7 @@ private struct LibraryList: View {
     private var moreMenu: some View {
         Menu {
             Menu {
-                Picker("Sort By", selection: $sort) {
+                Picker("Sort By", selection: $sort.loggingClicks("library_sort", screen: Self.screen)) {
                     ForEach(LibrarySort.allCases) { Text($0.displayName).tag($0) }
                 }
             } label: {
@@ -579,6 +588,9 @@ private struct LibraryList: View {
                 .foregroundStyle(AppColors.textPrimary(for: colorScheme))
         }
         .accessibilityLabel("Library Options")
+        .simultaneousGesture(TapGesture().onEnded {
+            AnalyticsEvents.logButtonClick("library_menu", screen: Self.screen)
+        })
     }
 
     private func beginNewFolder(for note: SavedNote?) {
@@ -597,7 +609,7 @@ private struct LibraryList: View {
                     folderChip(name)
                 }
                 Button {
-                    AnalyticsEvents.logButtonClick("new_folder", screen: Self.screen)
+                    AnalyticsEvents.logButtonClick("new_folder_chip", screen: Self.screen)
                     beginNewFolder(for: nil)
                 } label: {
                     Text("New Folder")
@@ -642,12 +654,14 @@ private struct LibraryList: View {
         .buttonStyle(.plain)
         .contextMenu {
             Button {
+                AnalyticsEvents.logButtonClick("rename_folder_chip", screen: Self.screen)
                 folderTitle = name
                 folderToRename = name
             } label: {
                 Label("Rename", systemImage: "pencil")
             }
             Button(role: .destructive) {
+                AnalyticsEvents.logButtonClick("delete_folder_chip", screen: Self.screen)
                 folderToDelete = name
             } label: {
                 Label("Delete Folder", systemImage: "trash")
@@ -667,17 +681,25 @@ private struct LibraryList: View {
             badge: String(localized: "Draft"),
             takes: takeCounts.count(for: scriptID),
             colorScheme: colorScheme,
-            onTakes: { takesTarget = TakesTarget(id: scriptID, title: title) }
+            onTakes: {
+                AnalyticsEvents.logButtonClick("library_takes_draft", screen: Self.screen)
+                takesTarget = TakesTarget(id: scriptID, title: title)
+            }
         )
-        .onTapGesture { openDraft(mode) }
+        .onTapGesture {
+            AnalyticsEvents.logButtonClick("open_draft", screen: Self.screen)
+            openDraft(mode)
+        }
         .plainRow(insets: Self.rowInsets)
         .contextMenu {
             Button {
+                AnalyticsEvents.logButtonClick("open_draft_menu", screen: Self.screen)
                 openDraft(mode)
             } label: {
                 Label("Keep Writing", systemImage: "square.and.pencil")
             }
             Button(role: .destructive) {
+                AnalyticsEvents.logButtonClick("discard_draft_menu", screen: Self.screen)
                 draftToDiscard = mode
             } label: {
                 Label("Discard", systemImage: "trash")
@@ -685,6 +707,7 @@ private struct LibraryList: View {
         }
         .swipeActions(edge: .trailing) {
             Button {
+                AnalyticsEvents.logButtonClick("discard_draft_swipe", screen: Self.screen)
                 draftToDiscard = mode
             } label: {
                 Label("Discard", systemImage: "trash")
@@ -703,7 +726,7 @@ private struct LibraryList: View {
             takes: takeCounts.count(for: note.id),
             colorScheme: colorScheme,
             onTakes: {
-                AnalyticsEvents.logButtonClick("takes", screen: Self.screen)
+                AnalyticsEvents.logButtonClick("library_takes_note", screen: Self.screen)
                 takesTarget = TakesTarget(id: note.id, title: note.title)
             }
         )
@@ -712,6 +735,7 @@ private struct LibraryList: View {
         .contextMenu { noteMenu(note) }
         .swipeActions(edge: .trailing) {
             Button {
+                AnalyticsEvents.logButtonClick("delete_note_swipe", screen: Self.screen)
                 noteToDelete = note
             } label: {
                 Label("Delete", systemImage: "trash")
@@ -720,7 +744,7 @@ private struct LibraryList: View {
         }
         .swipeActions(edge: .leading) {
             Button {
-                AnalyticsEvents.logButtonClick("rename_note", screen: Self.screen)
+                AnalyticsEvents.logButtonClick("rename_note_swipe", screen: Self.screen)
                 renameTitle = note.title
                 noteToRename = note
             } label: {
@@ -728,7 +752,7 @@ private struct LibraryList: View {
             }
             .tint(.orange)
             Button {
-                duplicate(note)
+                duplicate(note, from: "duplicate_note")
             } label: {
                 Label("Duplicate", systemImage: "plus.square.on.square")
             }
@@ -739,13 +763,13 @@ private struct LibraryList: View {
     @ViewBuilder
     private func noteMenu(_ note: SavedNote) -> some View {
         Button {
-            open(note)
+            open(note, from: "load_note_menu")
         } label: {
             Label("Open", systemImage: "square.and.pencil")
         }
 
         Button {
-            AnalyticsEvents.logButtonClick("rename_note", screen: Self.screen)
+            AnalyticsEvents.logButtonClick("rename_note_menu", screen: Self.screen)
             renameTitle = note.title
             noteToRename = note
         } label: {
@@ -753,7 +777,7 @@ private struct LibraryList: View {
         }
 
         Button {
-            duplicate(note)
+            duplicate(note, from: "duplicate_note_menu")
         } label: {
             Label("Duplicate", systemImage: "plus.square.on.square")
         }
@@ -772,6 +796,7 @@ private struct LibraryList: View {
             .pickerStyle(.inline)
 
             Button {
+                AnalyticsEvents.logButtonClick("new_folder_move", screen: Self.screen)
                 beginNewFolder(for: note)
             } label: {
                 Label("New Folder", systemImage: "folder.badge.plus")
@@ -796,6 +821,7 @@ private struct LibraryList: View {
         Divider()
 
         Button(role: .destructive) {
+            AnalyticsEvents.logButtonClick("delete_note_menu", screen: Self.screen)
             noteToDelete = note
         } label: {
             Label("Delete", systemImage: "trash")
@@ -824,8 +850,8 @@ private struct LibraryList: View {
     /// Open a saved note in the editor. One already open there keeps what's
     /// being written in it; any other replaces its mode's script, once the
     /// user agrees to lose what isn't saved.
-    private func open(_ note: SavedNote) {
-        AnalyticsEvents.logButtonClick("load_note", screen: Self.screen)
+    private func open(_ note: SavedNote, from button: String = "load_note") {
+        AnalyticsEvents.logButtonClick(button, screen: Self.screen)
         if settingsService.noteId(for: note.mode) == note.id {
             openDraft(note.mode)
         } else if settingsService.hasUnsavedChanges(in: note.mode) {
@@ -860,15 +886,15 @@ private struct LibraryList: View {
         path.append(.editor)
     }
 
-    private func duplicate(_ note: SavedNote) {
-        AnalyticsEvents.logButtonClick("duplicate_note", screen: Self.screen)
+    private func duplicate(_ note: SavedNote, from button: String) {
+        AnalyticsEvents.logButtonClick(button, screen: Self.screen)
         if settingsService.duplicateNote(id: note.id) == nil {
             errorMessage = String(localized: "The script couldn't be duplicated. Try again.")
         }
     }
 
-    private func move(_ note: SavedNote, to folder: String?) {
-        AnalyticsEvents.logButtonClick("move_note", screen: Self.screen)
+    private func move(_ note: SavedNote, to folder: String?, from button: String = "move_note") {
+        AnalyticsEvents.logButtonClick(button, screen: Self.screen)
         if !settingsService.moveNote(id: note.id, toFolder: folder) {
             errorMessage = String(localized: "The script couldn't be moved. Try again.")
         }
@@ -956,6 +982,7 @@ private struct LibraryList: View {
                 ), presenting: list.pendingOpen) { pending in
                     if settingsService.noteId(for: pending.mode) != nil {
                         Button("Save and Continue") {
+                            AnalyticsEvents.logButtonClick("unsaved_save_continue", screen: LibraryList.screen)
                             if settingsService.saveChanges(in: pending.mode) {
                                 list.proceed(with: pending)
                             } else {
@@ -963,9 +990,17 @@ private struct LibraryList: View {
                             }
                         }
                     }
-                    Button("Keep Editing") { list.openDraft(pending.mode) }
-                    Button("Discard Changes", role: .destructive) { list.proceed(with: pending) }
-                    Button("Cancel", role: .cancel) { }
+                    Button("Keep Editing") {
+                        AnalyticsEvents.logButtonClick("unsaved_keep_editing", screen: LibraryList.screen)
+                        list.openDraft(pending.mode)
+                    }
+                    Button("Discard Changes", role: .destructive) {
+                        AnalyticsEvents.logButtonClick("unsaved_discard", screen: LibraryList.screen)
+                        list.proceed(with: pending)
+                    }
+                    Button("Cancel", role: .cancel) {
+                        AnalyticsEvents.logButtonClick("unsaved_cancel", screen: LibraryList.screen)
+                    }
                 } message: { pending in
                     Text(unsavedMessage(for: pending.mode))
                 }
@@ -973,7 +1008,9 @@ private struct LibraryList: View {
                     get: { list.draftToDiscard != nil },
                     set: { if !$0 { list.draftToDiscard = nil } }
                 ), presenting: list.draftToDiscard) { mode in
-                    Button("Cancel", role: .cancel) { }
+                    Button("Cancel", role: .cancel) {
+                        AnalyticsEvents.logButtonClick("discard_draft_cancel", screen: LibraryList.screen)
+                    }
                     Button("Discard", role: .destructive) {
                         AnalyticsEvents.logButtonClick("discard_draft", screen: LibraryList.screen)
                         let current = settingsService.settings.scriptMode
@@ -988,8 +1025,11 @@ private struct LibraryList: View {
                     set: { if !$0 { list.noteToRename = nil } }
                 )) {
                     TextField("Title", text: list.$renameTitle)
-                    Button("Cancel", role: .cancel) { }
+                    Button("Cancel", role: .cancel) {
+                        AnalyticsEvents.logButtonClick("rename_note_cancel", screen: LibraryList.screen)
+                    }
                     Button("Rename") {
+                        AnalyticsEvents.logButtonClick("rename_note_confirm", screen: LibraryList.screen)
                         guard let note = list.noteToRename else { return }
                         let title = list.renameTitle.trimmingCharacters(in: .whitespacesAndNewlines)
                         if !title.isEmpty, !settingsService.updateNote(id: note.id, title: title) {
@@ -1001,7 +1041,9 @@ private struct LibraryList: View {
                     get: { list.noteToDelete != nil },
                     set: { if !$0 { list.noteToDelete = nil } }
                 ), presenting: list.noteToDelete) { note in
-                    Button("Cancel", role: .cancel) { }
+                    Button("Cancel", role: .cancel) {
+                        AnalyticsEvents.logButtonClick("delete_note_cancel", screen: LibraryList.screen)
+                    }
                     Button("Delete", role: .destructive) {
                         AnalyticsEvents.logButtonClick("delete_note", screen: LibraryList.screen)
                         if !settingsService.deleteNote(id: note.id) {
@@ -1019,7 +1061,9 @@ private struct LibraryList: View {
                     get: { list.errorMessage != nil },
                     set: { if !$0 { list.errorMessage = nil } }
                 )) {
-                    Button("OK", role: .cancel) { }
+                    Button("OK", role: .cancel) {
+                        AnalyticsEvents.logButtonClick("library_error_ok", screen: LibraryList.screen)
+                    }
                 } message: {
                     Text(list.errorMessage ?? "")
                 }
@@ -1045,14 +1089,17 @@ private struct LibraryList: View {
             content
                 .alert("New Folder", isPresented: list.$showingNewFolder) {
                     TextField("Name", text: list.$newFolderName)
-                    Button("Cancel", role: .cancel) { }
+                    Button("Cancel", role: .cancel) {
+                        AnalyticsEvents.logButtonClick("new_folder_cancel", screen: LibraryList.screen)
+                    }
                     Button("Create") {
+                        AnalyticsEvents.logButtonClick("new_folder_create", screen: LibraryList.screen)
                         guard let name = settingsService.createFolder(named: list.newFolderName) else {
                             list.errorMessage = String(localized: "There's already a folder with that name, or the name can't be used.")
                             return
                         }
                         if let note = list.noteForNewFolder {
-                            list.move(note, to: name)
+                            list.move(note, to: name, from: "move_note_new_folder")
                         }
                     }
                 } message: {
@@ -1065,8 +1112,11 @@ private struct LibraryList: View {
                     set: { if !$0 { list.folderToRename = nil } }
                 )) {
                     TextField("Name", text: list.$folderTitle)
-                    Button("Cancel", role: .cancel) { }
+                    Button("Cancel", role: .cancel) {
+                        AnalyticsEvents.logButtonClick("rename_folder_cancel", screen: LibraryList.screen)
+                    }
                     Button("Rename") {
+                        AnalyticsEvents.logButtonClick("rename_folder_confirm", screen: LibraryList.screen)
                         guard let name = list.folderToRename else { return }
                         guard settingsService.renameFolder(name, to: list.folderTitle) else {
                             list.errorMessage = String(localized: "There's already a folder with that name, or the name can't be used.")
@@ -1084,8 +1134,11 @@ private struct LibraryList: View {
                     get: { list.folderToDelete != nil },
                     set: { if !$0 { list.folderToDelete = nil } }
                 ), presenting: list.folderToDelete) { name in
-                    Button("Cancel", role: .cancel) { }
+                    Button("Cancel", role: .cancel) {
+                        AnalyticsEvents.logButtonClick("delete_folder_cancel", screen: LibraryList.screen)
+                    }
                     Button("Delete Folder", role: .destructive) {
+                        AnalyticsEvents.logButtonClick("delete_folder_confirm", screen: LibraryList.screen)
                         settingsService.deleteFolder(name)
                         if list.folder == name, !list.path.isEmpty {
                             list.path.removeLast()
@@ -1107,8 +1160,11 @@ private struct LibraryList: View {
                 // Alerts rather than confirmation dialogs, which leave Cancel out
                 // where they open as a popover.
                 .alert("Stop Using Storage Folder?", isPresented: list.$showingStopFolder) {
-                    Button("Cancel", role: .cancel) { }
+                    Button("Cancel", role: .cancel) {
+                        AnalyticsEvents.logButtonClick("stop_notes_folder_cancel", screen: LibraryList.screen)
+                    }
                     Button("Stop Using Folder", role: .destructive) {
+                        AnalyticsEvents.logButtonClick("stop_notes_folder_confirm", screen: LibraryList.screen)
                         if !settingsService.stopUsingNotesFolder() {
                             list.showingStopFolderFailed = true
                         }
@@ -1121,8 +1177,11 @@ private struct LibraryList: View {
                     }
                 }
                 .alert("Delete All Scripts?", isPresented: list.$showingDeleteAll) {
-                    Button("Cancel", role: .cancel) { }
+                    Button("Cancel", role: .cancel) {
+                        AnalyticsEvents.logButtonClick("delete_all_notes_cancel", screen: LibraryList.screen)
+                    }
                     Button("Delete All", role: .destructive) {
+                        AnalyticsEvents.logButtonClick("delete_all_notes_confirm", screen: LibraryList.screen)
                         let count = settingsService.savedNotes.count
                         if !settingsService.deleteAllNotes() {
                             list.errorMessage = String(localized: "Your notes were deleted. \(list.undeletedFilesMessage(count: count))")
@@ -1136,8 +1195,11 @@ private struct LibraryList: View {
                     }
                 }
                 .alert("Couldn't Delete Script Files", isPresented: list.$showingStopFolderFailed) {
-                    Button("Keep Using Folder", role: .cancel) { }
+                    Button("Keep Using Folder", role: .cancel) {
+                        AnalyticsEvents.logButtonClick("stop_notes_folder_keep", screen: LibraryList.screen)
+                    }
                     Button("Stop Anyway") {
+                        AnalyticsEvents.logButtonClick("stop_notes_folder_anyway", screen: LibraryList.screen)
                         settingsService.stopUsingNotesFolderKeepingFiles()
                     }
                 } message: {

@@ -201,7 +201,7 @@ struct TeleprompterView: View {
                     if showControls || showingCamera {
                         ToolbarItem(placement: .topBarLeading) {
                             Button(action: {
-                                AnalyticsEvents.logButtonClick("close", screen: "teleprompter")
+                                AnalyticsEvents.logButtonClick("teleprompter_close", screen: "teleprompter")
                                 stopAndDismiss()
                             }) {
                                 Image(systemName: "xmark")
@@ -212,7 +212,7 @@ struct TeleprompterView: View {
                         }
                         ToolbarItem(placement: .topBarTrailing) {
                             Button {
-                                AnalyticsEvents.logButtonClick("camera", screen: "teleprompter")
+                                AnalyticsEvents.logButtonClick("teleprompter_camera", screen: "teleprompter")
                                 stopControlsTimer()
                                 showingCamera.toggle()
                             } label: {
@@ -224,7 +224,7 @@ struct TeleprompterView: View {
                         ToolbarItem(placement: .topBarTrailing) {
                             Menu {
                                 Button {
-                                    AnalyticsEvents.logButtonClick(settings.followsVoice ? "follow_voice_off" : "follow_voice_on", screen: "teleprompter")
+                                    AnalyticsEvents.logButtonClick(settings.followsVoice ? "teleprompter_follow_voice_off" : "teleprompter_follow_voice_on", screen: "teleprompter")
                                     settingsService.settings.followsVoice.toggle()
                                 } label: {
                                     Label(settings.followsVoice ? "Turn Off Follow My Voice" : "Follow My Voice",
@@ -235,7 +235,10 @@ struct TeleprompterView: View {
                                     .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                             }
                             .accessibilityLabel("Reading Options")
-                            .simultaneousGesture(TapGesture().onEnded { stopControlsTimer() })
+                            .simultaneousGesture(TapGesture().onEnded {
+                                AnalyticsEvents.logButtonClick("teleprompter_menu", screen: "teleprompter")
+                                stopControlsTimer()
+                            })
                         }
                         HelpToolbarItem(page: .teleprompter, isPresented: $showingHelp)
                     }
@@ -375,7 +378,7 @@ struct TeleprompterView: View {
     /// listening or not. The script only moves as words are said.
     private var listenButton: some View {
         Button(action: {
-            AnalyticsEvents.logButtonClick(voice.isListening ? "follow_voice_stop" : "follow_voice_listen",
+            AnalyticsEvents.logButtonClick(voice.isListening ? "teleprompter_follow_voice_stop" : "teleprompter_follow_voice_listen",
                                            screen: "teleprompter")
             if voice.isListening {
                 voice.stop()
