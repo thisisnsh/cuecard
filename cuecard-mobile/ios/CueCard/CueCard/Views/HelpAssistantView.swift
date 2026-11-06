@@ -225,6 +225,7 @@ final class HelpAssistant: ObservableObject {
 
     func ask(_ question: String) {
         guard #available(iOS 26.0, *), availability == .available else { return }
+        AIUsage.recordQuestion()
         exchanges.append(Exchange(question: question))
         let index = exchanges.count - 1
 

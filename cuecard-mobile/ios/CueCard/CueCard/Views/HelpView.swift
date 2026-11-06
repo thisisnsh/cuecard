@@ -64,7 +64,20 @@ private struct HelpSection: Identifiable {
 // MARK: - Topics
 
 private enum AllHelp {
-    static let writing = HelpSection("writing", title: "Writing",
+    /// Suggestions are left out while Apple Intelligence is off, or this
+    /// iPhone has none.
+    static var writing: HelpSection {
+        var section = allWriting
+        if OnDeviceModelAvailability.current == .unsupported {
+            section.topics.removeAll { $0.id == suggestionsTopic.id }
+        }
+        return section
+    }
+
+    private static let suggestionsTopic = HelpTopic("Get Suggestions (Beta)",
+                  detail: "Tap the glowing button beside the timer to have Apple Intelligence read your script or deck on this iPhone. It suggests spelling fixes, cues, anchors and bold or italic words. In a deck it leaves out anchors, and only adds a cue where a card has room. Accept or reject each one, or accept them all. Needs an iPhone with Apple Intelligence turned on.")
+
+    private static let allWriting = HelpSection("writing", title: "Writing",
                                     summary: "Modes, cues, formatting, images and cards",
                                     systemImage: "pencil", topics: [
         HelpTopic("Pick a Mode",
@@ -79,8 +92,7 @@ private enum AllHelp {
                   detail: "Tap the photo button above the keyboard, or paste an image in. The Lock Screen and Apple Watch show a photo symbol in their place."),
         HelpTopic("Add Cards",
                   detail: "Each box in the editor is one card. Tap Create New Card to add another."),
-        HelpTopic("Get Suggestions (Beta)",
-                  detail: "Tap the glowing button beside the timer to have Apple Intelligence read your script or deck on this iPhone. It suggests spelling fixes, cues, anchors and bold or italic words. In a deck it leaves out anchors, and only adds a cue where a card has room. Accept or reject each one, or accept them all. Needs an iPhone with Apple Intelligence turned on.")
+        suggestionsTopic
     ])
 
     static let notes = HelpSection("notes", title: "Library & Saving",

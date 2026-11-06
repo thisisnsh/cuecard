@@ -29,9 +29,49 @@ struct SuggestionsMetrics: Equatable {
     var rejected = 0
 }
 
+/// CueCard's own switch for Apple Intelligence, in Settings. On unless the
+/// user turns it off; off, Suggestions and Ask AI are gone everywhere.
+enum AppleIntelligenceSetting {
+    static let enabledKey = "cuecard_apple_intelligence_enabled"
+
+    static var isEnabled: Bool {
+        UserDefaults.standard.object(forKey: enabledKey) as? Bool ?? true
+    }
+}
+
+/// How much Apple Intelligence has been used in CueCard on this iPhone, shown
+/// in Settings and sent with a report about it.
+enum AIUsage {
+    private static let reviewsKey = "cuecard_ai_suggestion_reviews"
+    private static let foundKey = "cuecard_ai_suggestions_found"
+    private static let acceptedKey = "cuecard_ai_suggestions_accepted"
+    private static let questionsKey = "cuecard_ai_help_questions"
+
+    /// Suggestion reviews seen through to the end.
+    static var reviews: Int { UserDefaults.standard.integer(forKey: reviewsKey) }
+    static var suggestionsFound: Int { UserDefaults.standard.integer(forKey: foundKey) }
+    static var suggestionsAccepted: Int { UserDefaults.standard.integer(forKey: acceptedKey) }
+    /// Questions asked in Help.
+    static var questions: Int { UserDefaults.standard.integer(forKey: questionsKey) }
+
+    static func recordReview(_ metrics: SuggestionsMetrics) {
+        add(1, to: reviewsKey)
+        add(metrics.found, to: foundKey)
+        add(metrics.accepted, to: acceptedKey)
+    }
+
+    static func recordQuestion() {
+        add(1, to: questionsKey)
+    }
+
+    private static func add(_ amount: Int, to key: String) {
+        UserDefaults.standard.set(UserDefaults.standard.integer(forKey: key) + amount, forKey: key)
+    }
+}
+
 /// Whether this iPhone has Apple's on-device model to ask — for suggestions
 /// and for answers in Help — and if not, whether the user could do
-/// something about that.
+/// something about that. Turned off in Settings, it's as if there were none.
 enum OnDeviceModelAvailability: Equatable {
     case available
     /// Apple Intelligence is off, or still getting ready: what uses it shows,
@@ -41,6 +81,11 @@ enum OnDeviceModelAvailability: Equatable {
     case unsupported
 
     static var current: OnDeviceModelAvailability {
+        AppleIntelligenceSetting.isEnabled ? onDevice : .unsupported
+    }
+
+    /// What this iPhone can do, whatever the switch in Settings says.
+    static var onDevice: OnDeviceModelAvailability {
         guard #available(iOS 26.0, *) else { return .unsupported }
         switch SystemLanguageModel.default.availability {
         case .available:
@@ -138,6 +183,7 @@ final class ScriptReview: ObservableObject {
     func finish() {
         let result = metrics
         end()
+        AIUsage.recordReview(result)
         if result.found > 0 { finished = result }
     }
 

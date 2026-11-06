@@ -40,6 +40,9 @@ struct HomeView: View {
     @State private var bottomControlsHeight: CGFloat = 128
     /// A use of a beta AI feature to ask the reader about.
     @State private var aiExperience: AIExperience?
+    /// Apple Intelligence turned on in Settings, watched so Suggestions goes
+    /// as soon as it's turned off.
+    @AppStorage(AppleIntelligenceSetting.enabledKey) private var isAIEnabled = true
     @ObservedObject private var cardsSession = CueCardsSession.shared
     @StateObject private var takes = TakesLibrary()
     @Namespace private var takesTransition
@@ -175,9 +178,10 @@ struct HomeView: View {
     }
 
     /// Suggestions from Apple's on-device model, for a script being written for
-    /// the teleprompter. Not shown where this iPhone has no model to ask.
+    /// the teleprompter. Not shown where this iPhone has no model to ask, or
+    /// Apple Intelligence is turned off in Settings.
     private var showsSuggestions: Bool {
-        hasNotes && OnDeviceModelAvailability.current != .unsupported
+        hasNotes && isAIEnabled && OnDeviceModelAvailability.current != .unsupported
     }
 
     @ViewBuilder
@@ -494,6 +498,9 @@ struct HomeView: View {
             }
             .onChange(of: isCardsMode) {
                 review.end()
+            }
+            .onChange(of: isAIEnabled) {
+                if !isAIEnabled { review.end() }
             }
             // A review seen through: ask how it went.
             .onChange(of: review.finished) {

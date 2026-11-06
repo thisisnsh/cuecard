@@ -48,6 +48,8 @@ struct EditorSettingsView: View {
             case .cards: cardsSections
             }
 
+            AppleIntelligenceSection(screen: Self.screen)
+
             AboutSection(screen: Self.screen)
             diagnosticsSection
         }
@@ -248,6 +250,46 @@ struct EditorSettingsView: View {
 }
 
 // MARK: - Shared Sections
+
+/// CueCard's switch for Apple Intelligence, how much it's been used, and a
+/// way to report a problem with it. Only on an iPhone that has it.
+private struct AppleIntelligenceSection: View {
+    let screen: String
+
+    @Environment(\.openURL) private var openURL
+    @AppStorage(AppleIntelligenceSetting.enabledKey) private var isEnabled = true
+
+    var body: some View {
+        if OnDeviceModelAvailability.onDevice != .unsupported {
+            Section {
+                Toggle(isOn: $isEnabled.loggingClicks("settings_apple_intelligence", screen: screen)) {
+                    HStack(spacing: 8) {
+                        Text("Enable Apple Intelligence")
+                        BetaBadge()
+                    }
+                }
+
+                if isEnabled {
+                    LabeledContent("Scripts Reviewed", value: AIUsage.reviews.formatted())
+                    LabeledContent("Suggestions Accepted",
+                                   value: "\(AIUsage.suggestionsAccepted.formatted()) of \(AIUsage.suggestionsFound.formatted())")
+                    LabeledContent("Questions Asked", value: AIUsage.questions.formatted())
+                }
+
+                Button {
+                    AnalyticsEvents.logButtonClick("settings_apple_intelligence_report", screen: screen)
+                    openURL(AppLinks.appleIntelligenceReport)
+                } label: {
+                    Text("Report an Issue")
+                }
+            } header: {
+                Text("Apple Intelligence")
+            } footer: {
+                Text("AI Suggestions in the editor and Ask AI in Help run on this iPhone, and nothing you write leaves it. They're in beta, and will be fully released in a future version. Turn this off to hide them everywhere in CueCard.")
+            }
+        }
+    }
+}
 
 /// The list Settings is built on, with a Done button and a way
 /// off the number pad, which has no return key.

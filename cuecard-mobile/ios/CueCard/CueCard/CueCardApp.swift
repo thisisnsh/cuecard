@@ -129,6 +129,18 @@ enum AppLinks {
         )
     }
 
+    /// An email to support about Apple Intelligence in CueCard, with how
+    /// much it's been used.
+    static var appleIntelligenceReport: URL {
+        let usage = "Apple Intelligence (beta) · \(AIUsage.reviews) reviews · "
+            + "\(AIUsage.suggestionsFound) suggestions found · \(AIUsage.suggestionsAccepted) accepted · "
+            + "\(AIUsage.questions) questions asked"
+        return supportEmail(
+            subject: "CueCard Apple Intelligence Issue",
+            body: String(localized: "What happened:\n\nWhat you expected:\n") + "\n" + usage
+        )
+    }
+
     /// An email to support asking for something new.
     static let featureRequest = supportEmail(
         subject: "CueCard Feature Request",
