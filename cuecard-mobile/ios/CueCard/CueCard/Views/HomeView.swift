@@ -421,23 +421,24 @@ struct HomeView: View {
         } else {
             VStack(spacing: 10) {
                 if hasNotes {
-                    // Timer and Suggestions on the left, Play on the right. With
-                    // no room for the two on one line, they stack beside Play.
+                    // AI Suggestions on the left; Takes, the timer and Play on
+                    // the right, the timer beside Play. With no room for them
+                    // on one line, Takes stacks over the timer.
                     ViewThatFits(in: .horizontal) {
                         HStack(spacing: 12) {
-                            timerControl
                             suggestionsControl
                             Spacer(minLength: 0)
                             takesControl
+                            timerControl
                             startButton
                         }
                         HStack(alignment: .bottom, spacing: 12) {
-                            VStack(alignment: .leading, spacing: 12) {
-                                suggestionsControl
+                            suggestionsControl
+                            Spacer(minLength: 0)
+                            VStack(alignment: .trailing, spacing: 12) {
+                                takesControl
                                 timerControl
                             }
-                            Spacer(minLength: 0)
-                            takesControl
                             startButton
                         }
                     }
