@@ -105,7 +105,7 @@ private enum AllHelp {
         HelpTopic("Rename, Duplicate or Delete",
                   detail: "In your library, touch and hold a script, or swipe it. In the editor, tap the title at the top to rename it."),
         HelpTopic("Organize in Collections",
-                  detail: "In your library, tap + after your collections, or ••• › New Collection. Tap a collection at the top to show only its scripts, or All to show every one. To add a script to one, swipe it left or touch and hold it, then tap Add to Collection. A script you start or import goes in the collection you're in. Touch and hold a collection to rename or delete it. Tap ••• › Sort By to change the order."),
+                  detail: "In your library, tap + after your collections, or ••• › New Collection. Tap a collection at the top to show only its scripts, or All to show every one. To add a script to one, swipe it right or touch and hold it, then tap Add to Collection. A script you start or import goes in the collection you're in. Touch and hold a collection to rename or delete it. Tap ••• › Sort By to change the order."),
         HelpTopic("Import a Text File",
                   detail: "In your library, tap ••• › Import File to add a text file or a TextPack as a script."),
         HelpTopic("Go Back to an Older Version",

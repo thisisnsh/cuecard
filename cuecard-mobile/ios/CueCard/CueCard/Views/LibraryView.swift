@@ -759,13 +759,6 @@ private struct LibraryList: View {
                 Label("Delete", systemImage: "trash")
             }
             .tint(AppColors.red(for: colorScheme))
-            Button {
-                AnalyticsEvents.logButtonClick("add_to_collection_swipe", screen: Self.screen)
-                noteToCollect = note
-            } label: {
-                Label("Add to Collection", systemImage: "rectangle.stack.badge.plus")
-            }
-            .tint(AppColors.purple(for: colorScheme))
         }
         .swipeActions(edge: .leading) {
             Button {
@@ -782,6 +775,13 @@ private struct LibraryList: View {
                 Label("Duplicate", systemImage: "plus.square.on.square")
             }
             .tint(AppColors.blue(for: colorScheme))
+            Button {
+                AnalyticsEvents.logButtonClick("add_to_collection_swipe", screen: Self.screen)
+                noteToCollect = note
+            } label: {
+                Label("Add to Collection", systemImage: "rectangle.stack.badge.plus")
+            }
+            .tint(AppColors.purple(for: colorScheme))
         }
     }
 
