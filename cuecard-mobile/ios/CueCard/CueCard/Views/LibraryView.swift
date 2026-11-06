@@ -3,17 +3,19 @@ import UniformTypeIdentifiers
 import FirebaseAnalytics
 
 /// Where a library screen leads.
-enum LibraryRoute: Hashable {
+enum LibraryRoute: Hashable, Codable {
     case folder(String)
     case editor
 }
 
 /// Where the app opens: every saved script and deck, filed in folders, with
 /// the takes recorded with each. A script opens into the editor from here.
+/// It opens again on the folder or the editor it was left on, even after
+/// the app was quit; left reading, it opens on the editor.
 struct LibraryView: View {
     @EnvironmentObject var settingsService: SettingsService
     @Environment(\.scenePhase) private var scenePhase
-    @State private var path: [LibraryRoute] = []
+    @State private var path: [LibraryRoute] = Self.restoredPath()
     @StateObject private var takeCounts = TakeCounts()
     @ObservedObject private var cardsSession = CueCardsSession.shared
     /// A deck opened from the watch, while the editor isn't open to show it.
@@ -25,6 +27,23 @@ struct LibraryView: View {
 
     /// The launch's open is counted once, however often this appears.
     private static var hasCountedLaunch = false
+
+    /// The screens open over the top of the library, kept as they change.
+    /// Not scene storage, which is let go of when the app is quit.
+    private static let pathKey = "library_path"
+
+    /// The screens the library was left on, up to any folder deleted since.
+    private static func restoredPath() -> [LibraryRoute] {
+        guard let data = UserDefaults.standard.data(forKey: pathKey),
+              let saved = try? JSONDecoder().decode([LibraryRoute].self, from: data) else { return [] }
+        let folders = SettingsService.shared.folders
+        var path: [LibraryRoute] = []
+        for route in saved {
+            if case .folder(let name) = route, !folders.contains(name) { break }
+            path.append(route)
+        }
+        return path
+    }
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -73,6 +92,7 @@ struct LibraryView: View {
         // Back from the editor, there may be new takes or a new note.
         .onChange(of: path) {
             if !path.contains(.editor) { takeCounts.reload() }
+            UserDefaults.standard.set(try? JSONEncoder().encode(path), forKey: Self.pathKey)
         }
     }
 
