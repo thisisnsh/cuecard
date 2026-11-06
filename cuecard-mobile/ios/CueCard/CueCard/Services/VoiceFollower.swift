@@ -51,13 +51,13 @@ final class VoiceFollower: ObservableObject {
         }
 
         guard await Self.requestPermissions() else {
-            status = .unavailable(String(localized: "Allow CueCard to use the microphone and speech recognition in Settings to follow your voice."))
+            status = .unavailable(String(localized: "Allow mic and speech in Settings"))
             log("denied")
             return
         }
         guard current == generation else { return }
         guard let recognizer = Self.recognizer(for: text) else {
-            status = .unavailable(String(localized: "Your voice can't be followed in this script's language on this iPhone yet."))
+            status = .unavailable(String(localized: "This language isn't supported yet"))
             log("unsupported_language")
             return
         }
@@ -69,7 +69,7 @@ final class VoiceFollower: ObservableObject {
         } catch {
             guard current == generation else { return }
             stop()
-            status = .unavailable(String(localized: "The microphone couldn't be started. Close anything else using it and try again."))
+            status = .unavailable(String(localized: "The microphone couldn't start"))
             log("audio_failed")
             return
         }
@@ -175,7 +175,7 @@ final class VoiceFollower: ObservableObject {
             // Listening has since been stopped, or started over.
             guard listeningSince == session else { return }
             stop()
-            status = .unavailable(String(localized: "The microphone stopped. Tap Play to listen again."))
+            status = .unavailable(String(localized: "Microphone stopped. Tap Play."))
             log("audio_interrupted")
         }
     }

@@ -87,6 +87,20 @@ extension Binding {
     }
 }
 
+extension Binding where Value == Bool {
+    /// The same switch, logged as a click whenever it's flipped, with which
+    /// way it went.
+    func loggingToggle(_ buttonName: String, screen: String) -> Binding<Bool> {
+        Binding(
+            get: { wrappedValue },
+            set: { newValue in
+                AnalyticsEvents.logButtonClick(buttonName, screen: screen, parameters: ["value": newValue ? "on" : "off"])
+                wrappedValue = newValue
+            }
+        )
+    }
+}
+
 // MARK: - External Links
 enum AppLinks {
     static let sourceCode = URL(string: "https://github.com/thisisnsh/cuecard")!

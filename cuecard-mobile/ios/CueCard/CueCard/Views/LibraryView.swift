@@ -4,7 +4,6 @@ import FirebaseAnalytics
 
 /// Where a library screen leads.
 enum LibraryRoute: Hashable, Codable {
-    case folder(String)
     case editor
 }
 
@@ -32,26 +31,18 @@ struct LibraryView: View {
     /// Not scene storage, which is let go of when the app is quit.
     private static let pathKey = "library_path"
 
-    /// The screens the library was left on, up to any folder deleted since.
+    /// The screens the library was left on.
     private static func restoredPath() -> [LibraryRoute] {
         guard let data = UserDefaults.standard.data(forKey: pathKey),
               let saved = try? JSONDecoder().decode([LibraryRoute].self, from: data) else { return [] }
-        let folders = SettingsService.shared.folders
-        var path: [LibraryRoute] = []
-        for route in saved {
-            if case .folder(let name) = route, !folders.contains(name) { break }
-            path.append(route)
-        }
-        return path
+        return saved
     }
 
     var body: some View {
         NavigationStack(path: $path) {
-            LibraryList(folder: nil, path: $path, takeCounts: takeCounts)
+            LibraryList(path: $path, takeCounts: takeCounts)
                 .navigationDestination(for: LibraryRoute.self) { route in
                     switch route {
-                    case .folder(let name):
-                        LibraryList(folder: name, path: $path, takeCounts: takeCounts)
                     case .editor:
                         HomeView()
                     }
@@ -171,11 +162,10 @@ private struct TakesTarget: Identifiable {
 
 // MARK: - List
 
-/// The top of the library, or one of its folders: the scripts or decks in
-/// it, the drafts started in it, and at the top, the folders.
+/// The library's scripts or decks, with the folders as chips at the top that
+/// narrow the list to one folder's, in place. All shows every one, filed or
+/// not. The chosen folder is remembered.
 private struct LibraryList: View {
-    /// The folder shown, or nil for the top of the library.
-    let folder: String?
     @Binding var path: [LibraryRoute]
     @ObservedObject var takeCounts: TakeCounts
 
@@ -186,12 +176,13 @@ private struct LibraryList: View {
 
     @AppStorage("library_sort") private var sort: LibrarySort = .edited
     @AppStorage("library_mode") private var mode: ScriptMode = .teleprompter
+    /// The folder chosen, or empty for All.
+    @AppStorage("library_folder") private var chosenFolder = ""
     @AppStorage(LibraryStorageWarning.dismissedKey) private var warningDismissed = false
     @AppStorage(LibraryStorageWarning.opensKey) private var opensSinceDismissed = 0
 
     @State private var query = ""
     @FocusState private var isSearching: Bool
-    @Namespace private var controlsGlass
     @State private var showingHelp = false
     @State private var showingImporter = false
     @State private var showingFolderPicker = false
@@ -203,9 +194,7 @@ private struct LibraryList: View {
     @State private var noteToRename: SavedNote?
     @State private var noteToDelete: SavedNote?
     @State private var renameTitle = ""
-    /// A new folder is being named, and the note to file in it, if any.
     @State private var showingNewFolder = false
-    @State private var noteForNewFolder: SavedNote?
     @State private var newFolderName = ""
     @State private var folderToRename: String?
     @State private var folderToDelete: String?
@@ -216,20 +205,20 @@ private struct LibraryList: View {
     private static let screen = "library"
     private static let rowInsets = EdgeInsets(top: 6, leading: 20, bottom: 6, trailing: 20)
 
-    private var isRoot: Bool { folder == nil }
+    /// The folder shown, or nil for All. One deleted since it was chosen is All.
+    private var folder: String? {
+        settingsService.folders.contains(chosenFolder) ? chosenFolder : nil
+    }
 
     private var trimmedQuery: String {
         query.trimmingCharacters(in: .whitespaces)
     }
 
-    /// Searching from the top looks through every folder.
-    private var isSearchingAll: Bool { isRoot && !trimmedQuery.isEmpty }
-
-    /// The saved notes shown: this folder's, or every one that matches the
-    /// search from the top, of the chosen mode, in the chosen order.
+    /// The saved notes shown: the chosen folder's, or every one under All,
+    /// of the chosen mode, matching the search, in the chosen order.
     private var notes: [SavedNote] {
         let shown = settingsService.savedNotes.filter { note in
-            (isSearchingAll || note.folder == folder)
+            (folder == nil || note.folder == folder)
                 && note.mode == mode
                 && matches(title: note.title, content: note.content)
         }
@@ -246,13 +235,12 @@ private struct LibraryList: View {
         let text = settingsService.notes(for: mode)
         return settingsService.noteId(for: mode) == nil
             && !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            && (isSearchingAll || settingsService.draftFolder(for: mode) == folder)
+            && (folder == nil || settingsService.draftFolder(for: mode) == folder)
             && matches(title: "", content: text)
     }
 
     private var folders: [String] {
-        guard isRoot, trimmedQuery.isEmpty else { return [] }
-        return settingsService.folders.sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+        settingsService.folders.sorted { $0.localizedStandardCompare($1) == .orderedAscending }
     }
 
     private func matches(title: String, content: String) -> Bool {
@@ -268,12 +256,12 @@ private struct LibraryList: View {
 
     var body: some View {
         List {
-            if isRoot, let notification = notifications.notification(for: .homeBanner) {
+            if let notification = notifications.notification(for: .homeBanner) {
                 NotificationBanner(notification: notification)
                     .plainRow(insets: Self.rowInsets)
             }
 
-            if isRoot, trimmedQuery.isEmpty, showsStorageWarning {
+            if trimmedQuery.isEmpty, showsStorageWarning {
                 LibraryStorageBanner(
                     isUnreachable: settingsService.hasNotesFolder,
                     colorScheme: colorScheme,
@@ -293,15 +281,11 @@ private struct LibraryList: View {
             }
 
             if !folders.isEmpty {
-                sectionLabel(String(localized: "Folders"))
                 folderChips
-                    .plainRow(insets: EdgeInsets(top: 2, leading: 0, bottom: 14, trailing: 0))
+                    .plainRow(insets: EdgeInsets(top: 2, leading: 0, bottom: 10, trailing: 0))
             }
 
             if hasDraft || !notes.isEmpty {
-                if !folders.isEmpty {
-                    sectionLabel(kindName)
-                }
                 if hasDraft {
                     draftRow(mode)
                 }
@@ -315,7 +299,7 @@ private struct LibraryList: View {
                     .plainRow(insets: Self.rowInsets)
             }
 
-            if isRoot, trimmedQuery.isEmpty {
+            if trimmedQuery.isEmpty {
                 footer
                     .plainRow(insets: EdgeInsets(top: 10, leading: 24, bottom: 16, trailing: 24))
             }
@@ -326,9 +310,9 @@ private struct LibraryList: View {
         .scrollEdgeFade()
         .background(AppColors.background(for: colorScheme).ignoresSafeArea())
         .animation(.easeInOut(duration: 0.2), value: mode)
+        .animation(.easeInOut(duration: 0.2), value: folder)
         .animation(.easeInOut(duration: 0.2), value: showsStorageWarning)
         .safeAreaInset(edge: .bottom, spacing: 0) { libraryControls }
-        .navigationTitle(folder ?? "")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { toolbar }
         .helpSheet(for: .library, isPresented: $showingHelp)
@@ -373,8 +357,7 @@ private struct LibraryList: View {
     }
 
     /// Teleprompter or cards: whose scripts the library shows. The bar shows
-    /// the chosen mode's name, or in a folder, whose name needs the room, its
-    /// symbol.
+    /// the chosen mode's name.
     private var modeMenu: some View {
         // Plain buttons rather than a picker, so the menu shows no checkmark:
         // the bar already says which mode is on.
@@ -389,12 +372,8 @@ private struct LibraryList: View {
             }
         } label: {
             HStack(spacing: 6) {
-                if isRoot {
-                    Text(mode.displayName)
-                        .font(.headline)
-                } else {
-                    Image(systemName: mode.systemImage)
-                }
+                Text(mode.displayName)
+                    .font(.headline)
                 Image(systemName: "chevron.down")
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(AppColors.textSecondary(for: colorScheme))
@@ -406,13 +385,6 @@ private struct LibraryList: View {
         .simultaneousGesture(TapGesture().onEnded {
             AnalyticsEvents.logButtonClick("library_mode_menu", screen: Self.screen)
         })
-    }
-
-    private func sectionLabel(_ text: String) -> some View {
-        Text(text)
-            .font(.subheadline.weight(.semibold))
-            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-            .plainRow(insets: EdgeInsets(top: 4, leading: 24, bottom: 4, trailing: 24))
     }
 
     @ViewBuilder
@@ -441,71 +413,29 @@ private struct LibraryList: View {
     }
 
     private var footer: some View {
-        LibraryFooter(
-            colorScheme: colorScheme,
-            onChoose: {
-                AnalyticsEvents.logButtonClick("choose_notes_folder", screen: Self.screen)
-                showingFolderPicker = true
-            },
-            onStop: {
-                AnalyticsEvents.logButtonClick("stop_notes_folder", screen: Self.screen)
-                showingStopFolder = true
-            }
-        )
-        .frame(maxWidth: .infinity)
+        LibraryFooter(colorScheme: colorScheme)
+            .frame(maxWidth: .infinity)
     }
 
-    /// Searching and starting a script, together at the bottom. While
-    /// searching, + gives way to Done, which breaks off the search's glass.
+    /// Searching and starting a script, together at the bottom. The search
+    /// ends with the keyboard's Done key, or a scroll of the list.
     private var libraryControls: some View {
-        controlsRow
-            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-            .padding(.horizontal, 20)
-            .padding(.vertical, 12)
-            .frame(maxWidth: 600)
-            .frame(maxWidth: .infinity)
-            .background(AppColors.background(for: colorScheme))
-            .animation(.smooth(duration: 0.35), value: isSearching)
+        HStack(spacing: 10) {
+            searchRow
+                .glassedEffect(in: Capsule(), interactive: true)
+            newButton
+        }
+        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+        .padding(.horizontal, 20)
+        .padding(.vertical, 12)
+        .frame(maxWidth: 600)
+        .frame(maxWidth: .infinity)
+        .background(AppColors.background(for: colorScheme))
     }
 
     @ViewBuilder
-    private var controlsRow: some View {
-        if #available(iOS 26.0, *) {
-            GlassEffectContainer(spacing: 10) {
-                HStack(spacing: 10) {
-                    searchRow
-                        .glassEffect(.regular.interactive(), in: Capsule())
-                        .glassEffectID("search", in: controlsGlass)
-                    if isSearching {
-                        doneButton
-                            .glassEffect(.regular.interactive(), in: Circle())
-                            .glassEffectID("done", in: controlsGlass)
-                    } else {
-                        newButton
-                            .glassEffect(.regular.tint(AppColors.green(for: colorScheme)).interactive(), in: Circle())
-                            .glassEffectID("new", in: controlsGlass)
-                    }
-                }
-            }
-        } else {
-            HStack(spacing: 10) {
-                searchRow
-                    .glassedEffect(in: Capsule())
-                if isSearching {
-                    doneButton
-                        .glassedEffect(in: Circle())
-                        .transition(.scale.combined(with: .opacity))
-                } else {
-                    newButton
-                        .background(AppColors.green(for: colorScheme), in: Circle())
-                        .transition(.scale.combined(with: .opacity))
-                }
-            }
-        }
-    }
-
     private var newButton: some View {
-        Button { startNew(mode) } label: {
+        let button = Button { startNew(mode) } label: {
             Image(systemName: "plus")
                 .font(.system(size: 20, weight: .semibold))
                 .foregroundStyle(colorScheme == .dark ? .black : .white)
@@ -514,21 +444,12 @@ private struct LibraryList: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(mode == .cards ? "New Deck" : "New Script")
-    }
 
-    private var doneButton: some View {
-        Button {
-            AnalyticsEvents.logButtonClick("library_search_done", screen: Self.screen)
-            isSearching = false
-        } label: {
-            Image(systemName: "checkmark")
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                .frame(width: 48, height: 48)
-                .contentShape(Circle())
+        if #available(iOS 26.0, *) {
+            button.glassEffect(.regular.tint(AppColors.green(for: colorScheme)).interactive(), in: Circle())
+        } else {
+            button.background(AppColors.green(for: colorScheme), in: Circle())
         }
-        .buttonStyle(.plain)
-        .accessibilityLabel("Done")
     }
 
     private var searchRow: some View {
@@ -540,9 +461,12 @@ private struct LibraryList: View {
                 .accessibilityHidden(true)
             TextField(searchPrompt, text: $query)
                 .focused($isSearching)
-                .submitLabel(.search)
+                .submitLabel(.done)
                 .autocorrectionDisabled()
-                .onSubmit { isSearching = false }
+                .onSubmit {
+                    AnalyticsEvents.logButtonClick("library_search_done", screen: Self.screen)
+                    isSearching = false
+                }
                 .accessibilityLabel(searchPrompt)
             if !query.isEmpty {
                 Button {
@@ -582,43 +506,55 @@ private struct LibraryList: View {
             } label: {
                 Label("Import File", systemImage: "arrow.down.doc")
             }
-            if isRoot {
-                Button {
-                    AnalyticsEvents.logButtonClick("new_folder", screen: Self.screen)
-                    beginNewFolder(for: nil)
-                } label: {
-                    Label("New Folder", systemImage: "folder.badge.plus")
-                }
+            Button {
+                AnalyticsEvents.logButtonClick("new_folder", screen: Self.screen)
+                beginNewFolder()
+            } label: {
+                Label("New Folder", systemImage: "folder.badge.plus")
             }
             if let folder {
-                Divider()
-
-
                 Button {
                     AnalyticsEvents.logButtonClick("rename_folder", screen: Self.screen)
                     folderTitle = folder
                     folderToRename = folder
                 } label: {
-                    Label("Rename Folder", systemImage: "pencil")
+                    Label("Rename “\(folder)”", systemImage: "pencil")
                 }
                 Button(role: .destructive) {
                     AnalyticsEvents.logButtonClick("delete_folder", screen: Self.screen)
                     folderToDelete = folder
                 } label: {
-                    Label("Delete Folder", systemImage: "trash")
+                    Label("Delete “\(folder)”", systemImage: "trash")
                 }
             }
-            if isRoot {
-                Divider()
 
-                Button(role: .destructive) {
-                    AnalyticsEvents.logButtonClick("delete_all_notes", screen: Self.screen)
-                    showingDeleteAll = true
-                } label: {
-                    Label("Delete All Scripts", systemImage: "trash")
-                }
-                .disabled(settingsService.savedNotes.isEmpty)
+            Divider()
+
+            Button {
+                AnalyticsEvents.logButtonClick("choose_notes_folder", screen: Self.screen)
+                showingFolderPicker = true
+            } label: {
+                Label(settingsService.hasNotesFolder ? "Change Storage Folder" : "Choose Storage Folder",
+                      systemImage: "externaldrive.badge.plus")
             }
+            if settingsService.hasNotesFolder {
+                Button {
+                    AnalyticsEvents.logButtonClick("stop_notes_folder", screen: Self.screen)
+                    showingStopFolder = true
+                } label: {
+                    Label("Stop Using Storage Folder", systemImage: "externaldrive.badge.minus")
+                }
+            }
+
+            Divider()
+
+            Button(role: .destructive) {
+                AnalyticsEvents.logButtonClick("delete_all_notes", screen: Self.screen)
+                showingDeleteAll = true
+            } label: {
+                Label("Delete All Scripts", systemImage: "trash")
+            }
+            .disabled(settingsService.savedNotes.isEmpty)
         } label: {
             Image(systemName: "ellipsis")
                 .font(.body.weight(.semibold))
@@ -630,65 +566,65 @@ private struct LibraryList: View {
         })
     }
 
-    private func beginNewFolder(for note: SavedNote?) {
-        noteForNewFolder = note
+    private func beginNewFolder() {
         newFolderName = ""
         showingNewFolder = true
     }
 
     // MARK: Rows
 
-    /// The folders side by side, scrolling sideways, with one to make another.
+    /// All, then each folder, side by side and scrolling sideways, with one
+    /// to make another. The chosen one is filled in, and the list below
+    /// shows only what's in it.
     private var folderChips: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 10) {
-                ForEach(folders, id: \.self) { name in
-                    folderChip(name)
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    chip(String(localized: "All", comment: "Library chip showing every script, in every folder"),
+                         count: settingsService.savedNotes.filter { $0.mode == mode }.count,
+                         isSelected: folder == nil) {
+                        AnalyticsEvents.logButtonClick("library_folder_all", screen: Self.screen)
+                        chosenFolder = ""
+                    }
+                    .id("")
+
+                    ForEach(folders, id: \.self) { name in
+                        folderChip(name)
+                            .id(name)
+                    }
+
+                    Button {
+                        AnalyticsEvents.logButtonClick("new_folder_chip", screen: Self.screen)
+                        beginNewFolder()
+                    } label: {
+                        Image(systemName: "plus")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                            .frame(width: 36, height: 36)
+                            .overlay(
+                                Circle().stroke(AppColors.textSecondary(for: colorScheme).opacity(0.4),
+                                                style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
+                            )
+                            .contentShape(Circle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("New Folder")
                 }
-                Button {
-                    AnalyticsEvents.logButtonClick("new_folder_chip", screen: Self.screen)
-                    beginNewFolder(for: nil)
-                } label: {
-                    Text("New Folder")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                        .padding(.horizontal, 16)
-                        .frame(height: 40)
-                        .overlay(
-                            Capsule().stroke(AppColors.textSecondary(for: colorScheme).opacity(0.4),
-                                             style: StrokeStyle(lineWidth: 1, dash: [5, 5]))
-                        )
-                        .contentShape(Capsule())
-                }
-                .buttonStyle(.plain)
+                .padding(.horizontal, 20)
+                .padding(.vertical, 4)
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 4)
+            .scrollEdgeFade(axis: .horizontal, length: 20, insetContent: false)
+            // Back on a folder chosen further along, it's scrolled into view.
+            .onAppear { proxy.scrollTo(folder ?? "", anchor: .center) }
         }
-        .scrollEdgeFade(axis: .horizontal, length: 20, insetContent: false)
     }
 
     private func folderChip(_ name: String) -> some View {
         let count = settingsService.savedNotes.filter { $0.folder == name && $0.mode == mode }.count
-        return Button {
-            AnalyticsEvents.logButtonClick("open_folder", screen: Self.screen)
-            path.append(.folder(name))
-        } label: {
-            HStack(spacing: 8) {
-                Text(name)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                    .lineLimit(1)
-                Text("\(count)")
-                    .font(.subheadline.monospacedDigit())
-                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-            }
-            .padding(.horizontal, 16)
-            .frame(height: 40)
-            .glassedEffect(in: Capsule(), interactive: true)
-            .contentShape(Capsule())
+        return chip(name, count: count, isSelected: folder == name) {
+            AnalyticsEvents.logButtonClick("library_folder_choose", screen: Self.screen)
+            chosenFolder = name
         }
-        .buttonStyle(.plain)
         .contextMenu {
             Button {
                 AnalyticsEvents.logButtonClick("rename_folder_chip", screen: Self.screen)
@@ -704,8 +640,37 @@ private struct LibraryList: View {
                 Label("Delete Folder", systemImage: "trash")
             }
         }
-        .accessibilityLabel("\(name), \(count)")
-        .accessibilityHint("Opens the folder")
+    }
+
+    /// A name and how many scripts it holds, filled in while it's the one chosen.
+    private func chip(_ title: String, count: Int, isSelected: Bool,
+                      action: @escaping () -> Void) -> some View {
+        let background = AppColors.background(for: colorScheme)
+        let primary = AppColors.textPrimary(for: colorScheme)
+        return Button(action: action) {
+            HStack(spacing: 6) {
+                Text(title)
+                    .font(.subheadline.weight(.semibold))
+                    .lineLimit(1)
+                Text("\(count)")
+                    .font(.subheadline.monospacedDigit())
+                    .opacity(0.6)
+            }
+            .foregroundStyle(isSelected ? background : primary)
+            .padding(.horizontal, 14)
+            .frame(height: 36)
+            .background {
+                if isSelected {
+                    Capsule().fill(primary)
+                } else {
+                    Capsule().stroke(AppColors.textSecondary(for: colorScheme).opacity(0.3), lineWidth: 1)
+                }
+            }
+            .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(title), \(count)")
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
     private func draftRow(_ mode: ScriptMode) -> some View {
@@ -819,29 +784,6 @@ private struct LibraryList: View {
             Label("Duplicate", systemImage: "plus.square.on.square")
         }
 
-        Menu {
-            Picker("Move to Folder", selection: Binding(
-                get: { note.folder },
-                set: { move(note, to: $0) }
-            )) {
-                Text("None").tag(String?.none)
-                ForEach(settingsService.folders.sorted { $0.localizedStandardCompare($1) == .orderedAscending },
-                        id: \.self) { name in
-                    Text(name).tag(String?.some(name))
-                }
-            }
-            .pickerStyle(.inline)
-
-            Button {
-                AnalyticsEvents.logButtonClick("new_folder_move", screen: Self.screen)
-                beginNewFolder(for: note)
-            } label: {
-                Label("New Folder", systemImage: "folder.badge.plus")
-            }
-        } label: {
-            Label("Move to Folder", systemImage: "folder")
-        }
-
         ScriptShareLink(title: note.title, content: note.content)
 
         if watch.isWatchAppInstalled {
@@ -866,7 +808,7 @@ private struct LibraryList: View {
     }
 
     /// When it was last edited, how many cards a deck has, whether it's on
-    /// the watch, and, in search results from every folder, its folder.
+    /// the watch, and, under All, its folder.
     private func detail(of note: SavedNote) -> String {
         var parts = [LibraryText.date(note.updatedAt)]
         if note.mode == .cards {
@@ -876,7 +818,7 @@ private struct LibraryList: View {
         if settingsService.watchNoteIDs.contains(note.id) {
             parts.append(String(localized: "On Apple Watch"))
         }
-        if isSearchingAll, let folder = note.folder {
+        if folder == nil, let folder = note.folder {
             parts.append(folder)
         }
         return parts.joined(separator: " · ")
@@ -927,13 +869,6 @@ private struct LibraryList: View {
         AnalyticsEvents.logButtonClick(button, screen: Self.screen)
         if settingsService.duplicateNote(id: note.id) == nil {
             errorMessage = String(localized: "The script couldn't be duplicated. Try again.")
-        }
-    }
-
-    private func move(_ note: SavedNote, to folder: String?, from button: String = "move_note") {
-        AnalyticsEvents.logButtonClick(button, screen: Self.screen)
-        if !settingsService.moveNote(id: note.id, toFolder: folder) {
-            errorMessage = String(localized: "The script couldn't be moved. Try again.")
         }
     }
 
@@ -1135,9 +1070,8 @@ private struct LibraryList: View {
                             list.errorMessage = String(localized: "There's already a folder with that name, or the name can't be used.")
                             return
                         }
-                        if let note = list.noteForNewFolder {
-                            list.move(note, to: name, from: "move_note_new_folder")
-                        }
+                        // Opened on the new folder, so what's made next goes in it.
+                        list.chosenFolder = name
                     }
                 }
                 .alert("Rename Folder", isPresented: Binding(
@@ -1155,11 +1089,11 @@ private struct LibraryList: View {
                             list.errorMessage = String(localized: "There's already a folder with that name, or the name can't be used.")
                             return
                         }
-                        // Renamed from inside it: the screen follows.
+                        // The chosen folder stays chosen under its new name.
                         if list.folder == name, let renamed = settingsService.folders.first(where: {
                             $0 == ScriptFile.folderName(from: list.folderTitle)
-                        }), !list.path.isEmpty {
-                            list.path[list.path.count - 1] = .folder(renamed)
+                        }) {
+                            list.chosenFolder = renamed
                         }
                     }
                 }
@@ -1173,12 +1107,10 @@ private struct LibraryList: View {
                     Button("Delete Folder", role: .destructive) {
                         AnalyticsEvents.logButtonClick("delete_folder_confirm", screen: LibraryList.screen)
                         settingsService.deleteFolder(name)
-                        if list.folder == name, !list.path.isEmpty {
-                            list.path.removeLast()
-                        }
+                        if list.folder == name { list.chosenFolder = "" }
                     }
                 } message: { _ in
-                    Text("The scripts in it aren't deleted. They move to the top of your library.")
+                    Text("The scripts in it aren't deleted. They stay in All.")
                 }
         }
     }
@@ -1405,13 +1337,11 @@ private struct LibraryStorageBanner: View {
     }
 }
 
-/// Where scripts are kept, at the end of the library, with the storage
-/// folder's controls and anything the folder couldn't take.
+/// Where scripts are kept, at the end of the library, with anything the
+/// storage folder couldn't take. Its controls are in •••.
 private struct LibraryFooter: View {
     @EnvironmentObject var settingsService: SettingsService
     let colorScheme: ColorScheme
-    let onChoose: () -> Void
-    let onStop: () -> Void
 
     var body: some View {
         VStack(spacing: 10) {
@@ -1425,15 +1355,6 @@ private struct LibraryFooter: View {
             }
             line(storageText, systemImage: "lock.fill")
                 .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-
-            HStack(spacing: 8) {
-                if settingsService.hasNotesFolder {
-                    folderButton("Change Folder", systemImage: "folder", action: onChoose)
-                    folderButton("Stop Using Folder", systemImage: "folder.badge.minus", action: onStop)
-                } else {
-                    folderButton("Choose Storage Folder", systemImage: "folder.badge.plus", action: onChoose)
-                }
-            }
         }
         .font(.caption)
         .multilineTextAlignment(.center)
@@ -1450,21 +1371,6 @@ private struct LibraryFooter: View {
 
     private func line(_ text: String, systemImage: String) -> some View {
         line(Text(text), systemImage: systemImage)
-    }
-
-    private func folderButton(_ title: LocalizedStringKey, systemImage: String,
-                              action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Label(title, systemImage: systemImage)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                .lineLimit(1)
-                .padding(.horizontal, 14)
-                .frame(height: 34)
-                .glassedEffect(in: Capsule(), interactive: true)
-                .contentShape(Capsule())
-        }
-        .buttonStyle(.borderless)
     }
 
     private var storageText: Text {

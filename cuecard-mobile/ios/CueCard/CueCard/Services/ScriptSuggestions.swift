@@ -40,13 +40,25 @@ struct SuggestionsMetrics: Equatable {
     var rejected = 0
 }
 
-/// CueCard's own switch for Apple Intelligence, in Settings. On unless the
-/// user turns it off; off, Suggestions and Ask AI are gone everywhere.
+/// CueCard's own switches for Apple Intelligence, in Settings: one for all
+/// of it, and one for each beta feature under it. Each is on unless the user
+/// turns it off; with the first off, every feature is gone everywhere.
 enum AppleIntelligenceSetting {
     static let enabledKey = "cuecard_apple_intelligence_enabled"
+    /// AI Suggestions in the editor.
+    static let suggestionsKey = "cuecard_ai_suggestions_enabled"
+    /// Ask AI in Help.
+    static let askAIKey = "cuecard_ai_ask_enabled"
+    /// Follow My Voice's button in the teleprompter.
+    static let followVoiceKey = "cuecard_follow_voice_enabled"
 
-    static var isEnabled: Bool {
-        UserDefaults.standard.object(forKey: enabledKey) as? Bool ?? true
+    static var isEnabled: Bool { isOn(enabledKey) }
+
+    /// Apple Intelligence and the feature under `key` are both on.
+    static func isEnabled(_ key: String) -> Bool { isEnabled && isOn(key) }
+
+    private static func isOn(_ key: String) -> Bool {
+        UserDefaults.standard.object(forKey: key) as? Bool ?? true
     }
 }
 
@@ -93,6 +105,16 @@ enum OnDeviceModelAvailability: Equatable {
 
     static var current: OnDeviceModelAvailability {
         AppleIntelligenceSetting.isEnabled ? onDevice : .unsupported
+    }
+
+    /// For AI Suggestions, which can be turned off on its own.
+    static var forSuggestions: OnDeviceModelAvailability {
+        AppleIntelligenceSetting.isEnabled(AppleIntelligenceSetting.suggestionsKey) ? onDevice : .unsupported
+    }
+
+    /// For Ask AI, which can be turned off on its own.
+    static var forAskAI: OnDeviceModelAvailability {
+        AppleIntelligenceSetting.isEnabled(AppleIntelligenceSetting.askAIKey) ? onDevice : .unsupported
     }
 
     /// What this iPhone can do, whatever the switch in Settings says.

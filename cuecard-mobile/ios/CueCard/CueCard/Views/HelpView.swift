@@ -64,18 +64,18 @@ private struct HelpSection: Identifiable {
 // MARK: - Topics
 
 private enum AllHelp {
-    /// Suggestions are left out while Apple Intelligence is off, or this
-    /// iPhone has none.
+    /// Suggestions are left out while they or Apple Intelligence are off, or
+    /// this iPhone has none.
     static var writing: HelpSection {
         var section = allWriting
-        if OnDeviceModelAvailability.current == .unsupported {
+        if OnDeviceModelAvailability.forSuggestions == .unsupported {
             section.topics.removeAll { $0.id == suggestionsTopic.id }
         }
         return section
     }
 
     private static let suggestionsTopic = HelpTopic("Get AI Suggestions (Beta)",
-                  detail: "Tap the sparkles button at the bottom left of the editor to have Apple Intelligence read your script or deck on this iPhone. It suggests spelling fixes, cues, anchors, line breaks that split long lines into short paragraphs, and bold or italic words. In a deck it leaves out anchors, and only adds a cue where a card has room. Accept or reject each one, or accept them all, then tap Done. Needs an iPhone with Apple Intelligence turned on, and Enable Apple Intelligence on in Settings.")
+                  detail: "Tap the sparkles button at the bottom left of the editor to have Apple Intelligence read your script or deck on this iPhone. It suggests spelling fixes, cues, anchors, line breaks that split long lines into short paragraphs, and bold or italic words. In a deck it leaves out anchors, and only adds a cue where a card has room. Accept or reject each one, or accept them all, then tap Done. Needs an iPhone with Apple Intelligence turned on, and Enable Apple Intelligence and AI Suggestions on in Settings.")
 
     private static let allWriting = HelpSection("writing", title: "Writing",
                                     summary: "Modes, cues, formatting, images and cards",
@@ -101,17 +101,17 @@ private enum AllHelp {
         HelpTopic("Open a Script",
                   detail: "CueCard opens on your library, with every script and deck you saved. Tap one to write in it, and tap back to return. Switch between Teleprompter and Cards at the top."),
         HelpTopic("Save Your Work",
-                  detail: "When there are changes to save, the bottom of the editor says Unsaved and Save appears at the top, beside the gear. Tap it to save. To keep your changes as a separate script, open ••• at the top of the editor, then Save as New. A new script you haven't saved shows in the library as a draft."),
+                  detail: "When there are changes to save, the bottom of the editor says Unsaved and Save appears at the top, before the gear. Tap it to save. To keep your changes as a separate script, open ••• at the top of the editor, then Save as New. A new script you haven't saved shows in the library as a draft."),
         HelpTopic("Rename, Duplicate or Delete",
                   detail: "In your library, touch and hold a script, or swipe it. In the editor, tap the title at the top to rename it."),
         HelpTopic("Organize in Folders",
-                  detail: "In your library, tap New Folder beside your folders, or ••• › New Folder. Touch and hold a script and tap Move to Folder to file it. Tap ••• › Sort By to change the order."),
+                  detail: "In your library, tap + after your folders, or ••• › New Folder. Tap a folder at the top to show only its scripts, or All to show every one. A script you start or import goes in the folder you're in. Touch and hold a folder to rename or delete it. Tap ••• › Sort By to change the order."),
         HelpTopic("Import a Text File",
                   detail: "In your library, tap ••• › Import File to add a text file or a TextPack as a script."),
         HelpTopic("Go Back to an Older Version",
                   detail: "Every save is a new version. Tap the version number at the bottom of the editor to compare changes and restore one. Once a note has more than one, it's also under ••• at the top, in Version History."),
         HelpTopic("Keep Scripts if the App Is Removed",
-                  detail: "Until you choose a storage folder, scripts are kept only in CueCard and are deleted with the app. At the bottom of your library, tap Choose Storage Folder. Each script is kept there as a text file, with a list of the folders they're in. Pick one in iCloud Drive to keep them there too."),
+                  detail: "Until you choose a storage folder, scripts are kept only in CueCard and are deleted with the app. In your library, tap ••• › Choose Storage Folder. Each script is kept there as a text file, with a list of the folders they're in. Pick one in iCloud Drive to keep them there too."),
         HelpTopic("Your Privacy",
                   detail: "There's no account, and CueCard doesn't upload your scripts. They're kept on this iPhone, and in the storage folder if you choose one."),
         HelpTopic("Share a Script",
@@ -131,7 +131,19 @@ private enum AllHelp {
                   detail: "Open a script, tap the gear at the top, then Language. CueCard is in English, French, Portuguese, Russian and Spanish.")
     ])
 
-    static let teleprompter = HelpSection("teleprompter", title: "Teleprompter",
+    /// Follow My Voice is left out while it or Apple Intelligence is off.
+    static var teleprompter: HelpSection {
+        var section = allTeleprompter
+        if !AppleIntelligenceSetting.isEnabled(AppleIntelligenceSetting.followVoiceKey) {
+            section.topics.removeAll { $0.id == followVoiceTopic.id }
+        }
+        return section
+    }
+
+    private static let followVoiceTopic = HelpTopic("Follow My Voice (Beta)",
+                  detail: "Tap the waveform at the top of the teleprompter. It's off each time the teleprompter opens. The script moves as you read it aloud, instead of at a set speed, and the timer starts with your first words. Tap Pause to stop listening and Play to listen again. Your voice is understood on this iPhone and never leaves it.")
+
+    private static let allTeleprompter = HelpSection("teleprompter", title: "Teleprompter",
                                     summary: "Scrolling, recording, mirroring and the floating window",
                                     systemImage: "text.alignleft", topics: [
         HelpTopic("Play and Pause",
@@ -152,8 +164,7 @@ private enum AllHelp {
                   detail: "Leave CueCard while the teleprompter is open and your script keeps going in a floating window, handy on video calls. It doesn't open while the camera is on."),
         HelpTopic("Know When Time Is Running Out",
                   detail: "The timer changes color when you're near the end and again once you're over time. Pick the colors in the timer."),
-        HelpTopic("Follow My Voice (Beta)",
-                  detail: "Tap the waveform at the top of the teleprompter, or turn on Follow My Voice in Settings. The script moves as you read it aloud, instead of at a set speed, and the timer starts with your first words. Tap Pause to stop listening and Play to listen again. Your voice is understood on this iPhone and never leaves it.")
+        followVoiceTopic
     ])
 
     static let cards = HelpSection("cards", title: "Cards",
@@ -240,7 +251,7 @@ struct HelpView: View {
     static let screen = "help"
 
     private var asksFirst: Bool {
-        OnDeviceModelAvailability.current == .available
+        OnDeviceModelAvailability.forAskAI == .available
     }
 
     var body: some View {
@@ -327,7 +338,7 @@ private struct HelpTopicsList: View {
     private var frontPage: some View {
         // Only where the iPhone has Apple Intelligence to answer with. While
         // it isn't ready, the page says why.
-        if OnDeviceModelAvailability.current != .unsupported {
+        if OnDeviceModelAvailability.forAskAI != .unsupported {
             Section {
                 NavigationLink {
                     HelpAssistantView(close: close)
@@ -350,6 +361,9 @@ private struct HelpTopicsList: View {
                     }
                     .padding(.vertical, 2)
                 }
+                .simultaneousGesture(TapGesture().onEnded {
+                    AnalyticsEvents.logButtonClick("help_ask_ai", screen: HelpView.screen)
+                })
             }
         }
 

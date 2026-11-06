@@ -211,9 +211,6 @@ struct TeleprompterSettings: Codable, Equatable {
     var showsReadingGuide: Bool
     /// Where the reading line sits, as a fraction of the teleprompter's height.
     var readingGuidePosition: Double
-    /// Follow My Voice (beta): the teleprompter listens, and the script moves
-    /// with the words being said instead of at a set speed.
-    var followsVoice: Bool
 
     static let `default` = TeleprompterSettings(
         editorFontSize: ScreenTextScale.scaled(16, by: ScreenTextScale.editor),
@@ -364,7 +361,6 @@ struct TeleprompterSettings: Codable, Equatable {
         case flipsTextVertically
         case showsReadingGuide
         case readingGuidePosition
-        case followsVoice
     }
 
     init(
@@ -387,8 +383,7 @@ struct TeleprompterSettings: Codable, Equatable {
         mirrorsText: Bool,
         flipsTextVertically: Bool,
         showsReadingGuide: Bool,
-        readingGuidePosition: Double,
-        followsVoice: Bool = false
+        readingGuidePosition: Double
     ) {
         self.editorFontSize = editorFontSize
         self.fontSize = fontSize
@@ -410,7 +405,6 @@ struct TeleprompterSettings: Codable, Equatable {
         self.flipsTextVertically = flipsTextVertically
         self.showsReadingGuide = showsReadingGuide
         self.readingGuidePosition = readingGuidePosition
-        self.followsVoice = followsVoice
     }
 
     init(from decoder: Decoder) throws {
@@ -474,8 +468,6 @@ struct TeleprompterSettings: Codable, Equatable {
             ?? TeleprompterSettings.default.showsReadingGuide
         readingGuidePosition = min(max(try container.decodeIfPresent(Double.self, forKey: .readingGuidePosition)
             ?? TeleprompterSettings.default.readingGuidePosition, 0), 1)
-        followsVoice = try container.decodeIfPresent(Bool.self, forKey: .followsVoice)
-            ?? TeleprompterSettings.default.followsVoice
     }
 
     static func clamp(_ value: Int, to range: ClosedRange<Int>) -> Int {
@@ -504,7 +496,6 @@ struct TeleprompterSettings: Codable, Equatable {
         try container.encode(flipsTextVertically, forKey: .flipsTextVertically)
         try container.encode(showsReadingGuide, forKey: .showsReadingGuide)
         try container.encode(readingGuidePosition, forKey: .readingGuidePosition)
-        try container.encode(followsVoice, forKey: .followsVoice)
     }
 }
 

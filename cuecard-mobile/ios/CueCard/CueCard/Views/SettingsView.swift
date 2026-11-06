@@ -26,29 +26,12 @@ struct EditorSettingsView: View {
         SettingsScreen(screen: Self.screen, title: mode == .cards ? "Cards Settings" : "Teleprompter Settings") {
             remoteMessageSection
 
-            Section("Editor") {
-                switch mode {
-                case .teleprompter:
-                    SizePresetPicker(
-                        title: "Editor Text Size",
-                        value: $settingsService.settings.editorFontSize.loggingClicks("settings_editor_text_size", screen: Self.screen),
-                        presets: TeleprompterSettings.editorFontSizePresets
-                    )
-                case .cards:
-                    SizePresetPicker(
-                        title: "Editor Text Size",
-                        value: $settingsService.settings.cards.editorFontSize.loggingClicks("settings_cards_editor_text_size", screen: Self.screen),
-                        presets: TeleprompterSettings.editorFontSizePresets
-                    )
-                }
-            }
-
+            // The mode's own reading settings first, then Apple
+            // Intelligence, then how the app looks and what's around it.
             switch mode {
             case .teleprompter: teleprompterSections
             case .cards: cardsSections
             }
-
-            AppleIntelligenceSection(screen: Self.screen)
 
             AboutSection(screen: Self.screen)
             diagnosticsSection
@@ -74,16 +57,7 @@ struct EditorSettingsView: View {
             Toggle("Reading Guide Line", isOn: $settingsService.settings.showsReadingGuide.loggingClicks("settings_reading_guide", screen: Self.screen))
         }
 
-        Section {
-            Toggle(isOn: $settingsService.settings.followsVoice.loggingClicks("settings_follow_voice", screen: Self.screen)) {
-                HStack(spacing: 8) {
-                    Text("Follow My Voice")
-                    BetaBadge()
-                }
-            }
-        } footer: {
-            Text("The script moves as you speak instead of at a set speed. Your voice is understood on this iPhone and never leaves it.")
-        }
+        AppleIntelligenceSection(screen: Self.screen, mode: .teleprompter)
 
         Section("Floating Window") {
             SizePresetPicker(
@@ -113,9 +87,16 @@ struct EditorSettingsView: View {
             Text("Sync play and pause on the teleprompter and camera.")
         }
 
-        AppleWatchSection(screen: Self.screen, mode: .teleprompter)
+        AppearanceSection(screen: Self.screen,
+                          cueColor: $settingsService.settings.cueColor.loggingClicks("settings_cue_color", screen: Self.screen)) {
+            SizePresetPicker(
+                title: "Editor Text Size",
+                value: $settingsService.settings.editorFontSize.loggingClicks("settings_editor_text_size", screen: Self.screen),
+                presets: TeleprompterSettings.editorFontSizePresets
+            )
+        }
 
-        AppearanceSection(screen: Self.screen, cueColor: $settingsService.settings.cueColor.loggingClicks("settings_cue_color", screen: Self.screen))
+        AppleWatchSection(screen: Self.screen, mode: .teleprompter)
 
         LanguageSection(screen: Self.screen)
 
@@ -186,9 +167,18 @@ struct EditorSettingsView: View {
             Text("Cards")
         }
 
-        AppleWatchSection(screen: Self.screen, mode: .cards)
+        AppleIntelligenceSection(screen: Self.screen, mode: .cards)
 
-        AppearanceSection(screen: Self.screen, cueColor: $settingsService.settings.cards.cueColor.loggingClicks("settings_cards_cue_color", screen: Self.screen))
+        AppearanceSection(screen: Self.screen,
+                          cueColor: $settingsService.settings.cards.cueColor.loggingClicks("settings_cards_cue_color", screen: Self.screen)) {
+            SizePresetPicker(
+                title: "Editor Text Size",
+                value: $settingsService.settings.cards.editorFontSize.loggingClicks("settings_cards_editor_text_size", screen: Self.screen),
+                presets: TeleprompterSettings.editorFontSizePresets
+            )
+        }
+
+        AppleWatchSection(screen: Self.screen, mode: .cards)
 
         LanguageSection(screen: Self.screen)
 
@@ -251,29 +241,32 @@ struct EditorSettingsView: View {
 
 // MARK: - Shared Sections
 
-/// CueCard's switch for Apple Intelligence, how much it's been used, and a
-/// way to report a problem with it. Only on an iPhone that has it.
+/// CueCard's switch for Apple Intelligence, a switch for each beta feature
+/// under it, and a way to report a problem with it. Only on an iPhone that
+/// has it. Every switch is logged with which way it went.
 private struct AppleIntelligenceSection: View {
     let screen: String
+    let mode: ScriptMode
 
     @Environment(\.openURL) private var openURL
     @AppStorage(AppleIntelligenceSetting.enabledKey) private var isEnabled = true
+    @AppStorage(AppleIntelligenceSetting.suggestionsKey) private var isSuggestionsEnabled = true
+    @AppStorage(AppleIntelligenceSetting.askAIKey) private var isAskAIEnabled = true
+    @AppStorage(AppleIntelligenceSetting.followVoiceKey) private var isFollowVoiceEnabled = true
 
     var body: some View {
         if OnDeviceModelAvailability.onDevice != .unsupported {
             Section {
-                Toggle(isOn: $isEnabled.loggingClicks("settings_apple_intelligence", screen: screen)) {
-                    HStack(spacing: 8) {
-                        Text("Enable Apple Intelligence")
-                        BetaBadge()
-                    }
-                }
+                Toggle("Enable Apple Intelligence",
+                       isOn: $isEnabled.loggingToggle("settings_apple_intelligence", screen: screen))
 
                 if isEnabled {
-                    LabeledContent("Scripts Reviewed", value: AIUsage.reviews.formatted())
-                    LabeledContent("Suggestions Accepted",
-                                   value: "\(AIUsage.suggestionsAccepted.formatted()) of \(AIUsage.suggestionsFound.formatted())")
-                    LabeledContent("Questions Asked", value: AIUsage.questions.formatted())
+                    feature("AI Suggestions", isOn: $isSuggestionsEnabled, button: "settings_ai_suggestions")
+                    feature("Ask AI", isOn: $isAskAIEnabled, button: "settings_ask_ai")
+                    // The teleprompter is the only place it listens.
+                    if mode == .teleprompter {
+                        feature("Follow My Voice", isOn: $isFollowVoiceEnabled, button: "settings_follow_voice")
+                    }
                 }
 
                 Button {
@@ -285,7 +278,18 @@ private struct AppleIntelligenceSection: View {
             } header: {
                 Text("Apple Intelligence")
             } footer: {
-                Text("AI Suggestions in the editor and Ask AI in Help run on this iPhone, and nothing you write leaves it. They're in beta, and will be fully released in a future version. Turn this off to hide them everywhere in CueCard.")
+                Text(mode == .teleprompter
+                     ? "AI Suggestions in the editor, Ask AI in Help and Follow My Voice in the teleprompter run on this iPhone, and nothing you write or say leaves it. They're in beta. Turn one off to hide it, or turn off Apple Intelligence to hide them all."
+                     : "AI Suggestions in the editor and Ask AI in Help run on this iPhone, and nothing you write leaves it. They're in beta. Turn one off to hide it, or turn off Apple Intelligence to hide them all.")
+            }
+        }
+    }
+
+    private func feature(_ title: LocalizedStringKey, isOn: Binding<Bool>, button: String) -> some View {
+        Toggle(isOn: isOn.loggingToggle(button, screen: screen)) {
+            HStack(spacing: 8) {
+                Text(title)
+                BetaBadge()
             }
         }
     }
@@ -382,12 +386,14 @@ private struct AppleWatchSection: View {
     }
 }
 
-/// Theme and cue color. The theme is one setting for the whole app; the cue
-/// color is the one for the mode these settings belong to.
-private struct AppearanceSection: View {
+/// Theme, editor text size and cue color. The theme is one setting for the
+/// whole app; the others are the ones for the mode these settings belong to.
+private struct AppearanceSection<EditorTextSize: View>: View {
     @EnvironmentObject var settingsService: SettingsService
     let screen: String
     @Binding var cueColor: CueColor
+    /// The editor's text size, which is the mode's own.
+    @ViewBuilder let editorTextSize: EditorTextSize
 
     var body: some View {
         Section("Appearance") {
@@ -396,6 +402,8 @@ private struct AppearanceSection: View {
                     Text(theme.displayName).tag(theme)
                 }
             }
+
+            editorTextSize
 
             ColorSwatchRow(title: "Cue Color", selection: $cueColor)
         }

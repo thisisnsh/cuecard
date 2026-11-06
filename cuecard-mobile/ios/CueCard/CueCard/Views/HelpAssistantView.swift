@@ -209,7 +209,7 @@ final class HelpAssistant: ObservableObject {
     }
 
     @Published private(set) var exchanges: [Exchange] = []
-    let availability = OnDeviceModelAvailability.current
+    let availability = OnDeviceModelAvailability.forAskAI
     private var task: Task<Void, Never>?
     /// A session for the next question, with the help already read in, so
     /// the answer starts sooner.

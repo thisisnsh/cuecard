@@ -12,6 +12,12 @@ struct TeleprompterView: View {
     @StateObject private var pipManager = TeleprompterPiPManager.shared
     /// Listens for Follow My Voice, which moves the script with the reader's words.
     @StateObject private var voice = VoiceFollower()
+    /// Follow My Voice is on for this read. Off every time the teleprompter
+    /// opens: it's turned on with the waveform at the top.
+    @State private var followsVoice = false
+    /// Follow My Voice is turned on in Settings, under Apple Intelligence.
+    @AppStorage(AppleIntelligenceSetting.enabledKey) private var isAIEnabled = true
+    @AppStorage(AppleIntelligenceSetting.followVoiceKey) private var isFollowVoiceEnabled = true
 
     private var isPlaying: Bool { pipManager.playback.isPlaying }
     private var elapsedTime: Double { pipManager.playback.elapsedTime }
@@ -158,7 +164,7 @@ struct TeleprompterView: View {
                     VStack {
                         Spacer()
 
-                        if settings.followsVoice {
+                        if followsVoice {
                             voiceStatus
                                 .padding(.horizontal, 20)
                                 // Clear of the play button's glow.
@@ -173,7 +179,6 @@ struct TeleprompterView: View {
                 }
                 .onAppear {
                     setupPiP()
-                    if settings.followsVoice { startFollowingVoice() }
                     // A video recorded from now until the teleprompter closes
                     // is a take of this script.
                     TakeStore.shared.begin(scriptID: settingsService.teleprompterScriptID)
@@ -228,7 +233,7 @@ struct TeleprompterView: View {
         .onChange(of: isPlaying) { _, playing in
             if playing { resetControlsTimer() } else { stopControlsTimer() }
         }
-        .onChange(of: settings.followsVoice) { _, follows in
+        .onChange(of: followsVoice) { _, follows in
             if follows {
                 startFollowingVoice()
             } else {
@@ -262,11 +267,13 @@ struct TeleprompterView: View {
             Spacer(minLength: 0)
 
             HStack(spacing: 8) {
-                headerButton("waveform", tint: settings.followsVoice ? AppColors.purple(for: colorScheme) : nil) {
-                    AnalyticsEvents.logButtonClick(settings.followsVoice ? "teleprompter_follow_voice_off" : "teleprompter_follow_voice_on", screen: "teleprompter")
-                    settingsService.settings.followsVoice.toggle()
+                if isAIEnabled && isFollowVoiceEnabled {
+                    headerButton("waveform", tint: followsVoice ? AppColors.purple(for: colorScheme) : nil) {
+                        AnalyticsEvents.logButtonClick(followsVoice ? "teleprompter_follow_voice_off" : "teleprompter_follow_voice_on", screen: "teleprompter")
+                        followsVoice.toggle()
+                    }
+                    .accessibilityLabel(followsVoice ? "Turn Off Follow My Voice" : "Follow My Voice")
                 }
-                .accessibilityLabel(settings.followsVoice ? "Turn Off Follow My Voice" : "Follow My Voice")
 
                 headerButton(showingCamera ? "camera.fill" : "camera") {
                     AnalyticsEvents.logButtonClick("teleprompter_camera", screen: "teleprompter")
@@ -309,14 +316,16 @@ struct TeleprompterView: View {
 
     // MARK: - Footer
 
-    /// Play stays in the center of the screen, whichever buttons are beside it:
-    /// the floating window on the left and restart on the right, with the
-    /// anchors, when the script has any, out at the edges.
+    /// The anchors out at the edges, when the script has any, and the
+    /// floating window, Play and restart together in the middle.
     private var playbackControls: some View {
-        ZStack {
-            HStack(spacing: 8) {
-                if content.hasAnchors { anchorButton(forward: false) }
+        HStack(spacing: 0) {
+            anchorButton(forward: false)
+                .hiddenUnless(content.hasAnchors)
 
+            Spacer(minLength: 8)
+
+            HStack(spacing: 16) {
                 Button {
                     AnalyticsEvents.logButtonClick(pipManager.isPiPActive ? "pip_exit" : "pip_enter", screen: "teleprompter")
                     togglePiP()
@@ -327,11 +336,9 @@ struct TeleprompterView: View {
                         .glassedEffect(in: Circle())
                 }
                 .accessibilityLabel(pipManager.isPiPActive ? "Close Overlay" : "Start Overlay")
-                .opacity(pipManager.isPiPPossible ? 1 : 0)
-                .disabled(!pipManager.isPiPPossible)
-                .accessibilityHidden(!pipManager.isPiPPossible)
+                .hiddenUnless(pipManager.isPiPPossible)
 
-                Spacer(minLength: 0)
+                if followsVoice { voicePlayButton } else { playButton }
 
                 Button {
                     AnalyticsEvents.logButtonClick("restart", screen: "teleprompter")
@@ -344,11 +351,12 @@ struct TeleprompterView: View {
                         .glassedEffect(in: Circle())
                 }
                 .accessibilityLabel("Restart")
-
-                if content.hasAnchors { anchorButton(forward: true) }
             }
 
-            if settings.followsVoice { voicePlayButton } else { playButton }
+            Spacer(minLength: 8)
+
+            anchorButton(forward: true)
+                .hiddenUnless(content.hasAnchors)
         }
         .foregroundStyle(AppColors.textPrimary(for: colorScheme))
         .frame(maxWidth: 480)
@@ -424,16 +432,18 @@ struct TeleprompterView: View {
         let label: (text: String, icon: String) = switch voice.status {
         case .unavailable(let reason): (reason, "exclamationmark.triangle")
         case .listening where !pipManager.playback.hasStarted:
-            (String(localized: "Start reading. The script follows your voice."), "waveform")
+            (String(localized: "Start reading"), "waveform")
         case .listening: (String(localized: "Listening"), "waveform")
         case .idle: (String(localized: "Not listening"), "mic.slash")
         }
+        // One line, however long the reason: it shrinks a little, then
+        // trails off, rather than wrapping.
         HStack(spacing: 8) {
             Image(systemName: label.icon)
                 .symbolEffect(.variableColor.iterative, isActive: voice.isListening)
             Text(label.text)
-                .lineLimit(3)
-                .multilineTextAlignment(.center)
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
             BetaBadge()
         }
         .font(.footnote.weight(.semibold))
@@ -478,7 +488,7 @@ struct TeleprompterView: View {
 
     /// After a session long enough to judge, ask how it went.
     private func finishFollowingVoice() {
-        guard settings.followsVoice else { return }
+        guard followsVoice else { return }
         voice.stop()
         let metrics = voice.metrics
         Analytics.logEvent("follow_voice_session", parameters: VoiceFeedback.parameters(for: metrics))
@@ -633,6 +643,14 @@ struct TeleprompterView: View {
 private let controlsFade = Animation.easeInOut(duration: 0.3)
 
 private extension View {
+    /// Keep a button's place in the row while it has nothing to do, so the
+    /// buttons around it don't move.
+    func hiddenUnless(_ isShown: Bool) -> some View {
+        opacity(isShown ? 1 : 0)
+            .disabled(!isShown)
+            .accessibilityHidden(!isShown)
+    }
+
     /// Fade controls out and back in, and take them out of reach of taps and
     /// VoiceOver while they're gone.
     func fadedOut(_ isHidden: Bool) -> some View {
