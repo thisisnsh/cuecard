@@ -12,12 +12,12 @@ struct HelpAssistantView: View {
     private let screen = "help_assistant"
 
     /// More to read under the examples, before anything is asked: the help
-    /// to browse, where this is Help's front page.
-    let browse: AnyView?
+    /// to browse, where this is Help's front page, narrowed to what's typed.
+    let browse: ((String) -> AnyView)?
     /// Done, from the page this was opened from: closes the whole sheet.
     let close: () -> Void
 
-    init(browse: AnyView? = nil, close: @escaping () -> Void) {
+    init(browse: ((String) -> AnyView)? = nil, close: @escaping () -> Void) {
         self.browse = browse
         self.close = close
     }
@@ -31,8 +31,12 @@ struct HelpAssistantView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
                     if assistant.exchanges.isEmpty {
-                        introduction
-                        if let browse { browse }
+                        // As Help's front page, typing narrows the help to
+                        // the topics that match, in its place.
+                        if browse == nil || trimmedQuestion.isEmpty {
+                            introduction
+                        }
+                        if let browse { browse(trimmedQuestion) }
                     }
                     ForEach(assistant.exchanges) { exchange in
                         exchangeView(exchange)
@@ -48,21 +52,9 @@ struct HelpAssistantView: View {
             }
         }
         .safeAreaInset(edge: .bottom) { askBar }
-        .navigationTitle(browse == nil ? "Ask" : "Help")
+        .navigationTitle(browse == nil ? "Ask AI" : "Help")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .principal) {
-                HStack(spacing: 8) {
-                    Text(browse == nil ? "Ask" : "Help")
-                        .font(.headline)
-                    BetaBadge()
-                }
-                .fixedSize()
-                .accessibilityElement(children: .combine)
-                .accessibilityAddTraits(.isHeader)
-            }
-            .sharedBackgroundHidden()
-
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Done") {
                     AnalyticsEvents.logButtonClick("help_ask_done", screen: screen)
@@ -85,10 +77,12 @@ struct HelpAssistantView: View {
             HStack(spacing: 8) {
                 Image(systemName: "sparkles")
                     .foregroundStyle(AppColors.purple(for: colorScheme))
-                Text("Ask anything about using CueCard.")
+                Text("Ask AI")
                     .font(.headline)
                     .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                BetaBadge()
             }
+            .accessibilityElement(children: .combine)
 
             if case .unavailable(let reason) = assistant.availability {
                 Text(reason)

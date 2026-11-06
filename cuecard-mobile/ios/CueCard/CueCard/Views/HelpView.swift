@@ -217,8 +217,9 @@ enum HelpLibrary {
 // MARK: - Help Sheet
 
 /// The same help on every page. Where Apple Intelligence can answer, it
-/// opens on asking a question, with the sections to browse below; otherwise
-/// on the sections, with a search across all of them.
+/// opens on asking a question, with the sections to browse below, which
+/// narrow to the matching topics as the question is typed; otherwise on the
+/// sections, with a search across all of them.
 struct HelpView: View {
     @Environment(\.dismiss) private var dismiss
 
@@ -233,18 +234,11 @@ struct HelpView: View {
     var body: some View {
         NavigationStack {
             if asksFirst {
-                HelpAssistantView(browse:AnyView(HelpBrowseCards(close: close)), close: close)
-                    .toolbar {
-                        ToolbarItem(placement: .topBarLeading) {
-                            NavigationLink {
-                                HelpTopicsList(showsAsk: false, close: close)
-                            } label: {
-                                Text("All Topics")
-                            }
-                        }
-                    }
+                HelpAssistantView(browse: { query in
+                    AnyView(HelpBrowseCards(query: query, close: close))
+                }, close: close)
             } else {
-                HelpTopicsList(showsAsk: true, close: close)
+                HelpTopicsList(close: close)
             }
         }
         .onAppear {
@@ -262,21 +256,17 @@ struct HelpView: View {
     }
 }
 
-/// Every section, with the links to report a bug, ask for a feature and see
-/// what's new, and a search across all the topics.
+/// Help's front page where Apple Intelligence can't answer: every section,
+/// with the links to report a bug, ask for a feature and see what's new, and
+/// a search across all the topics.
 private struct HelpTopicsList: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.openURL) private var openURL
     @ObservedObject private var whatsNew = WhatsNewService.shared
 
-    /// Offer asking a question first: where Apple Intelligence isn't ready,
-    /// the assistant says why.
-    let showsAsk: Bool
     let close: () -> Void
 
     @State private var query = ""
-    /// All Topics was logged as opened, which coming back to it isn't.
-    @State private var didLogOpen = false
 
     private var trimmedQuery: String {
         query.trimmingCharacters(in: .whitespaces)
@@ -309,7 +299,7 @@ private struct HelpTopicsList: View {
             }
         }
         .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search Help")
-        .navigationTitle(showsAsk ? "Help" : "All Topics")
+        .navigationTitle("Help")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -319,17 +309,13 @@ private struct HelpTopicsList: View {
                 }
             }
         }
-        .onAppear {
-            guard !showsAsk, !didLogOpen else { return }
-            didLogOpen = true
-            AnalyticsEvents.logButtonClick("help_all_topics", screen: HelpView.screen)
-        }
     }
 
     @ViewBuilder
     private var frontPage: some View {
-        // Only where the iPhone has Apple Intelligence to answer with.
-        if showsAsk, OnDeviceModelAvailability.current != .unsupported {
+        // Only where the iPhone has Apple Intelligence to answer with. While
+        // it isn't ready, the page says why.
+        if OnDeviceModelAvailability.current != .unsupported {
             Section {
                 NavigationLink {
                     HelpAssistantView(close: close)
@@ -341,7 +327,7 @@ private struct HelpTopicsList: View {
                             .frame(width: 28)
                         VStack(alignment: .leading, spacing: 2) {
                             HStack(spacing: 8) {
-                                Text("Ask a Question")
+                                Text("Ask AI")
                                     .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                                 BetaBadge()
                             }
@@ -430,15 +416,60 @@ private struct HelpSectionLabel: View {
 }
 
 /// The help to browse, under the question on the asking page: the sections,
-/// then the links, each group on a card of its own.
+/// then the links, each group on a card of its own. With a question typed,
+/// the topics that match it instead, open.
 private struct HelpBrowseCards: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.openURL) private var openURL
     @ObservedObject private var whatsNew = WhatsNewService.shared
 
+    /// What's typed in the question, trimmed.
+    let query: String
     let close: () -> Void
 
+    private var results: [HelpSection] {
+        AllHelp.sections
+            .map { $0.filtered(by: query) }
+            .filter { !$0.topics.isEmpty }
+    }
+
     var body: some View {
+        if query.isEmpty {
+            sections
+        } else {
+            matches
+        }
+    }
+
+    @ViewBuilder
+    private var matches: some View {
+        let results = results
+        VStack(alignment: .leading, spacing: 12) {
+            if results.isEmpty {
+                Text("No help topics match. Tap the arrow to ask AI.")
+                    .font(.subheadline)
+                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                    .padding(.top, 4)
+            }
+            ForEach(results) { section in
+                Text(section.title)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                    .padding(.top, 4)
+                card {
+                    ForEach(Array(section.topics.enumerated()), id: \.element.id) { index, topic in
+                        if index > 0 { Divider().padding(.leading, 16) }
+                        HelpTopicRow(topic: topic, isExpanded: true)
+                            .buttonStyle(.plain)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 10)
+                    }
+                }
+            }
+        }
+    }
+
+    private var sections: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Or Browse Help")
                 .font(.subheadline.weight(.semibold))
