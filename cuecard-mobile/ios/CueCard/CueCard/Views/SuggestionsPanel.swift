@@ -12,11 +12,10 @@ struct SuggestionsButton: View {
                 .foregroundStyle(AppColors.purple(for: colorScheme))
                 .frame(width: 52, height: 52)
                 .glassedEffect(in: Circle())
-                .aiGlow()
                 .contentShape(Circle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Suggestions")
+        .accessibilityLabel("AI Suggestions")
         .accessibilityHint("Suggests fixes, cues and emphasis for your script, on this iPhone")
     }
 }
@@ -66,9 +65,10 @@ extension View {
     }
 }
 
-/// Where the home controls were while suggestions are open: the one being
-/// looked at, as it would change the script, to accept or reject. Each is
-/// decided on its own, like suggested edits in a shared document.
+/// Where the home controls were while suggestions are open: one window with
+/// its title and actions at the top, and the suggestion being looked at, as
+/// it would change the script, to accept or reject. Each is decided on its
+/// own, like suggested edits in a shared document.
 struct SuggestionsPanel: View {
     @ObservedObject var review: ScriptReview
     let colorScheme: ColorScheme
@@ -80,45 +80,46 @@ struct SuggestionsPanel: View {
     private var primary: Color { AppColors.textPrimary(for: colorScheme) }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 14) {
             header
-            card
+            content
         }
+        .padding(16)
+        .glassedEffect(in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .shadow(color: Color.black.opacity(0.1), radius: 10)
         .animation(.easeInOut(duration: 0.2), value: review.focusedID)
         .animation(.easeInOut(duration: 0.2), value: review.isRunning)
     }
 
+    /// The window's title, and Accept All and Done, on one line, or the
+    /// actions under the title where there's no room.
     private var header: some View {
         ViewThatFits(in: .horizontal) {
             HStack(spacing: 8) {
-                reviewStatus
+                title
                 Spacer(minLength: 8)
                 reviewActions
             }
-            VStack(alignment: .leading, spacing: 8) {
-                reviewStatus
+            VStack(alignment: .leading, spacing: 10) {
+                title
                 HStack { Spacer(minLength: 0); reviewActions }
             }
         }
     }
 
-    private var reviewStatus: some View {
+    private var title: some View {
         HStack(spacing: 8) {
-            if review.isRunning { ProgressView().controlSize(.small) }
-            Group {
-                if let index = review.focusedIndex {
-                    Text("\(index + 1) of \(review.suggestions.count)").monospacedDigit()
-                } else if review.isRunning {
-                    Text("Reviewing…")
-                } else {
-                    Text("Suggestions")
-                }
-            }
-            .font(.subheadline.weight(.semibold))
-            .foregroundStyle(secondary)
+            Image(systemName: "sparkles")
+                .foregroundStyle(AppColors.purple(for: colorScheme))
+            Text("AI Suggestions")
+                .foregroundStyle(primary)
             BetaBadge()
+            if review.isRunning { ProgressView().controlSize(.small) }
         }
+        .font(.subheadline.weight(.semibold))
         .fixedSize(horizontal: true, vertical: false)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isHeader)
     }
 
     private var reviewActions: some View {
@@ -134,81 +135,79 @@ struct SuggestionsPanel: View {
     }
 
     @ViewBuilder
-    private var card: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            if let suggestion = review.focused {
-                HStack(spacing: 8) {
-                    Image(systemName: suggestion.kind.systemImage)
-                        .foregroundStyle(AppColors.purple(for: colorScheme))
-                    Text(suggestion.kind.title)
-                        .foregroundStyle(primary)
-                    Spacer(minLength: 8)
-                    if review.suggestions.count > 1 {
-                        stepButton("chevron.left", label: "Previous Suggestion") {
-                            AnalyticsEvents.logButtonClick("suggestion_previous", screen: "home")
-                            review.focusPrevious()
-                        }
-                        stepButton("chevron.right", label: "Next Suggestion") {
-                            AnalyticsEvents.logButtonClick("suggestion_next", screen: "home")
-                            review.focusNext()
-                        }
+    private var content: some View {
+        if let suggestion = review.focused {
+            HStack(spacing: 8) {
+                Image(systemName: suggestion.kind.systemImage)
+                    .foregroundStyle(AppColors.purple(for: colorScheme))
+                Text(suggestion.kind.title)
+                    .foregroundStyle(primary)
+                if let index = review.focusedIndex {
+                    Text("\(index + 1) of \(review.suggestions.count)")
+                        .monospacedDigit()
+                        .foregroundStyle(secondary)
+                }
+                Spacer(minLength: 8)
+                if review.suggestions.count > 1 {
+                    stepButton("chevron.left", label: "Previous Suggestion") {
+                        AnalyticsEvents.logButtonClick("suggestion_previous", screen: "home")
+                        review.focusPrevious()
+                    }
+                    stepButton("chevron.right", label: "Next Suggestion") {
+                        AnalyticsEvents.logButtonClick("suggestion_next", screen: "home")
+                        review.focusNext()
                     }
                 }
-                .font(.subheadline.weight(.semibold))
-
-                preview(of: suggestion)
-                    .font(.body)
-                    .lineLimit(3)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-
-                HStack(spacing: 10) {
-                    Button {
-                        review.reject(suggestion.id)
-                    } label: {
-                        Label("Reject", systemImage: "xmark")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(primary)
-                            .frame(maxWidth: .infinity)
-                            .frame(minHeight: 44)
-                            .glassedEffect(in: Capsule(), interactive: true)
-                    }
-                    .buttonStyle(.plain)
-
-                    Button {
-                        onAccept(suggestion)
-                    } label: {
-                        Label("Accept", systemImage: "checkmark")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(colorScheme == .dark ? .black : .white)
-                            .frame(maxWidth: .infinity)
-                            .frame(minHeight: 44)
-                            .background(Capsule().fill(AppColors.green(for: colorScheme)))
-                    }
-                    .buttonStyle(.plain)
-                }
-            } else if review.isRunning {
-                HStack(spacing: 10) {
-                    Image(systemName: "sparkles")
-                        .foregroundStyle(AppColors.purple(for: colorScheme))
-                    Text("Reading your script on this iPhone…")
-                        .foregroundStyle(primary)
-                }
-                .font(.subheadline.weight(.medium))
-                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-            } else {
-                HStack(spacing: 10) {
-                    Image(systemName: "checkmark.circle")
-                        .foregroundStyle(AppColors.green(for: colorScheme))
-                    Text("No suggestions. Your script looks good.")
-                        .foregroundStyle(primary)
-                }
-                .font(.subheadline.weight(.medium))
-                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
             }
+            .font(.subheadline.weight(.semibold))
+
+            preview(of: suggestion)
+                .font(.body)
+                .lineLimit(3)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            HStack(spacing: 10) {
+                Button {
+                    review.reject(suggestion.id)
+                } label: {
+                    Label("Reject", systemImage: "xmark")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(primary)
+                        .frame(maxWidth: .infinity)
+                        .frame(minHeight: 44)
+                        .background(Capsule().fill(secondary.opacity(0.15)))
+                        .contentShape(Capsule())
+                }
+                .buttonStyle(.plain)
+
+                Button {
+                    onAccept(suggestion)
+                } label: {
+                    Label("Accept", systemImage: "checkmark")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(colorScheme == .dark ? .black : .white)
+                        .frame(maxWidth: .infinity)
+                        .frame(minHeight: 44)
+                        .background(Capsule().fill(AppColors.green(for: colorScheme)))
+                        .contentShape(Capsule())
+                }
+                .buttonStyle(.plain)
+            }
+        } else if review.isRunning {
+            Text("Reading your script on this iPhone…")
+                .font(.subheadline.weight(.medium))
+                .foregroundStyle(primary)
+                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+        } else {
+            HStack(spacing: 10) {
+                Image(systemName: "checkmark.circle")
+                    .foregroundStyle(AppColors.green(for: colorScheme))
+                Text("No suggestions. Your script looks good.")
+                    .foregroundStyle(primary)
+            }
+            .font(.subheadline.weight(.medium))
+            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
         }
-        .padding(16)
-        .glassedEffect(in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .shadow(color: Color.black.opacity(0.1), radius: 10)
     }
 
     /// The change as it would read in the script: what goes struck through,
@@ -249,8 +248,9 @@ struct SuggestionsPanel: View {
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(primary)
                 .padding(.horizontal, 14)
-                .frame(minHeight: 44)
-                .glassedEffect(in: Capsule(), interactive: true)
+                .frame(minHeight: 36)
+                .background(Capsule().fill(secondary.opacity(0.15)))
+                .contentShape(Capsule())
         }
         .buttonStyle(.plain)
     }

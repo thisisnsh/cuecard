@@ -26,7 +26,7 @@ struct HomeView: View {
     @State private var renameTitle = ""
     @State private var showingImagePicker = false
     @State private var pickedImages: [PhotosPickerItem] = []
-    /// Brief confirmation after the Save action.
+    /// Brief confirmation after the Save action, in the status at the bottom.
     @State private var showsSaved = false
     @State private var savedTask: Task<Void, Never>?
     @State private var errorMessage: String?
@@ -38,6 +38,9 @@ struct HomeView: View {
     @State private var suggestionsUnavailable: String?
     /// Measured so every line stays clear of the controls, including larger text.
     @State private var bottomControlsHeight: CGFloat = 128
+    /// The strip at the bottom edge, home indicator and all, where the
+    /// script's status sits below the controls.
+    @State private var bottomEdgeHeight: CGFloat = 0
     /// A use of a beta AI feature to ask the reader about.
     @State private var aiExperience: AIExperience?
     /// Apple Intelligence turned on in Settings, watched so Suggestions goes
@@ -286,49 +289,56 @@ struct HomeView: View {
         showingSaveAsNew = true
     }
 
-    /// "Click to Save" floating over the script while there are changes to
-    /// save, then "Saved" for a moment once they are.
-    @ViewBuilder
-    private var saveStatus: some View {
-        let isUnsaved = settingsService.hasUnsavedChanges
-        if isUnsaved || showsSaved {
-            Button {
-                save(from: "save_note_pill")
-            } label: {
-                Text(isUnsaved ? "Click to Save" : "Saved")
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 6)
-                    .glassedEffect(in: Capsule(), interactive: isUnsaved)
-                    .contentShape(Capsule())
-            }
-            .buttonStyle(.plain)
-            .allowsHitTesting(isUnsaved)
-            .accessibilityHint(isUnsaved ? "Saves your changes" : "")
-            .transition(.opacity)
-        }
-    }
-
-    /// The saved script's version, in small text under everything else. Opens
+    /// Whether the script has changes to save, and the saved one's version,
+    /// in small text at the bottom edge, below the controls, so they don't
+    /// move up for it. "Saved" for a moment after saving. The version opens
     /// its history.
     @ViewBuilder
-    private var versionFooter: some View {
-        if let id = settingsService.currentNoteId {
+    private var statusFooter: some View {
+        let isUnsaved = settingsService.hasUnsavedChanges
+        let state: String? = isUnsaved ? String(localized: "Unsaved")
+            : showsSaved ? String(localized: "Saved") : nil
+        let version = settingsService.currentNoteId.map {
+            String(localized: "Version \(settingsService.versionCounts[$0] ?? 1)")
+        }
+        let text = [state, version].compactMap { $0 }.joined(separator: " · ")
+        if !text.isEmpty {
             Button {
                 AnalyticsEvents.logButtonClick("version_history_footer", screen: "home")
                 isEditorFocused = false
                 showingVersions = true
             } label: {
-                Text("Version \(settingsService.versionCounts[id] ?? 1)")
+                Text(text)
                     .font(.caption2)
                     .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, 24)
+                    .frame(minHeight: 22)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .accessibilityHint("Opens Version History")
+            .disabled(version == nil)
+            .accessibilityHint(version == nil ? "" : String(localized: "Opens Version History"))
+            .animation(.easeInOut(duration: 0.2), value: text)
+        }
+    }
+
+    /// Save, beside the gear while there are changes to save.
+    @ViewBuilder
+    private var saveButton: some View {
+        if settingsService.hasUnsavedChanges {
+            Button {
+                isEditorFocused = false
+                save(from: "save_note_toolbar")
+            } label: {
+                Text("Save")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(AppColors.green(for: colorScheme))
+                    .padding(.horizontal, 6)
+                    .frame(height: 36)
+                    .contentShape(Rectangle())
+            }
+            .accessibilityHint("Saves your changes")
+            .transition(.opacity)
         }
     }
 
@@ -410,7 +420,6 @@ struct HomeView: View {
             .transition(.move(edge: .bottom).combined(with: .opacity))
         } else {
             VStack(spacing: 10) {
-                saveStatus
                 if hasNotes {
                     // Timer and Suggestions on the left, Play on the right. With
                     // no room for the two on one line, they stack beside Play.
@@ -435,13 +444,12 @@ struct HomeView: View {
                 } else {
                     timerControl
                 }
-                versionFooter
             }
-            .animation(.easeInOut(duration: 0.2), value: settingsService.hasUnsavedChanges)
-            .animation(.easeInOut(duration: 0.2), value: showsSaved)
             .padding(.horizontal, 20)
             .padding(.top, 12)
-            .padding(.bottom, settingsService.currentNoteId == nil ? 12 : 2)
+            // Where there's no strip at the bottom edge for the status, room
+            // is left for it here.
+            .padding(.bottom, bottomEdgeHeight < 20 ? 30 : 12)
         }
     }
 
@@ -508,7 +516,7 @@ struct HomeView: View {
                 review.finished = nil
                 aiExperience = .suggestions(finished)
             }
-            .alert("Suggestions", isPresented: Binding(
+            .alert("AI Suggestions", isPresented: Binding(
                 get: { suggestionsUnavailable != nil || review.errorMessage != nil },
                 set: { if !$0 { suggestionsUnavailable = nil; review.errorMessage = nil } }
             )) {
@@ -571,6 +579,22 @@ struct HomeView: View {
                     if !isEditorFocused { bottomControlsHeight = height }
                 }
         }
+        .overlay(alignment: .bottom) {
+            if !isEditorFocused && !review.isActive {
+                statusFooter
+                    .frame(height: max(bottomEdgeHeight, 24), alignment: .top)
+                    .ignoresSafeArea(.container, edges: .bottom)
+                    .transition(.opacity)
+            }
+        }
+        .background {
+            Color.clear
+                .ignoresSafeArea(.keyboard)
+                .onGeometryChange(for: CGFloat.self) { $0.safeAreaInsets.bottom } action: { height in
+                    bottomEdgeHeight = height
+                }
+        }
+        .animation(.easeInOut(duration: 0.2), value: settingsService.hasUnsavedChanges)
         .animation(.easeInOut(duration: 0.2), value: isEditorFocused)
         .navigationBarTitleDisplayMode(.inline)
         // No bar background: the script's fade shows through its lower half.
@@ -640,9 +664,12 @@ struct HomeView: View {
         }
         .sharedBackgroundHidden()
 
-        // One item, so the gear and ••• sit closer than two items' buttons do.
+        // One item, so Save, the gear and ••• sit closer than separate items'
+        // buttons do.
         ToolbarItem(placement: .topBarTrailing) {
             HStack(spacing: 0) {
+                saveButton
+
                 Button(action: {
                     AnalyticsEvents.logButtonClick("settings", screen: "home")
                     isEditorFocused = false

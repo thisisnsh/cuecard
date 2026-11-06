@@ -74,8 +74,8 @@ private enum AllHelp {
         return section
     }
 
-    private static let suggestionsTopic = HelpTopic("Get Suggestions (Beta)",
-                  detail: "Tap the glowing button beside the timer to have Apple Intelligence read your script or deck on this iPhone. It suggests spelling fixes, cues, anchors and bold or italic words. In a deck it leaves out anchors, and only adds a cue where a card has room. Accept or reject each one, or accept them all. Needs an iPhone with Apple Intelligence turned on.")
+    private static let suggestionsTopic = HelpTopic("Get AI Suggestions (Beta)",
+                  detail: "Tap the sparkles button beside the timer to have Apple Intelligence read your script or deck on this iPhone. It suggests spelling fixes, cues, anchors and bold or italic words. In a deck it leaves out anchors, and only adds a cue where a card has room. Accept or reject each one, or accept them all, then tap Done. Needs an iPhone with Apple Intelligence turned on, and Enable Apple Intelligence on in Settings.")
 
     private static let allWriting = HelpSection("writing", title: "Writing",
                                     summary: "Modes, cues, formatting, images and cards",
@@ -101,7 +101,7 @@ private enum AllHelp {
         HelpTopic("Open a Script",
                   detail: "CueCard opens on your library, with every script and deck you saved. Tap one to write in it, and tap back to return. Switch between Teleprompter and Cards at the top."),
         HelpTopic("Save Your Work",
-                  detail: "Click to Save appears above the reading controls when there are changes to save. Tap it to save. To keep your changes as a separate script, open ••• at the top of the editor, then Save as New. A new script you haven't saved shows in the library as a draft."),
+                  detail: "When there are changes to save, the bottom of the editor says Unsaved and Save appears at the top, beside the gear. Tap it to save. To keep your changes as a separate script, open ••• at the top of the editor, then Save as New. A new script you haven't saved shows in the library as a draft."),
         HelpTopic("Rename, Duplicate or Delete",
                   detail: "In your library, touch and hold a script, or swipe it. In the editor, tap the title at the top to rename it."),
         HelpTopic("Organize in Folders",
