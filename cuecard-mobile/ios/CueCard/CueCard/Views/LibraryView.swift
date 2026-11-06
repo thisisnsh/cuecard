@@ -762,6 +762,13 @@ private struct LibraryList: View {
         }
         .swipeActions(edge: .leading) {
             Button {
+                AnalyticsEvents.logButtonClick("add_to_collection_swipe", screen: Self.screen)
+                noteToCollect = note
+            } label: {
+                Label("Add to Collection", systemImage: "rectangle.stack.badge.plus")
+            }
+            .tint(AppColors.purple(for: colorScheme))
+            Button {
                 AnalyticsEvents.logButtonClick("rename_note_swipe", screen: Self.screen)
                 renameTitle = note.title
                 noteToRename = note
@@ -775,13 +782,6 @@ private struct LibraryList: View {
                 Label("Duplicate", systemImage: "plus.square.on.square")
             }
             .tint(AppColors.blue(for: colorScheme))
-            Button {
-                AnalyticsEvents.logButtonClick("add_to_collection_swipe", screen: Self.screen)
-                noteToCollect = note
-            } label: {
-                Label("Add to Collection", systemImage: "rectangle.stack.badge.plus")
-            }
-            .tint(AppColors.purple(for: colorScheme))
         }
     }
 
