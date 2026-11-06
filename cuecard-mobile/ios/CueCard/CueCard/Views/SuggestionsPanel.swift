@@ -16,7 +16,7 @@ struct SuggestionsButton: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("AI Suggestions")
-        .accessibilityHint("Suggests fixes, cues and emphasis for your script, on this iPhone")
+        .accessibilityHint("Suggests fixes, cues, line breaks and emphasis for your script, on this iPhone")
     }
 }
 
@@ -223,18 +223,28 @@ struct SuggestionsPanel: View {
                 + Text(suggestion.replacement)
                 .foregroundColor(green)
                 .fontWeight(.semibold)
-        case .cue, .anchor:
-            // Only ever something put in beside the words.
-            let isBefore = suggestion.kind == .anchor
-            let added = isBefore
-                ? String(suggestion.replacement.dropLast(suggestion.original.count))
-                : String(suggestion.replacement.dropFirst(suggestion.original.count))
-            let tag = Text(added.trimmingCharacters(in: .whitespaces))
-                .foregroundColor(isBefore ? secondary : cueColor.color(for: colorScheme))
+        case .cue:
+            // Put in after the words.
+            let tag = Text(suggestion.replacement.trimmingCharacters(in: .whitespaces))
+                .foregroundColor(cueColor.color(for: colorScheme))
                 .fontWeight(.semibold)
                 .fontWidth(.condensed)
-            let words = Text(suggestion.original).foregroundColor(primary)
-            return isBefore ? tag + Text(" ") + words : words + Text(" ") + tag
+            return Text(suggestion.context).foregroundColor(primary) + Text(" ") + tag
+        case .anchor, .lineBreak:
+            // Put in ahead of the words, which start a new line where the
+            // suggestion breaks one.
+            var added = Text("")
+            if suggestion.replacement.hasPrefix("\n") {
+                added = Text(Image(systemName: "return")).foregroundColor(green).fontWeight(.semibold) + Text(" ")
+            }
+            if suggestion.kind == .anchor {
+                added = added + Text(TeleprompterParser.anchorTag)
+                    .foregroundColor(secondary)
+                    .fontWeight(.semibold)
+                    .fontWidth(.condensed)
+                    + Text(" ")
+            }
+            return added + Text(suggestion.original.trimmingCharacters(in: .whitespaces)).foregroundColor(primary)
         case .bold:
             return Text(suggestion.original).fontWeight(.heavy).foregroundColor(green)
         case .italic:
@@ -274,6 +284,7 @@ extension ScriptSuggestion.Kind {
         case .spelling: "Fix Spelling"
         case .cue: "Add Cue"
         case .anchor: "Add Anchor"
+        case .lineBreak: "Add Line Break"
         case .bold: "Make Bold"
         case .italic: "Make Italic"
         }
@@ -284,6 +295,7 @@ extension ScriptSuggestion.Kind {
         case .spelling: "textformat.abc"
         case .cue: "text.bubble"
         case .anchor: "bookmark"
+        case .lineBreak: "return"
         case .bold: "bold"
         case .italic: "italic"
         }

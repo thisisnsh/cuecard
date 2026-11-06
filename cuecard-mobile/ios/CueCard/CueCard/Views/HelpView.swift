@@ -75,7 +75,7 @@ private enum AllHelp {
     }
 
     private static let suggestionsTopic = HelpTopic("Get AI Suggestions (Beta)",
-                  detail: "Tap the sparkles button at the bottom left of the editor to have Apple Intelligence read your script or deck on this iPhone. It suggests spelling fixes, cues, anchors and bold or italic words. In a deck it leaves out anchors, and only adds a cue where a card has room. Accept or reject each one, or accept them all, then tap Done. Needs an iPhone with Apple Intelligence turned on, and Enable Apple Intelligence on in Settings.")
+                  detail: "Tap the sparkles button at the bottom left of the editor to have Apple Intelligence read your script or deck on this iPhone. It suggests spelling fixes, cues, anchors, line breaks that split long lines into short paragraphs, and bold or italic words. In a deck it leaves out anchors, and only adds a cue where a card has room. Accept or reject each one, or accept them all, then tap Done. Needs an iPhone with Apple Intelligence turned on, and Enable Apple Intelligence on in Settings.")
 
     private static let allWriting = HelpSection("writing", title: "Writing",
                                     summary: "Modes, cues, formatting, images and cards",

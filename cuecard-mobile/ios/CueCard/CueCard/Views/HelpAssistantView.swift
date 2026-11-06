@@ -211,6 +211,13 @@ final class HelpAssistant: ObservableObject {
     @Published private(set) var exchanges: [Exchange] = []
     let availability = OnDeviceModelAvailability.current
     private var task: Task<Void, Never>?
+    /// A session for the next question, with the help already read in, so
+    /// the answer starts sooner.
+    private var nextSession: AnyObject?
+
+    init() {
+        prepare()
+    }
 
     var isAnswering: Bool { exchanges.last?.isAnswering ?? false }
 
@@ -229,7 +236,9 @@ final class HelpAssistant: ObservableObject {
         exchanges.append(Exchange(question: question))
         let index = exchanges.count - 1
 
-        let answers = HelpAnswerer.answer(question)
+        let session = nextSession as? LanguageModelSession ?? HelpAnswerer.session()
+        nextSession = nil
+        let answers = HelpAnswerer.answer(question, in: session)
         task = Task { [weak self] in
             do {
                 for try await answer in answers {
@@ -241,32 +250,48 @@ final class HelpAssistant: ObservableObject {
                 self?.exchanges[index].failed = true
                 self?.exchanges[index].isAnswering = false
             }
+            if !Task.isCancelled { self?.prepare() }
         }
+    }
+
+    /// Each question gets a session of its own, so one answer never leans on
+    /// the last. The next one is readied while the user is reading or typing.
+    private func prepare() {
+        guard #available(iOS 26.0, *), availability == .available, nextSession == nil else { return }
+        let session = HelpAnswerer.session()
+        session.prewarm()
+        nextSession = session
     }
 }
 
 @available(iOS 26.0, *)
 private enum HelpAnswerer {
-    private static let instructions = """
-        You answer questions about CueCard, an iPhone app for reading a script from a teleprompter \
-        or from cards while speaking or recording. Answer only from the help topics in the prompt. \
-        Be brief: one to three sentences, naming the buttons and settings to use. \
-        If the topics don't answer the question, say you aren't sure, and suggest Report a Bug or \
-        Request a Feature in Help. Answer in the language of the question.
-        """
+    /// All of CueCard's help goes in with every question. It's about 2,000
+    /// tokens in English and 2,600 in Russian, which leaves room for the
+    /// question and the answer even in the model's smallest context of 4,096.
+    static func session() -> LanguageModelSession {
+        let help = HelpLibrary.topics
+            .map { "- \($0.section) › \($0.topic.title): \($0.topic.detail)" }
+            .joined(separator: "\n")
+        let instructions = """
+            You answer questions about CueCard, an iPhone app for reading a script from a teleprompter \
+            or from cards while speaking or recording. Answer only from CueCard's help, below. \
+            Be brief: one to three sentences, naming the buttons and settings to use. \
+            If the help doesn't answer the question, say that you don't know, and suggest Report a Bug or \
+            Request a Feature in Help. Answer in the language of the question.
 
-    /// About how much help goes in with a question. The model's context holds
-    /// a few thousand tokens, instructions and answer included.
-    private static let helpLength = 2400
+            CueCard's help:
+            \(help)
+            """
+        return LanguageModelSession(model: SystemLanguageModel.default, instructions: instructions)
+    }
 
     /// The answer as it's written, each time a little more of it.
-    static func answer(_ question: String) -> AsyncThrowingStream<String, Error> {
+    static func answer(_ question: String, in session: LanguageModelSession) -> AsyncThrowingStream<String, Error> {
         AsyncThrowingStream { continuation in
             let task = Task {
                 do {
-                    let session = LanguageModelSession(model: SystemLanguageModel.default, instructions: instructions)
-                    let prompt = "Help topics:\n\(relevantHelp(for: question))\n\nQuestion: \(question)"
-                    for try await snapshot in session.streamResponse(to: prompt) {
+                    for try await snapshot in session.streamResponse(to: question) {
                         continuation.yield(snapshot.content)
                     }
                     continuation.finish()
@@ -276,32 +301,6 @@ private enum HelpAnswerer {
             }
             continuation.onTermination = { _ in task.cancel() }
         }
-    }
-
-    /// The help topics sharing the most words with the question, as many as
-    /// fit, best first.
-    private static func relevantHelp(for question: String) -> String {
-        let asked = words(in: question)
-        let ranked = HelpLibrary.topics
-            .map { entry in (entry, asked.intersection(words(in: entry.topic.title + " " + entry.topic.detail)).count) }
-            .sorted { $0.1 > $1.1 }
-        var help = ""
-        for (entry, _) in ranked {
-            let line = "- \(entry.section) › \(entry.topic.title): \(entry.topic.detail)\n"
-            guard help.count + line.count <= helpLength else { continue }
-            help += line
-        }
-        return help
-    }
-
-    /// The words that tell one topic from another: longer ones, any form.
-    private static func words(in text: String) -> Set<String> {
-        var words = Set<String>()
-        text.enumerateSubstrings(in: text.startIndex..., options: .byWords) { word, _, _, _ in
-            guard let word, word.count >= 4 else { return }
-            words.insert(word.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: nil))
-        }
-        return words
     }
 
     static func message(for error: Error) -> String {

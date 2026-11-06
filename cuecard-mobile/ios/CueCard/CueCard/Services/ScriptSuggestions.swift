@@ -2,22 +2,33 @@ import Foundation
 import FoundationModels
 
 /// A small change Apple's on-device model proposes for the script, for the
-/// user to accept or reject: a spelling fix, a cue or an anchor put in, or
-/// words set in bold or italic.
+/// user to accept or reject: a spelling fix, a cue or an anchor put in, a
+/// long line broken in two, or words set in bold or italic.
 struct ScriptSuggestion: Identifiable, Equatable {
     enum Kind: Equatable {
-        case spelling, cue, anchor, bold, italic
+        case spelling, cue, anchor, lineBreak, bold, italic
     }
 
     let id = UUID()
     let kind: Kind
     /// Where it applies in the script, kept current as other suggestions are
-    /// accepted ahead of it.
+    /// accepted ahead of it. A cue only puts something in, so its range is
+    /// empty, at the spot it goes: a fix to the words before it is a
+    /// suggestion of its own.
     var range: NSRange
     /// The words there now.
     let original: String
     /// What they become once it's accepted.
     let replacement: String
+    /// For a cue, the words it comes after, to show it in place.
+    var context = ""
+
+    /// What the editor marks: the words a cue comes after, or the range.
+    var mark: NSRange {
+        guard range.length == 0 else { return range }
+        let length = min((context as NSString).length, range.location)
+        return NSRange(location: range.location - length, length: length)
+    }
 }
 
 /// What the reader made of a review, for the rating sent after it.
@@ -216,7 +227,11 @@ final class ScriptReview: ObservableObject {
     func acceptAll() -> [(range: NSRange, replacement: String)] {
         AnalyticsEvents.logButtonClick("suggestion_accept_all", screen: "home", parameters: ["count": suggestions.count])
         metrics.accepted += suggestions.count
-        let all = suggestions.sorted { $0.range.location > $1.range.location }
+        // A cue put in where another suggestion starts goes in after it's made,
+        // so it lands ahead of it.
+        let all = suggestions.sorted {
+            ($0.range.location, $0.range.length) > ($1.range.location, $1.range.length)
+        }
         for suggestion in all {
             script = (script as NSString).replacingCharacters(in: suggestion.range, with: suggestion.replacement)
             edits.append((suggestion.range.location,
@@ -249,7 +264,7 @@ final class ScriptReview: ObservableObject {
     /// The suggestion tapped on in the editor, if one was.
     func focus(at location: Int) {
         if let tapped = suggestions.first(where: {
-            $0.range.location <= location && location <= NSMaxRange($0.range)
+            $0.mark.location <= location && location <= NSMaxRange($0.mark)
         }) {
             focusedID = tapped.id
         }
@@ -269,7 +284,8 @@ final class ScriptReview: ObservableObject {
     private func add(_ found: [ScriptSuggestion]) {
         let text = script as NSString
         for var suggestion in found {
-            for edit in edits where edit.location < suggestion.range.location {
+            // Words put in where it starts, like a cue, go ahead of it.
+            for edit in edits where edit.location <= suggestion.range.location {
                 suggestion.range.location += edit.delta
             }
             guard NSMaxRange(suggestion.range) <= text.length,
@@ -305,6 +321,7 @@ extension ScriptSuggestion.Kind {
         case .spelling: "spelling"
         case .cue: "cue"
         case .anchor: "anchor"
+        case .lineBreak: "line_break"
         case .bold: "bold"
         case .italic: "italic"
         }
@@ -317,37 +334,57 @@ extension ScriptSuggestion.Kind {
 /// what it suggests against the script before passing it on: the model
 /// is small and gets things wrong, and a suggestion that doesn't fit the
 /// script's own rules is dropped rather than shown.
+///
+/// Each passage is read three times, for one kind of thing each time:
+/// mistakes, delivery, then paragraphs. The model does far better asked
+/// for one thing than for all of them at once.
 @available(iOS 26.0, *)
 enum ScriptSuggester {
     /// About how much script goes to the model at once. Its context holds a
     /// few thousand tokens, instructions and answer included.
     private static let passageLength = 1500
 
+    /// A line at least this long is worth breaking into paragraphs.
+    private static let longLine = 160
+
+    /// The least room between two cues, so the ones suggested don't bunch up.
+    private static let cueSpacing = 80
+
     /// Suggestions for each passage, as the model finishes it. For a deck,
     /// `cardLimit` is the characters a card holds.
     static func suggestions(for script: String, cardLimit: Int? = nil) -> AsyncThrowingStream<[ScriptSuggestion], Error> {
         AsyncThrowingStream { continuation in
             let task = Task {
-                let protected = protectedRanges(in: script)
-                let emphases = RichText.emphases(in: script, skipping: TeleprompterParser.cueMatches(in: script).map(\.range))
+                let isDeck = cardLimit != nil
+                let cues = TeleprompterParser.cueMatches(in: script).map(\.range)
+                let context = Context(
+                    text: script as NSString,
+                    protected: protectedRanges(in: script),
+                    cues: cues,
+                    emphases: RichText.emphases(in: script, skipping: cues),
+                    paragraphBreak: isDeck || !script.contains("\n\n") ? "\n" : "\n\n"
+                )
                 var cards = cardLimit.map { CardBudget(script: script, limit: $0) }
+                var taken: [NSRange] = []
                 do {
                     for passage in passages(in: script) {
-                        try Task.checkCancellation()
-                        do {
-                            let review = try await review(of: (script as NSString).substring(with: passage),
-                                                          isDeck: cardLimit != nil)
-                            let found = validated(review.changes, in: passage, of: script,
-                                                  protected: protected, emphases: emphases, cards: &cards)
-                            if !found.isEmpty { continuation.yield(found) }
-                        } catch let error as LanguageModelSession.GenerationError {
-                            switch error {
-                            case .unsupportedLanguageOrLocale, .assetsUnavailable:
-                                throw error
-                            default:
-                                // A passage the model couldn't make sense of, or wouldn't
-                                // read, is passed over; the rest are still worth reading.
-                                continue
+                        let text = context.text.substring(with: passage)
+                        for pass in Pass.allCases where pass.applies(to: text) {
+                            try Task.checkCancellation()
+                            do {
+                                let proposals = try await pass.run(on: text, isDeck: isDeck)
+                                let found = validated(proposals, in: passage, context: context,
+                                                      taken: &taken, cards: &cards)
+                                if !found.isEmpty { continuation.yield(found) }
+                            } catch let error as LanguageModelSession.GenerationError {
+                                switch error {
+                                case .unsupportedLanguageOrLocale, .assetsUnavailable:
+                                    throw error
+                                default:
+                                    // A passage the model couldn't make sense of, or wouldn't
+                                    // read, is passed over; the rest are still worth reading.
+                                    continue
+                                }
                             }
                         }
                     }
@@ -367,28 +404,65 @@ enum ScriptSuggester {
         return String(localized: "Suggestions couldn't be made right now. Try again in a little while.")
     }
 
-    private static let instructions = """
-        You review a script someone will read aloud from a teleprompter, and suggest a few small \
-        changes to it. Most passages need few changes or none. When a passage is fine, suggest nothing.
+    // MARK: Asking
 
+    /// What the model is asked to look for in a passage, one reading each.
+    private enum Pass: CaseIterable {
+        /// Spelling slips, and words to stress.
+        case proofread
+        /// Cues, and anchors.
+        case delivery
+        /// Where a long line breaks into paragraphs.
+        case paragraphs
 
-        """ + markup + spellingAndCues + """
+        /// Only a passage with a long line in it has anything to break.
+        func applies(to passage: String) -> Bool {
+            guard self == .paragraphs else { return true }
+            var hasLongLine = false
+            passage.enumerateLines { line, stop in
+                if (line as NSString).length >= longLine { hasLongLine = true; stop = true }
+            }
+            return hasLongLine
+        }
 
-        - anchor: the first words of a new major section in a long script. value is empty.
-        """ + emphasisAndRules
+        func run(on passage: String, isDeck: Bool) async throws -> [Proposal] {
+            let prompt = "Passage:\n\(passage)"
+            let options = GenerationOptions(samplingMode: .greedy)
+            switch self {
+            case .proofread:
+                let session = LanguageModelSession(model: SystemLanguageModel.default,
+                                                   instructions: proofreadInstructions(isDeck: isDeck))
+                return try await session.respond(to: prompt, generating: ModelProofread.self, options: options)
+                    .content.changes.map { Proposal(kind: $0.kind.kind, text: $0.text, value: $0.correction) }
+            case .delivery:
+                let session = LanguageModelSession(model: SystemLanguageModel.default,
+                                                   instructions: deliveryInstructions(isDeck: isDeck))
+                return try await session.respond(to: prompt, generating: ModelDelivery.self, options: options)
+                    .content.marks.map { Proposal(kind: $0.kind.kind, text: $0.text, value: $0.cue) }
+            case .paragraphs:
+                let session = LanguageModelSession(model: SystemLanguageModel.default,
+                                                   instructions: paragraphInstructions)
+                return try await session.respond(to: prompt, generating: ModelParagraphs.self, options: options)
+                    .content.starts.map { Proposal(kind: .lineBreak, text: $0, value: "") }
+            }
+        }
+    }
 
-    /// For a deck of cards: no anchors, which are for jumping through the
-    /// teleprompter, and only the cues a card has room for.
-    private static let deckInstructions = """
-        You review a deck of cue cards someone will read aloud, one short card at a time, and suggest \
-        a few small changes to it. Most passages need few changes or none. When a passage is fine, \
-        suggest nothing. A line with [separator] ends one card and starts the next.
+    /// One thing the model suggested, before it's checked against the script.
+    private struct Proposal {
+        let kind: ScriptSuggestion.Kind
+        /// The words it applies to, as the model copied them.
+        let text: String
+        /// The corrected words for spelling, the cue's words for a cue.
+        let value: String
+    }
 
-
-        """ + markup + spellingAndCues + emphasisAndRules + """
-
-        - Never suggest an anchor. Cards are short: suggest a cue only where a card has room for it.
-        """
+    private static func about(isDeck: Bool) -> String {
+        isDeck
+            ? "a deck of cue cards someone will read aloud, one short card at a time. "
+                + "A line with [separator] ends one card and starts the next"
+            : "a script someone will read aloud from a teleprompter"
+    }
 
     private static let markup = """
         The script has its own markup:
@@ -396,40 +470,57 @@ enum ScriptSuggester {
         They aren't read aloud.
         - [anchor] marks the start of a section the speaker can jump to.
         - *words* are bold and _words_ are italic.
+        """
+
+    private static func proofreadInstructions(isDeck: Bool) -> String {
+        """
+        You proofread \(about(isDeck: isDeck)). Most passages need few changes or none.
+
+        \(markup)
 
         The kinds of change:
-        """
-
-    private static let spellingAndCues = """
-
-        - spelling: a misspelled word or a clear grammar slip. text is the wrong words; value is \
+        - spelling: a misspelled word or a clear grammar slip. text is the wrong words; correction is \
         the same words corrected. Never reword or rewrite a sentence.
-        - cue: a delivery cue at a natural moment, such as pause, breathe, smile, slow down or look up. \
-        text is the words the cue comes right after; value is the cue's words, one to four, without brackets. \
-        At most one or two in a passage.
-        """
-
-    private static let emphasisAndRules = """
-
-        - bold: a word or short phrase to stress strongly. value is empty. Rare.
-        - italic: a word or short phrase to say with lighter emphasis. value is empty. Rare.
+        - bold: a word or short phrase to stress strongly. Rare.
+        - italic: a word or short phrase to say with lighter emphasis. Rare.
 
         Rules:
         - text is copied exactly from the passage: a few words, all on one line.
-        - Never change anything inside square brackets, and never add a cue or anchor where there is one already.
+        - Never change anything inside square brackets.
         - Keep to the script's language.
         """
-
-    private static func review(of passage: String, isDeck: Bool) async throws -> ModelReview {
-        let session = LanguageModelSession(model: SystemLanguageModel.default,
-                                           instructions: isDeck ? deckInstructions : instructions)
-        let response = try await session.respond(
-            to: "Passage:\n\(passage)",
-            generating: ModelReview.self,
-            options: GenerationOptions(samplingMode: .greedy)
-        )
-        return response.content
     }
+
+    /// A deck has no anchors, which are for jumping through the
+    /// teleprompter, and only the cues a card has room for.
+    private static func deliveryInstructions(isDeck: Bool) -> String {
+        let anchor = isDeck
+            ? "Never suggest an anchor. Cards are short: suggest a cue only where a card has room for it."
+            : """
+            - anchor: a sentence that starts a new topic or section, for the speaker to jump to. text is \
+            its first few words.
+            """
+        return """
+        You mark up \(about(isDeck: isDeck)), to make it easier to deliver. You never change its words.
+
+        \(markup)
+
+        The kinds of mark:
+        - cue: a delivery cue where a speaker would naturally pause, breathe, smile, slow down or look up, \
+        such as after a key point, before a big reveal or between two ideas. text is the last few words \
+        before the cue; cue is what the speaker should do. One or two in a passage.
+        \(anchor)
+
+        Rules:
+        - text is copied exactly from the passage: a few words, all on one line.
+        - Never add a cue or anchor where there is one already.
+        """
+    }
+
+    private static let paragraphInstructions = """
+        You split a script someone will read aloud into short paragraphs of one to three sentences, \
+        each one thought, so the speaker can take it in at a glance. You never change its words.
+        """
 
     // MARK: Passages
 
@@ -482,6 +573,19 @@ enum ScriptSuggester {
 
     // MARK: Checking what the model says
 
+    /// The script being reviewed, and what in it bears on a suggestion.
+    private struct Context {
+        let text: NSString
+        /// Tags the model mustn't change, or put anything inside.
+        let protected: [NSRange]
+        /// The cues already in the script.
+        let cues: [NSRange]
+        let emphases: [Emphasis]
+        /// What starts a new paragraph: a blank line where the script already
+        /// has them between its paragraphs, otherwise a line break.
+        let paragraphBreak: String
+    }
+
     /// Tags the model mustn't change, or put anything inside.
     private static func protectedRanges(in script: String) -> [NSRange] {
         TeleprompterParser.cueMatches(in: script).map(\.range)
@@ -493,34 +597,42 @@ enum ScriptSuggester {
     /// The most of each kind kept from one passage, so a review never buries
     /// the script in suggestions.
     private static let limits: [ScriptSuggestion.Kind: Int] = [
-        .spelling: 6, .cue: 2, .anchor: 1, .bold: 1, .italic: 1
+        .spelling: 6, .cue: 3, .anchor: 1, .lineBreak: 4, .bold: 1, .italic: 1
     ]
 
-    private static func validated(_ changes: [ModelChange], in passage: NSRange, of script: String,
-                                  protected: [NSRange], emphases: [Emphasis],
-                                  cards: inout CardBudget?) -> [ScriptSuggestion] {
-        let text = script as NSString
+    /// What the model proposed that fits the script. `taken` is where
+    /// suggestions already are, from this passage's other readings and the
+    /// passages before, so no two overlap.
+    private static func validated(_ proposals: [Proposal], in passage: NSRange, context: Context,
+                                  taken: inout [NSRange], cards: inout CardBudget?) -> [ScriptSuggestion] {
         var kept: [ScriptSuggestion] = []
         var counts: [ScriptSuggestion.Kind: Int] = [:]
 
-        for change in changes {
-            let kind = change.kind.kind
+        for proposal in proposals {
+            let kind = proposal.kind
             // Cards are turned, not jumped through.
             if cards != nil, kind == .anchor { continue }
             guard counts[kind, default: 0] < limits[kind, default: 0],
-                  var range = locate(change.text, in: passage, of: text) else { continue }
-            if kind == .bold || kind == .italic { range = text.trimmingPunctuation(in: range) }
+                  var range = locate(proposal.text, in: passage, of: context.text) else { continue }
+            if kind == .bold || kind == .italic { range = context.text.trimmingPunctuation(in: range) }
             guard range.length > 0,
-                  !protected.contains(where: { NSIntersectionRange($0, range).length > 0 }),
-                  !kept.contains(where: { NSIntersectionRange($0.range, range).length > 0 }),
-                  let suggestion = suggestion(kind, at: range, value: change.value, in: text,
-                                              protected: protected, emphases: emphases),
+                  !context.protected.contains(where: { NSIntersectionRange($0, range).length > 0 }),
+                  let suggestion = suggestion(kind, at: range, value: proposal.value, context: context),
+                  !taken.contains(where: { NSIntersectionRange($0, suggestion.range).length > 0 }),
+                  kind != .cue || hasRoomForCue(at: NSMaxRange(suggestion.range), context: context, kept: kept),
                   cards?.takes(suggestion) ?? true
             else { continue }
             kept.append(suggestion)
+            taken.append(suggestion.range)
             counts[kind, default: 0] += 1
         }
         return kept
+    }
+
+    /// No cue already in the script, or kept from this passage, close by.
+    private static func hasRoomForCue(at location: Int, context: Context, kept: [ScriptSuggestion]) -> Bool {
+        let nearby = context.cues.map(\.location) + kept.filter { $0.kind == .cue }.map { NSMaxRange($0.range) }
+        return !nearby.contains { abs($0 - location) < cueSpacing }
     }
 
     /// Where the words the model copied are in the passage: whole words, on one line.
@@ -539,52 +651,97 @@ enum ScriptSuggester {
         return nil
     }
 
-    private static func suggestion(_ kind: ScriptSuggestion.Kind, at range: NSRange, value: String, in text: NSString,
-                                   protected: [NSRange], emphases: [Emphasis]) -> ScriptSuggestion? {
+    private static func suggestion(_ kind: ScriptSuggestion.Kind, at range: NSRange, value: String,
+                                   context: Context) -> ScriptSuggestion? {
+        let text = context.text
         let original = text.substring(with: range)
         let value = value.trimmingCharacters(in: .whitespacesAndNewlines)
         let markup = CharacterSet(charactersIn: "[]*_")
-        let replacement: String
 
         switch kind {
         case .spelling:
+            // The model sometimes sets its fix in bold; the fix is the words.
+            let fixed = value.filter { $0 != "*" && $0 != "_" }
             // A fix, not a rewrite: a few words, changed by a few letters.
-            guard !value.isEmpty, value != original,
-                  value.rangeOfCharacter(from: markup.union(.newlines)) == nil,
+            guard !fixed.isEmpty, fixed != original,
+                  fixed.rangeOfCharacter(from: markup.union(.newlines)) == nil,
                   original.rangeOfCharacter(from: markup) == nil,
-                  original.split(separator: " ").count <= 6,
-                  original.editDistance(to: value) <= max(2, original.count / 3)
+                  original.split(separator: " ").count <= 10,
+                  original.editDistance(to: fixed) <= max(2, original.count / 3)
             else { return nil }
-            replacement = value
+            return ScriptSuggestion(kind: kind, range: range, original: original, replacement: fixed)
 
         case .cue:
-            let cue = value.trimmingCharacters(in: CharacterSet(charactersIn: "[] "))
+            // Offered a few, the first is the one.
+            let first = value.split(whereSeparator: { ",;/".contains($0) }).first.map(String.init) ?? ""
+            let cue = first.trimmingCharacters(in: CharacterSet(charactersIn: "[]. ").union(.whitespaces))
             let end = NSMaxRange(range)
             guard !cue.isEmpty, cue.count <= 30, cue.split(separator: " ").count <= 4,
                   cue.rangeOfCharacter(from: markup.union(.newlines)) == nil,
-                  !hasTag(near: end, in: text, protected: protected)
+                  !hasTag(near: end, in: text, protected: context.protected)
             else { return nil }
-            replacement = original + text.spacedInsertion(of: TeleprompterParser.cueTag(text: cue), at: end).text
+            let tag = text.spacedInsertion(of: TeleprompterParser.cueTag(text: cue), at: end).text
+            return ScriptSuggestion(kind: kind, range: NSRange(location: end, length: 0), original: "",
+                                    replacement: tag, context: original)
 
         case .anchor:
-            // At the start of a line, past the first, with none there already.
             let line = text.lineRange(for: NSRange(location: range.location, length: 0))
             let before = text.substring(with: NSRange(location: line.location, length: range.location - line.location))
-            guard line.location > 0, before.trimmingCharacters(in: .whitespaces).isEmpty,
-                  !hasTag(near: range.location, in: text, protected: protected)
+            if before.trimmingCharacters(in: .whitespaces).isEmpty {
+                // At the start of a line, past the first, with none there already.
+                guard line.location > 0, !hasTag(near: range.location, in: text, protected: context.protected)
+                else { return nil }
+                let tag = text.spacedInsertion(of: TeleprompterParser.anchorTag, at: range.location).text
+                return ScriptSuggestion(kind: kind, range: range, original: original, replacement: tag + original)
+            }
+            // A sentence partway along a line: the new section starts a paragraph of its own.
+            guard let span = breakable(range, context: context) else { return nil }
+            return ScriptSuggestion(kind: kind, range: span, original: text.substring(with: span),
+                                    replacement: context.paragraphBreak + TeleprompterParser.anchorTag + " " + original)
+
+        case .lineBreak:
+            let line = text.substring(with: text.lineRange(for: NSRange(location: range.location, length: 0)))
+            guard (line.trimmingCharacters(in: .whitespacesAndNewlines) as NSString).length >= longLine,
+                  let span = breakable(range, context: context)
             else { return nil }
-            replacement = text.spacedInsertion(of: TeleprompterParser.anchorTag, at: range.location).text + original
+            return ScriptSuggestion(kind: kind, range: span, original: text.substring(with: span),
+                                    replacement: context.paragraphBreak + original)
 
         case .bold, .italic:
             guard original.count <= 40, original.split(separator: " ").count <= 5,
                   original.rangeOfCharacter(from: markup.union(.newlines)) == nil,
-                  !emphases.contains(where: { NSIntersectionRange($0.range, range).length > 0 })
+                  !context.emphases.contains(where: { NSIntersectionRange($0.range, range).length > 0 })
             else { return nil }
             let marker = (kind == .bold ? EmphasisStyle.bold : .italic).marker
-            replacement = marker + original + marker
+            return ScriptSuggestion(kind: kind, range: range, original: original, replacement: marker + original + marker)
+        }
+    }
+
+    /// `words` with the space before them, where they start a sentence
+    /// partway along a line, for a new paragraph to take the space's place.
+    /// The sentence before can end in a cue, which stays with it.
+    private static func breakable(_ words: NSRange, context: Context) -> NSRange? {
+        let text = context.text
+        func isSpace(_ location: Int) -> Bool {
+            let character = text.character(at: location)
+            return character == 0x20 || character == 0x09
         }
 
-        return ScriptSuggestion(kind: kind, range: range, original: original, replacement: replacement)
+        var start = words.location
+        while start > 0, isSpace(start - 1) { start -= 1 }
+        guard start < words.location else { return nil }
+
+        var end = start
+        while let cue = context.cues.first(where: { NSMaxRange($0) == end }) {
+            end = cue.location
+            while end > 0, isSpace(end - 1) { end -= 1 }
+        }
+        let closers = CharacterSet(charactersIn: "\"')»”’")
+        while end > 0, let scalar = Unicode.Scalar(text.character(at: end - 1)), closers.contains(scalar) { end -= 1 }
+        guard end > 0, let last = Unicode.Scalar(text.character(at: end - 1)),
+              CharacterSet(charactersIn: ".!?…。！？").contains(last)
+        else { return nil }
+        return NSRange(location: start, length: NSMaxRange(words) - start)
     }
 
     /// A tag right at `location`, give or take a space, so another isn't put beside it.
@@ -627,37 +784,74 @@ private struct CardBudget {
 
 @available(iOS 26.0, *)
 @Generable
-private struct ModelReview {
-    @Guide(description: "The changes worth making, in the order they appear. Empty when the passage is fine.",
+private struct ModelProofread {
+    @Guide(description: "The fixes worth making, in the order they appear. Empty when the passage needs none.",
            .maximumCount(8))
-    var changes: [ModelChange]
+    var changes: [ModelFix]
 }
 
 @available(iOS 26.0, *)
 @Generable
-private struct ModelChange {
+private struct ModelFix {
     @Guide(description: "The kind of change.")
-    var kind: ModelKind
+    var kind: ModelFixKind
     @Guide(description: "A few words copied exactly from the passage, all on one line.")
     var text: String
-    @Guide(description: "For spelling, the corrected words. For cue, the cue's words without brackets. Otherwise empty.")
-    var value: String
+    @Guide(description: "Only for spelling: text with the mistake corrected. Otherwise empty.")
+    var correction: String
 }
 
 @available(iOS 26.0, *)
 @Generable
-private enum ModelKind {
-    case spelling, cue, anchor, bold, italic
+private enum ModelFixKind {
+    case spelling, bold, italic
 
     var kind: ScriptSuggestion.Kind {
         switch self {
         case .spelling: .spelling
-        case .cue: .cue
-        case .anchor: .anchor
         case .bold: .bold
         case .italic: .italic
         }
     }
+}
+
+@available(iOS 26.0, *)
+@Generable
+private struct ModelDelivery {
+    @Guide(description: "The marks worth adding, in the order they appear.", .maximumCount(8))
+    var marks: [ModelMark]
+}
+
+@available(iOS 26.0, *)
+@Generable
+private struct ModelMark {
+    @Guide(description: "The kind of mark.")
+    var kind: ModelMarkKind
+    @Guide(description: "A few words copied exactly from the passage, all on one line.")
+    var text: String
+    @Guide(description: "Only for cue: what the speaker should do there, one to four words, such as pause, breathe, smile, slow down or look up. Otherwise empty.")
+    var cue: String
+}
+
+@available(iOS 26.0, *)
+@Generable
+private enum ModelMarkKind {
+    case cue, anchor
+
+    var kind: ScriptSuggestion.Kind {
+        switch self {
+        case .cue: .cue
+        case .anchor: .anchor
+        }
+    }
+}
+
+@available(iOS 26.0, *)
+@Generable
+private struct ModelParagraphs {
+    @Guide(description: "The first few words of each sentence that should start a new paragraph, copied exactly, in order.",
+           .maximumCount(6))
+    var starts: [String]
 }
 
 // MARK: - Helpers

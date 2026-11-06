@@ -229,8 +229,8 @@ struct HomeView: View {
     private var suggestionMarks: SuggestionMarks? {
         guard review.isActive else { return nil }
         return SuggestionMarks(
-            ranges: review.suggestions.map(\.range),
-            focused: review.focused?.range,
+            ranges: review.suggestions.map(\.mark),
+            focused: review.focused?.mark,
             onTap: { review.focus(at: $0) }
         )
     }
