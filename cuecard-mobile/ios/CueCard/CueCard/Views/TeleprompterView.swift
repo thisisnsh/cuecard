@@ -16,7 +16,6 @@ struct TeleprompterView: View {
     /// opens: it's turned on with the waveform at the top.
     @State private var followsVoice = false
     /// Follow My Voice is turned on in Settings, under Apple Intelligence.
-    @AppStorage(AppleIntelligenceSetting.enabledKey) private var isAIEnabled = true
     @AppStorage(AppleIntelligenceSetting.followVoiceKey) private var isFollowVoiceEnabled = true
 
     private var isPlaying: Bool { pipManager.playback.isPlaying }
@@ -267,7 +266,7 @@ struct TeleprompterView: View {
             Spacer(minLength: 0)
 
             HStack(spacing: 8) {
-                if isAIEnabled && isFollowVoiceEnabled {
+                if isFollowVoiceEnabled {
                     headerButton("waveform", tint: followsVoice ? AppColors.purple(for: colorScheme) : nil) {
                         AnalyticsEvents.logButtonClick(followsVoice ? "teleprompter_follow_voice_off" : "teleprompter_follow_voice_on", screen: "teleprompter")
                         followsVoice.toggle()

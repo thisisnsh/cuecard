@@ -87,16 +87,16 @@ struct EditorSettingsView: View {
             Text("Sync play and pause on the teleprompter and camera.")
         }
 
-        AppearanceSection(screen: Self.screen,
-                          cueColor: $settingsService.settings.cueColor.loggingClicks("settings_cue_color", screen: Self.screen)) {
+        Section("Editor") {
             SizePresetPicker(
-                title: "Editor Text Size",
+                title: "Text Size",
                 value: $settingsService.settings.editorFontSize.loggingClicks("settings_editor_text_size", screen: Self.screen),
                 presets: TeleprompterSettings.editorFontSizePresets
             )
         }
 
-        AppleWatchSection(screen: Self.screen, mode: .teleprompter)
+        AppearanceSection(screen: Self.screen,
+                          cueColor: $settingsService.settings.cueColor.loggingClicks("settings_cue_color", screen: Self.screen))
 
         LanguageSection(screen: Self.screen)
 
@@ -169,16 +169,18 @@ struct EditorSettingsView: View {
 
         AppleIntelligenceSection(screen: Self.screen, mode: .cards)
 
-        AppearanceSection(screen: Self.screen,
-                          cueColor: $settingsService.settings.cards.cueColor.loggingClicks("settings_cards_cue_color", screen: Self.screen)) {
+        Section("Editor") {
             SizePresetPicker(
-                title: "Editor Text Size",
+                title: "Text Size",
                 value: $settingsService.settings.cards.editorFontSize.loggingClicks("settings_cards_editor_text_size", screen: Self.screen),
                 presets: TeleprompterSettings.editorFontSizePresets
             )
         }
 
-        AppleWatchSection(screen: Self.screen, mode: .cards)
+        AppearanceSection(screen: Self.screen,
+                          cueColor: $settingsService.settings.cards.cueColor.loggingClicks("settings_cards_cue_color", screen: Self.screen))
+
+        AppleWatchSection(screen: Self.screen)
 
         LanguageSection(screen: Self.screen)
 
@@ -241,15 +243,14 @@ struct EditorSettingsView: View {
 
 // MARK: - Shared Sections
 
-/// CueCard's switch for Apple Intelligence, a switch for each beta feature
-/// under it, and a way to report a problem with it. Only on an iPhone that
-/// has it. Every switch is logged with which way it went.
+/// A switch for each of CueCard's beta Apple Intelligence features, and a
+/// way to report a problem with them. Only on an iPhone that has it. Every
+/// switch is logged with which way it went.
 private struct AppleIntelligenceSection: View {
     let screen: String
     let mode: ScriptMode
 
     @Environment(\.openURL) private var openURL
-    @AppStorage(AppleIntelligenceSetting.enabledKey) private var isEnabled = true
     @AppStorage(AppleIntelligenceSetting.suggestionsKey) private var isSuggestionsEnabled = true
     @AppStorage(AppleIntelligenceSetting.askAIKey) private var isAskAIEnabled = true
     @AppStorage(AppleIntelligenceSetting.followVoiceKey) private var isFollowVoiceEnabled = true
@@ -257,16 +258,11 @@ private struct AppleIntelligenceSection: View {
     var body: some View {
         if OnDeviceModelAvailability.onDevice != .unsupported {
             Section {
-                Toggle("Enable Apple Intelligence",
-                       isOn: $isEnabled.loggingToggle("settings_apple_intelligence", screen: screen))
-
-                if isEnabled {
-                    feature("AI Suggestions", isOn: $isSuggestionsEnabled, button: "settings_ai_suggestions")
-                    feature("Ask AI", isOn: $isAskAIEnabled, button: "settings_ask_ai")
-                    // The teleprompter is the only place it listens.
-                    if mode == .teleprompter {
-                        feature("Follow My Voice", isOn: $isFollowVoiceEnabled, button: "settings_follow_voice")
-                    }
+                feature("AI Suggestions", isOn: $isSuggestionsEnabled, button: "settings_ai_suggestions")
+                feature("Ask AI", isOn: $isAskAIEnabled, button: "settings_ask_ai")
+                // The teleprompter is the only place it listens.
+                if mode == .teleprompter {
+                    feature("Follow My Voice", isOn: $isFollowVoiceEnabled, button: "settings_follow_voice")
                 }
 
                 Button {
@@ -279,8 +275,8 @@ private struct AppleIntelligenceSection: View {
                 Text("Apple Intelligence")
             } footer: {
                 Text(mode == .teleprompter
-                     ? "AI Suggestions in the editor, Ask AI in Help and Follow My Voice in the teleprompter run on this iPhone, and nothing you write or say leaves it. They're in beta. Turn one off to hide it, or turn off Apple Intelligence to hide them all."
-                     : "AI Suggestions in the editor and Ask AI in Help run on this iPhone, and nothing you write leaves it. They're in beta. Turn one off to hide it, or turn off Apple Intelligence to hide them all.")
+                     ? "Runs on this iPhone with Apple Intelligence. Nothing you write or say leaves it."
+                     : "Runs on this iPhone with Apple Intelligence. Nothing you write leaves it.")
             }
         }
     }
@@ -331,35 +327,20 @@ private struct SettingsScreen<Content: View>: View {
     }
 }
 
-/// The watch app: a row that installs it while a watch is paired without it,
-/// and once it's on, how big it draws cards. Left out when there's nothing
-/// to show for the mode.
+/// How big the watch app draws cards, once it's installed. Installing it is
+/// offered with Share and Review.
 private struct AppleWatchSection: View {
     @EnvironmentObject var settingsService: SettingsService
     @ObservedObject private var watch = WatchSessionService.shared
-    @Environment(\.colorScheme) var colorScheme
-    @Environment(\.openURL) private var openURL
 
     let screen: String
-    let mode: ScriptMode
-
-    /// The Watch app on the iPhone, open on its App Store.
-    private static let watchAppURL = URL(string: "itms-watchs://")!
-
-    private var needsInstall: Bool { watch.isPaired && !watch.isWatchAppInstalled }
-    private var showsCardTextSize: Bool { mode == .cards && watch.isWatchAppInstalled }
 
     var body: some View {
-        if needsInstall || showsCardTextSize {
+        if watch.isWatchAppInstalled {
             Section {
-                if needsInstall {
-                    installButton
-                }
-                if showsCardTextSize {
-                    Picker("Card Text Size", selection: $settingsService.settings.watch.cardTextSize.loggingClicks("settings_watch_text_size", screen: screen)) {
-                        ForEach(WatchCardTextSize.allCases, id: \.self) { size in
-                            Text(size.displayName).tag(size)
-                        }
+                Picker("Card Text Size", selection: $settingsService.settings.watch.cardTextSize.loggingClicks("settings_watch_text_size", screen: screen)) {
+                    ForEach(WatchCardTextSize.allCases, id: \.self) { size in
+                        Text(size.displayName).tag(size)
                     }
                 }
             } header: {
@@ -367,33 +348,14 @@ private struct AppleWatchSection: View {
             }
         }
     }
-
-    private var installButton: some View {
-        Button {
-            AnalyticsEvents.logButtonClick("watch_install", screen: screen)
-            openURL(Self.watchAppURL)
-        } label: {
-            HStack {
-                Text("Install on Apple Watch")
-                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                Spacer()
-                Image(systemName: "applewatch")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-            }
-            .contentShape(Rectangle())
-        }
-    }
 }
 
-/// Theme, editor text size and cue color. The theme is one setting for the
-/// whole app; the others are the ones for the mode these settings belong to.
-private struct AppearanceSection<EditorTextSize: View>: View {
+/// Theme and cue color. The theme is one setting for the whole app; the cue
+/// color is the one for the mode these settings belong to.
+private struct AppearanceSection: View {
     @EnvironmentObject var settingsService: SettingsService
     let screen: String
     @Binding var cueColor: CueColor
-    /// The editor's text size, which is the mode's own.
-    @ViewBuilder let editorTextSize: EditorTextSize
 
     var body: some View {
         Section("Appearance") {
@@ -402,8 +364,6 @@ private struct AppearanceSection<EditorTextSize: View>: View {
                     Text(theme.displayName).tag(theme)
                 }
             }
-
-            editorTextSize
 
             ColorSwatchRow(title: "Cue Color", selection: $cueColor)
         }
@@ -548,17 +508,22 @@ private struct AdvancedSection<Fields: View>: View {
     }
 }
 
-/// Share, review and reset, the same in both modes.
+/// Share, review, installing on a paired watch without the app, and reset,
+/// the same in both modes.
 ///
 /// Each row is a plain button whose action does the work. A Link or ShareLink
 /// with a tap gesture laid over it for analytics competes with the row for the
 /// tap, which is what used to take several tries to get through.
 private struct AboutSection: View {
     @EnvironmentObject var settingsService: SettingsService
+    @ObservedObject private var watch = WatchSessionService.shared
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.openURL) private var openURL
 
     let screen: String
+
+    /// The Watch app on the iPhone, open on its App Store.
+    private static let watchAppURL = URL(string: "itms-watchs://")!
 
     var body: some View {
         Section {
@@ -574,6 +539,15 @@ private struct AboutSection: View {
                 openURL(ReviewPromptService.writeReviewURL)
             } label: {
                 row("Review on App Store", systemImage: "arrow.up.right")
+            }
+
+            if watch.isPaired && !watch.isWatchAppInstalled {
+                Button {
+                    AnalyticsEvents.logButtonClick("watch_install", screen: screen)
+                    openURL(Self.watchAppURL)
+                } label: {
+                    row("Install on Apple Watch", systemImage: "applewatch")
+                }
             }
         }
 
@@ -669,7 +643,6 @@ struct AdvancedNumberRow: View {
             Spacer()
             SettingNumberField(value: $value, range: range, unit: unit)
         }
-        .padding(.vertical, 4)
     }
 }
 
@@ -703,15 +676,18 @@ struct SettingNumberField: View {
                     .foregroundStyle(.secondary)
             }
         }
-        .padding(.horizontal, 14)
-        .padding(.vertical, 8)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 5)
         .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .fill(AppColors.textSecondary(for: colorScheme).opacity(0.12))
         )
         // The unit is part of the target: tapping anywhere in the box
         // starts editing, not only the digits themselves.
-        .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        // The box is drawn past the text, but takes only the text's height,
+        // so its row is as tall as the others.
+        .padding(.vertical, -5)
         .onTapGesture { isFocused = true }
         .onAppear { text = String(value) }
         .onChange(of: value) { _, newValue in

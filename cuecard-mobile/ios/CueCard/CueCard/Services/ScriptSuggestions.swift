@@ -40,11 +40,10 @@ struct SuggestionsMetrics: Equatable {
     var rejected = 0
 }
 
-/// CueCard's own switches for Apple Intelligence, in Settings: one for all
-/// of it, and one for each beta feature under it. Each is on unless the user
-/// turns it off; with the first off, every feature is gone everywhere.
+/// CueCard's own switches for its Apple Intelligence features, in Settings,
+/// one for each. Each is on unless the user turns it off; off, the feature
+/// is gone everywhere.
 enum AppleIntelligenceSetting {
-    static let enabledKey = "cuecard_apple_intelligence_enabled"
     /// AI Suggestions in the editor.
     static let suggestionsKey = "cuecard_ai_suggestions_enabled"
     /// Ask AI in Help.
@@ -52,12 +51,8 @@ enum AppleIntelligenceSetting {
     /// Follow My Voice's button in the teleprompter.
     static let followVoiceKey = "cuecard_follow_voice_enabled"
 
-    static var isEnabled: Bool { isOn(enabledKey) }
-
-    /// Apple Intelligence and the feature under `key` are both on.
-    static func isEnabled(_ key: String) -> Bool { isEnabled && isOn(key) }
-
-    private static func isOn(_ key: String) -> Bool {
+    /// The feature under `key` is on.
+    static func isEnabled(_ key: String) -> Bool {
         UserDefaults.standard.object(forKey: key) as? Bool ?? true
     }
 }
@@ -94,7 +89,8 @@ enum AIUsage {
 
 /// Whether this iPhone has Apple's on-device model to ask — for suggestions
 /// and for answers in Help — and if not, whether the user could do
-/// something about that. Turned off in Settings, it's as if there were none.
+/// something about that. For a feature turned off in Settings, it's as if
+/// there were none.
 enum OnDeviceModelAvailability: Equatable {
     case available
     /// Apple Intelligence is off, or still getting ready: what uses it shows,
@@ -102,10 +98,6 @@ enum OnDeviceModelAvailability: Equatable {
     case unavailable(String)
     /// No on-device model on this iPhone or this version of iOS.
     case unsupported
-
-    static var current: OnDeviceModelAvailability {
-        AppleIntelligenceSetting.isEnabled ? onDevice : .unsupported
-    }
 
     /// For AI Suggestions, which can be turned off on its own.
     static var forSuggestions: OnDeviceModelAvailability {
@@ -117,7 +109,7 @@ enum OnDeviceModelAvailability: Equatable {
         AppleIntelligenceSetting.isEnabled(AppleIntelligenceSetting.askAIKey) ? onDevice : .unsupported
     }
 
-    /// What this iPhone can do, whatever the switch in Settings says.
+    /// What this iPhone can do, whatever the switches in Settings say.
     static var onDevice: OnDeviceModelAvailability {
         guard #available(iOS 26.0, *) else { return .unsupported }
         switch SystemLanguageModel.default.availability {

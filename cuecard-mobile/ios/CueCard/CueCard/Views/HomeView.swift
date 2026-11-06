@@ -43,9 +43,8 @@ struct HomeView: View {
     @State private var bottomEdgeHeight: CGFloat = 0
     /// A use of a beta AI feature to ask the reader about.
     @State private var aiExperience: AIExperience?
-    /// Apple Intelligence and AI Suggestions turned on in Settings, watched
-    /// so Suggestions goes as soon as either is turned off.
-    @AppStorage(AppleIntelligenceSetting.enabledKey) private var isAIEnabled = true
+    /// AI Suggestions turned on in Settings, watched so it goes as soon as
+    /// it's turned off.
     @AppStorage(AppleIntelligenceSetting.suggestionsKey) private var isSuggestionsEnabled = true
     @ObservedObject private var cardsSession = CueCardsSession.shared
     @StateObject private var takes = TakesLibrary()
@@ -183,9 +182,9 @@ struct HomeView: View {
 
     /// Suggestions from Apple's on-device model, for a script being written for
     /// the teleprompter. Not shown where this iPhone has no model to ask, or
-    /// Apple Intelligence or AI Suggestions is turned off in Settings.
+    /// AI Suggestions is turned off in Settings.
     private var showsSuggestions: Bool {
-        hasNotes && isAIEnabled && isSuggestionsEnabled && OnDeviceModelAvailability.forSuggestions != .unsupported
+        hasNotes && isSuggestionsEnabled && OnDeviceModelAvailability.forSuggestions != .unsupported
     }
 
     @ViewBuilder
@@ -323,21 +322,29 @@ struct HomeView: View {
         }
     }
 
-    /// Save, in a button of its own before the gear, while there are changes
-    /// to save.
+    /// Save, at the bottom beside AI Suggestions, or the timer without it,
+    /// while there are changes to save.
+    @ViewBuilder
     private var saveButton: some View {
-        Button {
-            isEditorFocused = false
-            save(from: "save_note_toolbar")
-        } label: {
-            Text("Save")
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                .padding(.horizontal, 8)
-                .frame(height: 36)
-                .contentShape(Rectangle())
+        if settingsService.hasUnsavedChanges {
+            Button {
+                isEditorFocused = false
+                save(from: "save_note_bottom")
+            } label: {
+                Text("Save")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                    .padding(.horizontal, 18)
+                    .frame(height: 52)
+                    .fixedSize(horizontal: true, vertical: false)
+                    .glassedEffect(in: Capsule(), interactive: true)
+                    .shadow(color: Color.black.opacity(0.1), radius: 10)
+                    .contentShape(Capsule())
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint("Saves your changes")
+            .transition(.scale.combined(with: .opacity))
         }
-        .accessibilityHint("Saves your changes")
     }
 
     /// Drop a `[cue]` in at the caret with its text selected, so the user can
@@ -423,6 +430,7 @@ struct HomeView: View {
                     // and Takes and Play are on the right.
                     HStack(spacing: 12) {
                         timerControl
+                        saveButton
                         Spacer(minLength: 0)
                         takesControl
                         startButton
@@ -434,13 +442,17 @@ struct HomeView: View {
                     ViewThatFits(in: .horizontal) {
                         HStack(spacing: 12) {
                             suggestionsControl
+                            saveButton
                             Spacer(minLength: 0)
                             takesControl
                             timerControl
                             startButton
                         }
                         HStack(alignment: .bottom, spacing: 12) {
-                            suggestionsControl
+                            VStack(alignment: .leading, spacing: 12) {
+                                saveButton
+                                suggestionsControl
+                            }
                             Spacer(minLength: 0)
                             VStack(alignment: .trailing, spacing: 12) {
                                 takesControl
@@ -515,8 +527,8 @@ struct HomeView: View {
             .onChange(of: isCardsMode) {
                 review.end()
             }
-            .onChange(of: isAIEnabled && isSuggestionsEnabled) { _, isOn in
-                if !isOn { review.end() }
+            .onChange(of: isSuggestionsEnabled) {
+                if !isSuggestionsEnabled { review.end() }
             }
             // A review seen through: ask how it went.
             .onChange(of: review.finished) {
@@ -671,15 +683,6 @@ struct HomeView: View {
             titleControl
         }
         .sharedBackgroundHidden()
-
-        if settingsService.hasUnsavedChanges {
-            ToolbarItem(placement: .topBarTrailing) {
-                saveButton
-            }
-            if #available(iOS 26.0, *) {
-                ToolbarSpacer(.fixed, placement: .topBarTrailing)
-            }
-        }
 
         // One item, so the gear and ••• sit closer than separate items'
         // buttons do.

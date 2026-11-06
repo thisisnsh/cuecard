@@ -7,9 +7,9 @@ enum LibraryRoute: Hashable, Codable {
     case editor
 }
 
-/// Where the app opens: every saved script and deck, filed in folders, with
+/// Where the app opens: every saved script and deck, in collections, with
 /// the takes recorded with each. A script opens into the editor from here.
-/// It opens again on the folder or the editor it was left on, even after
+/// It opens again on the collection or the editor it was left on, even after
 /// the app was quit; left reading, it opens on the editor.
 struct LibraryView: View {
     @EnvironmentObject var settingsService: SettingsService
@@ -113,7 +113,7 @@ struct LibraryView: View {
 /// The warning that scripts are lost with the app until there's a storage
 /// folder, and when it's shown again after being put away.
 enum LibraryStorageWarning {
-    static let dismissedKey = "library_folder_tip_dismissed"
+    static let dismissedKey = "library_collection_tip_dismissed"
     static let opensKey = "library_opens_since_folder_tip_dismissed"
     static let opensBetweenReminders = 10
 }
@@ -162,9 +162,9 @@ private struct TakesTarget: Identifiable {
 
 // MARK: - List
 
-/// The library's scripts or decks, with the folders as chips at the top that
-/// narrow the list to one folder's, in place. All shows every one, filed or
-/// not. The chosen folder is remembered.
+/// The library's scripts or decks, with the collections as chips at the top that
+/// narrow the list to one collection's, in place. All shows every one, filed or
+/// not. The chosen collection is remembered.
 private struct LibraryList: View {
     @Binding var path: [LibraryRoute]
     @ObservedObject var takeCounts: TakeCounts
@@ -176,8 +176,8 @@ private struct LibraryList: View {
 
     @AppStorage("library_sort") private var sort: LibrarySort = .edited
     @AppStorage("library_mode") private var mode: ScriptMode = .teleprompter
-    /// The folder chosen, or empty for All.
-    @AppStorage("library_folder") private var chosenFolder = ""
+    /// The collection chosen, or empty for All.
+    @AppStorage("library_collection") private var chosenCollection = ""
     @AppStorage(LibraryStorageWarning.dismissedKey) private var warningDismissed = false
     @AppStorage(LibraryStorageWarning.opensKey) private var opensSinceDismissed = 0
 
@@ -194,31 +194,37 @@ private struct LibraryList: View {
     @State private var noteToRename: SavedNote?
     @State private var noteToDelete: SavedNote?
     @State private var renameTitle = ""
-    @State private var showingNewFolder = false
-    @State private var newFolderName = ""
-    @State private var folderToRename: String?
-    @State private var folderToDelete: String?
-    @State private var folderTitle = ""
+    @State private var showingNewCollection = false
+    @State private var newCollectionName = ""
+    @State private var collectionToRename: String?
+    @State private var collectionToDelete: String?
+    @State private var collectionTitle = ""
     @State private var takesTarget: TakesTarget?
+    /// The note being added to a collection.
+    @State private var noteToCollect: SavedNote?
     @State private var errorMessage: String?
 
     private static let screen = "library"
-    private static let rowInsets = EdgeInsets(top: 6, leading: 20, bottom: 6, trailing: 20)
+    /// The list's own margins keep rows off the screen's edges, so the rows
+    /// themselves have none at the sides: a swipe's buttons then sit right
+    /// beside the card rather than out past the margin.
+    private static let sideMargin: CGFloat = 20
+    private static let rowInsets = EdgeInsets(top: 6, leading: 0, bottom: 6, trailing: 0)
 
-    /// The folder shown, or nil for All. One deleted since it was chosen is All.
-    private var folder: String? {
-        settingsService.folders.contains(chosenFolder) ? chosenFolder : nil
+    /// The collection shown, or nil for All. One deleted since it was chosen is All.
+    private var collection: String? {
+        settingsService.collections.contains(chosenCollection) ? chosenCollection : nil
     }
 
     private var trimmedQuery: String {
         query.trimmingCharacters(in: .whitespaces)
     }
 
-    /// The saved notes shown: the chosen folder's, or every one under All,
+    /// The saved notes shown: the chosen collection's, or every one under All,
     /// of the chosen mode, matching the search, in the chosen order.
     private var notes: [SavedNote] {
         let shown = settingsService.savedNotes.filter { note in
-            (folder == nil || note.folder == folder)
+            (collection == nil || note.collection == collection)
                 && note.mode == mode
                 && matches(title: note.title, content: note.content)
         }
@@ -235,12 +241,12 @@ private struct LibraryList: View {
         let text = settingsService.notes(for: mode)
         return settingsService.noteId(for: mode) == nil
             && !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            && (folder == nil || settingsService.draftFolder(for: mode) == folder)
+            && (collection == nil || settingsService.draftCollection(for: mode) == collection)
             && matches(title: "", content: text)
     }
 
-    private var folders: [String] {
-        settingsService.folders.sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+    private var collections: [String] {
+        settingsService.collections.sorted { $0.localizedStandardCompare($1) == .orderedAscending }
     }
 
     private func matches(title: String, content: String) -> Bool {
@@ -280,11 +286,6 @@ private struct LibraryList: View {
                 .plainRow(insets: Self.rowInsets)
             }
 
-            if !folders.isEmpty {
-                folderChips
-                    .plainRow(insets: EdgeInsets(top: 2, leading: 0, bottom: 10, trailing: 0))
-            }
-
             if hasDraft || !notes.isEmpty {
                 if hasDraft {
                     draftRow(mode)
@@ -301,23 +302,38 @@ private struct LibraryList: View {
 
             if trimmedQuery.isEmpty {
                 footer
-                    .plainRow(insets: EdgeInsets(top: 10, leading: 24, bottom: 16, trailing: 24))
+                    .plainRow(insets: EdgeInsets(top: 10, leading: 4, bottom: 16, trailing: 4))
             }
         }
         .listStyle(.plain)
+        .contentMargins(.horizontal, Self.sideMargin, for: .scrollContent)
         .scrollContentBackground(.hidden)
         .scrollDismissesKeyboard(.immediately)
-        .scrollEdgeFade()
+        // Faded under the collections at the top only: at the bottom the list
+        // runs on under the search, which floats over it.
+        .scrollEdgeFade(fadesEnd: false)
         .background(AppColors.background(for: colorScheme).ignoresSafeArea())
         .animation(.easeInOut(duration: 0.2), value: mode)
-        .animation(.easeInOut(duration: 0.2), value: folder)
+        .animation(.easeInOut(duration: 0.2), value: collection)
         .animation(.easeInOut(duration: 0.2), value: showsStorageWarning)
+        .safeAreaInset(edge: .top, spacing: 0) {
+            // Out of the list, so they stay in reach and run edge to edge.
+            if !collections.isEmpty {
+                collectionChips
+                    .padding(.top, 2)
+                    .padding(.bottom, 6)
+                    .background(AppColors.background(for: colorScheme))
+            }
+        }
         .safeAreaInset(edge: .bottom, spacing: 0) { libraryControls }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { toolbar }
         .helpSheet(for: .library, isPresented: $showingHelp)
         .sheet(item: $takesTarget, onDismiss: takeCounts.reload) { target in
             ScriptTakesSheet(scriptID: target.id, title: target.title)
+        }
+        .sheet(item: $noteToCollect) { note in
+            CollectionPicker(noteID: note.id, screen: Self.screen)
         }
         .fileImporter(isPresented: $showingImporter, allowedContentTypes: ScriptFile.importableContentTypes) { result in
             handleImport(result)
@@ -417,8 +433,9 @@ private struct LibraryList: View {
             .frame(maxWidth: .infinity)
     }
 
-    /// Searching and starting a script, together at the bottom. The search
-    /// ends with the keyboard's Done key, or a scroll of the list.
+    /// Searching and starting a script, together at the bottom, floating
+    /// over the list. The search ends with the keyboard's Done key, or a
+    /// scroll of the list.
     private var libraryControls: some View {
         HStack(spacing: 10) {
             searchRow
@@ -430,7 +447,6 @@ private struct LibraryList: View {
         .padding(.vertical, 12)
         .frame(maxWidth: 600)
         .frame(maxWidth: .infinity)
-        .background(AppColors.background(for: colorScheme))
     }
 
     @ViewBuilder
@@ -487,7 +503,7 @@ private struct LibraryList: View {
     }
 
     private var searchPrompt: String {
-        folder.map { String(localized: "Search \($0)", comment: "Search a library folder") }
+        collection.map { String(localized: "Search \($0)", comment: "Search a library collection") }
             ?? String(localized: "Search")
     }
 
@@ -507,24 +523,24 @@ private struct LibraryList: View {
                 Label("Import File", systemImage: "arrow.down.doc")
             }
             Button {
-                AnalyticsEvents.logButtonClick("new_folder", screen: Self.screen)
-                beginNewFolder()
+                AnalyticsEvents.logButtonClick("new_collection", screen: Self.screen)
+                beginNewCollection()
             } label: {
-                Label("New Folder", systemImage: "folder.badge.plus")
+                Label("New Collection", systemImage: "rectangle.stack.badge.plus")
             }
-            if let folder {
+            if let collection {
                 Button {
-                    AnalyticsEvents.logButtonClick("rename_folder", screen: Self.screen)
-                    folderTitle = folder
-                    folderToRename = folder
+                    AnalyticsEvents.logButtonClick("rename_collection", screen: Self.screen)
+                    collectionTitle = collection
+                    collectionToRename = collection
                 } label: {
-                    Label("Rename “\(folder)”", systemImage: "pencil")
+                    Label("Rename “\(collection)”", systemImage: "pencil")
                 }
                 Button(role: .destructive) {
-                    AnalyticsEvents.logButtonClick("delete_folder", screen: Self.screen)
-                    folderToDelete = folder
+                    AnalyticsEvents.logButtonClick("delete_collection", screen: Self.screen)
+                    collectionToDelete = collection
                 } label: {
-                    Label("Delete “\(folder)”", systemImage: "trash")
+                    Label("Delete “\(collection)”", systemImage: "trash")
                 }
             }
 
@@ -566,36 +582,36 @@ private struct LibraryList: View {
         })
     }
 
-    private func beginNewFolder() {
-        newFolderName = ""
-        showingNewFolder = true
+    private func beginNewCollection() {
+        newCollectionName = ""
+        showingNewCollection = true
     }
 
     // MARK: Rows
 
-    /// All, then each folder, side by side and scrolling sideways, with one
+    /// All, then each collection, side by side and scrolling sideways, with one
     /// to make another. The chosen one is filled in, and the list below
     /// shows only what's in it.
-    private var folderChips: some View {
+    private var collectionChips: some View {
         ScrollViewReader { proxy in
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
-                    chip(String(localized: "All", comment: "Library chip showing every script, in every folder"),
+                    chip(String(localized: "All", comment: "Library chip showing every script, in every collection"),
                          count: settingsService.savedNotes.filter { $0.mode == mode }.count,
-                         isSelected: folder == nil) {
-                        AnalyticsEvents.logButtonClick("library_folder_all", screen: Self.screen)
-                        chosenFolder = ""
+                         isSelected: collection == nil) {
+                        AnalyticsEvents.logButtonClick("library_collection_all", screen: Self.screen)
+                        chosenCollection = ""
                     }
                     .id("")
 
-                    ForEach(folders, id: \.self) { name in
-                        folderChip(name)
+                    ForEach(collections, id: \.self) { name in
+                        collectionChip(name)
                             .id(name)
                     }
 
                     Button {
-                        AnalyticsEvents.logButtonClick("new_folder_chip", screen: Self.screen)
-                        beginNewFolder()
+                        AnalyticsEvents.logButtonClick("new_collection_chip", screen: Self.screen)
+                        beginNewCollection()
                     } label: {
                         Image(systemName: "plus")
                             .font(.system(size: 14, weight: .semibold))
@@ -608,36 +624,36 @@ private struct LibraryList: View {
                             .contentShape(Circle())
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("New Folder")
+                    .accessibilityLabel("New Collection")
                 }
                 .padding(.horizontal, 20)
                 .padding(.vertical, 4)
             }
             .scrollEdgeFade(axis: .horizontal, length: 20, insetContent: false)
-            // Back on a folder chosen further along, it's scrolled into view.
-            .onAppear { proxy.scrollTo(folder ?? "", anchor: .center) }
+            // Back on a collection chosen further along, it's scrolled into view.
+            .onAppear { proxy.scrollTo(collection ?? "", anchor: .center) }
         }
     }
 
-    private func folderChip(_ name: String) -> some View {
-        let count = settingsService.savedNotes.filter { $0.folder == name && $0.mode == mode }.count
-        return chip(name, count: count, isSelected: folder == name) {
-            AnalyticsEvents.logButtonClick("library_folder_choose", screen: Self.screen)
-            chosenFolder = name
+    private func collectionChip(_ name: String) -> some View {
+        let count = settingsService.savedNotes.filter { $0.collection == name && $0.mode == mode }.count
+        return chip(name, count: count, isSelected: collection == name) {
+            AnalyticsEvents.logButtonClick("library_collection_choose", screen: Self.screen)
+            chosenCollection = name
         }
         .contextMenu {
             Button {
-                AnalyticsEvents.logButtonClick("rename_folder_chip", screen: Self.screen)
-                folderTitle = name
-                folderToRename = name
+                AnalyticsEvents.logButtonClick("rename_collection_chip", screen: Self.screen)
+                collectionTitle = name
+                collectionToRename = name
             } label: {
                 Label("Rename", systemImage: "pencil")
             }
             Button(role: .destructive) {
-                AnalyticsEvents.logButtonClick("delete_folder_chip", screen: Self.screen)
-                folderToDelete = name
+                AnalyticsEvents.logButtonClick("delete_collection_chip", screen: Self.screen)
+                collectionToDelete = name
             } label: {
-                Label("Delete Folder", systemImage: "trash")
+                Label("Delete Collection", systemImage: "trash")
             }
         }
     }
@@ -743,6 +759,13 @@ private struct LibraryList: View {
                 Label("Delete", systemImage: "trash")
             }
             .tint(AppColors.red(for: colorScheme))
+            Button {
+                AnalyticsEvents.logButtonClick("add_to_collection_swipe", screen: Self.screen)
+                noteToCollect = note
+            } label: {
+                Label("Add to Collection", systemImage: "rectangle.stack.badge.plus")
+            }
+            .tint(AppColors.purple(for: colorScheme))
         }
         .swipeActions(edge: .leading) {
             Button {
@@ -784,6 +807,13 @@ private struct LibraryList: View {
             Label("Duplicate", systemImage: "plus.square.on.square")
         }
 
+        Button {
+            AnalyticsEvents.logButtonClick("add_to_collection_menu", screen: Self.screen)
+            noteToCollect = note
+        } label: {
+            Label("Add to Collection", systemImage: "rectangle.stack.badge.plus")
+        }
+
         ScriptShareLink(title: note.title, content: note.content)
 
         if watch.isWatchAppInstalled {
@@ -808,7 +838,7 @@ private struct LibraryList: View {
     }
 
     /// When it was last edited, how many cards a deck has, whether it's on
-    /// the watch, and, under All, its folder.
+    /// the watch, and, under All, its collection.
     private func detail(of note: SavedNote) -> String {
         var parts = [LibraryText.date(note.updatedAt)]
         if note.mode == .cards {
@@ -818,8 +848,8 @@ private struct LibraryList: View {
         if settingsService.watchNoteIDs.contains(note.id) {
             parts.append(String(localized: "On Apple Watch"))
         }
-        if folder == nil, let folder = note.folder {
-            parts.append(folder)
+        if collection == nil, let collection = note.collection {
+            parts.append(collection)
         }
         return parts.joined(separator: " · ")
     }
@@ -860,7 +890,7 @@ private struct LibraryList: View {
         case .note(let note):
             settingsService.loadNote(note)
         case .new(let mode):
-            settingsService.createNewNote(mode: mode, in: folder)
+            settingsService.createNewNote(mode: mode, in: collection)
         }
         path.append(.editor)
     }
@@ -882,7 +912,7 @@ private struct LibraryList: View {
                     return
                 }
                 let content = TeleprompterParser.normalizingTags(in: text)
-                if settingsService.importNote(title: ScriptFile.title(for: url), content: content, folder: folder) == nil {
+                if settingsService.importNote(title: ScriptFile.title(for: url), content: content, collection: collection) == nil {
                     errorMessage = String(localized: "The file couldn't be saved as a script. Try again.")
                 }
             } catch let error as ScriptFile.FileTooLarge {
@@ -936,7 +966,7 @@ private struct LibraryList: View {
         func body(content: Content) -> some View {
             content
                 .modifier(NoteAlerts(list: list))
-                .modifier(FolderAlerts(list: list))
+                .modifier(CollectionAlerts(list: list))
                 .modifier(StorageAlerts(list: list))
         }
     }
@@ -1052,62 +1082,62 @@ private struct LibraryList: View {
         }
     }
 
-    private struct FolderAlerts: ViewModifier {
+    private struct CollectionAlerts: ViewModifier {
         let list: LibraryList
 
         private var settingsService: SettingsService { list.settingsService }
 
         func body(content: Content) -> some View {
             content
-                .alert("New Folder", isPresented: list.$showingNewFolder) {
-                    TextField("Name", text: list.$newFolderName)
+                .alert("New Collection", isPresented: list.$showingNewCollection) {
+                    TextField("Name", text: list.$newCollectionName)
                     Button("Cancel", role: .cancel) {
-                        AnalyticsEvents.logButtonClick("new_folder_cancel", screen: LibraryList.screen)
+                        AnalyticsEvents.logButtonClick("new_collection_cancel", screen: LibraryList.screen)
                     }
                     Button("Create") {
-                        AnalyticsEvents.logButtonClick("new_folder_create", screen: LibraryList.screen)
-                        guard let name = settingsService.createFolder(named: list.newFolderName) else {
-                            list.errorMessage = String(localized: "There's already a folder with that name, or the name can't be used.")
+                        AnalyticsEvents.logButtonClick("new_collection_create", screen: LibraryList.screen)
+                        guard let name = settingsService.createCollection(named: list.newCollectionName) else {
+                            list.errorMessage = String(localized: "There's already a collection with that name, or the name can't be used.")
                             return
                         }
-                        // Opened on the new folder, so what's made next goes in it.
-                        list.chosenFolder = name
+                        // Opened on the new collection, so what's made next goes in it.
+                        list.chosenCollection = name
                     }
                 }
-                .alert("Rename Folder", isPresented: Binding(
-                    get: { list.folderToRename != nil },
-                    set: { if !$0 { list.folderToRename = nil } }
+                .alert("Rename Collection", isPresented: Binding(
+                    get: { list.collectionToRename != nil },
+                    set: { if !$0 { list.collectionToRename = nil } }
                 )) {
-                    TextField("Name", text: list.$folderTitle)
+                    TextField("Name", text: list.$collectionTitle)
                     Button("Cancel", role: .cancel) {
-                        AnalyticsEvents.logButtonClick("rename_folder_cancel", screen: LibraryList.screen)
+                        AnalyticsEvents.logButtonClick("rename_collection_cancel", screen: LibraryList.screen)
                     }
                     Button("Rename") {
-                        AnalyticsEvents.logButtonClick("rename_folder_confirm", screen: LibraryList.screen)
-                        guard let name = list.folderToRename else { return }
-                        guard settingsService.renameFolder(name, to: list.folderTitle) else {
-                            list.errorMessage = String(localized: "There's already a folder with that name, or the name can't be used.")
+                        AnalyticsEvents.logButtonClick("rename_collection_confirm", screen: LibraryList.screen)
+                        guard let name = list.collectionToRename else { return }
+                        guard settingsService.renameCollection(name, to: list.collectionTitle) else {
+                            list.errorMessage = String(localized: "There's already a collection with that name, or the name can't be used.")
                             return
                         }
-                        // The chosen folder stays chosen under its new name.
-                        if list.folder == name, let renamed = settingsService.folders.first(where: {
-                            $0 == ScriptFile.folderName(from: list.folderTitle)
+                        // The chosen collection stays chosen under its new name.
+                        if list.collection == name, let renamed = settingsService.collections.first(where: {
+                            $0 == ScriptFile.collectionName(from: list.collectionTitle)
                         }) {
-                            list.chosenFolder = renamed
+                            list.chosenCollection = renamed
                         }
                     }
                 }
-                .alert("Delete “\(list.folderToDelete ?? "")” Folder?", isPresented: Binding(
-                    get: { list.folderToDelete != nil },
-                    set: { if !$0 { list.folderToDelete = nil } }
-                ), presenting: list.folderToDelete) { name in
+                .alert("Delete “\(list.collectionToDelete ?? "")” Collection?", isPresented: Binding(
+                    get: { list.collectionToDelete != nil },
+                    set: { if !$0 { list.collectionToDelete = nil } }
+                ), presenting: list.collectionToDelete) { name in
                     Button("Cancel", role: .cancel) {
-                        AnalyticsEvents.logButtonClick("delete_folder_cancel", screen: LibraryList.screen)
+                        AnalyticsEvents.logButtonClick("delete_collection_cancel", screen: LibraryList.screen)
                     }
-                    Button("Delete Folder", role: .destructive) {
-                        AnalyticsEvents.logButtonClick("delete_folder_confirm", screen: LibraryList.screen)
-                        settingsService.deleteFolder(name)
-                        if list.folder == name { list.chosenFolder = "" }
+                    Button("Delete Collection", role: .destructive) {
+                        AnalyticsEvents.logButtonClick("delete_collection_confirm", screen: LibraryList.screen)
+                        settingsService.deleteCollection(name)
+                        if list.collection == name { list.chosenCollection = "" }
                     }
                 } message: { _ in
                     Text("The scripts in it aren't deleted. They stay in All.")
@@ -1270,6 +1300,115 @@ private struct LibraryScriptRow: View {
                 Button(String(localized: "Show Takes"), action: onTakes)
             }
         }
+    }
+}
+
+// MARK: - Collections
+
+/// Puts a note in one of the collections, or a new one named here, or takes
+/// it out of the one it's in.
+private struct CollectionPicker: View {
+    let noteID: UUID
+    let screen: String
+
+    @EnvironmentObject var settingsService: SettingsService
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
+    @State private var newName = ""
+    @State private var errorMessage: String?
+
+    private var current: String? {
+        settingsService.savedNotes.first { $0.id == noteID }?.collection
+    }
+
+    private var collections: [String] {
+        settingsService.collections.sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+    }
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    ForEach(collections, id: \.self) { name in
+                        Button {
+                            AnalyticsEvents.logButtonClick("add_to_collection_choose", screen: screen)
+                            put(in: name)
+                        } label: {
+                            HStack {
+                                Label(name, systemImage: "rectangle.stack")
+                                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                                Spacer()
+                                if current == name {
+                                    Image(systemName: "checkmark")
+                                        .font(.body.weight(.semibold))
+                                        .foregroundStyle(AppColors.green(for: colorScheme))
+                                }
+                            }
+                            .contentShape(Rectangle())
+                        }
+                        .accessibilityAddTraits(current == name ? .isSelected : [])
+                    }
+
+                    HStack(spacing: 12) {
+                        Image(systemName: "plus")
+                            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                        TextField("New Collection", text: $newName)
+                            .submitLabel(.done)
+                            .onSubmit(create)
+                    }
+                }
+
+                if let current {
+                    Section {
+                        Button(role: .destructive) {
+                            AnalyticsEvents.logButtonClick("remove_from_collection", screen: screen)
+                            put(in: nil)
+                        } label: {
+                            Text("Remove from “\(current)”")
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Add to Collection")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") {
+                        AnalyticsEvents.logButtonClick("add_to_collection_cancel", screen: screen)
+                        dismiss()
+                    }
+                }
+            }
+            .alert("Something Went Wrong", isPresented: Binding(
+                get: { errorMessage != nil },
+                set: { if !$0 { errorMessage = nil } }
+            )) {
+                Button("OK", role: .cancel) {
+                    AnalyticsEvents.logButtonClick("add_to_collection_error_ok", screen: screen)
+                }
+            } message: {
+                Text(errorMessage ?? "")
+            }
+        }
+        .presentationDetents([.medium, .large])
+    }
+
+    private func put(in collection: String?) {
+        if settingsService.moveNote(id: noteID, toCollection: collection) {
+            dismiss()
+        } else {
+            errorMessage = String(localized: "The script couldn't be added to the collection. Try again.")
+        }
+    }
+
+    private func create() {
+        guard !newName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        AnalyticsEvents.logButtonClick("add_to_collection_new", screen: screen)
+        guard let name = settingsService.createCollection(named: newName) else {
+            errorMessage = String(localized: "There's already a collection with that name, or the name can't be used.")
+            return
+        }
+        put(in: name)
     }
 }
 

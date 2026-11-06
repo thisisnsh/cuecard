@@ -506,18 +506,18 @@ struct SavedNote: Codable, Identifiable, Equatable {
     var content: String
     /// The mode it was written in, and opens back up in.
     var mode: ScriptMode
-    /// The folder it's filed in, or nil for the top of the library.
-    var folder: String?
+    /// The collection it's in, or nil for none.
+    var collection: String?
     let createdAt: Date
     var updatedAt: Date
 
-    init(id: UUID = UUID(), title: String, content: String, mode: ScriptMode, folder: String? = nil,
+    init(id: UUID = UUID(), title: String, content: String, mode: ScriptMode, collection: String? = nil,
          createdAt: Date = Date(), updatedAt: Date = Date()) {
         self.id = id
         self.title = title
         self.content = content
         self.mode = mode
-        self.folder = folder
+        self.collection = collection
         self.createdAt = createdAt
         self.updatedAt = updatedAt
     }
@@ -531,7 +531,7 @@ struct SavedNote: Codable, Identifiable, Equatable {
         // split into any.
         mode = try container.decodeIfPresent(ScriptMode.self, forKey: .mode)
             ?? (CueCards.separatorRanges(in: content).isEmpty ? .teleprompter : .cards)
-        folder = try container.decodeIfPresent(String.self, forKey: .folder)
+        collection = try container.decodeIfPresent(String.self, forKey: .collection)
         createdAt = try container.decode(Date.self, forKey: .createdAt)
         updatedAt = try container.decode(Date.self, forKey: .updatedAt)
     }
@@ -555,9 +555,9 @@ class SettingsService: ObservableObject {
     private let teleprompterDraftIdKey = "cuecard_teleprompter_draft_id"
     private let cardsDraftIdKey = "cuecard_cards_draft_id"
     private let watchNoteIDsKey = "cuecard_watch_note_ids"
-    private let foldersKey = "cuecard_note_folders"
-    private let teleprompterDraftFolderKey = "cuecard_teleprompter_draft_folder"
-    private let cardsDraftFolderKey = "cuecard_cards_draft_folder"
+    private let collectionsKey = "cuecard_collections"
+    private let teleprompterDraftCollectionKey = "cuecard_teleprompter_draft_collection"
+    private let cardsDraftCollectionKey = "cuecard_cards_draft_collection"
     private let hasSeenWelcomeKey = "cuecard_has_seen_welcome"
     /// Cues used to be saved in a library. They're written straight into the
     /// script now, so the stored library is cleared out on the way past.
@@ -608,9 +608,9 @@ class SettingsService: ObservableObject {
     /// What's in `noteStore`, for the views and the watch to read.
     @Published private(set) var savedNotes: [SavedNote] = []
 
-    /// The library's folders, in the order they were made.
-    @Published private(set) var folders: [String] = [] {
-        didSet { userDefaults.set(folders, forKey: foldersKey) }
+    /// The library's collections, in the order they were made.
+    @Published private(set) var collections: [String] = [] {
+        didSet { userDefaults.set(collections, forKey: collectionsKey) }
     }
 
     /// How many versions each saved note has, for notes that have any.
@@ -648,14 +648,14 @@ class SettingsService: ObservableObject {
         didSet { saveNoteId(cardsDraftId, forKey: cardsDraftIdKey) }
     }
 
-    /// The library folder each mode's draft is saved into, where it was
+    /// The collection each mode's draft is saved into, where it was
     /// started from one.
-    private var teleprompterDraftFolder: String? {
-        didSet { userDefaults.set(teleprompterDraftFolder, forKey: teleprompterDraftFolderKey) }
+    private var teleprompterDraftCollection: String? {
+        didSet { userDefaults.set(teleprompterDraftCollection, forKey: teleprompterDraftCollectionKey) }
     }
 
-    private var cardsDraftFolder: String? {
-        didSet { userDefaults.set(cardsDraftFolder, forKey: cardsDraftFolderKey) }
+    private var cardsDraftCollection: String? {
+        didSet { userDefaults.set(cardsDraftCollection, forKey: cardsDraftCollectionKey) }
     }
 
     /// What the teleprompter's script is filed under for its takes: the note
@@ -837,14 +837,14 @@ Thanks for listening. *Questions?*
         }
         self.savedNotes = noteStore.fetchAll()
         self.versionCounts = noteVersions.counts()
-        self.teleprompterDraftFolder = userDefaults.string(forKey: teleprompterDraftFolderKey)
-        self.cardsDraftFolder = userDefaults.string(forKey: cardsDraftFolderKey)
-        // Every folder a note is filed in is listed, even if the list was lost.
-        var folders = userDefaults.stringArray(forKey: foldersKey) ?? []
-        for folder in savedNotes.compactMap(\.folder) where !folders.containsFolder(folder) {
-            folders.append(folder)
+        self.teleprompterDraftCollection = userDefaults.string(forKey: teleprompterDraftCollectionKey)
+        self.cardsDraftCollection = userDefaults.string(forKey: cardsDraftCollectionKey)
+        // Every collection a note is in is listed, even if the list was lost.
+        var collections = userDefaults.stringArray(forKey: collectionsKey) ?? []
+        for collection in savedNotes.compactMap(\.collection) where !collections.containsCollection(collection) {
+            collections.append(collection)
         }
-        self.folders = folders
+        self.collections = collections
 
         if let strings = userDefaults.stringArray(forKey: watchNoteIDsKey) {
             self.watchNoteIDs = Set(strings.compactMap(UUID.init(uuidString:)))
@@ -867,10 +867,10 @@ Thanks for listening. *Questions?*
         let previous = savedNotes.first { $0.id == note.id }
         noteFolder.write(note)
         keep(note, restoredFrom: restoredFrom)
-        // New, or moved to another library folder: the notes folder's list
+        // New, or put in another collection: the notes folder's list
         // of how they're filed follows.
-        if previous?.folder != note.folder || previous == nil {
-            noteFolder.arrange(savedNotes, folders: folders)
+        if previous?.collection != note.collection || previous == nil {
+            noteFolder.arrange(savedNotes, collections: collections)
         }
         return true
     }
@@ -937,24 +937,24 @@ Thanks for listening. *Questions?*
     /// Save current notes as a new note. Returns false if it couldn't be saved.
     @discardableResult
     func saveCurrentNote(title: String) -> Bool {
-        saveCurrentNote(title: title, folder: draftFolder(for: settings.scriptMode))
+        saveCurrentNote(title: title, collection: draftCollection(for: settings.scriptMode))
     }
 
-    /// Save what's written as a note of its own, in the same folder as the
+    /// Save what's written as a note of its own, in the same collection as the
     /// one open, which stays as it was last saved. The editor carries on in
     /// the new one. Returns false if it couldn't be saved.
     @discardableResult
     func saveCurrentNoteAsNew(title: String) -> Bool {
-        saveCurrentNote(title: title, folder: currentNote?.folder ?? draftFolder(for: settings.scriptMode))
+        saveCurrentNote(title: title, collection: currentNote?.collection ?? draftCollection(for: settings.scriptMode))
     }
 
-    private func saveCurrentNote(title: String, folder: String?) -> Bool {
+    private func saveCurrentNote(title: String, collection: String?) -> Bool {
         let trimmedContent = notes.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedContent.isEmpty else { return true }
 
         let mode = settings.scriptMode
         let note = SavedNote(id: mode == .teleprompter ? teleprompterDraftId : cardsDraftId,
-                             title: title, content: notes, mode: mode, folder: folder)
+                             title: title, content: notes, mode: mode, collection: collection)
         guard store(note) else { return false }
         currentNoteId = note.id
         startNewDraft(for: mode)
@@ -963,21 +963,21 @@ Thanks for listening. *Questions?*
 
     /// The mode's draft was saved or let go of. What's written next is a new
     /// script, with no takes of its own yet.
-    private func startNewDraft(for mode: ScriptMode, in folder: String? = nil) {
+    private func startNewDraft(for mode: ScriptMode, in collection: String? = nil) {
         if mode == .cards {
             cardsDraftId = UUID()
-            cardsDraftFolder = folder
+            cardsDraftCollection = collection
         } else {
             teleprompterDraftId = UUID()
-            teleprompterDraftFolder = folder
+            teleprompterDraftCollection = collection
         }
     }
 
-    /// The library folder the mode's draft goes into once it's saved.
-    func draftFolder(for mode: ScriptMode) -> String? {
-        let folder = mode == .cards ? cardsDraftFolder : teleprompterDraftFolder
+    /// The collection the mode's draft goes into once it's saved.
+    func draftCollection(for mode: ScriptMode) -> String? {
+        let collection = mode == .cards ? cardsDraftCollection : teleprompterDraftCollection
         // Not one deleted since.
-        return folder.flatMap { name in folders.first { $0.caseInsensitiveCompare(name) == .orderedSame } }
+        return collection.flatMap { name in collections.first { $0.caseInsensitiveCompare(name) == .orderedSame } }
     }
 
     /// Update an existing saved note. Returns false if it couldn't be saved.
@@ -1135,7 +1135,7 @@ Thanks for listening. *Questions?*
             return
         }
 
-        let changes = noteFolder.sync(savedNotes, folders: folders)
+        let changes = noteFolder.sync(savedNotes, collections: collections)
         if changes.undeletable != notesFolderUndeletedFiles {
             notesFolderUndeletedFiles = changes.undeletable
         }
@@ -1149,15 +1149,15 @@ Thanks for listening. *Questions?*
                 ])
             }
         }
-        if let synced = changes.folders, synced != folders {
-            folders = synced
+        if let synced = changes.collections, synced != collections {
+            collections = synced
         }
-        // A folder is named as the library names it, whatever its case in the
+        // A collection is named as the library names it, whatever its case in the
         // notes folder's list.
         let updated = changes.updated.map { note in
             var note = note
-            note.folder = note.folder.map { name in
-                folders.first { $0.caseInsensitiveCompare(name) == .orderedSame } ?? name
+            note.collection = note.collection.map { name in
+                collections.first { $0.caseInsensitiveCompare(name) == .orderedSame } ?? name
             }
             return note
         }
@@ -1176,65 +1176,64 @@ Thanks for listening. *Questions?*
         for id in changes.deleted {
             forget(id)
         }
-        // Notes filed in a folder deleted elsewhere go back to the top.
-        for note in savedNotes where note.folder.map({ !folders.containsFolder($0) }) ?? false {
-            moveNote(id: note.id, toFolder: nil)
+        // Notes in a collection deleted elsewhere are left in none.
+        for note in savedNotes where note.collection.map({ !collections.containsCollection($0) }) ?? false {
+            moveNote(id: note.id, toCollection: nil)
         }
     }
 
-    // MARK: - Library folders
+    // MARK: - Collections
 
-    /// Make a library folder, in the notes folder's list too if there is one.
+    /// Make a collection, in the notes folder's list too if there is one.
     /// Returns its name, cleaned up as a file name is, or nil if nothing's
-    /// left of it or a folder has it already.
+    /// left of it or a collection has it already.
     @discardableResult
-    func createFolder(named name: String) -> String? {
-        let cleaned = ScriptFile.folderName(from: name)
-        guard !cleaned.isEmpty, !folders.containsFolder(cleaned) else { return nil }
-        folders.append(cleaned)
+    func createCollection(named name: String) -> String? {
+        let cleaned = ScriptFile.collectionName(from: name)
+        guard !cleaned.isEmpty, !collections.containsCollection(cleaned) else { return nil }
+        collections.append(cleaned)
         syncNotesFolder()
         return cleaned
     }
 
-    /// Rename a library folder, moving its notes with it. False if the new
-    /// name can't be used, or another folder has it.
+    /// Rename a collection, moving its notes with it. False if the new
+    /// name can't be used, or another collection has it.
     @discardableResult
-    func renameFolder(_ name: String, to newName: String) -> Bool {
-        let cleaned = ScriptFile.folderName(from: newName)
-        guard !cleaned.isEmpty, let index = folders.firstIndex(of: name) else { return false }
+    func renameCollection(_ name: String, to newName: String) -> Bool {
+        let cleaned = ScriptFile.collectionName(from: newName)
+        guard !cleaned.isEmpty, let index = collections.firstIndex(of: name) else { return false }
         guard cleaned != name else { return true }
-        // A change of case alone is the same folder.
-        let others = folders.filter { $0 != name }
-        guard !others.containsFolder(cleaned) else { return false }
-        folders[index] = cleaned
+        // A change of case alone is the same collection.
+        let others = collections.filter { $0 != name }
+        guard !others.containsCollection(cleaned) else { return false }
+        collections[index] = cleaned
         refile(from: name, to: cleaned)
         syncNotesFolder()
         return true
     }
 
-    /// Delete a library folder. Its notes aren't deleted: they go back to
-    /// the top of the library.
-    func deleteFolder(_ name: String) {
-        folders.removeAll { $0 == name }
+    /// Delete a collection. Its notes aren't deleted: they're left in none.
+    func deleteCollection(_ name: String) {
+        collections.removeAll { $0 == name }
         refile(from: name, to: nil)
         syncNotesFolder()
     }
 
-    /// File a saved note in a library folder, or at the top for nil. Its
+    /// Put a saved note in a collection, or in none for nil. Its
     /// date stays as it is: moving it isn't editing it.
     @discardableResult
-    func moveNote(id: UUID, toFolder folder: String?) -> Bool {
-        guard var note = savedNotes.first(where: { $0.id == id }), note.folder != folder else { return true }
-        note.folder = folder
+    func moveNote(id: UUID, toCollection collection: String?) -> Bool {
+        guard var note = savedNotes.first(where: { $0.id == id }), note.collection != collection else { return true }
+        note.collection = collection
         return store(note)
     }
 
     private func refile(from name: String, to newName: String?) {
-        for note in savedNotes where note.folder == name {
-            moveNote(id: note.id, toFolder: newName)
+        for note in savedNotes where note.collection == name {
+            moveNote(id: note.id, toCollection: newName)
         }
-        if cardsDraftFolder == name { cardsDraftFolder = newName }
-        if teleprompterDraftFolder == name { teleprompterDraftFolder = newName }
+        if cardsDraftCollection == name { cardsDraftCollection = newName }
+        if teleprompterDraftCollection == name { teleprompterDraftCollection = newName }
     }
 
     /// Save a copy of a note beside it, titled as a copy, with none of the
@@ -1244,7 +1243,7 @@ Thanks for listening. *Questions?*
     func duplicateNote(id: UUID) -> SavedNote? {
         guard let note = savedNotes.first(where: { $0.id == id }) else { return nil }
         let copy = SavedNote(title: String(localized: "\(note.title) Copy", comment: "Title of a duplicated script"),
-                             content: note.content, mode: note.mode, folder: note.folder)
+                             content: note.content, mode: note.mode, collection: note.collection)
         return store(copy) ? copy : nil
     }
 
@@ -1252,21 +1251,21 @@ Thanks for listening. *Questions?*
         mode == .cards ? cardsNoteId : teleprompterNoteId
     }
 
-    /// Start a new script in `mode`, saved into `folder` once it's saved.
-    func createNewNote(mode: ScriptMode, in folder: String? = nil) {
+    /// Start a new script in `mode`, saved into `collection` once it's saved.
+    func createNewNote(mode: ScriptMode, in collection: String? = nil) {
         settings.scriptMode = mode
         notes = ""
         currentNoteId = nil
-        startNewDraft(for: mode, in: folder)
+        startNewDraft(for: mode, in: collection)
     }
 
-    /// Keep an imported file as a saved note in `folder`, leaving the editor
+    /// Keep an imported file as a saved note in `collection`, leaving the editor
     /// as it is. The file already carries a name, so there's nothing to
     /// prompt the user for. A file split into cards is a deck. Returns the
     /// note, or nil if it couldn't be saved.
-    func importNote(title: String, content: String, folder: String?) -> SavedNote? {
+    func importNote(title: String, content: String, collection: String?) -> SavedNote? {
         let mode: ScriptMode = CueCards.separatorRanges(in: content).isEmpty ? .teleprompter : .cards
-        let note = SavedNote(title: title, content: content, mode: mode, folder: folder)
+        let note = SavedNote(title: title, content: content, mode: mode, collection: collection)
         return store(note) ? note : nil
     }
 
@@ -1334,7 +1333,7 @@ Thanks for listening. *Questions?*
         cardsNoteId = nil
         startNewDraft(for: .teleprompter)
         startNewDraft(for: .cards)
-        folders = []
+        collections = []
         watchNoteIDs = []
         userDefaults.removeObject(forKey: settingsKey)
         userDefaults.removeObject(forKey: notesKey)

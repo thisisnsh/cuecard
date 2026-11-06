@@ -54,11 +54,13 @@ extension Shape {
 extension View {
     /// Apply to the scrolling view, before its fixed header or footer. SwiftUI
     /// sizes the mask to the visible area between the bars and keyboard.
+    /// Without `fadesEnd`, only the start fades, and the content runs on
+    /// under whatever floats over the end.
     @ViewBuilder
     func scrollEdgeFade(axis: Axis = .vertical, length: CGFloat = 24,
-                        insetContent: Bool = true, enabled: Bool = true) -> some View {
+                        insetContent: Bool = true, fadesEnd: Bool = true, enabled: Bool = true) -> some View {
         if enabled {
-            modifier(ScrollEdgeFade(axis: axis, length: length, insetContent: insetContent))
+            modifier(ScrollEdgeFade(axis: axis, length: length, insetContent: insetContent, fadesEnd: fadesEnd))
         } else {
             self
         }
@@ -69,8 +71,12 @@ private struct ScrollEdgeFade: ViewModifier {
     let axis: Axis
     let length: CGFloat
     let insetContent: Bool
+    let fadesEnd: Bool
 
     private var edges: Edge.Set { axis == .vertical ? .vertical : .horizontal }
+    private var fadedEdges: Edge.Set {
+        fadesEnd ? edges : (axis == .vertical ? .top : .leading)
+    }
 
     func body(content: Content) -> some View {
         padded(content)
@@ -81,17 +87,21 @@ private struct ScrollEdgeFade: ViewModifier {
                     // The mask is already inside the safe area. Padding by the
                     // inherited safe-area insets here would subtract it twice.
                     let fraction = min(max(length, 0) / max(size, 1), 0.5)
+                    let end = fadesEnd ? fraction : 0
 
                     LinearGradient(stops: [
                         .init(color: .clear, location: 0),
                         .init(color: .black.opacity(0.1), location: fraction * 0.45),
                         .init(color: .black, location: fraction),
-                        .init(color: .black, location: 1 - fraction),
-                        .init(color: .black.opacity(0.1), location: 1 - fraction * 0.45),
-                        .init(color: .clear, location: 1)
+                        .init(color: .black, location: 1 - end),
+                        .init(color: .black.opacity(fadesEnd ? 0.1 : 1), location: 1 - end * 0.45),
+                        .init(color: fadesEnd ? .clear : .black, location: 1)
                     ], startPoint: axis == .vertical ? .top : .leading,
                        endPoint: axis == .vertical ? .bottom : .trailing)
                 }
+                // Without a fade at the end, the content stays in view under
+                // the bar there too, rather than being cut off at its edge.
+                .ignoresSafeArea(.container, edges: fadesEnd ? [] : (axis == .vertical ? .bottom : .trailing))
             }
     }
 
@@ -99,7 +109,7 @@ private struct ScrollEdgeFade: ViewModifier {
     private func padded(_ content: Content) -> some View {
         if insetContent {
             // First and last items can scroll completely clear of the fades.
-            content.contentMargins(edges, length, for: .scrollContent)
+            content.contentMargins(fadedEdges, length, for: .scrollContent)
         } else {
             content
         }

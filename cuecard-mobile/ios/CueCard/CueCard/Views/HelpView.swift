@@ -64,8 +64,8 @@ private struct HelpSection: Identifiable {
 // MARK: - Topics
 
 private enum AllHelp {
-    /// Suggestions are left out while they or Apple Intelligence are off, or
-    /// this iPhone has none.
+    /// Suggestions are left out while they're turned off, or this iPhone has
+    /// no Apple Intelligence.
     static var writing: HelpSection {
         var section = allWriting
         if OnDeviceModelAvailability.forSuggestions == .unsupported {
@@ -75,7 +75,7 @@ private enum AllHelp {
     }
 
     private static let suggestionsTopic = HelpTopic("Get AI Suggestions (Beta)",
-                  detail: "Tap the sparkles button at the bottom left of the editor to have Apple Intelligence read your script or deck on this iPhone. It suggests spelling fixes, cues, anchors, line breaks that split long lines into short paragraphs, and bold or italic words. In a deck it leaves out anchors, and only adds a cue where a card has room. Accept or reject each one, or accept them all, then tap Done. Needs an iPhone with Apple Intelligence turned on, and Enable Apple Intelligence and AI Suggestions on in Settings.")
+                  detail: "Tap the sparkles button at the bottom left of the editor to have Apple Intelligence read your script or deck on this iPhone. It suggests spelling fixes, cues, anchors, line breaks that split long lines into short paragraphs, and bold or italic words. In a deck it leaves out anchors, and only adds a cue where a card has room. Accept or reject each one, or accept them all, then tap Done. Needs an iPhone with Apple Intelligence turned on, and AI Suggestions on in Settings.")
 
     private static let allWriting = HelpSection("writing", title: "Writing",
                                     summary: "Modes, cues, formatting, images and cards",
@@ -96,22 +96,22 @@ private enum AllHelp {
     ])
 
     static let notes = HelpSection("notes", title: "Library & Saving",
-                                    summary: "Folders, saving, import, versions and sharing",
-                                    systemImage: "folder", topics: [
+                                    summary: "Collections, saving, import, versions and sharing",
+                                    systemImage: "rectangle.stack", topics: [
         HelpTopic("Open a Script",
                   detail: "CueCard opens on your library, with every script and deck you saved. Tap one to write in it, and tap back to return. Switch between Teleprompter and Cards at the top."),
         HelpTopic("Save Your Work",
-                  detail: "When there are changes to save, the bottom of the editor says Unsaved and Save appears at the top, before the gear. Tap it to save. To keep your changes as a separate script, open ••• at the top of the editor, then Save as New. A new script you haven't saved shows in the library as a draft."),
+                  detail: "When there are changes to save, the bottom of the editor says Unsaved and Save appears at the bottom left. Tap it to save. To keep your changes as a separate script, open ••• at the top of the editor, then Save as New. A new script you haven't saved shows in the library as a draft."),
         HelpTopic("Rename, Duplicate or Delete",
                   detail: "In your library, touch and hold a script, or swipe it. In the editor, tap the title at the top to rename it."),
-        HelpTopic("Organize in Folders",
-                  detail: "In your library, tap + after your folders, or ••• › New Folder. Tap a folder at the top to show only its scripts, or All to show every one. A script you start or import goes in the folder you're in. Touch and hold a folder to rename or delete it. Tap ••• › Sort By to change the order."),
+        HelpTopic("Organize in Collections",
+                  detail: "In your library, tap + after your collections, or ••• › New Collection. Tap a collection at the top to show only its scripts, or All to show every one. To add a script to one, swipe it left or touch and hold it, then tap Add to Collection. A script you start or import goes in the collection you're in. Touch and hold a collection to rename or delete it. Tap ••• › Sort By to change the order."),
         HelpTopic("Import a Text File",
                   detail: "In your library, tap ••• › Import File to add a text file or a TextPack as a script."),
         HelpTopic("Go Back to an Older Version",
                   detail: "Every save is a new version. Tap the version number at the bottom of the editor to compare changes and restore one. Once a note has more than one, it's also under ••• at the top, in Version History."),
         HelpTopic("Keep Scripts if the App Is Removed",
-                  detail: "Until you choose a storage folder, scripts are kept only in CueCard and are deleted with the app. In your library, tap ••• › Choose Storage Folder. Each script is kept there as a text file, with a list of the folders they're in. Pick one in iCloud Drive to keep them there too."),
+                  detail: "Until you choose a storage folder, scripts are kept only in CueCard and are deleted with the app. In your library, tap ••• › Choose Storage Folder. Each script is kept there as a text file, with a list of the collections they're in. Pick one in iCloud Drive to keep them there too."),
         HelpTopic("Your Privacy",
                   detail: "There's no account, and CueCard doesn't upload your scripts. They're kept on this iPhone, and in the storage folder if you choose one."),
         HelpTopic("Share a Script",
@@ -131,7 +131,7 @@ private enum AllHelp {
                   detail: "Open a script, tap the gear at the top, then Language. CueCard is in English, French, Portuguese, Russian and Spanish.")
     ])
 
-    /// Follow My Voice is left out while it or Apple Intelligence is off.
+    /// Follow My Voice is left out while it's turned off.
     static var teleprompter: HelpSection {
         var section = allTeleprompter
         if !AppleIntelligenceSetting.isEnabled(AppleIntelligenceSetting.followVoiceKey) {

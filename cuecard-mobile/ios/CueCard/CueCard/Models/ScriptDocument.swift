@@ -134,15 +134,13 @@ enum ScriptFile {
         return String(localized: "Speech")
     }
 
-    /// A name for a library folder, cleaned up as a file name is. Empty if
-    /// nothing's left.
-    static func folderName(from name: String) -> String {
-        var cleaned = sanitized(name)
-        // A leading dot would hide the folder on disk.
-        while cleaned.hasPrefix(".") {
-            cleaned = String(cleaned.dropFirst()).trimmingCharacters(in: .whitespaces)
-        }
-        return String(cleaned.prefix(40)).trimmingCharacters(in: .whitespaces)
+    /// A name for a collection, on one line and not too long. Collections
+    /// aren't folders on disk, so any character will do. Empty if nothing's
+    /// left.
+    static func collectionName(from name: String) -> String {
+        let oneLine = name.components(separatedBy: .newlines).joined(separator: " ")
+            .trimmingCharacters(in: .whitespaces)
+        return String(oneLine.prefix(40)).trimmingCharacters(in: .whitespaces)
     }
 
     private static func sanitized(_ name: String) -> String {
