@@ -99,7 +99,7 @@ private enum AllHelp {
         HelpTopic("Go Back to an Older Version",
                   detail: "Every save is a new version. Tap the version number at the bottom of the editor to compare changes and restore one. Once a note has more than one, it's also under ••• at the top, in Version History."),
         HelpTopic("Keep Scripts if the App Is Removed",
-                  detail: "Until you choose a storage folder, scripts are kept only in CueCard and are deleted with the app. In your library, tap ••• › Choose Storage Folder. Each script is kept there as a text file and each folder as a folder. Pick one in iCloud Drive to keep them there too."),
+                  detail: "Until you choose a storage folder, scripts are kept only in CueCard and are deleted with the app. At the bottom of your library, tap Choose Storage Folder. Each script is kept there as a text file, with a list of the folders they're in. Pick one in iCloud Drive to keep them there too."),
         HelpTopic("Your Privacy",
                   detail: "There's no account, and CueCard doesn't upload your scripts. They're kept on this iPhone, and in the storage folder if you choose one."),
         HelpTopic("Share a Script",

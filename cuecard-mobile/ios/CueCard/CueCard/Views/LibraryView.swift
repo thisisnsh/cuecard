@@ -171,6 +171,7 @@ private struct LibraryList: View {
 
     @State private var query = ""
     @FocusState private var isSearching: Bool
+    @Namespace private var controlsGlass
     @State private var showingHelp = false
     @State private var showingImporter = false
     @State private var showingFolderPicker = false
@@ -420,32 +421,67 @@ private struct LibraryList: View {
     }
 
     private var footer: some View {
-        LibraryFooter(colorScheme: colorScheme)
-            .frame(maxWidth: .infinity, alignment: .leading)
+        LibraryFooter(
+            colorScheme: colorScheme,
+            onChoose: {
+                AnalyticsEvents.logButtonClick("choose_notes_folder", screen: Self.screen)
+                showingFolderPicker = true
+            },
+            onStop: {
+                AnalyticsEvents.logButtonClick("stop_notes_folder", screen: Self.screen)
+                showingStopFolder = true
+            }
+        )
+        .frame(maxWidth: .infinity)
     }
 
     /// Searching and starting a script, together at the bottom. While
-    /// searching, it's only the search, above the keyboard.
+    /// searching, + gives way to Done, which breaks off the search's glass.
     private var libraryControls: some View {
-        HStack(spacing: 10) {
-            searchRow
-            if isSearching {
-                Button("Done") {
-                    AnalyticsEvents.logButtonClick("library_search_done", screen: Self.screen)
-                    isSearching = false
+        controlsRow
+            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+            .frame(maxWidth: 600)
+            .frame(maxWidth: .infinity)
+            .background(AppColors.background(for: colorScheme))
+            .animation(.smooth(duration: 0.35), value: isSearching)
+    }
+
+    @ViewBuilder
+    private var controlsRow: some View {
+        if #available(iOS 26.0, *) {
+            GlassEffectContainer(spacing: 10) {
+                HStack(spacing: 10) {
+                    searchRow
+                        .glassEffect(.regular.interactive(), in: Capsule())
+                        .glassEffectID("search", in: controlsGlass)
+                    if isSearching {
+                        doneButton
+                            .glassEffect(.regular.interactive(), in: Circle())
+                            .glassEffectID("done", in: controlsGlass)
+                    } else {
+                        newButton
+                            .glassEffect(.regular.tint(AppColors.green(for: colorScheme)).interactive(), in: Circle())
+                            .glassEffectID("new", in: controlsGlass)
+                    }
                 }
-                    .font(.subheadline.weight(.semibold))
-                    .frame(minHeight: 44)
-            } else {
-                newButton
+            }
+        } else {
+            HStack(spacing: 10) {
+                searchRow
+                    .glassedEffect(in: Capsule())
+                if isSearching {
+                    doneButton
+                        .glassedEffect(in: Circle())
+                        .transition(.scale.combined(with: .opacity))
+                } else {
+                    newButton
+                        .background(AppColors.green(for: colorScheme), in: Circle())
+                        .transition(.scale.combined(with: .opacity))
+                }
             }
         }
-        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-        .padding(.horizontal, 20)
-        .padding(.vertical, 12)
-        .frame(maxWidth: 600)
-        .frame(maxWidth: .infinity)
-        .background(AppColors.background(for: colorScheme))
     }
 
     private var newButton: some View {
@@ -454,11 +490,25 @@ private struct LibraryList: View {
                 .font(.system(size: 20, weight: .semibold))
                 .foregroundStyle(colorScheme == .dark ? .black : .white)
                 .frame(width: 48, height: 48)
-                .background(AppColors.green(for: colorScheme), in: Circle())
                 .contentShape(Circle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(mode == .cards ? "New Deck" : "New Script")
+    }
+
+    private var doneButton: some View {
+        Button {
+            AnalyticsEvents.logButtonClick("library_search_done", screen: Self.screen)
+            isSearching = false
+        } label: {
+            Image(systemName: "checkmark")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                .frame(width: 48, height: 48)
+                .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Done")
     }
 
     private var searchRow: some View {
@@ -490,7 +540,6 @@ private struct LibraryList: View {
         .buttonStyle(.plain)
         .padding(.trailing, 4)
         .frame(minHeight: 48)
-        .glassedEffect(in: Capsule())
     }
 
     private var searchPrompt: String {
@@ -540,24 +589,6 @@ private struct LibraryList: View {
                 }
             }
             if isRoot {
-                Divider()
-
-                Button {
-                    AnalyticsEvents.logButtonClick("choose_notes_folder", screen: Self.screen)
-                    showingFolderPicker = true
-                } label: {
-                    Label(settingsService.hasNotesFolder ? "Change Storage Folder" : "Choose Storage Folder",
-                          systemImage: "externaldrive.badge.plus")
-                }
-                if settingsService.hasNotesFolder {
-                    Button {
-                        AnalyticsEvents.logButtonClick("stop_notes_folder", screen: Self.screen)
-                        showingStopFolder = true
-                    } label: {
-                        Label("Stop Using Storage Folder", systemImage: "externaldrive.badge.minus")
-                    }
-                }
-
                 Divider()
 
                 Button(role: .destructive) {
@@ -1088,10 +1119,6 @@ private struct LibraryList: View {
                             list.move(note, to: name, from: "move_note_new_folder")
                         }
                     }
-                } message: {
-                    Text(settingsService.notesFolderName.map {
-                        String(localized: "It's made in “\($0)” folder too.")
-                    } ?? "")
                 }
                 .alert("Rename Folder", isPresented: Binding(
                     get: { list.folderToRename != nil },
@@ -1358,30 +1385,66 @@ private struct LibraryStorageBanner: View {
     }
 }
 
-/// Where scripts are kept, at the end of the library, with anything the
-/// storage folder couldn't take.
+/// Where scripts are kept, at the end of the library, with the storage
+/// folder's controls and anything the folder couldn't take.
 private struct LibraryFooter: View {
     @EnvironmentObject var settingsService: SettingsService
     let colorScheme: ColorScheme
+    let onChoose: () -> Void
+    let onStop: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(spacing: 10) {
             if let warning = oversizedFilesWarning {
-                Label(warning, systemImage: "exclamationmark.triangle.fill")
+                line(warning, systemImage: "exclamationmark.triangle.fill")
                     .foregroundStyle(AppColors.yellow(for: colorScheme))
             }
             if let warning = undeletedFilesWarning {
-                Label(warning, systemImage: "exclamationmark.triangle.fill")
+                line(warning, systemImage: "exclamationmark.triangle.fill")
                     .foregroundStyle(AppColors.yellow(for: colorScheme))
             }
-            Label {
-                storageText
-            } icon: {
-                Image(systemName: "lock.fill")
+            line(storageText, systemImage: "lock.fill")
+                .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+
+            HStack(spacing: 8) {
+                if settingsService.hasNotesFolder {
+                    folderButton("Change Folder", systemImage: "folder", action: onChoose)
+                    folderButton("Stop Using Folder", systemImage: "folder.badge.minus", action: onStop)
+                } else {
+                    folderButton("Choose Storage Folder", systemImage: "folder.badge.plus", action: onChoose)
+                }
             }
-            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
         }
         .font(.caption)
+        .multilineTextAlignment(.center)
+    }
+
+    /// An icon beside its text, close and centered on each other.
+    private func line(_ text: Text, systemImage: String) -> some View {
+        HStack(alignment: .center, spacing: 4) {
+            Image(systemName: systemImage)
+                .imageScale(.small)
+            text
+        }
+    }
+
+    private func line(_ text: String, systemImage: String) -> some View {
+        line(Text(text), systemImage: systemImage)
+    }
+
+    private func folderButton(_ title: LocalizedStringKey, systemImage: String,
+                              action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Label(title, systemImage: systemImage)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                .lineLimit(1)
+                .padding(.horizontal, 14)
+                .frame(height: 34)
+                .glassedEffect(in: Capsule(), interactive: true)
+                .contentShape(Capsule())
+        }
+        .buttonStyle(.borderless)
     }
 
     private var storageText: Text {

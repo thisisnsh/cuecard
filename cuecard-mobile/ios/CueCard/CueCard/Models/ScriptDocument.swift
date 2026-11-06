@@ -134,8 +134,8 @@ enum ScriptFile {
         return String(localized: "Speech")
     }
 
-    /// A name for a library folder, kept to what can name a folder on disk
-    /// too, so it's the same in the notes folder. Empty if nothing's left.
+    /// A name for a library folder, cleaned up as a file name is. Empty if
+    /// nothing's left.
     static func folderName(from name: String) -> String {
         var cleaned = sanitized(name)
         // A leading dot would hide the folder on disk.

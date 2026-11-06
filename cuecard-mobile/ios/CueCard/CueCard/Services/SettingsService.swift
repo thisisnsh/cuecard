@@ -873,8 +873,14 @@ Thanks for listening. *Questions?*
     /// If the store can't take it, nothing changes and false is returned.
     private func store(_ note: SavedNote, restoredFrom: Int? = nil) -> Bool {
         guard noteStore.save([note]) else { return false }
+        let previous = savedNotes.first { $0.id == note.id }
         noteFolder.write(note)
         keep(note, restoredFrom: restoredFrom)
+        // New, or moved to another library folder: the notes folder's list
+        // of how they're filed follows.
+        if previous?.folder != note.folder || previous == nil {
+            noteFolder.arrange(savedNotes, folders: folders)
+        }
         return true
     }
 
@@ -1155,7 +1161,8 @@ Thanks for listening. *Questions?*
         if let synced = changes.folders, synced != folders {
             folders = synced
         }
-        // A folder is named as the library names it, whatever its case on disk.
+        // A folder is named as the library names it, whatever its case in the
+        // notes folder's list.
         let updated = changes.updated.map { note in
             var note = note
             note.folder = note.folder.map { name in
@@ -1178,8 +1185,7 @@ Thanks for listening. *Questions?*
         for id in changes.deleted {
             forget(id)
         }
-        // Notes filed in a folder deleted outside the app are gone with
-        // their files; any left go back to the top.
+        // Notes filed in a folder deleted elsewhere go back to the top.
         for note in savedNotes where note.folder.map({ !folders.containsFolder($0) }) ?? false {
             moveNote(id: note.id, toFolder: nil)
         }
@@ -1187,9 +1193,9 @@ Thanks for listening. *Questions?*
 
     // MARK: - Library folders
 
-    /// Make a library folder, in the notes folder too if there is one.
-    /// Returns its name, cleaned up to one a folder on disk can have, or nil
-    /// if nothing's left of it or a folder has it already.
+    /// Make a library folder, in the notes folder's list too if there is one.
+    /// Returns its name, cleaned up as a file name is, or nil if nothing's
+    /// left of it or a folder has it already.
     @discardableResult
     func createFolder(named name: String) -> String? {
         let cleaned = ScriptFile.folderName(from: name)
@@ -1206,7 +1212,7 @@ Thanks for listening. *Questions?*
         let cleaned = ScriptFile.folderName(from: newName)
         guard !cleaned.isEmpty, let index = folders.firstIndex(of: name) else { return false }
         guard cleaned != name else { return true }
-        // A change of case alone is the same folder on disk.
+        // A change of case alone is the same folder.
         let others = folders.filter { $0 != name }
         guard !others.containsFolder(cleaned) else { return false }
         folders[index] = cleaned
