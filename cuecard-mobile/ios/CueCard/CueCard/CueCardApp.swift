@@ -101,6 +101,16 @@ extension Binding where Value == Bool {
     }
 }
 
+extension Binding where Value == String {
+    /// The same text, kept to the length a script's title is saved with.
+    func limitedToTitle() -> Binding<String> {
+        Binding(
+            get: { wrappedValue },
+            set: { wrappedValue = SavedNote.limitedTitle($0) }
+        )
+    }
+}
+
 // MARK: - External Links
 enum AppLinks {
     static let sourceCode = URL(string: "https://github.com/thisisnsh/cuecard")!

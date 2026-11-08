@@ -68,32 +68,35 @@ struct HomeView: View {
         return (settingsService.versionCounts[id] ?? 1) > 1
     }
 
-    /// The script's title, or what it is while it has none, beside the back
-    /// button. A saved one opens to be renamed.
+    /// The script's title, or what it is while it has none, at the start of
+    /// the status at the bottom edge. A saved one opens to be renamed.
+    @ViewBuilder
     private var titleControl: some View {
         let mode = settingsService.settings.scriptMode
         let note = settingsService.currentNote
         let title = note?.title
             ?? (mode == .cards ? String(localized: "New Deck") : String(localized: "New Script"))
+        let label = Text(title)
+            .lineLimit(1)
+            .truncationMode(.tail)
 
-        return Button {
-            guard let note else { return }
-            AnalyticsEvents.logButtonClick("rename_note", screen: "home")
-            isEditorFocused = false
-            renameTitle = note.title
-            showingRename = true
-        } label: {
-            Text(title)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                .lineLimit(1)
-                .truncationMode(.tail)
-                .frame(maxWidth: .infinity)
+        if let note {
+            Button {
+                AnalyticsEvents.logButtonClick("rename_note", screen: "home")
+                isEditorFocused = false
+                renameTitle = note.title
+                showingRename = true
+            } label: {
+                label
+                    .frame(minHeight: 22)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(title)
+            .accessibilityHint(String(localized: "Renames the script"))
+        } else {
+            label
         }
-        .buttonStyle(.plain)
-        .disabled(note == nil)
-        .accessibilityLabel(title)
-        .accessibilityHint(note == nil ? "" : String(localized: "Renames the script"))
     }
 
     private func showCardsOpenedOnWatch() {
@@ -284,16 +287,16 @@ struct HomeView: View {
         AnalyticsEvents.logButtonClick("save_as_new_menu", screen: "home")
         isEditorFocused = false
         saveAsNewTitle = settingsService.currentNote.map {
-            String(localized: "\($0.title) Copy", comment: "Title of a duplicated script")
+            SavedNote.limitedTitle(String(localized: "\($0.title) Copy", comment: "Title of a duplicated script"))
         } ?? ""
         showingSaveAsNew = true
     }
 
-    /// Whether the script has changes to save, and the saved one's version,
-    /// in small text at the bottom edge, below the controls, so they don't
-    /// move up for it. "Saved" for a moment after saving. The version opens
-    /// its history.
-    @ViewBuilder
+    /// The script's title, whether it has changes to save, and the saved
+    /// one's version, in small text on one line at the bottom edge, below the
+    /// controls, so they don't move up for it. The title gives way to the
+    /// rest when they don't all fit. "Saved" for a moment after saving. The
+    /// title opens to be renamed, the version its history.
     private var statusFooter: some View {
         let isUnsaved = settingsService.hasUnsavedChanges
         let state: String? = isUnsaved ? String(localized: "Unsaved")
@@ -301,49 +304,56 @@ struct HomeView: View {
         let version = settingsService.currentNoteId.map {
             String(localized: "Version \(settingsService.versionCounts[$0] ?? 1)")
         }
-        let text = [state, version].compactMap { $0 }.joined(separator: " · ")
-        if !text.isEmpty {
-            Button {
-                AnalyticsEvents.logButtonClick("version_history_footer", screen: "home")
-                isEditorFocused = false
-                showingVersions = true
-            } label: {
-                Text(text)
-                    .font(.caption2)
-                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                    .padding(.horizontal, 24)
-                    .frame(minHeight: 22)
-                    .contentShape(Rectangle())
+        let details = [state, version].compactMap { $0 }.joined(separator: " · ")
+
+        return HStack(spacing: 0) {
+            titleControl
+            if !details.isEmpty {
+                Button {
+                    AnalyticsEvents.logButtonClick("version_history_footer", screen: "home")
+                    isEditorFocused = false
+                    showingVersions = true
+                } label: {
+                    Text(verbatim: " · \(details)")
+                        .lineLimit(1)
+                        .fixedSize()
+                        .frame(minHeight: 22)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .disabled(version == nil)
+                .accessibilityLabel(details)
+                .accessibilityHint(version == nil ? "" : String(localized: "Opens Version History"))
             }
-            .buttonStyle(.plain)
-            .disabled(version == nil)
-            .accessibilityHint(version == nil ? "" : String(localized: "Opens Version History"))
-            .animation(.easeInOut(duration: 0.2), value: text)
         }
+        .font(.caption2)
+        .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+        .padding(.horizontal, 24)
+        .frame(minHeight: 22)
+        .animation(.easeInOut(duration: 0.2), value: details)
     }
 
-    /// Save, at the bottom beside AI Suggestions, or the timer without it,
-    /// while there are changes to save.
-    @ViewBuilder
-    private var saveButton: some View {
+    /// Save, at the top beside the settings, while there are changes to save.
+    @ToolbarContentBuilder
+    private var saveToolbarItem: some ToolbarContent {
         if settingsService.hasUnsavedChanges {
-            Button {
-                isEditorFocused = false
-                save(from: "save_note_bottom")
-            } label: {
-                Text("Save")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                    .padding(.horizontal, 18)
-                    .frame(height: 52)
-                    .fixedSize(horizontal: true, vertical: false)
-                    .glassedEffect(in: Capsule(), interactive: true)
-                    .shadow(color: Color.black.opacity(0.1), radius: 10)
-                    .contentShape(Capsule())
+            ToolbarItem(placement: .topBarTrailing) {
+                Button {
+                    isEditorFocused = false
+                    save(from: "save_note_top")
+                } label: {
+                    Text("Save")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                        .padding(.horizontal, 6)
+                        .frame(height: 36)
+                        .contentShape(Rectangle())
+                }
+                .accessibilityHint("Saves your changes")
             }
-            .buttonStyle(.plain)
-            .accessibilityHint("Saves your changes")
-            .transition(.scale.combined(with: .opacity))
+            if #available(iOS 26.0, *) {
+                ToolbarSpacer(.fixed, placement: .topBarTrailing)
+            }
         }
     }
 
@@ -430,7 +440,6 @@ struct HomeView: View {
                     // and Takes and Play are on the right.
                     HStack(spacing: 12) {
                         timerControl
-                        saveButton
                         Spacer(minLength: 0)
                         takesControl
                         startButton
@@ -442,17 +451,13 @@ struct HomeView: View {
                     ViewThatFits(in: .horizontal) {
                         HStack(spacing: 12) {
                             suggestionsControl
-                            saveButton
                             Spacer(minLength: 0)
                             takesControl
                             timerControl
                             startButton
                         }
                         HStack(alignment: .bottom, spacing: 12) {
-                            VStack(alignment: .leading, spacing: 12) {
-                                saveButton
-                                suggestionsControl
-                            }
+                            suggestionsControl
                             Spacer(minLength: 0)
                             VStack(alignment: .trailing, spacing: 12) {
                                 takesControl
@@ -676,13 +681,10 @@ struct HomeView: View {
         }
     }
 
-    /// Let the navigation bar fit the title between navigation and actions.
+    /// Save, when there are changes, then the settings, options and help.
     @ToolbarContentBuilder
     private var toolbar: some ToolbarContent {
-        ToolbarItem(placement: .principal) {
-            titleControl
-        }
-        .sharedBackgroundHidden()
+        saveToolbarItem
 
         // One item, so the gear and ••• sit closer than separate items'
         // buttons do.
@@ -762,7 +764,7 @@ struct HomeView: View {
                     Text(editor.errorMessage ?? "")
                 }
                 .alert("Save Note", isPresented: editor.$showingSaveDialog) {
-                    TextField("Note title", text: editor.$saveNoteTitle)
+                    TextField("Note title", text: editor.$saveNoteTitle.limitedToTitle())
                     Button("Cancel", role: .cancel) {
                         AnalyticsEvents.logButtonClick("save_dialog_cancel", screen: "home")
                     }
@@ -781,7 +783,7 @@ struct HomeView: View {
                     Text("Enter a title for your note")
                 }
                 .alert("Save as New", isPresented: editor.$showingSaveAsNew) {
-                    TextField("Note title", text: editor.$saveAsNewTitle)
+                    TextField("Note title", text: editor.$saveAsNewTitle.limitedToTitle())
                     Button("Cancel", role: .cancel) {
                         AnalyticsEvents.logButtonClick("save_as_new_cancel", screen: "home")
                     }
@@ -800,7 +802,7 @@ struct HomeView: View {
                     Text("Your changes go in a new script. “\(settingsService.currentNote?.title ?? "")” stays as it was last saved.")
                 }
                 .alert("Rename Script", isPresented: editor.$showingRename) {
-                    TextField("Title", text: editor.$renameTitle)
+                    TextField("Title", text: editor.$renameTitle.limitedToTitle())
                     Button("Cancel", role: .cancel) {
                         AnalyticsEvents.logButtonClick("rename_dialog_cancel", screen: "home")
                     }

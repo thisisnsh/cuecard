@@ -1026,7 +1026,7 @@ private struct LibraryList: View {
                     get: { list.noteToRename != nil },
                     set: { if !$0 { list.noteToRename = nil } }
                 )) {
-                    TextField("Title", text: list.$renameTitle)
+                    TextField("Title", text: list.$renameTitle.limitedToTitle())
                     Button("Cancel", role: .cancel) {
                         AnalyticsEvents.logButtonClick("rename_note_cancel", screen: LibraryList.screen)
                     }

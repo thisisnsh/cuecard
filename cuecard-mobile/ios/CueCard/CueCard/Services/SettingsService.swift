@@ -511,10 +511,18 @@ struct SavedNote: Codable, Identifiable, Equatable {
     let createdAt: Date
     var updatedAt: Date
 
+    /// The most characters a title is saved with, so it fits on one line.
+    static let titleLimit = 64
+
+    /// The title cut down to `titleLimit` characters.
+    static func limitedTitle(_ title: String) -> String {
+        String(title.prefix(titleLimit))
+    }
+
     init(id: UUID = UUID(), title: String, content: String, mode: ScriptMode, collection: String? = nil,
          createdAt: Date = Date(), updatedAt: Date = Date()) {
         self.id = id
-        self.title = title
+        self.title = Self.limitedTitle(title)
         self.content = content
         self.mode = mode
         self.collection = collection
@@ -985,7 +993,7 @@ Thanks for listening. *Questions?*
     func updateNote(id: UUID, title: String? = nil, content: String? = nil) -> Bool {
         guard var note = savedNotes.first(where: { $0.id == id }) else { return false }
         if let title = title {
-            note.title = title
+            note.title = SavedNote.limitedTitle(title)
         }
         if let content = content {
             note.content = content
