@@ -6505,32 +6505,32 @@
         }
       }
     },
-    "Help AI: Ask anything about CueCard and your scripts." : {
+    "Help AI: Ask anything about using CueCard." : {
       "comment" : "What's New for 1.14.0, looked up by its English text from WhatsNew.json.",
       "extractionState" : "manual",
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ayuda IA: pregunta lo que quieras sobre CueCard y tus guiones."
+            "value" : "Ayuda IA: pregunta lo que quieras sobre cómo usar CueCard."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Aide IA : posez toutes vos questions sur CueCard et vos scripts."
+            "value" : "Aide IA : posez toutes vos questions sur l’utilisation de CueCard."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ajuda IA: pergunte o que quiser sobre o CueCard e seus roteiros."
+            "value" : "Ajuda IA: pergunte o que quiser sobre como usar o CueCard."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Справка ИИ: задавайте любые вопросы о CueCard и своих сценариях."
+            "value" : "Справка ИИ: задавайте любые вопросы об использовании CueCard."
           }
         }
       }
@@ -8140,6 +8140,36 @@
         }
       }
     },
+    "Library: Redesigned, with collections to group your scripts." : {
+      "comment" : "What's New for 1.14.0, looked up by its English text from WhatsNew.json.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Biblioteca: rediseñada, con colecciones para agrupar tus guiones."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bibliothèque : une nouvelle présentation, avec des collections pour regrouper vos scripts."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Biblioteca: novo visual, com coleções para agrupar seus roteiros."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Библиотека: новый дизайн и коллекции для группировки сценариев."
+          }
+        }
+      }
+    },
     "Light" : {
       "localizations" : {
         "es" : {
@@ -9166,36 +9196,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Новая папка"
-          }
-        }
-      }
-    },
-    "New Library: A cleaner home for your scripts, with collections." : {
-      "comment" : "What's New for 1.14.0, looked up by its English text from WhatsNew.json.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nueva biblioteca: un espacio más ordenado para tus guiones, con colecciones."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nouvelle bibliothèque : un espace plus clair pour vos scripts, avec des collections."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nova biblioteca: um espaço mais organizado para seus roteiros, com coleções."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Новая библиотека: более удобное место для ваших сценариев с коллекциями."
           }
         }
       }
