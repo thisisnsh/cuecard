@@ -1,10 +1,10 @@
 {
   "1.14.0": {
     "features": [
-        "New Library: A cleaner home for your scripts, with collections.",
+        "Library: Redesigned, with collections to group your scripts.",
         "Suggestions AI: Fixes and ideas for your script, right on your iPhone.",
         "Follow Me AI: The teleprompter scrolls along as you speak.",
-        "Help AI: Ask anything about CueCard and your scripts."
+        "Help AI: Ask anything about using CueCard."
     ]
   }
 }
