@@ -75,10 +75,11 @@ struct TeleprompterView: View {
         return " \(TeleprompterParser.formatTime(Int(elapsedTime))) "
     }
 
-    /// How far the script fades into the background at each end. The reading line
-    /// sits clear of both.
-    private static let topFade: CGFloat = 96
-    private static let bottomFade: CGFloat = 140
+    /// How far the script fades into the background at each end: from under the
+    /// header at the top, and from the phone's bottom edge at the bottom. The
+    /// reading line sits clear of both.
+    private static let topFade: CGFloat = 56
+    private static let bottomFade: CGFloat = 110
 
     /// Where the reading line sits, as a fraction of the height, with the guide
     /// turned off. Just above centre: high enough to leave the next few lines in
@@ -94,17 +95,20 @@ struct TeleprompterView: View {
     ///
     /// It doubles as the script's top inset, so the first line starts on the
     /// reading line and a line's scroll target is its own position in the text.
-    private func readingLine(in height: CGFloat) -> CGFloat {
+    ///
+    /// `height` is the reader's height inside the safe area; the script runs
+    /// `bottomInset` further, down to the phone's bottom edge.
+    private func readingLine(in height: CGFloat, bottomInset: CGFloat) -> CGFloat {
         guard settings.showsReadingGuide else {
             return height * Self.unguidedReadingLine
         }
-        return clampedReadingLine(height * CGFloat(settings.readingGuidePosition), in: height)
+        return clampedReadingLine(height * CGFloat(settings.readingGuidePosition), in: height, bottomInset: bottomInset)
     }
 
     /// Keeps the line on the reading guide clear of the fades at both ends.
-    private func clampedReadingLine(_ line: CGFloat, in height: CGFloat) -> CGFloat {
+    private func clampedReadingLine(_ line: CGFloat, in height: CGFloat, bottomInset: CGFloat) -> CGFloat {
         let highest = Self.topFade
-        let lowest = max(highest, height - Self.bottomFade - lineHeight)
+        let lowest = max(highest, height + bottomInset - Self.bottomFade - lineHeight)
         return min(max(line, highest), lowest)
     }
 
@@ -112,6 +116,7 @@ struct TeleprompterView: View {
         CameraRecordingView(isPresented: $showingCamera, scriptID: settingsService.teleprompterScriptID,
                             link: cameraLink, onControl: followCamera) {
             GeometryReader { geometry in
+                let bottomInset = geometry.safeAreaInsets.bottom
                 ZStack {
                     // Background - matches device theme
                     AppColors.background(for: colorScheme)
@@ -129,8 +134,9 @@ struct TeleprompterView: View {
                         linePosition: scriptTime * Double(settings.linesPerMinute) / 60.0,
                         colorScheme: colorScheme,
                         seesThrough: showingCamera,
-                        topPadding: readingLine(in: geometry.size.height),
-                        bottomPadding: geometry.size.height - readingLine(in: geometry.size.height),
+                        topPadding: readingLine(in: geometry.size.height, bottomInset: bottomInset),
+                        bottomPadding: geometry.size.height + bottomInset
+                            - readingLine(in: geometry.size.height, bottomInset: bottomInset),
                         snapToken: pipManager.playback.snapToken,
                         restorationRequest: pipManager.restorationRequest,
                         onRestorationReady: { request in
@@ -150,11 +156,16 @@ struct TeleprompterView: View {
                     // off flat against the header and the controls. A mask,
                     // not a painted fade, so the camera behind stays clear.
                     .scriptEdgeMask(top: Self.topFade, bottom: Self.bottomFade)
+                    // Down to the phone's edge, so the bottom fade ends there
+                    // rather than above the home indicator.
+                    .ignoresSafeArea(edges: .bottom)
 
                     if settings.showsReadingGuide {
-                        readingGuide(in: geometry.size.height)
+                        readingGuide(in: geometry.size.height, bottomInset: bottomInset)
                             // Flipped with the script, so it stays beside the same line.
                             .scaleEffect(x: isMirrored ? -1 : 1, y: isFlippedVertically ? -1 : 1)
+                            // The same frame as the script, so both flip about one middle.
+                            .ignoresSafeArea(edges: .bottom)
                     }
 
                     // Controls overlay. Always laid out and faded rather than
@@ -507,8 +518,8 @@ struct TeleprompterView: View {
     // MARK: - Reading Guide
 
     /// Stays up while the buttons fade: it's there to read by.
-    private func readingGuide(in height: CGFloat) -> some View {
-        let line = draggedReadingLine ?? readingLine(in: height)
+    private func readingGuide(in height: CGFloat, bottomInset: CGFloat) -> some View {
+        let line = draggedReadingLine ?? readingLine(in: height, bottomInset: bottomInset)
         return ReadingGuide(
             y: line + lineHeight / 2,
             colorScheme: colorScheme,
@@ -517,7 +528,7 @@ struct TeleprompterView: View {
                 readingLineAtDragStart = start
                 // Upside down, a drag down the screen moves the guide up the script.
                 let moved = isFlippedVertically ? -translation : translation
-                draggedReadingLine = clampedReadingLine(start + moved, in: height)
+                draggedReadingLine = clampedReadingLine(start + moved, in: height, bottomInset: bottomInset)
             },
             onDragEnd: {
                 if let draggedReadingLine, height > 0 {
@@ -528,7 +539,7 @@ struct TeleprompterView: View {
             },
             onStep: { lines in
                 let lines = isFlippedVertically ? -lines : lines
-                let moved = clampedReadingLine(line + lineHeight * CGFloat(lines), in: height)
+                let moved = clampedReadingLine(line + lineHeight * CGFloat(lines), in: height, bottomInset: bottomInset)
                 if height > 0 { settingsService.settings.readingGuidePosition = Double(moved / height) }
             }
         )
