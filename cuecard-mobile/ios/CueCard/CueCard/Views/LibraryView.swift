@@ -1,4 +1,6 @@
 import SwiftUI
+import StoreKit
+import Photos
 import UniformTypeIdentifiers
 import FirebaseAnalytics
 
@@ -21,6 +23,11 @@ struct LibraryView: View {
     @State private var showingWatchCards = false
     /// The app went to the background since it was last opened.
     @State private var wasInBackground = false
+    /// The mode whose open script is playing, started from the library.
+    @State private var playing: ScriptMode?
+    /// A use of a beta AI feature to ask the reader about.
+    @State private var aiExperience: AIExperience?
+    @Environment(\.requestReview) private var requestReview
     @AppStorage(LibraryStorageWarning.dismissedKey) private var warningDismissed = false
     @AppStorage(LibraryStorageWarning.opensKey) private var opensSinceDismissed = 0
 
@@ -40,7 +47,7 @@ struct LibraryView: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            LibraryList(path: $path, takeCounts: takeCounts)
+            LibraryList(path: $path, takeCounts: takeCounts, onPlay: play)
                 .navigationDestination(for: LibraryRoute.self) { route in
                     switch route {
                     case .editor:
@@ -53,6 +60,26 @@ struct LibraryView: View {
                 // Passed on by hand: as an iPad app on a Mac, a full screen
                 // cover doesn't inherit environment objects.
                 .environmentObject(settingsService)
+        }
+        .fullScreenCover(item: $playing, onDismiss: playDidClose) { mode in
+            switch mode {
+            case .teleprompter:
+                TeleprompterView(content: TeleprompterParser.parseNotes(settingsService.notes(for: .teleprompter)))
+                    .environmentObject(settingsService)
+            case .cards:
+                CueCardsView(cards: CueCards.cards(in: settingsService.notes(for: .cards)),
+                             title: settingsService.currentNote?.title ?? String(localized: "Cards"),
+                             deckID: settingsService.currentNoteId)
+                    .environmentObject(settingsService)
+            }
+        }
+        .sheet(isPresented: Binding(
+            get: { aiExperience != nil },
+            set: { if !$0 { aiExperience = nil } }
+        )) {
+            if let aiExperience {
+                AIFeedbackSheet(experience: aiExperience)
+            }
         }
         .onAppear {
             takeCounts.reload()
@@ -91,10 +118,40 @@ struct LibraryView: View {
         takeCounts.reload()
     }
 
+    /// Play the script open in `mode`, as the editor's Play button would,
+    /// coming back to the library when it closes.
+    private func play(_ mode: ScriptMode) {
+        settingsService.settings.scriptMode = mode
+        playing = mode
+    }
+
+    /// Back from playing: anything recorded is a take now, and a session
+    /// with Follow Me AI is asked about, as from the editor.
+    private func playDidClose() {
+        takeCounts.reload()
+        if let metrics = VoiceFeedback.shared.pending {
+            VoiceFeedback.shared.pending = nil
+            aiExperience = .voice(metrics)
+        } else {
+            requestReviewIfEarned()
+        }
+    }
+
+    /// Ask for a review once playing has closed, after its dismissal has
+    /// finished, so the system alert doesn't land on a moving screen.
+    private func requestReviewIfEarned() {
+        guard ReviewPromptService.shared.shouldRequestReview else { return }
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 800_000_000)
+            ReviewPromptService.shared.logReviewRequested()
+            requestReview()
+        }
+    }
+
     /// The editor shows a deck opened from the watch itself, while it's open.
     private func showCardsOpenedOnWatch() {
         guard scenePhase == .active, !path.contains(.editor), !cardsSession.cards.isEmpty,
-              !showingWatchCards else { return }
+              !showingWatchCards, playing == nil else { return }
         showingWatchCards = true
     }
 
@@ -168,6 +225,8 @@ private struct TakesTarget: Identifiable {
 private struct LibraryList: View {
     @Binding var path: [LibraryRoute]
     @ObservedObject var takeCounts: TakeCounts
+    /// Play the script open in a mode, without the editor.
+    let onPlay: (ScriptMode) -> Void
 
     @EnvironmentObject var settingsService: SettingsService
     @EnvironmentObject var notifications: RemoteNotificationService
@@ -210,6 +269,11 @@ private struct LibraryList: View {
     /// beside the card rather than out past the margin.
     private static let sideMargin: CGFloat = 20
     private static let rowInsets = EdgeInsets(top: 6, leading: 0, bottom: 6, trailing: 0)
+    /// Scripts have no card around them: their own padding and the line
+    /// under each keep them apart.
+    private static let scriptInsets = EdgeInsets()
+    private static let heroInsets = EdgeInsets(top: 4, leading: 0, bottom: 0, trailing: 0)
+    private static let headerInsets = EdgeInsets()
 
     /// The collection shown, or nil for All. One deleted since it was chosen is All.
     private var collection: String? {
@@ -247,6 +311,40 @@ private struct LibraryList: View {
 
     private var collections: [String] {
         settingsService.collections.sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+    }
+
+    /// The saved note open in the editor in the chosen mode, if it's listed.
+    private var openNote: SavedNote? {
+        guard let id = settingsService.noteId(for: mode) else { return nil }
+        return notes.first { $0.id == id }
+    }
+
+    /// The script open in the editor is shown on its own at the top, to play
+    /// or go back to, unless the list is being searched.
+    private var showsHero: Bool {
+        trimmedQuery.isEmpty && (hasDraft || openNote != nil)
+    }
+
+    /// The notes listed below the open script, in sections by when they were
+    /// edited or made while sorted by date. Searched, or sorted by title,
+    /// they're one list.
+    private var groups: [LibraryGroup] {
+        let heroID = showsHero ? openNote?.id : nil
+        let listed = notes.filter { $0.id != heroID }
+        guard trimmedQuery.isEmpty, sort != .title else {
+            return listed.isEmpty ? [] : [LibraryGroup(kind: nil, notes: listed)]
+        }
+        let now = Date()
+        var groups: [LibraryGroup] = []
+        for note in listed {
+            let kind = LibraryDateGroup(sort == .created ? note.createdAt : note.updatedAt, now: now)
+            if groups.last?.kind == kind {
+                groups[groups.count - 1].notes.append(note)
+            } else {
+                groups.append(LibraryGroup(kind: kind, notes: [note]))
+            }
+        }
+        return groups
     }
 
     private func matches(title: String, content: String) -> Bool {
@@ -287,11 +385,18 @@ private struct LibraryList: View {
             }
 
             if hasDraft || !notes.isEmpty {
-                if hasDraft {
+                if showsHero {
+                    heroRow
+                } else if hasDraft {
                     draftRow(mode)
                 }
-                ForEach(notes) { note in
-                    noteRow(note)
+                ForEach(groups) { group in
+                    if let title = group.kind?.title {
+                        groupHeader(title)
+                    }
+                    ForEach(group.notes) { note in
+                        noteRow(note, in: group.kind)
+                    }
                 }
             } else {
                 emptyState
@@ -689,15 +794,90 @@ private struct LibraryList: View {
         .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
+    /// The script open in the editor, at the top: its draft if it isn't
+    /// saved yet, or the saved note, showing what's written in it now.
+    @ViewBuilder
+    private var heroRow: some View {
+        let text = settingsService.notes(for: mode)
+        let plain = LibraryText.plain(text)
+        let canPlay = mode == .cards
+            ? !CueCards.cards(in: text).isEmpty
+            : !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        if let note = openNote {
+            LibraryHero(
+                title: note.title,
+                preview: LibraryText.preview(ofPlain: plain),
+                detail: [length(of: text, plain: plain), LibraryText.date(note.updatedAt)].joined(separator: " · "),
+                badge: settingsService.hasUnsavedChanges(in: mode) ? String(localized: "Unsaved") : nil,
+                isOnWatch: settingsService.watchNoteIDs.contains(note.id),
+                collection: tag(for: note.collection),
+                takes: takeCounts.count(for: note.id),
+                recentTakes: takeCounts.recentTakes(for: note.id),
+                canPlay: canPlay,
+                mode: mode,
+                colorScheme: colorScheme,
+                onPlay: { play(from: "library_play_note") },
+                onEdit: { open(note, from: "library_edit_note") },
+                onTakes: {
+                    AnalyticsEvents.logButtonClick("library_takes_note", screen: Self.screen)
+                    takesTarget = TakesTarget(id: note.id, title: note.title)
+                }
+            )
+            .onTapGesture { open(note) }
+            .plainRow(insets: Self.heroInsets)
+            .contextMenu { noteMenu(note) }
+            .swipeActions(edge: .trailing) { noteTrailingActions(note) }
+            .swipeActions(edge: .leading) { noteLeadingActions(note) }
+        } else {
+            let scriptID = mode == .cards ? settingsService.cardsScriptID : settingsService.teleprompterScriptID
+            let title = mode == .cards ? String(localized: "New Deck") : String(localized: "New Script")
+            LibraryHero(
+                title: title,
+                preview: LibraryText.preview(ofPlain: plain),
+                detail: length(of: text, plain: plain),
+                badge: String(localized: "Draft"),
+                isOnWatch: false,
+                collection: tag(for: settingsService.draftCollection(for: mode)),
+                takes: takeCounts.count(for: scriptID),
+                recentTakes: takeCounts.recentTakes(for: scriptID),
+                canPlay: canPlay,
+                mode: mode,
+                colorScheme: colorScheme,
+                onPlay: { play(from: "library_play_draft") },
+                onEdit: {
+                    AnalyticsEvents.logButtonClick("library_edit_draft", screen: Self.screen)
+                    openDraft(mode)
+                },
+                onTakes: {
+                    AnalyticsEvents.logButtonClick("library_takes_draft", screen: Self.screen)
+                    takesTarget = TakesTarget(id: scriptID, title: title)
+                }
+            )
+            .onTapGesture {
+                AnalyticsEvents.logButtonClick("open_draft", screen: Self.screen)
+                openDraft(mode)
+            }
+            .plainRow(insets: Self.heroInsets)
+            .contextMenu { draftMenu(mode) }
+            .swipeActions(edge: .trailing) { draftTrailingActions(mode) }
+        }
+    }
+
+    /// The draft as a row of its own, while the list is searched.
     private func draftRow(_ mode: ScriptMode) -> some View {
         let scriptID = mode == .cards ? settingsService.cardsScriptID : settingsService.teleprompterScriptID
         let title = mode == .cards ? String(localized: "New Deck") : String(localized: "New Script")
+        let text = settingsService.notes(for: mode)
+        let plain = LibraryText.plain(text)
         return LibraryScriptRow(
             title: title,
-            preview: LibraryText.preview(of: settingsService.notes(for: mode)),
-            detail: String(localized: "Not saved yet"),
+            preview: LibraryText.preview(ofPlain: plain),
+            detail: [length(of: text, plain: plain), String(localized: "Not saved yet")].joined(separator: " · "),
             badge: String(localized: "Draft"),
+            isOnWatch: false,
+            collection: tag(for: settingsService.draftCollection(for: mode)),
             takes: takeCounts.count(for: scriptID),
+            recentTakes: takeCounts.recentTakes(for: scriptID),
             colorScheme: colorScheme,
             onTakes: {
                 AnalyticsEvents.logButtonClick("library_takes_draft", screen: Self.screen)
@@ -708,40 +888,64 @@ private struct LibraryList: View {
             AnalyticsEvents.logButtonClick("open_draft", screen: Self.screen)
             openDraft(mode)
         }
-        .plainRow(insets: Self.rowInsets)
-        .contextMenu {
-            Button {
-                AnalyticsEvents.logButtonClick("open_draft_menu", screen: Self.screen)
-                openDraft(mode)
-            } label: {
-                Label("Keep Writing", systemImage: "square.and.pencil")
-            }
-            Button(role: .destructive) {
-                AnalyticsEvents.logButtonClick("discard_draft_menu", screen: Self.screen)
-                draftToDiscard = mode
-            } label: {
-                Label("Discard", systemImage: "trash")
-            }
+        .plainRow(insets: Self.scriptInsets)
+        .contextMenu { draftMenu(mode) }
+        .swipeActions(edge: .trailing) { draftTrailingActions(mode) }
+    }
+
+    @ViewBuilder
+    private func draftMenu(_ mode: ScriptMode) -> some View {
+        Button {
+            AnalyticsEvents.logButtonClick("open_draft_menu", screen: Self.screen)
+            openDraft(mode)
+        } label: {
+            Label("Keep Writing", systemImage: "square.and.pencil")
         }
-        .swipeActions(edge: .trailing) {
-            Button {
-                AnalyticsEvents.logButtonClick("discard_draft_swipe", screen: Self.screen)
-                draftToDiscard = mode
-            } label: {
-                Label("Discard", systemImage: "trash")
-            }
-            .tint(AppColors.red(for: colorScheme))
+        Button(role: .destructive) {
+            AnalyticsEvents.logButtonClick("discard_draft_menu", screen: Self.screen)
+            draftToDiscard = mode
+        } label: {
+            Label("Discard", systemImage: "trash")
         }
     }
 
-    private func noteRow(_ note: SavedNote) -> some View {
+    @ViewBuilder
+    private func draftTrailingActions(_ mode: ScriptMode) -> some View {
+        Button {
+            AnalyticsEvents.logButtonClick("discard_draft_swipe", screen: Self.screen)
+            draftToDiscard = mode
+        } label: {
+            Label("Discard", systemImage: "trash")
+        }
+        .tint(AppColors.red(for: colorScheme))
+    }
+
+    /// A date section's name, above its notes.
+    private func groupHeader(_ title: String) -> some View {
+        Text(title)
+            .font(.footnote.weight(.semibold))
+            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, 22)
+            .padding(.bottom, 2)
+            .accessibilityAddTraits(.isHeader)
+            .plainRow(insets: Self.headerInsets)
+    }
+
+    private func noteRow(_ note: SavedNote, in group: LibraryDateGroup?) -> some View {
         let isOpen = settingsService.noteId(for: note.mode) == note.id
+        let plain = LibraryText.plain(note.content)
+        let date = sort == .created ? note.createdAt : note.updatedAt
+        let when = group.map { LibraryText.date(date, in: $0) } ?? LibraryText.date(date)
         return LibraryScriptRow(
             title: note.title,
-            preview: LibraryText.preview(of: note.content),
-            detail: detail(of: note),
+            preview: LibraryText.preview(ofPlain: plain),
+            detail: ([length(of: note.content, plain: plain)] + [when].compactMap { $0 }).joined(separator: " · "),
             badge: isOpen && settingsService.hasUnsavedChanges(in: note.mode) ? String(localized: "Unsaved") : nil,
+            isOnWatch: settingsService.watchNoteIDs.contains(note.id),
+            collection: tag(for: note.collection),
             takes: takeCounts.count(for: note.id),
+            recentTakes: takeCounts.recentTakes(for: note.id),
             colorScheme: colorScheme,
             onTakes: {
                 AnalyticsEvents.logButtonClick("library_takes_note", screen: Self.screen)
@@ -749,42 +953,47 @@ private struct LibraryList: View {
             }
         )
         .onTapGesture { open(note) }
-        .plainRow(insets: Self.rowInsets)
+        .plainRow(insets: Self.scriptInsets)
         .contextMenu { noteMenu(note) }
-        .swipeActions(edge: .trailing) {
-            Button {
-                AnalyticsEvents.logButtonClick("delete_note_swipe", screen: Self.screen)
-                noteToDelete = note
-            } label: {
-                Label("Delete", systemImage: "trash")
-            }
-            .tint(AppColors.red(for: colorScheme))
-        }
-        .swipeActions(edge: .leading) {
-            Button {
-                AnalyticsEvents.logButtonClick("add_to_collection_swipe", screen: Self.screen)
-                noteToCollect = note
-            } label: {
-                Label("Add to Collection", systemImage: "rectangle.stack.badge.plus")
-            }
-            .tint(AppColors.purple(for: colorScheme))
-            Button {
-                AnalyticsEvents.logButtonClick("rename_note_swipe", screen: Self.screen)
-                renameTitle = note.title
-                noteToRename = note
-            } label: {
-                Label("Rename", systemImage: "pencil")
-            }
-            .tint(.orange)
-            Button {
-                duplicate(note, from: "duplicate_note")
-            } label: {
-                Label("Duplicate", systemImage: "plus.square.on.square")
-            }
-            .tint(AppColors.blue(for: colorScheme))
-        }
+        .swipeActions(edge: .trailing) { noteTrailingActions(note) }
+        .swipeActions(edge: .leading) { noteLeadingActions(note) }
     }
 
+    @ViewBuilder
+    private func noteTrailingActions(_ note: SavedNote) -> some View {
+        Button {
+            AnalyticsEvents.logButtonClick("delete_note_swipe", screen: Self.screen)
+            noteToDelete = note
+        } label: {
+            Label("Delete", systemImage: "trash")
+        }
+        .tint(AppColors.red(for: colorScheme))
+    }
+
+    @ViewBuilder
+    private func noteLeadingActions(_ note: SavedNote) -> some View {
+        Button {
+            AnalyticsEvents.logButtonClick("add_to_collection_swipe", screen: Self.screen)
+            noteToCollect = note
+        } label: {
+            Label("Add to Collection", systemImage: "rectangle.stack.badge.plus")
+        }
+        .tint(AppColors.purple(for: colorScheme))
+        Button {
+            AnalyticsEvents.logButtonClick("rename_note_swipe", screen: Self.screen)
+            renameTitle = note.title
+            noteToRename = note
+        } label: {
+            Label("Rename", systemImage: "pencil")
+        }
+        .tint(.orange)
+        Button {
+            duplicate(note, from: "duplicate_note")
+        } label: {
+            Label("Duplicate", systemImage: "plus.square.on.square")
+        }
+        .tint(AppColors.blue(for: colorScheme))
+    }
     @ViewBuilder
     private func noteMenu(_ note: SavedNote) -> some View {
         Button {
@@ -837,23 +1046,30 @@ private struct LibraryList: View {
         }
     }
 
-    /// When it was last edited, how many cards a deck has, whether it's on
-    /// the watch, and, under All, its collection.
-    private func detail(of note: SavedNote) -> String {
-        var parts = [LibraryText.date(note.updatedAt)]
-        if note.mode == .cards {
-            let count = CueCards.cards(in: note.content).count
-            parts.append(String(localized: "\(count) cards", comment: "How many cards a deck has"))
+    /// About how long a script takes to read out, or how many cards a deck has.
+    private func length(of content: String, plain: String) -> String {
+        if mode == .cards {
+            let count = CueCards.cards(in: content).count
+            return String(localized: "\(count) cards", comment: "How many cards a deck has")
         }
-        if settingsService.watchNoteIDs.contains(note.id) {
-            parts.append(String(localized: "On Apple Watch"))
-        }
-        if collection == nil, let collection = note.collection {
-            parts.append(collection)
-        }
-        return parts.joined(separator: " · ")
+        return LibraryText.readingTime(ofPlain: plain)
     }
 
+    /// A collection's name and its color, shown under All only: a
+    /// collection chosen already says where everything listed is.
+    private func tag(for name: String?) -> LibraryCollectionTag? {
+        guard collection == nil, let name else { return nil }
+        return LibraryCollectionTag(name: name,
+                                    color: LibraryCollectionTag.color(of: name, in: settingsService.collections,
+                                                                      colorScheme: colorScheme))
+    }
+
+    /// Play the script open in the chosen mode.
+    private func play(from button: String) {
+        AnalyticsEvents.logButtonClick(button, screen: Self.screen,
+                                       parameters: ["mode": mode.rawValue])
+        onPlay(mode)
+    }
     // MARK: Actions
 
     /// Open a saved note in the editor. One already open there keeps what's
@@ -1220,80 +1436,54 @@ private extension View {
     }
 }
 
-/// A script or deck as a card: its title, how it starts, when it was
-/// edited, and the takes recorded with it, which open from here.
+/// A script or deck in the list, with nothing around it but a line below:
+/// its title, how it starts, how long it is and when it was edited, and
+/// the takes recorded with it, which open from here.
 private struct LibraryScriptRow: View {
     let title: String
     let preview: String
     let detail: String
-    /// Draft or Unsaved, beside the title.
+    /// Draft or Unsaved, marked with a dot before the title.
     let badge: String?
+    let isOnWatch: Bool
+    let collection: LibraryCollectionTag?
     let takes: Int
+    let recentTakes: [PHAsset]
     let colorScheme: ColorScheme
     let onTakes: () -> Void
 
-    static let cornerRadius: CGFloat = 22
-
-    private var secondary: Color { AppColors.textSecondary(for: colorScheme) }
-
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
+            HStack(spacing: 6) {
+                if badge != nil {
+                    Circle()
+                        .fill(AppColors.yellow(for: colorScheme))
+                        .frame(width: 7, height: 7)
+                }
                 Text(title)
                     .font(.headline)
                     .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                     .lineLimit(1)
-                Spacer(minLength: 4)
-                if let badge {
-                    Text(badge)
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(AppColors.yellow(for: colorScheme))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(Capsule().fill(AppColors.yellow(for: colorScheme).opacity(0.15)))
-                        .fixedSize()
-                }
             }
 
             if !preview.isEmpty {
                 Text(preview)
                     .font(.subheadline)
-                    .foregroundStyle(secondary)
+                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
                     .lineLimit(2)
             }
 
-            HStack(spacing: 8) {
-                Text(detail)
-                    .font(.caption)
-                    .foregroundStyle(secondary.opacity(0.85))
-                    .lineLimit(1)
-                Spacer(minLength: 0)
-                if takes > 0 {
-                    Button(action: onTakes) {
-                        Text(String(localized: "\(takes) Takes", comment: "How many videos were recorded with a script"))
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 5)
-                            .background(Capsule().fill(secondary.opacity(0.15)))
-                    }
-                    .buttonStyle(.borderless)
-                }
-            }
-            .padding(.top, 2)
+            LibraryMetaLine(detail: detail, isOnWatch: isOnWatch, collection: collection,
+                            takes: takes, recentTakes: recentTakes, frameSize: CGSize(width: 24, height: 32),
+                            colorScheme: colorScheme, onTakes: onTakes)
+                .padding(.top, 2)
         }
-        .padding(16)
+        .padding(.vertical, 14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous)
-                .fill(colorScheme == .dark ? Color(white: 0.11) : Color.white)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous)
-                .stroke(secondary.opacity(0.2), lineWidth: 0.7)
-        )
-        .contentShape(RoundedRectangle(cornerRadius: Self.cornerRadius, style: .continuous))
+        .overlay(alignment: .bottom) { LibraryHairline(colorScheme: colorScheme) }
+        .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
+        .accessibilityValue(badge ?? "")
         .accessibilityAddTraits(.isButton)
         .accessibilityActions {
             if takes > 0 {
@@ -1301,6 +1491,252 @@ private struct LibraryScriptRow: View {
             }
         }
     }
+}
+
+/// The script open in the editor, larger, at the top of the list: played
+/// from here, or opened to keep writing.
+private struct LibraryHero: View {
+    let title: String
+    let preview: String
+    let detail: String
+    /// Draft or Unsaved, marked with a dot at the start of the details.
+    let badge: String?
+    let isOnWatch: Bool
+    let collection: LibraryCollectionTag?
+    let takes: Int
+    let recentTakes: [PHAsset]
+    /// There's something to play: words for the teleprompter, or a card.
+    let canPlay: Bool
+    let mode: ScriptMode
+    let colorScheme: ColorScheme
+    let onPlay: () -> Void
+    let onEdit: () -> Void
+    let onTakes: () -> Void
+
+    var body: some View {
+        let primary = AppColors.textPrimary(for: colorScheme)
+        let secondary = AppColors.textSecondary(for: colorScheme)
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 6) {
+                if let badge {
+                    Circle()
+                        .fill(AppColors.yellow(for: colorScheme))
+                        .frame(width: 7, height: 7)
+                    Text(badge)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(AppColors.yellow(for: colorScheme))
+                    Text(verbatim: "·")
+                }
+                LibraryMetaLine(detail: detail, isOnWatch: isOnWatch, collection: collection,
+                                takes: 0, recentTakes: [], frameSize: .zero,
+                                colorScheme: colorScheme, onTakes: onTakes)
+            }
+            .font(.caption)
+            .foregroundStyle(secondary)
+
+            Text(title)
+                .font(.title2.bold())
+                .foregroundStyle(primary)
+                .lineLimit(2)
+
+            if !preview.isEmpty {
+                Text(preview)
+                    .font(.subheadline)
+                    .foregroundStyle(secondary)
+                    .lineLimit(3)
+            }
+
+            HStack(spacing: 10) {
+                Button(action: onPlay) {
+                    Image(systemName: "play.fill")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(AppColors.background(for: colorScheme))
+                        .frame(width: 44, height: 44)
+                        .background(Circle().fill(primary))
+                        .contentShape(Circle())
+                }
+                .buttonStyle(.borderless)
+                .disabled(!canPlay)
+                .opacity(canPlay ? 1 : 0.4)
+                .accessibilityLabel(mode == .cards ? "Open Cards" : "Start Teleprompter")
+
+                Button(action: onEdit) {
+                    Text("Edit", comment: "Opens the script in the editor, from the library")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(primary)
+                        .padding(.horizontal, 20)
+                        .frame(height: 44)
+                        .background(Capsule().fill(secondary.opacity(0.15)))
+                        .contentShape(Capsule())
+                }
+                .buttonStyle(.borderless)
+
+                Spacer(minLength: 8)
+
+                if takes > 0 {
+                    LibraryTakeStrip(takes: takes, recentTakes: recentTakes,
+                                     frameSize: CGSize(width: 30, height: 40), cornerRadius: 7,
+                                     colorScheme: colorScheme, onTakes: onTakes)
+                }
+            }
+            .padding(.top, 10)
+        }
+        .padding(.top, 6)
+        .padding(.bottom, 20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .overlay(alignment: .bottom) { LibraryHairline(colorScheme: colorScheme) }
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .contain)
+    }
+}
+
+/// How long a script is and when it was edited, whether it's on the watch,
+/// its collection, and its newest takes at the end.
+private struct LibraryMetaLine: View {
+    let detail: String
+    let isOnWatch: Bool
+    let collection: LibraryCollectionTag?
+    let takes: Int
+    let recentTakes: [PHAsset]
+    let frameSize: CGSize
+    let colorScheme: ColorScheme
+    let onTakes: () -> Void
+
+    var body: some View {
+        HStack(spacing: 8) {
+            if !detail.isEmpty {
+                Text(detail)
+                    .lineLimit(1)
+                    .layoutPriority(1)
+            }
+            if isOnWatch {
+                Image(systemName: "applewatch")
+                    .imageScale(.small)
+                    .accessibilityLabel(String(localized: "On Apple Watch"))
+            }
+            if let collection {
+                HStack(spacing: 5) {
+                    Circle()
+                        .fill(collection.color)
+                        .frame(width: 7, height: 7)
+                        .accessibilityHidden(true)
+                    Text(collection.name)
+                        .lineLimit(1)
+                }
+            }
+            if takes > 0 {
+                Spacer(minLength: 8)
+                LibraryTakeStrip(takes: takes, recentTakes: recentTakes, frameSize: frameSize,
+                                 cornerRadius: 6, colorScheme: colorScheme, onTakes: onTakes)
+            }
+        }
+        .font(.caption)
+        .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+    }
+}
+
+/// Pictures of a script's newest takes, side by side, with how many more
+/// there are. Opens its takes.
+private struct LibraryTakeStrip: View {
+    let takes: Int
+    /// Newest first.
+    let recentTakes: [PHAsset]
+    let frameSize: CGSize
+    let cornerRadius: CGFloat
+    let colorScheme: ColorScheme
+    let onTakes: () -> Void
+
+    var body: some View {
+        Button(action: onTakes) {
+            HStack(spacing: 3) {
+                if recentTakes.isEmpty {
+                    Image(systemName: "film.stack")
+                    Text(verbatim: "\(takes)")
+                } else {
+                    ForEach(recentTakes, id: \.localIdentifier) { asset in
+                        TakeThumbnail(asset: asset, size: frameSize, cornerRadius: cornerRadius)
+                    }
+                    if takes > recentTakes.count {
+                        Text(verbatim: "+\(takes - recentTakes.count)")
+                            .padding(.leading, 4)
+                    }
+                }
+            }
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.borderless)
+        .accessibilityLabel(String(localized: "\(takes) Takes", comment: "How many videos were recorded with a script"))
+    }
+}
+
+/// The thin line under each script in the list.
+private struct LibraryHairline: View {
+    let colorScheme: ColorScheme
+    @Environment(\.displayScale) private var displayScale
+
+    var body: some View {
+        Rectangle()
+            .fill(AppColors.textPrimary(for: colorScheme).opacity(colorScheme == .dark ? 0.14 : 0.12))
+            .frame(height: 1 / displayScale)
+    }
+}
+
+/// A collection named beside a script, with a dot of its color.
+private struct LibraryCollectionTag {
+    let name: String
+    let color: Color
+
+    /// Each collection's color, by the order the collections were made in,
+    /// so it stays the same as more are made.
+    static func color(of name: String, in collections: [String], colorScheme: ColorScheme) -> Color {
+        let palette: [Color] = [
+            AppColors.blue(for: colorScheme),
+            AppColors.purple(for: colorScheme),
+            AppColors.pink(for: colorScheme),
+            AppColors.red(for: colorScheme),
+            AppColors.green(for: colorScheme),
+            .orange
+        ]
+        let index = collections.firstIndex { $0.caseInsensitiveCompare(name) == .orderedSame } ?? 0
+        return palette[index % palette.count]
+    }
+}
+
+/// When a script was edited or made, as the sections of the library.
+private enum LibraryDateGroup: Equatable {
+    case today, yesterday, week, month, earlier
+
+    init(_ date: Date, now: Date, calendar: Calendar = .current) {
+        if calendar.isDateInToday(date) {
+            self = .today
+        } else if calendar.isDateInYesterday(date) {
+            self = .yesterday
+        } else {
+            let days = calendar.dateComponents([.day], from: calendar.startOfDay(for: date),
+                                               to: calendar.startOfDay(for: now)).day ?? 0
+            self = days < 7 ? .week : days < 30 ? .month : .earlier
+        }
+    }
+
+    var title: String {
+        switch self {
+        case .today: return String(localized: "Today", comment: "Library section of scripts edited today")
+        case .yesterday: return String(localized: "Yesterday")
+        case .week: return String(localized: "Previous 7 Days", comment: "Library section of scripts edited this past week")
+        case .month: return String(localized: "Previous 30 Days", comment: "Library section of scripts edited this past month")
+        case .earlier: return String(localized: "Earlier", comment: "Library section of scripts edited over a month ago")
+        }
+    }
+}
+
+/// Notes listed together, under a date section's name or none.
+private struct LibraryGroup: Identifiable {
+    let kind: LibraryDateGroup?
+    var notes: [SavedNote]
+
+    var id: String { notes.first?.id.uuidString ?? "" }
 }
 
 // MARK: - Collections
@@ -1424,6 +1860,8 @@ private struct LibraryStorageBanner: View {
     let onChoose: () -> Void
     let onDismiss: (() -> Void)?
 
+    static let cornerRadius: CGFloat = 22
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .top, spacing: 12) {
@@ -1466,11 +1904,11 @@ private struct LibraryStorageBanner: View {
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            RoundedRectangle(cornerRadius: LibraryScriptRow.cornerRadius, style: .continuous)
+            RoundedRectangle(cornerRadius: LibraryStorageBanner.cornerRadius, style: .continuous)
                 .fill(AppColors.yellow(for: colorScheme).opacity(colorScheme == .dark ? 0.14 : 0.12))
         )
         .overlay(
-            RoundedRectangle(cornerRadius: LibraryScriptRow.cornerRadius, style: .continuous)
+            RoundedRectangle(cornerRadius: LibraryStorageBanner.cornerRadius, style: .continuous)
                 .stroke(AppColors.yellow(for: colorScheme).opacity(0.4), lineWidth: 1)
         )
     }
@@ -1578,8 +2016,35 @@ enum LibraryText {
 
     /// The start of a script, on one line.
     static func preview(of content: String) -> String {
-        String(plain(content).trimmingCharacters(in: .whitespacesAndNewlines).prefix(160))
+        preview(ofPlain: plain(content))
+    }
+
+    /// The start of a script's words, already `plain`, on one line.
+    static func preview(ofPlain plain: String) -> String {
+        String(plain.trimmingCharacters(in: .whitespacesAndNewlines).prefix(160))
             .replacingOccurrences(of: "\n", with: " ")
+    }
+
+    /// Words a minute read out at an easy speaking pace.
+    private static let speakingPace = 150.0
+
+    /// About how long a script's words, already `plain`, take to read out,
+    /// to the minute, and never less than one.
+    static func readingTime(ofPlain plain: String) -> String {
+        let words = plain.split(whereSeparator: \.isWhitespace).count
+        let minutes = max(1, Int((Double(words) / speakingPace).rounded()))
+        return String(localized: "~\(minutes) min", comment: "About how many minutes a script takes to read out")
+    }
+
+    /// When a script was edited, as told under its date section: the time
+    /// today, nothing yesterday, the weekday this past week, or the date.
+    fileprivate static func date(_ date: Date, in group: LibraryDateGroup) -> String? {
+        switch group {
+        case .today: return date.formatted(date: .omitted, time: .shortened)
+        case .yesterday: return nil
+        case .week: return date.formatted(.dateTime.weekday(.wide))
+        case .month, .earlier: return date.formatted(date: .abbreviated, time: .omitted)
+        }
     }
 
     /// The time today, Yesterday, or the date.

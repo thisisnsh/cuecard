@@ -511,12 +511,24 @@ struct SavedNote: Codable, Identifiable, Equatable {
     let createdAt: Date
     var updatedAt: Date
 
-    /// The most characters a title is saved with, so it fits on one line.
-    static let titleLimit = 64
+    /// The most characters a title is saved with, so it fits on one line of
+    /// the library.
+    static let titleLimit = 40
 
     /// The title cut down to `titleLimit` characters.
     static func limitedTitle(_ title: String) -> String {
         String(title.prefix(titleLimit))
+    }
+
+    /// The title cut down to `titleLimit` characters at the last word that
+    /// fits, for one saved before there was a limit. One long word is cut
+    /// where the limit falls.
+    static func shortenedTitle(_ title: String) -> String {
+        guard title.count > titleLimit else { return title }
+        let cut = title.prefix(titleLimit + 1)
+        let words = cut.lastIndex(where: \.isWhitespace).map { cut[..<$0] } ?? cut.prefix(titleLimit)
+        let shortened = words.trimmingCharacters(in: .whitespacesAndNewlines.union(.punctuationCharacters))
+        return shortened.isEmpty ? String(title.prefix(titleLimit)) : shortened
     }
 
     init(id: UUID = UUID(), title: String, content: String, mode: ScriptMode, collection: String? = nil,
@@ -573,6 +585,11 @@ class SettingsService: ObservableObject {
     /// Set once the scripts kept here have had their `[cue …]` tags rewritten
     /// to `[…]`.
     private let bareCuesKey = "cuecard_bare_cues"
+    /// Set once titles saved before `SavedNote.titleLimit` was 40 have been
+    /// cut down to it.
+    private let shortTitlesKey = "cuecard_titles_limited_40"
+    /// Set once the collections every library starts with have been made.
+    private let defaultCollectionsKey = "cuecard_default_collections_added"
     private let noteStore = NoteStore()
     private let noteFolder = NoteFolder()
     private let noteVersions = NoteVersions()
@@ -843,6 +860,22 @@ Thanks for listening. *Questions?*
                 userDefaults.set(true, forKey: bareCuesKey)
             }
         }
+        // Titles were once kept to 64 characters. Cut longer ones down to the
+        // limit at a word, keeping each note's date so nothing looks edited,
+        // and rename their files in the notes folder to match.
+        if !userDefaults.bool(forKey: shortTitlesKey) {
+            let shortened = noteStore.fetchAll().compactMap { note -> SavedNote? in
+                let title = SavedNote.shortenedTitle(note.title)
+                guard title != note.title else { return nil }
+                var note = note
+                note.title = title
+                return note
+            }
+            if shortened.isEmpty || noteStore.save(shortened) {
+                shortened.forEach(noteFolder.write)
+                userDefaults.set(true, forKey: shortTitlesKey)
+            }
+        }
         self.savedNotes = noteStore.fetchAll()
         self.versionCounts = noteVersions.counts()
         self.teleprompterDraftCollection = userDefaults.string(forKey: teleprompterDraftCollectionKey)
@@ -851,6 +884,16 @@ Thanks for listening. *Questions?*
         var collections = userDefaults.stringArray(forKey: collectionsKey) ?? []
         for collection in savedNotes.compactMap(\.collection) where !collections.containsCollection(collection) {
             collections.append(collection)
+        }
+        // Every library starts with a few collections, made once. Ones
+        // deleted after that stay deleted.
+        if !userDefaults.bool(forKey: defaultCollectionsKey) {
+            for name in Self.defaultCollections where !collections.containsCollection(name) {
+                collections.append(name)
+            }
+            // Observers don't run in here, so the list is written by hand.
+            userDefaults.set(collections, forKey: collectionsKey)
+            userDefaults.set(true, forKey: defaultCollectionsKey)
         }
         self.collections = collections
 
@@ -1191,6 +1234,16 @@ Thanks for listening. *Questions?*
     }
 
     // MARK: - Collections
+
+    /// The collections every library starts with, in the order they're made.
+    static var defaultCollections: [String] {
+        [
+            String(localized: "Pitch", comment: "A collection the library starts with, for pitches"),
+            String(localized: "Talks", comment: "A collection the library starts with, for talks and speeches"),
+            String(localized: "Reel", comment: "A collection the library starts with, for Instagram-style reels"),
+            String(localized: "Shorts", comment: "A collection the library starts with, for short vertical videos")
+        ]
+    }
 
     /// Make a collection, in the notes folder's list too if there is one.
     /// Returns its name, cleaned up as a file name is, or nil if nothing's

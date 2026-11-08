@@ -195,6 +195,11 @@ final class TakesLibrary: NSObject, ObservableObject {
 final class TakeCounts: NSObject, ObservableObject {
     /// Scripts with no takes aren't in here.
     @Published private(set) var counts: [UUID: Int] = [:]
+    /// Each script's newest takes, newest first, as many as the library shows.
+    @Published private(set) var recent: [UUID: [PHAsset]] = [:]
+
+    /// How many of a script's takes the library shows pictures of.
+    static let recentLimit = 3
 
     private var isObservingLibrary = false
     private var pendingReload: Task<Void, Never>?
@@ -208,12 +213,18 @@ final class TakeCounts: NSObject, ObservableObject {
         counts[scriptID] ?? 0
     }
 
+    /// The script's newest takes, newest first.
+    func recentTakes(for scriptID: UUID) -> [PHAsset] {
+        recent[scriptID] ?? []
+    }
+
     /// Count again, for a session just ended or a video just recorded. Only
     /// once Photos can be read: the library never asks for access itself.
     func reload() {
         let status = PHPhotoLibrary.authorizationStatus(for: .readWrite)
         guard status == .authorized || status == .limited else {
             counts = [:]
+            recent = [:]
             return
         }
         if !isObservingLibrary {
@@ -222,18 +233,23 @@ final class TakeCounts: NSObject, ObservableObject {
         }
 
         let sessions = TakeStore.shared.scriptIDsWithSessions().map { ($0, TakeStore.shared.sessions(for: $0)) }
+        let limit = Self.recentLimit
         loading?.cancel()
         loading = Task {
-            let counted = await Task.detached(priority: .userInitiated) {
+            let (counted, newest) = await Task.detached(priority: .userInitiated) {
                 var counts: [UUID: Int] = [:]
+                var newest: [UUID: [PHAsset]] = [:]
                 for (id, sessions) in sessions where !sessions.isEmpty {
-                    let count = TakesLibrary.videos(recordedDuring: sessions).count
-                    if count > 0 { counts[id] = count }
+                    let videos = TakesLibrary.videos(recordedDuring: sessions)
+                    guard !videos.isEmpty else { continue }
+                    counts[id] = videos.count
+                    newest[id] = Array(videos.suffix(limit).reversed())
                 }
-                return counts
+                return (counts, newest)
             }.value
-            guard !Task.isCancelled, counted != counts else { return }
-            counts = counted
+            guard !Task.isCancelled else { return }
+            if counted != counts { counts = counted }
+            if newest != recent { recent = newest }
         }
     }
 }
