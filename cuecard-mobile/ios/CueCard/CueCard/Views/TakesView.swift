@@ -43,8 +43,10 @@ struct TakesIcon: View {
             .font(.system(size: 18, weight: .semibold))
             .foregroundStyle(AppColors.textPrimary(for: colorScheme))
             .frame(width: 52, height: 52)
-            .glassedEffect(in: Circle())
+            // The zoom's source sits inside the glass: its clip would cut off
+            // the glass's edge and shadow, which the buttons beside it keep.
             .takesTransitionSource(in: transition)
+            .glassedEffect(in: Circle())
             .accessibilityLabel(count == 0
                                 ? String(localized: "Takes")
                                 : String(localized: "\(count) Takes", comment: "How many videos were recorded with a script"))

@@ -55,6 +55,8 @@ struct HomeView: View {
     /// How far the editor reaches up under the top bar: to its middle, so the
     /// script fades out from there down, as gently as it does at the bottom.
     private static let editorTopOverlap: CGFloat = 22
+    /// The most characters of the title the status line shows.
+    private static let footerTitleLimit = 20
 
     private var hasNotes: Bool {
         !settingsService.notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -76,7 +78,11 @@ struct HomeView: View {
         let note = settingsService.currentNote
         let title = note?.title
             ?? (mode == .cards ? String(localized: "New Deck") : String(localized: "New Script"))
-        let label = Text(title)
+        // Kept short, so the version beside it always has room.
+        let shown = title.count > Self.footerTitleLimit
+            ? title.prefix(Self.footerTitleLimit).trimmingCharacters(in: .whitespaces) + "…"
+            : title
+        let label = Text(verbatim: shown)
             .lineLimit(1)
             .truncationMode(.tail)
 
@@ -294,8 +300,8 @@ struct HomeView: View {
 
     /// The script's title, whether it has changes to save, and the saved
     /// one's version, in small text on one line at the bottom edge, below the
-    /// controls, so they don't move up for it. The title gives way to the
-    /// rest when they don't all fit. "Saved" for a moment after saving. The
+    /// controls, so they don't move up for it. The title is cut short after
+    /// 20 characters. "Saved" for a moment after saving. The
     /// title opens to be renamed, the version its history.
     private var statusFooter: some View {
         let isUnsaved = settingsService.hasUnsavedChanges
