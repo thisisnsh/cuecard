@@ -243,9 +243,10 @@ struct EditorSettingsView: View {
 
 // MARK: - Shared Sections
 
-/// A switch for each of CueCard's beta Apple Intelligence features, and a
-/// way to report a problem with them. Only on an iPhone that has it. Every
-/// switch is logged with which way it went.
+/// A switch for each of CueCard's beta Apple Intelligence features, each
+/// with a line on what it does, and a way to report a problem with them.
+/// Only on an iPhone that has it. Every switch is logged with which way it
+/// went.
 private struct AppleIntelligenceSection: View {
     let screen: String
     let mode: ScriptMode
@@ -258,11 +259,17 @@ private struct AppleIntelligenceSection: View {
     var body: some View {
         if OnDeviceModelAvailability.onDevice != .unsupported {
             Section {
-                feature("AI Suggestions", isOn: $isSuggestionsEnabled, button: "settings_ai_suggestions")
-                feature("Ask AI", isOn: $isAskAIEnabled, button: "settings_ask_ai")
+                feature("AI Suggestions",
+                        detail: "Suggests spelling fixes, cues and formatting to accept or reject.",
+                        isOn: $isSuggestionsEnabled, button: "settings_ai_suggestions")
+                feature("Ask AI",
+                        detail: "Answers your questions about CueCard in Help.",
+                        isOn: $isAskAIEnabled, button: "settings_ask_ai")
                 // The teleprompter is the only place it listens.
                 if mode == .teleprompter {
-                    feature("Follow My Voice", isOn: $isFollowVoiceEnabled, button: "settings_follow_voice")
+                    feature("Follow My Voice",
+                            detail: "Scrolls the script as you read it aloud.",
+                            isOn: $isFollowVoiceEnabled, button: "settings_follow_voice")
                 }
 
                 Button {
@@ -274,18 +281,23 @@ private struct AppleIntelligenceSection: View {
             } header: {
                 Text("Apple Intelligence")
             } footer: {
-                Text(mode == .teleprompter
-                     ? "Runs on this iPhone with Apple Intelligence. Nothing you write or say leaves it."
-                     : "Runs on this iPhone with Apple Intelligence. Nothing you write leaves it.")
+                Text("Runs on this iPhone with Apple Intelligence.")
             }
         }
     }
 
-    private func feature(_ title: LocalizedStringKey, isOn: Binding<Bool>, button: String) -> some View {
+    /// A feature's switch, with a line below its name on what it does.
+    private func feature(_ title: LocalizedStringKey, detail: LocalizedStringKey,
+                         isOn: Binding<Bool>, button: String) -> some View {
         Toggle(isOn: isOn.loggingToggle(button, screen: screen)) {
-            HStack(spacing: 8) {
-                Text(title)
-                BetaBadge()
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 8) {
+                    Text(title)
+                    BetaBadge()
+                }
+                Text(detail)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
             }
         }
     }
