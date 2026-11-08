@@ -200,7 +200,13 @@ struct HomeView: View {
     private var suggestionsControl: some View {
         let availability = OnDeviceModelAvailability.forSuggestions
         if showsSuggestions {
-            SuggestionsButton(colorScheme: colorScheme) {
+            SuggestionsButton(colorScheme: colorScheme, isOn: review.isActive) {
+                if review.isActive {
+                    AnalyticsEvents.logButtonClick(review.isRunning ? "suggestions_stop" : "suggestions_done",
+                                                   screen: "home", parameters: ["left": review.suggestions.count])
+                    review.finish()
+                    return
+                }
                 AnalyticsEvents.logButtonClick("suggestions", screen: "home")
                 isEditorFocused = false
                 if case .unavailable(let reason) = availability {
@@ -225,22 +231,26 @@ struct HomeView: View {
         review.start(script: deck, cardLimit: settingsService.settings.cards.characterLimit)
     }
 
-    /// Put an accepted suggestion into the script, through the editor so it
-    /// stays where it's scrolled to. A deck's editor is a card at a time,
-    /// so a deck's script is changed itself, and its cards follow.
+    /// Put an accepted suggestion into the script. The editor makes the
+    /// same change in place, so it stays where it's scrolled to.
     private func applySuggestion(_ edit: (range: NSRange, replacement: String)) {
-        guard isCardsMode || !editorController.replace(edit.range, with: edit.replacement) else { return }
         settingsService.notes = (settingsService.notes as NSString)
             .replacingCharacters(in: edit.range, with: edit.replacement)
     }
 
-    /// The suggestions being reviewed, for the editor to mark.
+    /// The suggestions being reviewed, for the editor to show, and what a
+    /// tap on one does.
     private var suggestionMarks: SuggestionMarks? {
         guard review.isActive else { return nil }
         return SuggestionMarks(
-            ranges: review.suggestions.map(\.mark),
-            focused: review.focused?.mark,
-            onTap: { review.focus(at: $0) }
+            suggestions: review.suggestions,
+            focused: review.focusedID,
+            onFocus: { review.focusedID = $0 },
+            onUnfocus: { if review.focusedID == $0 { review.focusedID = nil } },
+            onAccept: { id in
+                if let edit = review.accept(id) { applySuggestion(edit) }
+            },
+            onReject: { review.reject($0) }
         )
     }
 
@@ -403,7 +413,8 @@ struct HomeView: View {
     }
 
     /// What floats over the bottom of the script: the cue bar while writing,
-    /// the suggestions while they're open, the timer and Play otherwise.
+    /// the timer and Play otherwise, with what Suggestions AI is doing above
+    /// them while it's on.
     @ViewBuilder
     private var bottomControls: some View {
         if isEditorFocused {
@@ -424,23 +435,14 @@ struct HomeView: View {
                 }
             )
             .transition(.move(edge: .bottom).combined(with: .opacity))
-        } else if review.isActive {
-            SuggestionsPanel(
-                review: review,
-                colorScheme: colorScheme,
-                cueColor: settingsService.settings.activeCueColor,
-                onAccept: { suggestion in
-                    if let edit = review.accept(suggestion.id) { applySuggestion(edit) }
-                },
-                onAcceptAll: {
-                    review.acceptAll().forEach(applySuggestion)
-                }
-            )
-            .padding(.horizontal, 20)
-            .padding(.bottom, 24)
-            .transition(.move(edge: .bottom).combined(with: .opacity))
         } else {
             VStack(spacing: 10) {
+                if review.isActive {
+                    SuggestionsStatus(review: review, colorScheme: colorScheme)
+                        // Clear of the buttons' glass below.
+                        .padding(.bottom, 6)
+                        .transition(.opacity.combined(with: .scale(scale: 0.95)))
+                }
                 if hasNotes && !showsSuggestions {
                     // Without Suggestions AI, the timer has the left to itself,
                     // and Takes and Play are on the right.
@@ -611,7 +613,7 @@ struct HomeView: View {
                 }
         }
         .overlay(alignment: .bottom) {
-            if !isEditorFocused && !review.isActive {
+            if !isEditorFocused {
                 statusFooter
                     .frame(height: max(bottomEdgeHeight, 24), alignment: .top)
                     .ignoresSafeArea(.container, edges: .bottom)
@@ -839,7 +841,7 @@ struct NotesEditorView: View {
     var restingOverlayHeight: CGFloat = 0
     /// How far the editor reaches up under the top bar, for the fade to start there.
     var topOverlap: CGFloat = 0
-    /// Suggestions being reviewed, marked in the script.
+    /// Suggestions being reviewed, shown in the script.
     var suggestionMarks: SuggestionMarks?
 
     private var topFade: CGFloat { CueTextEditor.edgeFade + topOverlap }
@@ -902,7 +904,7 @@ struct CardsEditorView: View {
     let bottomInset: CGFloat
     /// How far the list reaches up under the top bar, for the fade to start there.
     var topOverlap: CGFloat = 0
-    /// Suggestions being reviewed, marked in the cards they're on. The deck
+    /// Suggestions being reviewed, shown in the cards they're on. The deck
     /// can't be changed meanwhile, other than by taking one.
     var suggestionMarks: SuggestionMarks?
 
@@ -975,13 +977,6 @@ struct CardsEditorView: View {
             .topScrollEdgeEffectHidden()
             .contentMargins(.top, topOverlap + Self.topFade - 8, for: .scrollContent)
             .contentMargins(.bottom, bottomInset + 16, for: .scrollContent)
-            // The card with the suggestion being looked at comes into view.
-            .onChange(of: suggestionMarks?.focused) {
-                guard let focused = suggestionMarks?.focused,
-                      let index = cardStarts.lastIndex(where: { $0 <= focused.location }),
-                      cards.indices.contains(index) else { return }
-                withAnimation { proxy.scrollTo(cards[index].id, anchor: .center) }
-            }
         }
         // A list draws on past its frame into the home indicator's strip, below
         // where the fade ends. Kept inside it, the cards fade out before the
@@ -1028,15 +1023,14 @@ struct CardsEditorView: View {
         guard let suggestionMarks else { return nil }
         let start = cardStarts[index]
         let end = start + (cards[index].text as NSString).length
-        func local(_ range: NSRange) -> NSRange? {
-            guard range.location >= start, NSMaxRange(range) <= end else { return nil }
-            return NSRange(location: range.location - start, length: range.length)
+        var marks = suggestionMarks
+        marks.suggestions = suggestionMarks.suggestions.compactMap { suggestion in
+            guard suggestion.range.location >= start, NSMaxRange(suggestion.range) <= end else { return nil }
+            var local = suggestion
+            local.range.location -= start
+            return local
         }
-        return SuggestionMarks(
-            ranges: suggestionMarks.ranges.compactMap(local),
-            focused: suggestionMarks.focused.flatMap(local),
-            onTap: { suggestionMarks.onTap($0 + start) }
-        )
+        return marks
     }
 
     private func cardRow(_ card: EditableCard, number: Int, marks: SuggestionMarks?) -> some View {

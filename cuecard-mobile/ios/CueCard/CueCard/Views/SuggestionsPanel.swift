@@ -1,22 +1,26 @@
 import SwiftUI
 
-/// The button that asks the on-device model for suggestions on the script.
+/// The button that asks the on-device model for suggestions on the script,
+/// filled while they're showing. Tapped again, it puts them away.
 struct SuggestionsButton: View {
     let colorScheme: ColorScheme
+    var isOn = false
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             Image(systemName: "sparkles")
                 .font(.system(size: 20, weight: .semibold))
-                .foregroundStyle(AppColors.purple(for: colorScheme))
+                .foregroundStyle(isOn ? (colorScheme == .dark ? Color.black : Color.white)
+                                      : AppColors.purple(for: colorScheme))
                 .frame(width: 52, height: 52)
+                .background { if isOn { Circle().fill(AppColors.purple(for: colorScheme)) } }
                 .glassedEffect(in: Circle())
                 .contentShape(Circle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Suggestions AI")
-        .accessibilityHint("Suggests fixes, cues, line breaks and emphasis for your script, on this iPhone")
+        .accessibilityLabel(isOn ? "Turn Off Suggestions AI" : "Suggestions AI")
+        .accessibilityHint(isOn ? "" : "Suggests fixes, cues, line breaks and emphasis for your script, on this iPhone")
     }
 }
 
@@ -65,239 +69,48 @@ extension View {
     }
 }
 
-/// Where the home controls were while suggestions are open: one window with
-/// its title and actions at the top, and the suggestion being looked at, as
-/// it would change the script, to accept or reject. Each is decided on its
-/// own, like suggested edits in a shared document.
-struct SuggestionsPanel: View {
+/// What Suggestions AI is doing, floating centered over the home controls
+/// like Follow Me AI's over the teleprompter's: reading the script, then
+/// what to do with what it found. The suggestions themselves are in the script, each
+/// accepted or rejected with a tap on it.
+struct SuggestionsStatus: View {
     @ObservedObject var review: ScriptReview
     let colorScheme: ColorScheme
-    let cueColor: CueColor
-    var onAccept: (ScriptSuggestion) -> Void
-    var onAcceptAll: () -> Void
-
-    private var secondary: Color { AppColors.textSecondary(for: colorScheme) }
-    private var primary: Color { AppColors.textPrimary(for: colorScheme) }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            header
-            content
-        }
-        .padding(16)
-        .glassedEffect(in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .shadow(color: Color.black.opacity(0.1), radius: 10)
-        .animation(.easeInOut(duration: 0.2), value: review.focusedID)
-        .animation(.easeInOut(duration: 0.2), value: review.isRunning)
-    }
-
-    /// The window's title, and Accept All and Done, on one line, or the
-    /// actions under the title where there's no room.
-    private var header: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: 8) {
-                title
-                Spacer(minLength: 8)
-                reviewActions
-            }
-            VStack(alignment: .leading, spacing: 10) {
-                title
-                HStack { Spacer(minLength: 0); reviewActions }
-            }
-        }
-    }
-
-    private var title: some View {
+        // One line, however long it runs in a language: it shrinks a
+        // little, then trails off, rather than wrapping.
         HStack(spacing: 8) {
-            Image(systemName: "sparkles")
-                .foregroundStyle(AppColors.purple(for: colorScheme))
-            Text("Suggestions AI")
-                .foregroundStyle(primary)
-            BetaBadge()
-            if review.isRunning { ProgressView().controlSize(.small) }
+            Image(systemName: icon)
+                .symbolEffect(.variableColor.iterative, isActive: review.isRunning)
+            label
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
         }
-        .font(.subheadline.weight(.semibold))
-        .fixedSize(horizontal: true, vertical: false)
+        .font(.footnote.weight(.semibold))
+        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+        .padding(.horizontal, 14)
+        .padding(.vertical, 8)
+        .glassedEffect(in: Capsule())
+        .padding(.horizontal, 24)
         .accessibilityElement(children: .combine)
-        .accessibilityAddTraits(.isHeader)
+        .animation(.easeInOut(duration: 0.2), value: review.isRunning)
+        .animation(.easeInOut(duration: 0.2), value: review.suggestions.count)
     }
 
-    private var reviewActions: some View {
-        HStack(spacing: 8) {
-            if review.suggestions.count > 1 { smallButton("Accept All", action: onAcceptAll) }
-            smallButton(review.isRunning ? "Stop" : "Done") {
-                AnalyticsEvents.logButtonClick(review.isRunning ? "suggestions_stop" : "suggestions_done", screen: "home",
-                                               parameters: ["left": review.suggestions.count])
-                review.finish()
-            }
-        }
-        .fixedSize(horizontal: true, vertical: false)
+    private var icon: String {
+        if review.isRunning { return "sparkles" }
+        return review.suggestions.isEmpty ? "checkmark.circle" : "hand.tap"
     }
 
     @ViewBuilder
-    private var content: some View {
-        if let suggestion = review.focused {
-            HStack(spacing: 8) {
-                Image(systemName: suggestion.kind.systemImage)
-                    .foregroundStyle(AppColors.purple(for: colorScheme))
-                Text(suggestion.kind.title)
-                    .foregroundStyle(primary)
-                if let index = review.focusedIndex {
-                    Text("\(index + 1) of \(review.suggestions.count)")
-                        .monospacedDigit()
-                        .foregroundStyle(secondary)
-                }
-                Spacer(minLength: 8)
-                if review.suggestions.count > 1 {
-                    stepButton("chevron.left", label: "Previous Suggestion") {
-                        AnalyticsEvents.logButtonClick("suggestion_previous", screen: "home")
-                        review.focusPrevious()
-                    }
-                    stepButton("chevron.right", label: "Next Suggestion") {
-                        AnalyticsEvents.logButtonClick("suggestion_next", screen: "home")
-                        review.focusNext()
-                    }
-                }
-            }
-            .font(.subheadline.weight(.semibold))
-
-            preview(of: suggestion)
-                .font(.body)
-                .lineLimit(3)
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-            HStack(spacing: 10) {
-                Button {
-                    review.reject(suggestion.id)
-                } label: {
-                    Label("Reject", systemImage: "xmark")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(primary)
-                        .frame(maxWidth: .infinity)
-                        .frame(minHeight: 44)
-                        .background(Capsule().fill(secondary.opacity(0.15)))
-                        .contentShape(Capsule())
-                }
-                .buttonStyle(.plain)
-
-                Button {
-                    onAccept(suggestion)
-                } label: {
-                    Label("Accept", systemImage: "checkmark")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(colorScheme == .dark ? .black : .white)
-                        .frame(maxWidth: .infinity)
-                        .frame(minHeight: 44)
-                        .background(Capsule().fill(AppColors.green(for: colorScheme)))
-                        .contentShape(Capsule())
-                }
-                .buttonStyle(.plain)
-            }
-        } else if review.isRunning {
-            Text("Reading your script on this iPhone…")
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(primary)
-                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+    private var label: some View {
+        if review.isRunning {
+            Text("Reading your script")
+        } else if !review.suggestions.isEmpty {
+            Text("Tap to accept/reject suggestions")
         } else {
-            HStack(spacing: 10) {
-                Image(systemName: "checkmark.circle")
-                    .foregroundStyle(AppColors.green(for: colorScheme))
-                Text("No suggestions. Your script looks good.")
-                    .foregroundStyle(primary)
-            }
-            .font(.subheadline.weight(.medium))
-            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-        }
-    }
-
-    /// The change as it would read in the script: what goes struck through,
-    /// what comes in highlighted.
-    private func preview(of suggestion: ScriptSuggestion) -> Text {
-        let green = AppColors.green(for: colorScheme)
-        switch suggestion.kind {
-        case .spelling:
-            return Text(suggestion.original)
-                .strikethrough()
-                .foregroundColor(AppColors.red(for: colorScheme))
-                + Text("  ")
-                + Text(suggestion.replacement)
-                .foregroundColor(green)
-                .fontWeight(.semibold)
-        case .cue:
-            // Put in after the words.
-            let tag = Text(suggestion.replacement.trimmingCharacters(in: .whitespaces))
-                .foregroundColor(cueColor.color(for: colorScheme))
-                .fontWeight(.semibold)
-                .fontWidth(.condensed)
-            return Text(suggestion.context).foregroundColor(primary) + Text(" ") + tag
-        case .anchor, .lineBreak:
-            // Put in ahead of the words, which start a new line where the
-            // suggestion breaks one.
-            var added = Text("")
-            if suggestion.replacement.hasPrefix("\n") {
-                added = Text(Image(systemName: "return")).foregroundColor(green).fontWeight(.semibold) + Text(" ")
-            }
-            if suggestion.kind == .anchor {
-                added = added + Text(TeleprompterParser.anchorTag)
-                    .foregroundColor(secondary)
-                    .fontWeight(.semibold)
-                    .fontWidth(.condensed)
-                    + Text(" ")
-            }
-            return added + Text(suggestion.original.trimmingCharacters(in: .whitespaces)).foregroundColor(primary)
-        case .bold:
-            return Text(suggestion.original).fontWeight(.heavy).foregroundColor(green)
-        case .italic:
-            return Text(suggestion.original).italic().foregroundColor(green)
-        }
-    }
-
-    private func smallButton(_ title: LocalizedStringKey, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(title)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(primary)
-                .padding(.horizontal, 14)
-                .frame(minHeight: 36)
-                .background(Capsule().fill(secondary.opacity(0.15)))
-                .contentShape(Capsule())
-        }
-        .buttonStyle(.plain)
-    }
-
-    private func stepButton(_ systemImage: String, label: LocalizedStringKey, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: systemImage)
-                .font(.system(size: 13, weight: .bold))
-                .foregroundStyle(primary)
-                .frame(width: 44, height: 44)
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(label)
-    }
-}
-
-extension ScriptSuggestion.Kind {
-    var title: LocalizedStringKey {
-        switch self {
-        case .spelling: "Fix Spelling"
-        case .cue: "Add Cue"
-        case .anchor: "Add Anchor"
-        case .lineBreak: "Add Line Break"
-        case .bold: "Make Bold"
-        case .italic: "Make Italic"
-        }
-    }
-
-    var systemImage: String {
-        switch self {
-        case .spelling: "textformat.abc"
-        case .cue: "text.bubble"
-        case .anchor: "bookmark"
-        case .lineBreak: "return"
-        case .bold: "bold"
-        case .italic: "italic"
+            Text("No suggestions")
         }
     }
 }

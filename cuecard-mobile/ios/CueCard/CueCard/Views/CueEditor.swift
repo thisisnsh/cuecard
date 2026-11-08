@@ -327,30 +327,8 @@ final class CueTextView: UITextView {
         setContentOffsetY(contentOffset.y)
     }
 
-    /// Bring `range` to the middle of what's in view, unless it's well in
-    /// view already: the suggestion being looked at.
-    func reveal(_ range: NSRange) {
-        guard isScrollEnabled,
-              let start = position(from: beginningOfDocument, offset: range.location),
-              let end = position(from: start, offset: range.length),
-              let textRange = textRange(from: start, to: end) else { return }
-        let rect = firstRect(for: textRange)
-        guard !rect.isNull, rect.minY.isFinite, rect.maxY.isFinite else { return }
-
-        // The top bar and the fade under it cover as much as the text starts down.
-        let coveredTop = textContainerInset.top
-        let visibleTop = contentOffset.y + coveredTop
-        let visibleHeight = bounds.height - coveredTop - adjustedContentInset.bottom
-        guard rect.minY < visibleTop || rect.maxY > visibleTop + visibleHeight else { return }
-
-        let lowest = -adjustedContentInset.top
-        let highest = max(lowest, contentSize.height + adjustedContentInset.bottom - bounds.height)
-        let target = min(max(rect.midY - coveredTop - visibleHeight / 2, lowest), highest)
-        setContentOffset(CGPoint(x: contentOffset.x, y: target), animated: true)
-    }
-
     /// Scroll to `y`, clamped to the ends of the text.
-    private func setContentOffsetY(_ y: CGFloat) {
+    func setContentOffsetY(_ y: CGFloat) {
         let lowest = -adjustedContentInset.top
         let highest = max(lowest, contentSize.height + adjustedContentInset.bottom - bounds.height)
         let offset = min(max(y, lowest), highest)
@@ -382,13 +360,6 @@ final class CueEditorController: ObservableObject {
     /// or take that style back off if it has it.
     func toggle(_ style: EmphasisStyle) {
         coordinator?.toggle(style)
-    }
-
-    /// Make an edit to the script where it sits in the editor: a suggestion
-    /// accepted. False if there's no editor to make it in.
-    func replace(_ range: NSRange, with replacement: String) -> Bool {
-        guard let coordinator else { return false }
-        return coordinator.replaceScript(range, with: replacement)
     }
 
     /// The editor showing a spinner for images still on their way in.
@@ -437,8 +408,9 @@ struct CueTextEditor: UIViewRepresentable {
     /// How far down the script starts. More than `edgeFade` where the editor
     /// reaches up under the top bar and the fade starts inside it.
     var topInset: CGFloat = Self.edgeFade
-    /// Suggestions being reviewed, marked in the text. The text can't be
-    /// typed in meanwhile; a tap picks the suggestion under it.
+    /// Suggestions being reviewed, shown in the text as they'd change it.
+    /// The text can't be typed in meanwhile; a tap on one offers to accept
+    /// or reject it.
     var suggestionMarks: SuggestionMarks?
 
     /// How far the script fades into the background at the top and bottom edges.
@@ -462,6 +434,9 @@ struct CueTextEditor: UIViewRepresentable {
         tap.isEnabled = false
         textView.addGestureRecognizer(tap)
         context.coordinator.suggestionTap = tap
+        let menu = UIEditMenuInteraction(delegate: context.coordinator)
+        textView.addInteraction(menu)
+        context.coordinator.suggestionMenu = menu
         context.coordinator.textView = textView
         textView.backgroundColor = .clear
         textView.textContainer.lineFragmentPadding = 0
@@ -501,34 +476,46 @@ struct CueTextEditor: UIViewRepresentable {
         }
 
         let isReviewing = suggestionMarks != nil
+        let wasReviewing = context.coordinator.appliedSuggestions != nil
         if textView.isEditable == isReviewing { textView.isEditable = !isReviewing }
+        // No selecting either, so a tap only ever picks a suggestion.
+        if textView.isSelectable == isReviewing { textView.isSelectable = !isReviewing }
         context.coordinator.suggestionTap?.isEnabled = isReviewing
+        if !isReviewing, wasReviewing { context.coordinator.suggestionMenu?.dismissMenu() }
 
         let styleChanged = context.coordinator.appliedColorScheme != colorScheme
             || context.coordinator.appliedCueColor != cueColor
             || context.coordinator.appliedFontSize != fontSize
             || context.coordinator.appliedCardLimit != cardLimit
-            || context.coordinator.appliedSuggestions != suggestionMarks?.ranges
+            || context.coordinator.appliedSuggestions != suggestionMarks?.suggestions
             || context.coordinator.appliedFocus != suggestionMarks?.focused
-        let focusChanged = context.coordinator.appliedFocus != suggestionMarks?.focused
 
-        if ScriptImageAttachment.script(from: textView.textStorage) != text {
-            textView.attributedText = ScriptImageAttachment.editorText(for: text, maxHeight: imageMaxHeight)
+        // The suggestions shown in the text come and go as they're decided
+        // on; the script stays where it's scrolled to.
+        let scrollY = textView.contentOffset.y
+        let script = ScriptImageAttachment.script(from: textView.textStorage)
+        if script != text {
+            // A suggestion taken in is changed in place, which keeps the
+            // images as they are.
+            if !(isReviewing && Self.splice(textView.textStorage, from: script, to: text)) {
+                textView.attributedText = ScriptImageAttachment.editorText(for: text, maxHeight: imageMaxHeight)
+            }
             applyHighlighting(to: textView)
             textView.layOutWholeText()
         } else if styleChanged {
             applyHighlighting(to: textView)
             textView.layOutWholeText()
         }
+        if isReviewing || wasReviewing, script != text || styleChanged {
+            textView.setContentOffsetY(scrollY)
+        }
         context.coordinator.appliedColorScheme = colorScheme
         context.coordinator.appliedCueColor = cueColor
         context.coordinator.appliedFontSize = fontSize
         context.coordinator.appliedCardLimit = cardLimit
-        context.coordinator.appliedSuggestions = suggestionMarks?.ranges
+        context.coordinator.appliedSuggestions = suggestionMarks?.suggestions
         context.coordinator.appliedFocus = suggestionMarks?.focused
-        if focusChanged, let focused = suggestionMarks?.focused {
-            textView.reveal(Self.editorRange(for: focused, in: text))
-        }
+        textView.accessibilityCustomActions = suggestionMarks.map(Self.accessibilityActions)
 
         // SwiftUI's .focused() doesn't reach into a UIViewRepresentable, so drive
         // first responder status from the binding instead — but after this update
@@ -565,17 +552,44 @@ struct CueTextEditor: UIViewRepresentable {
 
     // MARK: - Highlighting
 
+    /// Styles the script, and while reviewing, shows each suggestion in it.
+    /// Whatever was shown for the last ones is taken out first.
     func applyHighlighting(to textView: UITextView) {
-        guard let suggestionMarks else {
-            Self.applyHighlighting(to: textView, cueColor: cueColor, colorScheme: colorScheme,
-                                   fontSize: fontSize, cardLimit: cardLimit)
-            return
-        }
-        let script = ScriptImageAttachment.script(from: textView.textStorage)
+        // Recoloring mid-composition would drop the in-progress marked text.
+        guard textView.markedTextRange == nil else { return }
+        Self.removeSuggestionPreviews(from: textView.textStorage)
         Self.applyHighlighting(to: textView, cueColor: cueColor, colorScheme: colorScheme,
-                               fontSize: fontSize, cardLimit: cardLimit,
-                               suggestions: suggestionMarks.ranges.map { Self.editorRange(for: $0, in: script) },
-                               focusedSuggestion: suggestionMarks.focused.map { Self.editorRange(for: $0, in: script) })
+                               fontSize: fontSize, cardLimit: cardLimit)
+        if let suggestionMarks {
+            Self.showSuggestions(suggestionMarks, in: textView, cueColor: cueColor,
+                                 colorScheme: colorScheme, fontSize: fontSize)
+        }
+    }
+
+    /// Make the change from `old` to `new` where it happened in the editor's
+    /// text, rather than setting the whole text again, so the images in it
+    /// stay as they are. False, with nothing changed, where it touches one.
+    static func splice(_ storage: NSTextStorage, from old: String, to new: String) -> Bool {
+        let a = old as NSString
+        let b = new as NSString
+        let shortest = min(a.length, b.length)
+        var prefix = 0
+        while prefix < shortest, a.character(at: prefix) == b.character(at: prefix) { prefix += 1 }
+        var suffix = 0
+        while suffix < shortest - prefix,
+              a.character(at: a.length - 1 - suffix) == b.character(at: b.length - 1 - suffix) { suffix += 1 }
+        let changed = NSRange(location: prefix, length: a.length - prefix - suffix)
+        let replacement = b.substring(with: NSRange(location: prefix, length: b.length - prefix - suffix))
+
+        let touchesImage = TeleprompterParser.imageMatches(in: old).contains {
+            NSIntersectionRange($0.range, changed).length > 0
+                || ($0.range.location < changed.location && changed.location < NSMaxRange($0.range))
+        }
+        guard !touchesImage, TeleprompterParser.imageMatches(in: replacement).isEmpty,
+              !replacement.contains(CueCards.imageCharacter) else { return false }
+        removeSuggestionPreviews(from: storage)
+        storage.replaceCharacters(in: editorRange(for: changed, in: old), with: replacement)
+        return true
     }
 
     /// Where `range` of the script is in the editor's text, which holds each
@@ -588,21 +602,10 @@ struct CueTextEditor: UIViewRepresentable {
         return NSRange(location: location, length: range.length)
     }
 
-    /// Where a spot in the editor's text is in the script.
-    static func scriptLocation(forEditor location: Int, in script: String) -> Int {
-        var shift = 0
-        for image in TeleprompterParser.imageMatches(in: script) {
-            guard image.range.location - shift < location else { break }
-            shift += image.range.length - 1
-        }
-        return location + shift
-    }
-
     /// Styles the script as it reads: cues apart from the words, and emphasis
     /// applied with its markers left showing, quieter, so they can be edited.
     static func applyHighlighting(to textView: UITextView, cueColor: CueColor, colorScheme: ColorScheme,
-                                  fontSize: CGFloat, cardLimit: Int?, suggestions: [NSRange] = [],
-                                  focusedSuggestion: NSRange? = nil) {
+                                  fontSize: CGFloat, cardLimit: Int?) {
         // Recoloring mid-composition would drop the in-progress marked text.
         guard textView.markedTextRange == nil else { return }
 
@@ -712,21 +715,141 @@ struct CueTextEditor: UIViewRepresentable {
             }
         }
 
-        // Suggestions waiting on the user, the one being looked at underlined.
-        let tint = isDarkMode ? AppColors.UIColors.Dark.purple : AppColors.UIColors.Light.purple
-        for range in suggestions where NSMaxRange(range) <= fullRange.length {
-            let isFocused = range == focusedSuggestion
-            storage.addAttribute(.backgroundColor, value: tint.withAlphaComponent(isFocused ? 0.3 : 0.12), range: range)
-            if isFocused {
-                storage.addAttributes([
-                    .underlineStyle: NSUnderlineStyle.thick.rawValue,
-                    .underlineColor: tint
-                ], range: range)
-            }
-        }
         storage.endEditing()
 
         textView.typingAttributes = baseAttributes
+    }
+
+    // MARK: - Suggestions in the text
+
+    /// Each suggestion shown where it is, as it would change the script,
+    /// tinted so it stands out from the script itself: a misspelling struck
+    /// through with the fix or rewrite after it, missing words in green, a cue or an anchor faint where it would
+    /// go, a line break as a return mark, words to emphasize already set that
+    /// way. What's shown that isn't in the script is marked as a preview, so
+    /// it's never read back as part of it. The one tapped is tinted deeper
+    /// and underlined.
+    static func showSuggestions(_ marks: SuggestionMarks, in textView: UITextView, cueColor: CueColor,
+                                colorScheme: ColorScheme, fontSize: CGFloat) {
+        let storage = textView.textStorage
+        let script = ScriptImageAttachment.script(from: storage)
+        let isDarkMode = colorScheme == .dark
+        let base = baseAttributes(isDarkMode: isDarkMode, fontSize: fontSize, isWide: textView.text.hasWideScript)
+        let tint = isDarkMode ? AppColors.UIColors.Dark.purple : AppColors.UIColors.Light.purple
+        let green = isDarkMode ? AppColors.UIColors.Dark.green : AppColors.UIColors.Light.green
+        let red = isDarkMode ? AppColors.UIColors.Dark.red : AppColors.UIColors.Light.red
+        let secondary = isDarkMode ? AppColors.UIColors.Dark.textSecondary : AppColors.UIColors.Light.textSecondary
+        let tagColor = cueColor.uiColor(isDarkMode: isDarkMode)
+        let cueFont = UIFont.cue(ofSize: fontSize * 0.85)
+
+        // Back to front, so putting a preview in leaves the ones still to
+        // come where they are. Of two at the same spot, the longer goes
+        // first, so a cue ending a sentence lands ahead of a break after it.
+        let ordered = marks.suggestions.sorted {
+            ($0.range.location, $0.range.length) > ($1.range.location, $1.range.length)
+        }
+
+        storage.beginEditing()
+        for suggestion in ordered {
+            let range = editorRange(for: suggestion.range, in: script)
+            guard NSMaxRange(range) <= storage.length else { continue }
+            let id = suggestion.id.uuidString
+            let isFocused = suggestion.id == marks.focused
+            var mark: [NSAttributedString.Key: Any] = [
+                .cueSuggestion: id,
+                .backgroundColor: tint.withAlphaComponent(isFocused ? 0.3 : 0.12)
+            ]
+            if isFocused {
+                mark[.underlineStyle] = NSUnderlineStyle.thick.rawValue
+                mark[.underlineColor] = tint
+            }
+
+            let preview = NSMutableAttributedString()
+            var previewLocation = range.location
+            /// Set like the script, in its own font and color.
+            func addPreview(_ text: String, _ attributes: [NSAttributedString.Key: Any]) {
+                preview.append(NSAttributedString(string: text, attributes: base.merging(attributes) { $1 }))
+            }
+
+            switch suggestion.kind {
+            case .spelling, .missingWords, .rewrite:
+                // Words only put in bring their own space; a fix sits a
+                // little apart from the words it replaces.
+                storage.addAttributes([
+                    .strikethroughStyle: NSUnderlineStyle.single.rawValue,
+                    .strikethroughColor: red,
+                    .foregroundColor: red
+                ], range: range)
+                previewLocation = NSMaxRange(range)
+                addPreview((range.length > 0 ? "\u{2009}" : "") + suggestion.replacement,
+                           [.font: UIFont.systemFont(ofSize: fontSize, weight: .semibold), .foregroundColor: green])
+
+            case .bold, .italic:
+                storage.addAttributes([
+                    .font: UIFont.script(ofSize: fontSize, style: suggestion.kind == .bold ? .bold : .italic),
+                    .foregroundColor: green
+                ], range: range)
+
+            case .cue:
+                addPreview(suggestion.replacement, [.font: cueFont, .foregroundColor: tagColor])
+
+            case .anchor, .lineBreak:
+                let original = suggestion.original as NSString
+                let replacement = suggestion.replacement as NSString
+                if suggestion.replacement.hasPrefix("\n") {
+                    // A new paragraph from these words on: a return mark where
+                    // the line would break, past the space it takes the place of.
+                    var leading = 0
+                    while leading < original.length, original.character(at: leading) == 0x20 { leading += 1 }
+                    previewLocation = range.location + leading
+                    addPreview("\u{21B5} ", [.font: UIFont.systemFont(ofSize: fontSize, weight: .bold), .foregroundColor: green])
+                    if suggestion.kind == .anchor {
+                        addPreview(TeleprompterParser.anchorTag + " ", [.font: cueFont, .foregroundColor: secondary])
+                    }
+                } else if replacement.length > original.length, suggestion.replacement.hasSuffix(suggestion.original) {
+                    // An anchor at the start of a line: put in ahead of the words.
+                    addPreview(replacement.substring(to: replacement.length - original.length),
+                               [.font: cueFont, .foregroundColor: secondary])
+                }
+            }
+
+            if range.length > 0 { storage.addAttributes(mark, range: range) }
+            if preview.length > 0 {
+                let whole = NSRange(location: 0, length: preview.length)
+                preview.addAttributes(mark, range: whole)
+                preview.addAttribute(.cueSuggestionPreview, value: id, range: whole)
+                storage.insert(preview, at: previewLocation)
+            }
+        }
+        storage.endEditing()
+    }
+
+    /// With VoiceOver, which can't tap on a suggestion in the text, Accept
+    /// and Reject for each one from the editor's actions.
+    static func accessibilityActions(for marks: SuggestionMarks) -> [UIAccessibilityCustomAction] {
+        marks.suggestions.flatMap { suggestion -> [UIAccessibilityCustomAction] in
+            let change = suggestion.replacement.trimmingCharacters(in: .whitespacesAndNewlines)
+            let about = "\(suggestion.kind.actionName), \(change.isEmpty ? suggestion.original : change)"
+            return [
+                UIAccessibilityCustomAction(name: "\(String(localized: "Accept")): \(about)") { _ in
+                    marks.onAccept(suggestion.id)
+                    return true
+                },
+                UIAccessibilityCustomAction(name: "\(String(localized: "Reject")): \(about)") { _ in
+                    marks.onReject(suggestion.id)
+                    return true
+                }
+            ]
+        }
+    }
+
+    /// Takes out everything shown for suggestions that isn't in the script.
+    static func removeSuggestionPreviews(from text: NSMutableAttributedString) {
+        let ranges = text.suggestionPreviewRanges
+        guard !ranges.isEmpty else { return }
+        text.beginEditing()
+        for range in ranges.reversed() { text.deleteCharacters(in: range) }
+        text.endEditing()
     }
 
     /// Typing takes these too, so text still being composed is set like the
@@ -742,16 +865,17 @@ struct CueTextEditor: UIViewRepresentable {
 
     // MARK: - Coordinator
 
-    class Coordinator: NSObject, UITextViewDelegate, UIGestureRecognizerDelegate {
+    class Coordinator: NSObject, UITextViewDelegate, UIGestureRecognizerDelegate, UIEditMenuInteractionDelegate {
         var parent: CueTextEditor
         weak var textView: CueTextView?
         var appliedColorScheme: ColorScheme?
         var appliedCueColor: CueColor?
         var appliedFontSize: CGFloat?
         var appliedCardLimit: Int?
-        var appliedSuggestions: [NSRange]?
-        var appliedFocus: NSRange?
+        var appliedSuggestions: [ScriptSuggestion]?
+        var appliedFocus: ScriptSuggestion.ID?
         weak var suggestionTap: UITapGestureRecognizer?
+        weak var suggestionMenu: UIEditMenuInteraction?
 
         init(parent: CueTextEditor) {
             self.parent = parent
@@ -965,24 +1089,75 @@ struct CueTextEditor: UIViewRepresentable {
 
         // MARK: Suggestions
 
-        /// Put an accepted suggestion in, at its place in the script.
-        func replaceScript(_ range: NSRange, with replacement: String) -> Bool {
-            guard let textView, textView.markedTextRange == nil else { return false }
-            let script = ScriptImageAttachment.script(from: textView.textStorage)
-            guard NSMaxRange(range) <= (script as NSString).length else { return false }
-            let editorRange = CueTextEditor.editorRange(for: range, in: script)
-            replace(editorRange, with: replacement,
-                    caret: editorRange.location + (replacement as NSString).length, in: textView)
-            return true
+        /// A tap on a suggestion while they're open offers Accept and Reject
+        /// right above it. A tap anywhere else puts that away.
+        @objc func tapped(_ gesture: UITapGestureRecognizer) {
+            guard let textView, let marks = parent.suggestionMarks else { return }
+            let point = gesture.location(in: textView)
+            guard let id = suggestion(at: point, in: textView) else {
+                suggestionMenu?.dismissMenu()
+                return
+            }
+            marks.onFocus(id)
+            suggestionMenu?.presentEditMenu(with: UIEditMenuConfiguration(identifier: id.uuidString as NSString,
+                                                                          sourcePoint: point))
         }
 
-        /// A tap on the text while suggestions are open picks the one under it.
-        @objc func tapped(_ gesture: UITapGestureRecognizer) {
-            guard let textView, let marks = parent.suggestionMarks,
-                  let position = textView.closestPosition(to: gesture.location(in: textView)) else { return }
+        /// The suggestion drawn right where `point` is, if there is one.
+        private func suggestion(at point: CGPoint, in textView: UITextView) -> ScriptSuggestion.ID? {
+            guard let position = textView.closestPosition(to: point) else { return nil }
             let offset = textView.offset(from: textView.beginningOfDocument, to: position)
-            marks.onTap(CueTextEditor.scriptLocation(forEditor: offset,
-                                                     in: ScriptImageAttachment.script(from: textView.textStorage)))
+            let storage = textView.textStorage
+            // The closest spot is between two characters: either can be the one tapped.
+            for index in [offset, offset - 1] where index >= 0 && index < storage.length {
+                guard let id = storage.attribute(.cueSuggestion, at: index, effectiveRange: nil) as? String,
+                      let range = textRange(NSRange(location: index, length: 1), in: textView),
+                      textView.firstRect(for: range).insetBy(dx: -8, dy: -6).contains(point) else { continue }
+                return UUID(uuidString: id)
+            }
+            return nil
+        }
+
+        private func textRange(_ range: NSRange, in textView: UITextView) -> UITextRange? {
+            guard let start = textView.position(from: textView.beginningOfDocument, offset: range.location),
+                  let end = textView.position(from: start, offset: range.length) else { return nil }
+            return textView.textRange(from: start, to: end)
+        }
+
+        private func suggestionID(of configuration: UIEditMenuConfiguration) -> ScriptSuggestion.ID? {
+            (configuration.identifier as? NSString).flatMap { UUID(uuidString: $0 as String) }
+        }
+
+        func editMenuInteraction(_ interaction: UIEditMenuInteraction, menuFor configuration: UIEditMenuConfiguration,
+                                 suggestedActions: [UIMenuElement]) -> UIMenu? {
+            guard let id = suggestionID(of: configuration) else { return nil }
+            let accept = UIAction(title: String(localized: "Accept"), image: UIImage(systemName: "checkmark")) { [weak self] _ in
+                self?.parent.suggestionMarks?.onAccept(id)
+            }
+            let reject = UIAction(title: String(localized: "Reject"), image: UIImage(systemName: "xmark")) { [weak self] _ in
+                self?.parent.suggestionMarks?.onReject(id)
+            }
+            return UIMenu(children: [accept, reject])
+        }
+
+        /// Above the whole suggestion, not just where it was tapped.
+        func editMenuInteraction(_ interaction: UIEditMenuInteraction,
+                                 targetRectFor configuration: UIEditMenuConfiguration) -> CGRect {
+            guard let textView, let id = suggestionID(of: configuration)?.uuidString else { return .null }
+            let storage = textView.textStorage
+            var rect = CGRect.null
+            storage.enumerateAttribute(.cueSuggestion, in: NSRange(location: 0, length: storage.length)) { value, range, _ in
+                guard value as? String == id, let textRange = textRange(range, in: textView) else { return }
+                rect = rect.union(textView.firstRect(for: textRange))
+            }
+            return rect
+        }
+
+        func editMenuInteraction(_ interaction: UIEditMenuInteraction,
+                                 willDismissMenuFor configuration: UIEditMenuConfiguration,
+                                 animator: any UIEditMenuInteractionAnimating) {
+            guard let id = suggestionID(of: configuration) else { return }
+            parent.suggestionMarks?.onUnfocus(id)
         }
 
         func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
@@ -1126,14 +1301,52 @@ struct CueTextEditor: UIViewRepresentable {
     }
 }
 
-/// The suggestions being reviewed, as the editor marks them.
+/// The suggestions being reviewed, as the editor shows them.
 struct SuggestionMarks {
-    /// Where each is in the script.
-    var ranges: [NSRange]
-    /// The one being looked at.
-    var focused: NSRange?
-    /// A tap in the text, at this spot in the script.
-    var onTap: (Int) -> Void
+    /// Each with its range in this editor's script.
+    var suggestions: [ScriptSuggestion]
+    /// The one tapped on, with Accept and Reject showing above it.
+    var focused: ScriptSuggestion.ID?
+    var onFocus: (ScriptSuggestion.ID) -> Void
+    /// Accept and Reject were put away from over this one.
+    var onUnfocus: (ScriptSuggestion.ID) -> Void
+    var onAccept: (ScriptSuggestion.ID) -> Void
+    var onReject: (ScriptSuggestion.ID) -> Void
+}
+
+extension ScriptSuggestion.Kind {
+    /// What it does, to name it out loud.
+    var actionName: String {
+        switch self {
+        case .spelling: String(localized: "Fix Spelling")
+        case .missingWords: String(localized: "Add Missing Words")
+        case .rewrite: String(localized: "Rewrite")
+        case .cue: String(localized: "Add Cue")
+        case .anchor: String(localized: "Add Anchor")
+        case .lineBreak: String(localized: "Add Line Break")
+        case .bold: String(localized: "Make Bold")
+        case .italic: String(localized: "Make Italic")
+        }
+    }
+}
+
+extension NSAttributedString.Key {
+    /// On everything shown for a suggestion, its ID: the words it changes,
+    /// and what it would put in.
+    static let cueSuggestion = NSAttributedString.Key("CueCardSuggestion")
+    /// On what a suggestion would put in, shown but not in the script.
+    static let cueSuggestionPreview = NSAttributedString.Key("CueCardSuggestionPreview")
+}
+
+extension NSAttributedString {
+    /// Where suggestions' previews are, front to back.
+    var suggestionPreviewRanges: [NSRange] {
+        var ranges: [NSRange] = []
+        enumerateAttribute(.cueSuggestionPreview, in: NSRange(location: 0, length: length)) { value, range, _ in
+            if value != nil { ranges.append(range) }
+        }
+        return ranges
+    }
 }
 
 // MARK: - Script fonts
@@ -1208,6 +1421,13 @@ extension ScriptImageAttachment {
     /// The script the editor's text holds, each image written back as its
     /// `[image …]` tag. Anything else held as an attachment is left out.
     static func script(from text: NSAttributedString) -> String {
+        // Suggestions shown in the text aren't part of the script.
+        var text = text
+        if !text.suggestionPreviewRanges.isEmpty {
+            let copy = NSMutableAttributedString(attributedString: text)
+            CueTextEditor.removeSuggestionPreviews(from: copy)
+            text = copy
+        }
         let script = NSMutableString(string: text.string)
         var location = script.range(of: CueCards.imageCharacter, options: .backwards)
         // Back to front, so writing a tag doesn't move the ones still to come.

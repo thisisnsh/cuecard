@@ -2,33 +2,24 @@ import Foundation
 import FoundationModels
 
 /// A small change Apple's on-device model proposes for the script, for the
-/// user to accept or reject: a spelling fix, a cue or an anchor put in, a
+/// user to accept or reject: a spelling fix, words missing from a sentence
+/// put back, a phrase rewritten to say better, a cue or an anchor put in, a
 /// long line broken in two, or words set in bold or italic.
 struct ScriptSuggestion: Identifiable, Equatable {
     enum Kind: Equatable {
-        case spelling, cue, anchor, lineBreak, bold, italic
+        case spelling, missingWords, rewrite, cue, anchor, lineBreak, bold, italic
     }
 
     let id = UUID()
     let kind: Kind
     /// Where it applies in the script, kept current as other suggestions are
-    /// accepted ahead of it. A cue only puts something in, so its range is
-    /// empty, at the spot it goes: a fix to the words before it is a
-    /// suggestion of its own.
+    /// accepted ahead of it. A cue, or words only put in, is empty, at the
+    /// spot it goes: a fix to the words before it is a suggestion of its own.
     var range: NSRange
     /// The words there now.
     let original: String
     /// What they become once it's accepted.
     let replacement: String
-    /// For a cue, the words it comes after, to show it in place.
-    var context = ""
-
-    /// What the editor marks: the words a cue comes after, or the range.
-    var mark: NSRange {
-        guard range.length == 0 else { return range }
-        let length = min((context as NSString).length, range.location)
-        return NSRange(location: range.location - length, length: length)
-    }
 }
 
 /// What the reader made of a review, for the rating sent after it.
@@ -132,12 +123,14 @@ enum OnDeviceModelAvailability: Equatable {
 /// here. Anything else changing it — another note opened — ends the review.
 @MainActor
 final class ScriptReview: ObservableObject {
-    /// A review is open: the editor shows the suggestions and the panel.
+    /// A review is open: the editor shows the suggestions, and the bar
+    /// below it how many are left.
     @Published private(set) var isActive = false
     /// The model is still reading the script.
     @Published private(set) var isRunning = false
     /// What's left to decide on, in the order it appears in the script.
     @Published private(set) var suggestions: [ScriptSuggestion] = []
+    /// The one tapped on in the editor, with Accept and Reject above it.
     @Published var focusedID: ScriptSuggestion.ID?
     /// Why the review stopped short, to show the user.
     @Published var errorMessage: String?
@@ -156,14 +149,6 @@ final class ScriptReview: ObservableObject {
     /// it finds can be moved to where those words are now.
     private var edits: [(location: Int, delta: Int)] = []
     private var task: Task<Void, Never>?
-
-    var focused: ScriptSuggestion? {
-        suggestions.first { $0.id == focusedID }
-    }
-
-    var focusedIndex: Int? {
-        suggestions.firstIndex { $0.id == focusedID }
-    }
 
     /// Review `script`. A deck of cards comes with the characters a card
     /// holds, so nothing suggested runs a card past it.
@@ -219,8 +204,7 @@ final class ScriptReview: ObservableObject {
         end()
     }
 
-    /// Take the suggestion in. Returns the edit for the editor to make, with
-    /// the next suggestion in focus.
+    /// Take the suggestion in. Returns the edit to make to the script.
     func accept(_ id: ScriptSuggestion.ID) -> (range: NSRange, replacement: String)? {
         guard let index = suggestions.firstIndex(where: { $0.id == id }) else { return nil }
         let suggestion = suggestions.remove(at: index)
@@ -232,29 +216,8 @@ final class ScriptReview: ObservableObject {
             suggestions[i].range.location += delta
         }
         AnalyticsEvents.logButtonClick("suggestion_accept", screen: "home", parameters: ["kind": suggestion.kind.analyticsName])
-        focusAfterRemoving(at: index)
+        didRemove(suggestion)
         return (suggestion.range, suggestion.replacement)
-    }
-
-    /// Every suggestion left, back to front so each edit leaves the ranges of
-    /// the ones still to make where they are.
-    func acceptAll() -> [(range: NSRange, replacement: String)] {
-        AnalyticsEvents.logButtonClick("suggestion_accept_all", screen: "home", parameters: ["count": suggestions.count])
-        metrics.accepted += suggestions.count
-        // A cue put in where another suggestion starts goes in after it's made,
-        // so it lands ahead of it.
-        let all = suggestions.sorted {
-            ($0.range.location, $0.range.length) > ($1.range.location, $1.range.length)
-        }
-        for suggestion in all {
-            script = (script as NSString).replacingCharacters(in: suggestion.range, with: suggestion.replacement)
-            edits.append((suggestion.range.location,
-                          (suggestion.replacement as NSString).length - suggestion.range.length))
-        }
-        suggestions = []
-        focusedID = nil
-        finishIfDone()
-        return all.map { ($0.range, $0.replacement) }
     }
 
     func reject(_ id: ScriptSuggestion.ID) {
@@ -262,35 +225,14 @@ final class ScriptReview: ObservableObject {
         let suggestion = suggestions.remove(at: index)
         metrics.rejected += 1
         AnalyticsEvents.logButtonClick("suggestion_reject", screen: "home", parameters: ["kind": suggestion.kind.analyticsName])
-        focusAfterRemoving(at: index)
+        didRemove(suggestion)
     }
 
-    func focusNext() {
-        guard let index = focusedIndex, !suggestions.isEmpty else { return }
-        focusedID = suggestions[(index + 1) % suggestions.count].id
-    }
-
-    func focusPrevious() {
-        guard let index = focusedIndex, !suggestions.isEmpty else { return }
-        focusedID = suggestions[(index - 1 + suggestions.count) % suggestions.count].id
-    }
-
-    /// The suggestion tapped on in the editor, if one was.
-    func focus(at location: Int) {
-        if let tapped = suggestions.first(where: {
-            $0.mark.location <= location && location <= NSMaxRange($0.mark)
-        }) {
-            focusedID = tapped.id
-        }
-    }
-
-    private func focusAfterRemoving(at index: Int) {
-        if suggestions.isEmpty {
-            focusedID = nil
-            finishIfDone()
-        } else {
-            focusedID = suggestions[min(index, suggestions.count - 1)].id
-        }
+    /// Decided on: nothing's tapped on now, and with none left, the review
+    /// is done.
+    private func didRemove(_ suggestion: ScriptSuggestion) {
+        if focusedID == suggestion.id { focusedID = nil }
+        finishIfDone()
     }
 
     /// Found against the script as it was handed over: moved past whatever
@@ -310,7 +252,6 @@ final class ScriptReview: ObservableObject {
             metrics.found += 1
         }
         suggestions.sort { $0.range.location < $1.range.location }
-        if focusedID == nil { focusedID = suggestions.first?.id }
     }
 
     private func finishRunning() {
@@ -333,6 +274,8 @@ extension ScriptSuggestion.Kind {
     var analyticsName: String {
         switch self {
         case .spelling: "spelling"
+        case .missingWords: "missing_words"
+        case .rewrite: "rewrite"
         case .cue: "cue"
         case .anchor: "anchor"
         case .lineBreak: "line_break"
@@ -349,9 +292,11 @@ extension ScriptSuggestion.Kind {
 /// is small and gets things wrong, and a suggestion that doesn't fit the
 /// script's own rules is dropped rather than shown.
 ///
-/// Each passage is read three times, for one kind of thing each time:
-/// mistakes, delivery, then paragraphs. The model does far better asked
-/// for one thing than for all of them at once.
+/// Each passage is read up to five times, for one kind of thing each time:
+/// lines with words missing, typing mistakes, rewrites, delivery, then
+/// paragraphs.
+/// The model does far better asked for one thing than for all of them at
+/// once.
 @available(iOS 26.0, *)
 enum ScriptSuggester {
     /// About how much script goes to the model at once. Its context holds a
@@ -422,32 +367,78 @@ enum ScriptSuggester {
 
     /// What the model is asked to look for in a passage, one reading each.
     private enum Pass: CaseIterable {
-        /// Spelling slips, and words to stress.
+        /// Lines that start or stop partway through a sentence, which a
+        /// small model reads straight past unless they're pointed out.
+        case completion
+        /// Typing mistakes.
         case proofread
-        /// Cues, and anchors.
+        /// Phrases and sentences that would say better another way.
+        case rewrite
+        /// Cues, anchors, and words to stress.
         case delivery
         /// Where a long line breaks into paragraphs.
         case paragraphs
 
-        /// Only a passage with a long line in it has anything to break.
+        /// Only a passage with a line that looks cut short has anything to
+        /// complete, and only one with a long line anything to break.
         func applies(to passage: String) -> Bool {
-            guard self == .paragraphs else { return true }
-            var hasLongLine = false
-            passage.enumerateLines { line, stop in
-                if (line as NSString).length >= longLine { hasLongLine = true; stop = true }
+            switch self {
+            case .completion:
+                return !incompleteLines(in: passage).isEmpty
+            case .paragraphs:
+                var hasLongLine = false
+                passage.enumerateLines { line, stop in
+                    if (line as NSString).length >= longLine { hasLongLine = true; stop = true }
+                }
+                return hasLongLine
+            case .proofread, .rewrite, .delivery:
+                return true
             }
-            return hasLongLine
         }
 
         func run(on passage: String, isDeck: Bool) async throws -> [Proposal] {
             let prompt = "Passage:\n\(passage)"
             let options = GenerationOptions(samplingMode: .greedy)
             switch self {
+            case .completion:
+                // One line at a time, told which end is broken, and only
+                // asked for the line repaired: the line itself is already
+                // known, so nothing hangs on the model copying it exactly.
+                var proposals: [Proposal] = []
+                for broken in incompleteLines(in: passage) {
+                    let session = LanguageModelSession(model: SystemLanguageModel.default,
+                                                       instructions: completionInstructions(isDeck: isDeck))
+                    let problem = [
+                        broken.startsPartway ? "It starts partway through a sentence: words are missing before it." : nil,
+                        broken.stopsPartway ? "It stops before its sentence ends: words are missing after it." : nil
+                    ].compactMap { $0 }.joined(separator: " ")
+                    do {
+                        let repaired = try await session.respond(
+                            to: "\(prompt)\n\nLine to repair:\n\(broken.line)\n\n\(problem)",
+                            generating: ModelRepair.self, options: options
+                        ).content.line
+                        proposals.append(Proposal(kind: .missingWords, text: broken.line, value: repaired))
+                    } catch let error as LanguageModelSession.GenerationError {
+                        // A line the model wouldn't repair leaves the others still to try.
+                        switch error {
+                        case .unsupportedLanguageOrLocale, .assetsUnavailable: throw error
+                        default: continue
+                        }
+                    }
+                }
+                return proposals
             case .proofread:
                 let session = LanguageModelSession(model: SystemLanguageModel.default,
                                                    instructions: proofreadInstructions(isDeck: isDeck))
                 return try await session.respond(to: prompt, generating: ModelProofread.self, options: options)
-                    .content.changes.map { Proposal(kind: $0.kind.kind, text: $0.text, value: $0.correction) }
+                    .content.changes.map { Proposal(kind: .spelling, text: $0.text, value: $0.correction) }
+            case .rewrite:
+                // Free to be inventive here, unlike the readings that check.
+                let session = LanguageModelSession(model: SystemLanguageModel.default,
+                                                   instructions: rewriteInstructions(isDeck: isDeck))
+                return try await session.respond(to: prompt, generating: ModelRewrites.self,
+                                                 options: GenerationOptions(temperature: 0.8))
+                    .content.changes.map { Proposal(kind: .rewrite, text: $0.text, value: $0.rewrite) }
             case .delivery:
                 let session = LanguageModelSession(model: SystemLanguageModel.default,
                                                    instructions: deliveryInstructions(isDeck: isDeck))
@@ -467,7 +458,8 @@ enum ScriptSuggester {
         let kind: ScriptSuggestion.Kind
         /// The words it applies to, as the model copied them.
         let text: String
-        /// The corrected words for spelling, the cue's words for a cue.
+        /// The corrected words for spelling, the whole line for missing
+        /// words, the new words for a rewrite, the cue's words for a cue.
         let value: String
     }
 
@@ -486,17 +478,58 @@ enum ScriptSuggester {
         - *words* are bold and _words_ are italic.
         """
 
-    private static func proofreadInstructions(isDeck: Bool) -> String {
+    /// A line that starts or stops partway through a sentence, pointed out
+    /// to the model with the passage around it.
+    private static func completionInstructions(isDeck: Bool) -> String {
         """
-        You proofread \(about(isDeck: isDeck)). Most passages need few changes or none.
+        You repair a line from \(about(isDeck: isDeck)). Words were deleted from it by accident, so it \
+        starts partway through a sentence, like "r script at your pace", or stops before its sentence \
+        ends, like "it keeps going in a floating".
 
         \(markup)
 
-        The kinds of change:
-        - spelling: a misspelled word or a clear grammar slip. text is the wrong words; correction is \
-        the same words corrected. Never reword or rewrite a sentence.
-        - bold: a word or short phrase to stress strongly. Rare.
-        - italic: a word or short phrase to say with lighter emphasis. Rare.
+        Write the whole line again as a complete sentence that fits the passage around it, putting back \
+        the words that are missing. A word cut short at the start or the end is finished, so "r script" \
+        becomes something like "It scrolls your script". Keep the rest of the line as it is.
+
+        Rules:
+        - Always put words back: the line is broken.
+        - Never change anything inside square brackets.
+        - Keep to the script's language.
+        """
+    }
+
+    private static func rewriteInstructions(isDeck: Bool) -> String {
+        """
+        You're a speechwriter improving \(about(isDeck: isDeck)). Rewrite any phrase or sentence that \
+        would sound better said aloud: clearer, shorter, livelier, more natural, more persuasive, or \
+        easier to say in one breath. Be bold, and suggest whatever would make it land better with the \
+        audience, while keeping what the speaker means.
+
+        \(markup)
+
+        text is the words to replace, copied exactly from the passage: at most one sentence, all on one \
+        line. rewrite is what replaces them.
+
+        Rules:
+        - Never change or add anything inside square brackets.
+        - Keep to the script's language.
+        """
+    }
+
+    private static func proofreadInstructions(isDeck: Bool) -> String {
+        """
+        You proofread \(about(isDeck: isDeck)) for typing mistakes, and nothing else.
+
+        \(markup)
+
+        A typing mistake is:
+        - a misspelled word, like "teh" for "the" or "recieve" for "receive"
+        - a word cut short or run together, like "scrip" for "script"
+        - a wrong word that looks or sounds alike, like "there" for "their" or "your" for "you're"
+
+        text is the words with the mistake; correction is the same words with only the mistake fixed. \
+        Never reword a sentence or change how it's written.
 
         Rules:
         - text is copied exactly from the passage: a few words, all on one line.
@@ -524,10 +557,12 @@ enum ScriptSuggester {
         such as after a key point, before a big reveal or between two ideas. text is the last few words \
         before the cue; cue is what the speaker should do. One or two in a passage.
         \(anchor)
+        - bold: a word or short phrase to stress strongly. text is those words. Rare.
+        - italic: a word or short phrase to say with lighter emphasis. text is those words. Rare.
 
         Rules:
         - text is copied exactly from the passage: a few words, all on one line.
-        - Never add a cue or anchor where there is one already.
+        - Never add a mark where there is one already.
         """
     }
 
@@ -611,7 +646,7 @@ enum ScriptSuggester {
     /// The most of each kind kept from one passage, so a review never buries
     /// the script in suggestions.
     private static let limits: [ScriptSuggestion.Kind: Int] = [
-        .spelling: 6, .cue: 3, .anchor: 1, .lineBreak: 4, .bold: 1, .italic: 1
+        .spelling: 6, .missingWords: 3, .rewrite: 4, .cue: 3, .anchor: 1, .lineBreak: 4, .bold: 1, .italic: 1
     ]
 
     /// What the model proposed that fits the script. `taken` is where
@@ -629,8 +664,11 @@ enum ScriptSuggester {
             guard counts[kind, default: 0] < limits[kind, default: 0],
                   var range = locate(proposal.text, in: passage, of: context.text) else { continue }
             if kind == .bold || kind == .italic { range = context.text.trimmingPunctuation(in: range) }
+            // Words put back are checked against the tags where they go:
+            // the line they're on can have a cue in it.
             guard range.length > 0,
-                  !context.protected.contains(where: { NSIntersectionRange($0, range).length > 0 }),
+                  kind == .missingWords || kind == .rewrite
+                      || !context.protected.contains(where: { NSIntersectionRange($0, range).length > 0 }),
                   let suggestion = suggestion(kind, at: range, value: proposal.value, context: context),
                   !taken.contains(where: { NSIntersectionRange($0, suggestion.range).length > 0 }),
                   kind != .cue || hasRoomForCue(at: NSMaxRange(suggestion.range), context: context, kept: kept),
@@ -685,6 +723,23 @@ enum ScriptSuggester {
             else { return nil }
             return ScriptSuggestion(kind: kind, range: range, original: original, replacement: fixed)
 
+        case .missingWords, .rewrite:
+            // Only the words that differ, so the rest of the line stays as
+            // it is. The model sometimes sets what it writes in quotes or
+            // bold; what it means is the words.
+            let fixed = value.filter { $0 != "*" && $0 != "_" }
+                .trimmingCharacters(in: CharacterSet(charactersIn: "\"“”«»").union(.whitespaces))
+            guard let change = wordChange(from: original, at: range, to: fixed),
+                  change.replacement.rangeOfCharacter(from: markup.union(.newlines)) == nil,
+                  text.substring(with: change.range).rangeOfCharacter(from: markup) == nil,
+                  !context.protected.contains(where: {
+                      NSIntersectionRange($0, change.range).length > 0
+                          || ($0.location < change.range.location && change.range.location < NSMaxRange($0))
+                  })
+            else { return nil }
+            return ScriptSuggestion(kind: kind, range: change.range, original: text.substring(with: change.range),
+                                    replacement: change.replacement)
+
         case .cue:
             // Offered a few, the first is the one.
             let first = value.split(whereSeparator: { ",;/".contains($0) }).first.map(String.init) ?? ""
@@ -696,7 +751,7 @@ enum ScriptSuggester {
             else { return nil }
             let tag = text.spacedInsertion(of: TeleprompterParser.cueTag(text: cue), at: end).text
             return ScriptSuggestion(kind: kind, range: NSRange(location: end, length: 0), original: "",
-                                    replacement: tag, context: original)
+                                    replacement: tag)
 
         case .anchor:
             let line = text.lineRange(for: NSRange(location: range.location, length: 0))
@@ -758,6 +813,81 @@ enum ScriptSuggester {
         return NSRange(location: start, length: NSMaxRange(words) - start)
     }
 
+    /// Lines that look cut short: a paragraph of its own that starts with a
+    /// small letter, or stops without anything to end a sentence. Tags
+    /// don't count as words, and a line of only tags ends a paragraph.
+    static func incompleteLines(in passage: String) -> [(line: String, startsPartway: Bool, stopsPartway: Bool)] {
+        var lines: [String] = []
+        passage.enumerateLines { line, _ in lines.append(line) }
+        let words = lines.map { line -> String in
+            let text = NSMutableString(string: line)
+            for tag in protectedRanges(in: line).sorted(by: { $0.location > $1.location })
+            where NSMaxRange(tag) <= text.length {
+                text.replaceCharacters(in: tag, with: " ")
+            }
+            return (text as String).trimmingCharacters(in: .whitespaces)
+        }
+        let enders = CharacterSet(charactersIn: ".!?…:;\"”’')»。！？")
+
+        var suspects: [(line: String, startsPartway: Bool, stopsPartway: Bool)] = []
+        for (index, line) in words.enumerated() {
+            guard let first = line.unicodeScalars.first, let last = line.unicodeScalars.last else { continue }
+            let startsParagraph = index == 0 || words[index - 1].isEmpty
+            let endsParagraph = index == words.count - 1 || words[index + 1].isEmpty
+            let startsPartway = startsParagraph && CharacterSet.lowercaseLetters.contains(first)
+            let stopsPartway = endsParagraph && !enders.contains(last) && line.split(separator: " ").count >= 3
+            if startsPartway || stopsPartway {
+                suspects.append((lines[index].trimmingCharacters(in: .whitespaces), startsPartway, stopsPartway))
+            }
+        }
+        return suspects
+    }
+
+    /// What differs between `original`, at `range` in the script, and
+    /// `fixed`, word by word: the stretch to replace and what goes there,
+    /// where words go in, or which come out. Nil for no change.
+    private static func wordChange(from original: String, at range: NSRange,
+                                   to fixed: String) -> (range: NSRange, replacement: String)? {
+        let a = original as NSString
+        let b = fixed as NSString
+        let aWords = a.wordRanges
+        let bWords = b.wordRanges
+        let aText = aWords.map(a.substring(with:))
+        let bText = bWords.map(b.substring(with:))
+        guard !aWords.isEmpty, !bWords.isEmpty else { return nil }
+
+        var prefix = 0
+        while prefix < aText.count, prefix < bText.count, aText[prefix] == bText[prefix] { prefix += 1 }
+        var suffix = 0
+        while suffix < aText.count - prefix, suffix < bText.count - prefix,
+              aText[aText.count - 1 - suffix] == bText[bText.count - 1 - suffix] { suffix += 1 }
+        let removed = aText.count - prefix - suffix
+        let added = bText.count - prefix - suffix
+        guard added + removed > 0 else { return nil }
+
+        if added == 0 {
+            // Only taken out, with the space beside them, but never every word.
+            guard removed < aText.count else { return nil }
+            let last = aWords[aText.count - 1 - suffix]
+            let start = prefix > 0 ? NSMaxRange(aWords[prefix - 1]) : aWords[0].location
+            let end = prefix > 0 ? NSMaxRange(last) : aWords[prefix + removed].location
+            return (NSRange(location: range.location + start, length: end - start), "")
+        }
+
+        let words = b.substring(with: NSRange(location: bWords[prefix].location,
+                                              length: NSMaxRange(bWords[bText.count - 1 - suffix]) - bWords[prefix].location))
+        if removed > 0 {
+            let start = aWords[prefix].location
+            let end = NSMaxRange(aWords[aText.count - 1 - suffix])
+            return (NSRange(location: range.location + start, length: end - start), words)
+        }
+        // Only put in: ahead of the first word, or after the one before.
+        if prefix == 0 {
+            return (NSRange(location: range.location + aWords[0].location, length: 0), words + " ")
+        }
+        return (NSRange(location: range.location + NSMaxRange(aWords[prefix - 1]), length: 0), " " + words)
+    }
+
     /// A tag right at `location`, give or take a space, so another isn't put beside it.
     private static func hasTag(near location: Int, in text: NSString, protected: [NSRange]) -> Bool {
         protected.contains { $0.location <= location + 2 && location - 2 <= NSMaxRange($0) }
@@ -798,8 +928,31 @@ private struct CardBudget {
 
 @available(iOS 26.0, *)
 @Generable
+private struct ModelRepair {
+    @Guide(description: "The whole line again as a complete sentence, with the missing words put back.")
+    var line: String
+}
+
+@available(iOS 26.0, *)
+@Generable
+private struct ModelRewrites {
+    @Guide(description: "The rewrites worth making, in the order they appear.", .maximumCount(6))
+    var changes: [ModelRewrite]
+}
+
+@available(iOS 26.0, *)
+@Generable
+private struct ModelRewrite {
+    @Guide(description: "The words to replace, copied exactly from the passage: at most one sentence, all on one line.")
+    var text: String
+    @Guide(description: "What replaces them, said better.")
+    var rewrite: String
+}
+
+@available(iOS 26.0, *)
+@Generable
 private struct ModelProofread {
-    @Guide(description: "The fixes worth making, in the order they appear. Empty when the passage needs none.",
+    @Guide(description: "The typing mistakes, in the order they appear. Empty when there are none.",
            .maximumCount(8))
     var changes: [ModelFix]
 }
@@ -807,26 +960,10 @@ private struct ModelProofread {
 @available(iOS 26.0, *)
 @Generable
 private struct ModelFix {
-    @Guide(description: "The kind of change.")
-    var kind: ModelFixKind
-    @Guide(description: "A few words copied exactly from the passage, all on one line.")
+    @Guide(description: "A few words with a typing mistake, copied exactly from the passage, all on one line.")
     var text: String
-    @Guide(description: "Only for spelling: text with the mistake corrected. Otherwise empty.")
+    @Guide(description: "text with only the mistake corrected.")
     var correction: String
-}
-
-@available(iOS 26.0, *)
-@Generable
-private enum ModelFixKind {
-    case spelling, bold, italic
-
-    var kind: ScriptSuggestion.Kind {
-        switch self {
-        case .spelling: .spelling
-        case .bold: .bold
-        case .italic: .italic
-        }
-    }
 }
 
 @available(iOS 26.0, *)
@@ -850,12 +987,14 @@ private struct ModelMark {
 @available(iOS 26.0, *)
 @Generable
 private enum ModelMarkKind {
-    case cue, anchor
+    case cue, anchor, bold, italic
 
     var kind: ScriptSuggestion.Kind {
         switch self {
         case .cue: .cue
         case .anchor: .anchor
+        case .bold: .bold
+        case .italic: .italic
         }
     }
 }
@@ -871,6 +1010,23 @@ private struct ModelParagraphs {
 // MARK: - Helpers
 
 private extension NSString {
+    /// Where each run of characters between spaces is.
+    var wordRanges: [NSRange] {
+        var ranges: [NSRange] = []
+        var start: Int?
+        for index in 0..<length {
+            let isSpace = Unicode.Scalar(character(at: index)).map(CharacterSet.whitespaces.contains) ?? false
+            if isSpace {
+                if let open = start { ranges.append(NSRange(location: open, length: index - open)) }
+                start = nil
+            } else if start == nil {
+                start = index
+            }
+        }
+        if let open = start { ranges.append(NSRange(location: open, length: length - open)) }
+        return ranges
+    }
+
     /// Nothing that's part of a word on either side of `location`.
     func isWordBoundary(at location: Int) -> Bool {
         guard location > 0, location < length else { return true }
