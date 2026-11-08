@@ -16711,7 +16711,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Touchez l’icône d’onde en haut du prompteur. S’il n’apparaît pas, activez Suis-moi IA dans Réglages, sous Apple Intelligence. La fonction est désactivée à chaque ouverture du prompteur. Le script avance à mesure que vous le lisez à voix haute, au lieu de défiler à une vitesse fixe, et le minuteur démarre dès vos premiers mots. Touchez Pause pour arrêter l'écoute et Lire pour la reprendre. Votre voix est reconnue sur cet iPhone et ne le quitte jamais."
+            "value" : "Touchez l’icône d’onde en haut du prompteur. Si elle n’apparaît pas, activez Suis-moi IA dans Réglages, sous Apple Intelligence. La fonction est désactivée à chaque ouverture du prompteur. Le script avance à mesure que vous le lisez à voix haute, au lieu de défiler à une vitesse fixe, et le minuteur démarre dès vos premiers mots. Touchez Pause pour arrêter l'écoute et Lire pour la reprendre. Votre voix est reconnue sur cet iPhone et ne le quitte jamais."
           }
         },
         "pt-BR" : {
