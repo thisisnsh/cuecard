@@ -1399,9 +1399,15 @@ private struct LibraryScriptRow: View {
             }
 
             LibraryMetaLine(detail: detail, isOnWatch: isOnWatch, collection: collection,
-                            takes: takes, recentTakes: recentTakes, frameSize: CGSize(width: 24, height: 32),
-                            colorScheme: colorScheme, onTakes: onTakes)
+                            colorScheme: colorScheme)
                 .padding(.top, 2)
+
+            if takes > 0 {
+                LibraryTakeStrip(takes: takes, recentTakes: recentTakes,
+                                 frameSize: CGSize(width: 24, height: 32), cornerRadius: 6,
+                                 colorScheme: colorScheme, onTakes: onTakes)
+                    .padding(.top, 4)
+            }
         }
         .padding(.vertical, 14)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -1448,8 +1454,7 @@ private struct LibraryHero: View {
                     Text(verbatim: "·")
                 }
                 LibraryMetaLine(detail: detail, isOnWatch: isOnWatch, collection: collection,
-                                takes: 0, recentTakes: [], frameSize: .zero,
-                                colorScheme: colorScheme, onTakes: onTakes)
+                                colorScheme: colorScheme)
             }
             .font(.caption)
             .foregroundStyle(secondary)
@@ -1470,7 +1475,6 @@ private struct LibraryHero: View {
                 LibraryTakeStrip(takes: takes, recentTakes: recentTakes,
                                  frameSize: CGSize(width: 30, height: 40), cornerRadius: 7,
                                  colorScheme: colorScheme, onTakes: onTakes)
-                    .frame(maxWidth: .infinity, alignment: .trailing)
                     .padding(.top, 10)
             }
         }
@@ -1484,16 +1488,12 @@ private struct LibraryHero: View {
 }
 
 /// A deck's card count and when it was edited, whether it's on the watch,
-/// its collection, and its newest takes at the end.
+/// and its collection.
 private struct LibraryMetaLine: View {
     let detail: String
     let isOnWatch: Bool
     let collection: LibraryCollectionTag?
-    let takes: Int
-    let recentTakes: [PHAsset]
-    let frameSize: CGSize
     let colorScheme: ColorScheme
-    let onTakes: () -> Void
 
     var body: some View {
         HStack(spacing: 8) {
@@ -1516,11 +1516,6 @@ private struct LibraryMetaLine: View {
                     Text(collection.name)
                         .lineLimit(1)
                 }
-            }
-            if takes > 0 {
-                Spacer(minLength: 8)
-                LibraryTakeStrip(takes: takes, recentTakes: recentTakes, frameSize: frameSize,
-                                 cornerRadius: 6, colorScheme: colorScheme, onTakes: onTakes)
             }
         }
         .font(.caption)
