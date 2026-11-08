@@ -59,11 +59,11 @@ private struct HelpSection: Identifiable {
 // MARK: - Topics
 
 private enum AllHelp {
-    /// Suggestions are left out while they're turned off, or this iPhone has
-    /// no Apple Intelligence.
+    /// Suggestions are left out on an iPhone with no Apple Intelligence.
+    /// Turned off in Settings, they stay, so help can say how to turn them on.
     static var writing: HelpSection {
         var section = allWriting
-        if OnDeviceModelAvailability.forSuggestions == .unsupported {
+        if OnDeviceModelAvailability.onDevice == .unsupported {
             section.topics.removeAll { $0.id == suggestionsTopic.id }
         }
         return section
@@ -126,19 +126,11 @@ private enum AllHelp {
                   detail: "Open a script, tap the gear at the top, then Language. CueCard is in English, French, Portuguese, Russian and Spanish.")
     ])
 
-    /// Follow Me AI is left out while it's turned off.
-    static var teleprompter: HelpSection {
-        var section = allTeleprompter
-        if !AppleIntelligenceSetting.isEnabled(AppleIntelligenceSetting.followVoiceKey) {
-            section.topics.removeAll { $0.id == followVoiceTopic.id }
-        }
-        return section
-    }
-
     private static let followVoiceTopic = HelpTopic("Follow Me AI (Beta)",
-                  detail: "Tap the waveform at the top of the teleprompter. It's off each time the teleprompter opens. The script moves as you read it aloud, instead of at a set speed, and the timer starts with your first words. Tap Pause to stop listening and Play to listen again. Your voice is understood on this iPhone and never leaves it.")
+                  detail: "Tap the waveform at the top of the teleprompter. If it isn't there, turn on Follow Me AI in Settings, under Apple Intelligence. It's off each time the teleprompter opens. The script moves as you read it aloud, instead of at a set speed, and the timer starts with your first words. Tap Pause to stop listening and Play to listen again. Your voice is understood on this iPhone and never leaves it.")
 
-    private static let allTeleprompter = HelpSection("teleprompter", title: "Teleprompter",
+    /// Follow Me AI stays while it's turned off, so help can say how to turn it on.
+    static let teleprompter = HelpSection("teleprompter", title: "Teleprompter",
                                     summary: "Scrolling, recording, mirroring and the floating window",
                                     systemImage: "text.alignleft", topics: [
         HelpTopic("Play and Pause",
