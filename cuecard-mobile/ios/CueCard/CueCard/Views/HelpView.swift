@@ -451,8 +451,8 @@ private struct HelpSectionLabel: View {
     }
 }
 
-/// The help to browse, under the question on the asking page: the sections,
-/// then the links, each group on a card of its own. What's typed is a
+/// The help to browse, under the question on the asking page: the links,
+/// then the sections, each group on a card of its own. What's typed is a
 /// question for AI, so it doesn't narrow them.
 private struct HelpBrowseCards: View {
     @Environment(\.colorScheme) private var colorScheme
@@ -467,22 +467,10 @@ private struct HelpBrowseCards: View {
 
     private var sections: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Or Browse Help")
+            Text("Browse Help")
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(AppColors.textSecondary(for: colorScheme))
                 .padding(.top, 12)
-
-            card {
-                ForEach(Array(AllHelp.sections.enumerated()), id: \.element.id) { index, section in
-                    if index > 0 { divider }
-                    NavigationLink {
-                        HelpSectionView(section: section, event: "section_\(section.id)_browse", close: close)
-                    } label: {
-                        row { HelpSectionLabel(section: section) }
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
 
             card {
                 link("Report a Bug", systemImage: "ladybug", event: "report_bug_browse") {
@@ -497,6 +485,18 @@ private struct HelpBrowseCards: View {
                     link("What's New in \(whatsNew.version)", systemImage: "sparkles", event: "whats_new_browse") {
                         whatsNew.show()
                     }
+                }
+            }
+
+            card {
+                ForEach(Array(AllHelp.sections.enumerated()), id: \.element.id) { index, section in
+                    if index > 0 { divider }
+                    NavigationLink {
+                        HelpSectionView(section: section, event: "section_\(section.id)_browse", close: close)
+                    } label: {
+                        row { HelpSectionLabel(section: section) }
+                    }
+                    .buttonStyle(.plain)
                 }
             }
         }
