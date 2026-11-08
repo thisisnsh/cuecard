@@ -11,7 +11,7 @@ struct HelpAssistantView: View {
 
     private let screen = "help_assistant"
 
-    /// More to read under the examples, before anything is asked: the help
+    /// More to read under the introduction, before anything is asked: the help
     /// to browse, where this is Help's front page, narrowed to what's typed.
     let browse: ((String) -> AnyView)?
     /// Done, from the page this was opened from: closes the whole sheet.
@@ -92,32 +92,8 @@ struct HelpAssistantView: View {
                 Text("Answers come from Apple Intelligence on this iPhone, using CueCard's help. They can be wrong.")
                     .font(.subheadline)
                     .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-
-                VStack(alignment: .leading, spacing: 8) {
-                    ForEach(examples, id: \.self) { example in
-                        Button {
-                            ask(example, from: "example")
-                        } label: {
-                            Text(example)
-                                .font(.subheadline.weight(.medium))
-                                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                                .padding(.horizontal, 14)
-                                .padding(.vertical, 8)
-                                .glassedEffect(in: Capsule(), interactive: true)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
             }
         }
-    }
-
-    private var examples: [String] {
-        [
-            String(localized: "How do I add a pause to my script?"),
-            String(localized: "How does Follow My Voice work?"),
-            String(localized: "How do I record a video while I read?")
-        ]
     }
 
     private func exchangeView(_ exchange: HelpAssistant.Exchange) -> some View {
