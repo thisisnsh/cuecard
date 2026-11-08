@@ -155,7 +155,9 @@ extension View {
 extension View {
     /// `scriptEdgeFade` as a mask: the script itself fades out at its edges,
     /// so whatever is drawn behind it, such as the camera, stays clear.
-    func scriptEdgeMask(top: CGFloat, bottom: CGFloat) -> some View {
+    /// `topOverlap` starts the top fade that far above the view, under what's
+    /// pinned over it, so only the rest of the fade shows.
+    func scriptEdgeMask(top: CGFloat, bottom: CGFloat, topOverlap: CGFloat = 0) -> some View {
         mask {
             Rectangle()
                 .overlay(alignment: .top) {
@@ -165,6 +167,7 @@ extension View {
                     EdgeFade(color: .black, height: bottom, isTop: false).blendMode(.destinationOut)
                 }
                 .compositingGroup()
+                .padding(.top, -topOverlap)
         }
     }
 }
