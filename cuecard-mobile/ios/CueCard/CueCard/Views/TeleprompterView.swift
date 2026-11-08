@@ -527,7 +527,8 @@ struct TeleprompterView: View {
     }
 
     /// Jumps to the next `[anchor]` in the script, or back to the one before.
-    /// Faded while there's none that way.
+    /// The top and the end of the script count as anchors. Faded while
+    /// there's none that way.
     private func anchorButton(forward: Bool) -> some View {
         let isEnabled = forward ? pipManager.canJumpToNextAnchor : pipManager.canJumpToPreviousAnchor
         return Button(action: {

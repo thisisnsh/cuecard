@@ -280,10 +280,11 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         min(playback.scriptTime, scriptDuration) * linesPerSecond
     }
 
-    /// The anchor the next jump forward lands on, if there's one ahead.
+    /// The anchor the next jump forward lands on, if there's one ahead. The
+    /// end of the script counts as one, after the last.
     private var nextAnchorLine: Double? {
         let current = currentLine
-        return anchorLines.first { $0 > current + 0.05 }
+        return (anchorLines + [scriptDuration * linesPerSecond]).first { $0 > current + 0.05 }
     }
 
     /// Where a jump back lands: the start of the stretch being read, or —
