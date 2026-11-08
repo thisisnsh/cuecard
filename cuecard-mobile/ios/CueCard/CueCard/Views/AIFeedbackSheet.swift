@@ -1,7 +1,7 @@
 import SwiftUI
 import FirebaseAnalytics
 
-/// A Follow My Voice session that has just ended, waiting on the reader to
+/// A Follow Me AI session that has just ended, waiting on the reader to
 /// say how it went.
 @MainActor
 final class VoiceFeedback: ObservableObject {
@@ -26,26 +26,74 @@ final class VoiceFeedback: ObservableObject {
     }
 }
 
+/// What was asked of Help AI while Help was open.
+struct HelpChatMetrics {
+    var questions = 0
+    var answered = 0
+    /// Questions with no answer: the model refused, or couldn't be reached.
+    var failed = 0
+}
+
+/// The questions asked of Help AI while Help is open, for asking how helpful
+/// the answers were once it's closed. Asked once each time Help opens: not
+/// again after a rating or report from the chat itself.
+@MainActor
+final class HelpFeedback {
+    static let shared = HelpFeedback()
+
+    private(set) var metrics = HelpChatMetrics()
+    private var hasAsked = false
+
+    private init() {}
+
+    func recordQuestion() {
+        metrics.questions += 1
+    }
+
+    func recordAnswer(failed: Bool) {
+        if failed { metrics.failed += 1 } else { metrics.answered += 1 }
+    }
+
+    /// The rating was asked for, or an issue reported, from the chat.
+    func didAsk() {
+        hasAsked = true
+    }
+
+    /// Help closed: what was asked, if it's still worth asking about, and a
+    /// fresh start for the next time it opens.
+    func finish() -> HelpChatMetrics? {
+        defer {
+            metrics = HelpChatMetrics()
+            hasAsked = false
+        }
+        return metrics.questions > 0 && !hasAsked ? metrics : nil
+    }
+}
+
 /// A beta AI feature that has just been used, waiting on the reader to say
 /// how it went. Each place it's used reports as its own metric.
 enum AIExperience {
     /// Suggestions in the editor, on a script or a deck.
     case suggestions(SuggestionsMetrics)
-    /// Follow My Voice in the teleprompter.
+    /// Follow Me AI in the teleprompter.
     case voice(VoiceSessionMetrics)
+    /// Help AI, answering questions in Help.
+    case help(HelpChatMetrics)
 
     /// What this experience's events start with.
     var metric: String {
         switch self {
         case .suggestions(let metrics): metrics.isDeck ? "suggestions_cards" : "suggestions_teleprompter"
         case .voice: "follow_voice"
+        case .help: "help_ai"
         }
     }
 
     var question: LocalizedStringKey {
         switch self {
         case .suggestions: "How useful were these suggestions?"
-        case .voice: "How well did Follow My Voice keep up?"
+        case .voice: "How well did Follow Me AI keep up?"
+        case .help: "How helpful were the answers?"
         }
     }
 
@@ -61,6 +109,12 @@ enum AIExperience {
             ]
         case .voice(let metrics):
             VoiceFeedback.parameters(for: metrics)
+        case .help(let metrics):
+            [
+                "questions": metrics.questions,
+                "answered": metrics.answered,
+                "failed": metrics.failed
+            ]
         }
     }
 
@@ -68,6 +122,7 @@ enum AIExperience {
         switch self {
         case .suggestions(let metrics): AppLinks.suggestionsReport(metrics: metrics, stars: stars)
         case .voice(let metrics): AppLinks.followVoiceReport(metrics: metrics, stars: stars)
+        case .help(let metrics): AppLinks.helpAIReport(metrics: metrics, stars: stars)
         }
     }
 }

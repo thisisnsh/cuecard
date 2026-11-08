@@ -259,15 +259,15 @@ private struct AppleIntelligenceSection: View {
     var body: some View {
         if OnDeviceModelAvailability.onDevice != .unsupported {
             Section {
-                feature("AI Suggestions",
+                feature("Suggestions AI",
                         detail: "Suggests spelling fixes, cues and formatting to accept or reject.",
                         isOn: $isSuggestionsEnabled, button: "settings_ai_suggestions")
-                feature("Ask AI",
+                feature("Help AI",
                         detail: "Answers your questions about CueCard in Help.",
                         isOn: $isAskAIEnabled, button: "settings_ask_ai")
                 // The teleprompter is the only place it listens.
                 if mode == .teleprompter {
-                    feature("Follow My Voice",
+                    feature("Follow Me AI",
                             detail: "Scrolls the script as you read it aloud.",
                             isOn: $isFollowVoiceEnabled, button: "settings_follow_voice")
                 }

@@ -15,7 +15,7 @@ struct SuggestionsButton: View {
                 .contentShape(Circle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("AI Suggestions")
+        .accessibilityLabel("Suggestions AI")
         .accessibilityHint("Suggests fixes, cues, line breaks and emphasis for your script, on this iPhone")
     }
 }
@@ -111,7 +111,7 @@ struct SuggestionsPanel: View {
         HStack(spacing: 8) {
             Image(systemName: "sparkles")
                 .foregroundStyle(AppColors.purple(for: colorScheme))
-            Text("AI Suggestions")
+            Text("Suggestions AI")
                 .foregroundStyle(primary)
             BetaBadge()
             if review.isRunning { ProgressView().controlSize(.small) }

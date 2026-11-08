@@ -44,11 +44,11 @@ struct SuggestionsMetrics: Equatable {
 /// one for each. Each is on unless the user turns it off; off, the feature
 /// is gone everywhere.
 enum AppleIntelligenceSetting {
-    /// AI Suggestions in the editor.
+    /// Suggestions AI in the editor.
     static let suggestionsKey = "cuecard_ai_suggestions_enabled"
-    /// Ask AI in Help.
+    /// Help AI, answering questions in Help.
     static let askAIKey = "cuecard_ai_ask_enabled"
-    /// Follow My Voice's button in the teleprompter.
+    /// Follow Me AI's button in the teleprompter.
     static let followVoiceKey = "cuecard_follow_voice_enabled"
 
     /// The feature under `key` is on.
@@ -99,12 +99,12 @@ enum OnDeviceModelAvailability: Equatable {
     /// No on-device model on this iPhone or this version of iOS.
     case unsupported
 
-    /// For AI Suggestions, which can be turned off on its own.
+    /// For Suggestions AI, which can be turned off on its own.
     static var forSuggestions: OnDeviceModelAvailability {
         AppleIntelligenceSetting.isEnabled(AppleIntelligenceSetting.suggestionsKey) ? onDevice : .unsupported
     }
 
-    /// For Ask AI, which can be turned off on its own.
+    /// For Help AI, which can be turned off on its own.
     static var forAskAI: OnDeviceModelAvailability {
         AppleIntelligenceSetting.isEnabled(AppleIntelligenceSetting.askAIKey) ? onDevice : .unsupported
     }

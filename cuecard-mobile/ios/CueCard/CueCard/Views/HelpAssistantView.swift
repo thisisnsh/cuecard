@@ -1,23 +1,26 @@
 import SwiftUI
 import FoundationModels
+import FirebaseAnalytics
 
 /// Ask a question and get an answer from Apple's on-device model, drawn from
 /// the help topics. Nothing asked leaves the iPhone.
 struct HelpAssistantView: View {
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.openURL) private var openURL
     @StateObject private var assistant = HelpAssistant()
     @State private var question = ""
+    @State private var isRating = false
     @FocusState private var isAsking: Bool
 
     private let screen = "help_assistant"
 
     /// More to read under the introduction, before anything is asked: the help
-    /// to browse, where this is Help's front page, narrowed to what's typed.
-    let browse: ((String) -> AnyView)?
+    /// to browse, where this is Help's front page.
+    let browse: AnyView?
     /// Done, from the page this was opened from: closes the whole sheet.
     let close: () -> Void
 
-    init(browse: ((String) -> AnyView)? = nil, close: @escaping () -> Void) {
+    init(browse: AnyView? = nil, close: @escaping () -> Void) {
         self.browse = browse
         self.close = close
     }
@@ -31,16 +34,15 @@ struct HelpAssistantView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
                     if assistant.exchanges.isEmpty {
-                        // As Help's front page, typing narrows the help to
-                        // the topics that match, in its place.
-                        if browse == nil || trimmedQuestion.isEmpty {
-                            introduction
-                        }
-                        if let browse { browse(trimmedQuestion) }
+                        introduction
+                        if let browse { browse }
                     }
                     ForEach(assistant.exchanges) { exchange in
                         exchangeView(exchange)
                             .id(exchange.id)
+                    }
+                    if !assistant.exchanges.isEmpty && !assistant.isAnswering {
+                        feedbackRow
                     }
                 }
                 .padding(16)
@@ -52,9 +54,24 @@ struct HelpAssistantView: View {
             }
         }
         .safeAreaInset(edge: .bottom) { askBar }
-        .navigationTitle(browse == nil ? "Ask AI" : "Help")
+        .navigationTitle(browse == nil ? "Help AI" : "Help")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
+            // As Help's front page, back from the chat to the front page.
+            // Pushed from the help list, the system's back button does it.
+            if browse != nil && !assistant.exchanges.isEmpty {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
+                        AnalyticsEvents.logButtonClick("help_ask_back", screen: screen)
+                        isAsking = false
+                        withAnimation(.snappy(duration: 0.25)) { assistant.reset() }
+                    } label: {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 15, weight: .semibold))
+                    }
+                    .accessibilityLabel("Back")
+                }
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Done") {
                     AnalyticsEvents.logButtonClick("help_ask_done", screen: screen)
@@ -68,6 +85,9 @@ struct HelpAssistantView: View {
             isAsking = assistant.availability == .available && browse == nil
         }
         .onDisappear { assistant.stop() }
+        .sheet(isPresented: $isRating) {
+            AIFeedbackSheet(experience: .help(HelpFeedback.shared.metrics))
+        }
     }
 
     // MARK: Parts
@@ -77,7 +97,7 @@ struct HelpAssistantView: View {
             HStack(spacing: 8) {
                 Image(systemName: "sparkles")
                     .foregroundStyle(AppColors.purple(for: colorScheme))
-                Text("Ask AI")
+                Text("Help AI")
                     .font(.headline)
                     .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                 BetaBadge()
@@ -125,6 +145,37 @@ struct HelpAssistantView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
+    }
+
+    /// Under the last answer: rate the answers, or report what went wrong.
+    /// Either one stands for the rating asked for when Help closes.
+    private var feedbackRow: some View {
+        HStack(spacing: 20) {
+            Button {
+                AnalyticsEvents.logButtonClick("help_ai_rate", screen: screen)
+                HelpFeedback.shared.didAsk()
+                isRating = true
+            } label: {
+                Label("Rate Answers", systemImage: "star")
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
+            }
+
+            Button {
+                AnalyticsEvents.logButtonClick("help_ai_report", screen: screen)
+                let experience = AIExperience.help(HelpFeedback.shared.metrics)
+                Analytics.logEvent("\(experience.metric)_report", parameters: experience.parameters)
+                HelpFeedback.shared.didAsk()
+                openURL(experience.reportURL(stars: 0))
+            } label: {
+                Label("Report an Issue", systemImage: "exclamationmark.bubble")
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
+            }
+        }
+        .font(.footnote.weight(.semibold))
+        .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+        .buttonStyle(.plain)
     }
 
     private var askBar: some View {
@@ -206,11 +257,20 @@ final class HelpAssistant: ObservableObject {
         }
     }
 
+    /// Back to nothing asked: stops any answer, and clears the chat.
+    func reset() {
+        stop()
+        exchanges.removeAll()
+        prepare()
+    }
+
     func ask(_ question: String) {
         guard #available(iOS 26.0, *), availability == .available else { return }
         AIUsage.recordQuestion()
-        exchanges.append(Exchange(question: question))
-        let index = exchanges.count - 1
+        HelpFeedback.shared.recordQuestion()
+        let exchange = Exchange(question: question)
+        exchanges.append(exchange)
+        let id = exchange.id
 
         let session = nextSession as? LanguageModelSession ?? HelpAnswerer.session()
         nextSession = nil
@@ -218,16 +278,28 @@ final class HelpAssistant: ObservableObject {
         task = Task { [weak self] in
             do {
                 for try await answer in answers {
-                    self?.exchanges[index].answer = answer
+                    self?.update(id) { $0.answer = answer }
                 }
-                self?.exchanges[index].isAnswering = false
+                self?.update(id) { $0.isAnswering = false }
+                if !Task.isCancelled { HelpFeedback.shared.recordAnswer(failed: false) }
             } catch {
-                self?.exchanges[index].answer = HelpAnswerer.message(for: error)
-                self?.exchanges[index].failed = true
-                self?.exchanges[index].isAnswering = false
+                // Stopped, or the chat cleared: nothing to say about it.
+                guard !Task.isCancelled else { return }
+                self?.update(id) {
+                    $0.answer = HelpAnswerer.message(for: error)
+                    $0.failed = true
+                    $0.isAnswering = false
+                }
+                HelpFeedback.shared.recordAnswer(failed: true)
             }
             if !Task.isCancelled { self?.prepare() }
         }
+    }
+
+    /// Changes the exchange with `id`, if it's still in the chat.
+    private func update(_ id: Exchange.ID, _ change: (inout Exchange) -> Void) {
+        guard let index = exchanges.firstIndex(where: { $0.id == id }) else { return }
+        change(&exchanges[index])
     }
 
     /// Each question gets a session of its own, so one answer never leans on

@@ -10,12 +10,12 @@ struct TeleprompterView: View {
     @Environment(\.dismiss) var dismiss
     @Environment(\.colorScheme) var colorScheme
     @StateObject private var pipManager = TeleprompterPiPManager.shared
-    /// Listens for Follow My Voice, which moves the script with the reader's words.
+    /// Listens for Follow Me AI, which moves the script with the reader's words.
     @StateObject private var voice = VoiceFollower()
-    /// Follow My Voice is on for this read. Off every time the teleprompter
+    /// Follow Me AI is on for this read. Off every time the teleprompter
     /// opens: it's turned on with the waveform at the top.
     @State private var followsVoice = false
-    /// Follow My Voice is turned on in Settings, under Apple Intelligence.
+    /// Follow Me AI is turned on in Settings, under Apple Intelligence.
     @AppStorage(AppleIntelligenceSetting.followVoiceKey) private var isFollowVoiceEnabled = true
 
     private var isPlaying: Bool { pipManager.playback.isPlaying }
@@ -271,7 +271,7 @@ struct TeleprompterView: View {
                         AnalyticsEvents.logButtonClick(followsVoice ? "teleprompter_follow_voice_off" : "teleprompter_follow_voice_on", screen: "teleprompter")
                         followsVoice.toggle()
                     }
-                    .accessibilityLabel(followsVoice ? "Turn Off Follow My Voice" : "Follow My Voice")
+                    .accessibilityLabel(followsVoice ? "Turn Off Follow Me AI" : "Follow Me AI")
                 }
 
                 headerButton(showingCamera ? "camera.fill" : "camera") {
@@ -397,7 +397,7 @@ struct TeleprompterView: View {
                             : (isPlaying ? "Pause" : "Play"))
     }
 
-    // MARK: - Follow My Voice
+    // MARK: - Follow Me AI
 
     /// Play and Pause while following the reader's voice, glowing to say so.
     /// They start and stop listening: the script only moves as words are said.
@@ -424,7 +424,7 @@ struct TeleprompterView: View {
         .accessibilityLabel(voice.isListening ? "Pause" : "Play")
     }
 
-    /// What Follow My Voice is doing, or why it can't. Floats centered over
+    /// What Follow Me AI is doing, or why it can't. Floats centered over
     /// the play button.
     @ViewBuilder
     private var voiceStatus: some View {

@@ -30,8 +30,10 @@ struct HelpTopic: Identifiable {
         self.detail = String(localized: detail)
     }
 
-    func matches(_ query: String) -> Bool {
-        title.localizedCaseInsensitiveContains(query) || detail.localizedCaseInsensitiveContains(query)
+    /// How many of `words` are in the title or the explanation, ignoring
+    /// case and accents.
+    func matchCount(of words: [String]) -> Int {
+        words.filter { title.localizedStandardContains($0) || detail.localizedStandardContains($0) }.count
     }
 }
 
@@ -52,13 +54,6 @@ private struct HelpSection: Identifiable {
         self.systemImage = systemImage
         self.topics = topics
     }
-
-    /// The same section with only the topics that match `query`.
-    func filtered(by query: String) -> HelpSection {
-        var section = self
-        section.topics = topics.filter { $0.matches(query) }
-        return section
-    }
 }
 
 // MARK: - Topics
@@ -74,8 +69,8 @@ private enum AllHelp {
         return section
     }
 
-    private static let suggestionsTopic = HelpTopic("Get AI Suggestions (Beta)",
-                  detail: "Tap the sparkles button at the bottom left of the editor to have Apple Intelligence read your script or deck on this iPhone. It suggests spelling fixes, cues, anchors, line breaks that split long lines into short paragraphs, and bold or italic words. In a deck it leaves out anchors, and only adds a cue where a card has room. Accept or reject each one, or accept them all, then tap Done. Needs an iPhone with Apple Intelligence turned on, and AI Suggestions on in Settings.")
+    private static let suggestionsTopic = HelpTopic("Suggestions AI (Beta)",
+                  detail: "Tap the sparkles button at the bottom left of the editor to have Apple Intelligence read your script or deck on this iPhone. It suggests spelling fixes, cues, anchors, line breaks that split long lines into short paragraphs, and bold or italic words. In a deck it leaves out anchors, and only adds a cue where a card has room. Accept or reject each one, or accept them all, then tap Done. Needs an iPhone with Apple Intelligence turned on, and Suggestions AI on in Settings.")
 
     private static let allWriting = HelpSection("writing", title: "Writing",
                                     summary: "Modes, cues, formatting, images and cards",
@@ -131,7 +126,7 @@ private enum AllHelp {
                   detail: "Open a script, tap the gear at the top, then Language. CueCard is in English, French, Portuguese, Russian and Spanish.")
     ])
 
-    /// Follow My Voice is left out while it's turned off.
+    /// Follow Me AI is left out while it's turned off.
     static var teleprompter: HelpSection {
         var section = allTeleprompter
         if !AppleIntelligenceSetting.isEnabled(AppleIntelligenceSetting.followVoiceKey) {
@@ -140,7 +135,7 @@ private enum AllHelp {
         return section
     }
 
-    private static let followVoiceTopic = HelpTopic("Follow My Voice (Beta)",
+    private static let followVoiceTopic = HelpTopic("Follow Me AI (Beta)",
                   detail: "Tap the waveform at the top of the teleprompter. It's off each time the teleprompter opens. The script moves as you read it aloud, instead of at a set speed, and the timer starts with your first words. Tap Pause to stop listening and Play to listen again. Your voice is understood on this iPhone and never leaves it.")
 
     private static let allTeleprompter = HelpSection("teleprompter", title: "Teleprompter",
@@ -235,14 +230,33 @@ enum HelpLibrary {
     static var topics: [(section: String, topic: HelpTopic)] {
         AllHelp.sections.flatMap { section in section.topics.map { (section.title, $0) } }
     }
+
+    /// The topics with at least one of the words in `query`, those with the
+    /// most of them first, and otherwise in the order help lists them.
+    static func search(_ query: String) -> [(section: String, topic: HelpTopic)] {
+        var seen = Set<String>()
+        var words: [String] = []
+        for word in query.split(whereSeparator: \.isWhitespace) where seen.insert(word.lowercased()).inserted {
+            words.append(String(word))
+        }
+
+        typealias Match = (index: Int, count: Int)
+        let all = topics
+        var matches: [Match] = []
+        for (index, entry) in all.enumerated() {
+            let count = entry.topic.matchCount(of: words)
+            if count > 0 { matches.append((index, count)) }
+        }
+        matches.sort { a, b in a.count != b.count ? a.count > b.count : a.index < b.index }
+        return matches.map { all[$0.index] }
+    }
 }
 
 // MARK: - Help Sheet
 
 /// The same help on every page. Where Apple Intelligence can answer, it
-/// opens on asking a question, with the sections to browse below, which
-/// narrow to the matching topics as the question is typed; otherwise on the
-/// sections, with a search across all of them.
+/// opens on asking a question, with the sections to browse below; otherwise
+/// on the sections, with a search across all of them.
 struct HelpView: View {
     @Environment(\.dismiss) private var dismiss
 
@@ -257,9 +271,7 @@ struct HelpView: View {
     var body: some View {
         NavigationStack {
             if asksFirst {
-                HelpAssistantView(browse: { query in
-                    AnyView(HelpBrowseCards(query: query, close: close))
-                }, close: close)
+                HelpAssistantView(browse: AnyView(HelpBrowseCards(close: close)), close: close)
             } else {
                 HelpTopicsList(close: close)
             }
@@ -295,11 +307,9 @@ private struct HelpTopicsList: View {
         query.trimmingCharacters(in: .whitespaces)
     }
 
-    /// The sections with a topic that matches the search.
-    private var results: [HelpSection] {
-        AllHelp.sections
-            .map { $0.filtered(by: trimmedQuery) }
-            .filter { !$0.topics.isEmpty }
+    /// The topics with any of the words searched for, best match first.
+    private var results: [(section: String, topic: HelpTopic)] {
+        HelpLibrary.search(trimmedQuery)
     }
 
     var body: some View {
@@ -307,15 +317,14 @@ private struct HelpTopicsList: View {
             if trimmedQuery.isEmpty {
                 frontPage
             } else {
-                ForEach(results) { section in
-                    Section(section.title) {
-                        ForEach(section.topics) { topic in
-                            HelpTopicRow(topic: topic, isExpanded: true)
-                        }
+                Section {
+                    ForEach(results, id: \.topic.id) { result in
+                        HelpTopicRow(topic: result.topic, section: result.section, isExpanded: true)
                     }
                 }
             }
         }
+        .listSectionSpacing(.compact)
         .overlay {
             if !trimmedQuery.isEmpty && results.isEmpty {
                 ContentUnavailableView.search(text: trimmedQuery)
@@ -350,7 +359,7 @@ private struct HelpTopicsList: View {
                             .frame(width: 28)
                         VStack(alignment: .leading, spacing: 2) {
                             HStack(spacing: 8) {
-                                Text("Ask AI")
+                                Text("Help AI")
                                     .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                                 BetaBadge()
                             }
@@ -381,9 +390,7 @@ private struct HelpTopicsList: View {
             } label: {
                 linkRow("Request a Feature", systemImage: "lightbulb")
             }
-        }
 
-        Section {
             if whatsNew.release != nil {
                 Button {
                     AnalyticsEvents.logButtonClick("whats_new", screen: HelpView.screen)
@@ -442,57 +449,17 @@ private struct HelpSectionLabel: View {
 }
 
 /// The help to browse, under the question on the asking page: the sections,
-/// then the links, each group on a card of its own. With a question typed,
-/// the topics that match it instead, open.
+/// then the links, each group on a card of its own. What's typed is a
+/// question for AI, so it doesn't narrow them.
 private struct HelpBrowseCards: View {
     @Environment(\.colorScheme) private var colorScheme
     @Environment(\.openURL) private var openURL
     @ObservedObject private var whatsNew = WhatsNewService.shared
 
-    /// What's typed in the question, trimmed.
-    let query: String
     let close: () -> Void
 
-    private var results: [HelpSection] {
-        AllHelp.sections
-            .map { $0.filtered(by: query) }
-            .filter { !$0.topics.isEmpty }
-    }
-
     var body: some View {
-        if query.isEmpty {
-            sections
-        } else {
-            matches
-        }
-    }
-
-    @ViewBuilder
-    private var matches: some View {
-        let results = results
-        VStack(alignment: .leading, spacing: 12) {
-            if results.isEmpty {
-                Text("No help topics match. Tap the arrow to ask AI.")
-                    .font(.subheadline)
-                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                    .padding(.top, 4)
-            }
-            ForEach(results) { section in
-                Text(section.title)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                    .padding(.top, 4)
-                card {
-                    ForEach(Array(section.topics.enumerated()), id: \.element.id) { index, topic in
-                        if index > 0 { Divider().padding(.leading, 16) }
-                        HelpTopicRow(topic: topic, isExpanded: true)
-                            .buttonStyle(.plain)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 10)
-                    }
-                }
-            }
-        }
+        sections
     }
 
     private var sections: some View {
@@ -609,11 +576,12 @@ private struct HelpSectionView: View {
 }
 
 /// A topic's title, and its explanation once opened. Search results start
-/// open, so the match shows.
+/// open, so the match shows, with the section they're from above the title.
 private struct HelpTopicRow: View {
     @Environment(\.colorScheme) private var colorScheme
 
     let topic: HelpTopic
+    var section: String?
     @State var isExpanded = false
 
     var body: some View {
@@ -622,6 +590,11 @@ private struct HelpTopicRow: View {
             withAnimation(.snappy(duration: 0.25)) { isExpanded.toggle() }
         } label: {
             VStack(alignment: .leading, spacing: 4) {
+                if let section {
+                    Text(section)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(AppColors.textSecondary(for: colorScheme))
+                }
                 HStack(alignment: .firstTextBaseline) {
                     Text(topic.title)
                         .foregroundStyle(AppColors.textPrimary(for: colorScheme))
@@ -688,8 +661,33 @@ extension View {
     /// The help sheet for `page`, opened by its `HelpToolbarItem`. Kept on the
     /// page rather than the button, so the sheet stays up if the button fades.
     func helpSheet(for page: HelpPage, isPresented: Binding<Bool>) -> some View {
-        sheet(isPresented: isPresented) {
-            HelpView(page: page)
-        }
+        modifier(HelpSheet(page: page, isPresented: isPresented))
+    }
+}
+
+/// Help, and once it's closed after questions were asked of Help AI, the
+/// question of how helpful the answers were, unless it was already asked.
+private struct HelpSheet: ViewModifier {
+    let page: HelpPage
+    @Binding var isPresented: Bool
+    @State private var aiExperience: AIExperience?
+
+    func body(content: Content) -> some View {
+        content
+            .sheet(isPresented: $isPresented, onDismiss: {
+                if let metrics = HelpFeedback.shared.finish() {
+                    aiExperience = .help(metrics)
+                }
+            }) {
+                HelpView(page: page)
+            }
+            .sheet(isPresented: Binding(
+                get: { aiExperience != nil },
+                set: { if !$0 { aiExperience = nil } }
+            )) {
+                if let aiExperience {
+                    AIFeedbackSheet(experience: aiExperience)
+                }
+            }
     }
 }

@@ -132,23 +132,35 @@ enum AppLinks {
         body: String(localized: "What happened:\n\nWhat you expected:\n\nSteps to reproduce:\n")
     )
 
-    /// An email to support about Follow My Voice, with how the session went.
+    /// An email to support about Follow Me AI, with how the session went.
     static func followVoiceReport(metrics: VoiceSessionMetrics, stars: Int) -> URL {
-        let session = "Follow My Voice (beta) · \(Int(metrics.listenedSeconds))s listened · "
+        let session = "Follow Me AI (beta) · \(Int(metrics.listenedSeconds))s listened · "
             + "\(Int((metrics.progress * 100).rounded()))% of script" + (stars > 0 ? " · \(stars)/5" : "")
         return supportEmail(
-            subject: "CueCard Follow My Voice Issue",
+            subject: "CueCard Follow Me AI Issue",
             body: String(localized: "What happened:\n\nWhat you expected:\n") + "\n" + session
         )
     }
 
-    /// An email to support about Suggestions, with how the review went.
+    /// An email to support about Suggestions AI, with how the review went.
     static func suggestionsReport(metrics: SuggestionsMetrics, stars: Int) -> URL {
-        let session = "Suggestions (beta) · \(metrics.isDeck ? "cards" : "teleprompter") · "
+        let session = "Suggestions AI (beta) · \(metrics.isDeck ? "cards" : "teleprompter") · "
             + "\(metrics.found) found · \(metrics.accepted) accepted · \(metrics.rejected) rejected"
             + (stars > 0 ? " · \(stars)/5" : "")
         return supportEmail(
-            subject: "CueCard Suggestions Issue",
+            subject: "CueCard Suggestions AI Issue",
+            body: String(localized: "What happened:\n\nWhat you expected:\n") + "\n" + session
+        )
+    }
+
+    /// An email to support about Help AI, with what was asked while Help
+    /// was open.
+    static func helpAIReport(metrics: HelpChatMetrics, stars: Int) -> URL {
+        let session = "Help AI (beta) · \(metrics.questions) asked · "
+            + "\(metrics.answered) answered · \(metrics.failed) failed"
+            + (stars > 0 ? " · \(stars)/5" : "")
+        return supportEmail(
+            subject: "CueCard Help AI Issue",
             body: String(localized: "What happened:\n\nWhat you expected:\n") + "\n" + session
         )
     }

@@ -2,7 +2,7 @@ import AVFoundation
 import NaturalLanguage
 import Speech
 
-/// Follow My Voice (beta): the teleprompter listens to the reader and keeps
+/// Follow Me AI (beta): the teleprompter listens to the reader and keeps
 /// the words being said on the reading line, instead of scrolling at a set
 /// speed. Speech is recognized on the iPhone and never leaves it.
 @MainActor
@@ -211,7 +211,7 @@ final class VoiceFollower: ObservableObject {
     }
 }
 
-/// What a Follow My Voice session amounted to, for the rating sent after it.
+/// What a Follow Me AI session amounted to, for the rating sent after it.
 struct VoiceSessionMetrics {
     var listenedSeconds: Double = 0
     /// The most words heard in one stretch of recognition.

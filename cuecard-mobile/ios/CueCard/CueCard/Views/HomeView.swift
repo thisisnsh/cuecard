@@ -43,7 +43,7 @@ struct HomeView: View {
     @State private var bottomEdgeHeight: CGFloat = 0
     /// A use of a beta AI feature to ask the reader about.
     @State private var aiExperience: AIExperience?
-    /// AI Suggestions turned on in Settings, watched so it goes as soon as
+    /// Suggestions AI turned on in Settings, watched so it goes as soon as
     /// it's turned off.
     @AppStorage(AppleIntelligenceSetting.suggestionsKey) private var isSuggestionsEnabled = true
     @ObservedObject private var cardsSession = CueCardsSession.shared
@@ -172,7 +172,7 @@ struct HomeView: View {
     }
 
     /// Back from the teleprompter: anything recorded while it was open is a
-    /// take now. After Follow My Voice, the reader is asked how it went —
+    /// take now. After Follow Me AI, the reader is asked how it went —
     /// in place of the review prompt, so it's one question at a time.
     private func teleprompterDidClose() {
         takes.reload()
@@ -191,7 +191,7 @@ struct HomeView: View {
 
     /// Suggestions from Apple's on-device model, for a script being written for
     /// the teleprompter. Not shown where this iPhone has no model to ask, or
-    /// AI Suggestions is turned off in Settings.
+    /// Suggestions AI is turned off in Settings.
     private var showsSuggestions: Bool {
         hasNotes && isSuggestionsEnabled && OnDeviceModelAvailability.forSuggestions != .unsupported
     }
@@ -442,7 +442,7 @@ struct HomeView: View {
         } else {
             VStack(spacing: 10) {
                 if hasNotes && !showsSuggestions {
-                    // Without AI Suggestions, the timer has the left to itself,
+                    // Without Suggestions AI, the timer has the left to itself,
                     // and Takes and Play are on the right.
                     HStack(spacing: 12) {
                         timerControl
@@ -451,7 +451,7 @@ struct HomeView: View {
                         startButton
                     }
                 } else if hasNotes {
-                    // AI Suggestions on the left; Takes, the timer and Play on
+                    // Suggestions AI on the left; Takes, the timer and Play on
                     // the right, the timer beside Play. With no room for them
                     // on one line, Takes stacks over the timer.
                     ViewThatFits(in: .horizontal) {
@@ -547,7 +547,7 @@ struct HomeView: View {
                 review.finished = nil
                 aiExperience = .suggestions(finished)
             }
-            .alert("AI Suggestions", isPresented: Binding(
+            .alert("Suggestions AI", isPresented: Binding(
                 get: { suggestionsUnavailable != nil || review.errorMessage != nil },
                 set: { if !$0 { suggestionsUnavailable = nil; review.errorMessage = nil } }
             )) {
