@@ -659,7 +659,7 @@ struct HomeView: View {
             TimerSheet()
         }
         .sheet(isPresented: $showingTakes) {
-            TakesView(library: takes, scriptTitle: settingsService.currentNote?.title)
+            TakesView(library: takes)
                 .zoomsFromTakes(in: takesTransition)
         }
         .photosPicker(isPresented: $showingImagePicker, selection: $pickedImages,

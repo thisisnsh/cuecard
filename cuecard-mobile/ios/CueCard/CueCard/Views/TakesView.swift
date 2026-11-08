@@ -56,8 +56,6 @@ struct TakesIcon: View {
 /// Every take of the script, newest first, opening into playback and details.
 struct TakesView: View {
     @ObservedObject var library: TakesLibrary
-    /// The saved note's title, while the script is one.
-    let scriptTitle: String?
     @Environment(\.dismiss) var dismiss
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -99,17 +97,10 @@ struct TakesView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .principal) {
-                    VStack(spacing: 1) {
-                        Text("Takes")
-                            .font(.headline)
-                            .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                        if let scriptTitle {
-                            Text(scriptTitle)
-                                .lineLimit(1)
-                                .font(.caption2)
-                                .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                        }
-                    }
+                    Text("Takes")
+                        .font(.headline)
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                 }
 
                 ToolbarItem(placement: .topBarTrailing) {

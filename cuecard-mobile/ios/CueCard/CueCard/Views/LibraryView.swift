@@ -23,11 +23,6 @@ struct LibraryView: View {
     @State private var showingWatchCards = false
     /// The app went to the background since it was last opened.
     @State private var wasInBackground = false
-    /// The mode whose open script is playing, started from the library.
-    @State private var playing: ScriptMode?
-    /// A use of a beta AI feature to ask the reader about.
-    @State private var aiExperience: AIExperience?
-    @Environment(\.requestReview) private var requestReview
     @AppStorage(LibraryStorageWarning.dismissedKey) private var warningDismissed = false
     @AppStorage(LibraryStorageWarning.opensKey) private var opensSinceDismissed = 0
 
@@ -47,7 +42,7 @@ struct LibraryView: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            LibraryList(path: $path, takeCounts: takeCounts, onPlay: play)
+            LibraryList(path: $path, takeCounts: takeCounts)
                 .navigationDestination(for: LibraryRoute.self) { route in
                     switch route {
                     case .editor:
@@ -60,26 +55,6 @@ struct LibraryView: View {
                 // Passed on by hand: as an iPad app on a Mac, a full screen
                 // cover doesn't inherit environment objects.
                 .environmentObject(settingsService)
-        }
-        .fullScreenCover(item: $playing, onDismiss: playDidClose) { mode in
-            switch mode {
-            case .teleprompter:
-                TeleprompterView(content: TeleprompterParser.parseNotes(settingsService.notes(for: .teleprompter)))
-                    .environmentObject(settingsService)
-            case .cards:
-                CueCardsView(cards: CueCards.cards(in: settingsService.notes(for: .cards)),
-                             title: settingsService.currentNote?.title ?? String(localized: "Cards"),
-                             deckID: settingsService.currentNoteId)
-                    .environmentObject(settingsService)
-            }
-        }
-        .sheet(isPresented: Binding(
-            get: { aiExperience != nil },
-            set: { if !$0 { aiExperience = nil } }
-        )) {
-            if let aiExperience {
-                AIFeedbackSheet(experience: aiExperience)
-            }
         }
         .onAppear {
             takeCounts.reload()
@@ -118,40 +93,10 @@ struct LibraryView: View {
         takeCounts.reload()
     }
 
-    /// Play the script open in `mode`, as the editor's Play button would,
-    /// coming back to the library when it closes.
-    private func play(_ mode: ScriptMode) {
-        settingsService.settings.scriptMode = mode
-        playing = mode
-    }
-
-    /// Back from playing: anything recorded is a take now, and a session
-    /// with Follow Me AI is asked about, as from the editor.
-    private func playDidClose() {
-        takeCounts.reload()
-        if let metrics = VoiceFeedback.shared.pending {
-            VoiceFeedback.shared.pending = nil
-            aiExperience = .voice(metrics)
-        } else {
-            requestReviewIfEarned()
-        }
-    }
-
-    /// Ask for a review once playing has closed, after its dismissal has
-    /// finished, so the system alert doesn't land on a moving screen.
-    private func requestReviewIfEarned() {
-        guard ReviewPromptService.shared.shouldRequestReview else { return }
-        Task { @MainActor in
-            try? await Task.sleep(nanoseconds: 800_000_000)
-            ReviewPromptService.shared.logReviewRequested()
-            requestReview()
-        }
-    }
-
     /// The editor shows a deck opened from the watch itself, while it's open.
     private func showCardsOpenedOnWatch() {
         guard scenePhase == .active, !path.contains(.editor), !cardsSession.cards.isEmpty,
-              !showingWatchCards, playing == nil else { return }
+              !showingWatchCards else { return }
         showingWatchCards = true
     }
 
@@ -214,7 +159,6 @@ private enum PendingOpen: Identifiable {
 /// The script whose takes are open.
 private struct TakesTarget: Identifiable {
     let id: UUID
-    let title: String
 }
 
 // MARK: - List
@@ -225,8 +169,6 @@ private struct TakesTarget: Identifiable {
 private struct LibraryList: View {
     @Binding var path: [LibraryRoute]
     @ObservedObject var takeCounts: TakeCounts
-    /// Play the script open in a mode, without the editor.
-    let onPlay: (ScriptMode) -> Void
 
     @EnvironmentObject var settingsService: SettingsService
     @EnvironmentObject var notifications: RemoteNotificationService
@@ -383,7 +325,7 @@ private struct LibraryList: View {
                         }
                     }
                 )
-                .plainRow(insets: Self.rowInsets)
+                .plainRow(insets: Self.scriptInsets)
             }
 
             if hasDraft || !notes.isEmpty {
@@ -438,7 +380,7 @@ private struct LibraryList: View {
         .toolbar { toolbar }
         .helpSheet(for: .library, isPresented: $showingHelp)
         .sheet(item: $takesTarget, onDismiss: takeCounts.reload) { target in
-            ScriptTakesSheet(scriptID: target.id, title: target.title)
+            ScriptTakesSheet(scriptID: target.id)
         }
         .sheet(item: $noteToCollect) { note in
             CollectionPicker(noteID: note.id, screen: Self.screen)
@@ -803,9 +745,6 @@ private struct LibraryList: View {
     private var heroRow: some View {
         let text = settingsService.notes(for: mode)
         let plain = LibraryText.plain(text)
-        let canPlay = mode == .cards
-            ? !CueCards.cards(in: text).isEmpty
-            : !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         if let note = openNote {
             let isUnsaved = settingsService.hasUnsavedChanges(in: mode)
             LibraryHero(
@@ -817,16 +756,10 @@ private struct LibraryList: View {
                 collection: tag(for: note.collection),
                 takes: takeCounts.count(for: note.id),
                 recentTakes: takeCounts.recentTakes(for: note.id),
-                // Changes not saved yet are opened from the row itself.
-                showsActions: !isUnsaved,
-                canPlay: canPlay,
-                mode: mode,
                 colorScheme: colorScheme,
-                onPlay: { play(from: "library_play_note") },
-                onEdit: { open(note, from: "library_edit_note") },
                 onTakes: {
                     AnalyticsEvents.logButtonClick("library_takes_note", screen: Self.screen)
-                    takesTarget = TakesTarget(id: note.id, title: note.title)
+                    takesTarget = TakesTarget(id: note.id)
                 }
             )
             .onTapGesture { open(note) }
@@ -846,18 +779,10 @@ private struct LibraryList: View {
                 collection: tag(for: settingsService.draftCollection(for: mode)),
                 takes: takeCounts.count(for: scriptID),
                 recentTakes: takeCounts.recentTakes(for: scriptID),
-                showsActions: true,
-                canPlay: canPlay,
-                mode: mode,
                 colorScheme: colorScheme,
-                onPlay: { play(from: "library_play_draft") },
-                onEdit: {
-                    AnalyticsEvents.logButtonClick("library_edit_draft", screen: Self.screen)
-                    openDraft(mode)
-                },
                 onTakes: {
                     AnalyticsEvents.logButtonClick("library_takes_draft", screen: Self.screen)
-                    takesTarget = TakesTarget(id: scriptID, title: title)
+                    takesTarget = TakesTarget(id: scriptID)
                 }
             )
             .onTapGesture {
@@ -888,7 +813,7 @@ private struct LibraryList: View {
             colorScheme: colorScheme,
             onTakes: {
                 AnalyticsEvents.logButtonClick("library_takes_draft", screen: Self.screen)
-                takesTarget = TakesTarget(id: scriptID, title: title)
+                takesTarget = TakesTarget(id: scriptID)
             }
         )
         .onTapGesture {
@@ -956,7 +881,7 @@ private struct LibraryList: View {
             colorScheme: colorScheme,
             onTakes: {
                 AnalyticsEvents.logButtonClick("library_takes_note", screen: Self.screen)
-                takesTarget = TakesTarget(id: note.id, title: note.title)
+                takesTarget = TakesTarget(id: note.id)
             }
         )
         .onTapGesture { open(note) }
@@ -1070,12 +995,6 @@ private struct LibraryList: View {
                                                                       colorScheme: colorScheme))
     }
 
-    /// Play the script open in the chosen mode.
-    private func play(from button: String) {
-        AnalyticsEvents.logButtonClick(button, screen: Self.screen,
-                                       parameters: ["mode": mode.rawValue])
-        onPlay(mode)
-    }
     // MARK: Actions
 
     /// Open a saved note in the editor. One already open there keeps what's
@@ -1499,8 +1418,8 @@ private struct LibraryScriptRow: View {
     }
 }
 
-/// The script open in the editor, larger, at the top of the list: played
-/// from here, or opened to keep writing.
+/// The script open in the editor, larger, at the top of the list, opened
+/// to keep writing.
 private struct LibraryHero: View {
     let title: String
     let preview: String
@@ -1511,14 +1430,7 @@ private struct LibraryHero: View {
     let collection: LibraryCollectionTag?
     let takes: Int
     let recentTakes: [PHAsset]
-    /// Play and Edit, left out while there are changes not saved yet.
-    let showsActions: Bool
-    /// There's something to play: words for the teleprompter, or a card.
-    let canPlay: Bool
-    let mode: ScriptMode
     let colorScheme: ColorScheme
-    let onPlay: () -> Void
-    let onEdit: () -> Void
     let onTakes: () -> Void
 
     var body: some View {
@@ -1554,8 +1466,12 @@ private struct LibraryHero: View {
                     .lineLimit(3)
             }
 
-            if showsActions || takes > 0 {
-                heroControls(primary: primary, secondary: secondary)
+            if takes > 0 {
+                LibraryTakeStrip(takes: takes, recentTakes: recentTakes,
+                                 frameSize: CGSize(width: 30, height: 40), cornerRadius: 7,
+                                 colorScheme: colorScheme, onTakes: onTakes)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .padding(.top, 10)
             }
         }
         .padding(.top, 6)
@@ -1564,45 +1480,6 @@ private struct LibraryHero: View {
         .overlay(alignment: .bottom) { LibraryHairline(colorScheme: colorScheme) }
         .contentShape(Rectangle())
         .accessibilityElement(children: .contain)
-    }
-
-    private func heroControls(primary: Color, secondary: Color) -> some View {
-        HStack(spacing: 10) {
-            if showsActions {
-                Button(action: onPlay) {
-                    Image(systemName: "play.fill")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(AppColors.background(for: colorScheme))
-                        .frame(width: 44, height: 44)
-                        .background(Circle().fill(primary))
-                        .contentShape(Circle())
-                }
-                .buttonStyle(.borderless)
-                .disabled(!canPlay)
-                .opacity(canPlay ? 1 : 0.4)
-                .accessibilityLabel(mode == .cards ? "Open Cards" : "Start Teleprompter")
-
-                Button(action: onEdit) {
-                    Text("Edit", comment: "Opens the script in the editor, from the library")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(primary)
-                        .padding(.horizontal, 20)
-                        .frame(height: 44)
-                        .background(Capsule().fill(secondary.opacity(0.15)))
-                        .contentShape(Capsule())
-                }
-                .buttonStyle(.borderless)
-            }
-
-            Spacer(minLength: 8)
-
-            if takes > 0 {
-                LibraryTakeStrip(takes: takes, recentTakes: recentTakes,
-                                 frameSize: CGSize(width: 30, height: 40), cornerRadius: 7,
-                                 colorScheme: colorScheme, onTakes: onTakes)
-            }
-        }
-        .padding(.top, 10)
     }
 }
 
@@ -1869,6 +1746,8 @@ private struct CollectionPicker: View {
 /// Says plainly that scripts are lost with the app until there's a storage
 /// folder, and offers to choose one. Put away, it comes back every tenth
 /// time the app is opened. With a folder that can't be reached, says that.
+/// Drawn like a row of the list: no card, the yellow dot of what isn't
+/// kept safe yet, and a line below.
 private struct LibraryStorageBanner: View {
     /// There's a folder, but it can't be reached.
     let isUnreachable: Bool
@@ -1876,57 +1755,48 @@ private struct LibraryStorageBanner: View {
     let onChoose: () -> Void
     let onDismiss: (() -> Void)?
 
-    static let cornerRadius: CGFloat = 22
-
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .top, spacing: 12) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(isUnreachable ? "Storage Folder Can't Be Reached" : "Your Scripts Aren't Backed Up")
-                        .font(.headline)
-                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                    Text(isUnreachable
-                         ? "Your scripts are only kept in CueCard until it's back. Choose it again if it moved."
-                         : "If CueCard is deleted, your scripts go with it. Choose a folder on this iPhone or in iCloud Drive to keep each one as a file.")
-                        .font(.subheadline)
-                        .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+        let yellow = AppColors.yellow(for: colorScheme)
+        let secondary = AppColors.textSecondary(for: colorScheme)
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(yellow)
+                    .frame(width: 7, height: 7)
+                    .accessibilityHidden(true)
+                Text(isUnreachable ? "Storage Folder Can't Be Reached" : "Your Scripts Aren't Backed Up")
+                    .font(.headline)
+                    .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isHeader)
 
+            Text(isUnreachable
+                 ? "Your scripts are only kept in CueCard until it's back. Choose it again if it moved."
+                 : "If CueCard is deleted, your scripts go with it. Choose a folder on this iPhone or in iCloud Drive to keep each one as a file.")
+                .font(.subheadline)
+                .foregroundStyle(secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            HStack(spacing: 20) {
+                Button(action: onChoose) {
+                    Text(isUnreachable ? "Choose Folder Again" : "Choose Folder")
+                        .foregroundStyle(yellow)
+                }
                 if let onDismiss {
-                    Spacer(minLength: 0)
                     Button(action: onDismiss) {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundStyle(AppColors.textSecondary(for: colorScheme))
-                            .frame(width: 28, height: 28)
-                            .background(Circle().fill(AppColors.textSecondary(for: colorScheme).opacity(0.15)))
+                        Text("Not Now")
+                            .foregroundStyle(secondary)
                     }
-                    .buttonStyle(.borderless)
-                    .accessibilityLabel("Not Now")
                 }
             }
-
-            Button(action: onChoose) {
-                Text(isUnreachable ? "Choose Folder Again" : "Choose Folder")
-                    .font(.subheadline.weight(.semibold))
-                    .padding(.horizontal, 18)
-                    .frame(height: 38)
-                    .foregroundStyle(colorScheme == .dark ? .black : .white)
-                    .background(Capsule().fill(AppColors.textPrimary(for: colorScheme)))
-            }
+            .font(.subheadline.weight(.semibold))
             .buttonStyle(.borderless)
+            .padding(.top, 4)
         }
-        .padding(16)
+        .padding(.vertical, 14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: LibraryStorageBanner.cornerRadius, style: .continuous)
-                .fill(AppColors.yellow(for: colorScheme).opacity(colorScheme == .dark ? 0.14 : 0.12))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: LibraryStorageBanner.cornerRadius, style: .continuous)
-                .stroke(AppColors.yellow(for: colorScheme).opacity(0.4), lineWidth: 1)
-        )
+        .overlay(alignment: .bottom) { LibraryHairline(colorScheme: colorScheme) }
     }
 }
 
@@ -2003,11 +1873,9 @@ private struct LibraryFooter: View {
 
 /// The takes of a script opened from the library, rather than the editor.
 private struct ScriptTakesSheet: View {
-    let title: String
     @StateObject private var library: TakesLibrary
 
-    init(scriptID: UUID, title: String) {
-        self.title = title
+    init(scriptID: UUID) {
         _library = StateObject(wrappedValue: {
             let library = TakesLibrary()
             library.load(scriptID: scriptID)
@@ -2016,7 +1884,7 @@ private struct ScriptTakesSheet: View {
     }
 
     var body: some View {
-        TakesView(library: library, scriptTitle: title)
+        TakesView(library: library)
     }
 }
 
