@@ -325,6 +325,9 @@ private struct HelpTopicsList: View {
             }
         }
         .listSectionSpacing(.compact)
+        // The list's own gap above the first group is too much under the
+        // search field.
+        .contentMargins(.top, 8, for: .scrollContent)
         .overlay {
             if !trimmedQuery.isEmpty && results.isEmpty {
                 ContentUnavailableView.search(text: trimmedQuery)
