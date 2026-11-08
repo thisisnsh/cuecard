@@ -43,6 +43,9 @@ struct HomeView: View {
     @State private var bottomEdgeHeight: CGFloat = 0
     /// A use of a beta AI feature to ask the reader about.
     @State private var aiExperience: AIExperience?
+    /// What Suggestions AI is doing shows over the controls; how to take a
+    /// suggestion only for a few seconds.
+    @State private var showsSuggestionsStatus = true
     /// Suggestions AI turned on in Settings, watched so it goes as soon as
     /// it's turned off.
     @AppStorage(AppleIntelligenceSetting.suggestionsKey) private var isSuggestionsEnabled = true
@@ -437,7 +440,7 @@ struct HomeView: View {
             .transition(.move(edge: .bottom).combined(with: .opacity))
         } else {
             VStack(spacing: 10) {
-                if review.isActive {
+                if review.isActive && showsSuggestionsStatus {
                     SuggestionsStatus(review: review, colorScheme: colorScheme)
                         // Clear of the buttons' glass below.
                         .padding(.bottom, 6)
@@ -542,6 +545,16 @@ struct HomeView: View {
             }
             .onChange(of: isSuggestionsEnabled) {
                 if !isSuggestionsEnabled { review.end() }
+            }
+            // Once the script's read, how to take a suggestion shows for a
+            // few seconds, then goes, so it isn't mistaken for something to
+            // tap. "No suggestions" stays until they're turned off.
+            .task(id: review.isActive && !review.isRunning) {
+                showsSuggestionsStatus = true
+                guard review.isActive, !review.isRunning, !review.suggestions.isEmpty else { return }
+                try? await Task.sleep(for: .seconds(3))
+                guard !Task.isCancelled else { return }
+                withAnimation(.easeInOut(duration: 0.25)) { showsSuggestionsStatus = false }
             }
             // A review seen through: ask how it went.
             .onChange(of: review.finished) {

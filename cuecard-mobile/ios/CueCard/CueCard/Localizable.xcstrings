@@ -16757,30 +16757,30 @@
         }
       }
     },
-    "Tap to accept/reject suggestions" : {
+    "Tap the suggestion to accept/reject" : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Toca para aceptar/rechazar sugerencias"
+            "value" : "Toca la sugerencia para aceptar/rechazar"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Touchez pour accepter/refuser les suggestions"
+            "value" : "Touchez la suggestion pour accepter/refuser"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Toque para aceitar/rejeitar sugestões"
+            "value" : "Toque na sugestão para aceitar/rejeitar"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Коснитесь, чтобы принять/отклонить предложения"
+            "value" : "Коснитесь предложения, чтобы принять/отклонить"
           }
         }
       }

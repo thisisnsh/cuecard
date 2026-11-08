@@ -726,10 +726,12 @@ enum ScriptSuggester {
         case .missingWords, .rewrite:
             // Only the words that differ, so the rest of the line stays as
             // it is. The model sometimes sets what it writes in quotes or
-            // bold; what it means is the words.
+            // bold; what it means is the words. A pause it writes as a cue
+            // is taken as a dash, which becomes the cue below.
             let fixed = value.filter { $0 != "*" && $0 != "_" }
+                .replacingOccurrences(of: "[pause]", with: " — ", options: .caseInsensitive)
                 .trimmingCharacters(in: CharacterSet(charactersIn: "\"“”«»").union(.whitespaces))
-            guard let change = wordChange(from: original, at: range, to: fixed),
+            guard var change = wordChange(from: original, at: range, to: fixed),
                   change.replacement.rangeOfCharacter(from: markup.union(.newlines)) == nil,
                   text.substring(with: change.range).rangeOfCharacter(from: markup) == nil,
                   !context.protected.contains(where: {
@@ -737,6 +739,7 @@ enum ScriptSuggester {
                           || ($0.location < change.range.location && change.range.location < NSMaxRange($0))
                   })
             else { return nil }
+            change.replacement = pausingAtDashes(change.replacement)
             return ScriptSuggestion(kind: kind, range: change.range, original: text.substring(with: change.range),
                                     replacement: change.replacement)
 
@@ -811,6 +814,21 @@ enum ScriptSuggester {
               CharacterSet(charactersIn: ".!?…。！？").contains(last)
         else { return nil }
         return NSRange(location: start, length: NSMaxRange(words) - start)
+    }
+
+    /// A dash the model wrote between words, as a [pause] cue: in a script
+    /// read aloud, that's what a dash is for. A dash inside a word, like a
+    /// range of years, stays.
+    private static func pausingAtDashes(_ text: String) -> String {
+        let pause = " \(TeleprompterParser.cueTag(text: "pause")) "
+        var result = text.replacingOccurrences(of: #"\s*—\s*|\s+[–-]\s+"#, with: pause, options: .regularExpression)
+        guard result != text else { return text }
+        result = result.replacingOccurrences(of: " {2,}", with: " ", options: .regularExpression)
+        // Spaces at either end only where there were some to begin with:
+        // words put in bring their own.
+        if !text.hasPrefix(" ") { result = String(result.drop { $0 == " " }) }
+        if !text.hasSuffix(" ") { while result.hasSuffix(" ") { result.removeLast() } }
+        return result
     }
 
     /// Lines that look cut short: a paragraph of its own that starts with a

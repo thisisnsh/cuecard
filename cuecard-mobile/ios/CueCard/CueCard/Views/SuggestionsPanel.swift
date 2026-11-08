@@ -71,7 +71,7 @@ extension View {
 
 /// What Suggestions AI is doing, floating centered over the home controls
 /// like Follow Me AI's over the teleprompter's: reading the script, then
-/// what to do with what it found. The suggestions themselves are in the script, each
+/// what to do with what it found, until that's had a moment to sink in. The suggestions themselves are in the script, each
 /// accepted or rejected with a tap on it.
 struct SuggestionsStatus: View {
     @ObservedObject var review: ScriptReview
@@ -86,6 +86,7 @@ struct SuggestionsStatus: View {
             label
                 .lineLimit(1)
                 .minimumScaleFactor(0.85)
+            if review.isRunning { BetaBadge() }
         }
         .font(.footnote.weight(.semibold))
         .foregroundStyle(AppColors.textPrimary(for: colorScheme))
@@ -108,7 +109,7 @@ struct SuggestionsStatus: View {
         if review.isRunning {
             Text("Reading your script")
         } else if !review.suggestions.isEmpty {
-            Text("Tap to accept/reject suggestions")
+            Text("Tap the suggestion to accept/reject")
         } else {
             Text("No suggestions")
         }
