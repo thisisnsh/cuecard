@@ -55,12 +55,16 @@ extension View {
     /// Apply to the scrolling view, before its fixed header or footer. SwiftUI
     /// sizes the mask to the visible area between the bars and keyboard.
     /// Without `fadesEnd`, only the start fades, and the content runs on
-    /// under whatever floats over the end.
+    /// under whatever floats over the end. `startOverlap` moves the start fade
+    /// that far back, under what's pinned at the start, so the content fades
+    /// out behind it rather than at its edge.
     @ViewBuilder
     func scrollEdgeFade(axis: Axis = .vertical, length: CGFloat = 24,
-                        insetContent: Bool = true, fadesEnd: Bool = true, enabled: Bool = true) -> some View {
+                        insetContent: Bool = true, fadesEnd: Bool = true,
+                        startOverlap: CGFloat = 0, enabled: Bool = true) -> some View {
         if enabled {
-            modifier(ScrollEdgeFade(axis: axis, length: length, insetContent: insetContent, fadesEnd: fadesEnd))
+            modifier(ScrollEdgeFade(axis: axis, length: length, insetContent: insetContent,
+                                    fadesEnd: fadesEnd, startOverlap: max(startOverlap, 0)))
         } else {
             self
         }
@@ -72,6 +76,7 @@ private struct ScrollEdgeFade: ViewModifier {
     let length: CGFloat
     let insetContent: Bool
     let fadesEnd: Bool
+    let startOverlap: CGFloat
 
     private var edges: Edge.Set { axis == .vertical ? .vertical : .horizontal }
     private var fadedEdges: Edge.Set {
@@ -83,7 +88,7 @@ private struct ScrollEdgeFade: ViewModifier {
             .systemScrollEdgesHidden(edges)
             .mask {
                 GeometryReader { geometry in
-                    let size = axis == .vertical ? geometry.size.height : geometry.size.width
+                    let size = (axis == .vertical ? geometry.size.height : geometry.size.width) + startOverlap
                     // The mask is already inside the safe area. Padding by the
                     // inherited safe-area insets here would subtract it twice.
                     let fraction = min(max(length, 0) / max(size, 1), 0.5)
@@ -98,6 +103,8 @@ private struct ScrollEdgeFade: ViewModifier {
                         .init(color: fadesEnd ? .clear : .black, location: 1)
                     ], startPoint: axis == .vertical ? .top : .leading,
                        endPoint: axis == .vertical ? .bottom : .trailing)
+                    // Reaching back past the start, into the inset there.
+                    .padding(axis == .vertical ? .top : .leading, -startOverlap)
                 }
                 // Without a fade at the end, the content stays in view under
                 // the bar there too, rather than being cut off at its edge.

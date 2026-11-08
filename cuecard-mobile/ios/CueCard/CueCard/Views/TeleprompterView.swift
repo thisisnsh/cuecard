@@ -244,9 +244,9 @@ struct TeleprompterView: View {
     // MARK: - Header
 
     /// Close and the timer on the left, the reading buttons on the right. The
-    /// buttons fade like the ones below, in place, so the timer doesn't move
-    /// and stays up. A tap anywhere else on the row does what a tap on the
-    /// script does.
+    /// buttons fade like the ones below, in place. The timer stays up, and
+    /// moves to the middle of the row while they're gone. A tap anywhere else
+    /// on the row does what a tap on the script does.
     private var header: some View {
         let buttonsHidden = !showControls && !showingCamera
         return HStack(spacing: 8) {
@@ -256,12 +256,6 @@ struct TeleprompterView: View {
             }
             .accessibilityLabel("Close")
             .fadedOut(buttonsHidden)
-
-            Text(timeDisplay)
-                .font(.system(size: 16, weight: .bold, design: .monospaced))
-                .foregroundStyle(timerColor)
-                .lineLimit(1)
-                .fixedSize()
 
             Spacer(minLength: 0)
 
@@ -289,6 +283,18 @@ struct TeleprompterView: View {
             }
             .fadedOut(buttonsHidden)
         }
+        .overlay {
+            // Over the row rather than in it, so it can slide from beside
+            // Close to the middle.
+            Text(timeDisplay)
+                .font(.system(size: 16, weight: .bold, design: .monospaced))
+                .foregroundStyle(timerColor)
+                .lineLimit(1)
+                .fixedSize()
+                .padding(.leading, buttonsHidden ? 0 : Self.headerButtonSize + 8)
+                .frame(maxWidth: .infinity, alignment: buttonsHidden ? .center : .leading)
+                .animation(controlsFade, value: buttonsHidden)
+        }
         .padding(.horizontal, 20)
         .padding(.vertical, 4)
         // Past the row, so a tap on the status bar's strip counts too.
@@ -301,10 +307,12 @@ struct TeleprompterView: View {
             Image(systemName: systemImage)
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(tint ?? AppColors.textPrimary(for: colorScheme))
-                .frame(width: 44, height: 44)
+                .frame(width: Self.headerButtonSize, height: Self.headerButtonSize)
                 .glassedEffect(in: Circle())
         }
     }
+
+    private static let headerButtonSize: CGFloat = 44
 
     private func toggleControls() {
         withAnimation(controlsFade) {

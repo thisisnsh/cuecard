@@ -258,6 +258,8 @@ private struct LibraryList: View {
     @State private var collectionToRename: String?
     @State private var collectionToDelete: String?
     @State private var collectionTitle = ""
+    /// The collections row's height, for the list to fade out halfway up it.
+    @State private var chipsHeight: CGFloat = 0
     @State private var takesTarget: TakesTarget?
     /// The note being added to a collection.
     @State private var noteToCollect: SavedNote?
@@ -414,9 +416,9 @@ private struct LibraryList: View {
         .contentMargins(.horizontal, Self.sideMargin, for: .scrollContent)
         .scrollContentBackground(.hidden)
         .scrollDismissesKeyboard(.immediately)
-        // Faded under the collections at the top only: at the bottom the list
-        // runs on under the search, which floats over it.
-        .scrollEdgeFade(fadesEnd: false)
+        // Faded at the top only, into the lower half of the collections: at
+        // the bottom the list runs on under the search, which floats over it.
+        .scrollEdgeFade(fadesEnd: false, startOverlap: collections.isEmpty ? 0 : chipsHeight / 2)
         .background(AppColors.background(for: colorScheme).ignoresSafeArea())
         .animation(.easeInOut(duration: 0.2), value: mode)
         .animation(.easeInOut(duration: 0.2), value: collection)
@@ -427,7 +429,8 @@ private struct LibraryList: View {
                 collectionChips
                     .padding(.top, 2)
                     .padding(.bottom, 6)
-                    .background(AppColors.background(for: colorScheme))
+                    // No background: the list's fade hides it behind the row.
+                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { chipsHeight = $0 }
             }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) { libraryControls }
@@ -804,15 +807,18 @@ private struct LibraryList: View {
             ? !CueCards.cards(in: text).isEmpty
             : !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         if let note = openNote {
+            let isUnsaved = settingsService.hasUnsavedChanges(in: mode)
             LibraryHero(
                 title: note.title,
                 preview: LibraryText.preview(ofPlain: plain),
-                detail: [length(of: text, plain: plain), LibraryText.date(note.updatedAt)].joined(separator: " · "),
-                badge: settingsService.hasUnsavedChanges(in: mode) ? String(localized: "Unsaved") : nil,
+                detail: [cardCount(of: text), LibraryText.date(note.updatedAt)].compactMap { $0 }.joined(separator: " · "),
+                badge: isUnsaved ? String(localized: "Unsaved") : nil,
                 isOnWatch: settingsService.watchNoteIDs.contains(note.id),
                 collection: tag(for: note.collection),
                 takes: takeCounts.count(for: note.id),
                 recentTakes: takeCounts.recentTakes(for: note.id),
+                // Changes not saved yet are opened from the row itself.
+                showsActions: !isUnsaved,
                 canPlay: canPlay,
                 mode: mode,
                 colorScheme: colorScheme,
@@ -834,12 +840,13 @@ private struct LibraryList: View {
             LibraryHero(
                 title: title,
                 preview: LibraryText.preview(ofPlain: plain),
-                detail: length(of: text, plain: plain),
+                detail: cardCount(of: text) ?? "",
                 badge: String(localized: "Draft"),
                 isOnWatch: false,
                 collection: tag(for: settingsService.draftCollection(for: mode)),
                 takes: takeCounts.count(for: scriptID),
                 recentTakes: takeCounts.recentTakes(for: scriptID),
+                showsActions: true,
                 canPlay: canPlay,
                 mode: mode,
                 colorScheme: colorScheme,
@@ -872,7 +879,7 @@ private struct LibraryList: View {
         return LibraryScriptRow(
             title: title,
             preview: LibraryText.preview(ofPlain: plain),
-            detail: [length(of: text, plain: plain), String(localized: "Not saved yet")].joined(separator: " · "),
+            detail: [cardCount(of: text), String(localized: "Not saved yet")].compactMap { $0 }.joined(separator: " · "),
             badge: String(localized: "Draft"),
             isOnWatch: false,
             collection: tag(for: settingsService.draftCollection(for: mode)),
@@ -940,7 +947,7 @@ private struct LibraryList: View {
         return LibraryScriptRow(
             title: note.title,
             preview: LibraryText.preview(ofPlain: plain),
-            detail: ([length(of: note.content, plain: plain)] + [when].compactMap { $0 }).joined(separator: " · "),
+            detail: [cardCount(of: note.content), when].compactMap { $0 }.joined(separator: " · "),
             badge: isOpen && settingsService.hasUnsavedChanges(in: note.mode) ? String(localized: "Unsaved") : nil,
             isOnWatch: settingsService.watchNoteIDs.contains(note.id),
             collection: tag(for: note.collection),
@@ -1047,12 +1054,11 @@ private struct LibraryList: View {
     }
 
     /// About how long a script takes to read out, or how many cards a deck has.
-    private func length(of content: String, plain: String) -> String {
-        if mode == .cards {
-            let count = CueCards.cards(in: content).count
-            return String(localized: "\(count) cards", comment: "How many cards a deck has")
-        }
-        return LibraryText.readingTime(ofPlain: plain)
+    /// How many cards a deck has. Scripts aren't given a length.
+    private func cardCount(of content: String) -> String? {
+        guard mode == .cards else { return nil }
+        let count = CueCards.cards(in: content).count
+        return String(localized: "\(count) cards", comment: "How many cards a deck has")
     }
 
     /// A collection's name and its color, shown under All only: a
@@ -1437,7 +1443,7 @@ private extension View {
 }
 
 /// A script or deck in the list, with nothing around it but a line below:
-/// its title, how it starts, how long it is and when it was edited, and
+/// its title, how it starts, a deck's card count and when it was edited, and
 /// the takes recorded with it, which open from here.
 private struct LibraryScriptRow: View {
     let title: String
@@ -1505,6 +1511,8 @@ private struct LibraryHero: View {
     let collection: LibraryCollectionTag?
     let takes: Int
     let recentTakes: [PHAsset]
+    /// Play and Edit, left out while there are changes not saved yet.
+    let showsActions: Bool
     /// There's something to play: words for the teleprompter, or a card.
     let canPlay: Bool
     let mode: ScriptMode
@@ -1546,7 +1554,21 @@ private struct LibraryHero: View {
                     .lineLimit(3)
             }
 
-            HStack(spacing: 10) {
+            if showsActions || takes > 0 {
+                heroControls(primary: primary, secondary: secondary)
+            }
+        }
+        .padding(.top, 6)
+        .padding(.bottom, 20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .overlay(alignment: .bottom) { LibraryHairline(colorScheme: colorScheme) }
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .contain)
+    }
+
+    private func heroControls(primary: Color, secondary: Color) -> some View {
+        HStack(spacing: 10) {
+            if showsActions {
                 Button(action: onPlay) {
                     Image(systemName: "play.fill")
                         .font(.system(size: 16, weight: .semibold))
@@ -1570,27 +1592,21 @@ private struct LibraryHero: View {
                         .contentShape(Capsule())
                 }
                 .buttonStyle(.borderless)
-
-                Spacer(minLength: 8)
-
-                if takes > 0 {
-                    LibraryTakeStrip(takes: takes, recentTakes: recentTakes,
-                                     frameSize: CGSize(width: 30, height: 40), cornerRadius: 7,
-                                     colorScheme: colorScheme, onTakes: onTakes)
-                }
             }
-            .padding(.top, 10)
+
+            Spacer(minLength: 8)
+
+            if takes > 0 {
+                LibraryTakeStrip(takes: takes, recentTakes: recentTakes,
+                                 frameSize: CGSize(width: 30, height: 40), cornerRadius: 7,
+                                 colorScheme: colorScheme, onTakes: onTakes)
+            }
         }
-        .padding(.top, 6)
-        .padding(.bottom, 20)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .overlay(alignment: .bottom) { LibraryHairline(colorScheme: colorScheme) }
-        .contentShape(Rectangle())
-        .accessibilityElement(children: .contain)
+        .padding(.top, 10)
     }
 }
 
-/// How long a script is and when it was edited, whether it's on the watch,
+/// A deck's card count and when it was edited, whether it's on the watch,
 /// its collection, and its newest takes at the end.
 private struct LibraryMetaLine: View {
     let detail: String
@@ -2023,17 +2039,6 @@ enum LibraryText {
     static func preview(ofPlain plain: String) -> String {
         String(plain.trimmingCharacters(in: .whitespacesAndNewlines).prefix(160))
             .replacingOccurrences(of: "\n", with: " ")
-    }
-
-    /// Words a minute read out at an easy speaking pace.
-    private static let speakingPace = 150.0
-
-    /// About how long a script's words, already `plain`, take to read out,
-    /// to the minute, and never less than one.
-    static func readingTime(ofPlain plain: String) -> String {
-        let words = plain.split(whereSeparator: \.isWhitespace).count
-        let minutes = max(1, Int((Double(words) / speakingPace).rounded()))
-        return String(localized: "~\(minutes) min", comment: "About how many minutes a script takes to read out")
     }
 
     /// When a script was edited, as told under its date section: the time

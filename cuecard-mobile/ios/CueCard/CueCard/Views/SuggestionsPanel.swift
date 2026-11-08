@@ -107,7 +107,7 @@ struct SuggestionsStatus: View {
     @ViewBuilder
     private var label: some View {
         if review.isRunning {
-            Text("Reading your script")
+            Text("Suggesting changes")
         } else if !review.suggestions.isEmpty {
             Text("Tap the suggestion to accept/reject")
         } else {

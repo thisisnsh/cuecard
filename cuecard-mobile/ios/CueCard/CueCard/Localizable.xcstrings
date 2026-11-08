@@ -774,35 +774,6 @@
     "+%lld" : {
       "shouldTranslate" : false
     },
-    "~%lld min" : {
-      "comment" : "About how many minutes a script takes to read out",
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "~%lld min"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "~%lld min"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "~%lld min"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "~%lld мин"
-          }
-        }
-      }
-    },
     "−%lld" : {
       "shouldTranslate" : false
     },
@@ -11724,34 +11695,6 @@
         }
       }
     },
-    "Reading your script" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Leyendo tu guion"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lecture de votre script"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lendo seu roteiro"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Читаю сценарий"
-          }
-        }
-      }
-    },
     "Reading your script on this iPhone…" : {
       "comment" : "A message displayed when the app is reading the user's script.",
       "extractionState" : "stale",
@@ -15142,6 +15085,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Папка хранения недоступна"
+          }
+        }
+      }
+    },
+    "Suggesting changes" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sugiriendo cambios"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suggestion de modifications"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sugerindo alterações"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Предлагаю правки"
           }
         }
       }
