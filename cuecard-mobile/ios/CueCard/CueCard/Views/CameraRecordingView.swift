@@ -371,6 +371,8 @@ private struct FloatingCameraWindow: View {
                 Spacer(minLength: 0)
                 if recorder.isRecording { duration(compact: compact) }
                 Spacer(minLength: 0)
+                // Settings can't change mid-take, so it makes room for the time.
+                if !recorder.isRecording { settingsMenu }
                 zoomButton
             }
             Spacer(minLength: 0)
@@ -468,6 +470,60 @@ private struct FloatingCameraWindow: View {
         .accessibilityLabel(recorder.isPaused ? "Recording paused" : "Recording duration")
     }
 
+    /// How the camera records, as in the Camera app's video settings: only
+    /// the options this camera has, given the others chosen.
+    private var settingsMenu: some View {
+        let options = recorder.options
+        return Menu {
+            Picker("Resolution", selection: setting(\.resolution, "resolution")) {
+                ForEach(options.resolutions, id: \.self) { Text(verbatim: $0.label).tag($0) }
+            }
+            .pickerStyle(.menu)
+            Picker("Frame Rate", selection: setting(\.frameRate, "frame_rate")) {
+                ForEach(options.frameRates, id: \.self) { Text("\($0) fps").tag($0) }
+            }
+            .pickerStyle(.menu)
+            if options.dynamicRanges.count > 1 {
+                Picker("Dynamic Range", selection: setting(\.dynamicRange, "dynamic_range")) {
+                    ForEach(options.dynamicRanges, id: \.self) { Text(verbatim: $0.label).tag($0) }
+                }
+                .pickerStyle(.menu)
+            }
+            if options.codecs.count > 1 {
+                Picker("Codec", selection: setting(\.codec, "codec")) {
+                    ForEach(options.codecs, id: \.self) { Text(verbatim: $0.label).tag($0) }
+                }
+                .pickerStyle(.menu)
+            }
+            if options.stabilizations.count > 1 {
+                Picker("Stabilization", selection: setting(\.stabilization, "stabilization")) {
+                    ForEach(options.stabilizations, id: \.self) { Text($0.label).tag($0) }
+                }
+                .pickerStyle(.menu)
+            }
+            if options.isFrontCamera {
+                Toggle("Mirror Front Camera", isOn: setting(\.mirrorsFrontCamera, "mirror_front_camera"))
+            }
+        } label: {
+            circledIcon("gearshape", size: 32)
+        }
+        .menuOrder(.fixed)
+        .accessibilityLabel("Camera Settings")
+        .disabled(!recorder.isReady || recorder.isBusy)
+    }
+
+    private func setting<Value: Equatable>(_ keyPath: WritableKeyPath<CameraSettings, Value>,
+                                           _ name: String) -> Binding<Value> {
+        Binding {
+            recorder.settings[keyPath: keyPath]
+        } set: { value in
+            guard value != recorder.settings[keyPath: keyPath] else { return }
+            AnalyticsEvents.logButtonClick("camera_setting", screen: "camera",
+                                           parameters: ["setting": name, "value": "\(value)"])
+            recorder.changeSettings { $0[keyPath: keyPath] = value }
+        }
+    }
+
     /// Steps through the Camera app's stops this camera has, such as 0.5×, 1×,
     /// 2× and 5×, switching lenses on the way.
     private var zoomButton: some View {
@@ -494,6 +550,48 @@ private struct FloatingCameraWindow: View {
         }
         .opacity(steps.count > 1 ? 1 : 0)
         .disabled(!recorder.isReady || steps.count < 2)
+    }
+}
+
+private extension CameraSettings.Resolution {
+    var label: String {
+        switch self {
+        case .hd720: "720p"
+        case .hd1080: "1080p"
+        case .uhd4K: "4K"
+        }
+    }
+}
+
+private extension CameraSettings.DynamicRange {
+    var label: String {
+        switch self {
+        case .sdr: "SDR"
+        case .hdr: "HDR"
+        case .appleLog: "Apple Log"
+        case .appleLog2: "Apple Log 2"
+        }
+    }
+}
+
+private extension CameraSettings.Codec {
+    var label: String {
+        switch self {
+        case .hevc: "HEVC"
+        case .h264: "H.264"
+        case .proRes: "ProRes"
+        }
+    }
+}
+
+private extension CameraSettings.Stabilization {
+    var label: LocalizedStringKey {
+        switch self {
+        case .off: "Off"
+        case .standard: "Standard"
+        case .cinematic: "Cinematic"
+        case .extended: "Extended"
+        }
     }
 }
 

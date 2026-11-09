@@ -1,6 +1,96 @@
 import AVFoundation
+import os
 import Photos
 import UIKit
+
+/// How the camera records: what the sensor captures and how it's encoded, as
+/// in the Camera app's video settings. Nothing here changes the picture's look.
+struct CameraSettings: Codable, Equatable, Sendable {
+    enum Resolution: Int, Codable, CaseIterable, Sendable {
+        case hd720 = 720, hd1080 = 1080, uhd4K = 2160
+    }
+
+    enum DynamicRange: String, Codable, CaseIterable, Sendable {
+        case sdr, hdr, appleLog, appleLog2
+    }
+
+    enum Codec: String, Codable, CaseIterable, Sendable {
+        case hevc, h264, proRes
+    }
+
+    enum Stabilization: String, Codable, CaseIterable, Sendable {
+        case off, standard, cinematic, extended
+    }
+
+    var resolution = Resolution.hd1080
+    var frameRate = 30
+    var dynamicRange = DynamicRange.sdr
+    var codec = Codec.hevc
+    var stabilization = Stabilization.off
+    /// Records the front camera as the preview shows it, like a mirror.
+    var mirrorsFrontCamera = false
+
+    /// The frame rates offered, where the camera has them. Faster ones are slow motion.
+    static let frameRates = [24, 25, 30, 60, 120]
+
+    private static let key = "cameraSettings"
+
+    static var saved: CameraSettings {
+        guard let data = UserDefaults.standard.data(forKey: key),
+              let settings = try? JSONDecoder().decode(CameraSettings.self, from: data) else { return CameraSettings() }
+        return settings
+    }
+
+    func save() {
+        if let data = try? JSONEncoder().encode(self) { UserDefaults.standard.set(data, forKey: Self.key) }
+    }
+}
+
+extension CameraSettings.DynamicRange {
+    /// The camera's color space for it; none for Log 2 before iOS 26.
+    var colorSpace: AVCaptureColorSpace? {
+        switch self {
+        case .sdr: .sRGB
+        case .hdr: .HLG_BT2020
+        case .appleLog: .appleLog
+        case .appleLog2: if #available(iOS 26.0, *) { .appleLog2 } else { nil }
+        }
+    }
+
+    var isLog: Bool { self == .appleLog || self == .appleLog2 }
+
+    func isSupported(by format: AVCaptureDevice.Format) -> Bool {
+        colorSpace.map(format.supportedColorSpaces.contains) ?? false
+    }
+}
+
+extension CameraSettings.Stabilization {
+    var mode: AVCaptureVideoStabilizationMode {
+        switch self {
+        case .off: .off
+        case .standard: .standard
+        case .cinematic: .cinematic
+        case .extended: .cinematicExtended
+        }
+    }
+}
+
+/// The settings the camera in use can record with, given the rest.
+struct CameraOptions: Equatable, Sendable {
+    var resolutions: [CameraSettings.Resolution] = [.hd1080]
+    var frameRates = [30]
+    var dynamicRanges: [CameraSettings.DynamicRange] = [.sdr]
+    var codecs: [CameraSettings.Codec] = [.hevc]
+    var stabilizations: [CameraSettings.Stabilization] = [.off]
+    var isFrontCamera = true
+}
+
+/// The camera in use, what it records with, and what else it can.
+struct CameraState: @unchecked Sendable {
+    let device: AVCaptureDevice
+    let settings: CameraSettings
+    let options: CameraOptions
+}
 
 /// UI state lives on the main actor; capture configuration and file recording
 /// are serialized on CameraCapture's queue so starting a camera never blocks UI.
@@ -15,6 +105,11 @@ final class CameraRecorder: ObservableObject {
     /// The Camera app's zoom stops this camera has, smallest first.
     @Published private(set) var zoomSteps: [Double] = [1]
     @Published private(set) var maxZoom: Double = 1
+    /// What this camera records with: the reader's choice, as near as it can.
+    @Published private(set) var settings = CameraSettings.saved
+    @Published private(set) var options = CameraOptions()
+    /// The reader's choice, kept for a camera that can do more than this one.
+    private var preferredSettings = CameraSettings.saved
     /// The device zoom factor that shows as 1×.
     private var zoomBase: Double = 1
     /// Keeps a recording level with the horizon, however the phone is held.
@@ -76,12 +171,12 @@ final class CameraRecorder: ObservableObject {
             }
         }
         do {
-            let activeDevice = try await capture.prepare()
+            let state = try await capture.prepare(settings: preferredSettings)
             guard isVisible, preparationID == request, !Task.isCancelled else {
                 if !isVisible { capture.suspend() }
                 return
             }
-            updateDevice(activeDevice)
+            update(state)
             isReady = true
             message = nil
             // A take that didn't reach Photos last time goes there now.
@@ -133,7 +228,23 @@ final class CameraRecorder: ObservableObject {
         capture.setZoom(zoom * zoomBase)
     }
 
-    private func updateDevice(_ device: AVCaptureDevice) {
+    /// Records with this change from now on, on every camera that can.
+    func changeSettings(_ change: (inout CameraSettings) -> Void) {
+        guard isReady, !isBusy, !isRecording, !isStartingRecording else { return }
+        change(&preferredSettings)
+        preferredSettings.save()
+        isBusy = true
+        let wanted = preferredSettings
+        Task {
+            if let state = await capture.apply(wanted) { update(state) }
+            isBusy = false
+        }
+    }
+
+    private func update(_ state: CameraState) {
+        settings = state.settings
+        options = state.options
+        let device = state.device
         self.device = device
         rotation = AVCaptureDevice.RotationCoordinator(device: device, previewLayer: nil)
         zoomBase = Double(CameraCapture.mainLensZoomFactor(of: device))
@@ -167,7 +278,7 @@ final class CameraRecorder: ObservableObject {
         guard isReady, !isBusy, !isRecording else { return }
         isBusy = true
         defer { isBusy = false }
-        do { updateDevice(try await capture.switchCamera()) }
+        do { update(try await capture.switchCamera()) }
         catch { message = error.localizedDescription }
     }
 
@@ -298,6 +409,14 @@ final class CameraCapture: NSObject, @unchecked Sendable, AVCaptureFileOutputRec
     private var segments: [URL] = []
     private var recordingRotation: CGFloat = 90
     private var observers: [NSObjectProtocol] = []
+    /// What the reader asked for; each camera records the nearest it can.
+    private var preferred = CameraSettings()
+    private var effective = CameraSettings()
+    private var options = CameraOptions()
+
+    /// Whether a camera is on. It sets up the app's audio session for its
+    /// video, and Follow Me AI then leaves that alone.
+    static let isOn = OSAllocatedUnfairLock(initialState: false)
 
     override init() {
         super.init()
@@ -317,17 +436,173 @@ final class CameraCapture: NSObject, @unchecked Sendable, AVCaptureFileOutputRec
 
     deinit { observers.forEach(NotificationCenter.default.removeObserver) }
 
-    func prepare() async throws -> AVCaptureDevice {
+    func prepare(settings: CameraSettings) async throws -> CameraState {
         try await withCheckedThrowingContinuation { continuation in
             queue.async {
                 do {
-                    if self.videoInput == nil { try self.configure() }
+                    if self.videoInput == nil {
+                        try self.configure()
+                        self.preferred = settings
+                        self.applySettings()
+                    }
+                    Self.isOn.withLock { $0 = true }
                     self.session.startRunning()
                     guard self.session.isRunning, let device = self.videoInput?.device else { throw CameraError.unavailable }
-                    continuation.resume(returning: device)
+                    continuation.resume(returning: CameraState(device: device, settings: self.effective, options: self.options))
                 } catch { continuation.resume(throwing: error) }
             }
         }
+    }
+
+    /// Records with these settings from the next take, as near as this camera can.
+    func apply(_ settings: CameraSettings) async -> CameraState? {
+        await withCheckedContinuation { continuation in
+            queue.async {
+                guard !self.recordingRequested, let device = self.videoInput?.device else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                self.preferred = settings
+                self.applySettings()
+                continuation.resume(returning: CameraState(device: device, settings: self.effective, options: self.options))
+            }
+        }
+    }
+
+    /// Sets the camera's format, frame rate and color, then the encoder and
+    /// stabilization, to the nearest this camera has to what was asked for.
+    private func applySettings() {
+        guard let device = videoInput?.device else { return }
+        var settings = preferred
+        var options = CameraOptions(isFrontCamera: device.position == .front)
+        let format = Self.format(of: device, for: &settings, options: &options)
+        if let format, (try? device.lockForConfiguration()) != nil {
+            let zoom = device.videoZoomFactor
+            if device.activeFormat != format { device.activeFormat = format }
+            if let space = settings.dynamicRange.colorSpace, format.supportedColorSpaces.contains(space) {
+                device.activeColorSpace = space
+            }
+            let duration = CMTime(value: 1, timescale: CMTimeScale(settings.frameRate))
+            device.activeVideoMinFrameDuration = duration
+            device.activeVideoMaxFrameDuration = duration
+            // A new format starts zoomed out; stay on the lens that was in use.
+            device.videoZoomFactor = min(max(zoom, device.minAvailableVideoZoomFactor), device.maxAvailableVideoZoomFactor)
+            device.unlockForConfiguration()
+        }
+        // What the encoder offers depends on the format now in use.
+        let available = output.availableVideoCodecTypes
+        var codecs: [CameraSettings.Codec] = []
+        if available.contains(.hevc) { codecs.append(.hevc) }
+        // H.264 can't carry HDR or Log.
+        if settings.dynamicRange == .sdr, available.contains(.h264) { codecs.append(.h264) }
+        if Self.proRes(in: available) != nil { codecs.append(.proRes) }
+        // Log is recorded in ProRes, as in the Camera app.
+        if settings.dynamicRange.isLog, codecs.contains(.proRes) { codecs = [.proRes] }
+        if !codecs.contains(settings.codec), let first = codecs.first { settings.codec = first }
+        options.codecs = codecs.isEmpty ? [settings.codec] : codecs
+        if let connection = output.connection(with: .video) {
+            let type: AVVideoCodecType? = switch settings.codec {
+            case .hevc: available.contains(.hevc) ? .hevc : nil
+            case .h264: available.contains(.h264) ? .h264 : nil
+            case .proRes: Self.proRes(in: available)
+            }
+            if let type { output.setOutputSettings([AVVideoCodecKey: type], for: connection) }
+            if connection.isVideoStabilizationSupported {
+                connection.preferredVideoStabilizationMode = settings.stabilization.mode
+            }
+            if connection.isVideoMirroringSupported {
+                connection.automaticallyAdjustsVideoMirroring = false
+                connection.isVideoMirrored = mirrorsRecording
+            }
+        }
+        effective = settings
+        self.options = options
+    }
+
+    private var mirrorsRecording: Bool {
+        preferred.mirrorsFrontCamera && videoInput?.device.position == .front
+    }
+
+    /// The best of the camera's formats for the settings, after moving each
+    /// setting it can't do to the nearest it can, in order: resolution,
+    /// dynamic range, frame rate, then stabilization. Fills in what it offers.
+    private static func format(of device: AVCaptureDevice, for settings: inout CameraSettings,
+                               options: inout CameraOptions) -> AVCaptureDevice.Format? {
+        typealias Settings = CameraSettings
+        let byResolution = Dictionary(grouping: device.formats.filter { resolution(of: $0) != nil }) { resolution(of: $0)! }
+        let resolutions = Settings.Resolution.allCases.filter { byResolution[$0] != nil }
+        guard !resolutions.isEmpty else { return nil }
+        settings.resolution = nearest(settings.resolution, in: resolutions)
+        options.resolutions = resolutions
+
+        let sized = byResolution[settings.resolution] ?? []
+        let ranges = Settings.DynamicRange.allCases.filter { range in
+            sized.contains { range.isSupported(by: $0) }
+        }
+        guard !ranges.isEmpty else { return nil }
+        if !ranges.contains(settings.dynamicRange) { settings.dynamicRange = ranges[0] }
+        options.dynamicRanges = ranges
+
+        let colored = sized.filter { settings.dynamicRange.isSupported(by: $0) }
+        let rates = Settings.frameRates.filter { rate in colored.contains { supports($0, frameRate: rate) } }
+        guard !rates.isEmpty else { return nil }
+        if !rates.contains(settings.frameRate) {
+            settings.frameRate = rates.last { $0 <= settings.frameRate } ?? rates[0]
+        }
+        options.frameRates = rates
+
+        let timed = colored.filter { supports($0, frameRate: settings.frameRate) }
+        let modes = Settings.Stabilization.allCases.filter { mode in
+            mode == .off || timed.contains { $0.isVideoStabilizationModeSupported(mode.mode) }
+        }
+        settings.stabilization = nearest(settings.stabilization, in: modes)
+        options.stabilizations = modes
+
+        // Full sensor readout first, then the stabilization asked for, then
+        // 8-bit for SDR unless it's ProRes (10-bit is for HDR, Log and ProRes),
+        // then the least headroom above the frame rate, which keeps the most detail.
+        let wants8Bit = settings.dynamicRange == .sdr && settings.codec != .proRes
+        return timed.min { a, b in
+            func rank(_ format: AVCaptureDevice.Format) -> (Int, Int, Int, Double) {
+                (format.isVideoBinned ? 1 : 0,
+                 format.isVideoStabilizationModeSupported(settings.stabilization.mode) ? 0 : 1,
+                 wants8Bit && !is8Bit(format) ? 1 : 0,
+                 format.videoSupportedFrameRateRanges.map(\.maxFrameRate).max() ?? 0)
+            }
+            return rank(a) < rank(b)
+        }
+    }
+
+    /// The resolution of a 16:9 format, the only shape the window shows.
+    private static func resolution(of format: AVCaptureDevice.Format) -> CameraSettings.Resolution? {
+        let size = CMVideoFormatDescriptionGetDimensions(format.formatDescription)
+        guard let resolution = CameraSettings.Resolution(rawValue: Int(size.height)),
+              Int(size.width) == resolution.rawValue * 16 / 9 else { return nil }
+        return resolution
+    }
+
+    private static func supports(_ format: AVCaptureDevice.Format, frameRate: Int) -> Bool {
+        format.videoSupportedFrameRateRanges.contains {
+            $0.minFrameRate <= Double(frameRate) + 0.01 && Double(frameRate) <= $0.maxFrameRate + 0.01
+        }
+    }
+
+    private static func is8Bit(_ format: AVCaptureDevice.Format) -> Bool {
+        [kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange, kCVPixelFormatType_420YpCbCr8BiPlanarFullRange]
+            .contains(CMFormatDescriptionGetMediaSubType(format.formatDescription))
+    }
+
+    /// The closest the camera has: the next one down, or else the lowest.
+    private static func nearest<T: CaseIterable & Equatable>(_ value: T, in available: [T]) -> T {
+        guard !available.contains(value) else { return value }
+        let all = Array(T.allCases)
+        let index = all.firstIndex(of: value) ?? 0
+        return available.last { (all.firstIndex(of: $0) ?? 0) < index } ?? available[0]
+    }
+
+    /// ProRes as the Camera app records it, 422 HQ, or the next best on offer.
+    private static func proRes(in available: [AVVideoCodecType]) -> AVVideoCodecType? {
+        [.proRes422HQ, .proRes422, .proRes422LT].first { available.contains($0) }
     }
 
     private func configure() throws {
@@ -337,6 +612,8 @@ final class CameraCapture: NSObject, @unchecked Sendable, AVCaptureFileOutputRec
         session.inputs.forEach { session.removeInput($0) }
         session.outputs.forEach { session.removeOutput($0) }
         if session.canSetSessionPreset(.hd1920x1080) { session.sessionPreset = .hd1920x1080 }
+        // The color space follows the settings: SDR, HDR or Log.
+        session.automaticallyConfiguresCaptureDeviceForWideColor = false
         guard let camera = Self.camera(at: .front) ?? AVCaptureDevice.default(for: .video),
               let microphone = AVCaptureDevice.default(for: .audio) else { throw CameraError.unavailable }
         let video = try AVCaptureDeviceInput(device: camera)
@@ -374,7 +651,7 @@ final class CameraCapture: NSObject, @unchecked Sendable, AVCaptureFileOutputRec
         device.unlockForConfiguration()
     }
 
-    func switchCamera() async throws -> AVCaptureDevice {
+    func switchCamera() async throws -> CameraState {
         try await withCheckedThrowingContinuation { continuation in
             queue.async {
                 do {
@@ -389,7 +666,8 @@ final class CameraCapture: NSObject, @unchecked Sendable, AVCaptureFileOutputRec
                         self.videoInput = input
                         self.session.commitConfiguration()
                         Self.zoomToMainLens(device)
-                        continuation.resume(returning: device)
+                        self.applySettings()
+                        continuation.resume(returning: CameraState(device: device, settings: self.effective, options: self.options))
                     } else {
                         self.session.addInput(old)
                         self.session.commitConfiguration()
@@ -446,7 +724,7 @@ final class CameraCapture: NSObject, @unchecked Sendable, AVCaptureFileOutputRec
             if connection.isVideoRotationAngleSupported(rotation) { connection.videoRotationAngle = rotation }
             if connection.isVideoMirroringSupported {
                 connection.automaticallyAdjustsVideoMirroring = false
-                connection.isVideoMirrored = false
+                connection.isVideoMirrored = self.mirrorsRecording
             }
             self.stopRequested = false
             self.fallbackPauseRequested = false
@@ -478,6 +756,7 @@ final class CameraCapture: NSObject, @unchecked Sendable, AVCaptureFileOutputRec
         queue.async {
             self.stopOnQueue()
             self.session.stopRunning()
+            Self.isOn.withLock { $0 = false }
         }
     }
 

@@ -233,8 +233,13 @@ private final class Microphone: @unchecked Sendable {
     func start(into target: AudioTarget) async throws {
         try await perform {
             let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.playAndRecord, mode: .default,
-                                    options: [.mixWithOthers, .defaultToSpeaker, .allowBluetoothHFP])
+            // With the camera on, it has set the session up for its video.
+            // Changing it again as a take starts leaves the take without
+            // sound; listening works either way.
+            if !CameraCapture.isOn.withLock({ $0 }) || session.category != .playAndRecord {
+                try session.setCategory(.playAndRecord, mode: .default,
+                                        options: [.mixWithOthers, .defaultToSpeaker, .allowBluetoothHFP])
+            }
             try session.setActive(true)
             let input = self.engine.inputNode
             input.removeTap(onBus: 0)
