@@ -1857,12 +1857,10 @@ private struct LibraryFooter: View {
     private var storageText: Text {
         if settingsService.notesFolderIsInICloud {
             Text("Your scripts stay in your iCloud Drive.")
-        } else if settingsService.notesFolderName != nil {
-            Text("Your scripts stay on your device.")
-        } else if settingsService.hasNotesFolder {
+        } else if settingsService.hasNotesFolder && settingsService.notesFolderName == nil {
             Text("The storage folder can't be reached, so your scripts stay only on your device until it's back.")
         } else {
-            Text("Your scripts stay on your device\nand are deleted along with the app.")
+            Text("Your scripts stay on your device.")
         }
     }
 
