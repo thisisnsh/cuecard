@@ -21276,30 +21276,30 @@
         }
       }
     },
-    "Your scripts stay on your device and are deleted along with the app." : {
+    "Your scripts stay on your device\nand are deleted along with the app." : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tus guiones se quedan en tu dispositivo y se eliminan junto con la app."
+            "value" : "Tus guiones se quedan en tu dispositivo\ny se eliminan junto con la app."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Vos scripts restent sur votre appareil et sont supprimés avec l'app."
+            "value" : "Vos scripts restent sur votre appareil\net sont supprimés avec l'app."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Seus roteiros ficam no seu dispositivo e são apagados junto com o app."
+            "value" : "Seus roteiros ficam no seu dispositivo\ne são apagados junto com o app."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ваши сценарии хранятся на вашем устройстве и будут удалены вместе с приложением."
+            "value" : "Ваши сценарии хранятся на вашем устройстве\nи будут удалены вместе с приложением."
           }
         }
       }

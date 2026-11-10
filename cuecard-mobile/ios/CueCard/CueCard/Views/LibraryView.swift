@@ -1862,7 +1862,7 @@ private struct LibraryFooter: View {
         } else if settingsService.hasNotesFolder {
             Text("The storage folder can't be reached, so your scripts stay only on your device until it's back.")
         } else {
-            Text("Your scripts stay on your device and are deleted along with the app.")
+            Text("Your scripts stay on your device\nand are deleted along with the app.")
         }
     }
 
