@@ -254,7 +254,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Для экрана, лежащего наоборот."
+            "value" : "Для перевёрнутого экрана."
           }
         }
       }
@@ -310,7 +310,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Кадров записывается в секунду."
+            "value" : "Количество кадров, записываемых в секунду."
           }
         }
       }
@@ -572,19 +572,19 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "La graba tal como la ves."
+            "value" : "Graba la imagen tal como la ves."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "La filme telle que vous la voyez."
+            "value" : "Enregistre l'image telle que vous la voyez."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Grava como você a vê."
+            "value" : "Grava a imagem como você a vê."
           }
         },
         "ru" : {
@@ -612,7 +612,7 @@
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Firma uma imagem tremida."
+            "value" : "Estabiliza uma imagem tremida."
           }
         },
         "ru" : {
@@ -7881,25 +7881,25 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "En Ajustes, en Cámara, elige la resolución, la frecuencia de fotogramas, el rango dinámico, el códec y la estabilización. Cada cámara graba lo más cerca posible de lo que elijas, y un cambio hecho mientras grabas se aplica desde la siguiente toma. Activa Reflejar cámara frontal para grabar la cámara frontal tal como la ves."
+            "value" : "En Ajustes, en Cámara, elige la resolución, la frecuencia de fotogramas, el rango dinámico, el códec y la estabilización. Cada cámara graba lo más cerca posible de lo que elijas, y un cambio hecho mientras grabas se aplica desde la siguiente toma. Activa Reflejar cámara frontal para grabar la imagen de la cámara frontal tal como la ves."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dans Réglages, sous Appareil photo, choisissez la résolution, la fréquence d'images, la plage dynamique, le codec et la stabilisation. Chaque caméra filme au plus près de vos choix, et un changement fait pendant que vous filmez s'applique à la prise suivante. Activez Effet miroir caméra avant pour filmer la caméra avant telle que vous la voyez."
+            "value" : "Dans Réglages, sous Appareil photo, choisissez la résolution, la fréquence d'images, la plage dynamique, le codec et la stabilisation. Chaque caméra filme au plus près de vos choix, et un changement fait pendant que vous filmez s'applique à la prise suivante. Activez Effet miroir caméra avant pour enregistrer l'image de la caméra avant telle que vous la voyez."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Em Ajustes, em Câmera, escolha a resolução, a taxa de quadros, o alcance dinâmico, o codec e a estabilização. Cada câmera grava o mais próximo possível do que você escolher, e uma mudança feita durante a gravação vale a partir da próxima tomada. Ative Espelhar câmera frontal para gravar a câmera frontal como você a vê."
+            "value" : "Em Ajustes, em Câmera, escolha a resolução, a taxa de quadros, o alcance dinâmico, o codec e a estabilização. Cada câmera grava o mais próximo possível do que você escolher, e uma mudança feita durante a gravação vale a partir da próxima tomada. Ative Espelhar câmera frontal para gravar a imagem da câmera frontal como você a vê."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "В настройках, в разделе «Камера», выберите разрешение, частоту кадров, динамический диапазон, кодек и стабилизацию. Каждая камера записывает видео как можно ближе к выбранному, а изменение во время записи вступает в силу со следующего дубля. Включите «Отражать видео с фронтальной камеры», чтобы записывать её так, как вы её видите."
+            "value" : "В настройках, в разделе «Камера», выберите разрешение, частоту кадров, динамический диапазон, кодек и стабилизацию. Каждая камера записывает видео как можно ближе к выбранному, а изменение во время записи вступает в силу со следующего дубля. Включите «Отражать видео с фронтальной камеры», чтобы записывать изображение с неё так, как вы видите его на экране."
           }
         }
       }
