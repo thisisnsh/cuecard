@@ -7,338 +7,366 @@
     " %@ " : {
       "shouldTranslate" : false
     },
-    "Cards Editor Text Size" : {
+    "%lld to %lld" : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tamaño del texto del editor de tarjetas"
+            "value" : "De %lld a %lld"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Taille du texte de l'éditeur des fiches"
+            "value" : "De %lld à %lld"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tamanho do texto do editor de cartões"
+            "value" : "De %lld a %lld"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Размер текста редактора карточек"
+            "value" : "От %lld до %lld"
           }
         }
       }
     },
-    "Choose How Videos Record" : {
+    "Answers your questions in Help." : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Elige cómo se graban los vídeos"
+            "value" : "Responde a tus preguntas en Ayuda."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Choisir comment les vidéos sont filmées"
+            "value" : "Répond à vos questions dans l'Aide."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Escolher como os vídeos são gravados"
+            "value" : "Responde às suas perguntas na Ajuda."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Выберите, как записывать видео"
+            "value" : "Отвечает на ваши вопросы в «Справке»."
           }
         }
       }
     },
-    "In Settings, under Camera, pick the resolution, frame rate, dynamic range, codec and stabilization. Each camera records as close to them as it can, and a change made while recording starts with the next take. Turn on Mirror Front Camera to record the front camera as you see it." : {
+    "Cards over %lld characters are cut short there." : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "En Ajustes, en Cámara, elige la resolución, la frecuencia de fotogramas, el rango dinámico, el códec y la estabilización. Cada cámara graba lo más cerca posible de lo que elijas, y un cambio hecho mientras grabas se aplica desde la siguiente toma. Activa Reflejar cámara frontal para grabar la cámara frontal tal como la ves."
+            "value" : "Las tarjetas de más de %lld caracteres se recortan ahí."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dans Réglages, sous Appareil photo, choisissez la résolution, la fréquence d'images, la plage dynamique, le codec et la stabilisation. Chaque caméra filme au plus près de vos choix, et un changement fait pendant que vous filmez s'applique à la prise suivante. Activez Effet miroir caméra avant pour filmer la caméra avant telle que vous la voyez."
+            "value" : "Les fiches de plus de %lld caractères y sont coupées."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Em Ajustes, em Câmera, escolha a resolução, a taxa de quadros, o alcance dinâmico, o codec e a estabilização. Cada câmera grava o mais próximo possível do que você escolher, e uma mudança feita durante a gravação vale a partir da próxima tomada. Ative Espelhar câmera frontal para gravar a câmera frontal como você a vê."
+            "value" : "Cartões com mais de %lld caracteres são cortados lá."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "В настройках, в разделе «Камера», выберите разрешение, частоту кадров, динамический диапазон, кодек и стабилизацию. Каждая камера записывает видео как можно ближе к выбранному, а изменение во время записи вступает в силу со следующего дубля. Включите «Отражать видео с фронтальной камеры», чтобы записывать её так, как вы её видите."
+            "value" : "Карточки длиннее %lld символов там обрезаются."
           }
         }
       }
     },
-    "Read Over the Camera" : {
+    "Floating Window Layout" : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lee sobre la cámara"
+            "value" : "Diseño de la ventana flotante"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Lire par-dessus la caméra"
+            "value" : "Disposition de la fenêtre flottante"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ler sobre a câmera"
+            "value" : "Layout da janela flutuante"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Читайте поверх камеры"
+            "value" : "Формат плавающего окна"
           }
         }
       }
     },
-    "Tap the gear in your library, the editor, the teleprompter or your cards. Text sizes and cue color are under Teleprompter and Cards, and each keeps its own." : {
+    "For a screen lying the other way up." : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Toca el engranaje en tu biblioteca, el editor, el teleprompter o tus tarjetas. El tamaño del texto y el color de las indicaciones están en Teleprompter y en Tarjetas, y cada uno guarda los suyos."
+            "value" : "Para una pantalla colocada al revés."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Touchez l'engrenage dans votre bibliothèque, l'éditeur, le prompteur ou vos fiches. Les tailles du texte et la couleur des repères se trouvent sous Prompteur et Fiches, et chacun garde les siennes."
+            "value" : "Pour un écran posé à l'envers."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Toque na engrenagem na biblioteca, no editor, no teleprompter ou nos cartões. Os tamanhos do texto e a cor das deixas ficam em Teleprompter e Cartões, e cada um guarda os seus."
+            "value" : "Para uma tela posicionada ao contrário."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Коснитесь шестерёнки в библиотеке, редакторе, телесуфлёре или карточках. Размеры текста и цвет подсказок находятся в разделах «Телесуфлёр» и «Карточки», и у каждого свои."
+            "value" : "Для экрана, лежащего наоборот."
           }
         }
       }
     },
-    "Tap the gear, then Language. CueCard is in English, French, Portuguese, Russian and Spanish." : {
+    "For reading off a teleprompter's glass." : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Toca el engranaje y luego Idioma. CueCard está disponible en inglés, francés, portugués, ruso y español."
+            "value" : "Para leer en el cristal de un teleprompter."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Touchez l'engrenage, puis Langue. CueCard est disponible en anglais, français, portugais, russe et espagnol."
+            "value" : "Pour lire sur la vitre d'un prompteur."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Toque na engrenagem e depois em Idioma. O CueCard está disponível em inglês, francês, português, russo e espanhol."
+            "value" : "Para ler no vidro de um teleprompter."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Коснитесь шестерёнки, затем «Язык». CueCard доступен на английском, французском, португальском, русском и испанском языках."
+            "value" : "Для чтения со стекла телесуфлёра."
           }
         }
       }
     },
-    "Teleprompter and card text can be set from %lld to %lld, floating window text from %lld to %lld, and editor text from %lld to %lld." : {
+    "Keeps your words in view over the camera." : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "El tamaño del texto del teleprompter y de las tarjetas puede ir de %lld a %lld, el de la ventana flotante de %lld a %lld y el del editor de %lld a %lld."
+            "value" : "Mantiene tu texto a la vista sobre la cámara."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "La taille du texte du prompteur et des fiches peut aller de %lld à %lld, celle du texte de la fenêtre flottante de %lld à %lld et celle du texte de l'éditeur de %lld à %lld."
+            "value" : "Garde votre texte visible par-dessus la caméra."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "O tamanho do texto do teleprompter e dos cartões pode ir de %lld a %lld, o da janela flutuante de %lld a %lld e o do editor de %lld a %lld."
+            "value" : "Mantém o texto à vista sobre a câmera."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Размер текста телесуфлёра и карточек — от %lld до %lld, плавающего окна — от %lld до %lld, редактора — от %lld до %lld."
+            "value" : "Текст остаётся на виду поверх камеры."
           }
         }
       }
     },
-    "Teleprompter Editor Text Size" : {
+    "Needs a second language added in iOS." : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tamaño del texto del editor del teleprompter"
+            "value" : "Requiere añadir un segundo idioma en iOS."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Taille du texte de l'éditeur du prompteur"
+            "value" : "Nécessite d'ajouter une deuxième langue dans iOS."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tamanho do texto do editor do teleprompter"
+            "value" : "Requer um segundo idioma adicionado no iOS."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Размер текста редактора телесуфлёра"
+            "value" : "Нужен второй язык, добавленный в iOS."
           }
         }
       }
     },
-    "Text Above Camera" : {
+    "Plays and pauses with the camera." : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Texto sobre la cámara"
+            "value" : "Se reproduce y pausa con la cámara."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Texte au-dessus de la caméra"
+            "value" : "Se lance et se met en pause avec la caméra."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Texto sobre a câmera"
+            "value" : "Reproduz e pausa junto com a câmera."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Текст поверх камеры"
+            "value" : "Запускается и ставится на паузу вместе с камерой."
           }
         }
       }
     },
-    "Text Above Camera keeps your script or cards in view over the camera. Sync with Teleprompter plays and pauses the teleprompter and camera together. Each camera records as close to these settings as it can." : {
+    "Records it as you see it." : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Texto sobre la cámara mantiene tu guion o tus tarjetas a la vista sobre la cámara. Sincronizar con el teleprompter reproduce y pausa el teleprompter y la cámara a la vez. Cada cámara graba lo más cerca posible de estos ajustes."
+            "value" : "La graba tal como la ves."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Texte au-dessus de la caméra garde votre script ou vos fiches visibles par-dessus la caméra. Synchroniser avec le prompteur lance et met en pause le prompteur et la caméra ensemble. Chaque caméra filme au plus près de ces réglages."
+            "value" : "La filme telle que vous la voyez."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Texto sobre a câmera mantém o roteiro ou os cartões à vista sobre a câmera. Sincronizar com o teleprompter reproduz e pausa o teleprompter e a câmera juntos. Cada câmera grava o mais próximo possível destes ajustes."
+            "value" : "Grava como você a vê."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "«Текст поверх камеры» оставляет сценарий или карточки на виду поверх камеры. «Синхронизация с телесуфлёром» запускает и ставит на паузу телесуфлёр и камеру вместе. Каждая камера записывает видео как можно ближе к этим настройкам."
+            "value" : "Записывает так, как вы видите."
           }
         }
       }
     },
-    "Text size, colors, camera, timer and language" : {
+    "Suggests fixes, cues and formatting." : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tamaño de texto, colores, cámara, temporizador e idioma"
+            "value" : "Sugiere correcciones, indicaciones y formato."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Taille du texte, couleurs, caméra, minuteur et langue"
+            "value" : "Suggère des corrections, des repères et une mise en forme."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tamanho do texto, cores, câmera, timer e idioma"
+            "value" : "Sugere correções, deixas e formatação."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Размер текста, цвета, камера, таймер и язык"
+            "value" : "Предлагает исправления, подсказки и оформление."
           }
         }
       }
     },
-    "Your script or cards are drawn over the camera window, so you can read every line. Turn off Text Above Camera in Settings, under Camera, to show the camera on top instead. Either way, the text stays out of the video." : {
+    "Turn on Flip Horizontally or Flip Vertically under Teleprompter in Settings to flip the text for a teleprompter's glass. The floating window uses the same settings. Both are off by default." : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tu guion o tus tarjetas se muestran sobre la ventana de la cámara, para que puedas leer cada línea. Desactiva Texto sobre la cámara en Ajustes, en Cámara, para mostrar la cámara encima. En ambos casos, el texto no aparece en el vídeo."
+            "value" : "Activa Invertir horizontalmente o Invertir verticalmente en Teleprompter, en Ajustes, para invertir el texto y leerlo en el cristal de un teleprompter. La ventana flotante usa los mismos ajustes. Ambos están desactivados de forma predeterminada."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Votre script ou vos fiches s'affichent par-dessus la fenêtre de l'appareil photo, pour que vous lisiez chaque ligne. Désactivez Texte au-dessus de la caméra dans Réglages, sous Appareil photo, pour afficher la caméra par-dessus. Dans les deux cas, le texte n'apparaît pas dans la vidéo."
+            "value" : "Activez Inverser horizontalement ou Inverser verticalement sous Prompteur dans Réglages pour inverser le texte et le lire sur la vitre d'un prompteur. La fenêtre flottante utilise les mêmes réglages. Les deux sont désactivés par défaut."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "O roteiro ou os cartões aparecem sobre a janela da câmera, para você ler cada linha. Desative Texto sobre a câmera em Ajustes, em Câmera, para mostrar a câmera por cima. De qualquer forma, o texto não aparece no vídeo."
+            "value" : "Ative Inverter horizontalmente ou Inverter verticalmente em Teleprompter, nos Ajustes, para inverter o texto e lê-lo no vidro de um teleprompter. A janela flutuante usa os mesmos ajustes. Ambos ficam desativados por padrão."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Сценарий или карточки показываются поверх окна камеры, чтобы вы видели каждую строку. Выключите «Текст поверх камеры» в настройках, в разделе «Камера», чтобы камера была сверху. В любом случае текст не попадает в видео."
+            "value" : "Включите «Отразить по горизонтали» или «Отразить по вертикали» в разделе «Телесуфлёр» в настройках, чтобы отразить текст для чтения со стекла телесуфлёра. Эти настройки действуют и в плавающем окне. По умолчанию обе выключены."
+          }
+        }
+      }
+    },
+    "Viewer Text Size" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamaño del texto al leer"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Taille du texte à la lecture"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamanho do texto na leitura"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Размер текста при чтении"
           }
         }
       }
@@ -2434,64 +2462,6 @@
         }
       }
     },
-    "Answers your questions about CueCard in Help." : {
-      "comment" : "A description of the \"Ask AI\" feature.",
-      "isCommentAutoGenerated" : true,
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Responde a tus preguntas sobre CueCard en Ayuda."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Répond à vos questions sur CueCard dans l’aide."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Responde às suas perguntas sobre o CueCard na Ajuda."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Отвечает на ваши вопросы о CueCard в разделе «Справка»."
-          }
-        }
-      }
-    },
-    "Anyone who can see your iPhone can read the current card. Cards longer than %lld characters will be truncated on the Lock Screen." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cualquiera que vea tu iPhone podrá leer la tarjeta actual. Las tarjetas de más de %lld caracteres se cortarán en la pantalla bloqueada."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Toute personne voyant votre iPhone peut lire la fiche actuelle. Les fiches de plus de %lld caractères seront tronquées sur l'écran verrouillé."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Qualquer pessoa que veja seu iPhone pode ler o cartão atual. Cartões com mais de %lld caracteres serão cortados na Tela Bloqueada."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Любой, кто видит ваш iPhone, сможет прочитать текущую карточку. Если число символов в карточке больше %lld, на экране блокировки она будет обрезана."
-          }
-        }
-      }
-    },
     "Apple Intelligence" : {
       "comment" : "The section header for Apple Intelligence settings.",
       "isCommentAutoGenerated" : true,
@@ -3088,6 +3058,7 @@
     },
     "Camera Settings" : {
       "comment" : "The button that opens the camera's video settings.",
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -3284,6 +3255,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Набор карточек"
+          }
+        }
+      }
+    },
+    "Cards Editor Text Size" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamaño del texto del editor de tarjetas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Taille du texte de l'éditeur des fiches"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamanho do texto do editor de cartões"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Размер текста редактора карточек"
           }
         }
       }
@@ -3631,6 +3630,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Выбрать папку снова"
+          }
+        }
+      }
+    },
+    "Choose How Videos Record" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige cómo se graban los vídeos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisir comment les vidéos sont filmées"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escolher como os vídeos são gravados"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выберите, как записывать видео"
           }
         }
       }
@@ -4581,34 +4608,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "CueCard открывает библиотеку со всеми сохранёнными сценариями и наборами карточек. Коснитесь нужного, чтобы его редактировать, и вернитесь назад, чтобы открыть библиотеку. Переключайтесь между режимами «Телесуфлёр» и «Карточки» вверху."
-          }
-        }
-      }
-    },
-    "CueCard's page in the Settings app only shows Language once you've added a second language under General › Language & Region." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La página de CueCard en la app Ajustes solo muestra Idioma cuando has añadido un segundo idioma en General › Idioma y región."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La page de CueCard dans l'app Réglages n'affiche Langue qu'une fois une deuxième langue ajoutée dans Général › Langue et région."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A página do CueCard no app Ajustes só mostra Idioma depois que você adiciona um segundo idioma em Geral › Idioma e Região."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Пункт «Язык» на странице CueCard в приложении «Настройки» появляется только после добавления второго языка в разделе «Основные» › «Язык и регион»."
           }
         }
       }
@@ -5776,6 +5775,7 @@
       }
     },
     "Editor" : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -6415,34 +6415,6 @@
         }
       }
     },
-    "Flip the teleprompter and floating window text to read it off a teleprompter's glass." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Invierte el texto del teleprompter y de la ventana flotante para leerlo en el cristal de un teleprompter."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Inversez le texte du prompteur et de la fenêtre flottante pour le lire sur la vitre d'un prompteur."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Inverta o texto do teleprompter e da janela flutuante para lê-lo no vidro de um teleprompter."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Отразите текст телесуфлёра и плавающего окна, чтобы читать его со стекла телесуфлёра."
-          }
-        }
-      }
-    },
     "Flip Vertically" : {
       "localizations" : {
         "es" : {
@@ -6524,34 +6496,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Плавающий телесуфлёр"
-          }
-        }
-      }
-    },
-    "Floating Window" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ventana flotante"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fenêtre flottante"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Janela flutuante"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Плавающее окно"
           }
         }
       }
@@ -7452,6 +7396,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Импортированный сценарий"
+          }
+        }
+      }
+    },
+    "In Settings, under Camera, pick the resolution, frame rate, dynamic range, codec and stabilization. Each camera records as close to them as it can, and a change made while recording starts with the next take. Turn on Mirror Front Camera to record the front camera as you see it." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En Ajustes, en Cámara, elige la resolución, la frecuencia de fotogramas, el rango dinámico, el códec y la estabilización. Cada cámara graba lo más cerca posible de lo que elijas, y un cambio hecho mientras grabas se aplica desde la siguiente toma. Activa Reflejar cámara frontal para grabar la cámara frontal tal como la ves."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dans Réglages, sous Appareil photo, choisissez la résolution, la fréquence d'images, la plage dynamique, le codec et la stabilisation. Chaque caméra filme au plus près de vos choix, et un changement fait pendant que vous filmez s'applique à la prise suivante. Activez Effet miroir caméra avant pour filmer la caméra avant telle que vous la voyez."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Em Ajustes, em Câmera, escolha a resolução, a taxa de quadros, o alcance dinâmico, o codec e a estabilização. Cada câmera grava o mais próximo possível do que você escolher, e uma mudança feita durante a gravação vale a partir da próxima tomada. Ative Espelhar câmera frontal para gravar a câmera frontal como você a vê."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "В настройках, в разделе «Камера», выберите разрешение, частоту кадров, динамический диапазон, кодек и стабилизацию. Каждая камера записывает видео как можно ближе к выбранному, а изменение во время записи вступает в силу со следующего дубля. Включите «Отражать видео с фронтальной камеры», чтобы записывать её так, как вы её видите."
           }
         }
       }
@@ -8449,34 +8421,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Большой"
-          }
-        }
-      }
-    },
-    "Layout" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Diseño"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Disposition"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Layout"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Формат"
           }
         }
       }
@@ -12005,6 +11949,34 @@
         }
       }
     },
+    "Read Over the Camera" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lee sobre la cámara"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lire par-dessus la caméra"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ler sobre a câmera"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Читайте поверх камеры"
+          }
+        }
+      }
+    },
     "Reading Guide" : {
       "localizations" : {
         "es" : {
@@ -13425,36 +13397,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Форматирование текста: выделяйте слова в сценарии жирным или курсивом."
-          }
-        }
-      }
-    },
-    "Runs on this iPhone with Apple Intelligence." : {
-      "comment" : "A description of the Apple Intelligence section.",
-      "isCommentAutoGenerated" : true,
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Funciona en este iPhone con Apple Intelligence."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fonctionne sur cet iPhone avec Apple Intelligence."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Funciona neste iPhone com o Apple Intelligence."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Работает на этом iPhone с помощью Apple Intelligence."
           }
         }
       }
@@ -15866,36 +15808,6 @@
         }
       }
     },
-    "Suggests spelling fixes, cues and formatting to accept or reject." : {
-      "comment" : "A description of the AI Suggestions feature.",
-      "isCommentAutoGenerated" : true,
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sugiere correcciones ortográficas, indicaciones y formato que puedes aceptar o rechazar."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Suggère des corrections orthographiques, des repères et une mise en forme à accepter ou à refuser."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sugere correções de ortografia, deixas e formatação para você aceitar ou rejeitar."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Предлагает исправления орфографии, подсказки и форматирование, которые можно принять или отклонить."
-          }
-        }
-      }
-    },
     "Summarize my latest script." : {
       "comment" : "Text of a script that summarizes the user's latest script.",
       "extractionState" : "stale",
@@ -16099,6 +16011,7 @@
       }
     },
     "Sync play and pause on the teleprompter and camera." : {
+      "extractionState" : "stale",
       "localizations" : {
         "es" : {
           "stringUnit" : {
@@ -16824,6 +16737,62 @@
         }
       }
     },
+    "Tap the gear in your library, the editor, the teleprompter or your cards. Text sizes and cue color are under Teleprompter and Cards, and each keeps its own." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toca el engranaje en tu biblioteca, el editor, el teleprompter o tus tarjetas. El tamaño del texto y el color de las indicaciones están en Teleprompter y en Tarjetas, y cada uno guarda los suyos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touchez l'engrenage dans votre bibliothèque, l'éditeur, le prompteur ou vos fiches. Les tailles du texte et la couleur des repères se trouvent sous Prompteur et Fiches, et chacun garde les siennes."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toque na engrenagem na biblioteca, no editor, no teleprompter ou nos cartões. Os tamanhos do texto e a cor das deixas ficam em Teleprompter e Cartões, e cada um guarda os seus."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Коснитесь шестерёнки в библиотеке, редакторе, телесуфлёре или карточках. Размеры текста и цвет подсказок находятся в разделах «Телесуфлёр» и «Карточки», и у каждого свои."
+          }
+        }
+      }
+    },
+    "Tap the gear, then Language. CueCard is in English, French, Portuguese, Russian and Spanish." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toca el engranaje y luego Idioma. CueCard está disponible en inglés, francés, portugués, ruso y español."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touchez l'engrenage, puis Langue. CueCard est disponible en anglais, français, portugais, russe et espagnol."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toque na engrenagem e depois em Idioma. O CueCard está disponível em inglês, francês, português, russo e espanhol."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Коснитесь шестерёнки, затем «Язык». CueCard доступен на английском, французском, португальском, русском и испанском языках."
+          }
+        }
+      }
+    },
     "Tap the glowing button beside the timer to have Apple Intelligence read your script or deck on this iPhone. It suggests spelling fixes, cues, anchors and bold or italic words. In a deck it leaves out anchors, and only adds a cue where a card has room. Accept or reject each one, or accept them all. Needs an iPhone with Apple Intelligence turned on." : {
       "comment" : "A description of the Suggestions feature.",
       "extractionState" : "stale",
@@ -17295,6 +17264,34 @@
         }
       }
     },
+    "Teleprompter Editor Text Size" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamaño del texto del editor del teleprompter"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Taille du texte de l'éditeur du prompteur"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamanho do texto do editor do teleprompter"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Размер текста редактора телесуфлёра"
+          }
+        }
+      }
+    },
     "Teleprompter Script" : {
       "comment" : "A label for a teleprompter script.",
       "extractionState" : "stale",
@@ -17382,30 +17379,58 @@
         }
       }
     },
-    "Text Size" : {
+    "Text Above Camera" : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tamaño del texto"
+            "value" : "Texto sobre la cámara"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Taille du texte"
+            "value" : "Texte au-dessus de la caméra"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tamanho do texto"
+            "value" : "Texto sobre a câmera"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Размер текста"
+            "value" : "Текст поверх камеры"
+          }
+        }
+      }
+    },
+    "Text size, colors, camera, timer and language" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamaño de texto, colores, cámara, temporizador e idioma"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Taille du texte, couleurs, caméra, minuteur et langue"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamanho do texto, cores, câmera, timer e idioma"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Размер текста, цвета, камера, таймер и язык"
           }
         }
       }
@@ -19234,34 +19259,6 @@
         }
       }
     },
-    "Turn on Flip Horizontally or Flip Vertically under Mirror in Settings to flip the text for a teleprompter's glass. The floating window uses the same settings. Both are off by default." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Activa Invertir horizontalmente o Invertir verticalmente en Espejo, en Ajustes, para invertir el texto y leerlo en el cristal de un teleprompter. La ventana flotante usa los mismos ajustes. Ambos están desactivados de forma predeterminada."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Activez Inverser horizontalement ou Inverser verticalement sous Miroir dans Réglages pour inverser le texte et le lire sur la vitre d'un prompteur. La fenêtre flottante utilise les mêmes réglages. Les deux sont désactivés par défaut."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ative Inverter horizontalmente ou Inverter verticalmente em Espelho, nos Ajustes, para inverter o texto e lê-lo no vidro de um teleprompter. A janela flutuante usa os mesmos ajustes. Ambos ficam desativados por padrão."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Включите «Отразить по горизонтали» или «Отразить по вертикали» в разделе «Зеркало» в настройках, чтобы отразить текст для чтения со стекла телесуфлёра. Эти настройки действуют и в плавающем окне. По умолчанию обе выключены."
-          }
-        }
-      }
-    },
     "Turn on Show on Lock Screen in Settings. Then lock your iPhone and turn cards right from the Lock Screen." : {
       "localizations" : {
         "es" : {
@@ -20591,6 +20588,34 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ваша конфиденциальность"
+          }
+        }
+      }
+    },
+    "Your script or cards are drawn over the camera window, so you can read every line. Turn off Text Above Camera in Settings, under Camera, to show the camera on top instead. Either way, the text stays out of the video." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu guion o tus tarjetas se muestran sobre la ventana de la cámara, para que puedas leer cada línea. Desactiva Texto sobre la cámara en Ajustes, en Cámara, para mostrar la cámara encima. En ambos casos, el texto no aparece en el vídeo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre script ou vos fiches s'affichent par-dessus la fenêtre de l'appareil photo, pour que vous lisiez chaque ligne. Désactivez Texte au-dessus de la caméra dans Réglages, sous Appareil photo, pour afficher la caméra par-dessus. Dans les deux cas, le texte n'apparaît pas dans la vidéo."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O roteiro ou os cartões aparecem sobre a janela da câmera, para você ler cada linha. Desative Texto sobre a câmera em Ajustes, em Câmera, para mostrar a câmera por cima. De qualquer forma, o texto não aparece no vídeo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сценарий или карточки показываются поверх окна камеры, чтобы вы видели каждую строку. Выключите «Текст поверх камеры» в настройках, в разделе «Камера», чтобы камера была сверху. В любом случае текст не попадает в видео."
           }
         }
       }

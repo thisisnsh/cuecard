@@ -146,7 +146,7 @@ private enum AllHelp {
         HelpTopic("Record in Step with the Script",
                   detail: "With the camera open, Play starts recording and Pause pauses it. Recording or pausing on the camera plays or pauses the script, and stopping pauses it. Turn off Sync with Teleprompter in Settings to use them separately."),
         HelpTopic("Mirror",
-                  detail: "Turn on Flip Horizontally or Flip Vertically under Mirror in Settings to flip the text for a teleprompter's glass. The floating window uses the same settings. Both are off by default."),
+                  detail: "Turn on Flip Horizontally or Flip Vertically under Teleprompter in Settings to flip the text for a teleprompter's glass. The floating window uses the same settings. Both are off by default."),
         HelpTopic("Keep Your Place",
                   detail: "The pointer at the side of the script marks the line to read. Drag it up or down to read where it suits your eyes, and the script lines up with it. Turn off Reading Guide Line in Settings to hide it."),
         HelpTopic("Use Over Other Apps",

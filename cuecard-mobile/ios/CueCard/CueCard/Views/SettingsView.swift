@@ -19,8 +19,8 @@ enum SettingsGroup: Hashable {
 }
 
 /// The one Settings screen, opened from the library, the editor and both
-/// readers. It shows every setting, in groups: the teleprompter's, with its
-/// mirror and floating window, the camera, the cards', then the rest. It
+/// readers. It shows every setting, in groups: the teleprompter's, the
+/// camera, the cards', then the rest. It
 /// opens scrolled to the group for the screen it was opened from. The
 /// teleprompter and the cards each keep their own text sizes and cue color;
 /// the camera, the theme and the language are the same for both.
@@ -44,7 +44,7 @@ struct SettingsView: View {
         SettingsScreen(screen: Self.screen, title: "Settings", opensAt: opensAt) {
             remoteMessageSection
 
-            teleprompterSections
+            teleprompterSection
             CameraSection(screen: Self.screen)
             cardsSection
             AppleIntelligenceSection(screen: Self.screen)
@@ -59,10 +59,9 @@ struct SettingsView: View {
         .environmentObject(notifications)
     }
 
-    /// The teleprompter's reading and editor settings, then its mirror and
-    /// floating window.
-    @ViewBuilder
-    private var teleprompterSections: some View {
+    /// The teleprompter's reading, editor and floating window settings, and
+    /// its mirror.
+    private var teleprompterSection: some View {
         Section("Teleprompter") {
             AdvancedNumberRow(
                 title: "Scroll Speed",
@@ -70,9 +69,10 @@ struct SettingsView: View {
                 range: TeleprompterSettings.lpmRange,
                 unit: "lines/min"
             )
+            .id(SettingsGroup.teleprompter)
 
             SizePresetPicker(
-                title: "Text Size",
+                title: "Viewer Text Size",
                 value: $settingsService.settings.fontSize.loggingClicks("settings_text_size", screen: Self.screen),
                 presets: TeleprompterSettings.fontSizePresets
             )
@@ -83,45 +83,39 @@ struct SettingsView: View {
                 presets: TeleprompterSettings.editorFontSizePresets
             )
 
-            ColorSwatchRow(title: "Cue Color",
-                           selection: $settingsService.settings.cueColor.loggingClicks("settings_cue_color", screen: Self.screen))
-
-            Toggle("Reading Guide Line", isOn: $settingsService.settings.showsReadingGuide.loggingClicks("settings_reading_guide", screen: Self.screen))
-        }
-        .id(SettingsGroup.teleprompter)
-
-        Section {
-            Toggle("Flip Horizontally", isOn: $settingsService.settings.mirrorsText.loggingClicks("settings_flip_horizontal", screen: Self.screen))
-
-            Toggle("Flip Vertically", isOn: $settingsService.settings.flipsTextVertically.loggingClicks("settings_flip_vertical", screen: Self.screen))
-        } header: {
-            Text("Mirror")
-        } footer: {
-            Text("Flip the teleprompter and floating window text to read it off a teleprompter's glass.")
-        }
-
-        Section("Floating Window") {
             SizePresetPicker(
-                title: "Text Size",
+                title: "Floating Window Text Size",
                 value: $settingsService.settings.pipFontSize.loggingClicks("settings_floating_text_size", screen: Self.screen),
                 presets: TeleprompterSettings.pipFontSizePresets
             )
 
             AspectRatioPicker(selection: $settingsService.settings.overlayAspectRatio.loggingClicks("settings_floating_layout", screen: Self.screen))
+
+            CueColorPicker(selection: $settingsService.settings.cueColor.loggingClicks("settings_cue_color", screen: Self.screen))
+
+            Toggle("Reading Guide Line", isOn: $settingsService.settings.showsReadingGuide.loggingClicks("settings_reading_guide", screen: Self.screen))
+
+            Toggle(isOn: $settingsService.settings.mirrorsText.loggingClicks("settings_flip_horizontal", screen: Self.screen)) {
+                SettingLabel("Flip Horizontally", detail: "For reading off a teleprompter's glass.")
+            }
+
+            Toggle(isOn: $settingsService.settings.flipsTextVertically.loggingClicks("settings_flip_vertical", screen: Self.screen)) {
+                SettingLabel("Flip Vertically", detail: "For a screen lying the other way up.")
+            }
         }
     }
 
-    /// The cards' reading and editor settings, and the Lock Screen. That
-    /// keeps cards short enough to fit there, which the toggle's subtitle
-    /// says only while it's on. Turning it on asks first, since anyone who
-    /// can see the phone can read the card there.
+    /// The cards' reading and editor settings, and the Lock Screen, which
+    /// cuts long cards short. Turning it on asks first, since anyone who can
+    /// see the phone can read the card there.
     private var cardsSection: some View {
         Section {
             SizePresetPicker(
-                title: "Text Size",
+                title: "Viewer Text Size",
                 value: $settingsService.settings.cards.fontSize.loggingClicks("settings_cards_text_size", screen: Self.screen),
                 presets: TeleprompterSettings.fontSizePresets
             )
+            .id(SettingsGroup.cards)
 
             SizePresetPicker(
                 title: "Editor Text Size",
@@ -129,8 +123,7 @@ struct SettingsView: View {
                 presets: TeleprompterSettings.editorFontSizePresets
             )
 
-            ColorSwatchRow(title: "Cue Color",
-                           selection: $settingsService.settings.cards.cueColor.loggingClicks("settings_cards_cue_color", screen: Self.screen))
+            CueColorPicker(selection: $settingsService.settings.cards.cueColor.loggingClicks("settings_cards_cue_color", screen: Self.screen))
 
             Toggle(isOn: Binding(
                 get: { settingsService.settings.cards.showOnLockScreen },
@@ -143,14 +136,8 @@ struct SettingsView: View {
                     }
                 }
             )) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Show on Lock Screen")
-                    if settingsService.settings.cards.showOnLockScreen {
-                        Text("Anyone who can see your iPhone can read the current card. Cards longer than \(CueCards.characterLimit(onLockScreen: true)) characters will be truncated on the Lock Screen.")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                    }
-                }
+                SettingLabel("Show on Lock Screen",
+                             detail: "Cards over \(CueCards.characterLimit(onLockScreen: true)) characters are cut short there.")
             }
             .alert("Show Cards on Lock Screen?", isPresented: $confirmingLockScreen) {
                 Button("Cancel", role: .cancel) {
@@ -166,45 +153,42 @@ struct SettingsView: View {
         } header: {
             Text("Cards")
         }
-        .id(SettingsGroup.cards)
     }
 
-    /// Every text size as a number, past the presets.
+    /// Every text size as a number, past the presets, each with its range.
     private var advancedSection: some View {
-        AdvancedSection(screen: Self.screen, footer: advancedFooter) {
+        AdvancedSection(screen: Self.screen) {
             AdvancedNumberRow(
                 title: "Teleprompter Text Size",
+                showsRange: true,
                 value: $settingsService.settings.fontSize,
                 range: TeleprompterSettings.fontSizeRange
             )
             AdvancedNumberRow(
                 title: "Teleprompter Editor Text Size",
+                showsRange: true,
                 value: $settingsService.settings.editorFontSize,
                 range: TeleprompterSettings.editorFontSizeRange
             )
             AdvancedNumberRow(
                 title: "Floating Window Text Size",
+                showsRange: true,
                 value: $settingsService.settings.pipFontSize,
                 range: TeleprompterSettings.pipFontSizeRange
             )
             AdvancedNumberRow(
                 title: "Card Text Size",
+                showsRange: true,
                 value: $settingsService.settings.cards.fontSize,
                 range: TeleprompterSettings.fontSizeRange
             )
             AdvancedNumberRow(
                 title: "Cards Editor Text Size",
+                showsRange: true,
                 value: $settingsService.settings.cards.editorFontSize,
                 range: TeleprompterSettings.editorFontSizeRange
             )
         }
-    }
-
-    private var advancedFooter: LocalizedStringKey {
-        let reading = TeleprompterSettings.fontSizeRange
-        let pip = TeleprompterSettings.pipFontSizeRange
-        let editor = TeleprompterSettings.editorFontSizeRange
-        return "Teleprompter and card text can be set from \(reading.lowerBound) to \(reading.upperBound), floating window text from \(pip.lowerBound) to \(pip.upperBound), and editor text from \(editor.lowerBound) to \(editor.upperBound)."
     }
 
     /// One for the whole app.
@@ -266,10 +250,10 @@ private struct AppleIntelligenceSection: View {
         if OnDeviceModelAvailability.onDevice != .unsupported {
             Section {
                 feature("Suggestions AI",
-                        detail: "Suggests spelling fixes, cues and formatting to accept or reject.",
+                        detail: "Suggests fixes, cues and formatting.",
                         isOn: $isSuggestionsEnabled, button: "settings_ai_suggestions")
                 feature("Help AI",
-                        detail: "Answers your questions about CueCard in Help.",
+                        detail: "Answers your questions in Help.",
                         isOn: $isAskAIEnabled, button: "settings_ask_ai")
                 feature("Follow Me AI",
                         detail: "Scrolls the script as you read it aloud.",
@@ -283,8 +267,6 @@ private struct AppleIntelligenceSection: View {
                 }
             } header: {
                 Text("Apple Intelligence")
-            } footer: {
-                Text("Runs on this iPhone with Apple Intelligence.")
             }
         }
     }
@@ -301,6 +283,7 @@ private struct AppleIntelligenceSection: View {
                 Text(detail)
                     .font(.footnote)
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
             }
         }
     }
@@ -316,16 +299,26 @@ private struct SettingsScreen<Content: View>: View {
     let opensAt: SettingsGroup?
     @ViewBuilder let content: Content
 
+    @State private var hasScrolled = false
+    /// Above a group's first row: the space between groups and its title.
+    @ScaledMetric(relativeTo: .footnote) private var titleRoom: CGFloat = 56
+
     var body: some View {
         NavigationStack {
             ScrollViewReader { proxy in
                 List {
                     content
                 }
-                .onAppear {
-                    guard let opensAt else { return }
-                    // Once the list is laid out, so the group is there to go to.
-                    DispatchQueue.main.async { proxy.scrollTo(opensAt, anchor: .top) }
+                // Once the list is laid out, so the group is there to go to.
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+                    guard let opensAt, !hasScrolled, height > 0 else { return }
+                    hasScrolled = true
+                    // A group is gone to by its first row. Scrolling lines up
+                    // the same point of the row and of the list, so a point a
+                    // little way down the row leaves its title in view above.
+                    let rowHeight: CGFloat = 44
+                    let anchor = UnitPoint(x: 0.5, y: titleRoom / max(height - rowHeight, 1))
+                    DispatchQueue.main.async { proxy.scrollTo(opensAt, anchor: anchor) }
                 }
             }
             .scrollDismissesKeyboard(.immediately)
@@ -367,9 +360,13 @@ private struct CameraSection: View {
         let settings = offered.settings
         let options = offered.options
         Section {
-            Toggle("Text Above Camera", isOn: $settingsService.settings.showsTextAboveCamera.loggingClicks("settings_text_above_camera", screen: screen))
+            Toggle(isOn: $settingsService.settings.showsTextAboveCamera.loggingClicks("settings_text_above_camera", screen: screen)) {
+                SettingLabel("Text Above Camera", detail: "Keeps your words in view over the camera.")
+            }
 
-            Toggle("Sync with Teleprompter", isOn: $settingsService.settings.syncsCamera.loggingClicks("settings_sync_camera", screen: screen))
+            Toggle(isOn: $settingsService.settings.syncsCamera.loggingClicks("settings_sync_camera", screen: screen)) {
+                SettingLabel("Sync with Teleprompter", detail: "Plays and pauses with the camera.")
+            }
 
             Picker("Resolution", selection: setting(\.resolution, "resolution", shown: settings)) {
                 ForEach(options.resolutions, id: \.self) { Text(verbatim: $0.label).tag($0) }
@@ -393,12 +390,12 @@ private struct CameraSection: View {
                 }
             }
             if options.isFrontCamera {
-                Toggle("Mirror Front Camera", isOn: setting(\.mirrorsFrontCamera, "mirror_front_camera", shown: settings))
+                Toggle(isOn: setting(\.mirrorsFrontCamera, "mirror_front_camera", shown: settings)) {
+                    SettingLabel("Mirror Front Camera", detail: "Records it as you see it.")
+                }
             }
         } header: {
             Text("Camera")
-        } footer: {
-            Text("Text Above Camera keeps your script or cards in view over the camera. Sync with Teleprompter plays and pauses the teleprompter and camera together. Each camera records as close to these settings as it can.")
         }
     }
 
@@ -502,12 +499,14 @@ private struct LanguageSection: View {
         Section {
             // iOS keeps each app's language in the Settings app, which opens
             // on CueCard's page; choosing one there relaunches the app in it.
+            // It's only offered once there is more than one language to
+            // choose from, and iOS doesn't tell the app whether it is.
             Button {
                 AnalyticsEvents.logButtonClick("language", screen: screen)
                 openURL(URL(string: UIApplication.openSettingsURLString)!)
             } label: {
                 HStack {
-                    Text("Language")
+                    SettingLabel("Language", detail: "Needs a second language added in iOS.")
                         .foregroundStyle(AppColors.textPrimary(for: colorScheme))
                     Spacer()
                     Text(languageName)
@@ -538,11 +537,58 @@ private struct LanguageSection: View {
             }
         } header: {
             Text("Language")
-        } footer: {
-            // iOS only offers the choice once there is more than one language
-            // to choose from, and doesn't tell the app whether it's offering it.
-            Text("CueCard's page in the Settings app only shows Language once you've added a second language under General › Language & Region.")
         }
+    }
+}
+
+/// A setting's name, with one short line below it on what it does.
+private struct SettingLabel: View {
+    let title: LocalizedStringKey
+    let detail: LocalizedStringKey
+
+    init(_ title: LocalizedStringKey, detail: LocalizedStringKey) {
+        self.title = title
+        self.detail = detail
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title)
+            Text(detail)
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+        }
+    }
+}
+
+/// The cue color, from a menu of the app's colors, each with a dot of it:
+/// a row as tall as the others.
+private struct CueColorPicker: View {
+    @Environment(\.colorScheme) private var colorScheme
+    @Binding var selection: CueColor
+
+    var body: some View {
+        Picker("Cue Color", selection: $selection) {
+            ForEach(CueColor.allCases) { option in
+                Label {
+                    Text(option.displayName)
+                } icon: {
+                    Image(uiImage: Self.dot(option.uiColor(isDarkMode: colorScheme == .dark)))
+                }
+                .tag(option)
+            }
+        }
+    }
+
+    /// Drawn as an image in its own color: menus draw symbols in the text color.
+    private static func dot(_ color: UIColor) -> UIImage {
+        let size = CGSize(width: 14, height: 14)
+        return UIGraphicsImageRenderer(size: size).image { _ in
+            color.setFill()
+            UIBezierPath(ovalIn: CGRect(origin: .zero, size: size)).fill()
+        }
+        .withRenderingMode(.alwaysOriginal)
     }
 }
 
@@ -595,7 +641,6 @@ private struct AdvancedSection<Fields: View>: View {
     @AppStorage("settings.showAdvancedSettings") private var showAdvanced = false
 
     let screen: String
-    let footer: LocalizedStringKey
     @ViewBuilder let fields: Fields
 
     var body: some View {
@@ -612,10 +657,6 @@ private struct AdvancedSection<Fields: View>: View {
                 DispatchQueue.main.async {
                     withAnimation { showAdvanced.toggle() }
                 }
-            }
-        } footer: {
-            if showAdvanced {
-                Text(footer)
             }
         }
     }
@@ -733,7 +774,7 @@ struct AspectRatioPicker: View {
     @Binding var selection: OverlayAspectRatio
 
     var body: some View {
-        Picker("Layout", selection: $selection) {
+        Picker("Floating Window Layout", selection: $selection) {
             ForEach(OverlayAspectRatio.allCases, id: \.self) { ratio in
                 Text(ratio.displayName).tag(ratio)
             }
@@ -744,6 +785,8 @@ struct AspectRatioPicker: View {
 /// A title with its typed number field at the trailing edge.
 struct AdvancedNumberRow: View {
     let title: LocalizedStringKey
+    /// Shows the lowest and highest it takes, on a line below the title.
+    var showsRange = false
     @Binding var value: Int
     let range: ClosedRange<Int>
     /// Left out for text sizes, which read as bare numbers.
@@ -751,7 +794,11 @@ struct AdvancedNumberRow: View {
 
     var body: some View {
         HStack {
-            Text(title)
+            if showsRange {
+                SettingLabel(title, detail: "\(range.lowerBound) to \(range.upperBound)")
+            } else {
+                Text(title)
+            }
             Spacer()
             SettingNumberField(value: $value, range: range, unit: unit)
         }
