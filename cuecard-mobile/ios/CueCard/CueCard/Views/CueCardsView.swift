@@ -132,7 +132,7 @@ struct CueCardsView: View {
                 }
                 .helpSheet(for: .cards, isPresented: $showingHelp)
                 .sheet(isPresented: $showingSettings) {
-                    SettingsView(opensAt: .cards)
+                    SettingsView()
                         .environmentObject(settingsService)
                 }
                 .sheet(isPresented: $showingLockScreenHelp) {

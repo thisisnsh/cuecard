@@ -202,7 +202,7 @@ struct TeleprompterView: View {
             .safeAreaInset(edge: .top, spacing: 0) { header }
             .helpSheet(for: .teleprompter, isPresented: $showingHelp)
             .sheet(isPresented: $showingSettings) {
-                SettingsView(opensAt: .teleprompter)
+                SettingsView()
                     .environmentObject(settingsService)
             }
         }

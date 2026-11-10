@@ -5,32 +5,15 @@ import FirebaseCrashlytics
 
 // MARK: - Settings
 
-/// Where Settings opens: the group for the screen it's opened from.
-enum SettingsGroup: Hashable {
-    case teleprompter, cards
-
-    /// The group for what's written in that mode.
-    init(_ mode: ScriptMode) {
-        switch mode {
-        case .teleprompter: self = .teleprompter
-        case .cards: self = .cards
-        }
-    }
-}
-
 /// The one Settings screen, opened from the library, the editor and both
 /// readers. It shows every setting, in groups: the teleprompter's, the
-/// camera, the cards', then the rest. It
-/// opens scrolled to the group for the screen it was opened from. The
+/// camera, the cards', then the rest, each with a line on what it does. The
 /// teleprompter and the cards each keep their own text sizes and cue color;
 /// the camera, the theme and the language are the same for both.
 struct SettingsView: View {
     @EnvironmentObject var settingsService: SettingsService
     // Not from the environment: a reader's full screen cover may not pass it on.
     @ObservedObject private var notifications = RemoteNotificationService.shared
-
-    /// The group to show first, or the top.
-    var opensAt: SettingsGroup?
 
     private static let screen = "settings"
 
@@ -41,7 +24,7 @@ struct SettingsView: View {
     }
 
     var body: some View {
-        SettingsScreen(screen: Self.screen, title: "Settings", opensAt: opensAt) {
+        SettingsScreen(screen: Self.screen, title: "Settings") {
             remoteMessageSection
 
             teleprompterSection
@@ -50,9 +33,9 @@ struct SettingsView: View {
             AppleIntelligenceSection(screen: Self.screen)
             AppleWatchSection(screen: Self.screen)
             LanguageSection(screen: Self.screen)
-            advancedSection
             AboutSection(screen: Self.screen)
             themeSection
+            advancedSection
 
             diagnosticsSection
         }
@@ -65,35 +48,41 @@ struct SettingsView: View {
         Section("Teleprompter") {
             AdvancedNumberRow(
                 title: "Scroll Speed",
+                detail: "Lines that pass each minute.",
                 value: $settingsService.settings.linesPerMinute,
                 range: TeleprompterSettings.lpmRange,
                 unit: "lines/min"
             )
-            .id(SettingsGroup.teleprompter)
 
             SizePresetPicker(
                 title: "Viewer Text Size",
+                detail: "The script as it scrolls.",
                 value: $settingsService.settings.fontSize.loggingClicks("settings_text_size", screen: Self.screen),
                 presets: TeleprompterSettings.fontSizePresets
             )
 
             SizePresetPicker(
                 title: "Editor Text Size",
+                detail: "The script as you write it.",
                 value: $settingsService.settings.editorFontSize.loggingClicks("settings_editor_text_size", screen: Self.screen),
                 presets: TeleprompterSettings.editorFontSizePresets
             )
 
             SizePresetPicker(
                 title: "Floating Window Text Size",
+                detail: "The script over other apps.",
                 value: $settingsService.settings.pipFontSize.loggingClicks("settings_floating_text_size", screen: Self.screen),
                 presets: TeleprompterSettings.pipFontSizePresets
             )
 
             AspectRatioPicker(selection: $settingsService.settings.overlayAspectRatio.loggingClicks("settings_floating_layout", screen: Self.screen))
 
-            CueColorPicker(selection: $settingsService.settings.cueColor.loggingClicks("settings_cue_color", screen: Self.screen))
+            CueColorPicker(detail: "Cues in your script.",
+                           selection: $settingsService.settings.cueColor.loggingClicks("settings_cue_color", screen: Self.screen))
 
-            Toggle("Reading Guide Line", isOn: $settingsService.settings.showsReadingGuide.loggingClicks("settings_reading_guide", screen: Self.screen))
+            Toggle(isOn: $settingsService.settings.showsReadingGuide.loggingClicks("settings_reading_guide", screen: Self.screen)) {
+                SettingLabel("Reading Guide Line", detail: "Marks the line to read.")
+            }
 
             Toggle(isOn: $settingsService.settings.mirrorsText.loggingClicks("settings_flip_horizontal", screen: Self.screen)) {
                 SettingLabel("Flip Horizontally", detail: "For reading off a teleprompter's glass.")
@@ -112,18 +101,20 @@ struct SettingsView: View {
         Section {
             SizePresetPicker(
                 title: "Viewer Text Size",
+                detail: "Each card as you read it.",
                 value: $settingsService.settings.cards.fontSize.loggingClicks("settings_cards_text_size", screen: Self.screen),
                 presets: TeleprompterSettings.fontSizePresets
             )
-            .id(SettingsGroup.cards)
 
             SizePresetPicker(
                 title: "Editor Text Size",
+                detail: "The deck as you write it.",
                 value: $settingsService.settings.cards.editorFontSize.loggingClicks("settings_cards_editor_text_size", screen: Self.screen),
                 presets: TeleprompterSettings.editorFontSizePresets
             )
 
-            CueColorPicker(selection: $settingsService.settings.cards.cueColor.loggingClicks("settings_cards_cue_color", screen: Self.screen))
+            CueColorPicker(detail: "Cues on your cards.",
+                           selection: $settingsService.settings.cards.cueColor.loggingClicks("settings_cards_cue_color", screen: Self.screen))
 
             Toggle(isOn: Binding(
                 get: { settingsService.settings.cards.showOnLockScreen },
@@ -194,10 +185,12 @@ struct SettingsView: View {
     /// One for the whole app.
     private var themeSection: some View {
         Section {
-            Picker("Theme", selection: $settingsService.settings.themePreference.loggingClicks("settings_theme", screen: Self.screen)) {
+            Picker(selection: $settingsService.settings.themePreference.loggingClicks("settings_theme", screen: Self.screen)) {
                 ForEach(ThemePreference.allCases, id: \.self) { theme in
                     Text(theme.displayName).tag(theme)
                 }
+            } label: {
+                SettingLabel("Theme", detail: "Light, dark, or match your iPhone.")
             }
         }
     }
@@ -249,15 +242,15 @@ private struct AppleIntelligenceSection: View {
     var body: some View {
         if OnDeviceModelAvailability.onDevice != .unsupported {
             Section {
+                feature("Follow Me AI",
+                        detail: "Scrolls the script as you read it aloud.",
+                        isOn: $isFollowVoiceEnabled, button: "settings_follow_voice")
                 feature("Suggestions AI",
                         detail: "Suggests fixes, cues and formatting.",
                         isOn: $isSuggestionsEnabled, button: "settings_ai_suggestions")
                 feature("Help AI",
                         detail: "Answers your questions in Help.",
                         isOn: $isAskAIEnabled, button: "settings_ask_ai")
-                feature("Follow Me AI",
-                        detail: "Scrolls the script as you read it aloud.",
-                        isOn: $isFollowVoiceEnabled, button: "settings_follow_voice")
 
                 Button {
                     AnalyticsEvents.logButtonClick("settings_apple_intelligence_report", screen: screen)
@@ -296,30 +289,12 @@ private struct SettingsScreen<Content: View>: View {
 
     let screen: String
     let title: LocalizedStringKey
-    let opensAt: SettingsGroup?
     @ViewBuilder let content: Content
-
-    @State private var hasScrolled = false
-    /// Above a group's first row: the space between groups and its title.
-    @ScaledMetric(relativeTo: .footnote) private var titleRoom: CGFloat = 56
 
     var body: some View {
         NavigationStack {
-            ScrollViewReader { proxy in
-                List {
-                    content
-                }
-                // Once the list is laid out, so the group is there to go to.
-                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
-                    guard let opensAt, !hasScrolled, height > 0 else { return }
-                    hasScrolled = true
-                    // A group is gone to by its first row. Scrolling lines up
-                    // the same point of the row and of the list, so a point a
-                    // little way down the row leaves its title in view above.
-                    let rowHeight: CGFloat = 44
-                    let anchor = UnitPoint(x: 0.5, y: titleRoom / max(height - rowHeight, 1))
-                    DispatchQueue.main.async { proxy.scrollTo(opensAt, anchor: anchor) }
-                }
+            List {
+                content
             }
             .scrollDismissesKeyboard(.immediately)
             .navigationTitle(title)
@@ -368,25 +343,35 @@ private struct CameraSection: View {
                 SettingLabel("Sync with Teleprompter", detail: "Plays and pauses with the camera.")
             }
 
-            Picker("Resolution", selection: setting(\.resolution, "resolution", shown: settings)) {
+            Picker(selection: setting(\.resolution, "resolution", shown: settings)) {
                 ForEach(options.resolutions, id: \.self) { Text(verbatim: $0.label).tag($0) }
+            } label: {
+                SettingLabel("Resolution", detail: "The size of each video.")
             }
-            Picker("Frame Rate", selection: setting(\.frameRate, "frame_rate", shown: settings)) {
+            Picker(selection: setting(\.frameRate, "frame_rate", shown: settings)) {
                 ForEach(options.frameRates, id: \.self) { Text("\($0) fps").tag($0) }
+            } label: {
+                SettingLabel("Frame Rate", detail: "Frames recorded each second.")
             }
             if options.dynamicRanges.count > 1 {
-                Picker("Dynamic Range", selection: setting(\.dynamicRange, "dynamic_range", shown: settings)) {
+                Picker(selection: setting(\.dynamicRange, "dynamic_range", shown: settings)) {
                     ForEach(options.dynamicRanges, id: \.self) { Text(verbatim: $0.label).tag($0) }
+                } label: {
+                    SettingLabel("Dynamic Range", detail: "HDR and Log keep more light and color.")
                 }
             }
             if options.codecs.count > 1 {
-                Picker("Codec", selection: setting(\.codec, "codec", shown: settings)) {
+                Picker(selection: setting(\.codec, "codec", shown: settings)) {
                     ForEach(options.codecs, id: \.self) { Text(verbatim: $0.label).tag($0) }
+                } label: {
+                    SettingLabel("Codec", detail: "How each video is compressed.")
                 }
             }
             if options.stabilizations.count > 1 {
-                Picker("Stabilization", selection: setting(\.stabilization, "stabilization", shown: settings)) {
+                Picker(selection: setting(\.stabilization, "stabilization", shown: settings)) {
                     ForEach(options.stabilizations, id: \.self) { Text($0.label).tag($0) }
+                } label: {
+                    SettingLabel("Stabilization", detail: "Steadies a shaky picture.")
                 }
             }
             if options.isFrontCamera {
@@ -468,10 +453,12 @@ private struct AppleWatchSection: View {
     var body: some View {
         if watch.isWatchAppInstalled {
             Section {
-                Picker("Card Text Size", selection: $settingsService.settings.watch.cardTextSize.loggingClicks("settings_watch_text_size", screen: screen)) {
+                Picker(selection: $settingsService.settings.watch.cardTextSize.loggingClicks("settings_watch_text_size", screen: screen)) {
                     ForEach(WatchCardTextSize.allCases, id: \.self) { size in
                         Text(size.displayName).tag(size)
                     }
+                } label: {
+                    SettingLabel("Card Text Size", detail: "Cards on your wrist.")
                 }
             } header: {
                 Text("Apple Watch")
@@ -566,10 +553,11 @@ private struct SettingLabel: View {
 /// a row as tall as the others.
 private struct CueColorPicker: View {
     @Environment(\.colorScheme) private var colorScheme
+    let detail: LocalizedStringKey
     @Binding var selection: CueColor
 
     var body: some View {
-        Picker("Cue Color", selection: $selection) {
+        Picker(selection: $selection) {
             ForEach(CueColor.allCases) { option in
                 Label {
                     Text(option.displayName)
@@ -578,15 +566,22 @@ private struct CueColorPicker: View {
                 }
                 .tag(option)
             }
+        } label: {
+            SettingLabel("Cue Color", detail: detail)
         }
     }
 
-    /// Drawn as an image in its own color: menus draw symbols in the text color.
+    /// Drawn as an image in its own color: menus draw symbols in the text
+    /// color. The dot sits in the middle of a wider image, so the chosen
+    /// color, which the row shows with no space of its own, stands clear of
+    /// its name.
     private static func dot(_ color: UIColor) -> UIImage {
-        let size = CGSize(width: 14, height: 14)
+        let diameter: CGFloat = 14
+        let gap: CGFloat = 6
+        let size = CGSize(width: diameter + 2 * gap, height: diameter)
         return UIGraphicsImageRenderer(size: size).image { _ in
             color.setFill()
-            UIBezierPath(ovalIn: CGRect(origin: .zero, size: size)).fill()
+            UIBezierPath(ovalIn: CGRect(x: gap, y: 0, width: diameter, height: diameter)).fill()
         }
         .withRenderingMode(.alwaysOriginal)
     }
@@ -635,9 +630,11 @@ struct ColorSwatchRow: View {
     }
 }
 
-/// Typed sizes for anyone who wants one the presets don't offer. Hidden until
-/// asked for, and the choice to show it is remembered across both modes.
+/// The last group: typed sizes for anyone who wants one the presets don't
+/// offer, hidden until asked for, and Reset to Defaults. Whether the sizes
+/// show is remembered.
 private struct AdvancedSection<Fields: View>: View {
+    @EnvironmentObject var settingsService: SettingsService
     @AppStorage("settings.showAdvancedSettings") private var showAdvanced = false
 
     let screen: String
@@ -658,11 +655,19 @@ private struct AdvancedSection<Fields: View>: View {
                     withAnimation { showAdvanced.toggle() }
                 }
             }
+
+            Button("Reset to Defaults") {
+                AnalyticsEvents.logButtonClick("reset_to_defaults", screen: screen)
+                withAnimation { settingsService.resetSettings() }
+            }
+            // Greyed out once there's nothing left to reset, so a tap that
+            // changes nothing never looks like one that didn't register.
+            .disabled(!settingsService.canResetSettings)
         }
     }
 }
 
-/// Share, review, installing on a paired watch without the app, and reset.
+/// Share, review, and installing on a paired watch without the app.
 ///
 /// Each row is a plain button whose action does the work. A Link or ShareLink
 /// with a tap gesture laid over it for analytics competes with the row for the
@@ -702,16 +707,6 @@ private struct AboutSection: View {
                     row("Install on Apple Watch", systemImage: "applewatch")
                 }
             }
-        }
-
-        Section {
-            Button("Reset to Defaults") {
-                AnalyticsEvents.logButtonClick("reset_to_defaults", screen: screen)
-                withAnimation { settingsService.resetSettings() }
-            }
-            // Greyed out once there's nothing left to reset, so a tap that
-            // changes nothing never looks like one that didn't register.
-            .disabled(!settingsService.canResetSettings)
         }
     }
 
@@ -754,16 +749,24 @@ private struct AboutSection: View {
 /// the row never reads blank.
 struct SizePresetPicker: View {
     let title: LocalizedStringKey
+    /// A line below the title on what it sizes.
+    var detail: LocalizedStringKey? = nil
     @Binding var value: Int
     let presets: [SettingPreset]
 
     var body: some View {
-        Picker(title, selection: $value) {
+        Picker(selection: $value) {
             ForEach(presets, id: \.value) { preset in
                 Text(preset.label).tag(preset.value)
             }
             if !presets.contains(where: { $0.value == value }) {
                 Text("Custom (\(value))").tag(value)
+            }
+        } label: {
+            if let detail {
+                SettingLabel(title, detail: detail)
+            } else {
+                Text(title)
             }
         }
     }
@@ -774,10 +777,12 @@ struct AspectRatioPicker: View {
     @Binding var selection: OverlayAspectRatio
 
     var body: some View {
-        Picker("Floating Window Layout", selection: $selection) {
+        Picker(selection: $selection) {
             ForEach(OverlayAspectRatio.allCases, id: \.self) { ratio in
                 Text(ratio.displayName).tag(ratio)
             }
+        } label: {
+            SettingLabel("Floating Window Layout", detail: "Its shape over other apps.")
         }
     }
 }
@@ -785,6 +790,8 @@ struct AspectRatioPicker: View {
 /// A title with its typed number field at the trailing edge.
 struct AdvancedNumberRow: View {
     let title: LocalizedStringKey
+    /// A line below the title on what it does.
+    var detail: LocalizedStringKey? = nil
     /// Shows the lowest and highest it takes, on a line below the title.
     var showsRange = false
     @Binding var value: Int
@@ -794,7 +801,9 @@ struct AdvancedNumberRow: View {
 
     var body: some View {
         HStack {
-            if showsRange {
+            if let detail {
+                SettingLabel(title, detail: detail)
+            } else if showsRange {
                 SettingLabel(title, detail: "\(range.lowerBound) to \(range.upperBound)")
             } else {
                 Text(title)

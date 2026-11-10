@@ -381,7 +381,7 @@ private struct LibraryList: View {
         .toolbar { toolbar }
         .helpSheet(for: .library, isPresented: $showingHelp)
         .sheet(isPresented: $showingSettings) {
-            SettingsView(opensAt: SettingsGroup(mode))
+            SettingsView()
         }
         .sheet(item: $takesTarget, onDismiss: takeCounts.reload) { target in
             ScriptTakesSheet(scriptID: target.id)
