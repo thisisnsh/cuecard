@@ -707,23 +707,10 @@ struct HomeView: View {
     private var toolbar: some ToolbarContent {
         saveToolbarItem
 
-        // One item, so the gear and ••• sit closer than separate items'
+        // One item, so the ••• and gear sit closer than separate items'
         // buttons do.
         ToolbarItem(placement: .topBarTrailing) {
             HStack(spacing: 0) {
-                Button(action: {
-                    AnalyticsEvents.logButtonClick("settings", screen: "home")
-                    isEditorFocused = false
-                    showingSettings = true
-                }) {
-                    Image(systemName: "gearshape")
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
-                        .frame(width: 34, height: 36)
-                        .contentShape(Rectangle())
-                }
-                .accessibilityLabel("Settings")
-
                 Menu {
                     Button {
                         save(from: "save_note_menu")
@@ -758,6 +745,19 @@ struct HomeView: View {
                 .simultaneousGesture(TapGesture().onEnded {
                     AnalyticsEvents.logButtonClick("editor_menu", screen: "home")
                 })
+
+                Button(action: {
+                    AnalyticsEvents.logButtonClick("settings", screen: "home")
+                    isEditorFocused = false
+                    showingSettings = true
+                }) {
+                    Image(systemName: "gearshape")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                        .frame(width: 34, height: 36)
+                        .contentShape(Rectangle())
+                }
+                .accessibilityLabel("Settings")
             }
         }
 

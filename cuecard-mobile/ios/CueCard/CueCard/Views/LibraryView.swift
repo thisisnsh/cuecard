@@ -419,10 +419,12 @@ private struct LibraryList: View {
             modeMenu
         }
 
-        // One item, so the gear and ••• sit closer than separate items'
+        // One item, so the ••• and gear sit closer than separate items'
         // buttons do, as in the editor.
         ToolbarItem(placement: .topBarTrailing) {
             HStack(spacing: 0) {
+                moreMenu
+
                 Button {
                     AnalyticsEvents.logButtonClick("settings", screen: Self.screen)
                     isSearching = false
@@ -435,8 +437,6 @@ private struct LibraryList: View {
                         .contentShape(Rectangle())
                 }
                 .accessibilityLabel("Settings")
-
-                moreMenu
             }
         }
 
