@@ -1,10 +1,7 @@
 {
-  "1.14.0": {
+  "1.15.0": {
     "features": [
-        "Library: Redesigned, with collections to group your scripts.",
-        "Suggestions AI: Fixes and ideas for your script, right on your iPhone.",
-        "Follow Me AI: The teleprompter scrolls along as you speak.",
-        "Help AI: Ask anything about using CueCard."
+        "Camera Settings: Choose resolution, frame rate, dynamic range, codec, stabilization and front camera mirroring."
     ]
   }
 }

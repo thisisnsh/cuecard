@@ -63,6 +63,36 @@
         }
       }
     },
+    "Camera Settings: Choose resolution, frame rate, dynamic range, codec, stabilization and front camera mirroring." : {
+      "comment" : "What's New for 1.15.0, looked up by its English text from WhatsNew.json.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajustes de cámara: elige resolución, frecuencia de fotogramas, rango dinámico, códec, estabilización y efecto espejo de la cámara frontal."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Réglages de l’appareil photo : choisissez la résolution, la fréquence d’images, la plage dynamique, le codec, la stabilisation et l’effet miroir de la caméra avant."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajustes da câmera: escolha resolução, taxa de quadros, alcance dinâmico, codec, estabilização e espelhamento da câmera frontal."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Настройки камеры: выбирайте разрешение, частоту кадров, динамический диапазон, кодек, стабилизацию и зеркалирование фронтальной камеры."
+          }
+        }
+      }
+    },
     "Cards on your wrist." : {
       "localizations" : {
         "es" : {
