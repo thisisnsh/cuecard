@@ -5,13 +5,32 @@ import FirebaseCrashlytics
 
 // MARK: - Settings
 
-/// The one Settings screen, opened from the editor. It shows the settings for
-/// the mode being written in: the teleprompter's, or the cards'. Each mode
-/// keeps its own values, so nothing set for one changes the other, apart from
-/// the camera, the theme and the language, which are the same for both.
-struct EditorSettingsView: View {
+/// Where Settings opens: the group for the screen it's opened from.
+enum SettingsGroup: Hashable {
+    case teleprompter, cards
+
+    /// The group for what's written in that mode.
+    init(_ mode: ScriptMode) {
+        switch mode {
+        case .teleprompter: self = .teleprompter
+        case .cards: self = .cards
+        }
+    }
+}
+
+/// The one Settings screen, opened from the library, the editor and both
+/// readers. It shows every setting, in groups: the teleprompter's, with its
+/// mirror and floating window, the camera, the cards', then the rest. It
+/// opens scrolled to the group for the screen it was opened from. The
+/// teleprompter and the cards each keep their own text sizes and cue color;
+/// the camera, the theme and the language are the same for both.
+struct SettingsView: View {
     @EnvironmentObject var settingsService: SettingsService
-    @EnvironmentObject var notifications: RemoteNotificationService
+    // Not from the environment: a reader's full screen cover may not pass it on.
+    @ObservedObject private var notifications = RemoteNotificationService.shared
+
+    /// The group to show first, or the top.
+    var opensAt: SettingsGroup?
 
     private static let screen = "settings"
 
@@ -22,23 +41,26 @@ struct EditorSettingsView: View {
     }
 
     var body: some View {
-        let mode = settingsService.settings.scriptMode
-
-        SettingsScreen(screen: Self.screen, title: mode == .cards ? "Cards Settings" : "Teleprompter Settings") {
+        SettingsScreen(screen: Self.screen, title: "Settings", opensAt: opensAt) {
             remoteMessageSection
 
-            // The mode's own reading settings first, then Apple
-            // Intelligence, then how the app looks and what's around it.
-            switch mode {
-            case .teleprompter: teleprompterSections
-            case .cards: cardsSections
-            }
-
+            teleprompterSections
+            CameraSection(screen: Self.screen)
+            cardsSection
+            AppleIntelligenceSection(screen: Self.screen)
+            AppleWatchSection(screen: Self.screen)
+            LanguageSection(screen: Self.screen)
+            advancedSection
             AboutSection(screen: Self.screen)
+            themeSection
+
             diagnosticsSection
         }
+        .environmentObject(notifications)
     }
 
+    /// The teleprompter's reading and editor settings, then its mirror and
+    /// floating window.
     @ViewBuilder
     private var teleprompterSections: some View {
         Section("Teleprompter") {
@@ -55,20 +77,18 @@ struct EditorSettingsView: View {
                 presets: TeleprompterSettings.fontSizePresets
             )
 
-            Toggle("Reading Guide Line", isOn: $settingsService.settings.showsReadingGuide.loggingClicks("settings_reading_guide", screen: Self.screen))
-        }
-
-        AppleIntelligenceSection(screen: Self.screen, mode: .teleprompter)
-
-        Section("Floating Window") {
             SizePresetPicker(
-                title: "Text Size",
-                value: $settingsService.settings.pipFontSize.loggingClicks("settings_floating_text_size", screen: Self.screen),
-                presets: TeleprompterSettings.pipFontSizePresets
+                title: "Editor Text Size",
+                value: $settingsService.settings.editorFontSize.loggingClicks("settings_editor_text_size", screen: Self.screen),
+                presets: TeleprompterSettings.editorFontSizePresets
             )
 
-            AspectRatioPicker(selection: $settingsService.settings.overlayAspectRatio.loggingClicks("settings_floating_layout", screen: Self.screen))
+            ColorSwatchRow(title: "Cue Color",
+                           selection: $settingsService.settings.cueColor.loggingClicks("settings_cue_color", screen: Self.screen))
+
+            Toggle("Reading Guide Line", isOn: $settingsService.settings.showsReadingGuide.loggingClicks("settings_reading_guide", screen: Self.screen))
         }
+        .id(SettingsGroup.teleprompter)
 
         Section {
             Toggle("Flip Horizontally", isOn: $settingsService.settings.mirrorsText.loggingClicks("settings_flip_horizontal", screen: Self.screen))
@@ -80,52 +100,37 @@ struct EditorSettingsView: View {
             Text("Flip the teleprompter and floating window text to read it off a teleprompter's glass.")
         }
 
-        CameraSection(screen: Self.screen, mode: .teleprompter)
-
-        Section("Editor") {
+        Section("Floating Window") {
             SizePresetPicker(
                 title: "Text Size",
-                value: $settingsService.settings.editorFontSize.loggingClicks("settings_editor_text_size", screen: Self.screen),
-                presets: TeleprompterSettings.editorFontSizePresets
+                value: $settingsService.settings.pipFontSize.loggingClicks("settings_floating_text_size", screen: Self.screen),
+                presets: TeleprompterSettings.pipFontSizePresets
             )
-        }
 
-        AppearanceSection(screen: Self.screen,
-                          cueColor: $settingsService.settings.cueColor.loggingClicks("settings_cue_color", screen: Self.screen))
-
-        LanguageSection(screen: Self.screen)
-
-        AdvancedSection(screen: Self.screen, footer: teleprompterAdvancedFooter) {
-            AdvancedNumberRow(
-                title: "Teleprompter Text Size",
-                value: $settingsService.settings.fontSize,
-                range: TeleprompterSettings.fontSizeRange
-            )
-            AdvancedNumberRow(
-                title: "Floating Window Text Size",
-                value: $settingsService.settings.pipFontSize,
-                range: TeleprompterSettings.pipFontSizeRange
-            )
-            AdvancedNumberRow(
-                title: "Editor Text Size",
-                value: $settingsService.settings.editorFontSize,
-                range: TeleprompterSettings.editorFontSizeRange
-            )
+            AspectRatioPicker(selection: $settingsService.settings.overlayAspectRatio.loggingClicks("settings_floating_layout", screen: Self.screen))
         }
     }
 
-    @ViewBuilder
-    private var cardsSections: some View {
-        // Whether a deck being read is on the Lock Screen too. That keeps cards
-        // short enough to fit there, which the toggle's subtitle says only
-        // while it's on. Turning it on asks first, since anyone who can see
-        // the phone can read the card there.
+    /// The cards' reading and editor settings, and the Lock Screen. That
+    /// keeps cards short enough to fit there, which the toggle's subtitle
+    /// says only while it's on. Turning it on asks first, since anyone who
+    /// can see the phone can read the card there.
+    private var cardsSection: some View {
         Section {
             SizePresetPicker(
                 title: "Text Size",
                 value: $settingsService.settings.cards.fontSize.loggingClicks("settings_cards_text_size", screen: Self.screen),
                 presets: TeleprompterSettings.fontSizePresets
             )
+
+            SizePresetPicker(
+                title: "Editor Text Size",
+                value: $settingsService.settings.cards.editorFontSize.loggingClicks("settings_cards_editor_text_size", screen: Self.screen),
+                presets: TeleprompterSettings.editorFontSizePresets
+            )
+
+            ColorSwatchRow(title: "Cue Color",
+                           selection: $settingsService.settings.cards.cueColor.loggingClicks("settings_cards_cue_color", screen: Self.screen))
 
             Toggle(isOn: Binding(
                 get: { settingsService.settings.cards.showOnLockScreen },
@@ -161,51 +166,56 @@ struct EditorSettingsView: View {
         } header: {
             Text("Cards")
         }
+        .id(SettingsGroup.cards)
+    }
 
-        AppleIntelligenceSection(screen: Self.screen, mode: .cards)
-
-        CameraSection(screen: Self.screen, mode: .cards)
-
-        Section("Editor") {
-            SizePresetPicker(
-                title: "Text Size",
-                value: $settingsService.settings.cards.editorFontSize.loggingClicks("settings_cards_editor_text_size", screen: Self.screen),
-                presets: TeleprompterSettings.editorFontSizePresets
+    /// Every text size as a number, past the presets.
+    private var advancedSection: some View {
+        AdvancedSection(screen: Self.screen, footer: advancedFooter) {
+            AdvancedNumberRow(
+                title: "Teleprompter Text Size",
+                value: $settingsService.settings.fontSize,
+                range: TeleprompterSettings.fontSizeRange
             )
-        }
-
-        AppearanceSection(screen: Self.screen,
-                          cueColor: $settingsService.settings.cards.cueColor.loggingClicks("settings_cards_cue_color", screen: Self.screen))
-
-        AppleWatchSection(screen: Self.screen)
-
-        LanguageSection(screen: Self.screen)
-
-        AdvancedSection(screen: Self.screen, footer: cardsAdvancedFooter) {
+            AdvancedNumberRow(
+                title: "Teleprompter Editor Text Size",
+                value: $settingsService.settings.editorFontSize,
+                range: TeleprompterSettings.editorFontSizeRange
+            )
+            AdvancedNumberRow(
+                title: "Floating Window Text Size",
+                value: $settingsService.settings.pipFontSize,
+                range: TeleprompterSettings.pipFontSizeRange
+            )
             AdvancedNumberRow(
                 title: "Card Text Size",
                 value: $settingsService.settings.cards.fontSize,
                 range: TeleprompterSettings.fontSizeRange
             )
             AdvancedNumberRow(
-                title: "Editor Text Size",
+                title: "Cards Editor Text Size",
                 value: $settingsService.settings.cards.editorFontSize,
                 range: TeleprompterSettings.editorFontSizeRange
             )
         }
     }
 
-    private var teleprompterAdvancedFooter: LocalizedStringKey {
-        let prompter = TeleprompterSettings.fontSizeRange
+    private var advancedFooter: LocalizedStringKey {
+        let reading = TeleprompterSettings.fontSizeRange
         let pip = TeleprompterSettings.pipFontSizeRange
         let editor = TeleprompterSettings.editorFontSizeRange
-        return "Teleprompter text can be set from \(prompter.lowerBound) to \(prompter.upperBound), floating window text from \(pip.lowerBound) to \(pip.upperBound), and editor text from \(editor.lowerBound) to \(editor.upperBound)."
+        return "Teleprompter and card text can be set from \(reading.lowerBound) to \(reading.upperBound), floating window text from \(pip.lowerBound) to \(pip.upperBound), and editor text from \(editor.lowerBound) to \(editor.upperBound)."
     }
 
-    private var cardsAdvancedFooter: LocalizedStringKey {
-        let card = TeleprompterSettings.fontSizeRange
-        let editor = TeleprompterSettings.editorFontSizeRange
-        return "Card text can be set from \(card.lowerBound) to \(card.upperBound), and editor text from \(editor.lowerBound) to \(editor.upperBound)."
+    /// One for the whole app.
+    private var themeSection: some View {
+        Section {
+            Picker("Theme", selection: $settingsService.settings.themePreference.loggingClicks("settings_theme", screen: Self.screen)) {
+                ForEach(ThemePreference.allCases, id: \.self) { theme in
+                    Text(theme.displayName).tag(theme)
+                }
+            }
+        }
     }
 
     /// A notice from the worker, if there's one meant for Settings. Quieter than
@@ -246,7 +256,6 @@ struct EditorSettingsView: View {
 /// went.
 private struct AppleIntelligenceSection: View {
     let screen: String
-    let mode: ScriptMode
 
     @Environment(\.openURL) private var openURL
     @AppStorage(AppleIntelligenceSetting.suggestionsKey) private var isSuggestionsEnabled = true
@@ -262,12 +271,9 @@ private struct AppleIntelligenceSection: View {
                 feature("Help AI",
                         detail: "Answers your questions about CueCard in Help.",
                         isOn: $isAskAIEnabled, button: "settings_ask_ai")
-                // The teleprompter is the only place it listens.
-                if mode == .teleprompter {
-                    feature("Follow Me AI",
-                            detail: "Scrolls the script as you read it aloud.",
-                            isOn: $isFollowVoiceEnabled, button: "settings_follow_voice")
-                }
+                feature("Follow Me AI",
+                        detail: "Scrolls the script as you read it aloud.",
+                        isOn: $isFollowVoiceEnabled, button: "settings_follow_voice")
 
                 Button {
                     AnalyticsEvents.logButtonClick("settings_apple_intelligence_report", screen: screen)
@@ -307,12 +313,20 @@ private struct SettingsScreen<Content: View>: View {
 
     let screen: String
     let title: LocalizedStringKey
+    let opensAt: SettingsGroup?
     @ViewBuilder let content: Content
 
     var body: some View {
         NavigationStack {
-            List {
-                content
+            ScrollViewReader { proxy in
+                List {
+                    content
+                }
+                .onAppear {
+                    guard let opensAt else { return }
+                    // Once the list is laid out, so the group is there to go to.
+                    DispatchQueue.main.async { proxy.scrollTo(opensAt, anchor: .top) }
+                }
             }
             .scrollDismissesKeyboard(.immediately)
             .navigationTitle(title)
@@ -345,7 +359,6 @@ private struct SettingsScreen<Content: View>: View {
 private struct CameraSection: View {
     @EnvironmentObject var settingsService: SettingsService
     let screen: String
-    let mode: ScriptMode
 
     @State private var preferred = CameraSettings.saved
 
@@ -356,10 +369,7 @@ private struct CameraSection: View {
         Section {
             Toggle("Text Above Camera", isOn: $settingsService.settings.showsTextAboveCamera.loggingClicks("settings_text_above_camera", screen: screen))
 
-            // The cards have no playing to keep in step.
-            if mode == .teleprompter {
-                Toggle("Sync with Teleprompter", isOn: $settingsService.settings.syncsCamera.loggingClicks("settings_sync_camera", screen: screen))
-            }
+            Toggle("Sync with Teleprompter", isOn: $settingsService.settings.syncsCamera.loggingClicks("settings_sync_camera", screen: screen))
 
             Picker("Resolution", selection: setting(\.resolution, "resolution", shown: settings)) {
                 ForEach(options.resolutions, id: \.self) { Text(verbatim: $0.label).tag($0) }
@@ -388,11 +398,7 @@ private struct CameraSection: View {
         } header: {
             Text("Camera")
         } footer: {
-            if mode == .teleprompter {
-                Text("Text Above Camera keeps your script in view over the camera. Sync with Teleprompter plays and pauses them together. Each camera records as close to these settings as it can.")
-            } else {
-                Text("Text Above Camera keeps your cards in view over the camera. Each camera records as close to these settings as it can.")
-            }
+            Text("Text Above Camera keeps your script or cards in view over the camera. Sync with Teleprompter plays and pauses the teleprompter and camera together. Each camera records as close to these settings as it can.")
         }
     }
 
@@ -473,26 +479,6 @@ private struct AppleWatchSection: View {
             } header: {
                 Text("Apple Watch")
             }
-        }
-    }
-}
-
-/// Theme and cue color. The theme is one setting for the whole app; the cue
-/// color is the one for the mode these settings belong to.
-private struct AppearanceSection: View {
-    @EnvironmentObject var settingsService: SettingsService
-    let screen: String
-    @Binding var cueColor: CueColor
-
-    var body: some View {
-        Section("Appearance") {
-            Picker("Theme", selection: $settingsService.settings.themePreference.loggingClicks("settings_theme", screen: screen)) {
-                ForEach(ThemePreference.allCases, id: \.self) { theme in
-                    Text(theme.displayName).tag(theme)
-                }
-            }
-
-            ColorSwatchRow(title: "Cue Color", selection: $cueColor)
         }
     }
 }
@@ -635,8 +621,7 @@ private struct AdvancedSection<Fields: View>: View {
     }
 }
 
-/// Share, review, installing on a paired watch without the app, and reset,
-/// the same in both modes.
+/// Share, review, installing on a paired watch without the app, and reset.
 ///
 /// Each row is a plain button whose action does the work. A Link or ShareLink
 /// with a tap gesture laid over it for analytics competes with the row for the
@@ -854,7 +839,7 @@ extension View {
 }
 
 #Preview {
-    EditorSettingsView()
+    SettingsView()
         .environmentObject(SettingsService.shared)
         .environmentObject(RemoteNotificationService.shared)
 }

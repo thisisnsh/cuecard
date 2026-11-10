@@ -33,6 +33,7 @@ struct TeleprompterView: View {
     @State private var hasConfiguredSession = false
     @State private var showControls = true
     @State private var showingHelp = false
+    @State private var showingSettings = false
     @State private var showingCamera = false
     @State private var cameraLink = CameraLink()
     @State private var controlsTimer: Timer?
@@ -200,6 +201,10 @@ struct TeleprompterView: View {
             // taps from reaching the reader.
             .safeAreaInset(edge: .top, spacing: 0) { header }
             .helpSheet(for: .teleprompter, isPresented: $showingHelp)
+            .sheet(isPresented: $showingSettings) {
+                SettingsView(opensAt: .teleprompter)
+                    .environmentObject(settingsService)
+            }
         }
         .onChange(of: showingCamera) { _, presented in
             pipManager.setCameraPresented(presented)
@@ -278,6 +283,12 @@ struct TeleprompterView: View {
                     showingCamera.toggle()
                 }
                 .accessibilityLabel(showingCamera ? "Close Camera" : "Record Video")
+
+                headerButton("gearshape") {
+                    AnalyticsEvents.logButtonClick("settings", screen: "teleprompter")
+                    showingSettings = true
+                }
+                .accessibilityLabel("Settings")
 
                 headerButton("questionmark") {
                     AnalyticsEvents.logButtonClick("help_teleprompter", screen: "teleprompter")

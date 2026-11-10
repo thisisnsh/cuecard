@@ -117,15 +117,15 @@ private enum AllHelp {
                                     summary: "Text size, colors, camera, timer and language",
                                     systemImage: "gearshape", topics: [
         HelpTopic("Change Text Size and Colors",
-                  detail: "Open a script and tap the gear at the top. Each mode keeps its own sizes and cue color."),
+                  detail: "Tap the gear in your library, the editor, the teleprompter or your cards. Text sizes and cue color are under Teleprompter and Cards, and each keeps its own."),
         HelpTopic("Choose How Videos Record",
-                  detail: "Open a script, tap the gear at the top, and pick the resolution, frame rate, dynamic range, codec and stabilization under Camera. Each camera records as close to them as it can. Turn on Mirror Front Camera to record the front camera as you see it."),
+                  detail: "In Settings, under Camera, pick the resolution, frame rate, dynamic range, codec and stabilization. Each camera records as close to them as it can, and a change made while recording starts with the next take. Turn on Mirror Front Camera to record the front camera as you see it."),
         HelpTopic("Set a Timer",
                   detail: "Tap the timer at the bottom of the editor to set how long you have, when it warns you, and the colors it turns."),
         HelpTopic("Count Down Before Scrolling",
                   detail: "In the teleprompter's timer, set a Countdown to get a few seconds before the script starts scrolling."),
         HelpTopic("Change the Language",
-                  detail: "Open a script, tap the gear at the top, then Language. CueCard is in English, French, Portuguese, Russian and Spanish.")
+                  detail: "Tap the gear, then Language. CueCard is in English, French, Portuguese, Russian and Spanish.")
     ])
 
     private static let followVoiceTopic = HelpTopic("Follow Me AI (Beta)",

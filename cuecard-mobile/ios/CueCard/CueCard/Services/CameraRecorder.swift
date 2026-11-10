@@ -36,6 +36,9 @@ struct CameraSettings: Codable, Equatable, Sendable {
 
     private static let key = "cameraSettings"
 
+    /// Posted when Settings saves a change, so an open camera can follow it.
+    static let didChange = Notification.Name("CameraSettings.didChange")
+
     static var saved: CameraSettings {
         guard let data = UserDefaults.standard.data(forKey: key),
               let settings = try? JSONDecoder().decode(CameraSettings.self, from: data) else { return CameraSettings() }
@@ -44,6 +47,7 @@ struct CameraSettings: Codable, Equatable, Sendable {
 
     func save() {
         if let data = try? JSONEncoder().encode(self) { UserDefaults.standard.set(data, forKey: Self.key) }
+        NotificationCenter.default.post(name: Self.didChange, object: nil)
     }
 }
 
@@ -126,12 +130,37 @@ final class CameraRecorder: ObservableObject {
     /// Keeps the recorder alive while a take is saved, even after the reader
     /// it was recorded over has closed.
     private var savingSelf: CameraRecorder?
+    private var settingsObserver: NSObjectProtocol?
 
     init() {
         capture.onEvent = { [weak self] event in
             Task { @MainActor in self?.handle(event) }
         }
         pendingURL = Self.leftoverTake()
+        // Settings can open over the reader while the camera is on.
+        settingsObserver = NotificationCenter.default.addObserver(forName: CameraSettings.didChange,
+                                                                  object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated { self?.applySavedSettings() }
+        }
+    }
+
+    deinit {
+        if let settingsObserver { NotificationCenter.default.removeObserver(settingsObserver) }
+    }
+
+    /// Records with the choices saved in Settings: right away, or once the
+    /// take under way has finished.
+    private func applySavedSettings() {
+        guard isReady, !isRecording, !isStartingRecording else { return }
+        let saved = CameraSettings.saved
+        guard saved != preferredSettings else { return }
+        let previous = preferredSettings
+        preferredSettings = saved
+        Task {
+            if let state = await capture.apply(saved) { update(state) }
+            // A take started first; try again once it's done.
+            else { preferredSettings = previous }
+        }
     }
 
     /// A take still in CueCard's folder, from a save that failed or never ran.
@@ -341,6 +370,8 @@ final class CameraRecorder: ObservableObject {
                 }
                 Task { await savePending() }
             }
+            // Anything changed in Settings during the take.
+            applySavedSettings()
         case let .unavailable(reason):
             isReady = false
             message = reason
@@ -432,6 +463,22 @@ final class CameraCapture: NSObject, @unchecked Sendable, AVCaptureFileOutputRec
                     guard self.session.isRunning, let device = self.videoInput?.device else { throw CameraError.unavailable }
                     continuation.resume(returning: CameraState(device: device))
                 } catch { continuation.resume(throwing: error) }
+            }
+        }
+    }
+
+    /// Records with these settings from the next take, as near as this camera
+    /// can. None once a take has been asked for.
+    func apply(_ settings: CameraSettings) async -> CameraState? {
+        await withCheckedContinuation { continuation in
+            queue.async {
+                guard !self.recordingRequested, let device = self.videoInput?.device else {
+                    continuation.resume(returning: nil)
+                    return
+                }
+                self.preferred = settings
+                self.applySettings()
+                continuation.resume(returning: CameraState(device: device))
             }
         }
     }

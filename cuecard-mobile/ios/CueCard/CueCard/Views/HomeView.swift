@@ -648,7 +648,7 @@ struct HomeView: View {
         .toolbar { toolbar }
         .helpSheet(for: .writing(settingsService.settings.scriptMode), isPresented: $showingHelp)
         .sheet(isPresented: $showingSettings) {
-            EditorSettingsView()
+            SettingsView(opensAt: SettingsGroup(settingsService.settings.scriptMode))
         }
         .sheet(isPresented: $showingVersions) {
             if let id = settingsService.currentNoteId {

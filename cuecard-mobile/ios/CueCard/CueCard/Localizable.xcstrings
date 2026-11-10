@@ -7,6 +7,34 @@
     " %@ " : {
       "shouldTranslate" : false
     },
+    "Cards Editor Text Size" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamaño del texto del editor de tarjetas"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Taille du texte de l'éditeur des fiches"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamanho do texto do editor de cartões"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Размер текста редактора карточек"
+          }
+        }
+      }
+    },
     "Choose How Videos Record" : {
       "localizations" : {
         "es" : {
@@ -35,30 +63,30 @@
         }
       }
     },
-    "Open a script, tap the gear at the top, and pick the resolution, frame rate, dynamic range, codec and stabilization under Camera. Each camera records as close to them as it can. Turn on Mirror Front Camera to record the front camera as you see it." : {
+    "In Settings, under Camera, pick the resolution, frame rate, dynamic range, codec and stabilization. Each camera records as close to them as it can, and a change made while recording starts with the next take. Turn on Mirror Front Camera to record the front camera as you see it." : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Abre un guion, toca el engranaje de arriba y elige la resolución, la frecuencia de fotogramas, el rango dinámico, el códec y la estabilización en Cámara. Cada cámara graba lo más cerca posible de lo que elijas. Activa Reflejar cámara frontal para grabar la cámara frontal tal como la ves."
+            "value" : "En Ajustes, en Cámara, elige la resolución, la frecuencia de fotogramas, el rango dinámico, el códec y la estabilización. Cada cámara graba lo más cerca posible de lo que elijas, y un cambio hecho mientras grabas se aplica desde la siguiente toma. Activa Reflejar cámara frontal para grabar la cámara frontal tal como la ves."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ouvrez un script, touchez l'engrenage en haut, puis choisissez la résolution, la fréquence d'images, la plage dynamique, le codec et la stabilisation sous Appareil photo. Chaque caméra filme au plus près de vos choix. Activez Effet miroir caméra avant pour filmer la caméra avant telle que vous la voyez."
+            "value" : "Dans Réglages, sous Appareil photo, choisissez la résolution, la fréquence d'images, la plage dynamique, le codec et la stabilisation. Chaque caméra filme au plus près de vos choix, et un changement fait pendant que vous filmez s'applique à la prise suivante. Activez Effet miroir caméra avant pour filmer la caméra avant telle que vous la voyez."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Abra um roteiro, toque na engrenagem no topo e escolha a resolução, a taxa de quadros, o alcance dinâmico, o codec e a estabilização em Câmera. Cada câmera grava o mais próximo possível do que você escolher. Ative Espelhar câmera frontal para gravar a câmera frontal como você a vê."
+            "value" : "Em Ajustes, em Câmera, escolha a resolução, a taxa de quadros, o alcance dinâmico, o codec e a estabilização. Cada câmera grava o mais próximo possível do que você escolher, e uma mudança feita durante a gravação vale a partir da próxima tomada. Ative Espelhar câmera frontal para gravar a câmera frontal como você a vê."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Откройте сценарий, коснитесь шестерёнки вверху и выберите разрешение, частоту кадров, динамический диапазон, кодек и стабилизацию в разделе «Камера». Каждая камера записывает видео как можно ближе к выбранному. Включите «Отражать видео с фронтальной камеры», чтобы записывать её так, как вы её видите."
+            "value" : "В настройках, в разделе «Камера», выберите разрешение, частоту кадров, динамический диапазон, кодек и стабилизацию. Каждая камера записывает видео как можно ближе к выбранному, а изменение во время записи вступает в силу со следующего дубля. Включите «Отражать видео с фронтальной камеры», чтобы записывать её так, как вы её видите."
           }
         }
       }
@@ -91,6 +119,118 @@
         }
       }
     },
+    "Tap the gear in your library, the editor, the teleprompter or your cards. Text sizes and cue color are under Teleprompter and Cards, and each keeps its own." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toca el engranaje en tu biblioteca, el editor, el teleprompter o tus tarjetas. El tamaño del texto y el color de las indicaciones están en Teleprompter y en Tarjetas, y cada uno guarda los suyos."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touchez l'engrenage dans votre bibliothèque, l'éditeur, le prompteur ou vos fiches. Les tailles du texte et la couleur des repères se trouvent sous Prompteur et Fiches, et chacun garde les siennes."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toque na engrenagem na biblioteca, no editor, no teleprompter ou nos cartões. Os tamanhos do texto e a cor das deixas ficam em Teleprompter e Cartões, e cada um guarda os seus."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Коснитесь шестерёнки в библиотеке, редакторе, телесуфлёре или карточках. Размеры текста и цвет подсказок находятся в разделах «Телесуфлёр» и «Карточки», и у каждого свои."
+          }
+        }
+      }
+    },
+    "Tap the gear, then Language. CueCard is in English, French, Portuguese, Russian and Spanish." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toca el engranaje y luego Idioma. CueCard está disponible en inglés, francés, portugués, ruso y español."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touchez l'engrenage, puis Langue. CueCard est disponible en anglais, français, portugais, russe et espagnol."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toque na engrenagem e depois em Idioma. O CueCard está disponível em inglês, francês, português, russo e espanhol."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Коснитесь шестерёнки, затем «Язык». CueCard доступен на английском, французском, португальском, русском и испанском языках."
+          }
+        }
+      }
+    },
+    "Teleprompter and card text can be set from %lld to %lld, floating window text from %lld to %lld, and editor text from %lld to %lld." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El tamaño del texto del teleprompter y de las tarjetas puede ir de %lld a %lld, el de la ventana flotante de %lld a %lld y el del editor de %lld a %lld."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La taille du texte du prompteur et des fiches peut aller de %lld à %lld, celle du texte de la fenêtre flottante de %lld à %lld et celle du texte de l'éditeur de %lld à %lld."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O tamanho do texto do teleprompter e dos cartões pode ir de %lld a %lld, o da janela flutuante de %lld a %lld e o do editor de %lld a %lld."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Размер текста телесуфлёра и карточек — от %lld до %lld, плавающего окна — от %lld до %lld, редактора — от %lld до %lld."
+          }
+        }
+      }
+    },
+    "Teleprompter Editor Text Size" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamaño del texto del editor del teleprompter"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Taille du texte de l'éditeur du prompteur"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamanho do texto do editor do teleprompter"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Размер текста редактора телесуфлёра"
+          }
+        }
+      }
+    },
     "Text Above Camera" : {
       "localizations" : {
         "es" : {
@@ -119,58 +259,30 @@
         }
       }
     },
-    "Text Above Camera keeps your cards in view over the camera. Each camera records as close to these settings as it can." : {
+    "Text Above Camera keeps your script or cards in view over the camera. Sync with Teleprompter plays and pauses the teleprompter and camera together. Each camera records as close to these settings as it can." : {
       "localizations" : {
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Texto sobre la cámara mantiene tus tarjetas a la vista sobre la cámara. Cada cámara graba lo más cerca posible de estos ajustes."
+            "value" : "Texto sobre la cámara mantiene tu guion o tus tarjetas a la vista sobre la cámara. Sincronizar con el teleprompter reproduce y pausa el teleprompter y la cámara a la vez. Cada cámara graba lo más cerca posible de estos ajustes."
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Texte au-dessus de la caméra garde vos fiches visibles par-dessus la caméra. Chaque caméra filme au plus près de ces réglages."
+            "value" : "Texte au-dessus de la caméra garde votre script ou vos fiches visibles par-dessus la caméra. Synchroniser avec le prompteur lance et met en pause le prompteur et la caméra ensemble. Chaque caméra filme au plus près de ces réglages."
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Texto sobre a câmera mantém os cartões à vista sobre a câmera. Cada câmera grava o mais próximo possível destes ajustes."
+            "value" : "Texto sobre a câmera mantém o roteiro ou os cartões à vista sobre a câmera. Sincronizar com o teleprompter reproduz e pausa o teleprompter e a câmera juntos. Cada câmera grava o mais próximo possível destes ajustes."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "«Текст поверх камеры» оставляет карточки на виду поверх камеры. Каждая камера записывает видео как можно ближе к этим настройкам."
-          }
-        }
-      }
-    },
-    "Text Above Camera keeps your script in view over the camera. Sync with Teleprompter plays and pauses them together. Each camera records as close to these settings as it can." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Texto sobre la cámara mantiene tu guion a la vista sobre la cámara. Sincronizar con el teleprompter reproduce y pausa ambos a la vez. Cada cámara graba lo más cerca posible de estos ajustes."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Texte au-dessus de la caméra garde votre script visible par-dessus la caméra. Synchroniser avec le prompteur lance et met en pause les deux ensemble. Chaque caméra filme au plus près de ces réglages."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Texto sobre a câmera mantém o roteiro à vista sobre a câmera. Sincronizar com o teleprompter reproduz e pausa os dois juntos. Cada câmera grava o mais próximo possível destes ajustes."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "«Текст поверх камеры» оставляет сценарий на виду поверх камеры. «Синхронизация с телесуфлёром» запускает и ставит на паузу их вместе. Каждая камера записывает видео как можно ближе к этим настройкам."
+            "value" : "«Текст поверх камеры» оставляет сценарий или карточки на виду поверх камеры. «Синхронизация с телесуфлёром» запускает и ставит на паузу телесуфлёр и камеру вместе. Каждая камера записывает видео как можно ближе к этим настройкам."
           }
         }
       }
@@ -2380,34 +2492,6 @@
         }
       }
     },
-    "Appearance" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Apariencia"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Apparence"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aparência"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Оформление"
-          }
-        }
-      }
-    },
     "Apple Intelligence" : {
       "comment" : "The section header for Apple Intelligence settings.",
       "isCommentAutoGenerated" : true,
@@ -3117,34 +3201,6 @@
         }
       }
     },
-    "Card text can be set from %lld to %lld, and editor text from %lld to %lld." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "El tamaño del texto de las tarjetas puede ir de %lld a %lld y el del editor de %lld a %lld."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La taille du texte des fiches peut aller de %lld à %lld et celle du texte de l'éditeur de %lld à %lld."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "O tamanho do texto dos cartões pode ir de %lld a %lld e o do editor de %lld a %lld."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Размер текста карточек — от %lld до %lld, текста редактора — от %lld до %lld."
-          }
-        }
-      }
-    },
     "Card Text Size" : {
       "localizations" : {
         "es" : {
@@ -3228,34 +3284,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Набор карточек"
-          }
-        }
-      }
-    },
-    "Cards Settings" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ajustes de tarjetas"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Réglages des fiches"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ajustes dos cartões"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Настройки карточек"
           }
         }
       }
@@ -10799,36 +10827,6 @@
         }
       }
     },
-    "Open a script and tap the gear at the top. Each mode keeps its own sizes and cue color." : {
-      "comment" : "A help topic for the settings.",
-      "isCommentAutoGenerated" : true,
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Abre un guion y toca el engranaje de arriba. Cada modo tiene sus propios tamaños y color de indicaciones."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ouvrez un script et touchez l'engrenage en haut. Chaque mode a ses propres tailles et couleur de repère."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Abra um roteiro e toque na engrenagem no topo. Cada modo tem seus próprios tamanhos e cor de deixa."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Откройте сценарий и коснитесь шестерёнки вверху. У каждого режима свои размеры и цвет подсказок."
-          }
-        }
-      }
-    },
     "Open a script in CueCard's teleprompter first." : {
       "localizations" : {
         "es" : {
@@ -10881,36 +10879,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Откройте сценарий на iPhone. Часы показывают его таймер и могут запускать, ставить на паузу или отматывать на 10 секунд назад."
-          }
-        }
-      }
-    },
-    "Open a script, tap the gear at the top, then Language. CueCard is in English, French, Portuguese, Russian and Spanish." : {
-      "comment" : "A description of the language setting in the settings.",
-      "isCommentAutoGenerated" : true,
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Abre un guion, toca el engranaje de arriba y luego Idioma. CueCard está disponible en inglés, francés, portugués, ruso y español."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ouvrez un script, touchez l'engrenage en haut, puis Langue. CueCard est disponible en anglais, français, portugais, russe et espagnol."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Abra um roteiro, toque na engrenagem no topo e depois em Idioma. O CueCard está disponível em inglês, francês, português, russo e espanhol."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Откройте сценарий, коснитесь шестерёнки вверху, затем «Язык». CueCard доступен на английском, французском, португальском, русском и испанском языках."
           }
         }
       }
@@ -17354,62 +17322,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Сценарий для телесуфлёра"
-          }
-        }
-      }
-    },
-    "Teleprompter Settings" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ajustes del teleprompter"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Réglages du prompteur"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ajustes do teleprompter"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Настройки телесуфлёра"
-          }
-        }
-      }
-    },
-    "Teleprompter text can be set from %lld to %lld, floating window text from %lld to %lld, and editor text from %lld to %lld." : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "El tamaño del texto del teleprompter puede ir de %lld a %lld, el de la ventana flotante de %lld a %lld y el del editor de %lld a %lld."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "La taille du texte du prompteur peut aller de %lld à %lld, celle du texte de la fenêtre flottante de %lld à %lld et celle du texte de l'éditeur de %lld à %lld."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "O tamanho do texto do teleprompter pode ir de %lld a %lld, o da janela flutuante de %lld a %lld e o do editor de %lld a %lld."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Размер текста телесуфлёра — от %lld до %lld, плавающего окна — от %lld до %lld, редактора — от %lld до %lld."
           }
         }
       }

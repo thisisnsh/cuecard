@@ -185,6 +185,7 @@ private struct LibraryList: View {
     @State private var query = ""
     @FocusState private var isSearching: Bool
     @State private var showingHelp = false
+    @State private var showingSettings = false
     @State private var showingImporter = false
     @State private var showingFolderPicker = false
     @State private var showingStopFolder = false
@@ -379,6 +380,9 @@ private struct LibraryList: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { toolbar }
         .helpSheet(for: .library, isPresented: $showingHelp)
+        .sheet(isPresented: $showingSettings) {
+            SettingsView(opensAt: SettingsGroup(mode))
+        }
         .sheet(item: $takesTarget, onDismiss: takeCounts.reload) { target in
             ScriptTakesSheet(scriptID: target.id)
         }
@@ -415,8 +419,25 @@ private struct LibraryList: View {
             modeMenu
         }
 
+        // One item, so the gear and ••• sit closer than separate items'
+        // buttons do, as in the editor.
         ToolbarItem(placement: .topBarTrailing) {
-            moreMenu
+            HStack(spacing: 0) {
+                Button {
+                    AnalyticsEvents.logButtonClick("settings", screen: Self.screen)
+                    isSearching = false
+                    showingSettings = true
+                } label: {
+                    Image(systemName: "gearshape")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                        .frame(width: 34, height: 36)
+                        .contentShape(Rectangle())
+                }
+                .accessibilityLabel("Settings")
+
+                moreMenu
+            }
         }
 
         HelpToolbarItem(page: .library, isPresented: $showingHelp)
@@ -625,6 +646,8 @@ private struct LibraryList: View {
             Image(systemName: "ellipsis")
                 .font(.body.weight(.semibold))
                 .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                .frame(width: 34, height: 36)
+                .contentShape(Rectangle())
         }
         .accessibilityLabel("Library Options")
         .simultaneousGesture(TapGesture().onEnded {

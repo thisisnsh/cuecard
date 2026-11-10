@@ -19,6 +19,7 @@ struct CueCardsView: View {
     @State private var dragOffset: CGFloat = 0
     @State private var showingLockScreenHelp = false
     @State private var showingHelp = false
+    @State private var showingSettings = false
     @State private var showingCamera = false
     @Environment(\.openURL) private var openURL
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -109,6 +110,16 @@ struct CueCardsView: View {
                     }
                     ToolbarItem(placement: .topBarTrailing) {
                         Button {
+                            AnalyticsEvents.logButtonClick("settings", screen: "cards")
+                            showingSettings = true
+                        } label: {
+                            Image(systemName: "gearshape")
+                                .foregroundStyle(AppColors.textPrimary(for: colorScheme))
+                        }
+                        .accessibilityLabel("Settings")
+                    }
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
                             AnalyticsEvents.logButtonClick("cards_camera", screen: "cards")
                             showingCamera.toggle()
                         } label: {
@@ -120,6 +131,10 @@ struct CueCardsView: View {
                     HelpToolbarItem(page: .cards, isPresented: $showingHelp)
                 }
                 .helpSheet(for: .cards, isPresented: $showingHelp)
+                .sheet(isPresented: $showingSettings) {
+                    SettingsView(opensAt: .cards)
+                        .environmentObject(settingsService)
+                }
                 .sheet(isPresented: $showingLockScreenHelp) {
                     NavigationStack {
                         List {
