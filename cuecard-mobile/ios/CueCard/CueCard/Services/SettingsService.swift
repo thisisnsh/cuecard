@@ -200,6 +200,10 @@ struct TeleprompterSettings: Codable, Equatable {
     /// Play and pause on the teleprompter start and pause the camera's
     /// recording, and the camera's buttons play and pause the teleprompter.
     var syncsCamera: Bool
+    /// The script is drawn over the camera's picture, so it stays readable
+    /// wherever the window is. Off, the picture covers the text under it.
+    /// Both modes share it, like the camera's recording settings.
+    var showsTextAboveCamera: Bool
     /// The teleprompter and floating window draw the text flipped left to
     /// right, for reading off a teleprompter's glass.
     var mirrorsText: Bool
@@ -235,6 +239,7 @@ struct TeleprompterSettings: Codable, Equatable {
             timerSeconds: 0
         ),
         syncsCamera: true,
+        showsTextAboveCamera: true,
         mirrorsText: false,
         flipsTextVertically: false,
         showsReadingGuide: true,
@@ -357,6 +362,7 @@ struct TeleprompterSettings: Codable, Equatable {
         case watch
         case cards
         case syncsCamera
+        case showsTextAboveCamera
         case mirrorsText
         case flipsTextVertically
         case showsReadingGuide
@@ -380,6 +386,7 @@ struct TeleprompterSettings: Codable, Equatable {
         watch: WatchSettings,
         cards: CardsSettings,
         syncsCamera: Bool,
+        showsTextAboveCamera: Bool,
         mirrorsText: Bool,
         flipsTextVertically: Bool,
         showsReadingGuide: Bool,
@@ -401,6 +408,7 @@ struct TeleprompterSettings: Codable, Equatable {
         self.watch = watch
         self.cards = cards
         self.syncsCamera = syncsCamera
+        self.showsTextAboveCamera = showsTextAboveCamera
         self.mirrorsText = mirrorsText
         self.flipsTextVertically = flipsTextVertically
         self.showsReadingGuide = showsReadingGuide
@@ -460,6 +468,8 @@ struct TeleprompterSettings: Codable, Equatable {
         }
         syncsCamera = try container.decodeIfPresent(Bool.self, forKey: .syncsCamera)
             ?? TeleprompterSettings.default.syncsCamera
+        showsTextAboveCamera = try container.decodeIfPresent(Bool.self, forKey: .showsTextAboveCamera)
+            ?? TeleprompterSettings.default.showsTextAboveCamera
         mirrorsText = try container.decodeIfPresent(Bool.self, forKey: .mirrorsText)
             ?? TeleprompterSettings.default.mirrorsText
         flipsTextVertically = try container.decodeIfPresent(Bool.self, forKey: .flipsTextVertically)
@@ -492,6 +502,7 @@ struct TeleprompterSettings: Codable, Equatable {
         try container.encode(watch, forKey: .watch)
         try container.encode(cards, forKey: .cards)
         try container.encode(syncsCamera, forKey: .syncsCamera)
+        try container.encode(showsTextAboveCamera, forKey: .showsTextAboveCamera)
         try container.encode(mirrorsText, forKey: .mirrorsText)
         try container.encode(flipsTextVertically, forKey: .flipsTextVertically)
         try container.encode(showsReadingGuide, forKey: .showsReadingGuide)

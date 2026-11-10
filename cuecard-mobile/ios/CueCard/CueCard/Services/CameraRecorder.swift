@@ -4,7 +4,8 @@ import Photos
 import UIKit
 
 /// How the camera records: what the sensor captures and how it's encoded, as
-/// in the Camera app's video settings. Nothing here changes the picture's look.
+/// in the Camera app's video settings. Chosen in Settings, for both modes.
+/// Nothing here changes the picture's look.
 struct CameraSettings: Codable, Equatable, Sendable {
     enum Resolution: Int, Codable, CaseIterable, Sendable {
         case hd720 = 720, hd1080 = 1080, uhd4K = 2160
@@ -75,7 +76,7 @@ extension CameraSettings.Stabilization {
     }
 }
 
-/// The settings the camera in use can record with, given the rest.
+/// The settings a camera can record with, given the rest.
 struct CameraOptions: Equatable, Sendable {
     var resolutions: [CameraSettings.Resolution] = [.hd1080]
     var frameRates = [30]
@@ -85,11 +86,9 @@ struct CameraOptions: Equatable, Sendable {
     var isFrontCamera = true
 }
 
-/// The camera in use, what it records with, and what else it can.
+/// The camera in use.
 struct CameraState: @unchecked Sendable {
     let device: AVCaptureDevice
-    let settings: CameraSettings
-    let options: CameraOptions
 }
 
 /// UI state lives on the main actor; capture configuration and file recording
@@ -105,10 +104,7 @@ final class CameraRecorder: ObservableObject {
     /// The Camera app's zoom stops this camera has, smallest first.
     @Published private(set) var zoomSteps: [Double] = [1]
     @Published private(set) var maxZoom: Double = 1
-    /// What this camera records with: the reader's choice, as near as it can.
-    @Published private(set) var settings = CameraSettings.saved
-    @Published private(set) var options = CameraOptions()
-    /// The reader's choice, kept for a camera that can do more than this one.
+    /// The reader's choice in Settings; each camera records the nearest it can.
     private var preferredSettings = CameraSettings.saved
     /// The device zoom factor that shows as 1×.
     private var zoomBase: Double = 1
@@ -170,6 +166,8 @@ final class CameraRecorder: ObservableObject {
                 return
             }
         }
+        // Settings may have changed since the camera was last on.
+        if !isRecording, !isStartingRecording { preferredSettings = CameraSettings.saved }
         do {
             let state = try await capture.prepare(settings: preferredSettings)
             guard isVisible, preparationID == request, !Task.isCancelled else {
@@ -228,22 +226,7 @@ final class CameraRecorder: ObservableObject {
         capture.setZoom(zoom * zoomBase)
     }
 
-    /// Records with this change from now on, on every camera that can.
-    func changeSettings(_ change: (inout CameraSettings) -> Void) {
-        guard isReady, !isBusy, !isRecording, !isStartingRecording else { return }
-        change(&preferredSettings)
-        preferredSettings.save()
-        isBusy = true
-        let wanted = preferredSettings
-        Task {
-            if let state = await capture.apply(wanted) { update(state) }
-            isBusy = false
-        }
-    }
-
     private func update(_ state: CameraState) {
-        settings = state.settings
-        options = state.options
         let device = state.device
         self.device = device
         rotation = AVCaptureDevice.RotationCoordinator(device: device, previewLayer: nil)
@@ -411,8 +394,6 @@ final class CameraCapture: NSObject, @unchecked Sendable, AVCaptureFileOutputRec
     private var observers: [NSObjectProtocol] = []
     /// What the reader asked for; each camera records the nearest it can.
     private var preferred = CameraSettings()
-    private var effective = CameraSettings()
-    private var options = CameraOptions()
 
     /// Whether a camera is on. It sets up the app's audio session for its
     /// video, and Follow Me AI then leaves that alone.
@@ -440,32 +421,78 @@ final class CameraCapture: NSObject, @unchecked Sendable, AVCaptureFileOutputRec
         try await withCheckedThrowingContinuation { continuation in
             queue.async {
                 do {
-                    if self.videoInput == nil {
-                        try self.configure()
+                    let isNew = self.videoInput == nil
+                    if isNew { try self.configure() }
+                    if isNew || (settings != self.preferred && !self.recordingRequested) {
                         self.preferred = settings
                         self.applySettings()
                     }
                     Self.isOn.withLock { $0 = true }
                     self.session.startRunning()
                     guard self.session.isRunning, let device = self.videoInput?.device else { throw CameraError.unavailable }
-                    continuation.resume(returning: CameraState(device: device, settings: self.effective, options: self.options))
+                    continuation.resume(returning: CameraState(device: device))
                 } catch { continuation.resume(throwing: error) }
             }
         }
     }
 
-    /// Records with these settings from the next take, as near as this camera can.
-    func apply(_ settings: CameraSettings) async -> CameraState? {
-        await withCheckedContinuation { continuation in
-            queue.async {
-                guard !self.recordingRequested, let device = self.videoInput?.device else {
-                    continuation.resume(returning: nil)
-                    return
-                }
-                self.preferred = settings
-                self.applySettings()
-                continuation.resume(returning: CameraState(device: device, settings: self.effective, options: self.options))
-            }
+    /// What this iPhone's cameras can record with, for Settings, where no
+    /// camera is on: every choice either camera has, given the rest, with the
+    /// reader's choices moved to the nearest of those. Each camera then
+    /// records the nearest it can.
+    static func offered(for preferred: CameraSettings) -> (settings: CameraSettings, options: CameraOptions) {
+        typealias Settings = CameraSettings
+        let cameras = Self.cameras
+        var options = CameraOptions(resolutions: [], frameRates: [], dynamicRanges: [], codecs: [],
+                                    stabilizations: [], isFrontCamera: cameras.contains { $0.position == .front })
+        for device in cameras {
+            var settings = preferred
+            var own = CameraOptions()
+            _ = format(of: device, for: &settings, options: &own)
+            options.resolutions += own.resolutions
+            options.frameRates += own.frameRates
+            options.dynamicRanges += own.dynamicRanges
+            options.stabilizations += own.stabilizations
+        }
+        if cameras.isEmpty {
+            options = CameraOptions(isFrontCamera: false)
+        }
+        func ordered<T: CaseIterable & Equatable>(_ values: [T]) -> [T] { T.allCases.filter(values.contains) }
+        options.resolutions = ordered(options.resolutions)
+        options.dynamicRanges = ordered(options.dynamicRanges)
+        options.stabilizations = ordered(options.stabilizations)
+        options.frameRates = Settings.frameRates.filter(options.frameRates.contains)
+
+        var settings = preferred
+        settings.resolution = nearest(settings.resolution, in: options.resolutions)
+        if !options.dynamicRanges.contains(settings.dynamicRange), let first = options.dynamicRanges.first {
+            settings.dynamicRange = first
+        }
+        if !options.frameRates.contains(settings.frameRate), let first = options.frameRates.first {
+            settings.frameRate = options.frameRates.last { $0 <= settings.frameRate } ?? first
+        }
+        settings.stabilization = nearest(settings.stabilization, in: options.stabilizations)
+
+        // The same rules as the camera's encoder, below.
+        var codecs: [Settings.Codec] = [.hevc]
+        if settings.dynamicRange == .sdr { codecs.append(.h264) }
+        if recordsProRes(cameras) { codecs.append(.proRes) }
+        if settings.dynamicRange.isLog, codecs.contains(.proRes) { codecs = [.proRes] }
+        if !codecs.contains(settings.codec) { settings.codec = codecs[0] }
+        options.codecs = codecs
+        return (settings, options)
+    }
+
+    /// The cameras the window switches between. Looked up once: Settings
+    /// asks on every change.
+    private static let cameras: [AVCaptureDevice] = [AVCaptureDevice.Position.front, .back].compactMap(camera(at:))
+
+    /// Whether this iPhone records ProRes, which the encoder only says once a
+    /// camera is on. Every iPhone that records Apple Log does, and so do the
+    /// 13 Pro and 14 Pro, from before Log.
+    private static func recordsProRes(_ cameras: [AVCaptureDevice]) -> Bool {
+        DeviceModel.recordsProResWithoutLog || cameras.contains { device in
+            device.formats.contains(where: CameraSettings.DynamicRange.appleLog.isSupported(by:))
         }
     }
 
@@ -499,7 +526,6 @@ final class CameraCapture: NSObject, @unchecked Sendable, AVCaptureFileOutputRec
         // Log is recorded in ProRes, as in the Camera app.
         if settings.dynamicRange.isLog, codecs.contains(.proRes) { codecs = [.proRes] }
         if !codecs.contains(settings.codec), let first = codecs.first { settings.codec = first }
-        options.codecs = codecs.isEmpty ? [settings.codec] : codecs
         if let connection = output.connection(with: .video) {
             let type: AVVideoCodecType? = switch settings.codec {
             case .hevc: available.contains(.hevc) ? .hevc : nil
@@ -515,8 +541,6 @@ final class CameraCapture: NSObject, @unchecked Sendable, AVCaptureFileOutputRec
                 connection.isVideoMirrored = mirrorsRecording
             }
         }
-        effective = settings
-        self.options = options
     }
 
     private var mirrorsRecording: Bool {
@@ -667,7 +691,7 @@ final class CameraCapture: NSObject, @unchecked Sendable, AVCaptureFileOutputRec
                         self.session.commitConfiguration()
                         Self.zoomToMainLens(device)
                         self.applySettings()
-                        continuation.resume(returning: CameraState(device: device, settings: self.effective, options: self.options))
+                        continuation.resume(returning: CameraState(device: device))
                     } else {
                         self.session.addInput(old)
                         self.session.commitConfiguration()

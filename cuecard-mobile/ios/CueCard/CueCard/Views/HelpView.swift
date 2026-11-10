@@ -114,10 +114,12 @@ private enum AllHelp {
     ])
 
     static let settings = HelpSection("settings", title: "Settings & Timer",
-                                    summary: "Text size, colors, timer and language",
+                                    summary: "Text size, colors, camera, timer and language",
                                     systemImage: "gearshape", topics: [
         HelpTopic("Change Text Size and Colors",
                   detail: "Open a script and tap the gear at the top. Each mode keeps its own sizes and cue color."),
+        HelpTopic("Choose How Videos Record",
+                  detail: "Open a script, tap the gear at the top, and pick the resolution, frame rate, dynamic range, codec and stabilization under Camera. Each camera records as close to them as it can. Turn on Mirror Front Camera to record the front camera as you see it."),
         HelpTopic("Set a Timer",
                   detail: "Tap the timer at the bottom of the editor to set how long you have, when it warns you, and the colors it turns."),
         HelpTopic("Count Down Before Scrolling",
@@ -174,6 +176,8 @@ private enum AllHelp {
                   detail: "Videos you record in CueCard with a script or deck open are kept as its takes, and so are videos you record in another app while the teleprompter floats over it. Tap Takes above the reading controls to see them, or the takes count beside a script in your library."),
         HelpTopic("Move the Camera Window",
                   detail: "Drag the camera window to any corner. Pinch or double-tap it to change its size, and tap it to hide or show its buttons. Use the buttons to zoom or flip the camera."),
+        HelpTopic("Read Over the Camera",
+                  detail: "Your script or cards are drawn over the camera window, so you can read every line. Turn off Text Above Camera in Settings, under Camera, to show the camera on top instead. Either way, the text stays out of the video."),
         HelpTopic("Play a Take",
                   detail: "Tap a take to play it right in CueCard. Below the video, add tags and notes, like what worked and what to change next time."),
         HelpTopic("Favorite a Take",

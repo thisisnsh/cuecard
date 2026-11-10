@@ -7,6 +7,230 @@
     " %@ " : {
       "shouldTranslate" : false
     },
+    "Choose How Videos Record" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Elige cómo se graban los vídeos"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choisir comment les vidéos sont filmées"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Escolher como os vídeos são gravados"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выберите, как записывать видео"
+          }
+        }
+      }
+    },
+    "Open a script, tap the gear at the top, and pick the resolution, frame rate, dynamic range, codec and stabilization under Camera. Each camera records as close to them as it can. Turn on Mirror Front Camera to record the front camera as you see it." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abre un guion, toca el engranaje de arriba y elige la resolución, la frecuencia de fotogramas, el rango dinámico, el códec y la estabilización en Cámara. Cada cámara graba lo más cerca posible de lo que elijas. Activa Reflejar cámara frontal para grabar la cámara frontal tal como la ves."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ouvrez un script, touchez l'engrenage en haut, puis choisissez la résolution, la fréquence d'images, la plage dynamique, le codec et la stabilisation sous Appareil photo. Chaque caméra filme au plus près de vos choix. Activez Effet miroir caméra avant pour filmer la caméra avant telle que vous la voyez."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Abra um roteiro, toque na engrenagem no topo e escolha a resolução, a taxa de quadros, o alcance dinâmico, o codec e a estabilização em Câmera. Cada câmera grava o mais próximo possível do que você escolher. Ative Espelhar câmera frontal para gravar a câmera frontal como você a vê."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Откройте сценарий, коснитесь шестерёнки вверху и выберите разрешение, частоту кадров, динамический диапазон, кодек и стабилизацию в разделе «Камера». Каждая камера записывает видео как можно ближе к выбранному. Включите «Отражать видео с фронтальной камеры», чтобы записывать её так, как вы её видите."
+          }
+        }
+      }
+    },
+    "Read Over the Camera" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lee sobre la cámara"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lire par-dessus la caméra"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ler sobre a câmera"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Читайте поверх камеры"
+          }
+        }
+      }
+    },
+    "Text Above Camera" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texto sobre la cámara"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texte au-dessus de la caméra"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texto sobre a câmera"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Текст поверх камеры"
+          }
+        }
+      }
+    },
+    "Text Above Camera keeps your cards in view over the camera. Each camera records as close to these settings as it can." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texto sobre la cámara mantiene tus tarjetas a la vista sobre la cámara. Cada cámara graba lo más cerca posible de estos ajustes."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texte au-dessus de la caméra garde vos fiches visibles par-dessus la caméra. Chaque caméra filme au plus près de ces réglages."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texto sobre a câmera mantém os cartões à vista sobre a câmera. Cada câmera grava o mais próximo possível destes ajustes."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Текст поверх камеры» оставляет карточки на виду поверх камеры. Каждая камера записывает видео как можно ближе к этим настройкам."
+          }
+        }
+      }
+    },
+    "Text Above Camera keeps your script in view over the camera. Sync with Teleprompter plays and pauses them together. Each camera records as close to these settings as it can." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texto sobre la cámara mantiene tu guion a la vista sobre la cámara. Sincronizar con el teleprompter reproduce y pausa ambos a la vez. Cada cámara graba lo más cerca posible de estos ajustes."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texte au-dessus de la caméra garde votre script visible par-dessus la caméra. Synchroniser avec le prompteur lance et met en pause les deux ensemble. Chaque caméra filme au plus près de ces réglages."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Texto sobre a câmera mantém o roteiro à vista sobre a câmera. Sincronizar com o teleprompter reproduz e pausa os dois juntos. Cada câmera grava o mais próximo possível destes ajustes."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "«Текст поверх камеры» оставляет сценарий на виду поверх камеры. «Синхронизация с телесуфлёром» запускает и ставит на паузу их вместе. Каждая камера записывает видео как можно ближе к этим настройкам."
+          }
+        }
+      }
+    },
+    "Text size, colors, camera, timer and language" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamaño de texto, colores, cámara, temporizador e idioma"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Taille du texte, couleurs, caméra, minuteur et langue"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamanho do texto, cores, câmera, timer e idioma"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Размер текста, цвета, камера, таймер и язык"
+          }
+        }
+      }
+    },
+    "Your script or cards are drawn over the camera window, so you can read every line. Turn off Text Above Camera in Settings, under Camera, to show the camera on top instead. Either way, the text stays out of the video." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu guion o tus tarjetas se muestran sobre la ventana de la cámara, para que puedas leer cada línea. Desactiva Texto sobre la cámara en Ajustes, en Cámara, para mostrar la cámara encima. En ambos casos, el texto no aparece en el vídeo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Votre script ou vos fiches s'affichent par-dessus la fenêtre de l'appareil photo, pour que vous lisiez chaque ligne. Désactivez Texte au-dessus de la caméra dans Réglages, sous Appareil photo, pour afficher la caméra par-dessus. Dans les deux cas, le texte n'apparaît pas dans la vidéo."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O roteiro ou os cartões aparecem sobre a janela da câmera, para você ler cada linha. Desative Texto sobre a câmera em Ajustes, em Câmera, para mostrar a câmera por cima. De qualquer forma, o texto não aparece no vídeo."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сценарий или карточки показываются поверх окна камеры, чтобы вы видели каждую строку. Выключите «Текст поверх камеры» в настройках, в разделе «Камера», чтобы камера была сверху. В любом случае текст не попадает в видео."
+          }
+        }
+      }
+    },
     "“%@” couldn't be deleted from the notes folder. Its note stays deleted." : {
       "localizations" : {
         "es" : {
@@ -17270,34 +17494,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Размер текста"
-          }
-        }
-      }
-    },
-    "Text size, colors, timer and language" : {
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tamaño de texto, colores, temporizador e idioma"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Taille du texte, couleurs, minuteur et langue"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tamanho do texto, cores, timer e idioma"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Размер текста, цвета, таймер и язык"
           }
         }
       }

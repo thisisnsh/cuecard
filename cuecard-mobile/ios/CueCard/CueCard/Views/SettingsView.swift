@@ -7,7 +7,8 @@ import FirebaseCrashlytics
 
 /// The one Settings screen, opened from the editor. It shows the settings for
 /// the mode being written in: the teleprompter's, or the cards'. Each mode
-/// keeps its own values, so nothing set for one changes the other.
+/// keeps its own values, so nothing set for one changes the other, apart from
+/// the camera, the theme and the language, which are the same for both.
 struct EditorSettingsView: View {
     @EnvironmentObject var settingsService: SettingsService
     @EnvironmentObject var notifications: RemoteNotificationService
@@ -79,13 +80,7 @@ struct EditorSettingsView: View {
             Text("Flip the teleprompter and floating window text to read it off a teleprompter's glass.")
         }
 
-        Section {
-            Toggle("Sync with Teleprompter", isOn: $settingsService.settings.syncsCamera.loggingClicks("settings_sync_camera", screen: Self.screen))
-        } header: {
-            Text("Camera")
-        } footer: {
-            Text("Sync play and pause on the teleprompter and camera.")
-        }
+        CameraSection(screen: Self.screen, mode: .teleprompter)
 
         Section("Editor") {
             SizePresetPicker(
@@ -168,6 +163,8 @@ struct EditorSettingsView: View {
         }
 
         AppleIntelligenceSection(screen: Self.screen, mode: .cards)
+
+        CameraSection(screen: Self.screen, mode: .cards)
 
         Section("Editor") {
             SizePresetPicker(
@@ -335,6 +332,124 @@ private struct SettingsScreen<Content: View>: View {
                 AnalyticsParameterScreenName: screen,
                 AnalyticsParameterScreenClass: "SettingsView"
             ])
+        }
+    }
+}
+
+/// The floating camera, the same for both modes: whether the script is drawn
+/// over it, whether the teleprompter plays and pauses with it, and how it
+/// records, as in the Camera app's video settings. No camera is on here, so
+/// it offers what either of this iPhone's cameras has, given the other
+/// choices, and each camera records the nearest it can. The reader's own
+/// choices are kept, for when another one makes them possible again.
+private struct CameraSection: View {
+    @EnvironmentObject var settingsService: SettingsService
+    let screen: String
+    let mode: ScriptMode
+
+    @State private var preferred = CameraSettings.saved
+
+    var body: some View {
+        let offered = CameraCapture.offered(for: preferred)
+        let settings = offered.settings
+        let options = offered.options
+        Section {
+            Toggle("Text Above Camera", isOn: $settingsService.settings.showsTextAboveCamera.loggingClicks("settings_text_above_camera", screen: screen))
+
+            // The cards have no playing to keep in step.
+            if mode == .teleprompter {
+                Toggle("Sync with Teleprompter", isOn: $settingsService.settings.syncsCamera.loggingClicks("settings_sync_camera", screen: screen))
+            }
+
+            Picker("Resolution", selection: setting(\.resolution, "resolution", shown: settings)) {
+                ForEach(options.resolutions, id: \.self) { Text(verbatim: $0.label).tag($0) }
+            }
+            Picker("Frame Rate", selection: setting(\.frameRate, "frame_rate", shown: settings)) {
+                ForEach(options.frameRates, id: \.self) { Text("\($0) fps").tag($0) }
+            }
+            if options.dynamicRanges.count > 1 {
+                Picker("Dynamic Range", selection: setting(\.dynamicRange, "dynamic_range", shown: settings)) {
+                    ForEach(options.dynamicRanges, id: \.self) { Text(verbatim: $0.label).tag($0) }
+                }
+            }
+            if options.codecs.count > 1 {
+                Picker("Codec", selection: setting(\.codec, "codec", shown: settings)) {
+                    ForEach(options.codecs, id: \.self) { Text(verbatim: $0.label).tag($0) }
+                }
+            }
+            if options.stabilizations.count > 1 {
+                Picker("Stabilization", selection: setting(\.stabilization, "stabilization", shown: settings)) {
+                    ForEach(options.stabilizations, id: \.self) { Text($0.label).tag($0) }
+                }
+            }
+            if options.isFrontCamera {
+                Toggle("Mirror Front Camera", isOn: setting(\.mirrorsFrontCamera, "mirror_front_camera", shown: settings))
+            }
+        } header: {
+            Text("Camera")
+        } footer: {
+            if mode == .teleprompter {
+                Text("Text Above Camera keeps your script in view over the camera. Sync with Teleprompter plays and pauses them together. Each camera records as close to these settings as it can.")
+            } else {
+                Text("Text Above Camera keeps your cards in view over the camera. Each camera records as close to these settings as it can.")
+            }
+        }
+    }
+
+    /// Shows what the cameras will record with, and saves a change to the
+    /// reader's own choices, for the next time the camera opens.
+    private func setting<Value: Equatable>(_ keyPath: WritableKeyPath<CameraSettings, Value>,
+                                           _ name: String, shown: CameraSettings) -> Binding<Value> {
+        Binding {
+            shown[keyPath: keyPath]
+        } set: { value in
+            guard value != shown[keyPath: keyPath] else { return }
+            AnalyticsEvents.logButtonClick("camera_setting", screen: screen,
+                                           parameters: ["setting": name, "value": "\(value)"])
+            preferred[keyPath: keyPath] = value
+            preferred.save()
+        }
+    }
+}
+
+private extension CameraSettings.Resolution {
+    var label: String {
+        switch self {
+        case .hd720: "720p"
+        case .hd1080: "1080p"
+        case .uhd4K: "4K"
+        }
+    }
+}
+
+private extension CameraSettings.DynamicRange {
+    var label: String {
+        switch self {
+        case .sdr: "SDR"
+        case .hdr: "HDR"
+        case .appleLog: "Apple Log"
+        case .appleLog2: "Apple Log 2"
+        }
+    }
+}
+
+private extension CameraSettings.Codec {
+    var label: String {
+        switch self {
+        case .hevc: "HEVC"
+        case .h264: "H.264"
+        case .proRes: "ProRes"
+        }
+    }
+}
+
+private extension CameraSettings.Stabilization {
+    var label: LocalizedStringKey {
+        switch self {
+        case .off: "Off"
+        case .standard: "Standard"
+        case .cinematic: "Cinematic"
+        case .extended: "Extended"
         }
     }
 }

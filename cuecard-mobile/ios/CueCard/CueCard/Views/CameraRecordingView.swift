@@ -11,9 +11,10 @@ import SwiftUI
 /// navigation bar while dragged. It settles only inside the area the reader
 /// marks with `cameraWindowArea()`, below that bar.
 ///
-/// The window up here only takes the gestures and draws the controls. The
-/// picture itself is drawn by the reader with `CameraBackdrop`, between its
-/// background and its text, so the script stays in view over the camera.
+/// The window up here takes the gestures and draws the controls. With Text
+/// Above Camera on, the picture itself is drawn by the reader with
+/// `CameraBackdrop`, between its background and its text, so the script stays
+/// in view over the camera. Off, it's drawn up here, over the script.
 struct CameraRecordingView<Content: View>: View {
     @Binding var isPresented: Bool
     let scriptID: UUID?
@@ -24,6 +25,7 @@ struct CameraRecordingView<Content: View>: View {
     @ViewBuilder let content: () -> Content
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @EnvironmentObject private var settingsService: SettingsService
     @StateObject private var recorder = CameraRecorder()
     // Read here only for the reader's area, so the live drag and pinch
     // re-render the window and the picture but never the reader.
@@ -42,11 +44,16 @@ struct CameraRecordingView<Content: View>: View {
 
     var body: some View {
         let isShown = isPresented && !placement.area.isEmpty
+        let textAbove = settingsService.settings.showsTextAboveCamera
         content()
             .environment(\.reportCameraWindowArea, CameraWindowAreaReporter { [placement] in placement.area = $0 })
-            .environment(\.cameraBackdrop, isShown ? CameraBackdropSource(recorder: recorder, placement: placement) : nil)
+            .environment(\.cameraBackdrop, isShown && textAbove ? CameraBackdropSource(recorder: recorder, placement: placement) : nil)
             .overlay(alignment: .topLeading) {
                 if isShown {
+                    if !textAbove {
+                        CameraBackdropPicture(recorder: recorder, placement: placement)
+                            .transition(.opacity)
+                    }
                     GeometryReader { geometry in
                         FloatingCameraWindow(recorder: recorder, placement: placement,
                                              origin: geometry.frame(in: .global).origin,
@@ -159,7 +166,7 @@ private extension EnvironmentValues {
 
 /// The floating camera's picture. The reader puts it between its background
 /// and its text, so the words are drawn over the camera rather than under it.
-/// It draws nothing while the camera is off.
+/// It draws nothing while the camera is off, or with Text Above Camera off.
 struct CameraBackdrop: View {
     @Environment(\.cameraBackdrop) private var source
 
@@ -371,8 +378,6 @@ private struct FloatingCameraWindow: View {
                 Spacer(minLength: 0)
                 if recorder.isRecording { duration(compact: compact) }
                 Spacer(minLength: 0)
-                // Settings can't change mid-take, so it makes room for the time.
-                if !recorder.isRecording { settingsMenu }
                 zoomButton
             }
             Spacer(minLength: 0)
@@ -470,60 +475,6 @@ private struct FloatingCameraWindow: View {
         .accessibilityLabel(recorder.isPaused ? "Recording paused" : "Recording duration")
     }
 
-    /// How the camera records, as in the Camera app's video settings: only
-    /// the options this camera has, given the others chosen.
-    private var settingsMenu: some View {
-        let options = recorder.options
-        return Menu {
-            Picker("Resolution", selection: setting(\.resolution, "resolution")) {
-                ForEach(options.resolutions, id: \.self) { Text(verbatim: $0.label).tag($0) }
-            }
-            .pickerStyle(.menu)
-            Picker("Frame Rate", selection: setting(\.frameRate, "frame_rate")) {
-                ForEach(options.frameRates, id: \.self) { Text("\($0) fps").tag($0) }
-            }
-            .pickerStyle(.menu)
-            if options.dynamicRanges.count > 1 {
-                Picker("Dynamic Range", selection: setting(\.dynamicRange, "dynamic_range")) {
-                    ForEach(options.dynamicRanges, id: \.self) { Text(verbatim: $0.label).tag($0) }
-                }
-                .pickerStyle(.menu)
-            }
-            if options.codecs.count > 1 {
-                Picker("Codec", selection: setting(\.codec, "codec")) {
-                    ForEach(options.codecs, id: \.self) { Text(verbatim: $0.label).tag($0) }
-                }
-                .pickerStyle(.menu)
-            }
-            if options.stabilizations.count > 1 {
-                Picker("Stabilization", selection: setting(\.stabilization, "stabilization")) {
-                    ForEach(options.stabilizations, id: \.self) { Text($0.label).tag($0) }
-                }
-                .pickerStyle(.menu)
-            }
-            if options.isFrontCamera {
-                Toggle("Mirror Front Camera", isOn: setting(\.mirrorsFrontCamera, "mirror_front_camera"))
-            }
-        } label: {
-            circledIcon("gearshape", size: 32)
-        }
-        .menuOrder(.fixed)
-        .accessibilityLabel("Camera Settings")
-        .disabled(!recorder.isReady || recorder.isBusy)
-    }
-
-    private func setting<Value: Equatable>(_ keyPath: WritableKeyPath<CameraSettings, Value>,
-                                           _ name: String) -> Binding<Value> {
-        Binding {
-            recorder.settings[keyPath: keyPath]
-        } set: { value in
-            guard value != recorder.settings[keyPath: keyPath] else { return }
-            AnalyticsEvents.logButtonClick("camera_setting", screen: "camera",
-                                           parameters: ["setting": name, "value": "\(value)"])
-            recorder.changeSettings { $0[keyPath: keyPath] = value }
-        }
-    }
-
     /// Steps through the Camera app's stops this camera has, such as 0.5×, 1×,
     /// 2× and 5×, switching lenses on the way.
     private var zoomButton: some View {
@@ -550,48 +501,6 @@ private struct FloatingCameraWindow: View {
         }
         .opacity(steps.count > 1 ? 1 : 0)
         .disabled(!recorder.isReady || steps.count < 2)
-    }
-}
-
-private extension CameraSettings.Resolution {
-    var label: String {
-        switch self {
-        case .hd720: "720p"
-        case .hd1080: "1080p"
-        case .uhd4K: "4K"
-        }
-    }
-}
-
-private extension CameraSettings.DynamicRange {
-    var label: String {
-        switch self {
-        case .sdr: "SDR"
-        case .hdr: "HDR"
-        case .appleLog: "Apple Log"
-        case .appleLog2: "Apple Log 2"
-        }
-    }
-}
-
-private extension CameraSettings.Codec {
-    var label: String {
-        switch self {
-        case .hevc: "HEVC"
-        case .h264: "H.264"
-        case .proRes: "ProRes"
-        }
-    }
-}
-
-private extension CameraSettings.Stabilization {
-    var label: LocalizedStringKey {
-        switch self {
-        case .off: "Off"
-        case .standard: "Standard"
-        case .cinematic: "Cinematic"
-        case .extended: "Extended"
-        }
     }
 }
 

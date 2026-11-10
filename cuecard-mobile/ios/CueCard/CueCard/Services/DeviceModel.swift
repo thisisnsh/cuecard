@@ -29,4 +29,8 @@ enum DeviceModel {
         guard let generation = iPhoneGeneration else { return false }
         return generation >= 16
     }()
+
+    /// The 13 Pro and 14 Pro, and their Max models, record ProRes but not
+    /// Apple Log. Every iPhone since that records ProRes records Log too.
+    static let recordsProResWithoutLog = ["iPhone14,2", "iPhone14,3", "iPhone15,2", "iPhone15,3"].contains(identifier)
 }
