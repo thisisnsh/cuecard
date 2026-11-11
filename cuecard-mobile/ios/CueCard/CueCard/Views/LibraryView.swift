@@ -1045,6 +1045,11 @@ private struct LibraryList: View {
     /// user agrees to lose what isn't saved.
     private func open(_ note: SavedNote, from button: String = "load_note") {
         AnalyticsEvents.logButtonClick(button, screen: Self.screen)
+        openInEditor(note)
+    }
+
+    /// Open `note` in the editor, asking first if that loses unsaved changes.
+    private func openInEditor(_ note: SavedNote) {
         if settingsService.noteId(for: note.mode) == note.id {
             openDraft(note.mode)
         } else if settingsService.hasUnsavedChanges(in: note.mode) {
@@ -1096,7 +1101,10 @@ private struct LibraryList: View {
                     return
                 }
                 let content = TeleprompterParser.normalizingTags(in: text)
-                if settingsService.importNote(title: ScriptFile.title(for: url), content: content, collection: collection) == nil {
+                // Opened, so it's plain the file came in, whatever the list shows.
+                if let note = settingsService.importNote(title: ScriptFile.title(for: url), content: content, collection: collection) {
+                    openInEditor(note)
+                } else {
                     errorMessage = String(localized: "The file couldn't be saved as a script. Try again.")
                 }
             } catch let error as ScriptFile.FileTooLarge {
