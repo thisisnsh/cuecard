@@ -32,8 +32,6 @@ struct TeleprompterView: View {
     @State private var referenceLineStarts: [Int] = []
     @State private var hasConfiguredSession = false
     @State private var showControls = true
-    @State private var showingHelp = false
-    @State private var showingSettings = false
     @State private var showingCamera = false
     @State private var cameraLink = CameraLink()
     @State private var controlsTimer: Timer?
@@ -200,11 +198,6 @@ struct TeleprompterView: View {
             // A row of its own rather than a navigation bar, which would keep
             // taps from reaching the reader.
             .safeAreaInset(edge: .top, spacing: 0) { header }
-            .helpSheet(for: .teleprompter, isPresented: $showingHelp)
-            .sheet(isPresented: $showingSettings) {
-                SettingsView()
-                    .environmentObject(settingsService)
-            }
         }
         .onChange(of: showingCamera) { _, presented in
             pipManager.setCameraPresented(presented)
@@ -283,18 +276,6 @@ struct TeleprompterView: View {
                     showingCamera.toggle()
                 }
                 .accessibilityLabel(showingCamera ? "Close Camera" : "Record Video")
-
-                headerButton("gearshape") {
-                    AnalyticsEvents.logButtonClick("settings", screen: "teleprompter")
-                    showingSettings = true
-                }
-                .accessibilityLabel("Settings")
-
-                headerButton("questionmark") {
-                    AnalyticsEvents.logButtonClick("help_teleprompter", screen: "teleprompter")
-                    showingHelp = true
-                }
-                .accessibilityLabel("Help")
             }
             .fadedOut(buttonsHidden)
         }
@@ -603,7 +584,7 @@ struct TeleprompterView: View {
     ///   that's turned on in Settings. Off when the camera is what asked.
     private func togglePlayPause(syncingCamera: Bool = true) {
         let wasRunning = isPlaying || isCountingDown
-        // Animated so the gear leaves the toolbar, and comes back, with the same fade.
+        // Animated so the buttons leave the toolbar, and come back, with the same fade.
         withAnimation(controlsFade) { pipManager.togglePlayPause() }
         Analytics.logEvent(wasRunning ? "teleprompter_pause" : "teleprompter_play", parameters: nil)
         if syncingCamera, settings.syncsCamera, showingCamera {
