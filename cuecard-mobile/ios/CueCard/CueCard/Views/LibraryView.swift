@@ -137,6 +137,19 @@ private enum LibrarySort: String, CaseIterable, Identifiable {
 }
 
 /// A script about to replace what's being written in its mode's editor.
+/// What the library's file picker is choosing: a script to import, or the
+/// folder to keep scripts in.
+private enum FilePick {
+    case script, folder
+
+    var contentTypes: [UTType] {
+        switch self {
+        case .script: return ScriptFile.importableContentTypes
+        case .folder: return [.folder]
+        }
+    }
+}
+
 private enum PendingOpen: Identifiable {
     case note(SavedNote)
     case new(ScriptMode)
@@ -186,8 +199,10 @@ private struct LibraryList: View {
     @FocusState private var isSearching: Bool
     @State private var showingHelp = false
     @State private var showingSettings = false
-    @State private var showingImporter = false
-    @State private var showingFolderPicker = false
+    /// What the file picker is choosing. One picker serves both, as a view
+    /// with two `.fileImporter`s can leave one of them never showing.
+    @State private var filePick: FilePick = .script
+    @State private var showingFilePicker = false
     @State private var showingStopFolder = false
     @State private var showingStopFolderFailed = false
     @State private var showingDeleteAll = false
@@ -316,7 +331,7 @@ private struct LibraryList: View {
                     colorScheme: colorScheme,
                     onChoose: {
                         AnalyticsEvents.logButtonClick("choose_notes_folder_banner", screen: Self.screen)
-                        showingFolderPicker = true
+                        pick(.folder)
                     },
                     onDismiss: settingsService.hasNotesFolder ? nil : {
                         AnalyticsEvents.logButtonClick("dismiss_folder_tip", screen: Self.screen)
@@ -389,11 +404,11 @@ private struct LibraryList: View {
         .sheet(item: $noteToCollect) { note in
             CollectionPicker(noteID: note.id, screen: Self.screen)
         }
-        .fileImporter(isPresented: $showingImporter, allowedContentTypes: ScriptFile.importableContentTypes) { result in
-            handleImport(result)
-        }
-        .fileImporter(isPresented: $showingFolderPicker, allowedContentTypes: [.folder]) { result in
-            handleFolderPick(result)
+        .fileImporter(isPresented: $showingFilePicker, allowedContentTypes: filePick.contentTypes) { result in
+            switch filePick {
+            case .script: handleImport(result)
+            case .folder: handleFolderPick(result)
+            }
         }
         .modifier(LibraryAlerts(list: self))
         .onAppear {
@@ -589,7 +604,7 @@ private struct LibraryList: View {
             }
             Button {
                 AnalyticsEvents.logButtonClick("import_file", screen: Self.screen)
-                showingImporter = true
+                pick(.script)
             } label: {
                 Label("Import File", systemImage: "arrow.down.doc")
             }
@@ -619,7 +634,7 @@ private struct LibraryList: View {
 
             Button {
                 AnalyticsEvents.logButtonClick("choose_notes_folder", screen: Self.screen)
-                showingFolderPicker = true
+                pick(.folder)
             } label: {
                 Label(settingsService.hasNotesFolder ? "Change Storage Folder" : "Choose Storage Folder",
                       systemImage: "externaldrive.badge.plus")
@@ -653,6 +668,11 @@ private struct LibraryList: View {
         .simultaneousGesture(TapGesture().onEnded {
             AnalyticsEvents.logButtonClick("library_menu", screen: Self.screen)
         })
+    }
+
+    private func pick(_ kind: FilePick) {
+        filePick = kind
+        showingFilePicker = true
     }
 
     private func beginNewCollection() {
