@@ -12,7 +12,7 @@ const products = {
     id: "https://cuecard.dev/#mobileapp", name: "CueCard Teleprompter",
     url: "https://cuecard.dev/mobile/", price: "0", currency: "USD",
     alternateName: "CueCard",
-    description: "A free teleprompter and cue cards app for iPhone, iPad and Apple Watch. Float a scrolling script over the app you film in, or speak from cards you turn on the screen, the Lock Screen or your wrist.",
+    description: "Write scripts, record videos and review takes in a free teleprompter and cue cards app for iPhone and iPad. Float notes over other apps or read cards on Apple Watch.",
     image: "https://cuecard.dev/assets/promo-mobile.jpg",
     screenshots: ["https://cuecard.dev/assets/promo-mobile.jpg", "https://cuecard.dev/assets/promo-teleprompter.jpg", "https://cuecard.dev/assets/promo-cards.jpg", "https://cuecard.dev/assets/promo-ipad.jpg"],
     // The same list as features.mobile, in a line each. Keep the two in step.
@@ -29,7 +29,12 @@ const products = {
       "Play or pause from the Action Button or Control Center",
       "Saved scripts and decks with search by title or text, file import and text sharing",
       "Version history to compare changes and restore earlier saves",
-      "Optional notes folder that keeps the latest note files outside the app"
+      "Optional storage folder that keeps the latest note files outside the app",
+      "Collections, images, bold and italic text, and script anchors",
+      "Draggable reading guide and horizontal or vertical text flipping for teleprompter glass",
+      "Camera preferences for resolution, frame rate, dynamic range, codec, stabilization and front-camera mirroring",
+      "Follow Me AI beta: on-device voice-following with supported speech recognition",
+      "Suggestions AI and Help AI beta on supported Apple Intelligence devices"
     ],
     platforms: [
       { key: "ios", shipping: true, os: "iOS 17 or later, iPadOS 17 or later", short: "iOS / iPadOS 17+", storeUrl: "https://apps.apple.com/app/cuecard-teleprompter/id6757321325" },
@@ -355,7 +360,8 @@ const site = {
   // a live figure: the GitHub API only knows about desktop release assets, so
   // anything computed from it undercounts the App Store badly. Edit the
   // string and every page follows. The star count beside it *is* live.
-  downloadTotal: "15K+",
+  downloadTotal: "22K+",
+  downloadsVerified: "2026-11-12",
 
   // ── The apps CueCard is read over, on a phone ───────────────────────────
   // Each has a page of its own; `icon` names a symbol in partials/icons.njk.

@@ -16,6 +16,14 @@ const gh = "https://github.com/thisisnsh/cuecard";
 /** Questions about the phone app — the product cuecard.dev now leads with. */
 const mobile = [
   {
+    question: "Can I record video inside CueCard?",
+    answer: 'Yes. Open a script or cards, tap the camera, and record with your words in view. Stop saves the video to Photos. Review it in Takes, add notes and favorite the strongest version. <a href="/help/recording-video/">See the recording steps</a>.'
+  },
+  {
+    question: "Can the teleprompter follow my voice?",
+    answer: 'Follow Me AI (Beta) can move the script as you read aloud, using on-device speech recognition. It needs microphone and speech permissions and support for your script’s language. Fixed-speed scrolling remains available. <a href="/help/voice-following/">Check setup and availability</a>.'
+  },
+  {
     question: "What is CueCard Teleprompter?",
     answer:
       'CueCard Teleprompter is a free teleprompter and cue cards app for iPhone, iPad and Apple Watch. The <a href="/teleprompter/">teleprompter</a> scrolls your script while you speak, full screen or in a small window above the camera, Instagram, TikTok or a video call. <a href="/cards/">Cards</a> shows a talk one card at a time, in the app, on the Lock Screen or on your <a href="/watch/">Apple Watch</a>. It is on <a href="' +
@@ -107,27 +115,27 @@ const mobile = [
   {
     question: "Can I save scripts and come back to them?",
     answer:
-      "Yes. Tap Unsaved below the top bar or choose ••• › Save to name and save a script or deck. Choose ••• › Open to see Saved Notes, search by title or text, and swipe a note to rename or delete it."
+      "Yes. CueCard opens on the Library. Open a script to edit it, then tap Save at the top when there are changes. Tap its title at the bottom to rename it, or choose ••• › Save as New for a separate copy. Organize scripts in collections. <a href=\"/help/library/\">Library and saving help</a>."
   },
   {
     question: "Can I restore an older version of a script or deck?",
     answer:
-      "Yes, on iPhone and iPad. Saving changed text adds a version. Once a note has more than one version, tap the clock at the top of the editor to compare changes and restore an earlier version. Restoring adds a new version, so the history stays available."
+      "Yes. Tap the version number at the bottom of the editor to compare changes and restore a save. Once there is more than one version, you can also use ••• › Version History. <a href=\"/help/library/\">Read the steps</a>."
   },
   {
     question: "How do I keep my notes if I delete the iPhone or iPad app?",
     answer:
-      "Open Saved Notes with ••• › Open, then choose ••• › Choose Notes Folder. CueCard keeps the latest copy of each saved note as a text file in that folder, outside the app. Choose the same folder after reinstalling to bring the notes back. Without a notes folder, removing the app deletes its notes. Version history stays inside the app and is not included in the folder."
+      "In the Library, choose ••• › Choose Storage Folder. Check your saved files in Files before removing the app. Without a storage folder, deleting CueCard deletes its local notes. Version history stays inside the app; videos stay in Photos. <a href=\"/help/storage-and-sharing/\">Keep and share your scripts</a>."
   },
   {
     question: "Can I edit saved notes outside CueCard?",
     answer:
-      "Yes. On iPhone and iPad, choose a Notes Folder in Saved Notes. Changes to its text files come back into CueCard when it next syncs the folder, and new .txt or .md files become saved notes. The latest change wins if both copies have been edited."
+      "Choose a Storage Folder from the Library to keep the latest note files outside CueCard. Check that the folder is available in Files before editing. Keep a separate copy before making conflicting changes on multiple devices. <a href=\"/help/storage-and-sharing/\">Read about file storage</a>."
   },
   {
     question: "Which files can I import on iPhone and iPad?",
     answer:
-      "Choose ••• › Import to open plain text files, including .txt and .md, or an RTF file. Imported content becomes a saved note; RTF formatting is removed. Files larger than 10 MB are not imported. Use ••• › Share to send a script or deck as text, with its cues included."
+      "In the Library, choose ••• › Import File to import a text file or a TextPack with images. To share a script, touch and hold it in the Library and choose Share. Scripts with images use TextPack so the images travel with them. <a href=\"/help/storage-and-sharing/\">Import and sharing help</a>."
   },
   {
     question: "Does the phone app have a dark mode?",
@@ -137,7 +145,7 @@ const mobile = [
   {
     question: "What is Cards mode?",
     answer:
-      'Cue cards on your phone. Tap the mode name at the top left of the editor and choose Cards, write one short point per card, and tap Read Cards to swipe through them one at a time. It suits a speech, a toast or a class presentation, where you want reminders rather than a script. <a href="/cards/">See Cards</a>.'
+      'Cue cards on your phone. Tap the mode name at the top left of the Library and choose Cards, write one short point per card, and tap Read Cards to swipe through them one at a time. It suits a speech, a toast or a class presentation, where you want reminders rather than a script. <a href="/cards/">See Cards</a>.'
   },
   {
     question: "Can I read cue cards on the Lock Screen?",
@@ -157,7 +165,7 @@ const mobile = [
   {
     question: "How is this different from a hardware teleprompter?",
     answer:
-      "A hardware rig puts a mirror in front of your lens and costs real money to buy and carry. CueCard puts the script on the screen you are already holding. It is not identical — a beam-splitter rig puts your eyes dead centre on the lens — but for a phone shot filmed anywhere, at no cost, it gets you most of the way there."
+      "CueCard can display text directly on your iPhone or iPad, or serve as the screen in a teleprompter glass rig. Flip Horizontally and Flip Vertically under Teleprompter settings orient the reflected words. The physical rig is separate from the app."
   },
   {
     question: "Is there a desktop version of CueCard?",
@@ -410,6 +418,8 @@ function pick(...questions) {
  */
 const home = pick(
   "What is CueCard Teleprompter?",
+  "Can I record video inside CueCard?",
+  "Can the teleprompter follow my voice?",
   "What is Cards mode?",
   "Is there an Apple Watch app?",
   "Does the teleprompter show up in my recorded video?",

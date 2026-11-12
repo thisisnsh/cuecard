@@ -1,0 +1,28 @@
+---
+layout: layouts/base.njk
+pagination:
+  data: productGuides
+  size: 1
+  alias: guidePage
+permalink: "{{ guidePage.slug }}/index.html"
+eleventyComputed:
+  title: "{{ guidePage.title | safe }}"
+  description: "{{ guidePage.description | safe }}"
+  canonical: "https://cuecard.dev/{{ guidePage.slug }}/"
+---
+{% block body %}
+{% include "partials/nav.njk" %}
+<main id="main-content" tabindex="-1">
+  <header class="guide-header wrap">
+    {% include "partials/breadcrumbs.njk" %}
+    <p class="micro">For iPhone &amp; iPad</p>
+    <h1 class="display display-long">{{ guidePage.heading }}</h1>
+    <p class="body">{{ guidePage.description }}</p>
+    <div class="actions"><a class="btn btn-primary" href="{{ site.ios }}" data-product-platform="ios" data-cta-location="hero" data-destination-type="app_store">Download free for iPhone &amp; iPad</a><a class="btn btn-ghost" href="/help/">Get help</a></div>
+    <p class="meta-note">{{ site.downloadTotal }} downloads · No ads. No subscription. No account required.</p>
+  </header>
+  <article class="guide-prose guide-standalone wrap">{{ guidePage.body | markdownify | safe }}</article>
+  {% include "partials/ios-workflow.njk" %}
+</main>
+{% include "partials/footer.njk" %}
+{% endblock %}

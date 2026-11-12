@@ -10,7 +10,7 @@
     "ogTitle": "Teleprompter & Cue Cards for iPhone, iPad & Watch | CueCard",
     "ogDescription": "A free teleprompter that floats over the app you film in, and cue cards you turn in the app, on the Lock Screen or on Apple Watch. No account needed.",
     "heroSubtitle": "A teleprompter and cue cards, <em>on every Apple screen you carry.</em>",
-    "appDescription": "Film with a script that floats over TikTok, Instagram or your camera, or give a talk from cards you turn in the app, on your Lock Screen or on your Apple Watch.",
+    "appDescription": "Write and organize scripts, record with a teleprompter or cue cards, and review your takes. Float notes over other apps, read through teleprompter glass, or keep cards on Apple Watch. Free, with no ads or required account.",
     "showIos": true,
     "showAndroid": true,
     "faq": [
@@ -70,7 +70,7 @@
       "steps": [
         {
           "title": "Write and save your script",
-          "body": "Open CueCard and paste or type into the editor. The ••• menu includes New and Import. Choose Save to keep a named copy in Saved Notes."
+          "body": "In the Library, choose a mode and tap + to create a script, or choose ••• › Import File. Type or paste into the editor, then tap Save at the top to keep your changes."
         },
         {
           "title": "Choose a readable size and pace",
@@ -159,7 +159,8 @@
           "label": "A TikTok Teleprompter That Isn’t Trapped Inside TikTok"
         }
       ]
-    }
+    },
+    "modified": "2026-11-12"
   },
   {
     "slug": "mobile/ios",
@@ -173,7 +174,7 @@
     "ogDescription": "Set up a floating teleprompter or cue cards on iPhone. Read near the lens while you record, or turn cards from the Lock Screen or your Apple Watch.",
     "heroSubtitle": "A free <em>iPhone</em> teleprompter for the camera apps you use.",
     "promotionalText": "Free on the App Store, and open source on GitHub.",
-    "appDescription": "Set up a floating teleprompter or cue cards on iPhone. Read near the lens while you record, or turn cards from the Lock Screen or your Apple Watch.",
+    "appDescription": "Write and organize scripts, record with a teleprompter or cue cards, and review your takes. Float notes over other apps, read through teleprompter glass, or keep cards on Apple Watch. Free, with no ads or required account.",
     "showIos": true,
     "showAndroid": false,
     "faq": [
@@ -219,7 +220,7 @@
       },
       {
         "question": "Does CueCard have cue cards as well as a teleprompter?",
-        "answer": "Yes. Tap the mode name at the top left of the editor and choose Cards. Your talk shows one card at a time, and can sit on the Lock Screen too. <a href=\"/cards/\">See Cards</a>."
+        "answer": "Yes. Tap the mode name at the top left of the Library and choose Cards. Your talk shows one card at a time, and can sit on the Lock Screen too. <a href=\"/cards/\">See Cards</a>."
       }
     ],
     "icon": "apple",
@@ -235,7 +236,7 @@
       "steps": [
         {
           "title": "Write and save your script",
-          "body": "Open CueCard and paste or type into the editor. The ••• menu includes New and Import. Choose Save to keep a named copy in Saved Notes."
+          "body": "In the Library, choose a mode and tap + to create a script, or choose ••• › Import File. Type or paste into the editor, then tap Save at the top to keep your changes."
         },
         {
           "title": "Choose a readable size and pace",
@@ -312,7 +313,8 @@
           "label": "A TikTok Teleprompter That Isn’t Trapped Inside TikTok"
         }
       ]
-    }
+    },
+    "modified": "2026-11-12"
   },
   {
     "slug": "mobile/ipad",
@@ -326,7 +328,7 @@
     "ogDescription": "Read a full-screen script from your iPad beside a separate camera, or float your notes over a recording app. Adjust text size to your viewing distance.",
     "heroSubtitle": "Turn your <em>iPad</em> into a free teleprompter.",
     "promotionalText": "The same app as the phone, read from across the room.",
-    "appDescription": "Read a full-screen script from your iPad beside a separate camera, or float your notes over a recording app. Adjust text size to your viewing distance.",
+    "appDescription": "Write and organize scripts, record with a teleprompter or cue cards, and review your takes. Float notes over other apps, read through teleprompter glass, or keep cards on Apple Watch. Free, with no ads or required account.",
     "showIos": true,
     "showAndroid": false,
     "demoId": "ipad",
@@ -381,7 +383,7 @@
       "steps": [
         {
           "title": "Write and save your script",
-          "body": "Open CueCard and paste or type into the editor. The ••• menu includes New and Import. Choose Save to keep a named copy in Saved Notes."
+          "body": "In the Library, choose a mode and tap + to create a script, or choose ••• › Import File. Type or paste into the editor, then tap Save at the top to keep your changes."
         },
         {
           "title": "Set up the full-screen reader",
@@ -446,7 +448,8 @@
           "label": "Choose a mobile workflow"
         }
       ]
-    }
+    },
+    "modified": "2026-11-12"
   },
   {
     "slug": "mobile/android",
@@ -543,7 +546,7 @@
       "steps": [
         {
           "title": "Write and save your script",
-          "body": "Open CueCard and paste or type into the editor. The ••• menu includes New and Import. Choose Save to keep a named copy in Saved Notes."
+          "body": "In the Library, choose a mode and tap + to create a script, or choose ••• › Import File. Type or paste into the editor, then tap Save at the top to keep your changes."
         },
         {
           "title": "Choose a readable size and pace",
@@ -620,7 +623,7 @@
         }
       ]
     },
-    "modified": "2026-10-21"
+    "modified": "2026-11-12"
   },
   {
     "slug": "mobile/tiktok",
@@ -683,7 +686,7 @@
       "steps": [
         {
           "title": "Write and save your script",
-          "body": "Open CueCard and paste or type into the editor. The ••• menu includes New and Import. Choose Save to keep a named copy in Saved Notes."
+          "body": "In the Library, choose a mode and tap + to create a script, or choose ••• › Import File. Type or paste into the editor, then tap Save at the top to keep your changes."
         },
         {
           "title": "Choose a readable size and pace",
@@ -760,7 +763,7 @@
         }
       ]
     },
-    "modified": "2026-10-21"
+    "modified": "2026-11-12"
   },
   {
     "slug": "mobile/youtube",
@@ -828,7 +831,7 @@
       "steps": [
         {
           "title": "Write and save your script",
-          "body": "Open CueCard and paste or type into the editor. The ••• menu includes New and Import. Choose Save to keep a named copy in Saved Notes."
+          "body": "In the Library, choose a mode and tap + to create a script, or choose ••• › Import File. Type or paste into the editor, then tap Save at the top to keep your changes."
         },
         {
           "title": "Choose a readable size and pace",
@@ -901,7 +904,7 @@
         }
       ]
     },
-    "modified": "2026-10-21"
+    "modified": "2026-11-12"
   },
   {
     "slug": "mobile/linkedin",
@@ -965,7 +968,7 @@
       "steps": [
         {
           "title": "Write and save your script",
-          "body": "Open CueCard and paste or type into the editor. The ••• menu includes New and Import. Choose Save to keep a named copy in Saved Notes."
+          "body": "In the Library, choose a mode and tap + to create a script, or choose ••• › Import File. Type or paste into the editor, then tap Save at the top to keep your changes."
         },
         {
           "title": "Choose a readable size and pace",
@@ -1038,7 +1041,7 @@
         }
       ]
     },
-    "modified": "2026-10-21"
+    "modified": "2026-11-12"
   },
   {
     "slug": "mobile/facebook",
@@ -1102,7 +1105,7 @@
       "steps": [
         {
           "title": "Write and save your script",
-          "body": "Open CueCard and paste or type into the editor. The ••• menu includes New and Import. Choose Save to keep a named copy in Saved Notes."
+          "body": "In the Library, choose a mode and tap + to create a script, or choose ••• › Import File. Type or paste into the editor, then tap Save at the top to keep your changes."
         },
         {
           "title": "Choose a readable size and pace",
@@ -1175,7 +1178,7 @@
         }
       ]
     },
-    "modified": "2026-10-21"
+    "modified": "2026-11-12"
   },
   {
     "slug": "mobile/snapchat",
@@ -1239,7 +1242,7 @@
       "steps": [
         {
           "title": "Write and save your script",
-          "body": "Open CueCard and paste or type into the editor. The ••• menu includes New and Import. Choose Save to keep a named copy in Saved Notes."
+          "body": "In the Library, choose a mode and tap + to create a script, or choose ••• › Import File. Type or paste into the editor, then tap Save at the top to keep your changes."
         },
         {
           "title": "Choose a readable size and pace",
@@ -1316,7 +1319,7 @@
         }
       ]
     },
-    "modified": "2026-10-21"
+    "modified": "2026-11-12"
   },
   {
     "slug": "mobile/twitter",
@@ -1380,7 +1383,7 @@
       "steps": [
         {
           "title": "Write and save your script",
-          "body": "Open CueCard and paste or type into the editor. The ••• menu includes New and Import. Choose Save to keep a named copy in Saved Notes."
+          "body": "In the Library, choose a mode and tap + to create a script, or choose ••• › Import File. Type or paste into the editor, then tap Save at the top to keep your changes."
         },
         {
           "title": "Choose a readable size and pace",
@@ -1453,7 +1456,7 @@
         }
       ]
     },
-    "modified": "2026-10-21"
+    "modified": "2026-11-12"
   },
   {
     "slug": "mobile/twitch",
@@ -1517,7 +1520,7 @@
       "steps": [
         {
           "title": "Write and save your script",
-          "body": "Open CueCard and paste or type into the editor. The ••• menu includes New and Import. Choose Save to keep a named copy in Saved Notes."
+          "body": "In the Library, choose a mode and tap + to create a script, or choose ••• › Import File. Type or paste into the editor, then tap Save at the top to keep your changes."
         },
         {
           "title": "Choose a readable size and pace",
@@ -1590,6 +1593,6 @@
         }
       ]
     },
-    "modified": "2026-10-21"
+    "modified": "2026-11-12"
   }
 ]

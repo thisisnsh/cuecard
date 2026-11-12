@@ -143,6 +143,17 @@ eleventyComputed:
     {% set faqItems = pageFaq %}
     {% set faqHeading = ("Questions about " + p.name) if p.kind == "mode" else "Questions, answered." %}
     {% include "partials/faq.njk" %}
+<section class="workflow-section" aria-labelledby="mode-help-h"><div class="wrap">
+  <p class="micro">Keep going</p><h2 class="section-h" id="mode-help-h">The next step, explained.</h2>
+  <ul class="guide-link-grid">
+    <li><a href="/help/getting-started/">Create and save your first script →</a></li>
+    <li><a href="/help/recording-video/">Record with scripts or cards →</a></li>
+    <li><a href="/help/cards-and-watch/">Use the Lock Screen and Watch →</a></li>
+    <li><a href="/help/voice-following/">Set up voice-following →</a></li>
+    <li><a href="/help/mirror-and-reading-guide/">Mirroring, reading guide and anchors →</a></li>
+    <li><a href="/help/">Browse all help topics →</a></li>
+  </ul>
+</div></section>
 </main>
 
 {% include "partials/footer.njk" %}

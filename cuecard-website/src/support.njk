@@ -55,14 +55,14 @@ crumbs:
     <section class="hero" aria-labelledby="hero-h">
         <div class="wrap">
             {% include "partials/breadcrumbs.njk" %}
-            <h1 class="display reveal" id="hero-h">Something not working? <em>Tell us.</em></h1>
+            <h1 class="display reveal" id="hero-h">A little help. <em>A person if you need one.</em></h1>
             <p class="body reveal d1">
-                CueCard is made by a very small team, which means the person who reads your
-                email is the person who can fix the thing you are writing about. There is no
-                ticket queue and no bot in front of it.
+                Find step-by-step answers in the Help center, or email the person building CueCard.
+                Tell us what happened and which device and app version you use.
             </p>
             <div class="actions reveal d2">
-                <a class="btn btn-primary" href="mailto:{{ site.email }}">
+                <a class="btn btn-primary" href="/help/">Browse the Help center</a>
+                <a class="btn btn-ghost" href="mailto:{{ site.email }}">
                     {{ icon("mail", 17) }}Email {{ site.email }}
                 </a>
                 <a class="btn btn-ghost" href="{{ site.issues }}" target="_blank" rel="noopener">
@@ -72,6 +72,18 @@ crumbs:
             <span class="meta-note reveal d2">Usually answered within a couple of days · English</span>
         </div>
     </section>
+
+    <section class="workflow-section" aria-labelledby="support-topics"><div class="wrap">
+      <p class="micro">Common questions</p><h2 class="section-h" id="support-topics">Get back to what you were doing.</h2>
+      <ul class="guide-link-grid">
+        <li><a href="/help/floating-window/">The floating window is missing →</a></li>
+        <li><a href="/help/takes/">I cannot find a recording →</a></li>
+        <li><a href="/help/storage-and-sharing/">Keep scripts before deleting the app →</a></li>
+        <li><a href="/help/voice-following/">Voice-following is not working →</a></li>
+        <li><a href="/help/cards-and-watch/">Set up cards on Watch or Lock Screen →</a></li>
+        <li><a href="/help/library/">Find saved scripts and older versions →</a></li>
+      </ul>
+    </div></section>
 
     {# The three ways in, and what each one is actually for. Sending a bug to
        the inbox and a billing question to the issue tracker both work, but the

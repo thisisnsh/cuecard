@@ -1,0 +1,40 @@
+---
+layout: layouts/base.njk
+permalink: /help/index.html
+title: "CueCard Help | Recording, Scripts, AI & Apple Watch"
+description: "Get started with CueCard, fix a missing floating window, find your Takes, save scripts safely, and set up voice-following or Apple Watch."
+canonical: "https://cuecard.dev/help/"
+crumbs:
+  - name: CueCard
+    url: /
+  - name: Help
+    url: /help/
+---
+{% block body %}
+{% include "partials/nav.njk" %}
+<main id="main-content" tabindex="-1">
+  <header class="guide-header wrap">
+    {% include "partials/breadcrumbs.njk" %}
+    <p class="micro">CueCard Help</p>
+    <h1 class="display">Back to <em>your next take.</em></h1>
+    <p class="body">Find the steps, understand the controls, and get unstuck. Start with what you want to do.</p>
+    <div class="help-search" data-help-search hidden>
+      <label for="help-query">Search help</label>
+      <input id="help-query" type="search" placeholder="Try camera, backup, voice or Watch" autocomplete="off" aria-controls="help-topics">
+      <p id="help-results" role="status" aria-live="polite"></p>
+    </div>
+  </header>
+  <section class="wrap help-list" aria-label="Help topics">
+    <div class="help-grid" id="help-topics">
+      {% for article in helpArticles %}
+      <a class="help-card" href="/{{ article.slug }}/" data-help-topic data-search="{{ article.title }} {{ article.description }} {{ article.category }} {{ article.body | striptags }}">
+        <span class="micro">{{ article.category }}</span><h2>{{ article.title }}</h2><p>{{ article.description }}</p><span class="help-card-link">Read the guide →</span>
+      </a>
+      {% endfor %}
+    </div>
+    <p data-help-empty hidden>No matching guides. Try a shorter phrase, browse all topics by clearing the search, or <a href="/support/">contact support</a>.</p>
+    <div class="help-contact"><h2>Looking for something else?</h2><p><a href="/faq/">Read the FAQ</a> for compatibility, pricing and desktop questions. <a href="/support/">Contact a person</a> if you need more help.</p></div>
+  </section>
+</main>
+{% include "partials/footer.njk" %}
+{% endblock %}

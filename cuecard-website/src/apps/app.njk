@@ -87,11 +87,14 @@ layout: layouts/mobile-app.njk
     {% set guide = mobileGuides.forApp(app) %}
     {% set tutorial = app.tutorial %}
     {% if app.subject %}
+    <div class="wrap help-contact"><p>Prefer to film in CueCard? <a href="/record-video/">Record with the built-in camera</a>, save to Photos and upload your video here afterward. For overlay problems, <a href="/help/floating-window/">follow the troubleshooting guide</a>.</p></div>
     {% include "partials/setup-guide.njk" %}
     {% endif %}
     {% if app.slug == "mobile" %}
     {% include "partials/creator-guides.njk" %}
     {% endif %}
+
+    {% if app.showIos and not app.subject %}{% include "partials/ios-workflow.njk" %}{% endif %}
 
     {% set featureRows = features.forApp(app.subject, "social") if app.subject else (features.mobile if app.showIos else features.mobilePlanned) %}
     {% set rowsMicro = "What you get" %}

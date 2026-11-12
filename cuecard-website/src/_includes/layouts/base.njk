@@ -119,6 +119,7 @@
           "url": {{ ((canonical or (site.url + page.url))) | jsonLd | safe }},
           "name": {{ (pageName or title) | jsonLd | safe }},
           "description": {{ description | jsonLd | safe }},
+          {% if article or guidePage %}"dateModified": {{ (article.modified if article else guidePage.modified) | jsonLd | safe }},{% endif %}
           {% if resource or (app and app.modified) %}"dateModified": {{ (resource.modified if resource else app.modified) | jsonLd | safe }},{% endif %}
           "isPartOf": { "@id": {{ ((site.url) + "/#website") | jsonLd | safe }} },
           {% if blog %}"mainEntity": { "@id": {{ (canonical + "#post") | jsonLd | safe }} },{% endif %}

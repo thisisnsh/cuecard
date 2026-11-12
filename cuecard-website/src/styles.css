@@ -1736,3 +1736,53 @@ main:focus { outline: none; }
   .hero { padding-top: 32px; }
   .hero-eyebrow { margin-bottom: 12px; }
 }
+
+/* Current iOS workflow and task-focused help. */
+.workflow-grid,.help-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:20px; margin:32px 0; }
+.workflow-card,.help-card { display:flex; flex-direction:column; align-items:flex-start; padding:28px; border:1px solid var(--hairline); border-radius:18px; background:var(--paper); color:var(--ink); text-decoration:none; min-width:0; transition:border-color .2s,transform .2s; }
+.workflow-card:hover,.help-card:hover { border-color:var(--ink); transform:translateY(-3px); }
+.workflow-number { font-size:12px; font-weight:800; letter-spacing:.12em; color:var(--smoke); }
+.workflow-card h3,.help-card h2 { font-size:24px; line-height:1.2; margin:22px 0 12px; }
+.workflow-card p,.help-card p { color:var(--ash); line-height:1.7; margin:0 0 24px; }
+.help-card-link { font-size:14px; font-weight:800; margin-top:auto; }
+.workflow-extras { display:flex; flex-wrap:wrap; gap:16px 32px; padding-top:20px; border-top:1px solid var(--hairline); }
+.workflow-extras a { color:var(--ink); font-weight:700; text-underline-offset:5px; }
+.workflow-extras span { color:var(--smoke); font-size:13px; }
+.guide-header { padding-top:56px; padding-bottom:48px; }
+.guide-header .display { max-width:960px; margin:20px 0; }
+.guide-header .body { max-width:740px; }
+.guide-header .actions { margin:24px 0; }
+.guide-layout { display:grid; grid-template-columns:240px minmax(0,760px); gap:64px; padding-bottom:80px; align-items:start; }
+.guide-sidebar { display:flex; flex-direction:column; gap:4px; position:sticky; top:100px; }
+.guide-sidebar a { color:var(--ash); padding:9px 12px; font-size:14px; line-height:1.45; text-decoration:none; border-radius:8px; }
+.guide-sidebar a:hover,.guide-sidebar a[aria-current] { background:var(--leaf); color:var(--ink); }
+.guide-sidebar a[aria-current] { font-weight:800; }
+.guide-sidebar .guide-back { font-weight:800; margin-bottom:12px; }
+.guide-prose { color:var(--ash); font-size:18px; line-height:1.8; min-width:0; overflow-wrap:anywhere; }
+.guide-prose h2 { font-size:29px; line-height:1.25; letter-spacing:-.025em; color:var(--ink); margin:44px 0 18px; }
+.guide-prose h2:first-child { margin-top:0; }
+.guide-prose p,.guide-prose ul,.guide-prose ol { margin:0 0 22px; }
+.guide-prose ul,.guide-prose ol { padding-left:26px; }
+.guide-prose li { margin:10px 0; }
+.guide-prose strong { color:var(--ink); }
+.guide-prose a,.help-contact a { color:var(--ink); text-decoration:underline; text-underline-offset:4px; }
+.guide-standalone { max-width:820px; padding-bottom:64px; }
+.help-search { max-width:700px; margin-top:32px; }
+.help-search label { display:block; font-weight:800; margin-bottom:10px; }
+.help-search input { width:100%; box-sizing:border-box; padding:18px 20px; border:1px solid var(--hair-hi); border-radius:12px; font:inherit; font-size:18px; background:var(--paper); color:var(--ink); }
+.help-search input:focus-visible { outline:3px solid var(--ink); outline-offset:3px; }
+.help-search [role=status] { min-height:24px; margin:10px 0 0; color:var(--smoke); }
+.help-list { padding-bottom:72px; }
+.help-list .help-grid { margin-top:0; }
+.help-contact { background:var(--leaf); border-radius:16px; padding:28px; margin-top:36px; }
+.help-contact h2 { font-size:24px; margin:0 0 12px; color:var(--ink); }
+.help-contact p { margin:0; line-height:1.75; }
+.help-card[hidden], [data-help-empty][hidden], [data-help-search][hidden] { display:none; }
+@media(max-width:900px) { .workflow-grid,.help-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .guide-layout { grid-template-columns:180px minmax(0,1fr); gap:28px; } }
+@media(max-width:600px) { .workflow-grid,.help-grid { grid-template-columns:1fr; } .guide-layout { display:flex; flex-direction:column; gap:24px; } .guide-sidebar { position:static; order:2; width:100%; border-top:1px solid var(--hairline); padding-top:20px; } .guide-header { padding-top:32px; padding-bottom:32px; } .guide-prose { font-size:17px; } .workflow-card,.help-card { padding:24px; } .guide-prose h2 { font-size:26px; } }
+@media(prefers-reduced-motion:reduce) { .workflow-card,.help-card { transition:none; } .workflow-card:hover,.help-card:hover { transform:none; } }
+
+.help-footer { padding:40px 0; }
+.help-footer p { margin:16px 0; color:var(--ash); }
+.help-footer nav { display:flex; flex-wrap:wrap; gap:14px 24px; }
+.help-footer nav a { color:var(--ink); text-underline-offset:4px; }

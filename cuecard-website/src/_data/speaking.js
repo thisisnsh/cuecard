@@ -82,11 +82,11 @@ const teleprompter = {
     steps: [
       {
         title: "Choose Teleprompter",
-        body: "Tap the mode name at the top left of the editor and pick Teleprompter. Cards keeps its own script, so switching never mixes the two.",
+        body: "Tap the mode name at the top left of the Library and pick Teleprompter. Cards keeps its own script, so switching never mixes the two.",
       },
       {
         title: "Write, paste or import the script",
-        body: "Type or paste into the editor, or use Import in the ••• menu. Type [ or tap Add Cue for a reminder, and choose Save to keep a named copy in Saved Notes.",
+        body: "Type or paste into the editor, or use ••• › Import File in the Library. Type [ or tap + Cue for a reminder, and choose Save to keep a named copy in the Library.",
       },
       {
         title: "Set the speed and text size",
@@ -117,7 +117,7 @@ const teleprompter = {
     {
       question: "Does the teleprompter follow my voice?",
       answer:
-        "No. It scrolls at the speed you set in lines per minute and keeps that pace. If you need a moment, pause it, or drag the script back and it carries on from there.",
+        "Yes. Follow Me AI (Beta) can move the script as you speak, using supported on-device speech recognition and microphone permission. Tap the waveform in the teleprompter for each session. Fixed-speed scrolling in lines per minute is also available. Check the Help center for setup and requirements.",
     },
     {
       question: "Will the floating teleprompter show up in my video?",
@@ -214,7 +214,7 @@ const cards = {
     steps: [
       {
         title: "Switch to Cards",
-        body: "Tap the mode name at the top left of the editor and pick Cards. Cards has its own deck and settings, apart from the teleprompter's script.",
+        body: "Tap the mode name at the top left of the Library and pick Cards. Cards has its own deck and settings, apart from the teleprompter's script.",
       },
       {
         title: "Write one thought per card",
@@ -222,7 +222,7 @@ const cards = {
       },
       {
         title: "Add cues and save the deck",
-        body: "Type [ or tap Add Cue for reminders like [pause]. Choose Save in the ••• menu to keep the deck in Saved Notes.",
+        body: "Type [ or tap + Cue for reminders like [pause]. Tap Save at the top to keep the deck in the Library.",
       },
       {
         title: "Set a timer",
@@ -259,7 +259,7 @@ const cards = {
     {
       question: "Can I use cue cards on Apple Watch?",
       answer:
-        'Yes. Open a deck on your iPhone and it shows on the watch too, and turning a card on either moves both. Choose Keep on Apple Watch from the ••• menu on a saved deck to read it on the watch without your iPhone. <a href="/watch/">See CueCard on Apple Watch</a>.',
+        'Yes. Open a deck on your iPhone and it shows on the watch too, and turning a card on either moves both. Touch and hold a saved deck in the Library and choose Keep on Apple Watch to read it on the watch without your iPhone. <a href="/watch/">See CueCard on Apple Watch</a>.',
     },
     {
       question: "Should I use cue cards or a teleprompter?",
@@ -344,7 +344,7 @@ const watch = {
       },
       {
         title: "Keep a deck on the watch",
-        body: "Open a saved deck on the iPhone and choose Keep on Apple Watch from the ••• menu. It is then on the watch under On Watch, and works without your iPhone.",
+        body: "In the iPhone Library, touch and hold a saved deck and choose Keep on Apple Watch. It is then on the watch under On Watch, and works without your iPhone.",
       },
       {
         title: "Set the text size",
@@ -370,7 +370,7 @@ const watch = {
     {
       question: "Does the watch app work without my iPhone?",
       answer:
-        "For decks you keep on the watch, yes. Choose Keep on Apple Watch from the ••• menu on a saved deck, and you can read it on the watch with no iPhone nearby. The teleprompter remote needs the iPhone, because that is where the script is scrolling.",
+        "For decks you keep on the watch, yes. Touch and hold a saved deck in the Library and choose Keep on Apple Watch, and you can read it on the watch with no iPhone nearby. The teleprompter remote needs the iPhone, because that is where the script is scrolling.",
     },
     {
       question: "Which Apple Watch do I need?",
@@ -399,7 +399,7 @@ const speechSteps = (first, second) => [
   second,
   {
     title: "Add cues where you rush",
-    body: "Type [ or tap Add Cue for reminders like [pause] or [look up]. They show in color and are never read out.",
+    body: "Type [ or tap + Cue for reminders like [pause] or [look up]. They show in color and are never read out.",
   },
   {
     title: "Set a timer with a warning",
@@ -461,7 +461,7 @@ const speeches = [
       steps: speechSteps(
         {
           title: "Switch to Cards",
-          body: "Tap the mode name at the top left of CueCard's editor and choose Cards.",
+          body: "Tap the mode name at the top left of CueCard's Library and choose Cards.",
         },
         {
           title: "One story per card",
@@ -486,7 +486,7 @@ const speeches = [
       {
         question: "Can I give my speech from my Apple Watch?",
         answer:
-          'Yes. Save the deck, choose Keep on Apple Watch from the ••• menu, and read it on your wrist with the phone in your pocket. <a href="/watch/">See CueCard on Apple Watch</a>.',
+          'Yes. Save the deck, touch and hold the deck in the Library and choose Keep on Apple Watch, and read it on your wrist with the phone in your pocket. <a href="/watch/">See CueCard on Apple Watch</a>.',
       },
     ],
   },
@@ -535,7 +535,7 @@ const speeches = [
       steps: speechSteps(
         {
           title: "Switch to Cards",
-          body: "Tap the mode name at the top left of CueCard's editor and choose Cards.",
+          body: "Tap the mode name at the top left of CueCard's Library and choose Cards.",
         },
         {
           title: "One card per slide",
@@ -609,7 +609,7 @@ const speeches = [
       steps: speechSteps(
         {
           title: "Switch to Cards",
-          body: "Tap the mode name at the top left of CueCard's editor and choose Cards.",
+          body: "Tap the mode name at the top left of CueCard's Library and choose Cards.",
         },
         {
           title: "One section per card",
@@ -683,7 +683,7 @@ const speeches = [
       steps: speechSteps(
         {
           title: "Switch to Cards",
-          body: "Tap the mode name at the top left of CueCard's editor and choose Cards.",
+          body: "Tap the mode name at the top left of CueCard's Library and choose Cards.",
         },
         {
           title: "The passage, then each point",
@@ -698,7 +698,7 @@ const speeches = [
       {
         question: "Can I preach from my Apple Watch?",
         answer:
-          'Yes. Keep a saved deck on the watch with Keep on Apple Watch in the ••• menu, and read each point on your wrist without the phone. Set the watch to stay on CueCard for an hour in General › Return to Clock. <a href="/watch/">See CueCard on Apple Watch</a>.',
+          'Yes. Keep a saved deck on the watch by touching and holding it in the Library and choosing Keep on Apple Watch, and read each point on your wrist without the phone. Set the watch to stay on CueCard for an hour in General › Return to Clock. <a href="/watch/">See CueCard on Apple Watch</a>.',
       },
       {
         question: "Can I read a full sermon manuscript instead?",

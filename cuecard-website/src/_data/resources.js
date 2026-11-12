@@ -8,15 +8,29 @@ module.exports = [
     description: "Copy free teleprompter script templates for Instagram Reels, TikTok, Snapchat and YouTube Shorts. Download editable text files and rehearse in CueCard.",
     heading: "Free teleprompter scripts <em>for your next video.</em>",
     intro: "Start with a hook, explain one idea, and give viewers a next step. These editable examples help you write a short video without starting from a blank page. Copy the words or download a text file, then make it your own.",
-    modified: "2026-10-21",
+    modified: "2026-11-12",
     mode: "Teleprompter",
     instructions: [
       { title: "Choose an example and make it yours", body: "Replace the example topic with something you know firsthand. Keep one thought per line and use words you would actually say. Read it aloud once before opening your camera." },
-      { title: "Bring the text into CueCard", body: "Download the .txt file and save it to Files, then open CueCard and choose Import from File from the ••• menu. You can also select the sample text here and paste it into a new script. Choose Teleprompter from the mode menu." },
+      { title: "Bring the text into CueCard", body: "Download the .txt file and save it to Files, then open CueCard and choose ••• › Import File in the Library. You can also select the sample text here and paste it into a new script. Choose Teleprompter from the mode menu." },
       { title: "Rehearse, then start the overlay", body: "Set Scroll Speed and Floating Window Text Size in Settings. Tap the green play button, then Start Overlay, and open your camera app. Cue tags are reminders you act on yourself; they do not pause scrolling. Follow the platform guide below each sample for recording setup." }
     ],
-    note: "The examples are starting points, not fixed-duration scripts. Time your own read aloud: pauses, demonstrations and your speaking pace change the length. CueCard scrolls at the speed you set; it does not follow your voice.",
+    note: "The examples are starting points, not fixed-duration scripts. Time your own read aloud: pauses, demonstrations and your speaking pace change the length. Use fixed-speed scrolling or try Follow Me AI (Beta) where on-device speech recognition is supported. Cues are reminders, not playback commands.",
     samples: [
+      {
+        id: "product-walkthrough", title: "Product walkthrough: one task from start to finish",
+        description: "Show the actual task your product helps with. Replace the notebook example with your own workflow, and demonstrate only what the product really does.",
+        text: "Here is how I turn a loose idea into a plan.\n[show the blank page]\nFirst, I write the result I want at the top.\nThen I list the next three actions.\n[pause]\nI put a small box beside the one I can do today.\n[show the finished page]\nNow I have a starting point I can actually use.\nTry it with one idea you have been putting off.",
+        link: "/record-video/", linkLabel: "Record your walkthrough in CueCard",
+        tip: "Put an anchor before each demonstration so you can return to that section. Pause recording while you reset the example."
+      },
+      {
+        id: "course-introduction", title: "Course introduction: make the first step clear",
+        description: "Welcome the learner, name one outcome and say what they need. Replace the example topic and materials with the details of your lesson.",
+        text: "Welcome. Today we will turn one big idea into three useful steps.\n[smile]\nYou only need a notebook and a few minutes.\nWe will start by naming the problem, then break it into smaller actions.\n[pause]\nBy the end, you will have one next step to try.\nOpen a blank page and write down the idea you want to work on.\nLet us begin there.",
+        link: "/blog/review-video-takes/", linkLabel: "Review three takes of your introduction",
+        tip: "Keep the welcome short. Record a test, then check whether a new learner would know what to do next."
+      },
       {
         id: "instagram-reel", title: "Instagram Reel: teach one useful thing",
         description: "Use a problem, a small change and a demonstration. Replace this filming tip with a lesson from your own work, and show the result while you explain it.",
@@ -59,7 +73,7 @@ module.exports = [
     description: "Download free cue card templates for a wedding speech, class presentation or public talk. Edit short prompts and read them on iPhone or Apple Watch.",
     heading: "Free cue-card templates. <em>Your words, at a glance.</em>",
     intro: "A good cue card helps you find your next thought without reading a whole paragraph. Start with one of these short decks, replace the prompts with your own details, and rehearse the transitions aloud.",
-    modified: "2026-10-21",
+    modified: "2026-11-12",
     mode: "Cards",
     instructions: [
       { title: "Put one idea on each card", body: "Choose a deck below and replace the prompts with names, key facts and words that remind you of the story. Keep the opening and closing clear; use brief prompts for the middle." },

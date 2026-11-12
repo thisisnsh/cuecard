@@ -19,7 +19,7 @@ permalink: "sitemap.xml"
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
   {# The two products, and the pages that serve both. #}
-  <url><loc>https://cuecard.dev/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://cuecard.dev/</loc><lastmod>2026-11-12</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
   <url><loc>https://cuecard.dev/desktop/</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
   <url><loc>https://cuecard.dev/faq/</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://cuecard.dev/support/</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
@@ -58,6 +58,10 @@ permalink: "sitemap.xml"
   {%- for blog in blogs %}
   <url><loc>https://cuecard.dev/blog/{{ blog.slug }}/</loc><lastmod>{{ blog.modified or blog.datetime }}</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
   {%- endfor %}
+
+  <url><loc>{{ site.url }}/help/</loc><lastmod>2026-11-12</lastmod></url>
+  {% for article in helpArticles %}<url><loc>{{ site.url }}/{{ article.slug }}/</loc><lastmod>{{ article.modified }}</lastmod></url>{% endfor %}
+  {% for guide in productGuides %}<url><loc>{{ site.url }}/{{ guide.slug }}/</loc><lastmod>{{ guide.modified }}</lastmod></url>{% endfor %}
 
   {# The documents. #}
   <url><loc>https://cuecard.dev/privacy/</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>

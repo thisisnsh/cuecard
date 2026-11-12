@@ -1084,3 +1084,28 @@ function showDownloadError() {
         `;
     }
 }
+
+// Local-only help filtering. Articles and navigation work without JavaScript.
+(() => {
+    const search = document.querySelector('[data-help-search]');
+    if (!search) return;
+    const input = search.querySelector('input');
+    const cards = [...document.querySelectorAll('[data-help-topic]')];
+    const status = document.getElementById('help-results');
+    const empty = document.querySelector('[data-help-empty]');
+    const normalize = text => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const index = cards.map(card => normalize(card.dataset.search));
+    const update = () => {
+        const words = normalize(input.value).trim().split(/\s+/).filter(Boolean);
+        let count = 0;
+        cards.forEach((card, i) => {
+            card.hidden = !words.every(word => index[i].includes(word));
+            if (!card.hidden) count++;
+        });
+        status.textContent = `${count} ${count === 1 ? 'guide' : 'guides'}${words.length ? ' found' : ' to explore'}`;
+        empty.hidden = count !== 0;
+    };
+    search.hidden = false;
+    input.addEventListener('input', update);
+    update();
+})();

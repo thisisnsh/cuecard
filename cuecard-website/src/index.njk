@@ -2,12 +2,12 @@
 layout: layouts/base.njk
 permalink: /
 title: "Free Teleprompter & Cue Cards App | CueCard"
-description: "A free teleprompter and cue cards app for iPhone, iPad and Apple Watch. Read a script over the app you film in, or speak from cards on your Lock Screen."
+description: "Write scripts, record videos and review takes with CueCard, the free teleprompter and cue cards app for iPhone, iPad and Apple Watch."
 keywords: "cuecard teleprompter, teleprompter app, cue cards app, free teleprompter, digital cue cards, teleprompter iphone, ipad teleprompter, apple watch teleprompter, apple watch cue cards, floating teleprompter, speech notes app, cue cards on lock screen, open source teleprompter, tiktok teleprompter, instagram reels teleprompter, teleprompter mac, teleprompter windows, zoom speaker notes, invisible speaker notes"
 canonical: "https://cuecard.dev/"
 pageName: "Free Teleprompter & Cue Cards App | CueCard"
 ogTitle: "Free Teleprompter & Cue Cards App | CueCard"
-ogDescription: "A free teleprompter and cue cards app for iPhone, iPad and Apple Watch. Read a script over the app you film in, or speak from cards on your Lock Screen."
+ogDescription: "Write scripts, record videos and review takes with CueCard, the free teleprompter and cue cards app for iPhone, iPad and Apple Watch."
 ogLocale: "en_US"
 ---
 {% block jsonld %}
@@ -65,11 +65,11 @@ ogLocale: "en_US"
 
 <main id="main-content" tabindex="-1">
     {% set heroEyebrow = 'Free teleprompter & cue cards app' %}
-    {% set heroTitle = 'Your free teleprompter.<br><em>Your cue cards.</em>' %}
-    {% set heroBody = 'Float your script over the app you film in, or speak from cue cards at a glance. Free on iPhone, iPad and Apple Watch, with private speaker notes for Mac and Windows too.' %}
+    {% set heroTitle = 'Your script. Your voice.<br><em>Your best take.</em>' %}
+    {% set heroBody = 'Write your script, record with a teleprompter or cue cards, and review your takes in one free iPhone and iPad app. Float your notes over other apps, or keep your cue cards on Apple Watch.' %}
     {% set heroButtons = [
       { text: "Download for iPhone & iPad", href: site.ios, icon: "apple", style: "primary", external: true },
-      { text: "Mac & Windows", href: "/desktop/#download", icon: "monitor", style: "ghost" }
+      { text: "See how it works", href: "#how-it-works", icon: "arrow", style: "ghost" }
     ] %}
     {% set heroNote = 'No ads. No subscription. No account required.' %}
     {% set heroStrip = "none" %}
@@ -78,6 +78,8 @@ ogLocale: "en_US"
     {% set deckScript = deck.standard %}
     {% set demoCards = deck.standardCards %}
     {% include "partials/hero.njk" %}
+
+    {% include "partials/ios-workflow.njk" %}
 
     {% set modesMicro = "One free app" %}
     {% set modesHeading = "Ready for your next video, speech or presentation." %}
@@ -94,12 +96,6 @@ ogLocale: "en_US"
     {% include "partials/getcuecard.njk" %}
 
     {% include "partials/creator-guides.njk" %}
-
-    {% set featureRows = features.mobile %}
-    {% set rowsMicro = "What you get" %}
-    {% set rowsHeading = "Make the script fit you." %}
-    {% set rowsId = "features" %}
-    {% include "partials/rows.njk" %}
 
     {% set watchHeading = "A minute of it, on each screen" %}
     {% set watchNote = "One short film for the iPhone app, one for the same app on iPad, and one for the Mac and Windows app. Each opens on YouTube." %}

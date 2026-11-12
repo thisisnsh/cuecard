@@ -44,6 +44,31 @@ const mobile = [
     appleOnly: true,
   },
   {
+    h: "Follow your voice (Beta)",
+    p: 'Follow Me AI moves the script as you speak, using on-device speech recognition where supported. <a href="/help/voice-following/">Check setup and requirements</a>.',
+    appleOnly: true,
+  },
+  {
+    h: "Make room for your ideas",
+    p: 'Organize scripts in collections. Add images, bold and italic words, and anchors to jump between sections. <a href="/help/library/">Explore the Library</a>.',
+    appleOnly: true,
+  },
+  {
+    h: "Your camera, set for the next take",
+    p: 'Choose resolution, frame rate, dynamic range, codec, stabilization and front-camera mirroring. Options depend on the camera. <a href="/help/camera-settings/">See camera settings</a>.',
+    appleOnly: true,
+  },
+  {
+    h: "Read through teleprompter glass",
+    p: 'Flip text horizontally or vertically and drag the reading guide to a comfortable line. <a href="/teleprompter-mirror/">Set up your mirror</a>.',
+    appleOnly: true,
+  },
+  {
+    h: "Writing suggestions and help on your device (Beta)",
+    p: 'Review suggested edits or ask about CueCard. Requires iOS or iPadOS 26 and a supported, ready Apple Intelligence device. <a href="/help/ai-suggestions/">Check availability</a>.',
+    appleOnly: true,
+  },
+  {
     h: "Cards on your Lock Screen",
     p: "Turn cards and watch the timer with your phone locked.",
     appleOnly: true,
@@ -68,7 +93,7 @@ const mobile = [
   },
   {
     h: "Keep notes as files",
-    p: "Choose a notes folder to keep the latest copy of every saved script and deck outside the app, even if you remove CueCard.",
+    p: "Choose a storage folder to keep the latest copy of every saved script and deck outside the app, even if you remove CueCard.",
     appleOnly: true,
   },
   {

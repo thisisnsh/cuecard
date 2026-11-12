@@ -1,3 +1,10 @@
+{% if article or page.url == "/help/" %}
+<footer class="footer help-footer"><div class="wrap">
+  <a class="brand" href="/">CueCard</a><p>Free teleprompter &amp; cue cards for iPhone, iPad and Apple Watch.</p>
+  <nav aria-label="Footer"><a href="/help/">All help topics</a><a href="/support/">Contact support</a><a href="/faq/">FAQ &amp; desktop help</a><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a></nav>
+  <p class="meta-note">© {{ site.year }} CueCard</p>
+</div></footer>
+{% else %}
 {% from "partials/icons.njk" import icon %}
 {#
   The footer is the site's index. Every page CueCard has is reachable from
@@ -20,10 +27,9 @@
                 <span class="brand-text">Cue<b>Card</b></span>
             </a>
             <p class="footer-blurb">
-                CueCard is a free teleprompter and cue cards app. On iPhone, iPad and Apple Watch
-                it scrolls your script over whatever you record in, or puts your talk on cards you
-                turn in the app, on the Lock Screen or on your wrist. On Mac and Windows it keeps
-                your speaker notes out of your screen share. Free and open source.
+                Write scripts, record videos and review takes on iPhone and iPad. Float your notes
+                over other apps or read cards on Apple Watch. On Mac and Windows, keep speaker
+                notes out of your screen share. Free and open source.
             </p>
             <ul class="footer-list">
                 <li><a href="/mobile/">The app for iPhone, iPad and Apple Watch</a></li>
@@ -32,6 +38,7 @@
                 <li><a href="/blog/">Blog</a></li>
                 <li><a href="/teleprompter-scripts/">Free teleprompter scripts</a></li>
                 <li><a href="/cue-card-templates/">Free cue-card templates</a></li>
+                <li><a href="/help/">Help center</a></li>
                 <li><a href="/faq/">FAQ</a></li>
                 <li><a href="/support/">Support</a></li>
                 <li><a href="{{ site.github }}" target="_blank" rel="noopener">Source code</a></li>
@@ -57,8 +64,11 @@
                 <li><a href="/mobile/android/">{{ icon("android", 15) }} Android — coming soon</a></li>
             </ul>
 
-            <p class="micro footer-micro-2">{{ icon("sparkle", 13) }}Two modes</p>
+            <p class="micro footer-micro-2">{{ icon("sparkle", 13) }}Explore the app</p>
             <ul class="footer-list footer-list-2">
+                <li><a href="/record-video/">Record video</a></li>
+                <li><a href="/voice-following-teleprompter/">Voice-following (Beta)</a></li>
+                <li><a href="/teleprompter-mirror/">Teleprompter glass</a></li>
                 <li><a href="/teleprompter/">{{ icon("scroll", 14) }} Teleprompter</a></li>
                 <li><a href="/cards/">{{ icon("cards", 14) }} Cue cards</a></li>
             </ul>
@@ -126,3 +136,5 @@
         </p>
     </div>
 </footer>
+
+{% endif %}

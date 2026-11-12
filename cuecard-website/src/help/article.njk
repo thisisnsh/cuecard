@@ -1,0 +1,35 @@
+---
+layout: layouts/base.njk
+pagination:
+  data: helpArticles
+  size: 1
+  alias: article
+permalink: "{{ article.slug }}/index.html"
+eleventyComputed:
+  title: "{{ article.title | safe }} | CueCard Help"
+  description: "{{ article.description | safe }}"
+  canonical: "https://cuecard.dev/{{ article.slug }}/"
+---
+{% block body %}
+{% include "partials/nav.njk" %}
+<main id="main-content" tabindex="-1">
+  <header class="guide-header wrap">
+    {% include "partials/breadcrumbs.njk" %}
+    <p class="micro">CueCard Help · {{ article.category }}</p>
+    <h1 class="display display-long">{{ article.title }}</h1>
+    <p class="body">{{ article.description }}</p>
+    <p class="meta-note">For iPhone &amp; iPad · Updated November 12, 2026</p>
+  </header>
+  <div class="guide-layout wrap">
+    <aside class="guide-sidebar" aria-label="Help topics">
+      <a class="guide-back" href="/help/">← All help topics</a>
+      {% for item in helpArticles %}<a href="/{{ item.slug }}/"{% if article.slug == item.slug %} aria-current="page"{% endif %}>{{ item.title }}</a>{% endfor %}
+    </aside>
+    <article class="guide-prose">
+      {{ article.body | markdownify | safe }}
+      <div class="help-contact"><h2>Still need a hand?</h2><p><a href="mailto:{{ site.email }}">Email {{ site.email }}</a> with your device, iOS version, CueCard version and what happened. Include the steps you tried; leave private script text out unless it is needed to explain the issue.</p></div>
+    </article>
+  </div>
+</main>
+{% include "partials/footer.njk" %}
+{% endblock %}

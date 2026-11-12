@@ -136,31 +136,13 @@ const appSteps = {
   ],
 };
 
-const cameraSteps = (device = "iPhone") => [
-  {
-    title: "Write and save the script",
-    body: "Paste or type the script in CueCard, keep the lines short, and save a named copy for the next take.",
-  },
-  {
-    title: "Set the pace and text size",
-    body: "Choose a scroll speed you can speak comfortably and text large enough to read beside the lens.",
-  },
-  {
-    title: "Start the floating window",
-    body: "Tap the green play button, then Start Overlay to turn CueCard into a movable window.",
-  },
-  {
-    title: `Open the ${device} Camera app`,
-    body: "Choose Video and the selfie camera, then frame the shot before you begin recording.",
-  },
-  {
-    title: "Move CueCard near the lens",
-    body: "Use a narrow window just below the front camera and leave the Camera controls uncovered.",
-  },
-  {
-    title: "Record a short test",
-    body: "Check your eye-line and pace, then adjust the window or scroll speed before the final take.",
-  },
+const cameraSteps = () => [
+  { title: "Create a script in the Library", body: "Choose Teleprompter, tap +, and type or paste your script. Tap Save at the top to keep your changes." },
+  { title: "Rehearse your opening", body: "Open the teleprompter. Set text size and Scroll Speed in Settings, then read a few lines aloud." },
+  { title: "Open CueCard’s camera", body: "Tap the camera at the top of the reading view, tapping the screen first if controls are hidden. Allow camera and microphone access." },
+  { title: "Frame and record", body: "Move or resize the camera window. Tap the red button to record, tap again to pause, and stop to save to Photos. Sync with Teleprompter links recording and playback when enabled." },
+  { title: "Review a take", body: "Open Takes above the reading controls or from the Library. Play the clip, add a note and favorite the version you want to keep. Deleting a take also deletes it from Photos." },
+  { title: "Or use another camera app", body: "Close CueCard’s camera, then tap Start Overlay in the teleprompter or leave CueCard to float the script. Open your recording app and test a short clip. Camera video excludes the script; screen recording can include it." },
 ];
 
 const ipadSteps = [
@@ -194,11 +176,11 @@ const ipadSteps = [
 const hubSteps = [
   {
     title: "Choose Teleprompter or Cards",
-    body: "Tap the mode name at the top left of the editor. Teleprompter scrolls a whole script; Cards shows it one card at a time. Each keeps its own script and settings.",
+    body: "Tap the mode name at the top left of the Library. Teleprompter scrolls a whole script; Cards shows it one card at a time. Each keeps its own script and settings.",
   },
   {
     title: "Write, then save",
-    body: "Type or paste your script, or tap Create New Card for each card of a deck. Type [ or tap Add Cue for reminders, and choose Save in the ••• menu.",
+    body: "Type or paste your script, or tap Create New Card for each card of a deck. Type [ or tap + Cue for reminders, and tap Save at the top.",
   },
   {
     title: "Set the timer",
@@ -222,7 +204,7 @@ function forApp(app) {
   if (!app || !app.guide) return null;
 
   const steps = appSteps[app.slug]
-    || (app.slug === "mobile" ? hubSteps : app.slug === "mobile/ipad" ? ipadSteps : cameraSteps("iPhone"));
+    || (app.slug === "mobile" ? hubSteps : app.slug === "mobile/ipad" ? ipadSteps : cameraSteps());
 
   const intro = app.subject
     ? `Use CueCard with ${app.subject} in six short steps, from the saved script to the final take.`
