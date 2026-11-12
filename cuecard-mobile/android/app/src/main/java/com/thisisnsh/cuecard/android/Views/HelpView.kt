@@ -36,7 +36,7 @@ import androidx.compose.material.icons.automirrored.filled.FormatAlignLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.CollectionsBookmark
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Settings
@@ -83,6 +83,7 @@ import com.thisisnsh.cuecard.android.services.WhatsNewService
  * tells analytics where it was opened.
  */
 enum class HelpPage(val rawValue: String) {
+    LIBRARY("library"),
     WRITING_TELEPROMPTER("home_teleprompter"),
     WRITING_CARDS("home_cards"),
     TELEPROMPTER("teleprompter"),
@@ -99,8 +100,9 @@ private data class HelpTopic(@StringRes val titleRes: Int, @StringRes val detail
     val title: String get() = AppStrings.get(titleRes)
     val detail: String get() = AppStrings.get(detailRes)
 
-    fun matches(query: String): Boolean =
-        title.contains(query, ignoreCase = true) || detail.contains(query, ignoreCase = true)
+    /** How many of `words` are in the title or the explanation, ignoring case. */
+    fun matchCount(words: List<String>): Int =
+        words.count { title.contains(it, ignoreCase = true) || detail.contains(it, ignoreCase = true) }
 }
 
 private data class HelpSection(
@@ -114,9 +116,6 @@ private data class HelpSection(
 ) {
     val title: String get() = AppStrings.get(titleRes)
     val summary: String get() = AppStrings.get(summaryRes)
-
-    /** The same section with only the topics that match `query`. */
-    fun filtered(query: String): HelpSection = copy(topics = topics.filter { it.matches(query) })
 }
 
 // MARK: - Topics
@@ -135,13 +134,16 @@ private object AllHelp {
     )
 
     val notes = HelpSection(
-        "notes", R.string.help_notes, R.string.help_notes_summary, Icons.Filled.Folder,
+        "notes", R.string.help_notes, R.string.help_notes_summary, Icons.Filled.CollectionsBookmark,
         listOf(
+            HelpTopic(R.string.help_open_a_script_title, R.string.help_open_a_script_detail),
             HelpTopic(R.string.help_save_your_work_title, R.string.help_save_your_work_detail),
-            HelpTopic(R.string.help_open_saved_notes_title, R.string.help_open_saved_notes_detail),
+            HelpTopic(R.string.help_rename_duplicate_delete_title, R.string.help_rename_duplicate_delete_detail),
+            HelpTopic(R.string.help_organize_in_collections_title, R.string.help_organize_in_collections_detail),
             HelpTopic(R.string.help_import_a_text_file_title, R.string.help_import_a_text_file_detail),
             HelpTopic(R.string.help_go_back_to_an_older_version_title, R.string.help_go_back_to_an_older_version_detail),
-            HelpTopic(R.string.help_keep_notes_if_the_app_is_removed_title, R.string.help_keep_notes_if_the_app_is_removed_detail),
+            HelpTopic(R.string.help_keep_scripts_if_the_app_is_removed_title, R.string.help_keep_scripts_if_the_app_is_removed_detail),
+            HelpTopic(R.string.help_your_privacy_title, R.string.help_your_privacy_detail),
             HelpTopic(R.string.help_share_a_script_title, R.string.help_share_a_script_detail)
         )
     )
@@ -150,6 +152,7 @@ private object AllHelp {
         "settings", R.string.help_settings, R.string.help_settings_summary, Icons.Filled.Settings,
         listOf(
             HelpTopic(R.string.help_change_text_size_and_colors_title, R.string.help_change_text_size_and_colors_detail),
+            HelpTopic(R.string.help_choose_how_videos_record_title, R.string.help_choose_how_videos_record_detail),
             HelpTopic(R.string.help_set_a_timer_title, R.string.help_set_a_timer_detail),
             HelpTopic(R.string.help_count_down_title, R.string.help_count_down_detail),
             HelpTopic(R.string.help_change_language_title, R.string.help_change_language_detail)
@@ -186,6 +189,7 @@ private object AllHelp {
         listOfNotNull(
             HelpTopic(R.string.find_your_takes, R.string.help_find_your_takes_detail),
             HelpTopic(R.string.help_move_camera_title, R.string.help_move_camera_detail),
+            HelpTopic(R.string.help_read_over_the_camera_title, R.string.help_read_over_the_camera_detail),
             HelpTopic(R.string.help_play_a_take_title, R.string.help_play_a_take_detail),
             // Favorites are kept on a video from Android 11.
             if (TakesLibrary.canFavorite) {
@@ -199,6 +203,21 @@ private object AllHelp {
     )
 
     val sections = listOf(writing, notes, settings, teleprompter, cards, takes)
+
+    /**
+     * The topics with at least one of the words in `query`, those with the most
+     * of them first, and otherwise in the order help lists them, each with the
+     * section it's in.
+     */
+    fun search(query: String): List<Pair<HelpSection, HelpTopic>> {
+        val words = query.split(Regex("\\s+")).filter { it.isNotEmpty() }.distinctBy { it.lowercase() }
+        val all = sections.flatMap { section -> section.topics.map { section to it } }
+        return all.withIndex()
+            .map { (index, entry) -> Triple(index, entry, entry.second.matchCount(words)) }
+            .filter { it.third > 0 }
+            .sortedWith(compareByDescending<Triple<Int, Pair<HelpSection, HelpTopic>, Int>> { it.third }.thenBy { it.first })
+            .map { it.second }
+    }
 }
 
 // MARK: - Help Screen
@@ -224,8 +243,8 @@ fun HelpView(page: HelpPage, onDismiss: () -> Unit) {
     val openSection = AllHelp.sections.firstOrNull { it.id == openSectionId }
 
     val trimmed = query.trim()
-    // The sections with a topic that matches the search.
-    val results = AllHelp.sections.map { it.filtered(trimmed) }.filter { it.topics.isNotEmpty() }
+    // The topics with any of the words searched for, best match first.
+    val results = remember(trimmed) { AllHelp.search(trimmed) }
 
     LaunchedEffect(Unit) {
         AnalyticsEvents.logEvent(
@@ -238,7 +257,7 @@ fun HelpView(page: HelpPage, onDismiss: () -> Unit) {
 
     /** Closes the whole of Help, from the front page or a section. */
     fun close() {
-        AnalyticsEvents.logButtonClick("done", HELP_SCREEN)
+        AnalyticsEvents.logButtonClick(if (openSection != null) "help_section_done" else "help_topics_done", HELP_SCREEN)
         onDismiss()
     }
 
@@ -351,20 +370,11 @@ fun HelpView(page: HelpPage, onDismiss: () -> Unit) {
                         }
                     }
                 } else {
-                    results.forEach { section ->
-                        item(key = section.id) {
-                            Text(
-                                text = section.title,
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = AppColors.textSecondary(isDark),
-                                modifier = Modifier.padding(start = 20.dp, top = 24.dp, bottom = 4.dp)
-                            )
-                        }
-                        // Search results start open, so the match shows.
-                        items(section.topics, key = { section.id + it.titleRes }) { topic ->
-                            TopicRow(topic, isDark, initiallyExpanded = true)
-                        }
+                    item { Spacer(modifier = Modifier.height(8.dp)) }
+                    // Search results start open, so the match shows, with the
+                    // section they're from above the title.
+                    items(results, key = { (section, topic) -> section.id + topic.titleRes }) { (section, topic) ->
+                        TopicRow(topic, isDark, initiallyExpanded = true, section = section.title)
                     }
                 }
 
@@ -457,18 +467,24 @@ internal fun SearchField(
 
 /** A topic's title, and its explanation once opened. */
 @Composable
-private fun TopicRow(topic: HelpTopic, isDark: Boolean, initiallyExpanded: Boolean = false) {
+private fun TopicRow(topic: HelpTopic, isDark: Boolean, initiallyExpanded: Boolean = false, section: String? = null) {
     var isExpanded by remember(topic.titleRes) { mutableStateOf(initiallyExpanded) }
     val rotation by animateFloatAsState(if (isExpanded) 180f else 0f, tween(250), label = "chevron")
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clickableWithoutRipple { isExpanded = !isExpanded }
+            .clickableWithoutRipple {
+                AnalyticsEvents.logButtonClick(if (isExpanded) "help_topic_close" else "help_topic_open", HELP_SCREEN)
+                isExpanded = !isExpanded
+            }
             .padding(horizontal = 20.dp, vertical = 10.dp)
             .animateContentSize(tween(250)),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
+        section?.let {
+            Text(text = it, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = AppColors.textSecondary(isDark))
+        }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = topic.title,
@@ -505,7 +521,7 @@ fun HelpButton(page: HelpPage, isDark: Boolean, modifier: Modifier = Modifier, o
             .padding(horizontal = 12.dp)
             .size(20.dp)
             .clickableWithoutRipple {
-                AnalyticsEvents.logButtonClick("help", page.rawValue)
+                AnalyticsEvents.logButtonClick("help_${page.rawValue}", page.rawValue)
                 onClick()
             }
     )

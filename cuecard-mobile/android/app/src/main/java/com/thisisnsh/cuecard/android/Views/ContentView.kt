@@ -1,6 +1,22 @@
 package com.thisisnsh.cuecard.android.views
 
+import android.content.Context
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.edit
+import com.thisisnsh.cuecard.android.services.TakeCounts
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -16,7 +32,7 @@ import com.thisisnsh.cuecard.android.services.WhatsNewService
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-/** The screen the app opens on: the welcome, on a fresh install, or the script. */
+/** The screen the app opens on: the welcome, on a fresh install, or the library. */
 @Composable
 fun ContentView(
     settingsService: SettingsService,
@@ -69,14 +85,64 @@ fun ContentView(
             }
         )
 
-        true -> HomeView(
-            settingsService = settingsService,
-            notifications = notifications
-        )
+        true -> LibraryAndEditor(settingsService, notifications)
     }
 
     val release = whatsNew.release
     if (showingWhatsNew && release != null) {
         WhatsNewDialog(release = release, version = whatsNew.version, onDismiss = whatsNew::dismiss)
+    }
+}
+
+/** Where the library's state is kept, as it changes. */
+private const val LIBRARY_PREFS = "library"
+
+/**
+ * Whether the editor was open over the library. Kept in preferences rather than
+ * saved state, which is let go of when the app is closed, so the app opens
+ * again on the screen it was left on.
+ */
+private const val EDITOR_OPEN_KEY = "library_path_editor"
+
+/**
+ * The library, with the editor over it on one script. It opens again on the
+ * library or the editor it was left on, even after the app was closed; left
+ * reading, it opens on the editor.
+ */
+@Composable
+private fun LibraryAndEditor(settingsService: SettingsService, notifications: RemoteNotificationService) {
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences(LIBRARY_PREFS, Context.MODE_PRIVATE) }
+    var showingEditor by remember { mutableStateOf(prefs.getBoolean(EDITOR_OPEN_KEY, false)) }
+    val takeCounts = remember { TakeCounts(context) }
+    DisposableEffect(takeCounts) { onDispose { takeCounts.close() } }
+
+    fun setEditor(open: Boolean) {
+        showingEditor = open
+        prefs.edit { putBoolean(EDITOR_OPEN_KEY, open) }
+        // Back from the editor, there may be new takes or a new note.
+        if (!open) takeCounts.reload()
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        LibraryView(
+            settingsService = settingsService,
+            notifications = notifications,
+            takeCounts = takeCounts,
+            onOpenEditor = { setEditor(true) }
+        )
+
+        AnimatedVisibility(
+            visible = showingEditor,
+            enter = slideInHorizontally(initialOffsetX = { it }) + fadeIn(),
+            exit = slideOutHorizontally(targetOffsetX = { it }) + fadeOut()
+        ) {
+            BackHandler { setEditor(false) }
+            HomeView(
+                settingsService = settingsService,
+                notifications = notifications,
+                onBack = { setEditor(false) }
+            )
+        }
     }
 }

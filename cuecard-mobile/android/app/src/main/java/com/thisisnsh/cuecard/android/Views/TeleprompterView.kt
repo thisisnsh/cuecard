@@ -11,6 +11,10 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.ui.BiasAlignment
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -137,11 +141,14 @@ import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 
 /**
- * How far the script fades into the background at each end. The reading line
- * sits clear of both.
+ * How far the script fades into the background at each end, as in the editor.
+ * The reading line sits clear of both.
  */
-private val TOP_FADE = 96.dp
-private val BOTTOM_FADE = 140.dp
+private val TOP_FADE = CUE_EDITOR_EDGE_FADE
+private val BOTTOM_FADE = 72.dp
+
+/** The size of the round buttons at the top and beside Play. */
+private val HEADER_BUTTON_SIZE = 44.dp
 
 /**
  * Where on screen the line being read sits, as a fraction of the view height,
@@ -210,7 +217,6 @@ fun TeleprompterView(
      */
     val scriptClock = remember { mutableDoubleStateOf(0.0) }
     var showControls by remember { mutableStateOf(true) }
-    var showingHelp by remember { mutableStateOf(false) }
     /** The camera floats over the script, which stays full screen under it. */
     var showingCamera by remember { mutableStateOf(false) }
     val recorder = rememberCameraRecorder(showingCamera, scriptId)
@@ -529,10 +535,14 @@ fun TeleprompterView(
     fun currentLine(): Double =
         minOf(scriptClock.doubleValue, scriptDuration()) * settings.linesPerMinute / 60.0
 
-    /** The anchor the next jump forward lands on, if there's one ahead. */
+    /**
+     * The anchor the next jump forward lands on, if there's one ahead. The end of
+     * the script counts as one, after the last.
+     */
     fun nextAnchorLine(): Double? {
         val current = currentLine()
-        return anchorLines.firstOrNull { it > current + 0.05 }
+        val end = (lineOffsets.size - 1).coerceAtLeast(0).toDouble()
+        return (anchorLines + end).firstOrNull { it > current + 0.05 }
     }
 
     /**
@@ -677,13 +687,15 @@ fun TeleprompterView(
     // reading line and the image passing it are in view together.
     val imageWidth = with(density) { (viewportWidthPx - 48.dp.toPx()).coerceAtLeast(1f).toSp() }
     val maxImageHeight = with(density) { (viewportHeightPx * 0.5f).coerceAtLeast(1f).toSp() }
+    /** The camera's picture is drawn under the script, which stays in view over it. */
+    val textAboveCamera = showingCamera && settings.showsTextAboveCamera
     val script = remember(
-        content.fullText, settings.cueColor, settings.fontSize, isDark, showingCamera, imageWidth, maxImageHeight
+        content.fullText, settings.cueColor, settings.fontSize, isDark, textAboveCamera, imageWidth, maxImageHeight
     ) {
         buildScript(
             content, settings.cueColor, settings.fontSize.toFloat(), isDark,
             // A halo in the background color keeps the lines readable over the camera.
-            haloRadius = if (showingCamera) haloRadius else 0f,
+            haloRadius = if (textAboveCamera) haloRadius else 0f,
             imageWidth = imageWidth,
             maxImageHeight = maxImageHeight
         )
@@ -712,62 +724,28 @@ fun TeleprompterView(
         return
     }
 
-    BackHandler(enabled = showingHelp) { showingHelp = false }
+    /** The buttons at the top fade with the ones below, and stay while the camera is open. */
+    val headerButtonsHidden = !showControls && !showingCamera
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             containerColor = AppColors.background(isDark),
             topBar = {
-                CenterAlignedTopAppBar(
-                    title = {
-                        Text(
-                            text = timeDisplay,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = FontFamily.Monospace,
-                            color = timerColor
-                        )
+                TeleprompterHeader(
+                    timeDisplay = timeDisplay,
+                    timerColor = timerColor,
+                    buttonsHidden = headerButtonsHidden,
+                    showingCamera = showingCamera,
+                    isDark = isDark,
+                    onClose = {
+                        AnalyticsEvents.logButtonClick("teleprompter_close", "teleprompter")
+                        stopAndDismiss()
                     },
-                    navigationIcon = {
-                        // Comes and goes with the play, restart and floating window
-                        // buttons, and stays while the camera is open.
-                        AnimatedVisibility(
-                            visible = showControls || showingCamera,
-                            enter = fadeIn(controlsFade()),
-                            exit = fadeOut(controlsFade())
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Close,
-                                contentDescription = stringResource(R.string.close),
-                                tint = AppColors.textPrimary(isDark),
-                                modifier = Modifier
-                                    .padding(horizontal = 16.dp)
-                                    .size(14.dp)
-                                    .clickableWithoutRipple {
-                                        AnalyticsEvents.logButtonClick("close", "teleprompter")
-                                        stopAndDismiss()
-                                    }
-                            )
-                        }
+                    onCamera = {
+                        AnalyticsEvents.logButtonClick("teleprompter_camera", "teleprompter")
+                        showingCamera = !showingCamera
                     },
-                    actions = {
-                        AnimatedVisibility(
-                            visible = showControls || showingCamera,
-                            enter = fadeIn(controlsFade()),
-                            exit = fadeOut(controlsFade())
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                CameraButton(isOn = showingCamera, isDark = isDark) {
-                                    AnalyticsEvents.logButtonClick("camera", "teleprompter")
-                                    showingCamera = !showingCamera
-                                }
-                                HelpButton(page = HelpPage.TELEPROMPTER, isDark = isDark) { showingHelp = true }
-                            }
-                        }
-                    },
-                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                        containerColor = AppColors.background(isDark)
-                    )
+                    onTap = { showControls = !showControls }
                 )
             }
         ) { padding ->
@@ -778,7 +756,7 @@ fun TeleprompterView(
                     .background(AppColors.background(isDark))
             ) {
                 // Under the script, so the lines stay in view over it.
-                AnimatedVisibility(visible = showingCamera, enter = fadeIn(), exit = fadeOut()) {
+                AnimatedVisibility(visible = textAboveCamera, enter = fadeIn(), exit = fadeOut()) {
                     CameraBackdrop(recorder, cameraPlacement)
                 }
 
@@ -800,7 +778,7 @@ fun TeleprompterView(
                         // A mask rather than a painted fade while the camera is
                         // open, so the picture behind stays clear.
                         .then(
-                            if (showingCamera) {
+                            if (textAboveCamera) {
                                 Modifier.scriptEdgeMask(top = TOP_FADE, bottom = BOTTOM_FADE)
                             } else {
                                 Modifier.scriptEdgeFade(isDark = isDark, top = TOP_FADE, bottom = BOTTOM_FADE)
@@ -875,148 +853,164 @@ fun TeleprompterView(
                     )
                 }
 
+                // The anchors out at the edges, when the script has any, and the
+                // floating window, Play and restart together in the middle.
                 AnimatedVisibility(
                     visible = showControls,
-                    modifier = Modifier.align(Alignment.BottomCenter),
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .widthIn(max = 480.dp)
+                        .fillMaxWidth(),
                     enter = fadeIn(controlsFade()),
                     exit = fadeOut(controlsFade())
                 ) {
                     Row(
-                        modifier = Modifier.padding(bottom = 48.dp),
-                        // Closer together with the anchor buttons in, so the row
-                        // still fits a small phone.
-                        horizontalArrangement = Arrangement.spacedBy(if (content.hasAnchors) 14.dp else 24.dp),
+                        modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 20.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // The anchor buttons go at the ends, so the usual
-                        // buttons keep their places around Play.
-                        if (content.hasAnchors) {
-                            AnchorButton(forward = false, isEnabled = canJumpToPreviousAnchor, isDark = isDark) {
-                                AnalyticsEvents.logButtonClick("previous_anchor", "teleprompter")
-                                jumpToAnchor(forward = false)
-                            }
+                        // Kept in the row while there's none, so the buttons around
+                        // them don't move.
+                        AnchorButton(
+                            forward = false,
+                            isEnabled = canJumpToPreviousAnchor,
+                            isShown = content.hasAnchors,
+                            isDark = isDark
+                        ) {
+                            AnalyticsEvents.logButtonClick("previous_anchor", "teleprompter")
+                            jumpToAnchor(forward = false)
                         }
 
-                        // Kept in the row even when PiP is unavailable — taking it
-                        // out shifts the play button off centre — and only made
-                        // invisible and untouchable.
-                        // Dimmed while the camera is open: the overlay doesn't open then.
-                        Box(
-                            modifier = Modifier
-                                .size(52.dp)
-                                .alpha(
-                                    when {
-                                        !pipManager.isPiPPossible -> 0f
-                                        showingCamera -> 0.4f
-                                        else -> 1f
-                                    }
-                                )
-                                .glassed(CircleShape, isDark)
-                                .clickableWithoutRipple {
-                                    if (!pipManager.isPiPPossible || showingCamera) return@clickableWithoutRipple
-                                    AnalyticsEvents.logButtonClick(
-                                        if (pipManager.isPiPActive) "pip_exit" else "pip_enter",
-                                        "teleprompter"
-                                    )
-                                    if (pipManager.isPiPActive) {
-                                        pipManager.stopPiP()
-                                        AnalyticsEvents.logEvent("teleprompter_pip_stopped")
-                                    } else if (pipManager.enterPiP()) {
-                                        AnalyticsEvents.logEvent("teleprompter_pip_started")
-                                    }
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = if (pipManager.isPiPActive) {
-                                    Icons.Filled.PictureInPictureAlt
-                                } else {
-                                    Icons.Filled.PictureInPicture
-                                },
-                                contentDescription = if (pipManager.isPiPActive) {
-                                    stringResource(R.string.close_overlay)
-                                } else {
-                                    stringResource(R.string.start_overlay)
-                                },
-                                tint = AppColors.textPrimary(isDark),
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
+                        Spacer(modifier = Modifier.weight(1f).widthIn(min = 8.dp))
 
-                        // During the countdown the button shows the seconds left, on
-                        // the countdown color, and switches to the pause icon once playback
-                        // starts. It still pauses while showing a number.
-                        Box(
-                            modifier = Modifier
-                                .size(72.dp)
-                                .glassed(
-                                    CircleShape,
-                                    isDark,
-                                    tint = if (isCountingDown) {
-                                        settings.timerStyle.countdownColor.color(isDark)
-                                    } else {
-                                        AppColors.green(isDark)
-                                    }
-                                )
-                                .clickableWithoutRipple {
-                                    AnalyticsEvents.logButtonClick(
-                                        if (isPlaying || isCountingDown) "pause" else "play",
-                                        "teleprompter"
-                                    )
-                                    togglePlayPause()
-                                },
-                            contentAlignment = Alignment.Center
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Crossfade(
-                                targetState = isCountingDown,
-                                animationSpec = tween(120),
-                                label = "playButton"
-                            ) { showsNumber ->
-                                if (showsNumber) {
-                                    val startingIn = stringResource(R.string.pause_starting_in, countdownValue)
-                                    Text(
-                                        text = "$countdownValue",
-                                        fontSize = 30.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = if (isDark) Color.Black else Color.White,
-                                        modifier = Modifier.semantics {
-                                            contentDescription = startingIn
+                            // Kept in the row even when the overlay is unavailable,
+                            // and only made invisible and untouchable. Dimmed while
+                            // the camera is open: the overlay doesn't open then.
+                            Box(
+                                modifier = Modifier
+                                    .size(HEADER_BUTTON_SIZE)
+                                    .alpha(
+                                        when {
+                                            !pipManager.isPiPPossible -> 0f
+                                            showingCamera -> 0.4f
+                                            else -> 1f
                                         }
                                     )
-                                } else {
-                                    Icon(
-                                        imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                                        contentDescription = if (isPlaying) stringResource(R.string.pause) else stringResource(R.string.play),
-                                        tint = if (isDark) Color.Black else Color.White,
-                                        modifier = Modifier.size(28.dp)
+                                    .glassed(CircleShape, isDark)
+                                    .clickableWithoutRipple {
+                                        if (!pipManager.isPiPPossible || showingCamera) return@clickableWithoutRipple
+                                        AnalyticsEvents.logButtonClick(
+                                            if (pipManager.isPiPActive) "pip_exit" else "pip_enter",
+                                            "teleprompter"
+                                        )
+                                        if (pipManager.isPiPActive) {
+                                            pipManager.stopPiP()
+                                            AnalyticsEvents.logEvent("teleprompter_pip_stopped")
+                                        } else if (pipManager.enterPiP()) {
+                                            AnalyticsEvents.logEvent("teleprompter_pip_started")
+                                        }
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = if (pipManager.isPiPActive) {
+                                        Icons.Filled.PictureInPictureAlt
+                                    } else {
+                                        Icons.Filled.PictureInPicture
+                                    },
+                                    contentDescription = if (pipManager.isPiPActive) {
+                                        stringResource(R.string.close_overlay)
+                                    } else {
+                                        stringResource(R.string.start_overlay)
+                                    },
+                                    tint = AppColors.textPrimary(isDark),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+
+                            // During the countdown the button shows the seconds left,
+                            // on the countdown color, and switches to the pause icon
+                            // once playback starts. It still pauses while showing a number.
+                            Box(
+                                modifier = Modifier
+                                    .size(64.dp)
+                                    .glassed(
+                                        CircleShape,
+                                        isDark,
+                                        tint = if (isCountingDown) {
+                                            settings.timerStyle.countdownColor.color(isDark)
+                                        } else {
+                                            AppColors.green(isDark)
+                                        }
                                     )
+                                    .clickableWithoutRipple {
+                                        AnalyticsEvents.logButtonClick(
+                                            if (isPlaying || isCountingDown) "pause" else "play",
+                                            "teleprompter"
+                                        )
+                                        togglePlayPause()
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Crossfade(
+                                    targetState = isCountingDown,
+                                    animationSpec = tween(120),
+                                    label = "playButton"
+                                ) { showsNumber ->
+                                    if (showsNumber) {
+                                        val startingIn = stringResource(R.string.pause_starting_in, countdownValue)
+                                        Text(
+                                            text = "$countdownValue",
+                                            fontSize = 30.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (isDark) Color.Black else Color.White,
+                                            modifier = Modifier.semantics {
+                                                contentDescription = startingIn
+                                            }
+                                        )
+                                    } else {
+                                        Icon(
+                                            imageVector = if (isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                                            contentDescription = if (isPlaying) stringResource(R.string.pause) else stringResource(R.string.play),
+                                            tint = if (isDark) Color.Black else Color.White,
+                                            modifier = Modifier.size(28.dp)
+                                        )
+                                    }
                                 }
                             }
-                        }
 
-                        Box(
-                            modifier = Modifier
-                                .size(52.dp)
-                                .glassed(CircleShape, isDark)
-                                .clickableWithoutRipple {
-                                    AnalyticsEvents.logButtonClick("restart", "teleprompter")
-                                    restart()
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Refresh,
-                                contentDescription = stringResource(R.string.restart),
-                                tint = AppColors.textPrimary(isDark),
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-
-                        if (content.hasAnchors) {
-                            AnchorButton(forward = true, isEnabled = canJumpToNextAnchor, isDark = isDark) {
-                                AnalyticsEvents.logButtonClick("next_anchor", "teleprompter")
-                                jumpToAnchor(forward = true)
+                            Box(
+                                modifier = Modifier
+                                    .size(HEADER_BUTTON_SIZE)
+                                    .glassed(CircleShape, isDark)
+                                    .clickableWithoutRipple {
+                                        AnalyticsEvents.logButtonClick("restart", "teleprompter")
+                                        restart()
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Refresh,
+                                    contentDescription = stringResource(R.string.restart),
+                                    tint = AppColors.textPrimary(isDark),
+                                    modifier = Modifier.size(20.dp)
+                                )
                             }
+                        }
+
+                        Spacer(modifier = Modifier.weight(1f).widthIn(min = 8.dp))
+
+                        AnchorButton(
+                            forward = true,
+                            isEnabled = canJumpToNextAnchor,
+                            isShown = content.hasAnchors,
+                            isDark = isDark
+                        ) {
+                            AnalyticsEvents.logButtonClick("next_anchor", "teleprompter")
+                            jumpToAnchor(forward = true)
                         }
                     }
                 }
@@ -1027,7 +1021,8 @@ fun TeleprompterView(
                     FloatingCameraWindow(
                         recorder = recorder,
                         placement = cameraPlacement,
-                        drawsPicture = false,
+                        // With Text Above Camera off, the picture covers the script.
+                        drawsPicture = !settings.showsTextAboveCamera,
                         onControl = ::followCamera,
                         onClose = { showingCamera = false }
                     )
@@ -1035,36 +1030,127 @@ fun TeleprompterView(
             }
         }
 
-        HelpOverlay(page = HelpPage.TELEPROMPTER, visible = showingHelp, onDismiss = { showingHelp = false })
+    }
+}
+
+/**
+ * Close and the timer on the left, the camera on the right. The buttons fade
+ * like the ones below, in place. The timer stays up, and moves to the middle of
+ * the row while they're gone. A tap anywhere else on the row does what a tap
+ * on the script does.
+ */
+@Composable
+private fun TeleprompterHeader(
+    timeDisplay: String,
+    timerColor: Color,
+    buttonsHidden: Boolean,
+    showingCamera: Boolean,
+    isDark: Boolean,
+    onClose: () -> Unit,
+    onCamera: () -> Unit,
+    onTap: () -> Unit
+) {
+    val buttonsAlpha by animateFloatAsState(if (buttonsHidden) 0f else 1f, controlsFade(), label = "headerButtons")
+    val timerBias by animateFloatAsState(if (buttonsHidden) 0f else -1f, controlsFade(), label = "timerPlace")
+    val timerInset by animateDpAsState(if (buttonsHidden) 0.dp else HEADER_BUTTON_SIZE + 8.dp, controlsFade(), label = "timerInset")
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(AppColors.background(isDark))
+            .statusBarsPadding()
+            .pointerInput(Unit) { detectTapGestures { onTap() } }
+            .padding(horizontal = 20.dp, vertical = 4.dp)
+    ) {
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            HeaderButton(
+                icon = Icons.Filled.Close,
+                description = stringResource(R.string.close),
+                isDark = isDark,
+                modifier = Modifier.alpha(buttonsAlpha),
+                isEnabled = !buttonsHidden,
+                onClick = onClose
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            CameraButton(
+                isOn = showingCamera,
+                isDark = isDark,
+                modifier = Modifier.alpha(buttonsAlpha),
+                isEnabled = !buttonsHidden,
+                onClick = onCamera
+            )
+        }
+        // Over the row rather than in it, so it can slide from beside Close to the middle.
+        Text(
+            text = timeDisplay,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            fontFamily = FontFamily.Monospace,
+            color = timerColor,
+            maxLines = 1,
+            modifier = Modifier
+                .align(BiasAlignment(timerBias, 0f))
+                .padding(start = timerInset)
+        )
+    }
+}
+
+/** One of the round buttons at the top of a reader. */
+@Composable
+internal fun HeaderButton(
+    icon: ImageVector,
+    description: String,
+    isDark: Boolean,
+    modifier: Modifier = Modifier,
+    isEnabled: Boolean = true,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = modifier
+            .size(HEADER_BUTTON_SIZE)
+            .glassed(CircleShape, isDark)
+            .clickableWithoutRipple { if (isEnabled) onClick() }
+            .semantics { contentDescription = description },
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(imageVector = icon, contentDescription = null, tint = AppColors.textPrimary(isDark), modifier = Modifier.size(18.dp))
     }
 }
 
 /** Opens the floating camera over a reader, or closes it. Not shown on a device without a camera. */
 @Composable
-internal fun CameraButton(isOn: Boolean, isDark: Boolean, onClick: () -> Unit) {
+internal fun CameraButton(
+    isOn: Boolean,
+    isDark: Boolean,
+    modifier: Modifier = Modifier,
+    isEnabled: Boolean = true,
+    onClick: () -> Unit
+) {
     val context = LocalContext.current
     val hasCamera = remember { context.packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY) }
     if (!hasCamera) return
-    Icon(
-        imageVector = if (isOn) Icons.Filled.Videocam else Icons.Outlined.Videocam,
-        contentDescription = stringResource(if (isOn) R.string.close_camera else R.string.record_video),
-        tint = AppColors.textPrimary(isDark),
-        modifier = Modifier
-            .padding(start = 12.dp)
-            .size(22.dp)
-            .clickableWithoutRipple(onClick)
+    HeaderButton(
+        icon = if (isOn) Icons.Filled.Videocam else Icons.Outlined.Videocam,
+        description = stringResource(if (isOn) R.string.close_camera else R.string.record_video),
+        isDark = isDark,
+        modifier = modifier,
+        isEnabled = isEnabled,
+        onClick = onClick
     )
 }
 
-/** Jumps to the next `[anchor]` in the script, or back to the one before. */
+/**
+ * Jumps to the next `[anchor]` in the script, or back to the one before. The top
+ * and the end of the script count as anchors. Faded while there's none that way,
+ * and kept in its place, unseen, while the script has none.
+ */
 @Composable
-private fun AnchorButton(forward: Boolean, isEnabled: Boolean, isDark: Boolean, onClick: () -> Unit) {
+private fun AnchorButton(forward: Boolean, isEnabled: Boolean, isShown: Boolean, isDark: Boolean, onClick: () -> Unit) {
     Box(
         modifier = Modifier
-            .size(52.dp)
-            .alpha(if (isEnabled) 1f else 0.4f)
+            .size(HEADER_BUTTON_SIZE)
+            .alpha(if (!isShown) 0f else if (isEnabled) 1f else 0.4f)
             .glassed(CircleShape, isDark)
-            .clickableWithoutRipple { if (isEnabled) onClick() },
+            .clickableWithoutRipple { if (isEnabled && isShown) onClick() },
         contentAlignment = Alignment.Center
     ) {
         Icon(

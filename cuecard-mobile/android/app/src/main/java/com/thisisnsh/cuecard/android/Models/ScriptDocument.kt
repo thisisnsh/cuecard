@@ -142,6 +142,13 @@ object ScriptFile {
         return AppStrings.get(R.string.speech)
     }
 
+    /**
+     * A name for a collection, on one line and not too long. Collections
+     * aren't folders on disk, so any character will do. Empty if nothing's left.
+     */
+    fun collectionName(name: String): String =
+        name.lines().joinToString(" ").trim().take(40).trim()
+
     private fun sanitized(name: String): String {
         val illegal = "/\\:?%*|\"<>"
         return name.map { if (illegal.contains(it)) ' ' else it }

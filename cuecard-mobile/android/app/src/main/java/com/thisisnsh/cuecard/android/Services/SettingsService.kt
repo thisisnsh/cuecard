@@ -18,6 +18,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.thisisnsh.cuecard.android.AnalyticsEvents
 import com.thisisnsh.cuecard.android.models.CueCards
 import com.thisisnsh.cuecard.android.models.CueColor
+import com.thisisnsh.cuecard.android.models.ScriptFile
 import com.thisisnsh.cuecard.android.models.ScriptMode
 import com.thisisnsh.cuecard.android.models.TeleprompterParser
 import com.thisisnsh.cuecard.android.models.TimerStyle
@@ -196,6 +197,12 @@ data class TeleprompterSettings(
      */
     val syncsCamera: Boolean = true,
     /**
+     * The script is drawn over the camera's picture, so it stays readable
+     * wherever the window is. Off, the picture covers the text under it. Both
+     * modes share it, like the camera's recording settings.
+     */
+    val showsTextAboveCamera: Boolean = true,
+    /**
      * What the editor writes and the Play button opens. Chosen on the home
      * screen, like the timer.
      */
@@ -320,10 +327,32 @@ data class SavedNote(
     val content: String,
     /** The mode it was written in, and opens back up in. */
     val mode: ScriptMode,
+    /** The collection it's in, or null for none. */
+    val collection: String? = null,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 ) {
     companion object {
+        /** The most characters a title is saved with, so it fits on one line of the library. */
+        const val TITLE_LIMIT = 40
+
+        /** The title cut down to `TITLE_LIMIT` characters. */
+        fun limitedTitle(title: String): String = title.take(TITLE_LIMIT)
+
+        /**
+         * The title cut down to `TITLE_LIMIT` characters at the last word that
+         * fits, for one saved before there was a limit. One long word is cut
+         * where the limit falls.
+         */
+        fun shortenedTitle(title: String): String {
+            if (title.length <= TITLE_LIMIT) return title
+            val cut = title.take(TITLE_LIMIT + 1)
+            val lastSpace = cut.indexOfLast { it.isWhitespace() }
+            val words = if (lastSpace >= 0) cut.substring(0, lastSpace) else cut.take(TITLE_LIMIT)
+            val shortened = words.trim { it.isWhitespace() || it.category.name.endsWith("PUNCTUATION") }
+            return shortened.ifEmpty { title.take(TITLE_LIMIT) }
+        }
+
         private val idPattern =
             Regex("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
 
@@ -363,6 +392,7 @@ class SettingsService(private val context: Context) {
         private val SHOWS_READING_GUIDE = booleanPreferencesKey("shows_reading_guide")
         private val READING_GUIDE_POSITION = floatPreferencesKey("reading_guide_position")
         private val SYNCS_CAMERA = booleanPreferencesKey("syncs_camera")
+        private val SHOWS_TEXT_ABOVE_CAMERA = booleanPreferencesKey("shows_text_above_camera")
         private val CARDS = stringPreferencesKey("cards")
         /** The teleprompter's script. Named from when it was the only one. */
         private val NOTES = stringPreferencesKey("notes")
@@ -375,6 +405,24 @@ class SettingsService(private val context: Context) {
         private val CARDS_DRAFT_ID = stringPreferencesKey("cards_draft_id")
         /** Set once the scripts kept here have had their `[cue …]` tags rewritten to `[…]`. */
         private val BARE_CUES = booleanPreferencesKey("bare_cues")
+        /** The library's collections, in the order they were made. */
+        private val COLLECTIONS = stringPreferencesKey("collections")
+        /** The collection each mode's draft is saved into, where it was started from one. */
+        private val TELEPROMPTER_DRAFT_COLLECTION = stringPreferencesKey("teleprompter_draft_collection")
+        private val CARDS_DRAFT_COLLECTION = stringPreferencesKey("cards_draft_collection")
+        /** Set once titles saved before `SavedNote.TITLE_LIMIT` was 40 have been cut down to it. */
+        private val TITLES_LIMITED = booleanPreferencesKey("titles_limited_40")
+        /** Set once the collections every library starts with have been made. */
+        private val DEFAULT_COLLECTIONS_ADDED = booleanPreferencesKey("default_collections_added")
+
+        /** The collections every library starts with, in the order they're made. */
+        val defaultCollections: List<String>
+            get() = listOf(
+                AppStrings.get(R.string.collection_pitch),
+                AppStrings.get(R.string.collection_talks),
+                AppStrings.get(R.string.collection_reel),
+                AppStrings.get(R.string.collection_shorts)
+            )
 
         /**
          * Speed used to be set in words a minute, back when a highlight ran along
@@ -461,6 +509,21 @@ class SettingsService(private val context: Context) {
     private val _draftIds = MutableStateFlow<Map<ScriptMode, String>>(emptyMap())
     val draftIds: StateFlow<Map<ScriptMode, String>> = _draftIds.asStateFlow()
 
+    /** The library's collections, in the order they were made. */
+    private val _collections = MutableStateFlow<List<String>>(emptyList())
+    val collections: StateFlow<List<String>> = _collections.asStateFlow()
+
+    /**
+     * Each mode's script, its open note and the collection its draft goes
+     * into, whichever mode the editor is in, for the library to show.
+     */
+    private val _scripts = MutableStateFlow<Map<ScriptMode, String>>(emptyMap())
+    val scripts: StateFlow<Map<ScriptMode, String>> = _scripts.asStateFlow()
+    private val _noteIds = MutableStateFlow<Map<ScriptMode, String?>>(emptyMap())
+    val noteIds: StateFlow<Map<ScriptMode, String?>> = _noteIds.asStateFlow()
+    private val _draftCollections = MutableStateFlow<Map<ScriptMode, String?>>(emptyMap())
+    val draftCollections: StateFlow<Map<ScriptMode, String?>> = _draftCollections.asStateFlow()
+
     private val takeStore = TakeStore.getInstance(context)
 
     private val json = Json { ignoreUnknownKeys = true }
@@ -514,6 +577,7 @@ class SettingsService(private val context: Context) {
             showsReadingGuide = prefs[SHOWS_READING_GUIDE] ?: defaults.showsReadingGuide,
             readingGuidePosition = (prefs[READING_GUIDE_POSITION] ?: defaults.readingGuidePosition).coerceIn(0f, 1f),
             syncsCamera = prefs[SYNCS_CAMERA] ?: defaults.syncsCamera,
+            showsTextAboveCamera = prefs[SHOWS_TEXT_ABOVE_CAMERA] ?: defaults.showsTextAboveCamera,
             scriptMode = ScriptMode.fromString(prefs[SCRIPT_MODE]),
             // From before cards kept their own: start them on what both used.
             cards = decodeOrNull<CardsSettings>(prefs[CARDS]) ?: CardsSettings(
@@ -556,6 +620,31 @@ class SettingsService(private val context: Context) {
             }
         }
         if (prefs[BARE_CUES] != true) rewriteCueTags()
+        if (prefs[TITLES_LIMITED] != true) shortenTitles()
+        _draftCollections.value = mapOf(
+            ScriptMode.TELEPROMPTER to prefs[TELEPROMPTER_DRAFT_COLLECTION],
+            ScriptMode.CARDS to prefs[CARDS_DRAFT_COLLECTION]
+        )
+        // Every collection a note is in is listed, even if the list was lost.
+        val collections = (decodeOrNull<List<String>>(prefs[COLLECTIONS]) ?: emptyList()).toMutableList()
+        for (collection in _savedNotes.value.mapNotNull { it.collection }) {
+            if (!collections.containsCollection(collection)) collections += collection
+        }
+        // Every library starts with a few collections, made once. Ones deleted
+        // after that stay deleted.
+        val addsDefaults = prefs[DEFAULT_COLLECTIONS_ADDED] != true
+        if (addsDefaults) {
+            for (name in defaultCollections) if (!collections.containsCollection(name)) collections += name
+        }
+        _collections.value = collections
+        if (addsDefaults) {
+            runCatching {
+                context.dataStore.edit {
+                    it[COLLECTIONS] = json.encodeToString(collections.toList())
+                    it[DEFAULT_COLLECTIONS_ADDED] = true
+                }
+            }
+        }
         _versionCounts.value = withContext(Dispatchers.IO) { noteVersions.counts() }
         removeUnusedImages()
         _hasNotesFolder.value = noteFolder.isChosen
@@ -576,6 +665,7 @@ class SettingsService(private val context: Context) {
         teleprompterNotes = TeleprompterParser.normalizingTags(teleprompterNotes)
         cardsNotes = TeleprompterParser.normalizingTags(cardsNotes)
         _notes.value = if (_settings.value.scriptMode == ScriptMode.CARDS) cardsNotes else teleprompterNotes
+        publishModes()
         val rewritten = _savedNotes.value.map { it.copy(content = TeleprompterParser.normalizingTags(it.content)) }
         // Only written back if a note changed, so notes that couldn't be read are left alone.
         val savedNotesJson = if (rewritten != _savedNotes.value) {
@@ -594,6 +684,23 @@ class SettingsService(private val context: Context) {
         } catch (e: IOException) {
             // Tried again on the next launch; the old tags read the same meanwhile.
         }
+    }
+
+    /**
+     * Titles were once kept to 64 characters. Cut longer ones down to the limit
+     * at a word, keeping each note's date so nothing looks edited, and rename
+     * their files in the notes folder to match.
+     */
+    private suspend fun shortenTitles() {
+        val notes = _savedNotes.value
+        val shortened = notes.map { it.copy(title = SavedNote.shortenedTitle(it.title)) }
+        val changed = shortened.filterIndexed { index, note -> note.title != notes[index].title }
+        if (changed.isNotEmpty()) {
+            if (!persist(shortened)) return
+            _savedNotes.value = shortened
+            withContext(Dispatchers.IO) { changed.forEach(noteFolder::write) }
+        }
+        runCatching { context.dataStore.edit { it[TITLES_LIMITED] = true } }
     }
 
     /**
@@ -622,6 +729,7 @@ class SettingsService(private val context: Context) {
             prefs[SHOWS_READING_GUIDE] = newSettings.showsReadingGuide
             prefs[READING_GUIDE_POSITION] = newSettings.readingGuidePosition
             prefs[SYNCS_CAMERA] = newSettings.syncsCamera
+            prefs[SHOWS_TEXT_ABOVE_CAMERA] = newSettings.showsTextAboveCamera
             prefs[CARDS] = json.encodeToString(newSettings.cards)
             prefs.remove(RETIRED_WORDS_PER_MINUTE)
             prefs.remove(RETIRED_AUTO_SCROLL)
@@ -634,6 +742,13 @@ class SettingsService(private val context: Context) {
     private fun showScript(mode: ScriptMode) {
         _notes.value = if (mode == ScriptMode.CARDS) cardsNotes else teleprompterNotes
         _currentNoteId.value = if (mode == ScriptMode.CARDS) cardsNoteId else teleprompterNoteId
+        publishModes()
+    }
+
+    /** Hand each mode's script and open note to the library. */
+    private fun publishModes() {
+        _scripts.value = mapOf(ScriptMode.TELEPROMPTER to teleprompterNotes, ScriptMode.CARDS to cardsNotes)
+        _noteIds.value = mapOf(ScriptMode.TELEPROMPTER to teleprompterNoteId, ScriptMode.CARDS to cardsNoteId)
     }
 
     /**
@@ -649,15 +764,18 @@ class SettingsService(private val context: Context) {
         val isCards = mode == ScriptMode.CARDS
         if (isCards) cardsNotes = text else teleprompterNotes = text
         if (_settings.value.scriptMode == mode) _notes.value = text
+        publishModes()
         context.dataStore.edit { prefs ->
             prefs[if (isCards) CARDS_NOTES else NOTES] = text
         }
     }
 
-    private fun notes(mode: ScriptMode): String =
+    /** What's written in `mode`, whichever mode the editor is in. */
+    fun notes(mode: ScriptMode): String =
         if (mode == ScriptMode.CARDS) cardsNotes else teleprompterNotes
 
-    private fun noteId(mode: ScriptMode): String? =
+    /** The saved note open in `mode`, whichever mode the editor is in. */
+    fun noteId(mode: ScriptMode): String? =
         if (mode == ScriptMode.CARDS) cardsNoteId else teleprompterNoteId
 
     /**
@@ -700,6 +818,9 @@ class SettingsService(private val context: Context) {
         _versionCounts.value = emptyMap()
         _savedNotes.value = emptyList()
         _currentNoteId.value = null
+        _collections.value = emptyList()
+        _draftCollections.value = emptyMap()
+        publishModes()
         takeStore.removeAll()
         withContext(Dispatchers.IO) { ScriptImages.removeAll() }
         context.dataStore.edit { prefs ->
@@ -786,8 +907,16 @@ class SettingsService(private val context: Context) {
             listOf(note) + notes
         }
         if (!persist(updated)) return false
+        val previous = notes.find { it.id == note.id }
         withContext(Dispatchers.IO) { noteFolder.write(note) }
         keep(note, restoredFrom)
+        // New, or put in another collection: the notes folder's list of how
+        // they're filed follows.
+        if (previous == null || previous.collection != note.collection) {
+            val saved = _savedNotes.value
+            val collections = _collections.value
+            withContext(Dispatchers.IO) { noteFolder.arrange(saved, collections) }
+        }
         return true
     }
 
@@ -807,22 +936,38 @@ class SettingsService(private val context: Context) {
     }
 
     /** Save current notes as a new note. Returns false if it couldn't be saved. */
-    suspend fun saveCurrentNote(title: String): Boolean {
+    suspend fun saveCurrentNote(title: String): Boolean =
+        saveCurrentNote(title, draftCollection(_settings.value.scriptMode))
+
+    /**
+     * Save what's written as a note of its own, in the same collection as the
+     * one open, which stays as it was last saved. The editor carries on in the
+     * new one. Returns false if it couldn't be saved.
+     */
+    suspend fun saveCurrentNoteAsNew(title: String): Boolean =
+        saveCurrentNote(title, currentNote?.collection ?: draftCollection(_settings.value.scriptMode))
+
+    private suspend fun saveCurrentNote(title: String, collection: String?): Boolean {
         val trimmedContent = _notes.value.trim()
         if (trimmedContent.isEmpty()) return true
 
         val mode = _settings.value.scriptMode
         val note = SavedNote(
             id = draftId(mode),
-            title = title,
+            title = SavedNote.limitedTitle(title),
             content = _notes.value,
-            mode = mode
+            mode = mode,
+            collection = collection
         )
         if (!notesLock.withLock { store(note) }) return false
         setCurrentNoteId(note.id)
         startNewDraft(mode)
         return true
     }
+
+    /** The collection the mode's draft goes into once it's saved. Not one deleted since. */
+    fun draftCollection(mode: ScriptMode): String? =
+        _draftCollections.value[mode]?.let { name -> _collections.value.firstOrNull { it.equals(name, ignoreCase = true) } }
 
     private fun draftId(mode: ScriptMode): String =
         _draftIds.value[mode] ?: UUID.randomUUID().toString().also { id ->
@@ -839,9 +984,18 @@ class SettingsService(private val context: Context) {
      * The mode's draft was saved or let go of. What's written next is a new
      * script, with no takes of its own yet.
      */
-    private suspend fun startNewDraft(mode: ScriptMode) {
+    private suspend fun startNewDraft(mode: ScriptMode, collection: String? = null) {
         _draftIds.value = _draftIds.value + (mode to UUID.randomUUID().toString())
         saveDraftIds()
+        setDraftCollection(mode, collection)
+    }
+
+    private suspend fun setDraftCollection(mode: ScriptMode, collection: String?) {
+        _draftCollections.value = _draftCollections.value + (mode to collection)
+        val key = if (mode == ScriptMode.CARDS) CARDS_DRAFT_COLLECTION else TELEPROMPTER_DRAFT_COLLECTION
+        runCatching {
+            context.dataStore.edit { prefs -> if (collection != null) prefs[key] = collection else prefs.remove(key) }
+        }
     }
 
     private suspend fun saveDraftIds() {
@@ -857,7 +1011,7 @@ class SettingsService(private val context: Context) {
         val currentNote = _savedNotes.value.find { it.id == id } ?: return@withLock false
         store(
             currentNote.copy(
-                title = title ?: currentNote.title,
+                title = title?.let(SavedNote::limitedTitle) ?: currentNote.title,
                 content = content ?: currentNote.content,
                 updatedAt = System.currentTimeMillis()
             )
@@ -868,9 +1022,15 @@ class SettingsService(private val context: Context) {
      * Save current changes to the currently loaded note. Returns false if they
      * couldn't be saved.
      */
-    suspend fun saveChangesToCurrentNote(): Boolean {
-        val id = _currentNoteId.value ?: return false
-        return updateNote(id, content = _notes.value)
+    suspend fun saveChangesToCurrentNote(): Boolean = saveChanges(_settings.value.scriptMode)
+
+    /**
+     * Save what's written in `mode` to the note open in it, whichever mode the
+     * editor is in. False if there's no note or it couldn't be saved.
+     */
+    suspend fun saveChanges(mode: ScriptMode): Boolean {
+        val id = noteId(mode) ?: return false
+        return updateNote(id, content = notes(mode))
     }
 
     /** A saved note's versions, oldest first. */
@@ -940,6 +1100,7 @@ class SettingsService(private val context: Context) {
             if (teleprompterNoteId == id) teleprompterNoteId = null
             if (cardsNoteId == id) cardsNoteId = null
             if (_currentNoteId.value == id) _currentNoteId.value = null
+            publishModes()
         }
     }
 
@@ -958,6 +1119,7 @@ class SettingsService(private val context: Context) {
         teleprompterNoteId = null
         cardsNoteId = null
         _currentNoteId.value = null
+        publishModes()
         context.dataStore.edit { prefs ->
             prefs.remove(CURRENT_NOTE_ID)
             prefs.remove(CARDS_NOTE_ID)
@@ -1019,7 +1181,8 @@ class SettingsService(private val context: Context) {
             }
 
             val saved = _savedNotes.value
-            val (name, changes) = withContext(Dispatchers.IO) { noteFolder.name to noteFolder.sync(saved) }
+            val collections = _collections.value
+            val (name, changes) = withContext(Dispatchers.IO) { noteFolder.name to noteFolder.sync(saved, collections) }
             _notesFolderName.value = name
             _notesFolderUndeletedFiles.value = changes.undeletable
             if (changes.tooLarge != _notesFolderOversizedFiles.value) {
@@ -1032,7 +1195,15 @@ class SettingsService(private val context: Context) {
                     )
                 }
             }
-            for (note in changes.updated) {
+            changes.collections?.let { synced -> if (synced != _collections.value) setCollections(synced) }
+            // A collection is named as the library names it, whatever its case
+            // in the notes folder's list.
+            val updated = changes.updated.map { note ->
+                note.copy(collection = note.collection?.let { name ->
+                    _collections.value.firstOrNull { it.equals(name, ignoreCase = true) } ?: name
+                })
+            }
+            for (note in updated) {
                 // A note open in the editor with nothing unsaved follows its file.
                 val old = _savedNotes.value.find { it.id == note.id }
                 for (mode in ScriptMode.entries) {
@@ -1045,31 +1216,116 @@ class SettingsService(private val context: Context) {
             for (id in changes.deleted) {
                 forget(id)
             }
-            if (changes.updated.isNotEmpty() || changes.deleted.isNotEmpty()) {
+            if (updated.isNotEmpty() || changes.deleted.isNotEmpty()) {
                 saveSavedNotes()
+            }
+            // Notes in a collection deleted elsewhere are left in none.
+            for (note in _savedNotes.value) {
+                if (note.collection != null && !_collections.value.containsCollection(note.collection)) {
+                    store(note.copy(collection = null))
+                }
             }
         }
     }
 
-    /**
-     * Create a new empty note
-     */
-    suspend fun createNewNote() {
-        setCurrentNoteId(null)
-        saveNotes("")
-        startNewDraft(_settings.value.scriptMode)
+    // MARK: - Collections
+
+    private suspend fun setCollections(collections: List<String>) {
+        _collections.value = collections
+        runCatching { context.dataStore.edit { it[COLLECTIONS] = json.encodeToString(collections) } }
     }
 
     /**
-     * Load imported file content into the editor and keep it as a saved note.
-     * The file already carries a name, so there's nothing to prompt the user for.
-     * Returns false if it couldn't be saved; it's left in the editor unsaved.
+     * Make a collection, in the notes folder's list too if there is one.
+     * Returns its name, cleaned up, or null if nothing's left of it or a
+     * collection has it already.
      */
-    suspend fun importNote(title: String, content: String): Boolean {
+    suspend fun createCollection(name: String): String? {
+        val cleaned = ScriptFile.collectionName(name)
+        if (cleaned.isEmpty() || _collections.value.containsCollection(cleaned)) return null
+        setCollections(_collections.value + cleaned)
+        syncNotesFolder()
+        return cleaned
+    }
+
+    /**
+     * Rename a collection, moving its notes with it. False if the new name
+     * can't be used, or another collection has it.
+     */
+    suspend fun renameCollection(name: String, newName: String): Boolean {
+        val cleaned = ScriptFile.collectionName(newName)
+        val index = _collections.value.indexOf(name)
+        if (cleaned.isEmpty() || index < 0) return false
+        if (cleaned == name) return true
+        // A change of case alone is the same collection.
+        if (_collections.value.filter { it != name }.containsCollection(cleaned)) return false
+        setCollections(_collections.value.toMutableList().also { it[index] = cleaned })
+        refile(name, cleaned)
+        syncNotesFolder()
+        return true
+    }
+
+    /** Delete a collection. Its notes aren't deleted: they're left in none. */
+    suspend fun deleteCollection(name: String) {
+        setCollections(_collections.value.filter { it != name })
+        refile(name, null)
+        syncNotesFolder()
+    }
+
+    /** Put a saved note in a collection, or in none for null. Its date stays: moving it isn't editing it. */
+    suspend fun moveNote(id: String, collection: String?): Boolean = notesLock.withLock {
+        val note = _savedNotes.value.find { it.id == id } ?: return@withLock true
+        if (note.collection == collection) return@withLock true
+        store(note.copy(collection = collection))
+    }
+
+    private suspend fun refile(name: String, newName: String?) {
+        for (note in _savedNotes.value.filter { it.collection == name }) moveNote(note.id, newName)
+        for (mode in ScriptMode.entries) {
+            if (_draftCollections.value[mode] == name) setDraftCollection(mode, newName)
+        }
+    }
+
+    /**
+     * Save a copy of a note beside it, titled as a copy, with none of the
+     * original's versions or takes. Returns the copy, or null if it couldn't be saved.
+     */
+    suspend fun duplicateNote(id: String): SavedNote? = notesLock.withLock {
+        val note = _savedNotes.value.find { it.id == id } ?: return@withLock null
+        val copy = SavedNote(
+            title = SavedNote.limitedTitle(AppStrings.get(R.string.title_copy, note.title)),
+            content = note.content,
+            mode = note.mode,
+            collection = note.collection
+        )
+        if (store(copy)) copy else null
+    }
+
+    /** Start a new script in `mode`, saved into `collection` once it's saved. */
+    suspend fun createNewNote(mode: ScriptMode, collection: String? = null) {
+        updateScriptMode(mode)
         setCurrentNoteId(null)
-        saveNotes(content)
-        startNewDraft(_settings.value.scriptMode)
-        return saveCurrentNote(title)
+        saveNotes("")
+        startNewDraft(mode, collection)
+    }
+
+    /** Let go of `mode`'s unsaved new script, leaving the editor in the mode it's in. */
+    suspend fun discardDraft(mode: ScriptMode) {
+        val current = _settings.value.scriptMode
+        createNewNote(mode)
+        updateScriptMode(current)
+    }
+
+    /**
+     * Keep an imported file as a saved note in `collection`, leaving the editor
+     * as it is. The file already carries a name, so there's nothing to prompt
+     * the user for. A file split into cards is a deck. Returns the note, or null
+     * if it couldn't be saved.
+     */
+    suspend fun importNote(title: String, content: String, collection: String?): SavedNote? {
+        val mode = if (CueCards.separatorRanges(content).isEmpty()) ScriptMode.TELEPROMPTER else ScriptMode.CARDS
+        val note = SavedNote(title = SavedNote.limitedTitle(title), content = content, mode = mode, collection = collection)
+        return if (notesLock.withLock { store(note) }) note else null
     }
 
     /**
@@ -1123,6 +1379,7 @@ class SettingsService(private val context: Context) {
         val isCards = _settings.value.scriptMode == ScriptMode.CARDS
         if (isCards) cardsNoteId = id else teleprompterNoteId = id
         _currentNoteId.value = id
+        publishModes()
         context.dataStore.edit { prefs ->
             val key = if (isCards) CARDS_NOTE_ID else CURRENT_NOTE_ID
             if (id != null) {
@@ -1144,6 +1401,8 @@ private data class SavedNoteJson(
     val content: String,
     /** Missing from notes saved before each mode kept its own. */
     val mode: String? = null,
+    /** The collection it's in, or null for none. */
+    val collection: String? = null,
     val createdAt: Long,
     val updatedAt: Long
 ) {
@@ -1155,6 +1414,7 @@ private data class SavedNoteJson(
         // split into any.
         mode = mode?.let { ScriptMode.fromString(it) }
             ?: if (CueCards.separatorRanges(content).isEmpty()) ScriptMode.TELEPROMPTER else ScriptMode.CARDS,
+        collection = collection,
         createdAt = createdAt,
         updatedAt = updatedAt
     )
@@ -1165,6 +1425,7 @@ private data class SavedNoteJson(
             title = note.title,
             content = note.content,
             mode = note.mode.rawValue,
+            collection = note.collection,
             createdAt = note.createdAt,
             updatedAt = note.updatedAt
         )

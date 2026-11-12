@@ -33,6 +33,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
@@ -192,8 +193,6 @@ private fun rememberTakeRequests(library: TakesLibrary): TakeRequests {
 @Composable
 fun TakesView(
     library: TakesLibrary,
-    /** The saved note's title, while the script is one. */
-    scriptTitle: String?,
     onDismiss: () -> Unit
 ) {
     val isDark = LocalIsDarkTheme.current
@@ -240,23 +239,12 @@ fun TakesView(
         topBar = {
             TopAppBar(
                 title = {
-                    Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
-                        Text(
-                            text = stringResource(R.string.takes),
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = AppColors.textPrimary(isDark)
-                        )
-                        scriptTitle?.let {
-                            Text(
-                                text = it,
-                                fontSize = 11.sp,
-                                color = AppColors.textSecondary(isDark),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
+                    Text(
+                        text = stringResource(R.string.takes),
+                        fontSize = 17.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = AppColors.textPrimary(isDark)
+                    )
                 },
                 actions = {
                     Text(
@@ -266,7 +254,7 @@ fun TakesView(
                         modifier = Modifier
                             .padding(horizontal = 16.dp)
                             .clickableWithoutRipple {
-                                AnalyticsEvents.logButtonClick("done", TAKES_SCREEN)
+                                AnalyticsEvents.logButtonClick("takes_done", TAKES_SCREEN)
                                 onDismiss()
                             }
                     )
@@ -674,8 +662,8 @@ private fun TagButton(tag: String, isSuggestion: Boolean, description: String, i
 // MARK: - Player
 
 /**
- * A take full screen on black, with its number and date above it, and the
- * heart, its tags and notes, and the bin below it.
+ * A take full screen on black, with close, its number and date, and the bin
+ * above it, and the heart and its tags and notes together below it.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -726,6 +714,25 @@ private fun TakePlayerView(
                 )
             }
 
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .size(44.dp)
+                    .glassed(CircleShape, isDark = true)
+                    .clickableWithoutRipple {
+                        videoView?.pause()
+                        onDelete()
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Delete,
+                    contentDescription = stringResource(R.string.delete),
+                    tint = AppColors.red(isDark = true),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+
             Column(
                 modifier = Modifier
                     .align(Alignment.Center)
@@ -765,60 +772,39 @@ private fun TakePlayerView(
                 .weight(1f)
         )
 
-        // What can be done with the take, floating under the video: the heart
-        // and the bin on their own, the details between them.
+        // Frequent organization tools sit together, with labels to explain each action.
         Row(
             modifier = Modifier
+                .align(Alignment.CenterHorizontally)
+                .widthIn(max = 600.dp)
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(horizontal = 20.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             if (TakesLibrary.canFavorite) {
                 Box(modifier = Modifier.glassed(CircleShape, isDark = true)) {
-                    FavoriteButton(take.isFavorite, size = 48.dp, isDark = true, unfilledColor = Color.White, onClick = onFavorite)
+                    FavoriteButton(take.isFavorite, size = 52.dp, isDark = true, unfilledColor = Color.White, onClick = onFavorite)
                 }
-            } else {
-                Spacer(modifier = Modifier.size(48.dp))
             }
 
-            Spacer(modifier = Modifier.weight(1f))
-
             val tagsAndNotes = stringResource(R.string.tags_and_notes)
-            Row(
+            Column(
                 modifier = Modifier
-                    .height(48.dp)
+                    .weight(1f)
+                    .heightIn(min = 52.dp)
                     .glassed(Capsule, isDark = true)
                     .clickableWithoutRipple {
                         AnalyticsEvents.logButtonClick("take_details", PLAYER_SCREEN)
                         showingDetails = true
                     }
                     .semantics(mergeDescendants = true) { contentDescription = tagsAndNotes }
-                    .padding(horizontal = 18.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    .padding(horizontal = 8.dp, vertical = 8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically)
             ) {
-                Icon(imageVector = Icons.Filled.Sell, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
-                Text(text = tagsAndNotes, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = Color.White, maxLines = 1)
-            }
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .glassed(CircleShape, isDark = true)
-                    .clickableWithoutRipple {
-                        videoView?.pause()
-                        onDelete()
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Delete,
-                    contentDescription = stringResource(R.string.delete),
-                    tint = AppColors.red(isDark = true),
-                    modifier = Modifier.size(22.dp)
-                )
+                Icon(imageVector = Icons.Filled.Sell, contentDescription = null, tint = Color.White, modifier = Modifier.size(18.dp))
+                Text(text = tagsAndNotes, fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = Color.White, maxLines = 1)
             }
         }
     }

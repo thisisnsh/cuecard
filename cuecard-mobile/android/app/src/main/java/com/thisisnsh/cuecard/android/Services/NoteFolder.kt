@@ -25,6 +25,10 @@ import java.io.OutputStream
  * The images the notes place are kept beside them, in a hidden folder of
  * CueCard's own, so they come back with the notes too.
  *
+ * Every note's file sits at the top of the folder. The library's collections
+ * aren't folders on disk: which notes are in each is kept in a hidden file of
+ * CueCard's own, so it comes back with the notes too.
+ *
  * The folder is reached through the Storage Access Framework, so everything
  * here but `isChosen` talks to another process and is called off the main thread.
  */
@@ -52,8 +56,31 @@ class NoteFolder(private val context: Context) {
         /** Files over `ScriptFile.MAX_FILE_SIZE`, by name. They're left unread. */
         val tooLarge: List<String> = emptyList(),
         /** Files of notes deleted in the app that couldn't be deleted yet, by name. */
-        val undeletable: List<String> = emptyList()
+        val undeletable: List<String> = emptyList(),
+        /**
+         * The library's collections once the folder's own list is taken in, or
+         * null if the folder couldn't be looked at.
+         */
+        val collections: List<String>? = null
     )
+
+    /**
+     * Which notes are in each of the library's collections. Every note the
+     * folder knows is listed, in its collection or with the unfiled ones, so a
+     * note taken out of a collection elsewhere comes out here too. The same
+     * file iOS writes, so a folder shared between the two keeps its collections.
+     */
+    @Serializable
+    private data class Library(val collections: List<Collection>, val unfiled: List<String>) {
+        @Serializable
+        data class Collection(val name: String, val notes: List<String>)
+
+        /** Whether the list places `id` at all, in a collection or with the unfiled ones. */
+        fun places(id: String): Boolean = id in unfiled || collections.any { id in it.notes }
+
+        /** The collection the list puts `id` in, or null for none or for not placed. */
+        fun collection(id: String): String? = collections.firstOrNull { id in it.notes }?.name
+    }
 
     /** The folder couldn't be listed or written to when it was picked. */
     class Unusable : Exception()
@@ -142,6 +169,7 @@ class NoteFolder(private val context: Context) {
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
     private val resolver = context.contentResolver
     private val json = Json { ignoreUnknownKeys = true }
+    private val prettyJson = Json { prettyPrint = true }
 
     val isChosen: Boolean
         get() = prefs.contains(FOLDER_KEY)
@@ -155,6 +183,25 @@ class NoteFolder(private val context: Context) {
         get() = prefs.getStringSet(PENDING_DELETIONS_KEY, null).orEmpty().toSet()
         set(value) = prefs.edit {
             if (value.isEmpty()) remove(PENDING_DELETIONS_KEY) else putStringSet(PENDING_DELETIONS_KEY, value)
+        }
+
+    /** The library file's modification date when it was last in step, to tell when it's been changed outside the app. */
+    private var libraryModifiedAt: Long?
+        get() = if (prefs.contains(LIBRARY_MODIFIED_KEY)) prefs.getLong(LIBRARY_MODIFIED_KEY, 0) else null
+        set(value) = prefs.edit {
+            if (value == null) remove(LIBRARY_MODIFIED_KEY) else putLong(LIBRARY_MODIFIED_KEY, value)
+        }
+
+    /**
+     * The library's collections when the list was last in step, to tell one made
+     * or deleted in the app from one deleted or made elsewhere.
+     */
+    private var syncedCollections: List<String>?
+        get() = prefs.getString(SYNCED_COLLECTIONS_KEY, null)?.let {
+            runCatching { json.decodeFromString<List<String>>(it) }.getOrNull()
+        }
+        set(value) = prefs.edit {
+            if (value == null) remove(SYNCED_COLLECTIONS_KEY) else putString(SYNCED_COLLECTIONS_KEY, json.encodeToString(value))
         }
 
     /** The folder's name, or null if there's none or it can't be reached. */
@@ -183,6 +230,9 @@ class NoteFolder(private val context: Context) {
 
         prefs.edit { putString(FOLDER_KEY, uri.toString()) }
         pendingDeletions = emptySet()
+        // Its collections, if CueCard kept them there before, are taken in.
+        libraryModifiedAt = null
+        syncedCollections = null
         if (previous != null && previous != uri) releasePermission(previous)
     }
 
@@ -191,6 +241,8 @@ class NoteFolder(private val context: Context) {
         prefs.getString(FOLDER_KEY, null)?.toUri()?.let(::releasePermission)
         prefs.edit { remove(FOLDER_KEY) }
         pendingDeletions = emptySet()
+        libraryModifiedAt = null
+        syncedCollections = null
     }
 
     /** Write a note to its file, renaming the file if the title changed. */
@@ -199,6 +251,26 @@ class NoteFolder(private val context: Context) {
             val index = readIndex(folder) ?: return@withFolder
             write(note, index, folder)
             writeIndex(index, folder)
+        }
+    }
+
+    /**
+     * Write down which notes are in each collection, after one is added to one
+     * or saved. If the list was changed outside the app since it was last in
+     * step, it's left for the next sync to take in first.
+     */
+    fun arrange(notes: List<SavedNote>, collections: List<String>) {
+        withFolder { folder ->
+            val stored = readLibrary(folder)
+            if (stored != null && stored.second != libraryModifiedAt) return@withFolder
+            val index = readIndex(folder) ?: return@withFolder
+            val appNotes = notes.associateBy { it.id }
+            val ids = (index.keys + appNotes.keys) - pendingDeletions
+            val library = makeLibrary(ids, collections) { id ->
+                appNotes[id]?.let { return@makeLibrary it.collection }
+                stored?.first?.collection(id)
+            }
+            if (library != stored?.first) writeLibrary(library, folder)
         }
     }
 
@@ -233,7 +305,8 @@ class NoteFolder(private val context: Context) {
             pendingDeletions = pendingDeletions intersect kept.keys
             writeIndex(kept, folder)
             val imagesDeleted = folder.deleteFolder(IMAGES_FOLDER_NAME)
-            kept.isEmpty() && imagesDeleted
+            val libraryDeleted = folder.delete(LIBRARY_NAME)
+            kept.isEmpty() && imagesDeleted && libraryDeleted
         } ?: false
         if (released) forget()
         return released
@@ -243,13 +316,15 @@ class NoteFolder(private val context: Context) {
      * Bring the folder and the app's notes in step: files edited, added, renamed
      * or deleted outside the app come back as `Changes`, and notes the folder
      * doesn't have yet are written to it. Whichever side changed last wins.
+     * Which notes are in each of the library's `collections` is brought in step
+     * the same way.
      */
-    fun sync(notes: List<SavedNote>): Changes =
-        withFolder { folder -> sync(notes, folder) } ?: Changes()
+    fun sync(notes: List<SavedNote>, collections: List<String>): Changes =
+        withFolder { folder -> sync(notes, collections, folder) } ?: Changes()
 
     // MARK: - Syncing
 
-    private fun sync(notes: List<SavedNote>, folder: Folder): Changes {
+    private fun sync(notes: List<SavedNote>, collections: List<String>, folder: Folder): Changes {
         // Nothing is written before the folder is known to hold an index, and
         // if the index can't be read, nothing can be told about the folder, so
         // nothing is changed on either side.
@@ -298,11 +373,13 @@ class NoteFolder(private val context: Context) {
                 // Edited outside the app, or a note this install doesn't have
                 // yet, as after the app is reinstalled.
                 val content = readContent(item) ?: continue
+                // Its collection is settled below, with the others'.
                 val note = SavedNote(
                     id = id,
                     title = entry.title,
                     content = content,
                     mode = ScriptMode.fromString(entry.mode),
+                    collection = app?.collection,
                     createdAt = entry.createdAt,
                     updatedAt = if (fileChanged) modified ?: System.currentTimeMillis() else entry.noteUpdatedAt
                 )
@@ -320,7 +397,7 @@ class NoteFolder(private val context: Context) {
         if (missing.isNotEmpty() && files.isNotEmpty()) {
             for (id in missing) {
                 val entry = index[id] ?: continue
-                // A file renamed outside the app still holds the same text.
+                // A file renamed or moved outside the app still holds the same text.
                 val app = appNotes[id]
                 val renamed = app?.let { note ->
                     unknown.firstOrNull { name -> folder.file(name)?.let(::readContent) == note.content }
@@ -375,6 +452,8 @@ class NoteFolder(private val context: Context) {
 
         if (index != originalIndex) writeIndex(index, folder)
 
+        val arranged = arrange(appNotes, collections, index, deleted.toSet(), updated, folder)
+
         // Every note as it stands after the sync, for the images they place.
         val updatedById = updated.associateBy { it.id }
         val contents = notes.filter { it.id !in deleted }.map { updatedById[it.id]?.content ?: it.content } +
@@ -384,7 +463,95 @@ class NoteFolder(private val context: Context) {
         val readAll = undeletable.isEmpty() && tooLarge.isEmpty() && (files.isNotEmpty() || originalIndex.isEmpty())
         syncImages(contents, folder, deletingUnplaced = readAll)
 
-        return Changes(updated, deleted, tooLarge, undeletable.values.map { it.file }.sorted())
+        return Changes(updated, deleted, tooLarge, undeletable.values.map { it.file }.sorted(), arranged)
+    }
+
+    // MARK: - Collections
+
+    /**
+     * Bring which notes are in each collection in step with the folder's own
+     * list. If the list was changed outside the app since it was last in step,
+     * as on another device or before the app was reinstalled, it wins; otherwise
+     * the app does. Notes whose collection changed are put in `updated`.
+     * Returns the collections as they stand.
+     */
+    private fun arrange(
+        appNotes: Map<String, SavedNote>,
+        collections: List<String>,
+        index: Map<String, Entry>,
+        deleted: Set<String>,
+        updated: MutableList<SavedNote>,
+        folder: Folder
+    ): List<String> {
+        val stored = readLibrary(folder)
+        val changedOutside = stored != null && stored.second != libraryModifiedAt
+        val listed = stored?.first
+        val ids = (index.keys + appNotes.keys + updated.map { it.id }) - deleted - pendingDeletions
+
+        val names = collections.toMutableList()
+        if (changedOutside && listed != null) {
+            // The list's collections, but for those deleted here since it was
+            // last in step, and those made here since.
+            val synced = syncedCollections.orEmpty()
+            names.clear()
+            names += listed.collections.map { it.name }
+                .filter { !synced.containsCollection(it) || collections.containsCollection(it) }
+            for (name in collections) {
+                if (!synced.containsCollection(name) && !names.containsCollection(name)) names += name
+            }
+            // One a note here is in that the list doesn't place.
+            for (id in ids.sorted()) {
+                if (listed.places(id)) continue
+                val extra = appNotes[id]?.collection ?: continue
+                if (!names.containsCollection(extra)) names += extra
+            }
+        }
+
+        fun collectionOf(id: String): String? {
+            val name = when {
+                changedOutside && listed != null && listed.places(id) -> listed.collection(id)
+                appNotes[id] != null -> appNotes[id]?.collection
+                else -> listed?.collection(id)
+            }
+            // Named as the list names it; in one it's in no longer, in none.
+            return name?.let { wanted -> names.firstOrNull { it.equals(wanted, ignoreCase = true) } }
+        }
+
+        val library = makeLibrary(ids, names, ::collectionOf)
+        for (id in ids) {
+            val name = library.collection(id)
+            val position = updated.indexOfFirst { it.id == id }
+            if (position >= 0) {
+                updated[position] = updated[position].copy(collection = name)
+            } else {
+                val note = appNotes[id] ?: continue
+                if (note.collection != name) updated += note.copy(collection = name)
+            }
+        }
+
+        if (library != listed) {
+            writeLibrary(library, folder)
+        } else {
+            // In step already: the list as it is now is the one last seen.
+            libraryModifiedAt = stored?.second
+            syncedCollections = names
+        }
+        return names
+    }
+
+    /**
+     * The list of `collections` with each of `ids` in its collection, or with the
+     * unfiled ones. Sorted, so an unchanged list is written the same.
+     */
+    private fun makeLibrary(ids: Set<String>, collections: List<String>, collectionOf: (String) -> String?): Library {
+        val filed = mutableMapOf<String, MutableList<String>>()
+        val unfiled = mutableListOf<String>()
+        for (id in ids.sorted()) {
+            val name = collectionOf(id)
+            val match = name?.let { wanted -> collections.firstOrNull { it.equals(wanted, ignoreCase = true) } }
+            if (match != null) filed.getOrPut(match) { mutableListOf() } += id else unfiled += id
+        }
+        return Library(collections.map { Library.Collection(it, filed[it].orEmpty()) }, unfiled)
     }
 
     // MARK: - Images
@@ -544,6 +711,36 @@ class NoteFolder(private val context: Context) {
         return false
     }
 
+    /**
+     * The folder's list of how the notes are filed, and when it was last
+     * changed. Like the index, anything with access can rewrite it, but it only
+     * names collections and notes, so it's cleaned up and taken as it is.
+     */
+    private fun readLibrary(folder: Folder): Pair<Library, Long?>? {
+        val item = folder.file(LIBRARY_NAME) ?: return null
+        val text = runCatching { ScriptFile.readText(context, item.uri) }.getOrNull() ?: return null
+        val library = runCatching { json.decodeFromString<Library>(text) }.getOrNull() ?: return null
+        val seen = mutableListOf<String>()
+        val collections = library.collections.mapNotNull { entry ->
+            val name = ScriptFile.collectionName(entry.name)
+            if (name.isEmpty() || seen.containsCollection(name)) return@mapNotNull null
+            seen += name
+            Library.Collection(name, entry.notes.filter(SavedNote::isValidId))
+        }
+        return Library(collections, library.unfiled.filter(SavedNote::isValidId)) to item.modifiedAt
+    }
+
+    private fun writeLibrary(library: Library, folder: Folder) {
+        val written = folder.write(LIBRARY_NAME, prettyJson.encodeToString(library), INDEX_MIME_TYPE) ?: return
+        if (written.name != LIBRARY_NAME) {
+            // Kept under another name, where it would never be found again.
+            folder.delete(written.name)
+            return
+        }
+        libraryModifiedAt = written.modifiedAt
+        syncedCollections = library.collections.map { it.name }
+    }
+
     private fun releasePermission(uri: Uri) {
         runCatching { resolver.releasePersistableUriPermission(uri, PERMISSIONS) }
     }
@@ -574,7 +771,10 @@ class NoteFolder(private val context: Context) {
         const val PREFS_NAME = "cuecard_notes_folder"
         const val FOLDER_KEY = "cuecard_notes_folder_uri"
         const val PENDING_DELETIONS_KEY = "cuecard_notes_folder_pending_deletions"
+        const val LIBRARY_MODIFIED_KEY = "cuecard_notes_folder_library_modified"
+        const val SYNCED_COLLECTIONS_KEY = "cuecard_notes_folder_synced_collections"
         const val INDEX_NAME = ".cuecard.json"
+        const val LIBRARY_NAME = ".cuecard-library.json"
         /** Only CueCard writes in here, and it deletes what no note places. */
         const val IMAGES_FOLDER_NAME = ".cuecard-images"
         const val TEXT_MIME_TYPE = "text/plain"
@@ -592,3 +792,6 @@ class NoteFolder(private val context: Context) {
         )
     }
 }
+
+/** Whether a collection of this name is in the list, whatever its case. */
+fun List<String>.containsCollection(name: String): Boolean = any { it.equals(name, ignoreCase = true) }

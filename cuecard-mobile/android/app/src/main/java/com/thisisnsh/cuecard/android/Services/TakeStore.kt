@@ -77,6 +77,13 @@ class TakeStore private constructor(context: Context) {
         return runCatching { json.decodeFromString<List<TeleprompterSession>>(file.readText()) }.getOrDefault(emptyList())
     }
 
+    /** Every script the teleprompter or cards have been open on. */
+    fun scriptIdsWithSessions(): List<String> {
+        val ids = root.listFiles().orEmpty().map { it.name }.filter(SavedNote::isValidId).toMutableSet()
+        openScriptId?.let { ids += it }
+        return ids.toList()
+    }
+
     /** The tags and notes of a script's takes, by take ID. */
     fun details(scriptId: String): Map<String, TakeDetails> {
         val file = detailsFile(scriptId) ?: return emptyMap()

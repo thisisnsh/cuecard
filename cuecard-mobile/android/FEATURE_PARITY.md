@@ -1,51 +1,48 @@
 # Android feature parity
 
-Source review against the iOS app at commit `e5e0924` (iOS 1.13.0), for
-Android's first release, **1.0.0 (14)**. This compares user-facing capabilities;
+Source review against the iOS app at commit `ade4e2b` (iOS 1.15.1), for
+Android **1.0.0 (16)**. This compares user-facing capabilities;
 it is not a claim that every device and platform integration was exercised.
 
 | Area | Android status |
 | --- | --- |
-| Writing | Both modes, independent drafts, cues, bold/italic, select all, anchors, images and card limits are present. Added image clipboard paste and copying individual images to other apps. |
-| Notes | Save, rename, delete, search, mode filters, current-note marker and unsaved-change confirmation are present. |
-| Files | Text/RTF import, text/TextPack sharing, notes-folder synchronization and image storage are present. |
+| Library | Opens on a library of scripts and decks, with the mode menu, collection chips (All, each collection with its count, + to make one; touch and hold to rename or delete), search, sort by date edited, date created or title, date sections, the open script or draft at the top, take thumbnails, swipes (delete; add to collection), and a touch-and-hold menu (open, rename, duplicate, add to collection, share, delete). Pitch, Talks, Reel and Shorts are made once. Reopens on the editor if it was left there. |
+| Writing | Both modes, independent drafts, cues, bold/italic, anchors, images and card limits are present. The editor has a back button to the library, Save at the top while there are changes, ⋮ with Save, Save as New and Version History, and a status line with the title (tap to rename), Unsaved/Saved and the version (tap for history). Titles are kept to 40 characters; longer saved ones are shortened once at a word. |
+| Notes and storage | Saved scripts keep their collection. The storage folder keeps the collections in `.cuecard-library.json`, the same file iOS writes. Importing keeps the file as a script in the collection shown and opens it. A banner says scripts aren't backed up until a folder is chosen, and comes back every tenth open after Not Now. |
 | Versions | Saved versions, comparisons and restoration are present. |
-| Teleprompter | Automatic/manual scrolling, speed, countdown, restart, draggable reading guide, anchor navigation and both mirror directions are present. |
+| Teleprompter | Header with Close, the timer (centered while the buttons are hidden) and the camera; footer with the anchors at the edges and the floating window, Play and Restart together. The end of the script counts as the last anchor. Fades match the editor's. Settings and Help are no longer in the teleprompter or cards. |
 | Floating window | Android picture-in-picture provides playback controls, timer, images, separate text sizing and aspect ratio. It stays disabled while the camera is open. |
-| Cards | Swipe/button navigation, progress, images and count-up/count-down timer are present. |
-| Camera | Floating movable/resizable preview, front/back switching, zoom, recording, pause/resume, gallery saving and optional teleprompter synchronization are present. |
-| Takes | Per-script discovery, playback, tags, notes, favorites and deletion are present. Fixed reopening a script erasing its previous recording sessions. Android gallery favorites require Android 11 or newer. |
-| Preferences | Per-mode sizes/colors/timers, theme, advanced settings and resets are present. |
-| Help and onboarding | Welcome/sample scripts, searchable help, language settings, sharing, reviews and remote notices are present. Both apps currently offer English, Spanish, French, Brazilian Portuguese and Russian. |
+| Cards | Swipe/button navigation, progress, images and count-up/count-down timer are present. Next fills the row beside Back. |
+| Camera | Floating movable/resizable preview, front/back switching, zoom, recording, pause/resume, gallery saving and optional teleprompter synchronization are present. Text Above Camera draws the script, or the top card's words, over the camera; off, the camera covers them. Resolution, frame rate, HDR, stabilization and front-camera mirroring are chosen in Settings, offered as the device's cameras support them. |
+| Takes | Per-script discovery, playback, tags, notes, favorites and deletion are present. The library shows each script's takes. The player has Delete at the top and the heart beside Tags and Notes below. Android gallery favorites require Android 11 or newer. |
+| Settings | One screen from the library and the editor: Teleprompter, Camera, Cards, Language, Share and Review, Theme, then Advanced with Reset to Defaults. Every row has a line on what it does. |
+| Help and onboarding | Welcome/sample scripts, a Library help page, sections matching iOS (Library & Saving with collections, privacy and storage; video settings; reading over the camera), ranked word search showing each result's section, language settings, sharing, reviews and remote notices. Both apps offer English, Spanish, French, Brazilian Portuguese and Russian. |
 
 ## Platform-specific differences retained
 
+- Apple Intelligence: Suggestions AI, Help AI and Follow Me AI, with their
+  Settings switches and feedback sheets, are not on Android.
 - Apple Watch companion, wrist controls and offline watch decks.
 - ActivityKit Lock Screen/Dynamic Island cards and WidgetKit controls.
 - iPhone Action Button and App Intents.
 - Apple Photos album creation and multiple-album membership. Android takes
   remain in the device's video library and use its native permission flows.
+- Codec choice, Apple Log and cinematic stabilization: CameraX picks the codec,
+  and offers stabilization on or off.
+- The iCloud Drive storage note. Android names the storage folder instead.
 - Platform-native review prompts, language settings and camera/library APIs.
 
 ## Release metadata
 
-`versionCode` advances from 13 to 14; `versionName` remains `1.0.0`.
+`versionCode` advances from 15 to 16; `versionName` remains `1.0.0`.
 `assets/WhatsNew.json` and all release-note translation arrays are empty, so
-neither launch nor Help offers a What's New entry for the first release.
+neither launch nor Help offers a What's New entry.
 
-## Regression coverage
+## Verification
 
-`ScriptClipboardTest` exercises actual Compose editing and the Android
-clipboard: normal text replacement, image/source-URL paste, multiple images
-in cards, copying readable image data, pasting copied script tags, mixed text
-and images, unavailable images, and the empty first-release notes.
-`TakeStoreTest` checks that reopening and switching scripts retains previous
-recording sessions and take annotations.
-
-All eight instrumentation tests passed on the Android 16 (API 36.1) emulator.
-Debug and minified release APK builds passed. Lint reported no errors; existing
-warnings remain. The release APK is unsigned, and Crashlytics mapping upload
-was excluded from the local release-build check.
+Debug APK build, Kotlin compilation of the instrumentation tests and lint
+(no errors) passed with JDK 17 from Android Studio. The instrumentation tests
+and the app itself were not run for this change.
 
 Run from this directory with JDK 17 or newer and a running Android emulator:
 
@@ -53,5 +50,5 @@ Run from this directory with JDK 17 or newer and a running Android emulator:
 ./gradlew :app:assembleDebug :app:lintDebug :app:connectedDebugAndroidTest
 ```
 
-Camera capture quality, OEM gallery behavior and clipboard transfers to
-third-party apps still need physical-device release QA.
+Camera capture quality, the device's video formats, OEM gallery behavior and
+clipboard transfers to third-party apps still need physical-device release QA.

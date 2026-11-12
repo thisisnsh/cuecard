@@ -267,7 +267,7 @@ class TakesLibrary(context: Context) {
     }
 
     /** Videos whose recording overlaps a session, oldest first. */
-    private fun videos(sessions: List<TeleprompterSession>): List<Take> {
+    internal fun videos(sessions: List<TeleprompterSession>): List<Take> {
         // A recording that overlaps a session started before it ended, and no
         // longer than the longest recording before it began. Overlapping
         // stretches are merged to keep the query short.
@@ -334,5 +334,80 @@ class TakesLibrary(context: Context) {
             }
         }
         return videos.sortedBy { it.recordedAt }
+    }
+}
+
+/**
+ * How many takes each script has, and its newest, for the library to show
+ * beside it. Only counted once videos can be read: the library never asks for
+ * access itself.
+ */
+class TakeCounts(context: Context) {
+    companion object {
+        /** How many of a script's takes the library shows pictures of. */
+        const val RECENT_LIMIT = 3
+    }
+
+    private val context = context.applicationContext
+    private val takeStore = TakeStore.getInstance(context)
+    /** Reads the videos and draws their pictures. */
+    val library = TakesLibrary(context)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
+    /** Scripts with no takes aren't in here. */
+    private val _counts = MutableStateFlow<Map<String, Int>>(emptyMap())
+    val counts: StateFlow<Map<String, Int>> = _counts.asStateFlow()
+
+    /** Each script's newest takes, newest first. */
+    private val _recent = MutableStateFlow<Map<String, List<Take>>>(emptyMap())
+    val recent: StateFlow<Map<String, List<Take>>> = _recent.asStateFlow()
+
+    private var loading: Job? = null
+    private var pendingReload: Job? = null
+    private var isObserving = false
+
+    private val observer = object : ContentObserver(Handler(Looper.getMainLooper())) {
+        override fun onChange(selfChange: Boolean) {
+            pendingReload?.cancel()
+            pendingReload = scope.launch {
+                delay(300)
+                reload()
+            }
+        }
+    }
+
+    /** Count again, for a session just ended or a video just recorded. */
+    fun reload() {
+        library.updateStatus()
+        if (!library.status.value.canRead) {
+            _counts.value = emptyMap()
+            _recent.value = emptyMap()
+            return
+        }
+        if (!isObserving) {
+            isObserving = true
+            context.contentResolver.registerContentObserver(
+                MediaStore.Video.Media.EXTERNAL_CONTENT_URI, true, observer
+            )
+        }
+        val sessions = takeStore.scriptIdsWithSessions().associateWith { takeStore.sessions(it) }
+        loading?.cancel()
+        loading = scope.launch {
+            val counted = withContext(Dispatchers.IO) {
+                sessions.filterValues { it.isNotEmpty() }.mapValues { (_, sessions) -> library.videos(sessions) }
+                    .filterValues { it.isNotEmpty() }
+            }
+            val counts = counted.mapValues { it.value.size }
+            val recent = counted.mapValues { it.value.takeLast(RECENT_LIMIT).reversed() }
+            if (counts != _counts.value) _counts.value = counts
+            if (recent != _recent.value) _recent.value = recent
+        }
+    }
+
+    fun close() {
+        if (isObserving) context.contentResolver.unregisterContentObserver(observer)
+        isObserving = false
+        library.close()
+        scope.cancel()
     }
 }

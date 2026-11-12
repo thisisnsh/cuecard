@@ -77,6 +77,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.round
+import androidx.compose.ui.unit.toSize
 import com.thisisnsh.cuecard.android.AnalyticsEvents
 import com.thisisnsh.cuecard.android.LocalIsDarkTheme
 import com.thisisnsh.cuecard.android.models.AppColors
@@ -130,7 +141,6 @@ fun CueCardsView(
     val position = remember { Animatable(0f) }
     /** A pull past either end of the deck, which gives a little and settles. */
     var rubberBand by remember { mutableFloatStateOf(0f) }
-    var showingHelp by remember { mutableStateOf(false) }
     /** The camera floats over the deck while it's open. */
     var showingCamera by remember { mutableStateOf(false) }
     val recorder = rememberCameraRecorder(showingCamera, scriptId)
@@ -177,11 +187,68 @@ fun CueCardsView(
     }
 
     fun close() {
-        AnalyticsEvents.logButtonClick("close", CARDS_SCREEN)
+        AnalyticsEvents.logButtonClick("cards_close", CARDS_SCREEN)
         onDismiss()
     }
 
-    BackHandler(enabled = !showingHelp) { close() }
+    BackHandler { close() }
+
+    /** The deck's swipes, on whichever of its layers is on top. */
+    fun deckGestures(widthPx: Float, swipePx: Float): Modifier = Modifier.pointerInput(cards.size, widthPx) {
+        var drag = 0f
+        val velocity = VelocityTracker()
+        detectHorizontalDragGestures(
+            onDragStart = {
+                drag = 0f
+                velocity.resetTracking()
+            },
+            onDragCancel = {
+                drag = 0f
+                rubberBand = 0f
+                show(index)
+            },
+            onDragEnd = {
+                // Where a fling would carry the card, like SwiftUI's
+                // predicted end translation.
+                val predicted = drag + velocity.calculateVelocity().x * 0.25f
+                rubberBand = 0f
+                when {
+                    (drag < -swipePx || predicted < -widthPx / 2) && index < cards.size -> {
+                        AnalyticsEvents.logEvent("cards_next", mapOf("source" to "swipe"))
+                        next()
+                    }
+                    (drag > swipePx || predicted > widthPx / 2) && index > 0 -> {
+                        AnalyticsEvents.logEvent("cards_previous", mapOf("source" to "swipe"))
+                        previous()
+                    }
+                    else -> show(index)
+                }
+            },
+            onHorizontalDrag = { change, amount ->
+                change.consume()
+                velocity.addPosition(change.uptimeMillis, change.position)
+                drag += amount
+                // Swiped left, the top card follows the finger away.
+                // Swiped right, the card before it comes back in
+                // twice as fast, so it is well in view by the time
+                // the swipe counts.
+                val travel = if (drag < 0) -drag / widthPx else -2 * drag / widthPx
+                val target = index + travel
+                val clamped = target.coerceIn(0f, cards.size.toFloat())
+                rubberBand = (target - clamped) * widthPx * 0.15f
+                scope.launch { position.snapTo(clamped) }
+            }
+        )
+    }
+
+    /**
+     * The camera's picture is drawn between the cards and their words, so the
+     * words stay in view over it. Off, the picture covers the cards.
+     */
+    val textAboveCamera = showingCamera && settings.showsTextAboveCamera
+    /** Where the deck sits in the screen below the bar, for its words to be drawn over the camera. */
+    var rootPosition by remember { mutableStateOf(Offset.Zero) }
+    var deckBounds by remember { mutableStateOf(Rect.Zero) }
 
     val elapsed = ((now - startedAt) / 1000).toInt()
     val seconds = if (timerDuration > 0) timerDuration - elapsed else elapsed
@@ -207,22 +274,19 @@ fun CueCardsView(
                         )
                     },
                     navigationIcon = {
-                        Icon(
-                            imageVector = Icons.Filled.Close,
-                            contentDescription = stringResource(R.string.close),
-                            tint = AppColors.textPrimary(isDark),
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp)
-                                .size(18.dp)
-                                .clickableWithoutRipple { close() }
+                        HeaderButton(
+                            icon = Icons.Filled.Close,
+                            description = stringResource(R.string.close),
+                            isDark = isDark,
+                            modifier = Modifier.padding(horizontal = 12.dp),
+                            onClick = ::close
                         )
                     },
                     actions = {
-                        CameraButton(isOn = showingCamera, isDark = isDark) {
-                            AnalyticsEvents.logButtonClick("camera", CARDS_SCREEN)
+                        CameraButton(isOn = showingCamera, isDark = isDark, modifier = Modifier.padding(end = 12.dp)) {
+                            AnalyticsEvents.logButtonClick("cards_camera", CARDS_SCREEN)
                             showingCamera = !showingCamera
                         }
-                        HelpButton(page = HelpPage.CARDS, isDark = isDark) { showingHelp = true }
                     },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                         containerColor = AppColors.background(isDark)
@@ -234,6 +298,7 @@ fun CueCardsView(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
+                    .onGloballyPositioned { rootPosition = it.positionInRoot() }
             ) {
                 Column(modifier = Modifier.fillMaxSize()) {
                     PageDots(
@@ -257,6 +322,8 @@ fun CueCardsView(
                         val widthPx = with(density) { maxWidth.toPx() }
                         val swipePx = with(density) { SWIPE_DISTANCE.toPx() }
 
+                        val gestures = deckGestures(widthPx, swipePx)
+
                         Deck(
                             cards = cards,
                             position = position.value,
@@ -265,54 +332,11 @@ fun CueCardsView(
                             widthPx = widthPx,
                             settings = settings,
                             isDark = isDark,
+                            layer = if (textAboveCamera) DeckLayer.BACKS else DeckLayer.ALL,
                             modifier = Modifier
                                 .fillMaxSize()
-                                .pointerInput(cards.size) {
-                                    var drag = 0f
-                                    val velocity = VelocityTracker()
-                                    detectHorizontalDragGestures(
-                                        onDragStart = {
-                                            drag = 0f
-                                            velocity.resetTracking()
-                                        },
-                                        onDragCancel = {
-                                            drag = 0f
-                                            rubberBand = 0f
-                                            show(index)
-                                        },
-                                        onDragEnd = {
-                                            // Where a fling would carry the card, like SwiftUI's
-                                            // predicted end translation.
-                                            val predicted = drag + velocity.calculateVelocity().x * 0.25f
-                                            rubberBand = 0f
-                                            when {
-                                                (drag < -swipePx || predicted < -widthPx / 2) && index < cards.size -> {
-                                                    AnalyticsEvents.logEvent("cards_next", mapOf("source" to "swipe"))
-                                                    next()
-                                                }
-                                                (drag > swipePx || predicted > widthPx / 2) && index > 0 -> {
-                                                    AnalyticsEvents.logEvent("cards_previous", mapOf("source" to "swipe"))
-                                                    previous()
-                                                }
-                                                else -> show(index)
-                                            }
-                                        },
-                                        onHorizontalDrag = { change, amount ->
-                                            change.consume()
-                                            velocity.addPosition(change.uptimeMillis, change.position)
-                                            drag += amount
-                                            // Swiped left, the top card follows the finger away.
-                                            // Swiped right, the card before it comes back in
-                                            // twice as fast, so it is well in view by the time
-                                            // the swipe counts.
-                                            val travel = if (drag < 0) -drag / widthPx else -2 * drag / widthPx
-                                            val target = index + travel
-                                            val clamped = target.coerceIn(0f, cards.size.toFloat())
-                                            rubberBand = (target - clamped) * widthPx * 0.15f
-                                            scope.launch { position.snapTo(clamped) }
-                                        }
-                                    )
-                                }
+                                .onGloballyPositioned { deckBounds = Rect(it.positionInRoot(), it.size.toSize()) }
+                                .then(if (textAboveCamera) Modifier else gestures)
                         )
                     }
 
@@ -351,8 +375,36 @@ fun CueCardsView(
                                 next()
                             }
                         },
-                        modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 16.dp)
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .widthIn(max = 600.dp)
+                            .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 16.dp)
                     )
+                }
+
+                // Between the cards and their words, so the words stay in view.
+                if (textAboveCamera) {
+                    CameraBackdrop(recorder, cameraPlacement)
+                    val density = LocalDensity.current
+                    Box(
+                        modifier = Modifier
+                            .offset { (deckBounds.topLeft - rootPosition).round() }
+                            .size(with(density) { deckBounds.width.toDp() }, with(density) { deckBounds.height.toDp() })
+                    ) {
+                        Deck(
+                            cards = cards,
+                            position = position.value,
+                            rubberBand = rubberBand,
+                            isFinished = isFinished,
+                            widthPx = deckBounds.width,
+                            settings = settings,
+                            isDark = isDark,
+                            layer = DeckLayer.WORDS,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .then(deckGestures(deckBounds.width, with(density) { SWIPE_DISTANCE.toPx() }))
+                        )
+                    }
                 }
 
                 // Cards keep turning while the camera records over them.
@@ -360,7 +412,7 @@ fun CueCardsView(
                     FloatingCameraWindow(
                         recorder = recorder,
                         placement = cameraPlacement,
-                        drawsPicture = true,
+                        drawsPicture = !settings.showsTextAboveCamera,
                         onControl = {},
                         onClose = { showingCamera = false }
                     )
@@ -368,9 +420,14 @@ fun CueCardsView(
             }
         }
 
-        HelpOverlay(page = HelpPage.CARDS, visible = showingHelp, onDismiss = { showingHelp = false })
     }
 }
+
+/**
+ * Which of the deck is drawn: all of it, or with the camera between them, the
+ * cards themselves under it and the top card's words over it.
+ */
+private enum class DeckLayer { ALL, BACKS, WORDS }
 
 // MARK: - Deck
 
@@ -389,6 +446,7 @@ private fun Deck(
     widthPx: Float,
     settings: TeleprompterSettings,
     isDark: Boolean,
+    layer: DeckLayer,
     modifier: Modifier = Modifier
 ) {
     val density = LocalDensity.current
@@ -400,7 +458,7 @@ private fun Deck(
     )
 
     Box(modifier = modifier) {
-        if (finishedAlpha > 0f) {
+        if (finishedAlpha > 0f && layer != DeckLayer.WORDS) {
             FinishedCard(isDark = isDark, modifier = Modifier.alpha(finishedAlpha))
         }
 
@@ -410,10 +468,19 @@ private fun Deck(
             key(cardIndex) {
                 val offset = cardIndex - position
                 val isTop = cardIndex == Math.round(position)
-                CardFace(
+                // A card coming in from the left is drawn whole over the camera;
+                // of those in the deck, the camera is between the cards and the
+                // words, which are drawn for the top card only.
+                val face = when (layer) {
+                    DeckLayer.ALL -> CardLayer.WHOLE
+                    DeckLayer.BACKS -> if (offset < 0) null else CardLayer.BACK
+                    DeckLayer.WORDS -> if (offset < 0) CardLayer.WHOLE else if (isTop) CardLayer.WORDS else null
+                }
+                if (face != null) CardFace(
                     card = cards[cardIndex],
                     settings = settings,
                     isDark = isDark,
+                    layer = face,
                     modifier = Modifier
                         .fillMaxSize()
                         .zIndex(if (offset < 0) 2f else -offset)
@@ -442,9 +509,18 @@ private fun Deck(
     }
 }
 
+/** What of a card is drawn: the whole card, the card without its words, or its words alone. */
+private enum class CardLayer { WHOLE, BACK, WORDS }
+
 /** One card of the deck, cues drawn in their color, and its images. */
 @Composable
-private fun CardFace(card: String, settings: TeleprompterSettings, isDark: Boolean, modifier: Modifier = Modifier) {
+private fun CardFace(
+    card: String,
+    settings: TeleprompterSettings,
+    isDark: Boolean,
+    modifier: Modifier = Modifier,
+    layer: CardLayer = CardLayer.WHOLE
+) {
     val shape = RoundedCornerShape(CARD_CORNER_RADIUS)
     val blocks = remember(card) { CardBlock.blocks(card) }
     val fontSize = settings.cards.fontSize
@@ -452,11 +528,19 @@ private fun CardFace(card: String, settings: TeleprompterSettings, isDark: Boole
 
     BoxWithConstraints(
         modifier = modifier
-            .shadow(16.dp, shape, ambientColor = Color.Black.copy(alpha = if (isDark) 0.5f else 0.1f))
-            .clip(shape)
-            .background(cardBackground(isDark))
-            .border(0.7.dp, AppColors.textSecondary(isDark).copy(alpha = 0.2f), shape)
+            .then(
+                if (layer == CardLayer.WORDS) {
+                    Modifier.clip(shape)
+                } else {
+                    Modifier
+                        .shadow(16.dp, shape, ambientColor = Color.Black.copy(alpha = if (isDark) 0.5f else 0.1f))
+                        .clip(shape)
+                        .background(cardBackground(isDark))
+                        .border(0.7.dp, AppColors.textSecondary(isDark).copy(alpha = 0.2f), shape)
+                }
+            )
     ) {
+        if (layer == CardLayer.BACK) return@BoxWithConstraints
         val imageHeight = (maxHeight - CARD_PADDING * 2).coerceAtLeast(0.dp)
         Column(
             modifier = Modifier
@@ -478,6 +562,9 @@ private fun CardFace(card: String, settings: TeleprompterSettings, isDark: Boole
                         fontSize = fontSize.sp,
                         lineHeight = (fontSize * 1.2f + lineSpacing).sp,
                         fontWeight = FontWeight.SemiBold,
+                        // In the card's color, so the words stay readable over the
+                        // camera drawn behind them. Over the card itself it doesn't show.
+                        style = TextStyle(shadow = Shadow(color = cardBackground(isDark), blurRadius = 8f)),
                         modifier = Modifier.fillMaxWidth()
                     )
                     // An image on its own fills the card.
@@ -585,7 +672,7 @@ private fun PageDots(count: Int, index: Int, isDark: Boolean, modifier: Modifier
 
 // MARK: - Controls
 
-/** Back and Next, each sized to its label like Read Cards on the editor. */
+/** A stable back control and a wider primary action, within thumb reach. */
 @Composable
 private fun Controls(
     index: Int,
@@ -634,18 +721,19 @@ private fun Controls(
             )
         }
 
-        Spacer(modifier = Modifier.weight(1f))
+        Spacer(modifier = Modifier.width(12.dp))
 
         val onGreen = if (isDark) Color.Black else Color.White
         Row(
             modifier = Modifier
+                .weight(1f)
                 .height(52.dp)
                 .glassed(Capsule, isDark, tint = AppColors.green(isDark))
                 .clickableWithoutRipple(onNext)
                 .semantics { contentDescription = nextLabel }
                 .padding(horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)
         ) {
             Text(
                 text = nextLabel,
