@@ -88,7 +88,7 @@
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Настройки камеры: выбирайте разрешение, частоту кадров, динамический диапазон, кодек, стабилизацию и зеркалирование фронтальной камеры."
+            "value" : "Настройки камеры: выбирайте разрешение, частоту кадров, динамический диапазон, кодек, стабилизацию и зеркальное отражение видео с фронтальной камеры."
           }
         }
       }
@@ -17248,7 +17248,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Toca el engranaje en tu biblioteca o en el editor. El tamaño del texto y el color de las indicaciones están en Teleprompter y en Tarjetas, y cada uno guarda los suyos."
+            "value" : "Toca el engranaje en tu biblioteca o en el editor. Los tamaños del texto y el color de las indicaciones están en Teleprompter y en Tarjetas, y cada uno guarda los suyos."
           }
         },
         "fr" : {
