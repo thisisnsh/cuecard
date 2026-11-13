@@ -49,6 +49,7 @@ struct HomeView: View {
     /// Suggestions AI turned on in Settings, watched so it goes as soon as
     /// it's turned off.
     @AppStorage(AppleIntelligenceSetting.suggestionsKey) private var isSuggestionsEnabled = true
+    @ObservedObject private var watch = WatchSessionService.shared
     @ObservedObject private var cardsSession = CueCardsSession.shared
     @StateObject private var takes = TakesLibrary()
     @Namespace private var takesTransition
@@ -732,6 +733,18 @@ struct HomeView: View {
                             showingVersions = true
                         } label: {
                             Label("Version History", systemImage: "clock.arrow.circlepath")
+                        }
+                    }
+                    if watch.isWatchAppInstalled, let note = settingsService.currentNote {
+                        let isOnWatch = settingsService.watchNoteIDs.contains(note.id)
+                        Divider()
+                        Button {
+                            AnalyticsEvents.logButtonClick(isOnWatch ? "watch_remove_note" : "watch_add_note",
+                                                           screen: "home")
+                            settingsService.setOnWatch(!isOnWatch, noteID: note.id)
+                        } label: {
+                            Label(isOnWatch ? "Remove from Apple Watch" : "Keep on Apple Watch",
+                                  systemImage: isOnWatch ? "applewatch.slash" : "applewatch")
                         }
                     }
                 } label: {
