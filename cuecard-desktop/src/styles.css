@@ -20,7 +20,12 @@
   --color-purple: #b07cff;
 
   --tint: var(--color-green);
-  --cue-color: var(--color-pink);
+  /* Each mode keeps its own cue colour and editor size, set from Settings. */
+  --cue-teleprompter: var(--color-pink);
+  --cue-cards: var(--color-pink);
+  --cue-color: var(--cue-teleprompter);
+  --editor-size-teleprompter: 16px;
+  --editor-size-cards: 16px;
 
   /* Grouped surfaces, as iOS stacks them */
   --surface: #1c1c1e;
@@ -39,7 +44,7 @@
 
   --radius-window: 12px;
   --toolbar-height: 44px;
-  --sidebar-width: 232px;
+  --sidebar-width: 268px;
 
   /* Everything at the window's edges lines up on this: the script, the pill and
      the play button by their own edge, the toolbar icons by the edge of their
@@ -388,6 +393,7 @@ a {
 .note-row {
   display: flex;
   align-items: center;
+  position: relative;
   gap: 9px;
   width: 100%;
   padding: 7px 8px;
@@ -452,29 +458,95 @@ a {
   flex: none;
 }
 
-.note-row .note-actions {
-  display: flex;
-  gap: 1px;
-  opacity: 0;
-  flex: none;
+.note-row {
+  align-items: flex-start;
+  padding: 9px 8px 10px 10px;
+  outline: none;
 }
 
-.note-row:hover .note-actions {
+.note-row:focus-visible {
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--color-blue) 60%, transparent);
+}
+
+.note-row .note-text {
+  gap: 2px;
+}
+
+.note-row .note-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-right: 22px;
+}
+
+.note-preview {
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--text-secondary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+.note-row .note-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+  opacity: 0.85;
+}
+
+.note-badge {
+  font-weight: 600;
+  color: var(--color-yellow);
+}
+
+.row-collection {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.note-more {
+  position: absolute;
+  top: 7px;
+  right: 6px;
+  opacity: 0;
+}
+
+.note-row:hover .note-more,
+.note-row:focus-within .note-more,
+.note-more[aria-expanded="true"] {
   opacity: 1;
 }
 
 .note-dot {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  background: var(--text-secondary);
+  background: var(--color-yellow);
   flex: none;
 }
 
 .sidebar-empty {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
   font-size: 12px;
+  line-height: 1.4;
   color: var(--text-secondary);
-  padding: 6px 8px;
+  padding: 14px 10px;
+}
+
+.sidebar-empty strong {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 .sidebar-scrim {
@@ -529,12 +601,16 @@ a {
   min-width: 0;
   max-width: 55%;
   display: flex;
-  align-items: baseline;
-  gap: 7px;
+  align-items: center;
+  gap: 4px;
   padding-left: 2px;
 }
 
 .toolbar-title {
+  min-width: 0;
+  padding: 3px 6px;
+  margin: 0 -6px;
+  border-radius: 6px;
   font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
@@ -543,10 +619,42 @@ a {
 }
 
 .toolbar-subtitle {
+  padding: 3px 5px;
+  margin-left: 1px;
+  border-radius: 6px;
   font-size: 11px;
   color: var(--text-secondary);
   white-space: nowrap;
   flex: none;
+}
+
+.toolbar-subtitle.is-unsaved {
+  color: var(--color-yellow);
+}
+
+.toolbar-title:not(:disabled):hover,
+.toolbar-subtitle:not(:disabled):hover {
+  background: var(--hover);
+}
+
+.toolbar-title:disabled,
+.toolbar-subtitle:disabled {
+  cursor: inherit;
+}
+
+.save-btn {
+  height: 24px;
+  padding: 0 11px;
+  margin-right: 6px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--fill-strong);
+}
+
+.save-btn:hover {
+  filter: brightness(1.15);
 }
 
 /* The empty stretch of bar between the title and the buttons: drag it to move. */
@@ -606,7 +714,7 @@ a {
   --editor-pad-x: var(--gutter);
   --editor-pad-top: 10px;
   --editor-pad-bottom: 96px;
-  font-size: 16px;
+  font-size: var(--editor-size-teleprompter);
   line-height: 1.55;
   font-weight: 500;
 }
@@ -672,6 +780,154 @@ a {
   /* A heavier weight would change the glyph widths and pull the caret out of
      line with the text behind it, so the weight is faked. */
   text-shadow: 0 0 0.4px currentColor;
+}
+
+/* Anchors and separators are drawn like cues, in grey. */
+.tag-reserved {
+  color: var(--text-secondary);
+  text-shadow: 0 0 0.4px currentColor;
+}
+
+/* The markers recede once they close; what they style does not. */
+.em-marker {
+  color: color-mix(in srgb, var(--text-secondary) 70%, transparent);
+}
+
+/* Bold, faked with a stroke, for the same reason as a cue's weight. */
+.em-bold {
+  -webkit-text-stroke: 0.55px currentColor;
+}
+
+/* SF's italic is its upright slanted, glyph for glyph the same width, so it
+   can be drawn for real. Elsewhere a real italic would pull the caret out of
+   line, so it's drawn in a quieter colour instead. */
+:root.platform-macos .em-italic {
+  font-style: italic;
+}
+
+:root:not(.platform-macos) .em-italic {
+  color: color-mix(in srgb, var(--text-primary) 70%, var(--color-blue));
+}
+
+/* A card's box: it grows with its text rather than scrolling. */
+.editor.is-auto {
+  flex: none;
+  --editor-pad-x: 0px;
+  --editor-pad-top: 0px;
+  --editor-pad-bottom: 0px;
+  min-height: 1.55em;
+}
+
+.editor.is-auto .editor-backdrop {
+  position: relative;
+  inset: auto;
+}
+
+.editor.is-auto .editor-input {
+  overflow: hidden;
+}
+
+/* Cards mode's editor ------------------------------------------------------- */
+
+#pane-cards,
+#screen-cards {
+  --cue-color: var(--cue-cards);
+}
+
+.cards-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 8px var(--gutter) 104px;
+  scrollbar-width: none;
+}
+
+.cards-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card-box {
+  padding: 10px 14px 14px;
+  border-radius: 14px;
+  background: var(--glass-bg);
+  border: 0.7px solid var(--separator);
+  cursor: text;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.card-box.is-focused {
+  border-color: var(--glass-stroke);
+  box-shadow: 0 0 0 1px var(--glass-stroke);
+}
+
+.card-box-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 22px;
+  margin-bottom: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: default;
+}
+
+.card-number {
+  flex: 1;
+  letter-spacing: 0.02em;
+}
+
+.card-count {
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+
+.card-box.is-over .card-count {
+  color: var(--color-red);
+  font-weight: 600;
+}
+
+.card-remove {
+  opacity: 0;
+}
+
+.card-box:hover .card-remove,
+.card-box.is-focused .card-remove {
+  opacity: 1;
+}
+
+.card-box-editor {
+  font-size: var(--editor-size-cards);
+}
+
+.card-box-editor .editor {
+  font-size: inherit;
+}
+
+.add-card-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  height: 44px;
+  margin-top: 12px;
+  border-radius: 14px;
+  border: 1px dashed var(--glass-stroke);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.add-card-btn:hover {
+  color: var(--text-primary);
+  background: var(--hover);
 }
 
 /* Lines arrive and leave through a fade rather than being cut off flat. */
@@ -894,7 +1150,7 @@ a {
   bottom: 18px;
   z-index: 6;
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
   pointer-events: none;
@@ -904,72 +1160,88 @@ a {
   pointer-events: auto;
 }
 
-.timer-control {
-  overflow: hidden;
+.pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 44px;
+  padding: 0 18px;
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.glass-pill,
+.format-bar {
   background: var(--glass-bg);
   background-image: var(--glass-sheen);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 0.7px solid var(--glass-stroke);
   box-shadow: var(--glass-shadow);
-  border-radius: 26px;
-  transition: border-radius 0.24s ease;
+  border-radius: 22px;
 }
 
-.timer-control.is-open {
-  border-radius: 16px;
-  padding: 12px;
+.glass-pill:hover {
+  filter: brightness(1.08);
 }
 
-.pill-btn {
+.controls-trailing {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.format-bar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
   height: 44px;
-  padding: 0 18px;
-  font-size: 13px;
-  font-weight: 600;
+  padding: 0 6px;
+}
+
+.format-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 16px;
   color: var(--text-primary);
-  white-space: nowrap;
 }
 
-.timer-picker {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  min-width: 200px;
+.format-btn:hover {
+  background: var(--hover);
 }
 
-.timer-picker-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+.format-btn[data-format="cue"] {
+  color: var(--cue-color);
 }
 
-.timer-picker-title {
-  font-size: 14px;
-  font-weight: 600;
+.format-divider {
+  width: 1px;
+  height: 18px;
+  margin: 0 3px;
+  background: var(--separator);
 }
 
-.timer-picker-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
+#pane-cards:not([hidden]) ~ .home-controls .format-btn[data-format="cue"] {
+  color: var(--cue-cards);
 }
 
-.timer-picker-label {
+.wheel-unit {
+  width: 26px;
   font-size: 12px;
   color: var(--text-secondary);
 }
 
-.wheels {
+.time-wheels {
   display: flex;
   align-items: center;
-  gap: 4px;
-}
-
-.wheel-colon {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-secondary);
+  gap: 6px;
 }
 
 /* A wheel picker, as near as a window gets to one */
@@ -1052,6 +1324,7 @@ a {
   width: 30px;
   height: 30px;
   border-radius: 50%;
+  box-shadow: none;
 }
 
 .prompter-heading {
@@ -1086,20 +1359,10 @@ a {
   transition: color 0.3s ease;
 }
 
-.prompter-timer.is-neutral {
-  color: var(--text-primary);
-}
-
-.prompter-timer.is-warn {
-  color: var(--color-yellow);
-}
-
-.prompter-timer.is-over {
-  color: var(--color-red);
-}
-
-.prompter-timer.is-delay {
-  color: var(--color-pink);
+.prompter-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
 }
 
 .prompter-scroll {
@@ -1156,15 +1419,274 @@ a {
 
 .prompter-controls {
   position: absolute;
-  left: 0;
-  right: 0;
+  left: var(--gutter);
+  right: var(--gutter);
   bottom: 26px;
   z-index: 4;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   gap: 20px;
   transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.prompter-transport {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* The same width as Restart, so Play sits in the middle. */
+.transport-spacer {
+  width: 46px;
+  flex: none;
+}
+
+.anchor-btn.is-gone {
+  visibility: hidden;
+}
+
+.anchor-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+  transform: none;
+}
+
+.play-btn.is-counting {
+  background: var(--glass-bg);
+  background-image: var(--glass-sheen);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-color: var(--glass-stroke);
+}
+
+.countdown-number {
+  font-family: var(--font-mono);
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* The reading guide: a pointer in the margin and a faint rule across. */
+.reading-guide {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  z-index: 3;
+  pointer-events: none;
+  transition: top 0.2s ease;
+}
+
+.prompter.is-dragging-guide .reading-guide {
+  transition: none;
+}
+
+.reading-guide-rule {
+  position: absolute;
+  left: 30px;
+  right: 18px;
+  top: var(--rule-offset, 0px);
+  height: 1px;
+  background: rgba(var(--text-primary-rgb), 0.1);
+}
+
+.reading-guide-handle {
+  position: absolute;
+  left: 8px;
+  top: -12px;
+  width: 22px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  color: var(--cue-color);
+  pointer-events: auto;
+  cursor: ns-resize;
+  opacity: 0.8;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+
+.reading-guide-handle:hover,
+.prompter.is-dragging-guide .reading-guide-handle {
+  opacity: 1;
+  background: var(--hover);
+}
+
+.reading-guide.is-mirrored .reading-guide-handle {
+  left: auto;
+  right: 8px;
+  transform: scaleX(-1);
+}
+
+.reading-guide.is-mirrored .reading-guide-rule {
+  left: 18px;
+  right: 30px;
+}
+
+.prompter.is-idle .reading-guide-handle {
+  opacity: 0.45;
+}
+
+.prompter-text strong {
+  font-weight: 750;
+}
+
+.prompter-text .anchor-mark {
+  display: inline-block;
+  width: 0;
+  height: 1em;
+  vertical-align: baseline;
+}
+
+/* Cards: one at a time --------------------------------------------------- */
+
+.deck-dots {
+  flex: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  height: 14px;
+  margin-top: 2px;
+}
+
+.deck-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--fill-strong);
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.deck-dot.is-past {
+  background: rgba(var(--text-primary-rgb), 0.35);
+}
+
+.deck-dot.is-current {
+  background: var(--color-green);
+}
+
+.deck-dot.is-edge {
+  transform: scale(0.6);
+}
+
+.deck-stage {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px var(--gutter) 96px;
+}
+
+.deck-card {
+  width: 100%;
+  max-width: 760px;
+  height: 100%;
+  max-height: 520px;
+  display: flex;
+  align-items: center;
+  padding: 24px 30px;
+  border-radius: 20px;
+  background: var(--glass-bg);
+  background-image: var(--glass-sheen);
+  border: 0.7px solid var(--glass-stroke);
+  box-shadow: var(--glass-shadow);
+  overflow: hidden;
+}
+
+.deck-card-text {
+  width: 100%;
+  max-height: 100%;
+  font-weight: 500;
+  line-height: 1.32;
+  overflow-wrap: break-word;
+}
+
+.card-line {
+  display: block;
+}
+
+.card-line.is-blank {
+  height: 0.6em;
+}
+
+.deck-card-text .cue {
+  color: var(--cue-color);
+  font-size: 0.72em;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.deck-card-text strong {
+  font-weight: 750;
+}
+
+.deck-done {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.deck-done-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 4px;
+  border-radius: 50%;
+  color: var(--color-green);
+  background: color-mix(in srgb, var(--color-green) 16%, transparent);
+}
+
+.deck-controls {
+  position: absolute;
+  left: var(--gutter);
+  right: var(--gutter);
+  bottom: 24px;
+  z-index: 4;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.deck-next {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex: 1;
+  max-width: 300px;
+  height: 46px;
+  border-radius: 23px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-bg);
+  background: var(--color-green);
+  background-image: var(--glass-sheen);
+  border: 0.7px solid var(--glass-stroke);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.18);
+  transition: transform 0.1s ease, opacity 0.15s ease;
+}
+
+:root.theme-light .deck-next {
+  color: #fff;
+}
+
+.deck-next:active {
+  transform: scale(0.97);
+}
+
+.deck-next:disabled,
+.deck-controls .glass-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+  transform: none;
 }
 
 .prompter.is-idle .prompter-controls {
@@ -1182,6 +1704,10 @@ a {
   .glass-btn.is-round {
     width: 38px;
     height: 38px;
+  }
+
+  .transport-spacer {
+    width: 38px;
   }
 
   .prompter-controls {
@@ -1782,4 +2308,452 @@ a {
 .toast.is-in {
   opacity: 1;
   transform: translate(-50%, 0);
+}
+
+/* =============================================================================
+   Library
+   ========================================================================== */
+
+.sidebar-top {
+  height: var(--toolbar-height);
+  flex: none;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+}
+
+:root.platform-macos .sidebar-top {
+  padding-top: 2px;
+}
+
+.segmented.is-wide {
+  display: flex;
+  width: 100%;
+}
+
+.segmented.is-wide .segment {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 5px 8px;
+}
+
+.sidebar-search {
+  flex: none;
+  padding: 2px 10px 4px;
+}
+
+.search-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 9px;
+  border-radius: 8px;
+  background: var(--fill);
+  color: var(--text-secondary);
+  cursor: text;
+}
+
+.search-field:focus-within {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-blue) 45%, transparent);
+}
+
+.search-field input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: none;
+  font: inherit;
+  font-size: 12px;
+  color: var(--text-primary);
+}
+
+.search-field input::placeholder {
+  color: var(--text-secondary);
+}
+
+/* Esc clears the field, so it needs no button of its own. */
+.search-field input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
+
+.search-field.is-sheet {
+  height: 32px;
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.search-field.is-sheet input {
+  font-size: 13px;
+}
+
+.section-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-right: -2px;
+}
+
+.section-actions .section-btn {
+  margin-right: 0;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 0 4px 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  height: 24px;
+  padding: 0 9px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--fill);
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.chip:hover {
+  color: var(--text-primary);
+  background: var(--fill-strong);
+}
+
+.chip.is-selected {
+  color: var(--color-bg);
+  background: var(--text-primary);
+}
+
+.chip.is-add {
+  width: 24px;
+  padding: 0;
+  justify-content: center;
+}
+
+.chip-title {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chip-count {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.65;
+}
+
+.chip-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.library-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.library-group {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 10px 10px 4px;
+}
+
+.sidebar-footer {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 16px 11px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  border-top: 1px solid var(--separator);
+}
+
+.sidebar-footer .icon {
+  opacity: 0.8;
+}
+
+/* =============================================================================
+   Menus, sheets and their rows
+   ========================================================================== */
+
+.menu-header {
+  padding: 6px 12px 3px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.menu-icon.is-empty {
+  visibility: hidden;
+}
+
+.cell:disabled,
+.cell.is-action:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.cell.is-action:disabled:hover {
+  background: none;
+}
+
+.cells > div:not([hidden]) > .cell + .cell {
+  border-top: 1px solid var(--separator);
+}
+
+.cells > div:not([hidden]) + .cell {
+  border-top: 1px solid var(--separator);
+}
+
+.cell-label .cell-sub {
+  line-height: 1.35;
+}
+
+.segmented.is-sizes .segment {
+  padding: 4px 8px;
+  min-width: 30px;
+}
+
+.swatches.is-small {
+  gap: 9px;
+  padding: 2px 4px;
+}
+
+.swatches.is-small .swatch {
+  width: 20px;
+  height: 20px;
+}
+
+.swatches.is-small .swatch::after {
+  inset: -3px;
+}
+
+.pill-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  vertical-align: 1px;
+  color: var(--color-green);
+  background: color-mix(in srgb, var(--color-green) 16%, transparent);
+}
+
+/* Timer -------------------------------------------------------------------- */
+
+.timer-preview {
+  display: flex;
+  padding: 16px 8px;
+}
+
+.timer-stage {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.timer-stage-time {
+  font-family: var(--font-mono);
+  font-size: 26px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.timer-stage-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.timer-row {
+  min-height: 92px;
+}
+
+.timer-row .wheel {
+  width: 46px;
+}
+
+/* Versions ------------------------------------------------------------------ */
+
+.version-row {
+  gap: 10px;
+}
+
+.version-row .cell-label {
+  flex: 1;
+}
+
+.version-change {
+  display: flex;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.is-added {
+  color: var(--color-green);
+}
+
+.is-removed {
+  color: var(--color-red);
+}
+
+.version-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 0 4px 10px;
+}
+
+.cells.diff {
+  padding: 6px 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.diff-line {
+  display: flex;
+  gap: 8px;
+  padding: 1px 12px;
+}
+
+.diff-line.is-added {
+  background: color-mix(in srgb, var(--color-green) 13%, transparent);
+  color: var(--text-primary);
+}
+
+.diff-line.is-removed {
+  background: color-mix(in srgb, var(--color-red) 13%, transparent);
+  color: var(--text-primary);
+}
+
+.diff-line.is-same {
+  color: var(--text-secondary);
+}
+
+.diff-mark {
+  width: 10px;
+  flex: none;
+  font-weight: 700;
+}
+
+.diff-line.is-added .diff-mark {
+  color: var(--color-green);
+}
+
+.diff-line.is-removed .diff-mark {
+  color: var(--color-red);
+}
+
+.diff-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.diff-fold {
+  padding: 3px 30px;
+  font-family: var(--font-family);
+  font-size: 11px;
+  color: var(--text-secondary);
+  opacity: 0.8;
+}
+
+.diff-empty {
+  padding: 12px 14px;
+  font-family: var(--font-family);
+  color: var(--text-secondary);
+}
+
+/* Help ---------------------------------------------------------------------- */
+
+.help-section {
+  gap: 12px;
+}
+
+.help-section .cell-label {
+  flex: 1;
+}
+
+.help-section-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex: none;
+  border-radius: 7px;
+  color: var(--tint);
+  background: color-mix(in srgb, var(--tint) 14%, transparent);
+}
+
+.help-topic + .help-topic {
+  border-top: 1px solid var(--separator);
+}
+
+.help-topic summary {
+  list-style: none;
+  cursor: pointer;
+}
+
+.help-topic summary::-webkit-details-marker {
+  display: none;
+}
+
+.help-topic summary .cell-label {
+  flex: 1;
+}
+
+.help-topic summary .cell-accessory {
+  transition: transform 0.2s ease;
+}
+
+.help-topic[open] summary .cell-accessory {
+  transform: rotate(180deg);
+}
+
+.help-detail {
+  padding: 0 14px 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.help-empty {
+  padding: 30px 0;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.sheet.is-compact {
+  max-width: 480px;
 }

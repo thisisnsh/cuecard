@@ -4,7 +4,7 @@
  */
 
 import { icon } from './icons.js';
-import { segments } from './parser.js';
+import { segments, styledRuns, teleprompterText } from './parser.js';
 import { isMac } from './tauri.js';
 
 const host = () => document.getElementById('overlay-host');
@@ -63,7 +63,8 @@ export function showAlert({ title, message = '', field = null, actions }) {
           <h2 class="alert-title">${escapeHtml(title)}</h2>
           ${message ? `<p class="alert-message">${escapeHtml(message)}</p>` : ''}
           ${field ? `<input class="alert-field" type="text" value="${escapeAttribute(field.value || '')}"
-              placeholder="${escapeAttribute(field.placeholder || '')}" spellcheck="false">` : ''}
+              placeholder="${escapeAttribute(field.placeholder || '')}" spellcheck="false"
+              ${field.maxLength ? `maxlength="${field.maxLength}"` : ''}>` : ''}
         </div>
         <div class="alert-actions${actions.length > 2 ? ' is-stacked' : ''}">
           ${actions.map((action) => `
@@ -114,11 +115,11 @@ export function showAlert({ title, message = '', field = null, actions }) {
 }
 
 /** Ask for one piece of text. Resolves with the text, or null. */
-export async function promptForText({ title, message, value = '', placeholder = '', confirmLabel = 'Save' }) {
+export async function promptForText({ title, message, value = '', placeholder = '', confirmLabel = 'Save', maxLength = 40 }) {
   const result = await showAlert({
     title,
     message,
-    field: { value, placeholder },
+    field: { value, placeholder, maxLength },
     actions: [
       { id: 'cancel', label: 'Cancel', style: 'cancel' },
       { id: 'confirm', label: confirmLabel, style: 'preferred', requiresText: true },
@@ -151,10 +152,11 @@ export const showError = (message, title = 'Something Went Wrong') =>
 let openMenu = null;
 
 /**
- * A menu hanging off a button. Items are `{ label, icon, shortcut, disabled,
- * destructive, onSelect }`, or `{ divider: true }`.
+ * A menu hanging off a button, or at a point. Items are `{ label, icon,
+ * shortcut, disabled, destructive, checked, onSelect }`, `{ header: 'Title' }`
+ * or `{ divider: true }`.
  */
-export function showMenu(anchor, items) {
+export function showMenu(anchor, items, { at = null } = {}) {
   closeMenu();
 
   const layer = document.createElement('div');
@@ -166,12 +168,16 @@ export function showMenu(anchor, items) {
   menu.innerHTML = items
     .map((item, index) => {
       if (item.divider) return '<div class="menu-divider"></div>';
+      if (item.header) return `<div class="menu-header">${escapeHtml(item.header)}</div>`;
+      const trailing = item.checked !== undefined
+        ? `<span class="menu-icon${item.checked ? '' : ' is-empty'}">${icon('check', 15, 2.2)}</span>`
+        : item.icon ? `<span class="menu-icon">${icon(item.icon, 16)}</span>` : '';
       return `
         <button class="menu-item${item.destructive ? ' is-destructive' : ''}" role="menuitem"
           data-index="${index}" ${item.disabled ? 'disabled' : ''}>
           <span class="menu-label">${escapeHtml(item.label)}</span>
           ${item.shortcut ? `<span class="menu-shortcut">${escapeHtml(formatShortcut(item.shortcut))}</span>` : ''}
-          ${item.icon ? `<span class="menu-icon">${icon(item.icon, 16)}</span>` : ''}
+          ${trailing}
         </button>`;
     })
     .join('');
@@ -179,11 +185,26 @@ export function showMenu(anchor, items) {
   layer.appendChild(menu);
   host().appendChild(layer);
 
-  // Hung below the button and aligned to its trailing edge, kept on screen.
-  const box = anchor.getBoundingClientRect();
+  // Hung below the button and aligned to its trailing edge — or from the
+  // pointer, for a right click — and kept on screen.
   const width = menu.offsetWidth;
-  const left = Math.min(Math.max(box.right - width, 8), window.innerWidth - width - 8);
-  const top = Math.min(box.bottom + 6, window.innerHeight - menu.offsetHeight - 8);
+  const height = menu.offsetHeight;
+  let left;
+  let top;
+  if (at) {
+    left = at.x;
+    top = at.y;
+    menu.style.transformOrigin = 'top left';
+  } else {
+    const box = anchor.getBoundingClientRect();
+    const alignLeft = box.left + box.width / 2 < window.innerWidth / 2;
+    left = alignLeft ? box.left : box.right - width;
+    top = box.bottom + 6;
+    if (top + height > window.innerHeight - 8) top = box.top - height - 6;
+    menu.style.transformOrigin = alignLeft ? 'top left' : 'top right';
+  }
+  left = Math.min(Math.max(left, 8), window.innerWidth - width - 8);
+  top = Math.min(Math.max(top, 8), window.innerHeight - height - 8);
   menu.style.left = `${Math.max(left, 8)}px`;
   menu.style.top = `${Math.max(top, 8)}px`;
 
@@ -218,13 +239,17 @@ export function showMenu(anchor, items) {
   layer.addEventListener('mousedown', (event) => {
     if (!menu.contains(event.target)) closeMenu();
   });
+  layer.addEventListener('contextmenu', (event) => {
+    event.preventDefault();
+    closeMenu();
+  });
   document.addEventListener('keydown', onKey, true);
 
-  anchor.setAttribute('aria-expanded', 'true');
+  anchor?.setAttribute('aria-expanded', 'true');
   openMenu = () => {
     layer.remove();
     document.removeEventListener('keydown', onKey, true);
-    anchor.setAttribute('aria-expanded', 'false');
+    anchor?.setAttribute('aria-expanded', 'false');
     openMenu = null;
   };
 
@@ -239,7 +264,8 @@ export function closeMenu() {
 // SHEETS
 // =============================================================================
 
-let sheetCloser = null;
+/** The sheets up, the top one last. Only the top one answers Esc. */
+const sheetStack = [];
 
 /** Present a sheet over the window, as the phone app presents one. */
 export function openSheet(sheet, { onClose } = {}) {
@@ -254,10 +280,16 @@ export function openSheet(sheet, { onClose } = {}) {
   sheet.hidden = false;
   host().appendChild(layer);
 
+  let closed = false;
   const close = () => {
+    if (closed) return;
+    closed = true;
     document.removeEventListener('keydown', onKey, true);
     layer.classList.remove('is-in');
+    let finished = false;
     const done = () => {
+      if (finished) return;
+      finished = true;
       sheet.hidden = true;
       home.appendChild(sheet);
       layer.remove();
@@ -265,26 +297,84 @@ export function openSheet(sheet, { onClose } = {}) {
     // A transition that never runs must not leave the sheet sitting there.
     sheet.addEventListener('transitionend', done, { once: true });
     setTimeout(done, 420);
-    sheetCloser = null;
+    const index = sheetStack.indexOf(close);
+    if (index >= 0) sheetStack.splice(index, 1);
     onClose?.();
   };
 
   const onKey = (event) => {
-    if (event.key === 'Escape') {
-      event.stopPropagation();
-      close();
-    }
+    if (event.key !== 'Escape' || sheetStack[sheetStack.length - 1] !== close) return;
+    if (document.querySelector('.alert-layer, .menu-layer')) return;
+    event.stopPropagation();
+    close();
   };
 
   scrim.addEventListener('click', close);
   document.addEventListener('keydown', onKey, true);
-  sheetCloser = close;
+  sheetStack.push(close);
 
   requestAnimationFrame(() => layer.classList.add('is-in'));
   return close;
 }
 
-export const isSheetOpen = () => Boolean(sheetCloser);
+export const isSheetOpen = () => sheetStack.length > 0;
+
+/** Close whichever sheet is up. */
+export const closeSheet = () => sheetStack[sheetStack.length - 1]?.();
+
+/**
+ * A sheet built in code, with a title, an optional back button and Done.
+ * Returns its body to fill, and a way to change the title or the back button.
+ */
+export function presentSheet({ title, className = '', onClose, doneLabel = 'Done' }) {
+  const sheet = document.createElement('div');
+  sheet.className = `sheet ${className}`.trim();
+  sheet.hidden = true;
+  sheet.innerHTML = `
+    <header class="sheet-bar">
+      <div class="sheet-side">
+        <button class="text-btn" data-role="back" hidden>${icon('chevronLeft', 16)}<span></span></button>
+      </div>
+      <h2 class="sheet-title"></h2>
+      <div class="sheet-side is-trailing">
+        <button class="text-btn is-strong" data-role="done">${escapeHtml(doneLabel)}</button>
+      </div>
+    </header>
+    <div class="sheet-body"></div>`;
+  document.getElementById('app').appendChild(sheet);
+
+  const titleEl = sheet.querySelector('.sheet-title');
+  const back = sheet.querySelector('[data-role="back"]');
+  const body = sheet.querySelector('.sheet-body');
+  let backHandler = null;
+
+  const api = {
+    sheet,
+    body,
+    setTitle(text) {
+      titleEl.textContent = text;
+    },
+    /** Show a back button with `label`, or hide it with null. */
+    setBack(label, handler) {
+      backHandler = handler;
+      back.hidden = !label;
+      back.querySelector('span').textContent = label || '';
+    },
+    close: () => close(),
+  };
+
+  back.addEventListener('click', () => backHandler?.());
+  sheet.querySelector('[data-role="done"]').addEventListener('click', () => close());
+
+  api.setTitle(title);
+  const close = openSheet(sheet, {
+    onClose: () => {
+      onClose?.();
+      setTimeout(() => sheet.remove(), 440);
+    },
+  });
+  return api;
+}
 
 // =============================================================================
 // TOAST
@@ -313,12 +403,42 @@ export function showToast(text) {
 // RENDERING A SCRIPT
 // =============================================================================
 
+/** One line of spoken text, with its bold and italic. */
+export function emphasisHtml(text) {
+  return styledRuns(text)
+    .map((run) => {
+      let html = escapeHtml(run.text);
+      if (run.italic) html = `<em>${html}</em>`;
+      if (run.bold) html = `<strong>${html}</strong>`;
+      return html;
+    })
+    .join('');
+}
+
+/** One line of a script: its words, its cues, and its anchors as markers. */
+export function lineHtml(line, { anchors = true } = {}) {
+  let html = '';
+  let spaced = false;
+  for (const segment of segments(line)) {
+    // An anchor takes no room of its own, so no space goes either side of it.
+    if (segment.type === 'anchor') {
+      if (anchors) html += '<span class="anchor-mark" aria-hidden="true"></span>';
+      continue;
+    }
+    if (spaced) html += ' ';
+    html += segment.type === 'cue' ? `<span class="cue">${escapeHtml(segment.value)}</span>` : emphasisHtml(segment.value);
+    spaced = true;
+  }
+  return html;
+}
+
 /**
  * A script as the phone app lays it out: paragraphs, with each cue inline,
- * smaller, and drawn in the one colour from Settings.
+ * smaller, and drawn in the one colour from Settings. A deck reads straight
+ * through, a card to a line.
  */
-export function scriptHtml(text) {
-  const normalized = String(text || '').replace(/\r\n?/g, '\n').trim();
+export function scriptHtml(text, { anchors = true } = {}) {
+  const normalized = teleprompterText(text);
   if (!normalized) return '';
 
   return normalized
@@ -326,20 +446,20 @@ export function scriptHtml(text) {
     .map((paragraph) => {
       const lines = paragraph
         .split('\n')
-        .map((line) =>
-          segments(line)
-            .map((segment) =>
-              segment.type === 'cue'
-                ? `<span class="cue">${escapeHtml(segment.value)}</span>`
-                : escapeHtml(segment.value)
-            )
-            .join(' ')
-        )
+        .map((line) => lineHtml(line, { anchors }))
         .filter((line) => line.length);
       return lines.length ? `<p>${lines.join('<br>')}</p>` : '';
     })
     .filter(Boolean)
     .join('');
+}
+
+/** One card as it's read: its lines, anchors left out. */
+export function cardHtml(card) {
+  const lines = String(card || '')
+    .split('\n')
+    .map((line) => lineHtml(line, { anchors: false }));
+  return lines.map((line) => (line ? `<span class="card-line">${line}</span>` : '<span class="card-line is-blank"></span>')).join('');
 }
 
 // =============================================================================

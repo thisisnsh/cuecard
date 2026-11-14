@@ -15,6 +15,24 @@
     <!-- ===================== Home ===================== -->
     <section class="screen home" id="screen-home">
       <aside class="sidebar" id="sidebar">
+        <div class="sidebar-top" data-tauri-drag-region>
+          <div class="segmented is-wide" id="mode-switch" role="group" aria-label="Mode">
+            <button class="segment" data-value="teleprompter">
+              <span data-icon="teleprompter" data-icon-size="13"></span>Teleprompter
+            </button>
+            <button class="segment" data-value="cards">
+              <span data-icon="cards" data-icon-size="13"></span>Cards
+            </button>
+          </div>
+        </div>
+
+        <div class="sidebar-search">
+          <label class="search-field">
+            <span data-icon="search" data-icon-size="13"></span>
+            <input type="search" id="library-search" placeholder="Search Scripts" spellcheck="false" aria-label="Search">
+          </label>
+        </div>
+
         <div class="sidebar-scroll">
           <h2 class="sidebar-section">Live</h2>
           <button class="source-row" id="row-slides">
@@ -27,30 +45,38 @@
           </button>
 
           <h2 class="sidebar-section">
-            Scripts
-            <button class="section-btn" id="btn-new-script" data-icon="plus" data-icon-size="15"
-              aria-label="New script" title="New script"></button>
+            <span id="library-title">Scripts</span>
+            <span class="section-actions">
+              <button class="section-btn" id="btn-library-menu" data-icon="ellipsisPlain" data-icon-size="15"
+                aria-label="Library Options" title="Library Options" aria-haspopup="menu"></button>
+              <button class="section-btn" id="btn-new-script" data-icon="plus" data-icon-size="15"
+                aria-label="New" title="New"></button>
+            </span>
           </h2>
-          <div class="note-list" id="sidebar-notes"></div>
-          <p class="sidebar-empty" id="sidebar-empty" hidden>Saved scripts show up here.</p>
+          <div class="chips" id="library-chips"></div>
+          <div class="library-list" id="library-list"></div>
+          <p class="sidebar-empty" id="library-empty" hidden></p>
         </div>
+
+        <div class="sidebar-footer" id="library-footer"></div>
       </aside>
       <div class="sidebar-scrim" id="sidebar-scrim" hidden></div>
 
       <main class="detail">
         <header class="toolbar" data-tauri-drag-region>
           <div class="toolbar-side">
-            <button class="icon-btn" id="btn-sidebar" data-icon="sidebar" aria-label="Toggle sidebar"></button>
+            <button class="icon-btn" id="btn-sidebar" data-icon="sidebar" aria-label="Toggle sidebar" title="Library"></button>
           </div>
 
           <div class="toolbar-heading">
-            <span class="toolbar-title" id="title-main">CueCard</span>
-            <span class="toolbar-subtitle" id="title-sub" hidden></span>
+            <button class="toolbar-title" id="title-main" title="Rename">CueCard</button>
+            <button class="toolbar-subtitle" id="title-sub" hidden></button>
           </div>
 
           <div class="toolbar-drag" data-tauri-drag-region></div>
 
           <div class="toolbar-side is-trailing">
+            <button class="save-btn" id="btn-save" hidden title="Save">Save</button>
             <button class="invisible-btn" id="btn-invisible" aria-pressed="true">
               <span class="invisible-icon" data-icon="eyeOff" data-icon-size="16"></span>
               <span class="invisible-label">Invisible</span>
@@ -70,6 +96,11 @@
           <!-- The script you are writing -->
           <div class="pane" id="pane-script">
             <div id="editor"></div>
+          </div>
+
+          <!-- The deck you are writing, a box a card -->
+          <div class="pane" id="pane-cards" hidden>
+            <div class="cards-scroll" id="card-editor"></div>
           </div>
 
           <!-- Notes coming live from a Google Slides deck -->
@@ -96,30 +127,32 @@
 
           <!-- Floating controls, as on the phone -->
           <div class="home-controls" id="home-controls">
-            <div class="timer-control" id="timer-control">
-              <button class="pill-btn" id="btn-set-timer">Set Timer</button>
-              <button class="pill-btn" id="btn-sample" hidden>Add Sample Text</button>
-
-              <div class="timer-picker" id="timer-picker" hidden>
-                <div class="timer-picker-head">
-                  <span class="timer-picker-title">Timer</span>
-                  <button class="icon-btn is-small" id="btn-close-timer" data-icon="xmark" data-icon-size="13"
-                    aria-label="Close"></button>
-                </div>
-                <div class="timer-picker-row">
-                  <span class="timer-picker-label">Duration</span>
-                  <div class="wheels">
-                    <div class="wheel" id="wheel-minutes" tabindex="0" role="spinbutton" aria-label="Minutes"></div>
-                    <span class="wheel-colon">:</span>
-                    <div class="wheel" id="wheel-seconds" tabindex="0" role="spinbutton" aria-label="Seconds"></div>
-                  </div>
-                </div>
-              </div>
+            <div class="format-bar" id="format-bar" role="toolbar" aria-label="Format">
+              <button class="format-btn" data-format="cue" title="Add Cue" aria-label="Add Cue">
+                <span data-icon="cue" data-icon-size="16"></span>
+              </button>
+              <button class="format-btn" data-format="anchor" title="Add Anchor" aria-label="Add Anchor">
+                <span data-icon="anchor" data-icon-size="16"></span>
+              </button>
+              <span class="format-divider"></span>
+              <button class="format-btn" data-format="bold" aria-label="Bold">
+                <span data-icon="bold" data-icon-size="15"></span>
+              </button>
+              <button class="format-btn" data-format="italic" aria-label="Italic">
+                <span data-icon="italic" data-icon-size="15"></span>
+              </button>
             </div>
 
-            <button class="play-btn" id="btn-play" aria-label="Start prompter" title="Start prompter">
-              <span data-icon="play" data-icon-size="22"></span>
-            </button>
+            <div class="controls-trailing">
+              <button class="pill-btn glass-pill" id="btn-sample" hidden>Add Sample Text</button>
+              <button class="pill-btn glass-pill" id="btn-set-timer" title="Timer">
+                <span data-icon="timer" data-icon-size="15"></span>
+                <span id="timer-label">Set Timer</span>
+              </button>
+              <button class="play-btn" id="btn-play" aria-label="Start" title="Start">
+                <span data-icon="play" data-icon-size="22"></span>
+              </button>
+            </div>
           </div>
         </div>
       </main>
@@ -127,6 +160,9 @@
 
     <!-- ===================== Prompter ===================== -->
     <section class="screen prompter" id="screen-prompter" hidden></section>
+
+    <!-- ===================== Cards ===================== -->
+    <section class="screen prompter deck" id="screen-cards" hidden></section>
 
     <!-- ===================== Settings sheet ===================== -->
     <div class="sheet" id="sheet-settings" hidden>
@@ -165,56 +201,127 @@
             <h3 class="group-title">Teleprompter</h3>
             <div class="cells">
               <div class="cell">
-                <span class="cell-title">Start Delay</span>
-                <label class="number-box">
-                  <input id="field-delay" type="text" inputmode="numeric" maxlength="2" aria-label="Start delay in seconds">
-                  <span class="number-unit">seconds</span>
-                </label>
-              </div>
-              <div class="cell">
-                <span class="cell-title">Scroll Speed</span>
+                <span class="cell-label">
+                  <span class="cell-title">Scroll Speed</span>
+                  <span class="cell-sub">Lines that pass each minute.</span>
+                </span>
                 <label class="number-box">
                   <input id="field-speed" type="text" inputmode="numeric" maxlength="3" aria-label="Scroll speed in lines per minute">
                   <span class="number-unit">lines/min</span>
                 </label>
               </div>
-              <div class="cell is-stacked">
-                <span class="cell-title">Cue Color</span>
-                <div class="swatches" id="cue-swatches"></div>
+              <div class="cell">
+                <span class="cell-label">
+                  <span class="cell-title">Viewer Text Size</span>
+                  <span class="cell-sub">The script as it scrolls.</span>
+                </span>
+                <div class="segmented is-sizes" data-size="fontSize" role="group" aria-label="Viewer text size"></div>
               </div>
               <div class="cell">
-                <span class="cell-title">Text Size</span>
-                <div class="segmented" id="seg-textsize" role="group" aria-label="Text size">
-                  <button class="segment" data-value="small">Small</button>
-                  <button class="segment" data-value="medium">Medium</button>
-                  <button class="segment" data-value="large">Large</button>
-                </div>
+                <span class="cell-label">
+                  <span class="cell-title">Editor Text Size</span>
+                  <span class="cell-sub">The script as you write it.</span>
+                </span>
+                <div class="segmented is-sizes" data-size="editorFontSize" role="group" aria-label="Editor text size"></div>
+              </div>
+              <div class="cell">
+                <span class="cell-label">
+                  <span class="cell-title">Cue Color</span>
+                  <span class="cell-sub">Cues in your script.</span>
+                </span>
+                <div class="swatches is-small" data-swatches="cueColor"></div>
+              </div>
+              <div class="cell">
+                <span class="cell-label">
+                  <span class="cell-title">Reading Guide Line</span>
+                  <span class="cell-sub">Marks the line to read.</span>
+                </span>
+                <label class="switch">
+                  <input type="checkbox" data-toggle="showsReadingGuide">
+                  <span class="switch-track"></span>
+                </label>
+              </div>
+              <div class="cell">
+                <span class="cell-label">
+                  <span class="cell-title">Flip Horizontally</span>
+                  <span class="cell-sub">For reading off a teleprompter's glass.</span>
+                </span>
+                <label class="switch">
+                  <input type="checkbox" data-toggle="mirrorsText">
+                  <span class="switch-track"></span>
+                </label>
+              </div>
+              <div class="cell">
+                <span class="cell-label">
+                  <span class="cell-title">Flip Vertically</span>
+                  <span class="cell-sub">For a screen lying the other way up.</span>
+                </span>
+                <label class="switch">
+                  <input type="checkbox" data-toggle="flipsTextVertically">
+                  <span class="switch-track"></span>
+                </label>
               </div>
             </div>
-            <p class="group-footer">Every cue is shown in this color. The delay counts down before the script starts moving.</p>
+          </section>
+
+          <section class="group">
+            <h3 class="group-title">Cards</h3>
+            <div class="cells">
+              <div class="cell">
+                <span class="cell-label">
+                  <span class="cell-title">Viewer Text Size</span>
+                  <span class="cell-sub">Each card as you read it.</span>
+                </span>
+                <div class="segmented is-sizes" data-size="cardsFontSize" role="group" aria-label="Card text size"></div>
+              </div>
+              <div class="cell">
+                <span class="cell-label">
+                  <span class="cell-title">Editor Text Size</span>
+                  <span class="cell-sub">The deck as you write it.</span>
+                </span>
+                <div class="segmented is-sizes" data-size="cardsEditorFontSize" role="group" aria-label="Cards editor text size"></div>
+              </div>
+              <div class="cell">
+                <span class="cell-label">
+                  <span class="cell-title">Cue Color</span>
+                  <span class="cell-sub">Cues on your cards.</span>
+                </span>
+                <div class="swatches is-small" data-swatches="cardsCueColor"></div>
+              </div>
+            </div>
           </section>
 
           <section class="group">
             <h3 class="group-title">Window</h3>
             <div class="cells">
               <div class="cell">
-                <span class="cell-title">Invisible to Screen Sharing</span>
+                <span class="cell-label">
+                  <span class="cell-title">Invisible to Screen Sharing</span>
+                  <span class="cell-sub">Left out of shares, screenshots and recordings.</span>
+                </span>
                 <label class="switch">
                   <input type="checkbox" id="toggle-invisible">
                   <span class="switch-track"></span>
                 </label>
               </div>
               <div class="cell">
-                <span class="cell-title">Opacity</span>
+                <span class="cell-label">
+                  <span class="cell-title">Opacity</span>
+                  <span class="cell-sub">How much of what's behind shows through.</span>
+                </span>
                 <div class="slider-row">
                   <input type="range" id="slider-opacity" min="10" max="100" step="5" aria-label="Window opacity">
                   <span class="slider-value" id="opacity-value">100%</span>
                 </div>
               </div>
+              <button class="cell is-action" id="row-shortcuts">
+                <span class="cell-label">
+                  <span class="cell-title">Keyboard Shortcuts</span>
+                  <span class="cell-sub">Some of them work while you're in another app.</span>
+                </span>
+                <span class="cell-accessory" data-icon="chevronRight" data-icon-size="14"></span>
+              </button>
             </div>
-            <p class="group-footer">
-              CueCard stays out of screen sharing, screenshots and recordings. Everyone else sees what is behind it.
-            </p>
           </section>
 
           <section class="group">
@@ -228,29 +335,22 @@
                 <button class="tinted-btn" id="btn-slides-connect">Connect</button>
               </div>
               <button class="cell is-action" id="link-extension-2">
-                <span class="cell-title">Get the Browser Extension</span>
+                <span class="cell-label">
+                  <span class="cell-title">Get the Browser Extension</span>
+                  <span class="cell-sub">Sends the notes for the slide you're on.</span>
+                </span>
                 <span class="cell-accessory" data-icon="arrowUpRight" data-icon-size="13"></span>
               </button>
             </div>
-            <p class="group-footer">The extension sends the notes for the slide you are on to this window.</p>
           </section>
 
           <section class="group">
-            <h3 class="group-title">Keyboard</h3>
-            <div class="cells">
-              <button class="cell is-action" id="row-shortcuts">
-                <span class="cell-title">Keyboard Shortcuts</span>
-                <span class="cell-accessory" data-icon="chevronRight" data-icon-size="14"></span>
-              </button>
-            </div>
-            <p class="group-footer">Some of them work while you are in another app.</p>
-          </section>
-
-          <section class="group">
-            <h3 class="group-title">Appearance</h3>
             <div class="cells">
               <div class="cell">
-                <span class="cell-title">Theme</span>
+                <span class="cell-label">
+                  <span class="cell-title">Theme</span>
+                  <span class="cell-sub">Light, dark, or match your computer.</span>
+                </span>
                 <div class="segmented" id="seg-theme" role="group" aria-label="Theme">
                   <button class="segment" data-value="system">System</button>
                   <button class="segment" data-value="light">Light</button>
@@ -262,9 +362,51 @@
 
           <section class="group">
             <div class="cells">
+              <button class="cell is-action" id="btn-help">
+                <span class="cell-title">Help</span>
+                <span class="cell-accessory" data-icon="chevronRight" data-icon-size="14"></span>
+              </button>
               <button class="cell is-action" id="btn-rate">
                 <span class="cell-title">Star on GitHub</span>
                 <span class="cell-accessory" data-icon="arrowUpRight" data-icon-size="13"></span>
+              </button>
+            </div>
+          </section>
+
+          <section class="group">
+            <div class="cells">
+              <div id="advanced-fields" hidden>
+                <div class="cell">
+                  <span class="cell-label">
+                    <span class="cell-title">Teleprompter Text Size</span>
+                    <span class="cell-sub">16–72</span>
+                  </span>
+                  <label class="number-box"><input data-number="fontSize" type="text" inputmode="numeric" maxlength="2" aria-label="Teleprompter text size"></label>
+                </div>
+                <div class="cell">
+                  <span class="cell-label">
+                    <span class="cell-title">Teleprompter Editor Text Size</span>
+                    <span class="cell-sub">12–40</span>
+                  </span>
+                  <label class="number-box"><input data-number="editorFontSize" type="text" inputmode="numeric" maxlength="2" aria-label="Teleprompter editor text size"></label>
+                </div>
+                <div class="cell">
+                  <span class="cell-label">
+                    <span class="cell-title">Card Text Size</span>
+                    <span class="cell-sub">16–72</span>
+                  </span>
+                  <label class="number-box"><input data-number="cardsFontSize" type="text" inputmode="numeric" maxlength="2" aria-label="Card text size"></label>
+                </div>
+                <div class="cell">
+                  <span class="cell-label">
+                    <span class="cell-title">Cards Editor Text Size</span>
+                    <span class="cell-sub">12–40</span>
+                  </span>
+                  <label class="number-box"><input data-number="cardsEditorFontSize" type="text" inputmode="numeric" maxlength="2" aria-label="Cards editor text size"></label>
+                </div>
+              </div>
+              <button class="cell is-action" id="btn-advanced">
+                <span class="cell-title is-tinted" id="advanced-label">Show Advanced Settings</span>
               </button>
               <button class="cell is-action" id="btn-reset">
                 <span class="cell-title is-tinted">Reset to Defaults</span>
@@ -278,8 +420,12 @@
         <!-- Keyboard shortcuts -->
         <div class="sheet-page" id="page-shortcuts" hidden>
           <section class="group">
-            <h3 class="group-title">In CueCard</h3>
+            <h3 class="group-title">Writing</h3>
             <div class="cells" id="shortcut-list-local"></div>
+          </section>
+          <section class="group">
+            <h3 class="group-title">Reading</h3>
+            <div class="cells" id="shortcut-list-reading"></div>
           </section>
           <section class="group">
             <h3 class="group-title">Anywhere</h3>

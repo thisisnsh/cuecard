@@ -1,17 +1,22 @@
 /**
  * CueCard for desktop.
  *
- * The phone app has two screens — the one you write on and the one you present
- * from — and this has the same two, with the room a window gives used for the
- * things a phone has nowhere to put: your saved scripts and a live Google
- * Slides deck, side by side in a sidebar.
+ * The phone app opens on a library, writes scripts and decks in two modes, and
+ * presents them as a scrolling teleprompter or one card at a time. This has
+ * the same, with the room a window gives used for what a phone has nowhere to
+ * put: the library and a live Google Slides deck side by side in a sidebar,
+ * next to the script being written.
  */
 
 import { icon, hydrateIcons } from './icons.js';
 import * as T from './tauri.js';
 import {
-  COUNTDOWN_RANGE,
+  EDITOR_SIZE_PRESETS,
+  EDITOR_SIZE_RANGE,
   LPM_RANGE,
+  VIEWER_SIZE_PRESETS,
+  VIEWER_SIZE_RANGE,
+  canResetSettings,
   clamp,
   hadStoredTimer,
   loadSettings,
@@ -24,10 +29,24 @@ import {
 } from './settings.js';
 import * as notes from './notes.js';
 import { createEditor } from './editor.js';
+import { createCardEditor } from './card-editor.js';
 import { createPrompter } from './prompter.js';
+import { createCardsViewer } from './cards.js';
+import { createLibrary } from './library.js';
+import { openHelpSheet, openTimerSheet, openVersionsSheet } from './sheets.js';
 import * as ui from './ui.js';
 import * as notices from './notifications.js';
-import { CUE_COLORS, normalizingTags, suggestedFileName, titleForFileName, withoutTags } from './parser.js';
+import {
+  CUE_COLORS,
+  cards as cardsOf,
+  colorName,
+  formatDuration,
+  limitedTitle,
+  normalizingTags,
+  plainText,
+  suggestedFileName,
+  titleForFileName,
+} from './parser.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -35,11 +54,14 @@ const LINKS = {
   site: 'https://cuecard.dev',
   extension: 'https://cuecard.dev/#download',
   source: 'https://github.com/ThisIsNSH/CueCard',
-  support: 'mailto:support@cuecard.dev',
+  support: 'support@cuecard.dev',
 };
 
-const PLACEHOLDER =
-  'Write your script here…\n\nType [ to add a cue — a note to yourself like “[smile and pause]” that you read but never say out loud.';
+const PLACEHOLDERS = {
+  teleprompter:
+    'Write your script here…\n\nType [ to add a cue — a note to yourself like “[smile and pause]” that you read but never say out loud. Write *bold* or _italic_ for emphasis.',
+  cards: 'Write your first card…\n\nType [ to add a cue like “[pause]”.',
+};
 
 const app = {
   /** Which script the detail pane is showing: your own, or the live deck. */
@@ -48,10 +70,19 @@ const app = {
   update: null,
   sidebarOpen: true,
   overlay: false,
+  overlaySidebar: false,
+  /** "Saved", for a moment after saving. */
+  justSaved: false,
 };
 
 let editor;
+let cardEditor;
 let prompter;
+let cardsViewer;
+let library;
+
+const mode = () => notes.state.mode;
+const kindName = (m = mode()) => (m === 'cards' ? 'deck' : 'script');
 
 // =============================================================================
 // START-UP
@@ -68,13 +99,37 @@ async function boot() {
   watchSystemTheme();
   await notes.loadNotes({ seedTimer: seedTimerFromTimeTags });
 
-  editor = createEditor($('editor'), { onChange: onScriptEdited });
-  editor.setPlaceholder(PLACEHOLDER);
-  editor.setText(notes.state.draft);
+  editor = createEditor($('editor'), {
+    onChange: (text) => notes.setDraft(text, { mode: 'teleprompter' }),
+  });
+  editor.setPlaceholder(PLACEHOLDERS.teleprompter);
 
-  prompter = createPrompter($('screen-prompter'), { onClose: onPrompterClosed });
+  cardEditor = createCardEditor($('card-editor'), {
+    onChange: (script) => notes.setDraft(script, { mode: 'cards' }),
+  });
+  cardEditor.setPlaceholder(PLACEHOLDERS.cards);
 
-  buildSwatches();
+  syncEditors();
+
+  prompter = createPrompter($('screen-prompter'), { onClose: onViewerClosed });
+  cardsViewer = createCardsViewer($('screen-cards'), { onClose: onViewerClosed });
+
+  library = createLibrary(
+    {
+      modeSwitch: $('mode-switch'),
+      search: $('library-search'),
+      sectionTitle: $('library-title'),
+      chips: $('library-chips'),
+      list: $('library-list'),
+      empty: $('library-empty'),
+      footer: $('library-footer'),
+      more: $('btn-library-menu'),
+      add: $('btn-new-script'),
+    },
+    libraryHandlers()
+  );
+  await library.load();
+
   wireHome();
   wireSettingsSheet();
   wireKeyboard();
@@ -84,7 +139,7 @@ async function boot() {
   window.addEventListener('resize', updateLayout);
 
   onSettingsChange(onSettingChanged);
-  notes.onNotesChange(renderAll);
+  notes.onNotesChange(scheduleRender);
   notices.onNotificationsChange(renderNotices);
   await notices.loadNotifications();
 
@@ -113,38 +168,56 @@ function seedTimerFromTimeTags(seconds) {
   void setSetting('timerSeconds', seconds % 60, { track: false, force: true });
 }
 
+/** Put each mode's draft in its editor, after it changed from outside them. */
+function syncEditors() {
+  editor.setText(notes.draft('teleprompter').text);
+  cardEditor.setText(notes.draft('cards').text);
+}
+
+/** The editor the format buttons work in: the script's, or the card being written. */
+const activeEditor = () => (mode() === 'cards' ? cardEditor.activeEditor() : editor);
+
 // =============================================================================
 // THE SCRIPT BEING WRITTEN
 // =============================================================================
 
-function onScriptEdited(text) {
-  notes.setDraft(text);
-  renderToolbar();
-  renderControls();
-  renderSidebar();
+let savedTimer = null;
+function flashSaved() {
+  app.justSaved = true;
+  clearTimeout(savedTimer);
+  savedTimer = setTimeout(() => {
+    app.justSaved = false;
+    renderToolbar();
+  }, 1400);
 }
 
-async function saveScript() {
+async function saveScript(from = 'save_note') {
   if (!notes.hasScript()) return;
   if (!notes.currentNote()) return saveScriptAsNew();
+  if (!notes.hasUnsavedChanges()) return;
   await notes.saveCurrent();
-  ui.showToast('Saved');
-  T.trackClick('save_note', 'home');
+  flashSaved();
+  renderAll();
+  T.trackClick(from, 'home');
 }
 
 async function saveScriptAsNew() {
   if (!notes.hasScript()) return;
+  const note = notes.currentNote();
   const title = await ui.promptForText({
-    title: 'Save Script',
-    message: 'Give this script a name.',
-    value: suggestedFileName(null, notes.state.draft),
-    placeholder: 'Script name',
+    title: note ? 'Save as New' : mode() === 'cards' ? 'Save Deck' : 'Save Script',
+    message: note
+      ? `Your changes go in a new ${kindName()}. “${note.title}” stays as it was last saved.`
+      : `Give this ${kindName()} a name.`,
+    value: note ? limitedTitle(`${note.title} Copy`) : limitedTitle(suggestedFileName(null, plainText(notes.draft().text))),
+    placeholder: 'Title',
     confirmLabel: 'Save',
   });
   if (!title) return;
   await notes.saveAsNew(title);
-  ui.showToast('Saved');
-  T.trackClick('save_as_new', 'home');
+  flashSaved();
+  renderAll();
+  T.trackClick(note ? 'save_as_new' : 'save_note', 'home');
 }
 
 /**
@@ -153,13 +226,15 @@ async function saveScriptAsNew() {
  * Closing the window is not one of these: the draft is kept on the way out.
  * Returns false if the reader decided to stay.
  */
-async function confirmLeavingScript() {
-  if (app.source !== 'script' || !notes.hasUnsavedChanges()) return true;
+async function confirmLeavingScript(m = mode()) {
+  if (!notes.hasUnsavedChanges(m)) return true;
 
-  const note = notes.currentNote();
+  const note = notes.currentNote(m);
   const result = await ui.showAlert({
-    title: note ? `Save changes to “${note.title}”?` : 'Save this script?',
-    message: 'Your changes are lost if you do not save them.',
+    title: note ? `Save changes to “${note.title}”?` : `Save this ${kindName(m)}?`,
+    message: note
+      ? 'Your changes are lost if you do not save them.'
+      : `It was never saved, so it can't be brought back if you don't save it.`,
     actions: [
       { id: 'discard', label: "Don't Save", style: 'destructive' },
       { id: 'cancel', label: 'Cancel', style: 'cancel' },
@@ -167,12 +242,17 @@ async function confirmLeavingScript() {
     ],
   });
 
-  if (!result) return false;
+  if (!result) {
+    T.trackClick('unsaved_cancel', 'home');
+    return false;
+  }
+  T.trackClick(result.action === 'save' ? 'unsaved_save_continue' : 'unsaved_discard', 'home');
   if (result.action === 'save') {
-    if (note) await notes.saveCurrent();
+    if (m !== mode()) await notes.setMode(m);
+    if (note) await notes.saveCurrent(m);
     else {
       await saveScriptAsNew();
-      if (notes.hasUnsavedChanges()) return false;
+      if (notes.hasUnsavedChanges(m)) return false;
     }
   }
   return true;
@@ -194,92 +274,276 @@ async function closeApp() {
 }
 
 async function newScript() {
+  T.trackClick(mode() === 'cards' ? 'new_deck' : 'new_script', 'library');
   if (!(await confirmLeavingScript())) return;
-  await notes.newScript();
-  editor.setText('');
+  await notes.newScript(mode(), library.collection());
+  syncEditors();
   selectSource('script');
-  editor.focus();
-  T.trackClick('new_note', 'home');
+  focusEditor();
 }
 
 async function openScript(id) {
-  T.trackClick('load_note', 'saved_notes', { note_id: id });
-  if (!(await confirmLeavingScript())) return;
+  const note = notes.noteById(id);
+  if (!note) return;
+  T.trackClick('load_note', 'library', { note_id: id });
+
+  // Already open in its mode: just show it.
+  if (notes.draft(note.mode).noteId === id) {
+    await notes.setMode(note.mode);
+    selectSource('script');
+    return;
+  }
+  if (!(await confirmLeavingScript(note.mode))) return;
   await notes.openNote(id);
-  editor.setText(notes.state.draft);
+  syncEditors();
   editor.reset();
+  cardEditor.scrollToTop();
   selectSource('script');
 }
 
+async function openDraft() {
+  T.trackClick('open_draft', 'library');
+  selectSource('script');
+  focusEditor();
+}
+
+async function discardDraft() {
+  const sure = await ui.confirmAction({
+    title: `Discard This ${mode() === 'cards' ? 'Deck' : 'Script'}?`,
+    message: "It was never saved, so it can't be brought back.",
+    confirmLabel: 'Discard',
+    destructive: true,
+  });
+  T.trackClick(sure ? 'discard_draft' : 'discard_draft_cancel', 'library');
+  if (!sure) return;
+  await notes.discardDraft();
+  syncEditors();
+}
+
+/** Throw away what changed since the open script was last saved. */
+async function revertScript() {
+  const note = notes.currentNote();
+  if (!note || !notes.hasUnsavedChanges()) return;
+  const sure = await ui.confirmAction({
+    title: 'Discard Changes?',
+    message: `“${note.title}” goes back to how it was last saved.`,
+    confirmLabel: 'Discard Changes',
+    destructive: true,
+  });
+  if (!sure) return;
+  T.trackClick('discard_changes', 'home');
+  await notes.discardDraft();
+  syncEditors();
+}
+
 async function renameScript(id) {
-  const note = notes.state.saved.find((n) => n.id === id);
+  const note = notes.noteById(id);
   if (!note) return;
-  T.trackClick('rename_note', 'saved_notes', { note_id: id });
+  T.trackClick('rename_note', 'library', { note_id: id });
   const title = await ui.promptForText({
-    title: 'Rename Script',
-    message: 'Give this script a new name.',
+    title: 'Rename',
+    message: `Give this ${kindName(note.mode)} a new name.`,
     value: note.title,
-    placeholder: 'Script name',
+    placeholder: 'Title',
     confirmLabel: 'Rename',
   });
   if (title) await notes.renameNote(id, title);
 }
 
+/** The title in the bar: rename what's saved, or name what isn't. */
+function onTitleClick() {
+  const note = notes.currentNote();
+  if (note) return renameScript(note.id);
+  if (notes.hasScript()) return saveScriptAsNew();
+  return undefined;
+}
+
+async function duplicateScript(id) {
+  T.trackClick('duplicate_note', 'library');
+  const copy = await notes.duplicateNote(id);
+  if (copy) ui.showToast('Duplicated');
+}
+
 async function deleteScript(id) {
-  const note = notes.state.saved.find((n) => n.id === id);
+  const note = notes.noteById(id);
   if (!note) return;
-  T.trackClick('delete_note', 'saved_notes', { note_id: id });
+  T.trackClick('delete_note_menu', 'library', { note_id: id });
   const sure = await ui.confirmAction({
     title: `Delete “${note.title}”?`,
-    message: 'This cannot be undone.',
+    message: "Its versions are deleted too. This can't be undone.",
     confirmLabel: 'Delete',
     destructive: true,
   });
   if (!sure) return;
-  const wasOpen = notes.state.currentId === id;
+  T.trackClick('delete_note', 'library');
   await notes.deleteNote(id);
-  if (wasOpen) editor.setText('');
+  syncEditors();
+}
+
+async function deleteAllScripts() {
+  T.trackClick('delete_all_notes', 'library');
+  const sure = await ui.confirmAction({
+    title: 'Delete All Scripts?',
+    message: "Every saved script and deck will be deleted, with their versions. This can't be undone.",
+    confirmLabel: 'Delete All',
+    destructive: true,
+  });
+  if (!sure) return;
+  T.trackClick('delete_all_notes_confirm', 'library');
+  await notes.deleteAll();
+  syncEditors();
+}
+
+async function switchMode(m) {
+  await notes.setMode(m);
+  selectSource('script');
+}
+
+function openVersions(id = notes.currentNote()?.id) {
+  if (!id) return;
+  T.trackClick('version_history', 'home');
+  openVersionsSheet(id, { onRestored: syncEditors });
 }
 
 // =============================================================================
-// FILES
+// COLLECTIONS
+// =============================================================================
+
+const promptCollectionName = (value = '', { title = 'New Collection', confirmLabel = 'Create' } = {}) =>
+  ui.promptForText({
+    title,
+    message: 'Scripts and decks can be kept together in it.',
+    value,
+    placeholder: 'Name',
+    confirmLabel,
+  });
+
+async function newCollection() {
+  T.trackClick('new_collection', 'library');
+  const name = await promptCollectionName();
+  if (!name) return;
+  const made = await notes.createCollection(name);
+  if (!made) return;
+  library.showCollection(made);
+  renderAll();
+}
+
+async function renameCollection(name) {
+  T.trackClick('rename_collection', 'library');
+  const next = await promptCollectionName(name, { title: 'Rename Collection', confirmLabel: 'Rename' });
+  if (!next || next === name) return;
+  const renamed = await notes.renameCollection(name, next);
+  if (!renamed) return ui.showError(`There's already a collection called “${next}”.`, "Couldn't Rename");
+  if (library.collection() === null) library.showCollection(renamed);
+  renderAll();
+  return undefined;
+}
+
+async function deleteCollection(name) {
+  T.trackClick('delete_collection', 'library');
+  const sure = await ui.confirmAction({
+    title: `Delete “${name}”?`,
+    message: "The scripts in it aren't deleted. They stay in All.",
+    confirmLabel: 'Delete Collection',
+    destructive: true,
+  });
+  if (!sure) return;
+  await notes.deleteCollection(name);
+}
+
+// =============================================================================
+// FILES AND SHARING
 // =============================================================================
 
 async function importScript() {
+  T.trackClick('import_file', 'library');
   if (!T.filesAvailable()) return ui.showError('File access is not available in this build.');
-  if (!(await confirmLeavingScript())) return;
 
   try {
     const picked = await T.pickTextFile();
     if (!picked) return;
     if (!picked.text.trim()) return ui.showError('That file is empty.');
+    if (picked.text.length > 10 * 1024 * 1024) return ui.showError('That file is too large to be a script.');
 
     // Whatever spelling the file was written in, it arrives as [...].
-    await notes.importScript(titleForFileName(picked.path), normalizingTags(picked.text));
-    editor.setText(notes.state.draft);
+    const content = normalizingTags(picked.text.replace(/\r\n?/g, '\n'));
+    const target = content.match(/\[separator\]/i) ? 'cards' : 'teleprompter';
+    if (!(await confirmLeavingScript(target))) return;
+    await notes.importScript(titleForFileName(picked.path), content, library.collection());
+    syncEditors();
     editor.reset();
     selectSource('script');
     ui.showToast('Imported');
-    T.trackClick('import_file', 'home');
   } catch (error) {
     await ui.showError("This file couldn't be read as text.");
     console.error(error);
   }
+  return undefined;
 }
 
-async function exportScript() {
+async function exportText(title, content) {
   if (!T.filesAvailable()) return ui.showError('File access is not available in this build.');
-  if (!notes.hasScript()) return;
+  if (!plainText(content).trim()) return undefined;
 
   try {
-    const name = `${suggestedFileName(notes.currentNote()?.title, notes.state.draft)}.txt`;
-    if (await T.saveTextFile(name, normalizingTags(notes.state.draft))) {
+    const name = `${suggestedFileName(title, plainText(content))}.txt`;
+    if (await T.saveTextFile(name, normalizingTags(content))) {
       ui.showToast('Exported');
       T.trackClick('export_file', 'home');
     }
   } catch (error) {
     await ui.showError(String(error));
   }
+  return undefined;
+}
+
+const exportScript = () => exportText(notes.currentNote()?.title, notes.draft().text);
+
+function exportNote(id) {
+  const note = notes.noteById(id);
+  if (note) void exportText(note.title, note.content);
+}
+
+/** The script as text, cues included, on the clipboard. */
+async function copyText(content) {
+  const text = normalizingTags(content);
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    const area = document.createElement('textarea');
+    area.value = text;
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    area.select();
+    document.execCommand('copy');
+    area.remove();
+  }
+  ui.showToast('Copied');
+  T.trackClick('copy_text', 'home');
+}
+
+function libraryHandlers() {
+  return {
+    onChange: renderAll,
+    onMode: switchMode,
+    onOpen: openScript,
+    onOpenDraft: openDraft,
+    onDiscardDraft: discardDraft,
+    onNew: newScript,
+    onRename: renameScript,
+    onDuplicate: duplicateScript,
+    onDelete: deleteScript,
+    onDeleteAll: deleteAllScripts,
+    onExport: exportNote,
+    onCopy: (id) => copyText(notes.noteById(id)?.content || ''),
+    onVersions: openVersions,
+    onImport: importScript,
+    onNewCollection: newCollection,
+    onRenameCollection: renameCollection,
+    onDeleteCollection: deleteCollection,
+    promptCollectionName: () => promptCollectionName(),
+  };
 }
 
 // =============================================================================
@@ -355,30 +619,43 @@ const deckLabel = () =>
   [app.slides.slide?.title || 'Presentation', slideLabel()].filter(Boolean).join(' · ');
 
 // =============================================================================
-// THE PROMPTER
+// PRESENTING
 // =============================================================================
 
-function scriptForPrompter() {
+const draftTitle = (m = mode()) => notes.currentNote(m)?.title || (m === 'cards' ? 'New Deck' : 'New Script');
+
+function hasSomethingToPlay() {
+  if (app.source === 'slides') return Boolean(plainText(app.slides.notes).trim());
+  if (mode() === 'cards') return cardsOf(notes.draft('cards').text).length > 0;
+  return notes.hasScript('teleprompter');
+}
+
+/** Present what's showing: the deck's notes, the script, or the cards. */
+function start({ play = false } = {}) {
+  if (!hasSomethingToPlay()) return;
+  ui.closeMenu();
+
   if (app.source === 'slides') {
-    return {
+    return openPrompter({
       source: 'slides',
       text: app.slides.notes,
       title: app.slides.slide?.title || 'Google Slides',
       subtitle: slideLabel(),
-    };
+    }, play);
   }
-  return {
-    source: 'script',
-    text: notes.state.draft,
-    title: notes.currentNote()?.title || 'Untitled Script',
-    subtitle: '',
-  };
+
+  if (mode() === 'cards') {
+    T.trackClick('start_cards', 'home');
+    if (!cardsViewer.open({ text: notes.draft('cards').text, title: draftTitle('cards') })) return undefined;
+    $('screen-home').hidden = true;
+    T.trackScreen('cards');
+    return undefined;
+  }
+
+  return openPrompter({ source: 'script', text: notes.draft('teleprompter').text, title: draftTitle('teleprompter') }, play);
 }
 
-function startPrompter({ play = false } = {}) {
-  const script = scriptForPrompter();
-  if (!script.text.trim()) return;
-
+function openPrompter(script, play) {
   $('screen-home').hidden = true;
   prompter.open(script);
   T.trackScreen('teleprompter');
@@ -386,7 +663,7 @@ function startPrompter({ play = false } = {}) {
   if (play) prompter.togglePlay();
 }
 
-function onPrompterClosed() {
+function onViewerClosed() {
   $('screen-home').hidden = false;
   T.trackScreen('home');
   renderAll();
@@ -448,36 +725,68 @@ function renderNotice(surface, host, { row, group }) {
   notices.logImpression(notice);
 }
 
+let renderFrame = null;
+/** Typing changes the draft on every key, so drawing waits for the next frame. */
+function scheduleRender() {
+  if (renderFrame !== null) return;
+  renderFrame = requestAnimationFrame(() => {
+    renderFrame = null;
+    renderAll();
+  });
+}
+
 function renderAll() {
   renderNotices();
+  renderPanes();
   renderToolbar();
   renderSidebar();
   renderSlides();
   renderControls();
 }
 
+function renderPanes() {
+  const isSlides = app.source === 'slides';
+  $('pane-script').hidden = isSlides || mode() !== 'teleprompter';
+  $('pane-cards').hidden = isSlides || mode() !== 'cards';
+  $('pane-slides').hidden = !isSlides;
+}
+
 function renderToolbar() {
   const title = $('title-main');
   const sub = $('title-sub');
+  const save = $('btn-save');
 
   if (app.source === 'slides') {
     title.textContent = 'Google Slides';
+    title.disabled = true;
+    title.removeAttribute('title');
     sub.textContent = app.slides.slide?.title || (app.slides.connected ? 'Waiting for a deck' : 'Not connected');
     sub.hidden = false;
+    sub.disabled = true;
+    save.hidden = true;
     return;
   }
 
   const note = notes.currentNote();
-  title.textContent = note ? note.title : notes.hasScript() ? 'Untitled Script' : 'CueCard';
+  const unsaved = notes.hasUnsavedChanges();
+  title.textContent = note ? note.title : notes.hasScript() ? draftTitle() : 'CueCard';
+  title.disabled = !note && !notes.hasScript();
+  title.title = note ? 'Rename' : notes.hasScript() ? `Save this ${kindName()}` : '';
 
-  if (note && notes.hasUnsavedChanges()) sub.textContent = 'Edited';
-  else if (!note && notes.hasScript()) sub.textContent = 'Not saved';
-  else sub.textContent = '';
-  sub.hidden = !sub.textContent;
+  const details = [
+    unsaved ? 'Unsaved' : app.justSaved ? 'Saved' : null,
+    note ? `Version ${notes.versionCount(note.id)}` : null,
+  ].filter(Boolean);
+  sub.textContent = details.join(' · ');
+  sub.hidden = !details.length;
+  sub.disabled = !note;
+  sub.title = note ? 'Version History' : '';
+  sub.classList.toggle('is-unsaved', unsaved);
+
+  save.hidden = !unsaved;
 }
 
 function renderSidebar() {
-  // Slides
   const slidesRow = $('row-slides');
   slidesRow.classList.toggle('is-selected', app.source === 'slides');
   slidesRow.classList.toggle('is-live', Boolean(app.slides.slide));
@@ -488,65 +797,11 @@ function renderSidebar() {
       ? deckLabel()
       : 'Waiting for a deck';
 
-  // Scripts
-  const list = $('sidebar-notes');
-  const rows = [];
-
-  // A script that has been written but not yet named belongs at the top, so it
-  // is somewhere rather than nowhere.
-  if (!notes.state.currentId && notes.hasScript()) {
-    rows.push(row({ id: '', title: 'Untitled Script', meta: 'Not saved', selected: app.source === 'script', draft: true }));
-  }
-
-  for (const note of notes.state.saved) {
-    const selected = app.source === 'script' && notes.state.currentId === note.id;
-    const edited = selected && notes.hasUnsavedChanges();
-    rows.push(
-      row({
-        id: note.id,
-        title: note.title,
-        meta: `${notes.noteDate(note.updatedAt)}${notes.preview(note.content) ? ` · ${notes.preview(note.content)}` : ''}`,
-        selected,
-        edited,
-      })
-    );
-  }
-
-  list.innerHTML = rows.join('');
-  $('sidebar-empty').hidden = rows.length > 0;
-
-  list.querySelectorAll('.note-row').forEach((el) => {
-    const { id } = el.dataset;
-    el.addEventListener('click', (event) => {
-      if (event.target.closest('[data-act]')) return;
-      if (id) void openScript(id);
-    });
-    el.querySelector('[data-act="rename"]')?.addEventListener('click', () => renameScript(id));
-    el.querySelector('[data-act="delete"]')?.addEventListener('click', () => deleteScript(id));
-  });
-
-  function row({ id, title, meta, selected, edited = false, draft = false }) {
-    return `
-      <div class="note-row${selected ? ' is-selected' : ''}" data-id="${ui.escapeAttribute(id)}" role="button" tabindex="0">
-        <span class="note-text">
-          <span class="note-title">${ui.escapeHtml(title)}</span>
-          <span class="note-meta">${ui.escapeHtml(meta)}</span>
-        </span>
-        ${edited ? '<span class="note-dot" title="Unsaved changes"></span>' : ''}
-        ${draft ? '' : `
-          <span class="note-actions">
-            <button class="icon-btn is-small" data-act="rename" aria-label="Rename" title="Rename">${icon('pencil', 13)}</button>
-            <button class="icon-btn is-small" data-act="delete" aria-label="Delete" title="Delete">${icon('trash', 13)}</button>
-          </span>`}
-      </div>`;
-  }
+  library.render({ source: app.source, selectedId: notes.draft().noteId });
 }
 
 function renderSlides() {
-  const isSlides = app.source === 'slides';
-  $('pane-script').hidden = isSlides;
-  $('pane-slides').hidden = !isSlides;
-  if (!isSlides) return;
+  if (app.source !== 'slides') return;
 
   const { connected, slide, notes: slideNotes } = app.slides;
   const empty = $('slides-empty');
@@ -569,20 +824,31 @@ function renderSlides() {
   // Notes that are nothing but tags this version doesn't show leave an empty
   // script, which is the same as having none.
   $('slides-notes').innerHTML =
-    ui.scriptHtml(slideNotes) || '<p class="empty-text">This slide has no speaker notes.</p>';
+    ui.scriptHtml(slideNotes, { anchors: false }) || '<p class="empty-text">This slide has no speaker notes.</p>';
 }
 
 function renderControls() {
-  const hasContent =
-    app.source === 'slides' ? Boolean(withoutTags(app.slides.notes).trim()) : notes.hasScript();
-  $('btn-play').disabled = !hasContent;
+  const isScript = app.source === 'script';
+  const isCards = mode() === 'cards';
+
+  $('btn-play').disabled = !hasSomethingToPlay();
+  const playLabel = app.source === 'slides' ? 'Start Teleprompter' : isCards ? 'Open Cards' : 'Start Teleprompter';
+  $('btn-play').setAttribute('aria-label', playLabel);
+  $('btn-play').title = `${playLabel} (${ui.formatShortcut('mod+enter')})`;
+
+  // The format buttons are for writing.
+  $('format-bar').hidden = !isScript;
+  $('format-bar').querySelector('[data-format="anchor"]').hidden = isCards;
 
   // Nothing written yet means nothing to time, so the pill offers the one thing
   // that helps: something to read.
-  const offerSample = app.source === 'script' && !notes.hasScript();
+  const offerSample = isScript && !notes.hasScript();
   $('btn-sample').hidden = !offerSample;
-  $('btn-set-timer').hidden = offerSample || timerPickerOpen;
-  if (offerSample) closeTimerPicker();
+  $('btn-set-timer').hidden = offerSample;
+  const timerMode = app.source === 'slides' ? 'teleprompter' : mode();
+  const duration = timerDuration(timerMode);
+  $('timer-label').textContent = duration > 0 ? formatDuration(duration) : 'Set Timer';
+  $('btn-set-timer').setAttribute('aria-label', duration > 0 ? `Timer, ${formatDuration(duration)}` : 'Timer, not set');
 
   $('btn-invisible').setAttribute('aria-pressed', String(settings.invisible));
   $('btn-invisible').querySelector('.invisible-label').textContent = settings.invisible ? 'Invisible' : 'Visible';
@@ -596,8 +862,16 @@ function renderControls() {
 function selectSource(source) {
   app.source = source;
   if (source === 'slides') T.trackScreen('slides');
+  if (app.overlay && app.overlaySidebar) {
+    app.overlaySidebar = false;
+    updateLayout();
+  }
   renderAll();
-  if (source === 'script') editor.focus();
+  if (source === 'script') focusEditor();
+}
+
+function focusEditor() {
+  requestAnimationFrame(() => (mode() === 'cards' ? cardEditor.focus() : editor.focus()));
 }
 
 // =============================================================================
@@ -606,178 +880,71 @@ function selectSource(source) {
 
 function updateLayout() {
   const home = $('screen-home');
-  app.overlay = window.innerWidth < 680;
+  app.overlay = window.innerWidth < 720;
   home.classList.toggle('is-overlay', app.overlay);
 
-  const open = app.overlay ? app.sidebarOpen && app.overlaySidebar : app.sidebarOpen;
+  const open = app.overlay ? app.overlaySidebar : app.sidebarOpen;
   home.classList.toggle('is-sidebar-collapsed', !open);
   $('sidebar-scrim').hidden = !(app.overlay && open);
 }
 
-function toggleSidebar() {
-  const opening = app.overlay ? !app.overlaySidebar : !app.sidebarOpen;
+function toggleSidebar(force) {
+  const isOpen = app.overlay ? app.overlaySidebar : app.sidebarOpen;
+  const opening = typeof force === 'boolean' ? force : !isOpen;
+  if (opening === isOpen) return;
   if (opening) T.trackClick('saved_notes', 'home');
-  if (app.overlay) app.overlaySidebar = !app.overlaySidebar;
+  if (app.overlay) app.overlaySidebar = opening;
   else {
-    app.sidebarOpen = !app.sidebarOpen;
+    app.sidebarOpen = opening;
     void T.setStored('ui_sidebar_open', app.sidebarOpen);
   }
-  if (app.overlay) app.sidebarOpen = true;
   updateLayout();
-}
-
-// =============================================================================
-// THE TIMER PILL
-// =============================================================================
-
-let timerPickerOpen = false;
-
-/**
- * Swap the pill for the picker, or back, and let the box travel between the two
- * sizes rather than jumping. The end state is applied first and measured, so the
- * animation always runs between the real sizes.
- */
-function flipTimerControl(open) {
-  const control = $('timer-control');
-  const picker = $('timer-picker');
-  const from = control.getBoundingClientRect();
-
-  timerPickerOpen = open;
-  control.classList.toggle('is-open', open);
-  picker.hidden = !open;
-  renderControls();
-
-  const to = control.getBoundingClientRect();
-  control.animate(
-    [
-      { width: `${from.width}px`, height: `${from.height}px` },
-      { width: `${to.width}px`, height: `${to.height}px` },
-    ],
-    { duration: 320, easing: 'cubic-bezier(0.32, 0.9, 0.36, 1)' }
-  );
-
-  // The contents arrive once the box has somewhere to put them.
-  if (open) {
-    picker.animate(
-      [{ opacity: 0 }, { opacity: 1 }],
-      { duration: 200, delay: 90, easing: 'ease-out', fill: 'backwards' }
-    );
-  }
-}
-
-function openTimerPicker() {
-  if (timerPickerOpen) return;
-  flipTimerControl(true);
-  document.addEventListener('mousedown', onClickAwayFromPicker, true);
-  T.trackClick('set_timer', 'home');
-}
-
-function closeTimerPicker() {
-  if (!timerPickerOpen) return;
-  document.removeEventListener('mousedown', onClickAwayFromPicker, true);
-
-  // The contents leave before the box closes over them.
-  const fade = $('timer-picker').animate([{ opacity: 1 }, { opacity: 0 }], {
-    duration: 120,
-    easing: 'ease-in',
-  });
-  fade.finished.catch(() => {}).then(() => flipTimerControl(false));
-}
-
-function onClickAwayFromPicker(event) {
-  if (!$('timer-control').contains(event.target)) closeTimerPicker();
-}
-
-/** A wheel picker, as near as a window gets to one: scroll it, click it, or type. */
-function createWheel(el, { max, get, set }) {
-  let typed = '';
-  let typedAt = 0;
-  let wheelDelta = 0;
-
-  function render() {
-    const value = get();
-    const at = (n) => String((n + max + 1) % (max + 1)).padStart(2, '0');
-    el.innerHTML = `
-      <div class="wheel-row">${at(value - 1)}</div>
-      <div class="wheel-row is-current">${at(value)}</div>
-      <div class="wheel-row">${at(value + 1)}</div>
-      <div class="wheel-band"></div>`;
-    el.setAttribute('aria-valuenow', String(value));
-    el.setAttribute('aria-valuemin', '0');
-    el.setAttribute('aria-valuemax', String(max));
-  }
-
-  // Wraps, because the faded rows above and below say it will: 59 sits above 0.
-  const step = (by) => {
-    const span = max + 1;
-    set((((get() + by) % span) + span) % span);
-    render();
-  };
-
-  // One number per notch of a mouse wheel, rather than five.
-  el.addEventListener('wheel', (event) => {
-    event.preventDefault();
-    wheelDelta += event.deltaY;
-    if (Math.abs(wheelDelta) < 50) return;
-    step(wheelDelta > 0 ? 1 : -1);
-    wheelDelta = 0;
-  }, { passive: false });
-
-  el.addEventListener('click', (event) => {
-    const rows = [...el.querySelectorAll('.wheel-row')];
-    const index = rows.indexOf(event.target.closest('.wheel-row'));
-    if (index === 0) step(-1);
-    if (index === 2) step(1);
-    el.focus();
-  });
-
-  el.addEventListener('keydown', (event) => {
-    if (event.key === 'ArrowUp') {
-      event.preventDefault();
-      step(-1);
-    } else if (event.key === 'ArrowDown') {
-      event.preventDefault();
-      step(1);
-    } else if (/^\d$/.test(event.key)) {
-      // Two digits typed together are one number, as on a keypad.
-      const now = Date.now();
-      typed = now - typedAt < 900 ? (typed + event.key).slice(-2) : event.key;
-      typedAt = now;
-      set(Math.min(Number(typed), max));
-      render();
-    }
-  });
-
-  render();
-  return { render };
 }
 
 // =============================================================================
 // MENU
 // =============================================================================
 
+function supportMail(subject) {
+  void T.appVersion().then((version) => {
+    const body = `\n\n—\nCueCard ${version} for ${T.isMac ? 'macOS' : 'Windows'}`;
+    void T.openUrl(`mailto:${LINKS.support}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
+  });
+}
+
+function openHelp(page = 'home') {
+  T.trackClick('help', page);
+  openHelpSheet({
+    isMac: T.isMac,
+    page,
+    onSupport: () => supportMail('CueCard Desktop: a problem'),
+    onFeature: () => supportMail('CueCard Desktop: a feature request'),
+  });
+}
+
 function openMenu() {
+  T.trackClick('editor_menu', 'home');
   const note = notes.currentNote();
   const items = [];
 
   if (app.source === 'script') {
+    const isCards = mode() === 'cards';
     items.push(
-      { label: 'Save', icon: 'save', shortcut: 'mod+s', disabled: !(note && notes.hasUnsavedChanges()), onSelect: saveScript },
+      { label: 'Save', icon: 'save', shortcut: 'mod+s', disabled: !notes.hasUnsavedChanges(), onSelect: () => saveScript('save_note_menu') },
       { label: 'Save as New…', icon: 'docPlus', shortcut: 'mod+shift+s', disabled: !notes.hasScript(), onSelect: saveScriptAsNew },
+      { label: 'Version History', icon: 'history', disabled: !note || notes.versionCount(note.id) < 2, onSelect: () => openVersions() },
       { divider: true },
-      { label: 'New Script', icon: 'compose', shortcut: 'mod+n', onSelect: newScript },
-      {
-        label: 'Insert Cue',
-        icon: 'cue',
-        onSelect: () => {
-          T.trackClick('insert_cue', 'home');
-          editor.insertCue();
-        },
-      },
+      { label: isCards ? 'New Deck' : 'New Script', icon: 'compose', shortcut: 'mod+n', onSelect: newScript },
+      { label: 'Rename…', icon: 'pencil', disabled: !note, onSelect: () => note && renameScript(note.id) },
+      { label: isCards ? 'Create New Card' : 'Add Anchor', icon: isCards ? 'plus' : 'anchor', onSelect: () => (isCards ? cardEditor.addCard() : insertFormat('anchor')) },
       { divider: true },
-      { label: 'Import from File…', icon: 'docDown', onSelect: importScript },
-      { label: 'Export to File…', icon: 'docUp', disabled: !notes.hasScript(), onSelect: exportScript }
+      { label: 'Import File…', icon: 'docDown', onSelect: importScript },
+      { label: 'Export to File…', icon: 'docUp', disabled: !notes.hasScript(), onSelect: exportScript },
+      { label: 'Copy Text', icon: 'copy', disabled: !notes.hasScript(), onSelect: () => copyText(notes.draft().text) }
     );
+    if (note && notes.hasUnsavedChanges()) {
+      items.push({ divider: true }, { label: 'Discard Changes', icon: 'restart', destructive: true, onSelect: revertScript });
+    }
   } else {
     items.push(
       { label: 'Refresh Notes', icon: 'refresh', disabled: !app.slides.slide, onSelect: refreshSlides },
@@ -790,13 +957,27 @@ function openMenu() {
     items.push({ label: `Update to ${app.update.version}`, icon: 'update', onSelect: runUpdate });
   }
   items.push(
+    { label: 'Help', icon: 'help', onSelect: () => openHelp('home') },
     { label: 'Keyboard Shortcuts', icon: 'keyboard', onSelect: () => openSettings('shortcuts') },
     { divider: true },
     { label: 'Visit Website', icon: 'globe', onSelect: () => T.openUrl(LINKS.site) },
-    { label: 'Contact Support', icon: 'mail', onSelect: () => T.openUrl(LINKS.support) }
+    { label: 'Contact Support', icon: 'mail', onSelect: () => supportMail('CueCard Desktop') }
   );
 
   ui.showMenu($('btn-menu'), items);
+}
+
+/** What the format buttons and their shortcuts do, in whichever editor is in use. */
+function insertFormat(kind) {
+  if (app.source !== 'script') return;
+  const target = activeEditor();
+  if (!target) return;
+  T.trackClick(kind === 'cue' ? 'insert_cue' : kind === 'anchor' ? 'insert_anchor' : `format_${kind}`, 'home');
+  if (kind === 'cue') target.insertCue();
+  else if (kind === 'anchor') {
+    if (mode() === 'cards') return;
+    target.insertAnchor();
+  } else target.toggleEmphasis(kind);
 }
 
 // =============================================================================
@@ -809,7 +990,9 @@ function openSettings(page = 'settings') {
   syncSettings();
   renderNotices();
   showSettingsPage(page);
-  closeSettingsSheet = ui.openSheet($('sheet-settings'), { onClose: () => { closeSettingsSheet = null; } });
+  if (!closeSettingsSheet) {
+    closeSettingsSheet = ui.openSheet($('sheet-settings'), { onClose: () => { closeSettingsSheet = null; } });
+  }
   T.trackScreen('settings');
 }
 
@@ -819,31 +1002,79 @@ function showSettingsPage(page) {
   $('page-shortcuts').hidden = !isShortcuts;
   $('sheet-title').textContent = isShortcuts ? 'Keyboard Shortcuts' : 'Settings';
   $('btn-sheet-back').hidden = !isShortcuts;
-  document.querySelector('.sheet-body')?.scrollTo(0, 0);
+  $('sheet-settings').querySelector('.sheet-body')?.scrollTo(0, 0);
 }
 
-function buildSwatches() {
-  $('cue-swatches').innerHTML = CUE_COLORS.map(
-    (name) => `
-      <button class="swatch" data-color="${name}" style="background: var(--color-${name})"
-        aria-label="${name[0].toUpperCase()}${name.slice(1)}" title="${name[0].toUpperCase()}${name.slice(1)}">
-        ${icon('check', 13, 2.4)}
-      </button>`
-  ).join('');
+function buildSettingsControls() {
+  document.querySelectorAll('[data-swatches]').forEach((host) => {
+    const key = host.dataset.swatches;
+    host.innerHTML = CUE_COLORS.map(
+      (name) => `
+        <button class="swatch" data-color="${name}" style="background: var(--color-${name})"
+          aria-label="Cue color: ${colorName(name)}" title="${colorName(name)}">
+          ${icon('check', 11, 2.6)}
+        </button>`
+    ).join('');
+    host.addEventListener('click', (event) => {
+      const swatch = event.target.closest('.swatch');
+      if (swatch) void setSetting(key, swatch.dataset.color);
+    });
+  });
+
+  document.querySelectorAll('[data-size]').forEach((host) => {
+    const key = host.dataset.size;
+    const presets = key.toLowerCase().includes('editor') ? EDITOR_SIZE_PRESETS : VIEWER_SIZE_PRESETS;
+    host.innerHTML = presets
+      .map((preset) => `<button class="segment" data-value="${preset.value}" title="${preset.value} pt">${preset.label}</button>`)
+      .join('');
+    host.addEventListener('click', (event) => {
+      const segment = event.target.closest('.segment');
+      if (segment) void setSetting(key, Number(segment.dataset.value));
+    });
+  });
+
+  document.querySelectorAll('[data-toggle]').forEach((input) => {
+    input.addEventListener('change', () => setSetting(input.dataset.toggle, input.checked));
+  });
+
+  document.querySelectorAll('[data-number]').forEach((input) => {
+    const key = input.dataset.number;
+    const range = key.toLowerCase().includes('editor') ? EDITOR_SIZE_RANGE : VIEWER_SIZE_RANGE;
+    input.addEventListener('blur', () => commitNumberField(input, key, range));
+    input.addEventListener('keydown', (e) => e.key === 'Enter' && input.blur());
+  });
 }
+
+let showsAdvanced = false;
 
 function syncSettings() {
-  $('field-delay').value = String(settings.countdownSeconds);
   $('field-speed').value = String(settings.linesPerMinute);
   $('slider-opacity').value = String(settings.opacity);
   $('opacity-value').textContent = `${settings.opacity}%`;
   $('toggle-invisible').checked = settings.invisible;
 
-  $('cue-swatches').querySelectorAll('.swatch').forEach((el) => {
-    el.classList.toggle('is-selected', el.dataset.color === settings.cueColor);
+  document.querySelectorAll('[data-swatches]').forEach((host) => {
+    host.querySelectorAll('.swatch').forEach((el) => {
+      el.classList.toggle('is-selected', el.dataset.color === settings[host.dataset.swatches]);
+    });
   });
-  selectSegment('seg-textsize', settings.fontSizePreset);
+  document.querySelectorAll('[data-size]').forEach((host) => {
+    host.querySelectorAll('.segment').forEach((el) => {
+      el.classList.toggle('is-selected', Number(el.dataset.value) === settings[host.dataset.size]);
+    });
+    host.title = host.querySelector('.is-selected') ? '' : `Custom (${settings[host.dataset.size]})`;
+  });
+  document.querySelectorAll('[data-toggle]').forEach((input) => {
+    input.checked = Boolean(settings[input.dataset.toggle]);
+  });
+  document.querySelectorAll('[data-number]').forEach((input) => {
+    if (document.activeElement !== input) input.value = String(settings[input.dataset.number]);
+  });
   selectSegment('seg-theme', settings.theme);
+
+  $('advanced-fields').hidden = !showsAdvanced;
+  $('advanced-label').textContent = showsAdvanced ? 'Hide Advanced Settings' : 'Show Advanced Settings';
+  $('btn-reset').disabled = !canResetSettings();
 
   $('slides-settings-status').textContent = app.slides.connected ? 'Connected' : 'Not connected';
   $('btn-slides-connect').hidden = app.slides.connected;
@@ -860,9 +1091,16 @@ function selectSegment(id, value) {
   });
 }
 
+const PROMPTER_KEYS = new Set([
+  'fontSize', 'cueColor', 'mirrorsText', 'flipsTextVertically', 'showsReadingGuide',
+  'timerStyle', 'timerMinutes', 'timerSeconds', '*',
+]);
+const CARDS_KEYS = new Set(['cardsFontSize', 'cardsCueColor', 'cardsTimerStyle', 'cardsTimerMinutes', 'cardsTimerSeconds', '*']);
+
 function onSettingChanged(key) {
-  if (key === 'cueColor' || key === 'fontSizePreset') prompter.restyle();
-  if (key === 'invisible') renderControls();
+  if (PROMPTER_KEYS.has(key)) prompter.restyle();
+  if (CARDS_KEYS.has(key)) cardsViewer.restyle();
+  renderControls();
   if (!$('sheet-settings').hidden) syncSettings();
 }
 
@@ -881,18 +1119,29 @@ function commitNumberField(input, key, range) {
 const SHORTCUTS_LOCAL = [
   ['Save', 'mod+s'],
   ['Save as new', 'mod+shift+s'],
-  ['New script', 'mod+n'],
+  ['New script or deck', 'mod+n'],
+  ['Bold', 'mod+b'],
+  ['Italic', 'mod+i'],
+  ['New card', 'mod+enter', 'in a card'],
+  ['Teleprompter or Cards', ['mod+1', 'mod+2']],
+  ['Search the library', 'mod+f'],
+  ['Start', 'mod+enter'],
   ['Settings', 'mod+comma'],
 ];
 
-const SHORTCUTS_PROMPTER = [
-  ['Move a line', ['↑', '↓']],
-  ['Close the prompter', ['Esc']],
+const SHORTCUTS_READING = [
+  ['Play or pause', ['Space'], 'teleprompter'],
+  ['Restart', ['R'], 'teleprompter'],
+  ['Move a line', ['↑', '↓'], 'teleprompter'],
+  ['Anchor before or after', ['←', '→'], 'teleprompter'],
+  ['Next card', ['→', 'Space'], 'cards'],
+  ['Previous card', ['←'], 'cards'],
+  ['Close', ['Esc']],
 ];
 
 const SHORTCUTS_GLOBAL = [
   ['Show or hide CueCard', ['C']],
-  ['Play or pause', ['Space']],
+  ['Play or pause, or next card', ['Space']],
   ['Restart', ['0']],
   ['Less or more opacity', ['-', '=']],
   ['Move the window', ['←', '→', '↑', '↓']],
@@ -900,13 +1149,17 @@ const SHORTCUTS_GLOBAL = [
 
 function buildShortcutLists() {
   const keys = (list) => `<span class="shortcut-keys">${list.map((k) => `<kbd>${ui.escapeHtml(k)}</kbd>`).join('')}</span>`;
-  const cell = (label, inner) => `<div class="cell"><span class="cell-title">${label}</span>${inner}</div>`;
+  const cell = (label, inner, sub = '') =>
+    `<div class="cell"><span class="cell-label"><span class="cell-title">${label}</span>${sub ? `<span class="cell-sub">${sub}</span>` : ''}</span>${inner}</div>`;
   const base = T.isMac ? ['⌃', '⌥'] : ['Ctrl', 'Alt'];
 
-  $('shortcut-list-local').innerHTML = [
-    ...SHORTCUTS_LOCAL.map(([label, spec]) => cell(label, keys([ui.formatShortcut(spec)]))),
-    ...SHORTCUTS_PROMPTER.map(([label, list]) => cell(`${label} <span class="cell-sub">in the prompter</span>`, keys(list))),
-  ].join('');
+  $('shortcut-list-local').innerHTML = SHORTCUTS_LOCAL.map(([label, spec, sub]) =>
+    cell(label, keys((Array.isArray(spec) ? spec : [spec]).map(ui.formatShortcut)), sub)
+  ).join('');
+
+  $('shortcut-list-reading').innerHTML = SHORTCUTS_READING.map(([label, list, where]) =>
+    cell(label, keys(list), where ? `In ${where === 'cards' ? 'cards' : 'the teleprompter'}` : '')
+  ).join('');
 
   $('shortcut-list-global').innerHTML = SHORTCUTS_GLOBAL.map(([label, list]) =>
     cell(label, keys([...base, ...list]))
@@ -956,9 +1209,8 @@ async function runUpdate() {
 // =============================================================================
 
 function wireHome() {
-  $('btn-sidebar').addEventListener('click', toggleSidebar);
-  $('sidebar-scrim').addEventListener('click', toggleSidebar);
-  $('btn-new-script').addEventListener('click', newScript);
+  $('btn-sidebar').addEventListener('click', () => toggleSidebar());
+  $('sidebar-scrim').addEventListener('click', () => toggleSidebar(false));
   $('row-slides').addEventListener('click', () => selectSource('slides'));
   $('btn-connect-slides').addEventListener('click', connectSlides);
   $('btn-slides-connect').addEventListener('click', connectSlides);
@@ -969,6 +1221,16 @@ function wireHome() {
   });
   $('link-extension-2').addEventListener('click', () => T.openUrl(LINKS.extension));
 
+  $('title-main').addEventListener('click', () => {
+    T.trackClick('rename_note', 'home');
+    void onTitleClick();
+  });
+  $('title-sub').addEventListener('click', () => {
+    T.trackClick('version_history_footer', 'home');
+    openVersions();
+  });
+  $('btn-save').addEventListener('click', () => saveScript('save_note_top'));
+
   $('btn-invisible').addEventListener('click', toggleInvisible);
   $('btn-menu').addEventListener('click', openMenu);
   $('btn-settings').addEventListener('click', () => {
@@ -977,43 +1239,33 @@ function wireHome() {
   });
   $('btn-close').addEventListener('click', closeApp);
 
-  $('btn-play').addEventListener('click', () => {
-    T.trackClick('start_teleprompter', 'home');
-    startPrompter();
-  });
+  $('btn-play').addEventListener('click', () => start());
   $('btn-sample').addEventListener('click', () => {
     notes.addSampleText();
-    editor.setText(notes.state.draft);
+    syncEditors();
     editor.reset();
     T.trackClick('add_sample_text', 'home');
   });
 
-  $('btn-set-timer').addEventListener('click', openTimerPicker);
-  $('btn-close-timer').addEventListener('click', () => {
-    T.trackClick('close_timer_picker', 'home');
-    closeTimerPicker();
+  $('btn-set-timer').addEventListener('click', () => {
+    T.trackClick('set_timer', 'home');
+    openTimerSheet(app.source === 'slides' ? 'teleprompter' : mode());
   });
 
-  const wheels = {
-    minutes: createWheel($('wheel-minutes'), {
-      max: 59,
-      get: () => settings.timerMinutes,
-      set: (v) => setSetting('timerMinutes', v),
-    }),
-    seconds: createWheel($('wheel-seconds'), {
-      max: 59,
-      get: () => settings.timerSeconds,
-      set: (v) => setSetting('timerSeconds', v),
-    }),
-  };
-  onSettingsChange((key) => {
-    if (key === 'timerMinutes' || key === '*') wheels.minutes.render();
-    if (key === 'timerSeconds' || key === '*') wheels.seconds.render();
+  // The format buttons keep the editor's selection: a mousedown would take
+  // focus from it first.
+  $('format-bar').addEventListener('mousedown', (event) => event.preventDefault());
+  $('format-bar').addEventListener('click', (event) => {
+    const button = event.target.closest('[data-format]');
+    if (button) insertFormat(button.dataset.format);
   });
+  $('format-bar').querySelector('[data-format="bold"]').title = `Bold (${ui.formatShortcut('mod+b')})`;
+  $('format-bar').querySelector('[data-format="italic"]').title = `Italic (${ui.formatShortcut('mod+i')})`;
 }
 
 function wireSettingsSheet() {
   buildShortcutLists();
+  buildSettingsControls();
 
   $('btn-sheet-done').addEventListener('click', () => {
     T.trackClick('done', 'settings');
@@ -1022,22 +1274,10 @@ function wireSettingsSheet() {
   $('btn-sheet-back').addEventListener('click', () => showSettingsPage('settings'));
   $('row-shortcuts').addEventListener('click', () => showSettingsPage('shortcuts'));
 
-  const delay = $('field-delay');
-  delay.addEventListener('blur', () => commitNumberField(delay, 'countdownSeconds', COUNTDOWN_RANGE));
-  delay.addEventListener('keydown', (e) => e.key === 'Enter' && delay.blur());
-
   const speed = $('field-speed');
   speed.addEventListener('blur', () => commitNumberField(speed, 'linesPerMinute', LPM_RANGE));
   speed.addEventListener('keydown', (e) => e.key === 'Enter' && speed.blur());
 
-  $('cue-swatches').addEventListener('click', (event) => {
-    const swatch = event.target.closest('.swatch');
-    if (swatch) void setSetting('cueColor', swatch.dataset.color);
-  });
-  $('seg-textsize').addEventListener('click', (event) => {
-    const segment = event.target.closest('.segment');
-    if (segment) void setSetting('fontSizePreset', segment.dataset.value);
-  });
   $('seg-theme').addEventListener('click', (event) => {
     const segment = event.target.closest('.segment');
     if (segment) void setSetting('theme', segment.dataset.value);
@@ -1053,9 +1293,21 @@ function wireSettingsSheet() {
   opacity.addEventListener('change', () => T.trackSetting('opacity', opacity.value));
 
   $('btn-update').addEventListener('click', runUpdate);
+  $('btn-help').addEventListener('click', () => openHelp('settings'));
   $('btn-rate').addEventListener('click', () => {
     T.trackClick('rate_app', 'settings');
     void T.openUrl(LINKS.source);
+  });
+  $('btn-advanced').addEventListener('click', () => {
+    T.trackClick(showsAdvanced ? 'hide_advanced' : 'show_advanced', 'settings');
+    // Leave the field being typed in first, so its figure is committed.
+    document.activeElement?.blur?.();
+    showsAdvanced = !showsAdvanced;
+    void T.setStored('settings_show_advanced', showsAdvanced);
+    syncSettings();
+  });
+  void T.getStored('settings_show_advanced').then((value) => {
+    showsAdvanced = Boolean(value);
   });
   $('btn-reset').addEventListener('click', async () => {
     T.trackClick('reset_to_defaults', 'settings');
@@ -1069,14 +1321,22 @@ function wireSettingsSheet() {
     await resetSettings();
     syncSettings();
     renderControls();
-    prompter.restyle();
   });
 }
 
+/** Whether a key press belongs to a field other than the script, like search. */
+const isTypingElsewhere = (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLElement)) return false;
+  if (target.closest('.editor')) return false;
+  return target.matches('input, textarea, [contenteditable="true"]');
+};
+
 function wireKeyboard() {
   window.addEventListener('keydown', (event) => {
-    if (prompter.isOpen()) return;
-    if (document.querySelector('.alert-layer')) return;
+    if (event.defaultPrevented) return;
+    if (prompter.isOpen() || cardsViewer.isOpen()) return;
+    if (document.querySelector('.alert-layer, .menu-layer')) return;
 
     const on = (spec) => ui.matchesShortcut(event, spec);
     const sheetOpen = ui.isSheetOpen();
@@ -1097,6 +1357,19 @@ function wireKeyboard() {
     } else if (on('mod+n')) {
       event.preventDefault();
       void newScript();
+    } else if (on('mod+f')) {
+      event.preventDefault();
+      toggleSidebar(true);
+      library.focusSearch();
+    } else if (on('mod+1') || on('mod+2')) {
+      event.preventDefault();
+      void switchMode(on('mod+1') ? 'teleprompter' : 'cards');
+    } else if (on('mod+enter')) {
+      event.preventDefault();
+      start();
+    } else if ((on('mod+b') || on('mod+i')) && !isTypingElsewhere(event)) {
+      event.preventDefault();
+      insertFormat(on('mod+b') ? 'bold' : 'italic');
     }
   });
 }
@@ -1132,10 +1405,12 @@ async function onGlobalShortcut(action) {
       break;
     case 'timer-toggle':
       if (prompter.isOpen()) prompter.togglePlay();
-      else startPrompter({ play: true });
+      else if (cardsViewer.isOpen()) cardsViewer.next();
+      else start({ play: true });
       break;
     case 'timer-reset':
       if (prompter.isOpen()) prompter.restart();
+      else if (cardsViewer.isOpen()) cardsViewer.restart();
       break;
     case 'move-left':
     case 'move-right':
