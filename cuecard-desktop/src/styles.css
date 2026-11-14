@@ -809,18 +809,23 @@ a {
   color: color-mix(in srgb, var(--text-primary) 70%, var(--color-blue));
 }
 
-/* A card's box: it grows with its text rather than scrolling. */
+/* A card's box: it grows with its text rather than scrolling — or with its
+   placeholder, while it's empty, so a long one doesn't spill into the next. */
 .editor.is-auto {
   flex: none;
+  display: grid;
   --editor-pad-x: 0px;
   --editor-pad-top: 0px;
   --editor-pad-bottom: 0px;
   min-height: 1.55em;
 }
 
-.editor.is-auto .editor-backdrop {
+.editor.is-auto .editor-backdrop,
+.editor.is-auto .editor-placeholder {
+  grid-area: 1 / 1;
   position: relative;
   inset: auto;
+  margin: 0;
 }
 
 .editor.is-auto .editor-input {
@@ -1486,7 +1491,7 @@ a {
   position: absolute;
   left: 30px;
   right: 18px;
-  top: var(--rule-offset, 0px);
+  top: -0.5px;
   height: 1px;
   background: rgba(var(--text-primary-rgb), 0.1);
 }
@@ -2213,7 +2218,11 @@ a {
 .menu {
   position: absolute;
   min-width: 232px;
-  padding: 7px;
+  /* A long menu in a short window scrolls rather than running off it. */
+  max-height: calc(100vh - 16px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 5px;
   border-radius: 11px;
   background: var(--surface-2);
   border: 0.7px solid var(--separator);
@@ -2238,8 +2247,8 @@ a {
   align-items: center;
   gap: 14px;
   width: 100%;
-  padding: 9px 12px;
-  border-radius: 8px;
+  padding: 5px 10px;
+  border-radius: 6px;
   font-size: 13px;
   text-align: left;
   outline: none;
@@ -2277,7 +2286,7 @@ a {
 
 .menu-divider {
   height: 1px;
-  margin: 6px 8px;
+  margin: 4px 8px;
   background: var(--separator);
 }
 

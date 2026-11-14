@@ -179,8 +179,6 @@ export function createPrompter(root, { onClose, onPlayStateChange } = {}) {
     const center = top + lineHeight() / 2;
     const shown = settings.flipsTextVertically ? height - center : center;
     el.guide.style.top = `${shown}px`;
-    // The rule runs under the line rather than through it.
-    el.guide.style.setProperty('--rule-offset', `${(lineHeight() / 2 + 2) * (settings.flipsTextVertically ? -1 : 1)}px`);
     el.guide.classList.toggle('is-mirrored', settings.mirrorsText);
   }
 

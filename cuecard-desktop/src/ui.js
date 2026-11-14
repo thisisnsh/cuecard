@@ -188,7 +188,7 @@ export function showMenu(anchor, items, { at = null } = {}) {
   // Hung below the button and aligned to its trailing edge — or from the
   // pointer, for a right click — and kept on screen.
   const width = menu.offsetWidth;
-  const height = menu.offsetHeight;
+  let height = menu.offsetHeight;
   let left;
   let top;
   if (at) {
@@ -199,9 +199,17 @@ export function showMenu(anchor, items, { at = null } = {}) {
     const box = anchor.getBoundingClientRect();
     const alignLeft = box.left + box.width / 2 < window.innerWidth / 2;
     left = alignLeft ? box.left : box.right - width;
-    top = box.bottom + 6;
-    if (top + height > window.innerHeight - 8) top = box.top - height - 6;
-    menu.style.transformOrigin = alignLeft ? 'top left' : 'top right';
+    // Below the button if it fits, else above; failing both, on the roomier
+    // side, scrolling, so it never covers the button.
+    const roomBelow = window.innerHeight - box.bottom - 14;
+    const roomAbove = box.top - 14;
+    const below = height <= roomBelow || (height > roomAbove && roomBelow >= roomAbove);
+    if (height > (below ? roomBelow : roomAbove)) {
+      height = Math.max(below ? roomBelow : roomAbove, 0);
+      menu.style.maxHeight = `${height}px`;
+    }
+    top = below ? box.bottom + 6 : box.top - height - 6;
+    menu.style.transformOrigin = `${below ? 'top' : 'bottom'} ${alignLeft ? 'left' : 'right'}`;
   }
   left = Math.min(Math.max(left, 8), window.innerWidth - width - 8);
   top = Math.min(Math.max(top, 8), window.innerHeight - height - 8);
