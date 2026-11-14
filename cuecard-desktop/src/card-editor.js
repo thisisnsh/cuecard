@@ -10,7 +10,7 @@ import { createEditor } from './editor.js';
 import { CARD_CHARACTER_LIMIT, editableCards, measureCard, scriptForCards } from './parser.js';
 import { icon } from './icons.js';
 
-export function createCardEditor(root, { onChange, onFocusChange, onKeyDown } = {}) {
+export function createCardEditor(root, { onChange, onFocusChange, onKeyDown, onImages } = {}) {
   root.classList.add('card-editor');
   root.innerHTML = `
     <div class="card-list"></div>
@@ -57,6 +57,7 @@ export function createCardEditor(root, { onChange, onFocusChange, onKeyDown } = 
     const box = { el, counter: el.querySelector('.card-count'), editor: null };
     box.editor = createEditor(el.querySelector('.card-box-editor'), {
       auto: true,
+      onImages,
       onChange: () => {
         updateBox(box, boxes.indexOf(box));
         emit();

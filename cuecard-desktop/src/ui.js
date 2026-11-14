@@ -425,12 +425,22 @@ export function lineHtml(line, { anchors = true } = {}) {
       if (anchors) html += '<span class="anchor-mark" aria-hidden="true"></span>';
       continue;
     }
+    // A picture is a block of its own however it was written.
+    if (segment.type === 'image') {
+      html += imageHtml(segment.name);
+      spaced = false;
+      continue;
+    }
     if (spaced) html += ' ';
     html += segment.type === 'cue' ? `<span class="cue">${escapeHtml(segment.value)}</span>` : emphasisHtml(segment.value);
     spaced = true;
   }
   return html;
 }
+
+/** A picture placed in a script, filled in once it's loaded. */
+export const imageHtml = (name) =>
+  `<span class="script-image"><img data-image="${escapeAttribute(name)}" alt="Image" draggable="false"></span>`;
 
 /**
  * A script as the phone app lays it out: paragraphs, with each cue inline,

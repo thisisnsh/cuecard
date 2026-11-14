@@ -19,7 +19,8 @@
  *
  * `[anchor]` marks a spot the teleprompter can jump to. `[separator]` ends one
  * card of a deck and starts the next; the teleprompter reads it as a line
- * break. `[image …]` is the phone app's picture, which this app reads past.
+ * break. `[image 3fa9….jpg]` places a picture, named for its file in the
+ * image store; it's drawn as a block of its own wherever it's written.
  *
  * Emphasis is written the way chat apps write it, `*bold*` and `_italic_`.
  */
@@ -108,6 +109,19 @@ export function anchorMatches(text) {
   return tagMatches(text).filter((match) => match.kind === 'anchor');
 }
 
+/** The tag for an image in the store. */
+export const imageTag = (name) => `[image ${name}]`;
+
+/** Every image tag in the text, in order, each with the image's file name. */
+export function imageMatches(text) {
+  return tagMatches(text)
+    .filter((match) => match.kind === 'image')
+    .map((match) => ({ ...match, name: match.content.replace(/^image[ \t]+/, '') }));
+}
+
+/** The names of the images the text places, each once. */
+export const imageNames = (text) => new Set(imageMatches(String(text || '')).map((match) => match.name));
+
 /** Every tag that isn't a cue: anchors, separators and images. */
 export function reservedMatches(text) {
   return tagMatches(text).filter((match) => !match.isCue);
@@ -167,8 +181,8 @@ export const plainText = (text) =>
 export const wordCount = (text) => plainText(text).split(/\s+/).filter(Boolean).length;
 
 /**
- * Split a single line into spoken text, cue and anchor runs. Images and
- * separators are dropped.
+ * Split a single line into spoken text, cue, image and anchor runs.
+ * Separators are dropped.
  *
  * Shared by the editor and the display so both render cues identically.
  */
@@ -186,6 +200,7 @@ export function segments(line) {
     }
     if (match.isCue) result.push({ type: 'cue', value: match.content });
     else if (match.kind === 'anchor') result.push({ type: 'anchor' });
+    else if (match.kind === 'image') result.push({ type: 'image', name: match.content.replace(/^image[ \t]+/, '') });
     lastEnd = match.index + match.length;
   }
 
@@ -502,6 +517,19 @@ export function newCueInsertion(text, location) {
 export function anchorInsertion(text, location) {
   const insertion = spacedInsertion(text, ANCHOR_TAG, location);
   return { text: insertion.text, caretOffset: insertion.text.length };
+}
+
+/**
+ * The text to splice in for images at `location`: each on a line of its own,
+ * as the phone app writes them, and where the caret goes after them.
+ */
+export function imageInsertion(text, location, names) {
+  const previous = location > 0 ? text[location - 1] : '';
+  const next = location < text.length ? text[location] : '';
+  const before = previous && previous !== '\n' ? '\n' : '';
+  const after = next && next !== '\n' ? '\n' : '';
+  const body = names.map(imageTag).join('\n');
+  return { text: before + body + after, caretOffset: before.length + body.length + after.length };
 }
 
 /**

@@ -36,11 +36,13 @@ import { createLibrary } from './library.js';
 import { openHelpSheet, openTimerSheet, openVersionsSheet } from './sheets.js';
 import * as ui from './ui.js';
 import * as notices from './notifications.js';
+import { addImage, removeUnusedImages } from './images.js';
 import {
   CUE_COLORS,
   cards as cardsOf,
   colorName,
   formatDuration,
+  imageNames,
   limitedTitle,
   normalizingTags,
   plainText,
@@ -101,11 +103,13 @@ async function boot() {
 
   editor = createEditor($('editor'), {
     onChange: (text) => notes.setDraft(text, { mode: 'teleprompter' }),
+    onImages: insertImages,
   });
   editor.setPlaceholder(PLACEHOLDERS.teleprompter);
 
   cardEditor = createCardEditor($('card-editor'), {
     onChange: (script) => notes.setDraft(script, { mode: 'cards' }),
+    onImages: insertImages,
   });
   cardEditor.setPlaceholder(PLACEHOLDERS.cards);
 
@@ -154,6 +158,9 @@ async function boot() {
   await initSlides();
   listenToBackend();
   void startUpdateChecks();
+
+  // Pictures no script places any more go, once everything's had a chance to load.
+  setTimeout(() => void removeUnusedImages(placedImages()), 30 * 1000);
 
   // Anything the worker wants people to see. It throttles itself, so asking on
   // every launch and every few minutes costs nothing.
@@ -403,6 +410,52 @@ function openVersions(id = notes.currentNote()?.id) {
   if (!id) return;
   T.trackClick('version_history', 'home');
   openVersionsSheet(id, { onRestored: syncEditors });
+}
+
+// =============================================================================
+// IMAGES
+// =============================================================================
+
+/** Every picture something still places: a draft, a saved script, or any of
+ *  their versions. */
+function placedImages() {
+  const names = new Set();
+  const take = (text) => imageNames(text).forEach((name) => names.add(name));
+  notes.MODES.forEach((m) => take(notes.draft(m).text));
+  notes.state.saved.forEach((note) => take(note.content));
+  Object.values(notes.state.versions).forEach((list) => list.forEach((version) => take(version.content)));
+  return names;
+}
+
+/** Keep the pictures given and put them in where the caret is. */
+async function insertImages(files) {
+  if (app.source !== 'script' || !files.length) return;
+  const target = activeEditor();
+  T.trackClick('insert_image', 'home', { count: files.length });
+  if (files.length > 1 || files[0].size > 2_000_000) ui.showToast('Adding…');
+  const names = [];
+  for (const file of files) {
+    const name = await addImage(file);
+    if (name) names.push(name);
+  }
+  if (names.length) target?.insertImages(names);
+  if (names.length < files.length) {
+    await ui.showError(
+      names.length ? "Some of the pictures couldn't be added." : "That picture couldn't be added.",
+      "Couldn't Add Image"
+    );
+  }
+}
+
+async function pickImages() {
+  if (app.source !== 'script') return;
+  try {
+    const files = await T.pickImageFiles();
+    await insertImages(files);
+  } catch (error) {
+    console.error(error);
+    await ui.showError("That picture couldn't be read.", "Couldn't Add Image");
+  }
 }
 
 // =============================================================================
@@ -937,6 +990,7 @@ function openMenu() {
       { label: isCards ? 'New Deck' : 'New Script', icon: 'compose', shortcut: 'mod+n', onSelect: newScript },
       { label: 'Rename…', icon: 'pencil', disabled: !note, onSelect: () => note && renameScript(note.id) },
       { label: isCards ? 'Create New Card' : 'Add Anchor', icon: isCards ? 'plus' : 'anchor', onSelect: () => (isCards ? cardEditor.addCard() : insertFormat('anchor')) },
+      { label: 'Add Image…', icon: 'photo', onSelect: pickImages },
       { divider: true },
       { label: 'Import File…', icon: 'docDown', onSelect: importScript },
       { label: 'Export to File…', icon: 'docUp', disabled: !notes.hasScript(), onSelect: exportScript },
@@ -972,7 +1026,11 @@ function insertFormat(kind) {
   if (app.source !== 'script') return;
   const target = activeEditor();
   if (!target) return;
-  T.trackClick(kind === 'cue' ? 'insert_cue' : kind === 'anchor' ? 'insert_anchor' : `format_${kind}`, 'home');
+  if (kind !== 'image') T.trackClick(kind === 'cue' ? 'insert_cue' : kind === 'anchor' ? 'insert_anchor' : `format_${kind}`, 'home');
+  if (kind === 'image') {
+    void pickImages();
+    return;
+  }
   if (kind === 'cue') target.insertCue();
   else if (kind === 'anchor') {
     if (mode() === 'cards') return;

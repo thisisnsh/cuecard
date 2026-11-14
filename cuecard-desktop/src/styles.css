@@ -2757,3 +2757,79 @@ a {
 .sheet.is-compact {
   max-width: 480px;
 }
+
+/* =============================================================================
+   Images
+   ========================================================================== */
+
+/* In the editor: the tag as a quiet chip, and the picture hanging off a mark
+   with no width, so nothing around it moves. */
+.tag-image {
+  background: var(--fill);
+  border-radius: 4px;
+}
+
+.editor-thumb {
+  position: relative;
+  display: inline-block;
+  width: 0;
+  height: 0;
+  vertical-align: baseline;
+}
+
+.editor-thumb > img,
+.editor-thumb-missing {
+  position: absolute;
+  left: 8px;
+  bottom: -0.3em;
+  height: 1.35em;
+  max-width: 7em;
+  border-radius: 4px;
+  object-fit: cover;
+  box-shadow: 0 0 0 0.5px var(--glass-stroke);
+}
+
+.editor-thumb-missing {
+  width: 1.8em;
+  background: var(--fill-strong);
+}
+
+.editor.is-drop-target {
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--color-blue) 55%, transparent);
+  border-radius: 10px;
+}
+
+/* Reading: each picture a block of its own, as wide as the line and no
+   taller than most of the window. */
+.script-image {
+  display: block;
+  margin: 0.35em 0;
+}
+
+.script-image img {
+  display: block;
+  max-width: 100%;
+  max-height: min(55vh, 560px);
+  border-radius: 12px;
+  object-fit: contain;
+}
+
+.script-image.is-missing img {
+  display: none;
+}
+
+/* A picture this computer doesn't have: an empty frame where it goes. */
+.script-image.is-missing::before {
+  content: '';
+  display: block;
+  width: min(100%, 320px);
+  aspect-ratio: 4 / 3;
+  border-radius: 12px;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect width='18' height='18' x='3' y='3' rx='2'/%3E%3Ccircle cx='9' cy='9' r='2'/%3E%3Cpath d='m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21'/%3E%3C/svg%3E") center / 22% no-repeat,
+    rgba(136, 136, 136, 0.18);
+}
+
+.deck-card-text .script-image img {
+  max-height: 40vh;
+}

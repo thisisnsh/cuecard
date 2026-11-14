@@ -548,6 +548,7 @@ export function helpSections({ isMac }) {
         topic('Add Cues', 'Cues are reminders like [pause], shown in color and not read out. Type [ or click the cue button at the bottom left of the editor.'),
         topic('Bold and Italic', `Select words and click B or I at the bottom left, or press ${mod}B or ${mod}I. Or type *bold* or _italic_.`),
         topic('Add Anchors', 'Anchors mark spots in your script, like [anchor]. Type one or click the anchor button at the bottom left. In the teleprompter, the buttons at the far left and right jump to the anchor before or after.'),
+        topic('Add Images', 'Click the photo button at the bottom left of the editor, or paste or drag a picture in. It goes in as [image …] on a line of its own, with the picture beside it, and shows in full in the teleprompter and on cards.'),
         topic('Add Cards', `Each box in the editor is one card. Click Create New Card, or press ${mod}Return in a card, to add another. Backspace in an empty card removes it.`),
         topic('Keep Cards Short', 'Each card shows how many characters it has. Past 280 the count turns red, as the card is getting long to read at a glance.'),
       ],

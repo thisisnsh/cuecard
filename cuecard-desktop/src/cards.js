@@ -9,6 +9,7 @@
 import { cards as cardsOf, formatTime, wordCount } from './parser.js';
 import { settings, timerColor, timerDuration, timerStyle } from './settings.js';
 import { cardHtml } from './ui.js';
+import { hydrateImages } from './images.js';
 import { icon } from './icons.js';
 import { track, trackClick } from './tauri.js';
 
@@ -82,6 +83,7 @@ export function createCardsViewer(root, { onClose } = {}) {
       el.text.innerHTML = cardHtml(deck.cards[deck.index]);
       el.text.style.fontSize = `${settings.cardsFontSize}px`;
       fit();
+      hydrateImages(el.text, () => deck.open && !isDone() && fit());
       if (direction) {
         el.card.animate(
           [

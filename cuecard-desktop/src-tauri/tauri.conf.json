@@ -25,6 +25,7 @@
         "transparent": true,
         "visibleOnAllWorkspaces": true,
         "contentProtected": true,
+        "dragDropEnabled": false,
         "height": 480,
         "width": 760,
         "minHeight": 300,

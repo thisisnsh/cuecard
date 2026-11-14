@@ -18,6 +18,7 @@ const relaunch = T.process?.relaunch;
 const openDialog = T.dialog?.open;
 const saveDialog = T.dialog?.save;
 const readTextFile = T.fs?.readTextFile;
+const readFile = T.fs?.readFile;
 const writeTextFile = T.fs?.writeTextFile;
 
 async function call(command, args) {
@@ -184,6 +185,50 @@ export async function saveTextFile(defaultName, text) {
   if (!path) return false;
   await writeTextFile(path, text);
   return true;
+}
+
+// =============================================================================
+// IMAGES
+// =============================================================================
+
+/** Keep an image's bytes under `name` in the app's image store. */
+export async function imagesSave(name, bytes) {
+  if (!invoke) throw new Error('No backend');
+  await invoke('images_save', bytes, { headers: { 'x-image-name': name } });
+}
+
+/** An image's bytes from the store, or null if it isn't there. */
+export async function imagesRead(name) {
+  if (!invoke) return null;
+  try {
+    return new Uint8Array(await invoke('images_read', { name }));
+  } catch {
+    return null;
+  }
+}
+
+/** `[{ name, modified }]` for every image in the store. */
+export const imagesList = async () => (await call('images_list').catch(() => null)) || [];
+
+export const imagesRemove = (name) => call('images_remove', { name }).catch(() => {});
+
+const IMAGE_TYPES = { jpg: 'image/jpeg', jpeg: 'image/jpeg', png: 'image/png', gif: 'image/gif', webp: 'image/webp', heic: 'image/heic', heif: 'image/heif', bmp: 'image/bmp', tif: 'image/tiff', tiff: 'image/tiff' };
+
+/** Pictures picked from disk, as blobs. Empty if nothing was picked. */
+export async function pickImageFiles() {
+  if (!openDialog || !readFile) return [];
+  const picked = await openDialog({
+    multiple: true,
+    directory: false,
+    filters: [{ name: 'Image', extensions: Object.keys(IMAGE_TYPES) }],
+  });
+  const paths = picked ? (Array.isArray(picked) ? picked : [picked]) : [];
+  const blobs = [];
+  for (const path of paths) {
+    const ext = String(path).split('.').pop().toLowerCase();
+    blobs.push(new Blob([await readFile(path)], { type: IMAGE_TYPES[ext] || 'application/octet-stream' }));
+  }
+  return blobs;
 }
 
 // =============================================================================

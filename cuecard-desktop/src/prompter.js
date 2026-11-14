@@ -14,6 +14,7 @@
 import { formatTime, wordCount } from './parser.js';
 import { clamp, setSetting, settings, timerColor, timerDuration, timerStyle } from './settings.js';
 import { scriptHtml } from './ui.js';
+import { hydrateImages } from './images.js';
 import { icon } from './icons.js';
 import { track, trackClick } from './tauri.js';
 
@@ -131,6 +132,10 @@ export function createPrompter(root, { onClose, onPlayStateChange } = {}) {
     el.text.innerHTML = scriptHtml(run.text);
     applyFlip();
     layout();
+    // A picture takes its room once it's loaded, so the lines move under it.
+    hydrateImages(el.text, () => {
+      if (run.open) layout();
+    });
   }
 
   function applyFlip() {
@@ -206,6 +211,17 @@ export function createPrompter(root, { onClose, onPlayStateChange } = {}) {
       for (const rect of range.getClientRects()) {
         if (rect.height > 0) rects.push({ top: position(rect), height: rect.height });
       }
+    }
+
+    // A picture is read as a few lines, so the script doesn't race past it:
+    // more for a tall one than a wide one, as on the phone.
+    for (const frame of el.text.querySelectorAll('.script-image')) {
+      const rect = frame.getBoundingClientRect();
+      if (rect.height <= 0) continue;
+      const lines = Math.max(2, Math.min(8, Math.round((4 * rect.height) / Math.max(rect.width, 1))));
+      const slice = rect.height / lines;
+      const top = position(rect);
+      for (let i = 0; i < lines; i += 1) rects.push({ top: top + i * slice, height: slice - 0.5 });
     }
     rects.sort((a, b) => a.top - b.top);
 

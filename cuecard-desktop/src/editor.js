@@ -8,6 +8,10 @@
  * you see is the backdrop, and what you edit is the textarea. The two only
  * line up if their metrics match exactly, which is why the styling changes
  * colour and fakes weight, and never touches a glyph's width.
+ *
+ * A picture's `[image …]` tag stays in the text, drawn as a tinted chip with
+ * the picture beside it. The picture hangs off a mark with no width of its
+ * own, so it moves nothing either.
  */
 
 import {
@@ -17,15 +21,18 @@ import {
   emphases,
   emptyCueInsertion,
   emptyCueSurrounding,
+  imageInsertion,
+  imageMatches,
   newCueInsertion,
   reservedMatches,
 } from './parser.js';
-import { escapeHtml } from './ui.js';
+import { escapeAttribute, escapeHtml } from './ui.js';
+import { cachedImageURL, imageFiles, imageURL, onImageLoaded } from './images.js';
 
 /**
  * @param options.auto Grow to fit the text instead of scrolling, for a card.
  */
-export function createEditor(root, { onChange, onFocusChange, onKeyDown, auto = false } = {}) {
+export function createEditor(root, { onChange, onFocusChange, onKeyDown, onImages, auto = false } = {}) {
   root.classList.add('editor');
   root.classList.toggle('is-auto', auto);
   root.innerHTML = `
@@ -61,6 +68,13 @@ export function createEditor(root, { onChange, onFocusChange, onKeyDown, auto = 
     const reserved = reservedMatches(text);
     for (const match of reserved) add(match.index, match.index + match.length, 'tag-reserved');
 
+    // Each picture's tag is a run of its own, with the picture after it.
+    const pictures = new Map();
+    for (const match of imageMatches(text)) {
+      add(match.index, match.index + match.length, 'tag-image');
+      pictures.set(match.index + match.length, match.name);
+    }
+
     const skipping = [...cues, ...reserved];
     for (const emphasis of emphases(text, skipping)) {
       add(emphasis.open.index, emphasis.open.index + emphasis.open.length, 'em-marker');
@@ -71,9 +85,10 @@ export function createEditor(root, { onChange, onFocusChange, onKeyDown, auto = 
     let html = '';
     let runStart = 0;
     for (let i = 1; i <= text.length; i += 1) {
-      if (i < text.length && classes[i] === classes[runStart]) continue;
+      if (i < text.length && classes[i] === classes[runStart] && !pictures.has(i)) continue;
       const piece = escapeHtml(text.slice(runStart, i));
       html += classes[runStart] ? `<span class="${classes[runStart].trim()}">${piece}</span>` : piece;
+      if (pictures.has(i)) html += thumbnail(pictures.get(i));
       runStart = i;
     }
 
@@ -83,6 +98,21 @@ export function createEditor(root, { onChange, onFocusChange, onKeyDown, auto = 
     placeholder.hidden = text.length > 0;
     syncScroll();
   }
+
+  /** The picture beside its tag, if it's loaded; asked for if it isn't. */
+  function thumbnail(name) {
+    const url = cachedImageURL(name);
+    if (url === undefined) void imageURL(name);
+    const inner = url
+      ? `<img src="${escapeAttribute(url)}" alt="">`
+      : '<span class="editor-thumb-missing"></span>';
+    return `<span class="editor-thumb">${inner}</span>`;
+  }
+
+  // A picture that arrives after the text was drawn is drawn in.
+  onImageLoaded((name) => {
+    if (input.value.includes(name)) paint();
+  });
 
   const syncScroll = () => {
     if (auto) return;
@@ -109,6 +139,32 @@ export function createEditor(root, { onChange, onFocusChange, onKeyDown, auto = 
     onChange?.(input.value);
   });
   input.addEventListener('scroll', syncScroll);
+
+  // Pictures pasted or dropped in go where the caret is, each on its own line.
+  input.addEventListener('paste', (event) => {
+    const files = imageFiles(event.clipboardData);
+    if (!files.length || !onImages) return;
+    event.preventDefault();
+    onImages(files);
+  });
+  input.addEventListener('dragover', (event) => {
+    if (onImages && [...(event.dataTransfer?.items || [])].some((item) => item.kind === 'file')) {
+      event.preventDefault();
+      root.classList.add('is-drop-target');
+    }
+  });
+  input.addEventListener('dragleave', () => root.classList.remove('is-drop-target'));
+  input.addEventListener('drop', (event) => {
+    root.classList.remove('is-drop-target');
+    const files = imageFiles(event.dataTransfer);
+    if (!files.length || !onImages) return;
+    event.preventDefault();
+    input.focus();
+    // The caret goes where the pictures were let go.
+    const at = document.caretPositionFromPoint?.(event.clientX, event.clientY);
+    if (at?.offsetNode === input) input.setSelectionRange(at.offset, at.offset);
+    onImages(files);
+  });
   input.addEventListener('focus', () => onFocusChange?.(true));
   input.addEventListener('blur', () => onFocusChange?.(false));
 
@@ -171,6 +227,15 @@ export function createEditor(root, { onChange, onFocusChange, onKeyDown, auto = 
       const at = insertionPoint();
       const insertion = newCueInsertion(input.value, at);
       replace(at, at, insertion.text, at + insertion.selectionStart, at + insertion.selectionEnd);
+    },
+
+    /** Put pictures in at the caret, each on a line of its own. */
+    insertImages(names) {
+      if (!names.length) return;
+      input.focus();
+      const at = insertionPoint();
+      const insertion = imageInsertion(input.value, at, names);
+      replace(at, at, insertion.text, at + insertion.caretOffset);
     },
 
     /** Drop an `[anchor]` in at the caret. */

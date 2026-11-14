@@ -31,6 +31,8 @@ use tauri_plugin_store::StoreExt;
 use tower_http::cors::{Any, CorsLayer};
 use uuid::Uuid;
 
+mod files;
+
 // =============================================================================
 // CONSTANTS
 // =============================================================================
@@ -1432,7 +1434,11 @@ pub fn run() {
             has_slides_scope,
             connect_slides,
             refresh_notes,
-            set_screenshot_protection
+            set_screenshot_protection,
+            files::images_save,
+            files::images_read,
+            files::images_list,
+            files::images_remove
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
