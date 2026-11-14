@@ -140,6 +140,9 @@ export async function currentSlide() {
 
 export const refreshSlideNotes = () => call('refresh_notes');
 
+/** What another presentation app sends to be let in to the notes API. */
+export const apiToken = () => call('api_token');
+
 // =============================================================================
 // WINDOW
 // =============================================================================

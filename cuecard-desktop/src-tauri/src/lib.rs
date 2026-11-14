@@ -3,7 +3,8 @@
 //! This module contains the main backend logic for the CueCard application:
 //! - Google Slides sign-in, the one thing an account is ever asked for
 //! - Google Slides API integration
-//! - Local web server for browser extension communication
+//! - Local web server for browser extension communication, and the notes API
+//!   other presentation apps send their notes through (see `api`)
 //! - Tauri commands for frontend interaction
 //! - macOS window management (opacity, screenshot protection)
 
@@ -31,6 +32,7 @@ use tauri_plugin_store::StoreExt;
 use tower_http::cors::{Any, CorsLayer};
 use uuid::Uuid;
 
+mod api;
 mod files;
 
 // =============================================================================
@@ -141,6 +143,13 @@ pub struct SlideData {
     pub timestamp: i64,
     pub url: String,
     pub force_refresh: Option<bool>,
+    /// The app that sent the notes through the notes API, as it named itself
+    /// ("keynote", "deckset"…). None for Google Slides.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source: Option<String>,
+    /// How many slides the deck has, when the app that sent the notes said.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub slide_count: Option<i32>,
 }
 
 #[derive(Debug, Serialize)]
@@ -618,13 +627,17 @@ fn generate_client_id() -> String {
 async fn health_handler() -> Json<serde_json::Value> {
     Json(serde_json::json!({
         "status": "ok",
-        "server": "cuecard-desktop"
+        "server": "cuecard-desktop",
+        "api": api::API_VERSION
     }))
 }
 
 async fn slides_handler(
     Json(mut slide_data): Json<SlideData>,
 ) -> Result<Json<ApiResponse>, StatusCode> {
+    // Only the notes API says where notes came from; this route is Google's.
+    slide_data.source = None;
+    slide_data.slide_count = None;
     let force_refresh = slide_data.force_refresh.unwrap_or(false);
 
     // Check if presentation changed
@@ -785,7 +798,11 @@ async fn start_server() {
         .route("/health", get(health_handler))
         .route("/slides", post(slides_handler))
         .route("/oauth/callback", get(oauth_callback_handler))
-        .layer(cors);
+        .layer(cors)
+        // After the CORS layer, so it doesn't cover them: the notes API isn't
+        // for web pages, and a browser's preflight for it fails.
+        .route("/notes", post(api::notes_handler))
+        .route("/notes/clear", post(api::clear_handler));
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3642")
         .await
@@ -1247,6 +1264,12 @@ async fn refresh_notes(app: AppHandle) -> Result<Option<String>, String> {
         None => return Err("No current slide".to_string()),
     };
 
+    // Notes another app sent have nothing to read again from Google; that app
+    // refreshes them by sending them again.
+    if slide_data.source.is_some() {
+        return Ok(get_current_notes());
+    }
+
     {
         let mut notes_cache = SLIDE_NOTES.write();
         notes_cache.retain(|k, _| !k.starts_with(&format!("{}:", slide_data.presentation_id)));
@@ -1390,6 +1413,7 @@ pub fn run() {
 
             // Load stored tokens from persistent storage
             load_tokens_from_store(app.handle());
+            api::init_token(app.handle());
 
             // Platform-specific window initialization
             #[cfg(target_os = "macos")]
@@ -1434,6 +1458,7 @@ pub fn run() {
             has_slides_scope,
             connect_slides,
             refresh_notes,
+            api::api_token,
             set_screenshot_protection,
             files::images_save,
             files::images_read,

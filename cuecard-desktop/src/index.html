@@ -38,7 +38,7 @@
           <button class="source-row" id="row-slides">
             <span class="source-icon" data-icon="slides" data-icon-size="16"></span>
             <span class="source-text">
-              <span class="source-name">Google Slides</span>
+              <span class="source-name" id="slides-name">Google Slides</span>
               <span class="source-status" id="slides-status">Not connected</span>
             </span>
             <span class="live-dot" id="slides-dot" hidden></span>
@@ -341,6 +341,26 @@
                 <span class="cell-label">
                   <span class="cell-title">Get the Browser Extension</span>
                   <span class="cell-sub">Sends the notes for the slide you're on.</span>
+                </span>
+                <span class="cell-accessory" data-icon="arrowUpRight" data-icon-size="13"></span>
+              </button>
+            </div>
+          </section>
+
+          <section class="group">
+            <h3 class="group-title">Other Presentation Apps</h3>
+            <div class="cells">
+              <div class="cell">
+                <span class="cell-label">
+                  <span class="cell-title">Notes API Token</span>
+                  <span class="cell-sub">Keynote, PowerPoint, Deckset or a script of your own send their notes with it.</span>
+                </span>
+                <button class="tinted-btn" id="btn-copy-api-token">Copy</button>
+              </div>
+              <button class="cell is-action" id="link-api-guide">
+                <span class="cell-label">
+                  <span class="cell-title">Notes API Guide</span>
+                  <span class="cell-sub">How to send notes from another app.</span>
                 </span>
                 <span class="cell-accessory" data-icon="arrowUpRight" data-icon-size="13"></span>
               </button>

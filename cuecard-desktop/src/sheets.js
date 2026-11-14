@@ -617,6 +617,7 @@ export function helpSections({ isMac }) {
       topics: [
         topic('Read Your Speaker Notes', 'Install the CueCard browser extension and connect Google Slides in the sidebar. As you present, the notes for the slide you are on show up here, and the teleprompter moves on with each slide.'),
         topic('Refresh the Notes', 'Edited the notes while presenting? Click the refresh button above them to read them again.'),
+        topic('Use Another Presentation App', 'Keynote, PowerPoint, Deckset and other apps can send their notes to CueCard through the notes API. Copy the token under Other Presentation Apps in Settings, and see the Notes API Guide there for how.'),
       ],
     },
     {

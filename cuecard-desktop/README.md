@@ -8,6 +8,7 @@ Desktop client built with Tauri that keeps your speaker notes on top of every ot
 - Always-on-top window visible across all workspaces
 - Screenshot protection (notes won't appear in screen shares)
 - No sign-in: scripts and settings live on the device. Google sign-in is asked for only to read the notes of a Google Slides deck
+- Notes API: Keynote, PowerPoint, Deckset or any script can send speaker notes to the local server (see [API.md](API.md))
 - Auto-update support
 
 ### Architecture

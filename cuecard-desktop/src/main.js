@@ -56,6 +56,7 @@ const $ = (id) => document.getElementById(id);
 const LINKS = {
   site: 'https://cuecard.dev',
   extension: 'https://cuecard.dev/#download',
+  apiGuide: 'https://github.com/ThisIsNSH/CueCard/blob/main/cuecard-desktop/API.md',
   source: 'https://github.com/ThisIsNSH/CueCard',
   support: 'support@cuecard.dev',
 };
@@ -667,9 +668,7 @@ function exportNote(id) {
   if (note) void exportText(note.title, note.content);
 }
 
-/** The script as text, cues included, on the clipboard. */
-async function copyText(content) {
-  const text = normalizingTags(content);
+async function writeClipboard(text) {
   try {
     await navigator.clipboard.writeText(text);
   } catch {
@@ -682,6 +681,11 @@ async function copyText(content) {
     document.execCommand('copy');
     area.remove();
   }
+}
+
+/** The script as text, cues included, on the clipboard. */
+async function copyText(content) {
+  await writeClipboard(normalizingTags(content));
   ui.showToast('Copied');
   T.trackClick('copy_text', 'home');
 }
@@ -755,7 +759,8 @@ function onSlideUpdate(payload) {
 
   app.slides.slide = slide;
   app.slides.notes = payload.notes || '';
-  app.slides.connected = true;
+  // Only Google's notes say anything about the Google sign-in.
+  if (!slide.source) app.slides.connected = true;
   if (isNew) T.track('slide_update');
 
   // Everything the deck touches, not just the notes: the title bar, the sidebar
@@ -768,17 +773,62 @@ function onSlideUpdate(payload) {
   if (prompter.isOpen() && prompter.source() === 'slides') {
     prompter.setText(app.slides.notes, {
       fromSlide: isNew,
-      title: slide.title || 'Google Slides',
+      title: slide.title || liveSourceName(),
       subtitle: slideLabel(),
     });
   }
 }
 
+/** How the apps that send notes through the notes API are named on screen. */
+const SOURCE_NAMES = {
+  keynote: 'Keynote',
+  powerpoint: 'PowerPoint',
+  deckset: 'Deckset',
+  marp: 'Marp',
+  slidev: 'Slidev',
+  libreoffice: 'LibreOffice Impress',
+  impress: 'LibreOffice Impress',
+  pdfpc: 'pdfpc',
+  presenterm: 'presenterm',
+};
+
+/** The app the live notes come from: Google Slides, unless another app sent them. */
+const liveSourceName = () => {
+  const source = app.slides.slide?.source;
+  if (!source) return 'Google Slides';
+  return SOURCE_NAMES[source.toLowerCase()] || source;
+};
+
+/** A slide on screen, from Google with the sign-in to read it, or from another
+ *  app, which needs none. */
+const hasLiveSlide = () => Boolean(app.slides.slide) && (app.slides.connected || Boolean(app.slides.slide.source));
+
+/** Notes another app sent have nothing for CueCard to read again. */
+const canRefreshSlides = () => Boolean(app.slides.slide) && !app.slides.slide.source;
+
+async function copyApiToken() {
+  const token = await T.apiToken().catch(() => null);
+  if (!token) return ui.showToast('No Token Yet');
+  await writeClipboard(token);
+  ui.showToast('Copied');
+  T.trackClick('copy_api_token', 'settings');
+}
+
 /** Which slide of the deck this is, empty until something knows. */
 const slideLabel = () => {
   const number = app.slides.slide?.slideNumber ?? 0;
-  return number > 0 ? `Slide ${number}` : '';
+  const count = app.slides.slide?.slideCount ?? 0;
+  if (number <= 0) return '';
+  return count > 0 ? `Slide ${number} of ${count}` : `Slide ${number}`;
 };
+
+/** Another app's presentation ended. A teleprompter already open with its
+ *  notes stays up, since the talk may not be over. */
+function onSlideClear() {
+  app.slides.slide = null;
+  app.slides.notes = '';
+  renderAll();
+}
 
 /** The deck and the place in it, as one line: "Introducing CueCard · Slide 1". */
 const deckLabel = () =>
@@ -805,7 +855,7 @@ function start({ play = false } = {}) {
     return openPrompter({
       source: 'slides',
       text: app.slides.notes,
-      title: app.slides.slide?.title || 'Google Slides',
+      title: app.slides.slide?.title || liveSourceName(),
       subtitle: slideLabel(),
     }, play);
   }
@@ -923,7 +973,7 @@ function renderToolbar() {
   const save = $('btn-save');
 
   if (app.source === 'slides') {
-    title.textContent = 'Google Slides';
+    title.textContent = liveSourceName();
     title.disabled = true;
     title.removeAttribute('title');
     sub.textContent = app.slides.slide?.title || (app.slides.connected ? 'Waiting for a deck' : 'Not connected');
@@ -957,11 +1007,12 @@ function renderSidebar() {
   slidesRow.classList.toggle('is-selected', app.source === 'slides');
   slidesRow.classList.toggle('is-live', Boolean(app.slides.slide));
   $('slides-dot').hidden = !app.slides.slide;
-  $('slides-status').textContent = !app.slides.connected
-    ? 'Not connected'
-    : app.slides.slide
-      ? deckLabel()
-      : 'Waiting for a deck';
+  $('slides-name').textContent = liveSourceName();
+  $('slides-status').textContent = hasLiveSlide()
+    ? deckLabel()
+    : app.slides.connected
+      ? 'Waiting for a deck'
+      : 'Not connected';
 
   library.render({ source: app.source, selectedId: notes.draft().noteId });
 }
@@ -969,10 +1020,10 @@ function renderSidebar() {
 function renderSlides() {
   if (app.source !== 'slides') return;
 
-  const { connected, slide, notes: slideNotes } = app.slides;
+  const { connected, notes: slideNotes } = app.slides;
   const empty = $('slides-empty');
 
-  if (!connected || !slide) {
+  if (!hasLiveSlide()) {
     $('slides-head').hidden = true;
     $('slides-notes').innerHTML = '';
     empty.hidden = false;
@@ -987,6 +1038,7 @@ function renderSlides() {
   empty.hidden = true;
   $('slides-head').hidden = false;
   $('slides-title').textContent = deckLabel();
+  $('btn-refresh-slides').hidden = !canRefreshSlides();
   // Notes that are nothing but tags this version doesn't show leave an empty
   // script, which is the same as having none.
   $('slides-notes').innerHTML =
@@ -1114,7 +1166,7 @@ function openMenu() {
     }
   } else {
     items.push(
-      { label: 'Refresh Notes', icon: 'refresh', disabled: !app.slides.slide, onSelect: refreshSlides },
+      { label: 'Refresh Notes', icon: 'refresh', disabled: !canRefreshSlides(), onSelect: refreshSlides },
       { label: 'Get the Extension', icon: 'puzzle', onSelect: () => T.openUrl(LINKS.extension) }
     );
   }
@@ -1391,6 +1443,8 @@ function wireHome() {
     void T.openUrl(LINKS.extension);
   });
   $('link-extension-2').addEventListener('click', () => T.openUrl(LINKS.extension));
+  $('btn-copy-api-token').addEventListener('click', copyApiToken);
+  $('link-api-guide').addEventListener('click', () => T.openUrl(LINKS.apiGuide));
 
   $('title-main').addEventListener('click', () => {
     T.trackClick('rename_note', 'home');
@@ -1549,6 +1603,7 @@ function listenToBackend() {
   if (!T.listen) return;
 
   void T.listen('slide-update', (event) => onSlideUpdate(event.payload));
+  void T.listen('slide-clear', onSlideClear);
 
   // The one sign-in the app has: read access to the deck.
   void T.listen('slides-authorized', () => {
