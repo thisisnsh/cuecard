@@ -79,7 +79,83 @@ export function onNotesChange(fn) {
 const changed = () => listeners.forEach((fn) => fn());
 
 const now = () => new Date().toISOString();
-const newId = () => (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`);
+
+/** A UUID, upper case, as the phone app writes them: the storage folder it
+ *  shares with the phone names every script by one. */
+function newId() {
+  if (crypto.randomUUID) return crypto.randomUUID().toUpperCase();
+  const hex = [...crypto.getRandomValues(new Uint8Array(16))].map((b) => b.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-a${hex.slice(17, 20)}-${hex.slice(20, 32)}`.toUpperCase();
+}
+
+const UUID = /^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$/;
+
+// =============================================================================
+// THE STORAGE FOLDER
+// =============================================================================
+
+/**
+ * What keeps the storage folder in step as scripts change, set once one is
+ * chosen: `write(note)`, `arrange()`, `remove(ids)` and `sync()`.
+ */
+let folder = null;
+export function setFolderHooks(hooks) {
+  folder = hooks;
+}
+
+/** Bring in what a sync of the storage folder found changed outside the app. */
+export async function applyFolderChanges(changes) {
+  if (!changes) return false;
+  let touched = false;
+
+  if (changes.collections && JSON.stringify(changes.collections) !== JSON.stringify(state.collections)) {
+    state.collections = [...changes.collections];
+    touched = true;
+  }
+  const named = (name) => (name ? state.collections.find((c) => sameName(c, name)) || name : null);
+
+  for (const incoming of changes.updated) {
+    const note = { ...incoming, collection: named(incoming.collection) };
+    const existing = noteById(note.id);
+    // A script open in the editor with nothing unsaved follows its file.
+    for (const mode of MODES) {
+      const d = state.drafts[mode];
+      if (d.noteId !== note.id) continue;
+      if (existing && d.text === existing.content) d.text = note.content;
+      d.collection = note.collection;
+    }
+    if (existing) {
+      const previous = { ...existing };
+      Object.assign(existing, note);
+      if (previous.content !== note.content) recordVersion(existing, previous);
+    } else {
+      state.saved.unshift(note);
+      recordVersion(note);
+    }
+    touched = true;
+  }
+
+  for (const id of changes.deleted) {
+    state.saved = state.saved.filter((note) => note.id !== id);
+    delete state.versions[id];
+    // What was open stays in the editor, as a script of its own again.
+    for (const mode of MODES) if (state.drafts[mode].noteId === id) state.drafts[mode].noteId = null;
+    touched = true;
+  }
+
+  // Scripts in a collection deleted elsewhere are left in none.
+  for (const note of state.saved) {
+    if (note.collection && !hasCollection(note.collection)) {
+      note.collection = null;
+      touched = true;
+    }
+  }
+
+  if (!touched) return false;
+  await Promise.all([persistSaved(), persistVersions(), persistDrafts(), persistCollections()]);
+  changed();
+  return true;
+}
 
 // =============================================================================
 // READING
@@ -146,6 +222,7 @@ export async function loadNotes({ seedTimer } = {}) {
 
   await migrateNotes();
   if (!drafts) await migrateLegacyDraft();
+  await migrateIds();
   await migrateTimeTags(seedTimer);
   await migrateBareCues();
 
@@ -176,6 +253,31 @@ async function migrateNotes() {
     updatedAt: note.updatedAt || note.createdAt || now(),
   }));
   await setStored(KEY_SAVED, state.saved);
+}
+
+/**
+ * Scripts used to be named by the time they were saved. The storage folder
+ * names them by UUID, as the phone does, so every other id is swapped for one —
+ * once — along with whatever pointed at it.
+ */
+async function migrateIds() {
+  const renamed = new Map();
+  for (const note of state.saved) {
+    const id = String(note.id);
+    const next = UUID.test(id.toUpperCase()) ? id.toUpperCase() : newId();
+    if (next !== id) renamed.set(id, next);
+  }
+  if (!renamed.size) return;
+
+  state.saved = state.saved.map((note) => (renamed.has(note.id) ? { ...note, id: renamed.get(note.id) } : note));
+  const versions = {};
+  for (const [id, list] of Object.entries(state.versions)) versions[renamed.get(id) || id] = list;
+  state.versions = versions;
+  for (const mode of MODES) {
+    const d = state.drafts[mode];
+    if (d.noteId && renamed.has(d.noteId)) d.noteId = renamed.get(d.noteId);
+  }
+  await Promise.all([persistSaved(), persistVersions(), persistDrafts()]);
 }
 
 /** One draft and one open note, from before there were two modes. */
@@ -356,6 +458,8 @@ export async function saveAsNew(title, mode = state.mode) {
   d.collection = note.collection;
   await Promise.all([persistSaved(), persistVersions(), persistDrafts()]);
   changed();
+  void folder?.write(note);
+  void folder?.arrange();
   return note;
 }
 
@@ -369,6 +473,7 @@ export async function saveCurrent(mode = state.mode) {
   recordVersion(note, previous);
   await Promise.all([persistSaved(), persistVersions()]);
   changed();
+  void folder?.write(note);
 }
 
 /**
@@ -388,6 +493,7 @@ export async function restoreVersion(id, number) {
   }
   await Promise.all([persistSaved(), persistVersions(), persistDrafts()]);
   changed();
+  void folder?.write(note);
   return true;
 }
 
@@ -402,6 +508,7 @@ export async function renameNote(id, title) {
   note.title = name;
   await persistSaved();
   changed();
+  void folder?.write(note);
 }
 
 /** A copy of a note, as a script of its own with its own history. */
@@ -420,10 +527,13 @@ export async function duplicateNote(id) {
   recordVersion(copy);
   await Promise.all([persistSaved(), persistVersions()]);
   changed();
+  void folder?.write(copy);
+  void folder?.arrange();
   return copy;
 }
 
 export async function deleteNote(id) {
+  void folder?.remove([id]);
   state.saved = state.saved.filter((note) => note.id !== id);
   delete state.versions[id];
   for (const mode of MODES) {
@@ -435,6 +545,7 @@ export async function deleteNote(id) {
 
 /** Every saved script, gone. What's being written and was never saved stays. */
 export async function deleteAll() {
+  void folder?.remove(state.saved.map((note) => note.id));
   state.saved = [];
   state.versions = {};
   for (const mode of MODES) {
@@ -460,6 +571,8 @@ export async function importScript(title, content, collection = null) {
   state.saved.unshift(note);
   recordVersion(note);
   await Promise.all([persistSaved(), persistVersions()]);
+  void folder?.write(note);
+  void folder?.arrange();
   await openNote(note.id);
   return note;
 }
@@ -478,6 +591,7 @@ export async function createCollection(name) {
   state.collections.push(clean);
   await persistCollections();
   changed();
+  void folder?.sync();
   return clean;
 }
 
@@ -491,6 +605,7 @@ export async function renameCollection(from, to) {
   for (const mode of MODES) if (state.drafts[mode].collection === old) state.drafts[mode].collection = clean;
   await Promise.all([persistCollections(), persistSaved(), persistDrafts()]);
   changed();
+  void folder?.sync();
   return clean;
 }
 
@@ -503,6 +618,7 @@ export async function deleteCollection(name) {
   for (const mode of MODES) if (state.drafts[mode].collection === old) state.drafts[mode].collection = null;
   await Promise.all([persistCollections(), persistSaved(), persistDrafts()]);
   changed();
+  void folder?.sync();
 }
 
 /** File a note in a collection, or in none. An empty id is the mode's draft. */
@@ -520,4 +636,5 @@ export async function setNoteCollection(id, name, mode = state.mode) {
   for (const m of MODES) if (state.drafts[m].noteId === id) state.drafts[m].collection = collection;
   await Promise.all([persistSaved(), persistDrafts()]);
   changed();
+  void folder?.arrange();
 }

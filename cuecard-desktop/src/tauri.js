@@ -232,6 +232,54 @@ export async function pickImageFiles() {
 }
 
 // =============================================================================
+// THE STORAGE FOLDER
+// =============================================================================
+
+/** Ask for a folder to keep scripts in. Its path, or null. */
+export async function pickFolder() {
+  if (!openDialog) return null;
+  const picked = await openDialog({ directory: true, multiple: false, title: 'Choose Storage Folder' });
+  return picked ? String(picked) : null;
+}
+
+/** The folder's commands, each taking the folder's path first. Every one
+ *  resolves rather than throws: null, false or [] when it couldn't be done. */
+export const folder = {
+  check: (path) => call('folder_check', { folder: path }).then(Boolean).catch(() => false),
+  isICloud: (path) => call('folder_is_icloud', { folder: path }).then(Boolean).catch(() => false),
+  /** Null if the folder couldn't be listed, which isn't the same as empty. */
+  list: (path) => call('folder_list', { folder: path }).catch(() => null),
+  readText: (path, name) => call('folder_read_text', { folder: path, name }).catch(() => null),
+  /** When the file was last changed once written, or undefined if it wasn't. */
+  writeText: (path, name, text) =>
+    call('folder_write_text', { folder: path, name, text }).then((m) => m ?? null).catch(() => undefined),
+  rename: (path, from, to) => call('folder_rename', { folder: path, from, to }).then(() => true).catch(() => false),
+  remove: (path, name) => call('folder_remove', { folder: path, name }).catch(() => false),
+  download: (path, name) => call('folder_download', { folder: path, name }).catch(() => {}),
+  imagesList: (path) => call('folder_images_list', { folder: path }).catch(() => []),
+  async imageRead(path, name) {
+    if (!invoke) return null;
+    try {
+      return new Uint8Array(await invoke('folder_image_read', { folder: path, name }));
+    } catch {
+      return null;
+    }
+  },
+  async imageWrite(path, name, bytes) {
+    if (!invoke) return false;
+    try {
+      await invoke('folder_image_write', bytes, {
+        headers: { 'x-folder': encodeURIComponent(path), 'x-image-name': encodeURIComponent(name) },
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  },
+  imageRemove: (path, name) => call('folder_image_remove', { folder: path, name }).catch(() => {}),
+};
+
+// =============================================================================
 // NOTIFICATIONS
 // =============================================================================
 

@@ -36,7 +36,8 @@ import { createLibrary } from './library.js';
 import { openHelpSheet, openTimerSheet, openVersionsSheet } from './sheets.js';
 import * as ui from './ui.js';
 import * as notices from './notifications.js';
-import { addImage, removeUnusedImages } from './images.js';
+import { addImage, removeUnusedImages, retryMissing, setImageFallback } from './images.js';
+import * as folder from './folder.js';
 import {
   CUE_COLORS,
   cards as cardsOf,
@@ -75,6 +76,9 @@ const app = {
   overlaySidebar: false,
   /** "Saved", for a moment after saving. */
   justSaved: false,
+  /** The storage folder: whether there is one, its name, where, and whether it
+   *  could be reached on the last look. */
+  folder: { chosen: false, name: null, icloud: false, reachable: true, tooLarge: [] },
 };
 
 let editor;
@@ -100,6 +104,9 @@ async function boot() {
   await loadSettings();
   watchSystemTheme();
   await notes.loadNotes({ seedTimer: seedTimerFromTimeTags });
+  await folder.loadFolder();
+  setImageFallback((name) => folder.folderImage(name));
+  installFolderHooks();
 
   editor = createEditor($('editor'), {
     onChange: (text) => notes.setDraft(text, { mode: 'teleprompter' }),
@@ -158,6 +165,13 @@ async function boot() {
   await initSlides();
   listenToBackend();
   void startUpdateChecks();
+
+  // The storage folder: now, every little while, and whenever the window is
+  // come back to, as the phone may have changed it meanwhile.
+  void runFolderSync();
+  setInterval(() => void runFolderSync(), 15 * 1000);
+  window.addEventListener('focus', () => void runFolderSync());
+  document.addEventListener('visibilitychange', () => document.hidden || void runFolderSync());
 
   // Pictures no script places any more go, once everything's had a chance to load.
   setTimeout(() => void removeUnusedImages(placedImages()), 30 * 1000);
@@ -413,6 +427,102 @@ function openVersions(id = notes.currentNote()?.id) {
 }
 
 // =============================================================================
+// THE STORAGE FOLDER
+// =============================================================================
+
+/** Keep the folder in step as scripts are saved, renamed, filed and deleted. */
+function installFolderHooks() {
+  if (!folder.isChosen()) {
+    notes.setFolderHooks(null);
+    return;
+  }
+  notes.setFolderHooks({
+    write: (note) => folder.write({ ...note }),
+    arrange: () => folder.arrange(notes.state.saved.map((n) => ({ ...n })), [...notes.state.collections]),
+    remove: (ids) => folder.remove(ids),
+    sync: () => runFolderSync(),
+  });
+}
+
+async function refreshFolderInfo() {
+  const chosen = folder.isChosen();
+  app.folder.chosen = chosen;
+  app.folder.name = folder.folderName();
+  app.folder.reachable = chosen ? await folder.isReachable() : true;
+  app.folder.icloud = chosen ? await folder.isInICloud() : false;
+}
+
+let syncing = null;
+let syncAgain = false;
+
+/** Take in what changed in the folder outside the app, and write out what it's
+ *  missing. One at a time; asked for again while one runs, it runs once more. */
+async function runFolderSync() {
+  if (!folder.isChosen()) return null;
+  if (syncing) {
+    syncAgain = true;
+    return syncing;
+  }
+  syncing = (async () => {
+    let changes = null;
+    do {
+      syncAgain = false;
+      await refreshFolderInfo();
+      if (!app.folder.reachable) break;
+      changes = await folder.sync(notes.state.saved.map((n) => ({ ...n })), [...notes.state.collections]);
+      if (!changes) break;
+      app.folder.tooLarge = changes.tooLarge;
+      if (await notes.applyFolderChanges(changes)) {
+        retryMissing();
+        syncEditors();
+      }
+    } while (syncAgain);
+    scheduleRender();
+    return changes;
+  })();
+  try {
+    return await syncing;
+  } finally {
+    syncing = null;
+  }
+}
+
+async function chooseFolder() {
+  T.trackClick('choose_notes_folder', 'library');
+  const path = await T.pickFolder();
+  if (!path) return;
+  if (!(await T.folder.check(path))) {
+    await ui.showError("That folder can't be used. Pick another one.", "Couldn't Use Folder");
+    return;
+  }
+  await folder.choose(path);
+  installFolderHooks();
+  const changes = await runFolderSync();
+  if (!changes) {
+    await ui.showError("The folder couldn't be read. Check that CueCard can open it.", "Couldn't Use Folder");
+    return;
+  }
+  T.track('notes_folder_chosen', { icloud: app.folder.icloud });
+  ui.showToast(`Scripts are kept in “${folder.folderName()}”`);
+}
+
+async function stopUsingFolder() {
+  T.trackClick('stop_notes_folder', 'library');
+  const sure = await ui.confirmAction({
+    title: `Stop Using “${folder.folderName()}”?`,
+    message: 'Your scripts stay in CueCard. Their files are left in the folder, so the phone app can keep using them.',
+    confirmLabel: 'Stop Using Folder',
+    destructive: true,
+  });
+  if (!sure) return;
+  T.trackClick('stop_notes_folder_confirm', 'library');
+  await folder.forget();
+  installFolderHooks();
+  await refreshFolderInfo();
+  renderAll();
+}
+
+// =============================================================================
 // IMAGES
 // =============================================================================
 
@@ -596,6 +706,9 @@ function libraryHandlers() {
     onRenameCollection: renameCollection,
     onDeleteCollection: deleteCollection,
     promptCollectionName: () => promptCollectionName(),
+    onChooseFolder: chooseFolder,
+    onStopFolder: stopUsingFolder,
+    folderInfo: () => app.folder,
   };
 }
 

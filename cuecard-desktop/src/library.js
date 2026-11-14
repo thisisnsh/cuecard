@@ -234,9 +234,25 @@ export function createLibrary(el, handlers) {
       </div>`;
   }
 
+  /** Where the scripts are kept: on this computer, or in the storage folder too. */
   function renderFooter() {
-    const count = notes.state.saved.length;
-    el.footer.innerHTML = `${icon('laptop', 12)}<span>${count ? 'Your scripts stay on this computer.' : 'Scripts stay on this computer.'}</span>`;
+    const where = handlers.folderInfo?.() || {};
+    let line;
+    let glyph = 'laptop';
+    if (!where.chosen) {
+      line = notes.state.saved.length ? 'Your scripts stay on this computer.' : 'Scripts stay on this computer.';
+    } else if (!where.reachable) {
+      glyph = 'folder';
+      line = "The storage folder can't be reached, so your scripts stay only on this computer until it's back.";
+    } else {
+      glyph = where.icloud ? 'cloud' : 'folder';
+      line = where.icloud
+        ? `Kept in “${esc(where.name)}” in iCloud Drive.`
+        : `Kept in the “${esc(where.name)}” folder.`;
+      if (where.tooLarge?.length) line += ` ${where.tooLarge.length === 1 ? 'One file is' : `${where.tooLarge.length} files are`} too large to read.`;
+    }
+    el.footer.innerHTML = `${icon(glyph, 12)}<span>${where.chosen ? line : esc(line)}</span>`;
+    el.footer.title = where.chosen && where.reachable ? 'Choose Storage Folder in the library menu to change it.' : '';
   }
 
   // ---------------------------------------------------------------------------
@@ -336,6 +352,14 @@ export function createLibrary(el, handlers) {
       { label: 'Import File…', icon: 'docDown', onSelect: () => handlers.onImport() },
       { label: 'New Collection…', icon: 'collection', onSelect: () => handlers.onNewCollection() },
     ];
+    const where = handlers.folderInfo?.() || {};
+    items.push(
+      { divider: true },
+      { label: where.chosen ? 'Change Storage Folder…' : 'Choose Storage Folder…', icon: 'folder', onSelect: () => handlers.onChooseFolder() }
+    );
+    if (where.chosen) {
+      items.push({ label: 'Stop Using Storage Folder', icon: 'folderMinus', onSelect: () => handlers.onStopFolder() });
+    }
     if (chosen) {
       items.push(
         { label: `Rename “${chosen}”…`, icon: 'pencil', onSelect: () => handlers.onRenameCollection(chosen) },

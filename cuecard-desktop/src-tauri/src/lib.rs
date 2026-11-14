@@ -1438,7 +1438,19 @@ pub fn run() {
             files::images_save,
             files::images_read,
             files::images_list,
-            files::images_remove
+            files::images_remove,
+            files::folder_check,
+            files::folder_is_icloud,
+            files::folder_list,
+            files::folder_read_text,
+            files::folder_write_text,
+            files::folder_rename,
+            files::folder_remove,
+            files::folder_download,
+            files::folder_images_list,
+            files::folder_image_read,
+            files::folder_image_write,
+            files::folder_image_remove
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

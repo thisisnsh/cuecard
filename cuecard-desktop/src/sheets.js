@@ -567,7 +567,10 @@ export function helpSections({ isMac }) {
         topic('Import a Text File', "In your library's ••• menu, choose Import File to add a text file as a script. A file with [separator]s in it comes in as a deck."),
         topic('Go Back to an Older Version', 'Every save is a new version. Click the version number in the title bar to compare changes and restore one. It is also under ••• at the top, in Version History.'),
         topic('Share a Script', 'Right-click a script and choose Export to File or Copy Text. It goes as text, cues included.'),
-        topic('Your Privacy', "There's no account, and CueCard doesn't upload your scripts. They're kept on this computer."),
+        topic('Keep Scripts in a Folder', "In your library's ••• menu, choose Choose Storage Folder. Each saved script is kept there as a text file, with its images and the collections it's in. Edit a file in another app and the change comes back into CueCard."),
+        topic('Use With the Phone App', 'Pick a folder in iCloud Drive here, and the same folder in the phone app (in its library, ••• › Choose Storage Folder). Scripts saved on either one show up on the other, with their collections and images.'),
+        topic('Stop Using the Folder', "In your library's ••• menu, choose Stop Using Storage Folder. Your scripts stay in CueCard, and their files stay in the folder for the phone app."),
+        topic('Your Privacy', "There's no account, and CueCard doesn't upload your scripts. They're kept on this computer, and in the storage folder if you choose one."),
       ],
     },
     {
