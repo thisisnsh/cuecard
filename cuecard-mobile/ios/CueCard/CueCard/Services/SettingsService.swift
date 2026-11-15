@@ -27,6 +27,31 @@ enum ThemePreference: String, Codable, CaseIterable {
     }
 }
 
+/// How the teleprompter sets its lines across the screen.
+enum TeleprompterTextAlignment: String, Codable, CaseIterable {
+    case left
+    case center
+    case right
+
+    /// The name Settings shows. The raw value is what's saved, so it stays English.
+    var displayName: String {
+        switch self {
+        case .left: return String(localized: "Left")
+        case .center: return String(localized: "Center")
+        case .right: return String(localized: "Right")
+        }
+    }
+
+    /// Left follows the script's language, as the teleprompter always has.
+    var textAlignment: NSTextAlignment {
+        switch self {
+        case .left: return .natural
+        case .center: return .center
+        case .right: return .right
+        }
+    }
+}
+
 /// The Small / Medium / Large text sizes settings used to be saved as. Only
 /// read, to carry an older choice over to the point size it stood for.
 private enum LegacyFontSizePreset: String, Codable {
@@ -215,6 +240,8 @@ struct TeleprompterSettings: Codable, Equatable {
     var showsReadingGuide: Bool
     /// Where the reading line sits, as a fraction of the teleprompter's height.
     var readingGuidePosition: Double
+    /// How the teleprompter and floating window set the script's lines.
+    var textAlignment: TeleprompterTextAlignment
 
     static let `default` = TeleprompterSettings(
         editorFontSize: ScreenTextScale.scaled(16, by: ScreenTextScale.editor),
@@ -245,7 +272,8 @@ struct TeleprompterSettings: Codable, Equatable {
         showsReadingGuide: true,
         // As high as the guide goes — the teleprompter holds it just below the
         // top fade — so the most of the script is in view under it.
-        readingGuidePosition: 0
+        readingGuidePosition: 0,
+        textAlignment: .left
     )
 
     /// Scroll speed range (multiplier)
@@ -367,6 +395,7 @@ struct TeleprompterSettings: Codable, Equatable {
         case flipsTextVertically
         case showsReadingGuide
         case readingGuidePosition
+        case textAlignment
     }
 
     init(
@@ -390,7 +419,8 @@ struct TeleprompterSettings: Codable, Equatable {
         mirrorsText: Bool,
         flipsTextVertically: Bool,
         showsReadingGuide: Bool,
-        readingGuidePosition: Double
+        readingGuidePosition: Double,
+        textAlignment: TeleprompterTextAlignment
     ) {
         self.editorFontSize = editorFontSize
         self.fontSize = fontSize
@@ -413,6 +443,7 @@ struct TeleprompterSettings: Codable, Equatable {
         self.flipsTextVertically = flipsTextVertically
         self.showsReadingGuide = showsReadingGuide
         self.readingGuidePosition = readingGuidePosition
+        self.textAlignment = textAlignment
     }
 
     init(from decoder: Decoder) throws {
@@ -478,6 +509,8 @@ struct TeleprompterSettings: Codable, Equatable {
             ?? TeleprompterSettings.default.showsReadingGuide
         readingGuidePosition = min(max(try container.decodeIfPresent(Double.self, forKey: .readingGuidePosition)
             ?? TeleprompterSettings.default.readingGuidePosition, 0), 1)
+        textAlignment = try container.decodeIfPresent(TeleprompterTextAlignment.self, forKey: .textAlignment)
+            ?? TeleprompterSettings.default.textAlignment
     }
 
     static func clamp(_ value: Int, to range: ClosedRange<Int>) -> Int {
@@ -507,6 +540,7 @@ struct TeleprompterSettings: Codable, Equatable {
         try container.encode(flipsTextVertically, forKey: .flipsTextVertically)
         try container.encode(showsReadingGuide, forKey: .showsReadingGuide)
         try container.encode(readingGuidePosition, forKey: .readingGuidePosition)
+        try container.encode(textAlignment, forKey: .textAlignment)
     }
 }
 

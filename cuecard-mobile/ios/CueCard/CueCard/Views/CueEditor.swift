@@ -1372,8 +1372,9 @@ extension NSParagraphStyle {
     /// Japanese or Korean in it sets every line taller, all the same height, so
     /// a line doesn't shift as those words are typed or composed into it.
     static func script(ofSize size: CGFloat, isWide: Bool, lineSpacing: CGFloat = 0,
-                       paragraphSpacing: CGFloat = 0) -> NSParagraphStyle {
+                       paragraphSpacing: CGFloat = 0, alignment: NSTextAlignment = .natural) -> NSParagraphStyle {
         let style = NSMutableParagraphStyle()
+        style.alignment = alignment
         style.lineSpacing = lineSpacing
         style.paragraphSpacing = paragraphSpacing
         if isWide { style.minimumLineHeight = WideScript.lineHeight(ofSize: size) }

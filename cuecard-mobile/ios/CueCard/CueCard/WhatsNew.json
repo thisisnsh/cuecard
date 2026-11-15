@@ -1,7 +1,7 @@
 {
-  "1.15.0": {
+  "1.15.2": {
     "features": [
-        "Camera Settings: Choose resolution, frame rate, dynamic range, codec, stabilization and front camera mirroring."
+        "Read your teleprompter script with left, center or right alignment in the app or floating window. Choose your alignment in Settings."
     ]
   }
 }

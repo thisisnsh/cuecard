@@ -149,6 +149,34 @@
         }
       }
     },
+    "Center" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Centro"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Centre"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Centro"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "По центру"
+          }
+        }
+      }
+    },
     "Cues in your script." : {
       "localizations" : {
         "es" : {
@@ -457,6 +485,34 @@
         }
       }
     },
+    "Left" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Izquierda"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gauche"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esquerda"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "По левому краю"
+          }
+        }
+      }
+    },
     "Light, dark, or match your iPhone." : {
       "localizations" : {
         "es" : {
@@ -625,6 +681,34 @@
         }
       }
     },
+    "Right" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Derecha"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Droite"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Direita"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "По правому краю"
+          }
+        }
+      }
+    },
     "Steadies a shaky picture." : {
       "localizations" : {
         "es" : {
@@ -677,6 +761,64 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Предлагает исправления, подсказки и оформление."
+          }
+        }
+      }
+    },
+    "Text Alignment" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alineación del texto"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alignement du texte"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alinhamento do texto"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выравнивание текста"
+          }
+        }
+      }
+    },
+    "Read your teleprompter script with left, center or right alignment in the app or floating window. Choose your alignment in Settings." : {
+      "comment" : "What's New for 1.15.2, looked up by its English text from WhatsNew.json.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lee tu guion del teleprompter alineado a la izquierda, al centro o a la derecha, en la app o en la ventana flotante. Elige la alineación en Ajustes."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lisez votre script de prompteur aligné à gauche, au centre ou à droite, dans l’app ou dans la fenêtre flottante. Choisissez l’alignement dans Réglages."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leia seu roteiro do teleprompter alinhado à esquerda, ao centro ou à direita, no app ou na janela flutuante. Escolha o alinhamento em Ajustes."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Читайте сценарий телесуфлёра с выравниванием по левому краю, по центру или по правому краю — в приложении или в плавающем окне. Выберите выравнивание в «Настройках»."
           }
         }
       }

@@ -128,6 +128,7 @@ struct TeleprompterView: View {
                         content: content,
                         cueColor: settings.cueColor,
                         fontSize: CGFloat(settings.fontSize),
+                        alignment: settings.textAlignment,
                         linePosition: scriptTime * Double(settings.linesPerMinute) / 60.0,
                         colorScheme: colorScheme,
                         seesThrough: showingCamera,
@@ -820,6 +821,7 @@ struct AttributedTextView: UIViewRepresentable {
     let content: TeleprompterContent
     let cueColor: CueColor
     let fontSize: CGFloat
+    let alignment: TeleprompterTextAlignment
     /// How far into the script the reader is, in rendered lines. Fractional: the
     /// scroll interpolates between lines rather than stepping between them.
     let linePosition: Double
@@ -853,6 +855,7 @@ struct AttributedTextView: UIViewRepresentable {
         private var pendingUpdate: DispatchWorkItem?
         var lastContentId: String?
         var lastFontSize: CGFloat = 0
+        var lastAlignment: TeleprompterTextAlignment?
         var lastImageHeight: CGFloat = 0
         var lastCueColor: CueColor?
         var lastColorScheme: ColorScheme = .dark
@@ -1101,6 +1104,7 @@ struct AttributedTextView: UIViewRepresentable {
         let imageHeight = content.hasImages ? floor(textView.bounds.height * 0.5) : 0
         let needsFullRebuild = coordinator.lastContentId != contentId
             || coordinator.lastFontSize != fontSize
+            || coordinator.lastAlignment != alignment
             || coordinator.lastCueColor != cueColor
             || coordinator.lastColorScheme != colorScheme
             || coordinator.lastImageHeight != imageHeight
@@ -1108,12 +1112,13 @@ struct AttributedTextView: UIViewRepresentable {
         if needsFullRebuild {
             textView.attributedText = withHalo(TeleprompterTextLayout.attributedString(
                 text: content.fullText, fontSize: fontSize, cueColor: cueColor, isDarkMode: colorScheme == .dark,
-                maxImageHeight: imageHeight
+                alignment: alignment, maxImageHeight: imageHeight
             ))
             textView.layoutIfNeeded()
 
             coordinator.lastContentId = contentId
             coordinator.lastFontSize = fontSize
+            coordinator.lastAlignment = alignment
             coordinator.lastImageHeight = imageHeight
             coordinator.lastCueColor = cueColor
             coordinator.lastColorScheme = colorScheme

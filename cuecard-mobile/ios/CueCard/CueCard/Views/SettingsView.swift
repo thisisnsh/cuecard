@@ -75,6 +75,14 @@ struct SettingsView: View {
                 presets: TeleprompterSettings.pipFontSizePresets
             )
 
+            Picker(selection: $settingsService.settings.textAlignment.loggingClicks("settings_text_alignment", screen: Self.screen)) {
+                ForEach(TeleprompterTextAlignment.allCases, id: \.self) { alignment in
+                    Text(alignment.displayName).tag(alignment)
+                }
+            } label: {
+                SettingLabel("Text Alignment", detail: "The script as it scrolls.")
+            }
+
             AspectRatioPicker(selection: $settingsService.settings.overlayAspectRatio.loggingClicks("settings_floating_layout", screen: Self.screen))
 
             CueColorPicker(detail: "Cues in your script.",

@@ -132,6 +132,7 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
             || newSettings.timerStyle != settings.timerStyle
             || newSettings.mirrorsText != settings.mirrorsText
             || newSettings.flipsTextVertically != settings.flipsTextVertically
+            || newSettings.textAlignment != settings.textAlignment
             || newIsDarkMode != isDarkMode
         let speedChanged = newSettings.linesPerMinute != settings.linesPerMinute
         settings = newSettings
@@ -784,9 +785,10 @@ enum TeleprompterTextLayout {
     /// characters of its own.
     private static let wordJoiner = "\u{2060}"
 
-    /// The script set for reading. Images are centered on lines of their
-    /// own, no taller than `maxImageHeight`.
+    /// The script set for reading, its lines set as `alignment` says. Images
+    /// are centered on lines of their own, no taller than `maxImageHeight`.
     static func attributedString(text: String, fontSize: CGFloat, cueColor: CueColor, isDarkMode: Bool,
+                                 alignment: TeleprompterTextAlignment,
                                  maxImageHeight: CGFloat) -> NSAttributedString {
         let result = NSMutableAttributedString()
         var imageRanges: [NSRange] = []
@@ -852,7 +854,8 @@ enum TeleprompterTextLayout {
             result.addAttribute(anchorKey, value: index, range: NSRange(location: anchor, length: 1))
         }
         let paragraphStyle = NSParagraphStyle.script(ofSize: fontSize, isWide: text.hasWideScript,
-                                                     lineSpacing: fontSize * 0.18, paragraphSpacing: fontSize * 0.45)
+                                                     lineSpacing: fontSize * 0.18, paragraphSpacing: fontSize * 0.45,
+                                                     alignment: alignment.textAlignment)
         result.addAttribute(.paragraphStyle, value: paragraphStyle, range: NSRange(location: 0, length: result.length))
         if !imageRanges.isEmpty, let centered = paragraphStyle.mutableCopy() as? NSMutableParagraphStyle {
             centered.alignment = .center
@@ -975,7 +978,7 @@ private final class TeleprompterOverlayRenderer {
         let viewportHeight = logicalSize.height - (6 + ceil(timerFont.lineHeight) + 6) - 8
         let script = TeleprompterTextLayout.attributedString(
             text: text, fontSize: CGFloat(settings.pipFontSize), cueColor: settings.cueColor, isDarkMode: isDarkMode,
-            maxImageHeight: floor(viewportHeight * 0.8)
+            alignment: settings.textAlignment, maxImageHeight: floor(viewportHeight * 0.8)
         )
         textStorage = NSTextStorage(attributedString: script)
         anchorPositions = TeleprompterTextLayout.anchorPositions(in: script)
