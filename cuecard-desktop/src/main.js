@@ -865,13 +865,13 @@ function start({ play = false } = {}) {
 
   if (mode() === 'cards') {
     T.trackClick('start_cards', 'home');
-    if (!cardsViewer.open({ text: notes.draft('cards').text, title: draftTitle('cards') })) return undefined;
+    if (!cardsViewer.open({ text: notes.draft('cards').text })) return undefined;
     $('screen-home').hidden = true;
     T.trackScreen('cards');
     return undefined;
   }
 
-  return openPrompter({ source: 'script', text: notes.draft('teleprompter').text, title: draftTitle('teleprompter') }, play);
+  return openPrompter({ source: 'script', text: notes.draft('teleprompter').text }, play);
 }
 
 function openPrompter(script, play) {

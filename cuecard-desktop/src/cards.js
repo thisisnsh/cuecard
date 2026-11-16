@@ -19,16 +19,15 @@ const SWIPE_DISTANCE = 90;
 export function createCardsViewer(root, { onClose, onShortcuts } = {}) {
   root.innerHTML = `
     <div class="prompter-bar" data-tauri-drag-region>
-      <div class="prompter-bar-side">
+      <div class="prompter-bar-side" data-tauri-drag-region>
         <button class="glass-btn" data-role="close" aria-label="Close" title="Close (Esc)">${icon('xmark', 16)}</button>
+        <div class="prompter-heading" data-tauri-drag-region>
+          <span class="prompter-subtitle" data-tauri-drag-region></span>
+        </div>
+      </div>
+      <span class="prompter-timer" data-tauri-drag-region>00:00</span>
+      <div class="prompter-bar-side is-trailing" data-tauri-drag-region>
         <button class="glass-btn" data-role="shortcuts" aria-label="Keyboard Shortcuts" title="Keyboard Shortcuts">${icon('keyboard', 16)}</button>
-      </div>
-      <div class="prompter-heading" data-tauri-drag-region>
-        <span class="prompter-title" data-tauri-drag-region></span>
-        <span class="prompter-subtitle" data-tauri-drag-region></span>
-      </div>
-      <div class="prompter-bar-side is-trailing">
-        <span class="prompter-timer">00:00</span>
       </div>
     </div>
 
@@ -50,7 +49,6 @@ export function createCardsViewer(root, { onClose, onShortcuts } = {}) {
     </div>`;
 
   const el = {
-    title: root.querySelector('.prompter-title'),
     subtitle: root.querySelector('.prompter-subtitle'),
     timer: root.querySelector('.prompter-timer'),
     dots: root.querySelector('.deck-dots'),
@@ -224,13 +222,12 @@ export function createCardsViewer(root, { onClose, onShortcuts } = {}) {
   const onResize = () => deck.open && !isDone() && fit();
   window.addEventListener('resize', onResize);
 
-  function open({ text, title }) {
+  function open({ text }) {
     deck.cards = cardsOf(text);
     if (!deck.cards.length) return false;
     deck.open = true;
     deck.index = 0;
     deck.openedAt = performance.now();
-    el.title.textContent = title;
     root.hidden = false;
     document.addEventListener('keydown', onKeyDown, true);
     track('cards_started', { card_count: deck.cards.length, word_count: wordCount(text), timer_duration: timerDuration('cards') });

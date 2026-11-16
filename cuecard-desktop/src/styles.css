@@ -1291,7 +1291,9 @@ a {
 .prompter-bar {
   height: var(--toolbar-height);
   flex: none;
-  display: flex;
+  /* Equal side columns keep the timer in the true centre. */
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   gap: 10px;
   padding: 0 12px;
@@ -1300,11 +1302,10 @@ a {
 }
 
 .prompter-bar-side {
-  flex: none;
+  min-width: 0;
   display: flex;
   align-items: center;
-  gap: 6px;
-  min-width: 76px;
+  gap: 10px;
 }
 
 .prompter-bar-side.is-trailing {
@@ -1312,6 +1313,7 @@ a {
 }
 
 .prompter-bar .glass-btn {
+  flex: none;
   width: 30px;
   height: 30px;
   border-radius: 50%;
@@ -1323,7 +1325,7 @@ a {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-start;
   line-height: 1.25;
 }
 
@@ -1339,6 +1341,10 @@ a {
 .prompter-subtitle {
   font-size: 11px;
   color: var(--text-secondary);
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .prompter-timer {

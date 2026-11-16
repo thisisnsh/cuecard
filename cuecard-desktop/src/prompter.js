@@ -30,16 +30,16 @@ const ANCHOR_SLACK = 0.25;
 export function createPrompter(root, { onClose, onPlayStateChange, onShortcuts } = {}) {
   root.innerHTML = `
     <div class="prompter-bar" data-tauri-drag-region>
-      <div class="prompter-bar-side">
+      <div class="prompter-bar-side" data-tauri-drag-region>
         <button class="glass-btn" data-role="back" aria-label="Close" title="Close (Esc)">${icon('xmark', 16)}</button>
+        <div class="prompter-heading" data-tauri-drag-region>
+          <span class="prompter-title" data-tauri-drag-region></span>
+          <span class="prompter-subtitle" data-tauri-drag-region></span>
+        </div>
+      </div>
+      <span class="prompter-timer" data-tauri-drag-region>00:00</span>
+      <div class="prompter-bar-side is-trailing" data-tauri-drag-region>
         <button class="glass-btn" data-role="shortcuts" aria-label="Keyboard Shortcuts" title="Keyboard Shortcuts">${icon('keyboard', 16)}</button>
-      </div>
-      <div class="prompter-heading" data-tauri-drag-region>
-        <span class="prompter-title" data-tauri-drag-region></span>
-        <span class="prompter-subtitle" data-tauri-drag-region></span>
-      </div>
-      <div class="prompter-bar-side is-trailing">
-        <span class="prompter-timer">00:00</span>
       </div>
     </div>
 
@@ -654,7 +654,8 @@ export function createPrompter(root, { onClose, onPlayStateChange, onShortcuts }
   }
 
   function setHeading(title, subtitle) {
-    el.title.textContent = title;
+    el.title.textContent = title || '';
+    el.title.hidden = !title;
     el.subtitle.textContent = subtitle || '';
     el.subtitle.hidden = !subtitle;
   }
