@@ -595,6 +595,7 @@ export function helpSections({ isMac }) {
         topic('Change Speed', 'Scroll Speed in Settings sets how many lines pass each minute.'),
         topic('Jump Between Anchors', 'Press ← and →, or click the buttons at the far left and right, to jump to the anchor before or after. The top and the end of the script count as anchors too.'),
         topic('Keep Your Place', 'The pointer at the side of the script marks the line to read. Drag it up or down to read where it suits your eyes, and the script lines up with it. Turn off Reading Guide Line in Settings to hide it.'),
+        topic('Align the Text', 'Set Text Alignment under Teleprompter in Settings to Left, Center or Right. Images stay centered.'),
         topic('Mirror', "Turn on Flip Horizontally or Flip Vertically under Teleprompter in Settings to flip the text for a teleprompter's glass. Both are off by default."),
         topic('Know When Time Is Running Out', 'The timer changes color when you are near the end and again once you are over time. Pick the colors in the timer.'),
       ],
@@ -615,7 +616,7 @@ export function helpSections({ isMac }) {
       summary: 'The notes of the slide you are on',
       icon: 'slides',
       topics: [
-        topic('Read Your Speaker Notes', 'Install the CueCard browser extension and connect Google Slides in the sidebar. As you present, the notes for the slide you are on show up here, and the teleprompter moves on with each slide.'),
+        topic('Read Your Speaker Notes', 'Install the CueCard browser extension, choose Slides beside Teleprompter and Cards at the top of your library, and connect Google Slides. As you present, the notes for the slide you are on show up here, and the teleprompter moves on with each slide.'),
         topic('Refresh the Notes', 'Edited the notes while presenting? Click the refresh button above them to read them again.'),
         topic('Use Another Presentation App', 'Keynote, PowerPoint, Deckset and other apps can send their notes to CueCard through the notes API. Copy the token under Other Presentation Apps in Settings, and see the Notes API Guide there for how.'),
       ],
@@ -627,7 +628,8 @@ export function helpSections({ isMac }) {
       icon: 'eyeOff',
       topics: [
         topic('Stay Out of Screen Shares', 'While Invisible is on in the title bar, CueCard is left out of screen sharing, screenshots and recordings. Everyone else sees what is behind it.'),
-        topic('See Through the Window', `Set Opacity in Settings, or press ${global}- and ${global}= from any app.`),
+        topic('See Through the Window', `Set Opacity in Settings, or press ${global}- and ${global}= from any app. At 5% the background is all but gone and the words stand out.`),
+        topic('See Every Shortcut', 'Click the keyboard button at the top of the window for every keyboard shortcut, including the ones that work from any app.'),
         topic('Control It From Any App', `Press ${global}C to show or hide CueCard, ${global}Space to play or pause, ${global}0 to restart and ${global}arrow keys to move the window, while you are in another app.`),
       ],
     },

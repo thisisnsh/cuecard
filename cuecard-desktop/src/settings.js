@@ -34,6 +34,11 @@ export const EDITOR_SIZE_RANGE = [12, 40];
 export const LPM_RANGE = [1, 300];
 /** The delays a typed countdown is held to. */
 export const COUNTDOWN_RANGE = [0, 60];
+/** How far the window's background goes, from barely there to solid. It is
+ *  only ever the background: the script on it stays as it is. */
+export const OPACITY_RANGE = [5, 100];
+/** How the teleprompter sets its lines. Left follows the script's language. */
+export const TEXT_ALIGNMENTS = ['left', 'center', 'right'];
 
 /**
  * How a set timer is coloured: one colour while there's time, another from
@@ -70,6 +75,7 @@ export const DEFAULTS = {
   readingGuidePosition: 0,
   mirrorsText: false,
   flipsTextVertically: false,
+  textAlignment: 'left',
 
   // Cards
   cardsCueColor: DEFAULT_CUE_COLOR,
@@ -96,6 +102,7 @@ const KEYS = {
   readingGuidePosition: 'settings_reading_guide_position',
   mirrorsText: 'settings_flip_horizontal',
   flipsTextVertically: 'settings_flip_vertical',
+  textAlignment: 'settings_text_alignment',
   cardsCueColor: 'settings_cards_cue_color',
   cardsTimerMinutes: 'settings_cards_timer_minutes',
   cardsTimerSeconds: 'settings_cards_timer_seconds',
@@ -164,7 +171,7 @@ function sanitizeTimerStyle(value) {
 }
 
 const VALIDATORS = {
-  opacity: (v) => (isNumber(v) ? clamp(v, [10, 100]) : undefined),
+  opacity: (v) => (isNumber(v) ? clamp(v, OPACITY_RANGE) : undefined),
   invisible: (v) => (typeof v === 'boolean' ? v : undefined),
   theme: (v) => (['system', 'light', 'dark'].includes(v) ? v : undefined),
   cueColor: (v) => (CUE_COLORS.includes(v) ? v : undefined),
@@ -185,6 +192,7 @@ const VALIDATORS = {
   readingGuidePosition: (v) => (isNumber(v) ? clamp(v, [0, 1]) : undefined),
   mirrorsText: (v) => (typeof v === 'boolean' ? v : undefined),
   flipsTextVertically: (v) => (typeof v === 'boolean' ? v : undefined),
+  textAlignment: (v) => (TEXT_ALIGNMENTS.includes(v) ? v : undefined),
 };
 
 export async function loadSettings() {

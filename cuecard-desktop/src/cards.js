@@ -16,11 +16,12 @@ import { track, trackClick } from './tauri.js';
 /** How much sideways scrolling counts as a swipe. */
 const SWIPE_DISTANCE = 90;
 
-export function createCardsViewer(root, { onClose } = {}) {
+export function createCardsViewer(root, { onClose, onShortcuts } = {}) {
   root.innerHTML = `
     <div class="prompter-bar" data-tauri-drag-region>
       <div class="prompter-bar-side">
         <button class="glass-btn" data-role="close" aria-label="Close" title="Close (Esc)">${icon('xmark', 16)}</button>
+        <button class="glass-btn" data-role="shortcuts" aria-label="Keyboard Shortcuts" title="Keyboard Shortcuts">${icon('keyboard', 16)}</button>
       </div>
       <div class="prompter-heading" data-tauri-drag-region>
         <span class="prompter-title" data-tauri-drag-region></span>
@@ -170,6 +171,7 @@ export function createCardsViewer(root, { onClose } = {}) {
     trackClick('cards_close', 'cards');
     close();
   });
+  root.querySelector('[data-role="shortcuts"]').addEventListener('click', () => onShortcuts?.('cards'));
 
   // Two fingers sideways on a trackpad turn the card, once per swipe.
   el.stage.addEventListener('wheel', (event) => {

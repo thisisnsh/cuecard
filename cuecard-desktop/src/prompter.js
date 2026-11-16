@@ -27,11 +27,12 @@ const CONTROLS_LINGER = 2600;
 /** Lines from an anchor that still count as being on it. */
 const ANCHOR_SLACK = 0.25;
 
-export function createPrompter(root, { onClose, onPlayStateChange } = {}) {
+export function createPrompter(root, { onClose, onPlayStateChange, onShortcuts } = {}) {
   root.innerHTML = `
     <div class="prompter-bar" data-tauri-drag-region>
       <div class="prompter-bar-side">
         <button class="glass-btn" data-role="back" aria-label="Close" title="Close (Esc)">${icon('xmark', 16)}</button>
+        <button class="glass-btn" data-role="shortcuts" aria-label="Keyboard Shortcuts" title="Keyboard Shortcuts">${icon('keyboard', 16)}</button>
       </div>
       <div class="prompter-heading" data-tauri-drag-region>
         <span class="prompter-title" data-tauri-drag-region></span>
@@ -87,6 +88,7 @@ export function createPrompter(root, { onClose, onPlayStateChange } = {}) {
     countdown: root.querySelector('.countdown-number'),
     restart: root.querySelector('[data-role="restart"]'),
     back: root.querySelector('[data-role="back"]'),
+    shortcuts: root.querySelector('[data-role="shortcuts"]'),
     prevAnchor: root.querySelector('[data-role="prev-anchor"]'),
     nextAnchor: root.querySelector('[data-role="next-anchor"]'),
   };
@@ -129,6 +131,8 @@ export function createPrompter(root, { onClose, onPlayStateChange } = {}) {
 
   function render() {
     el.text.style.fontSize = `${settings.fontSize}px`;
+    // Left follows the script's language, as the teleprompter always has.
+    el.text.style.textAlign = settings.textAlignment === 'left' ? 'start' : settings.textAlignment;
     el.text.innerHTML = scriptHtml(run.text);
     applyFlip();
     layout();
@@ -561,6 +565,11 @@ export function createPrompter(root, { onClose, onPlayStateChange } = {}) {
     trackClick('teleprompter_close', 'teleprompter');
     close();
   });
+  // The script stops while the list is up, so no line goes by unread.
+  el.shortcuts.addEventListener('click', () => {
+    if (run.playing || run.countingDown) pause();
+    onShortcuts?.('teleprompter');
+  });
   el.prevAnchor.addEventListener('click', () => jumpToAnchor(false));
   el.nextAnchor.addEventListener('click', () => jumpToAnchor(true));
 
@@ -672,7 +681,7 @@ export function createPrompter(root, { onClose, onPlayStateChange } = {}) {
       }
     },
 
-    /** The script's size, colour, guide or flip changed under it. */
+    /** The script's size, colour, alignment, guide or flip changed under it. */
     restyle() {
       if (!run.open) return;
       render();

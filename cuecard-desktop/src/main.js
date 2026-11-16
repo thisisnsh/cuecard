@@ -4,8 +4,8 @@
  * The phone app opens on a library, writes scripts and decks in two modes, and
  * presents them as a scrolling teleprompter or one card at a time. This has
  * the same, with the room a window gives used for what a phone has nowhere to
- * put: the library and a live Google Slides deck side by side in a sidebar,
- * next to the script being written.
+ * put: the library in a sidebar next to the script being written, and a live
+ * Google Slides deck as a third choice beside Teleprompter and Cards.
  */
 
 import { icon, hydrateIcons } from './icons.js';
@@ -14,6 +14,7 @@ import {
   EDITOR_SIZE_PRESETS,
   EDITOR_SIZE_RANGE,
   LPM_RANGE,
+  OPACITY_RANGE,
   VIEWER_SIZE_PRESETS,
   VIEWER_SIZE_RANGE,
   canResetSettings,
@@ -123,8 +124,8 @@ async function boot() {
 
   syncEditors();
 
-  prompter = createPrompter($('screen-prompter'), { onClose: onViewerClosed });
-  cardsViewer = createCardsViewer($('screen-cards'), { onClose: onViewerClosed });
+  prompter = createPrompter($('screen-prompter'), { onClose: onViewerClosed, onShortcuts: openShortcuts });
+  cardsViewer = createCardsViewer($('screen-cards'), { onClose: onViewerClosed, onShortcuts: openShortcuts });
 
   library = createLibrary(
     {
@@ -416,7 +417,9 @@ async function deleteAllScripts() {
   syncEditors();
 }
 
+/** Teleprompter, Cards, or the live deck's notes. */
 async function switchMode(m) {
+  if (m === 'slides') return selectSource('slides');
   await notes.setMode(m);
   selectSource('script');
 }
@@ -1003,16 +1006,10 @@ function renderToolbar() {
 }
 
 function renderSidebar() {
-  const slidesRow = $('row-slides');
-  slidesRow.classList.toggle('is-selected', app.source === 'slides');
-  slidesRow.classList.toggle('is-live', Boolean(app.slides.slide));
+  // The Slides choice beside Teleprompter and Cards: a dot while a deck is live.
   $('slides-dot').hidden = !app.slides.slide;
-  $('slides-name').textContent = liveSourceName();
-  $('slides-status').textContent = hasLiveSlide()
-    ? deckLabel()
-    : app.slides.connected
-      ? 'Waiting for a deck'
-      : 'Not connected';
+  const status = hasLiveSlide() ? deckLabel() : app.slides.connected ? 'Waiting for a deck' : 'Not connected';
+  $('mode-slides').title = `${liveSourceName()}: ${status} (${ui.formatShortcut('mod+3')})`;
 
   library.render({ source: app.source, selectedId: notes.draft().noteId });
 }
@@ -1177,7 +1174,7 @@ function openMenu() {
   }
   items.push(
     { label: 'Help', icon: 'help', onSelect: () => openHelp('home') },
-    { label: 'Keyboard Shortcuts', icon: 'keyboard', onSelect: () => openSettings('shortcuts') },
+    { label: 'Keyboard Shortcuts', icon: 'keyboard', onSelect: () => openShortcuts() },
     { divider: true },
     { label: 'Visit Website', icon: 'globe', onSelect: () => T.openUrl(LINKS.site) },
     { label: 'Contact Support', icon: 'mail', onSelect: () => supportMail('CueCard Desktop') }
@@ -1219,12 +1216,17 @@ function openSettings(page = 'settings') {
   T.trackScreen('settings');
 }
 
+/** From the title bar, or from the teleprompter or cards as they're read. */
+function openShortcuts(screen = 'home') {
+  T.trackClick('keyboard_shortcuts', screen);
+  openSettings('shortcuts');
+}
+
 function showSettingsPage(page) {
   const isShortcuts = page === 'shortcuts';
   $('page-settings').hidden = isShortcuts;
   $('page-shortcuts').hidden = !isShortcuts;
   $('sheet-title').textContent = isShortcuts ? 'Keyboard Shortcuts' : 'Settings';
-  $('btn-sheet-back').hidden = !isShortcuts;
   $('sheet-settings').querySelector('.sheet-body')?.scrollTo(0, 0);
 }
 
@@ -1258,6 +1260,14 @@ function buildSettingsControls() {
 
   document.querySelectorAll('[data-toggle]').forEach((input) => {
     input.addEventListener('change', () => setSetting(input.dataset.toggle, input.checked));
+  });
+
+  // The keys that change a setting, after its line on what it does.
+  document.querySelectorAll('[data-keys]').forEach((host) => {
+    host.innerHTML = host.dataset.keys
+      .split(',')
+      .map((spec) => `<kbd>${ui.escapeHtml(ui.formatShortcut(spec))}</kbd>`)
+      .join('');
   });
 
   document.querySelectorAll('[data-number]').forEach((input) => {
@@ -1294,12 +1304,15 @@ function syncSettings() {
     if (document.activeElement !== input) input.value = String(settings[input.dataset.number]);
   });
   selectSegment('seg-theme', settings.theme);
+  selectSegment('seg-alignment', settings.textAlignment);
 
   $('advanced-fields').hidden = !showsAdvanced;
   $('advanced-label').textContent = showsAdvanced ? 'Hide Advanced Settings' : 'Show Advanced Settings';
   $('btn-reset').disabled = !canResetSettings();
 
-  $('slides-settings-status').textContent = app.slides.connected ? 'Connected' : 'Not connected';
+  $('slides-settings-status').textContent = app.slides.connected
+    ? "Connected. The notes for the slide you're on."
+    : "The notes for the slide you're on.";
   $('btn-slides-connect').hidden = app.slides.connected;
 
   void T.appVersion().then((version) => {
@@ -1315,7 +1328,7 @@ function selectSegment(id, value) {
 }
 
 const PROMPTER_KEYS = new Set([
-  'fontSize', 'cueColor', 'mirrorsText', 'flipsTextVertically', 'showsReadingGuide',
+  'fontSize', 'cueColor', 'textAlignment', 'mirrorsText', 'flipsTextVertically', 'showsReadingGuide',
   'timerStyle', 'timerMinutes', 'timerSeconds', '*',
 ]);
 const CARDS_KEYS = new Set(['cardsFontSize', 'cardsCueColor', 'cardsTimerStyle', 'cardsTimerMinutes', 'cardsTimerSeconds', '*']);
@@ -1346,7 +1359,7 @@ const SHORTCUTS_LOCAL = [
   ['Bold', 'mod+b'],
   ['Italic', 'mod+i'],
   ['New card', 'mod+enter', 'in a card'],
-  ['Teleprompter or Cards', ['mod+1', 'mod+2']],
+  ['Teleprompter, Cards or Slides', ['mod+1', 'mod+2', 'mod+3']],
   ['Search the library', 'mod+f'],
   ['Start', 'mod+enter'],
   ['Settings', 'mod+comma'],
@@ -1434,7 +1447,6 @@ async function runUpdate() {
 function wireHome() {
   $('btn-sidebar').addEventListener('click', () => toggleSidebar());
   $('sidebar-scrim').addEventListener('click', () => toggleSidebar(false));
-  $('row-slides').addEventListener('click', () => selectSource('slides'));
   $('btn-connect-slides').addEventListener('click', connectSlides);
   $('btn-slides-connect').addEventListener('click', connectSlides);
   $('btn-refresh-slides').addEventListener('click', refreshSlides);
@@ -1458,6 +1470,10 @@ function wireHome() {
 
   $('btn-invisible').addEventListener('click', toggleInvisible);
   $('btn-menu').addEventListener('click', openMenu);
+  $('btn-shortcuts').addEventListener('click', () => openShortcuts('home'));
+  $('mode-switch').querySelector('[data-value="teleprompter"]').title = `Teleprompter (${ui.formatShortcut('mod+1')})`;
+  $('mode-switch').querySelector('[data-value="cards"]').title = `Cards (${ui.formatShortcut('mod+2')})`;
+  $('btn-settings').title = `Settings (${ui.formatShortcut('mod+comma')})`;
   $('btn-settings').addEventListener('click', () => {
     T.trackClick('settings', 'home');
     openSettings('settings');
@@ -1496,8 +1512,6 @@ function wireSettingsSheet() {
     T.trackClick('done', 'settings');
     closeSettingsSheet?.();
   });
-  $('btn-sheet-back').addEventListener('click', () => showSettingsPage('settings'));
-  $('row-shortcuts').addEventListener('click', () => showSettingsPage('shortcuts'));
 
   const speed = $('field-speed');
   speed.addEventListener('blur', () => commitNumberField(speed, 'linesPerMinute', LPM_RANGE));
@@ -1506,6 +1520,10 @@ function wireSettingsSheet() {
   $('seg-theme').addEventListener('click', (event) => {
     const segment = event.target.closest('.segment');
     if (segment) void setSetting('theme', segment.dataset.value);
+  });
+  $('seg-alignment').addEventListener('click', (event) => {
+    const segment = event.target.closest('.segment');
+    if (segment) void setSetting('textAlignment', segment.dataset.value);
   });
 
   $('toggle-invisible').addEventListener('change', (e) => setSetting('invisible', e.target.checked));
@@ -1586,9 +1604,9 @@ function wireKeyboard() {
       event.preventDefault();
       toggleSidebar(true);
       library.focusSearch();
-    } else if (on('mod+1') || on('mod+2')) {
+    } else if (on('mod+1') || on('mod+2') || on('mod+3')) {
       event.preventDefault();
-      void switchMode(on('mod+1') ? 'teleprompter' : 'cards');
+      void switchMode(on('mod+1') ? 'teleprompter' : on('mod+2') ? 'cards' : 'slides');
     } else if (on('mod+enter')) {
       event.preventDefault();
       start();
@@ -1624,10 +1642,10 @@ async function onGlobalShortcut(action) {
       (await win.isVisible()) ? await win.hide() : await win.show();
       break;
     case 'opacity-down':
-      void setSetting('opacity', clamp(settings.opacity - 10, [10, 100]));
+      void setSetting('opacity', clamp(settings.opacity - 10, OPACITY_RANGE));
       break;
     case 'opacity-up':
-      void setSetting('opacity', clamp(settings.opacity + 10, [10, 100]));
+      void setSetting('opacity', clamp(settings.opacity + 10, OPACITY_RANGE));
       break;
     case 'timer-toggle':
       if (prompter.isOpen()) prompter.togglePlay();

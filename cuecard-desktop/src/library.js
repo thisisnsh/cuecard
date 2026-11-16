@@ -80,6 +80,8 @@ export function createLibrary(el, handlers) {
     /** The collection chosen, or empty for All. */
     collection: '',
     query: '',
+    /** What the detail pane shows: 'script', or 'slides' for the live deck. */
+    source: 'script',
   };
 
   async function load() {
@@ -124,6 +126,7 @@ export function createLibrary(el, handlers) {
   // ---------------------------------------------------------------------------
 
   function render({ source, selectedId }) {
+    view.source = source;
     renderModeSwitch();
     el.sectionTitle.textContent = kindName();
     el.search.placeholder = `Search ${kindName()}`;
@@ -132,10 +135,14 @@ export function createLibrary(el, handlers) {
     renderFooter();
   }
 
+  /** Teleprompter, Cards, or the live deck when that is what's showing. */
+  const selectedChoice = () => (view.source === 'slides' ? 'slides' : notes.state.mode);
+
   function renderModeSwitch() {
+    const chosen = selectedChoice();
     el.modeSwitch.querySelectorAll('.segment').forEach((segment) => {
-      segment.classList.toggle('is-selected', segment.dataset.value === notes.state.mode);
-      segment.setAttribute('aria-pressed', String(segment.dataset.value === notes.state.mode));
+      segment.classList.toggle('is-selected', segment.dataset.value === chosen);
+      segment.setAttribute('aria-pressed', String(segment.dataset.value === chosen));
     });
   }
 
@@ -379,7 +386,7 @@ export function createLibrary(el, handlers) {
 
   el.modeSwitch.addEventListener('click', (event) => {
     const segment = event.target.closest('.segment');
-    if (!segment || segment.dataset.value === notes.state.mode) return;
+    if (!segment || segment.dataset.value === selectedChoice()) return;
     trackClick(`library_mode_${segment.dataset.value}`, 'library');
     handlers.onMode(segment.dataset.value);
   });

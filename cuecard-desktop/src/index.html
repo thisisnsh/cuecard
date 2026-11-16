@@ -23,6 +23,10 @@
             <button class="segment" data-value="cards">
               <span data-icon="cards" data-icon-size="13"></span>Cards
             </button>
+            <button class="segment" data-value="slides" id="mode-slides">
+              <span data-icon="slides" data-icon-size="13"></span>Slides
+              <span class="live-dot" id="slides-dot" hidden></span>
+            </button>
           </div>
         </div>
 
@@ -34,16 +38,6 @@
         </div>
 
         <div class="sidebar-scroll">
-          <h2 class="sidebar-section">Live</h2>
-          <button class="source-row" id="row-slides">
-            <span class="source-icon" data-icon="slides" data-icon-size="16"></span>
-            <span class="source-text">
-              <span class="source-name" id="slides-name">Google Slides</span>
-              <span class="source-status" id="slides-status">Not connected</span>
-            </span>
-            <span class="live-dot" id="slides-dot" hidden></span>
-          </button>
-
           <h2 class="sidebar-section">
             <span id="library-title">Scripts</span>
             <span class="section-actions">
@@ -85,6 +79,8 @@
               <span data-icon="ellipsis"></span>
               <span class="badge" id="menu-badge" hidden></span>
             </button>
+            <button class="icon-btn" id="btn-shortcuts" data-icon="keyboard" aria-label="Keyboard Shortcuts"
+              title="Keyboard Shortcuts"></button>
             <button class="icon-btn" id="btn-settings" data-icon="gear" aria-label="Settings"></button>
             <button class="icon-btn is-close" id="btn-close" data-icon="xmark" aria-label="Close"></button>
           </div>
@@ -170,11 +166,7 @@
     <!-- ===================== Settings sheet ===================== -->
     <div class="sheet" id="sheet-settings" hidden>
       <header class="sheet-bar">
-        <div class="sheet-side">
-          <button class="text-btn" id="btn-sheet-back" hidden>
-            <span data-icon="chevronLeft" data-icon-size="16"></span>Settings
-          </button>
-        </div>
+        <div class="sheet-side"></div>
         <h2 class="sheet-title" id="sheet-title">Settings</h2>
         <div class="sheet-side is-trailing">
           <button class="text-btn is-strong" id="btn-sheet-done">Done</button>
@@ -226,6 +218,17 @@
                   <span class="cell-sub">The script as you write it.</span>
                 </span>
                 <div class="segmented is-sizes" data-size="editorFontSize" role="group" aria-label="Editor text size"></div>
+              </div>
+              <div class="cell">
+                <span class="cell-label">
+                  <span class="cell-title">Text Alignment</span>
+                  <span class="cell-sub">The script as it scrolls.</span>
+                </span>
+                <div class="segmented" id="seg-alignment" role="group" aria-label="Text alignment">
+                  <button class="segment" data-value="left">Left</button>
+                  <button class="segment" data-value="center">Center</button>
+                  <button class="segment" data-value="right">Right</button>
+                </div>
               </div>
               <div class="cell">
                 <span class="cell-label">
@@ -310,20 +313,13 @@
               <div class="cell">
                 <span class="cell-label">
                   <span class="cell-title">Opacity</span>
-                  <span class="cell-sub">How much of what's behind shows through.</span>
+                  <span class="cell-sub">How solid the background is.<span class="cell-keys" data-keys="ctrl+alt+-,ctrl+alt+="></span></span>
                 </span>
                 <div class="slider-row">
-                  <input type="range" id="slider-opacity" min="10" max="100" step="5" aria-label="Window opacity">
+                  <input type="range" id="slider-opacity" min="5" max="100" step="5" aria-label="Window opacity">
                   <span class="slider-value" id="opacity-value">100%</span>
                 </div>
               </div>
-              <button class="cell is-action" id="row-shortcuts">
-                <span class="cell-label">
-                  <span class="cell-title">Keyboard Shortcuts</span>
-                  <span class="cell-sub">Some of them work while you're in another app.</span>
-                </span>
-                <span class="cell-accessory" data-icon="chevronRight" data-icon-size="14"></span>
-              </button>
             </div>
           </section>
 
@@ -333,7 +329,7 @@
               <div class="cell">
                 <span class="cell-label">
                   <span class="cell-title">Slide Notes</span>
-                  <span class="cell-sub" id="slides-settings-status">Not connected</span>
+                  <span class="cell-sub" id="slides-settings-status">The notes for the slide you're on.</span>
                 </span>
                 <button class="tinted-btn" id="btn-slides-connect">Connect</button>
               </div>
@@ -353,7 +349,7 @@
               <div class="cell">
                 <span class="cell-label">
                   <span class="cell-title">Notes API Token</span>
-                  <span class="cell-sub">Keynote, PowerPoint, Deckset or a script of your own send their notes with it.</span>
+                  <span class="cell-sub">Lets Keynote, PowerPoint and other apps send notes.</span>
                 </span>
                 <button class="tinted-btn" id="btn-copy-api-token">Copy</button>
               </div>
@@ -386,11 +382,17 @@
           <section class="group">
             <div class="cells">
               <button class="cell is-action" id="btn-help">
-                <span class="cell-title">Help</span>
+                <span class="cell-label">
+                  <span class="cell-title">Help</span>
+                  <span class="cell-sub">How CueCard works, and a way to reach us.</span>
+                </span>
                 <span class="cell-accessory" data-icon="chevronRight" data-icon-size="14"></span>
               </button>
               <button class="cell is-action" id="btn-rate">
-                <span class="cell-title">Star on GitHub</span>
+                <span class="cell-label">
+                  <span class="cell-title">Star on GitHub</span>
+                  <span class="cell-sub">CueCard is free and open source.</span>
+                </span>
                 <span class="cell-accessory" data-icon="arrowUpRight" data-icon-size="13"></span>
               </button>
             </div>
@@ -402,37 +404,43 @@
                 <div class="cell">
                   <span class="cell-label">
                     <span class="cell-title">Teleprompter Text Size</span>
-                    <span class="cell-sub">16–72</span>
+                    <span class="cell-sub">16 to 72</span>
                   </span>
                   <label class="number-box"><input data-number="fontSize" type="text" inputmode="numeric" maxlength="2" aria-label="Teleprompter text size"></label>
                 </div>
                 <div class="cell">
                   <span class="cell-label">
                     <span class="cell-title">Teleprompter Editor Text Size</span>
-                    <span class="cell-sub">12–40</span>
+                    <span class="cell-sub">12 to 40</span>
                   </span>
                   <label class="number-box"><input data-number="editorFontSize" type="text" inputmode="numeric" maxlength="2" aria-label="Teleprompter editor text size"></label>
                 </div>
                 <div class="cell">
                   <span class="cell-label">
                     <span class="cell-title">Card Text Size</span>
-                    <span class="cell-sub">16–72</span>
+                    <span class="cell-sub">16 to 72</span>
                   </span>
                   <label class="number-box"><input data-number="cardsFontSize" type="text" inputmode="numeric" maxlength="2" aria-label="Card text size"></label>
                 </div>
                 <div class="cell">
                   <span class="cell-label">
                     <span class="cell-title">Cards Editor Text Size</span>
-                    <span class="cell-sub">12–40</span>
+                    <span class="cell-sub">12 to 40</span>
                   </span>
                   <label class="number-box"><input data-number="cardsEditorFontSize" type="text" inputmode="numeric" maxlength="2" aria-label="Cards editor text size"></label>
                 </div>
               </div>
               <button class="cell is-action" id="btn-advanced">
-                <span class="cell-title is-tinted" id="advanced-label">Show Advanced Settings</span>
+                <span class="cell-label">
+                  <span class="cell-title is-tinted" id="advanced-label">Show Advanced Settings</span>
+                  <span class="cell-sub">Type in exact text sizes.</span>
+                </span>
               </button>
               <button class="cell is-action" id="btn-reset">
-                <span class="cell-title is-tinted">Reset to Defaults</span>
+                <span class="cell-label">
+                  <span class="cell-title is-tinted">Reset to Defaults</span>
+                  <span class="cell-sub">Your scripts are left alone.</span>
+                </span>
               </button>
             </div>
           </section>
@@ -443,17 +451,17 @@
         <!-- Keyboard shortcuts -->
         <div class="sheet-page" id="page-shortcuts" hidden>
           <section class="group">
-            <h3 class="group-title">Writing</h3>
-            <div class="cells" id="shortcut-list-local"></div>
+            <h3 class="group-title">Anywhere</h3>
+            <div class="cells" id="shortcut-list-global"></div>
+            <p class="group-footer">These work while CueCard is in the background, and while you are in it.</p>
           </section>
           <section class="group">
             <h3 class="group-title">Reading</h3>
             <div class="cells" id="shortcut-list-reading"></div>
           </section>
           <section class="group">
-            <h3 class="group-title">Anywhere</h3>
-            <div class="cells" id="shortcut-list-global"></div>
-            <p class="group-footer">These work while CueCard is in the background, and while you are in it.</p>
+            <h3 class="group-title">Writing</h3>
+            <div class="cells" id="shortcut-list-local"></div>
           </section>
         </div>
       </div>
