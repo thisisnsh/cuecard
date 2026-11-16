@@ -1,10 +1,9 @@
 const markdownIt = require("markdown-it");
 
 module.exports = function(eleventyConfig) {
-  const { jsonLd, tutorialUrl, softwareSchema, cueHtml } = require('./lib/content');
+  const { jsonLd, softwareSchema, cueHtml } = require('./lib/content');
   eleventyConfig.addFilter('cueHtml', cueHtml);
   eleventyConfig.addFilter('jsonLd', jsonLd);
-  eleventyConfig.addFilter('tutorialUrl', tutorialUrl);
   eleventyConfig.addFilter('softwareSchema', softwareSchema);
   eleventyConfig.addFilter('latestModified', posts => posts.map(p => p.modified || p.datetime).sort().at(-1));
   // Configure dev server to serve 404.html for missing routes

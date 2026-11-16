@@ -1,7 +1,7 @@
 {% from "partials/icons.njk" import icon %}
 {#
   The desktop app's screens: the desktop pages' answer to the App Store strips
-  on the phone pages (partials/shots.njk). One card, the screens side by side
+  on the phone pages (partials/shots.njk). One card, the screens two by two
   on a wide screen and one after another on a narrow one, each with its own
   caption. Pressing a screen opens it full size in a dialog (script.js); with
   no JS the link opens the image itself.
@@ -22,9 +22,9 @@
                     <figure class="reel-frame">
                         <a class="reel-zoom" href="{{ f.src }}" data-reel-zoom aria-label="Expand: {{ f.caption }}">
                             <img src="{{ f.src }}"
-                                 srcset="{{ f.small }} 820w, {{ f.src }} 1612w"
-                                 sizes="(min-width: 761px) 380px, 94vw"
-                                 width="1612" height="1054"
+                                 srcset="{{ f.small }} 920w, {{ f.src }} 1838w"
+                                 sizes="(min-width: 761px) 560px, 94vw"
+                                 width="1838" height="1238"
                                  alt="{{ f.alt }}" loading="lazy" decoding="async">
                         </a>
                         <figcaption class="shot-cap">{{ f.caption }}</figcaption>
@@ -43,7 +43,7 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
         </button>
         <figure>
-            <img class="reel-dialog-img" src="" alt="" width="1612" height="1054">
+            <img class="reel-dialog-img" src="" alt="" width="1838" height="1238">
             <figcaption class="reel-dialog-cap"></figcaption>
         </figure>
     </dialog>

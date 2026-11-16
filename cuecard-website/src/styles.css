@@ -796,22 +796,30 @@ a.modes-card:hover .modes-go { color: var(--cue); }
 }
 
 /* ════════════════════════ THE SCREENSHOTS ═══════════════════════════════ */
-/* CARD again: the App Store artwork, one strip per device, side by side on a
-   wide screen. They are the only photographs on the site. */
-.shots-grid {
-  display: grid; gap: clamp(16px, 2.4vw, 26px);
+/* CARD again: the App Store screenshots in one row that scrolls sideways when
+   it does not fit, each screen snapping into place. */
+.shots-card {
   margin-top: clamp(20px, 2.8vw, 32px);
-}
-
-.shot {
   border: 1px solid var(--hairline); border-radius: 18px;
   background: var(--paper);
   overflow: hidden;
-  display: flex; flex-direction: column;
-  transition: border-color .25s var(--ease), transform .3s var(--ease), box-shadow .3s var(--ease);
 }
-.shot:hover { border-color: var(--hair-hi); transform: translateY(-3px); box-shadow: 0 18px 44px rgba(16,16,20,0.08); }
-.shot-media { display: block; width: 100%; height: auto; background: var(--paper); }
+.shots-strip {
+  list-style: none;
+  display: grid; grid-auto-flow: column;
+  grid-auto-columns: clamp(200px, 23vw, 260px);
+  gap: clamp(10px, 1.4vw, 16px);
+  padding: clamp(12px, 1.8vw, 22px);
+  overflow-x: auto; overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory; scroll-padding-inline: clamp(12px, 1.8vw, 22px);
+  scrollbar-width: thin;
+}
+.shots-strip:focus-visible { outline: 2px solid var(--cue); outline-offset: -2px; }
+.shot { scroll-snap-align: start; }
+.shot img {
+  display: block; width: 100%; height: auto;
+  border-radius: 12px; border: 1px solid var(--hairline);
+}
 .shot-foot {
   display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
   padding: 14px 18px 16px;
@@ -829,8 +837,8 @@ a.modes-card:hover .modes-go { color: var(--cue); }
 }
 
 /* ════════════════════════ THE DESKTOP SCREENS ═══════════════════════════ */
-/* The same card as the screenshots, holding the desktop app's screens: side
-   by side on a wide screen, one after another on a narrow one. */
+/* The same card as the screenshots, holding the desktop app's screens: two
+   by two on a wide screen, one after another on a narrow one. */
 .reel-card {
   margin-top: clamp(20px, 2.8vw, 32px);
   border: 1px solid var(--hairline); border-radius: 18px;
@@ -839,7 +847,7 @@ a.modes-card:hover .modes-go { color: var(--cue); }
 }
 .reel-grid {
   list-style: none;
-  display: grid; grid-template-columns: repeat(3, 1fr);
+  display: grid; grid-template-columns: repeat(2, 1fr);
   gap: clamp(8px, 1.4vw, 18px);
   padding: clamp(12px, 1.8vw, 22px) clamp(12px, 1.8vw, 22px) 6px;
 }
@@ -851,7 +859,7 @@ a.modes-card:hover .modes-go { color: var(--cue); }
 /* The expanded screen: the image at up to its own size, on dimmed page. */
 .reel-dialog {
   margin: auto; padding: 0; border: 0;
-  width: min(1612px, 94vw); max-height: 94vh;
+  width: min(1838px, 94vw); max-height: 94vh;
   background: transparent; overflow: visible;
 }
 .reel-dialog::backdrop { background: rgba(16, 16, 20, 0.72); }
@@ -881,82 +889,12 @@ a.modes-card:hover .modes-go { color: var(--cue); }
   .reel-grid { grid-template-columns: 1fr; gap: 4px; }
 }
 
-/* ════════════════════════ THE DEMOS ═════════════════════════════════════ */
-/* Three links out to YouTube, drawn as the device each was filmed on. Nothing
-   is embedded anywhere on this site: an iframe would drag a third-party
-   player onto every page it appeared on, and a link costs nothing. */
-.watchgrid {
-  list-style: none;
-  display: grid; gap: clamp(14px, 2vw, 22px);
-  margin-top: clamp(20px, 2.8vw, 32px);
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+/* The phone screenshot beside the iPad / iPhone panel (partials/bigscreen.njk). */
+.bigscreen-shot {
+  display: block; justify-self: center;
+  width: 100%; max-width: 220px; height: auto;
+  border-radius: 12px; border: 1px solid var(--hairline);
 }
-.watch-card {
-  display: flex; flex-direction: column; gap: 14px;
-  height: 100%;
-  padding: clamp(18px, 2.2vw, 24px);
-  border: 1px solid var(--hairline); border-radius: 18px;
-  background: var(--paper);
-  transition: border-color .25s var(--ease), transform .3s var(--ease), box-shadow .3s var(--ease);
-}
-.watch-card:hover { border-color: var(--hair-hi); transform: translateY(-3px); box-shadow: 0 18px 44px rgba(16,16,20,0.08); }
-.watch-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.watch-device {
-  display: inline-flex; align-items: center; gap: 8px;
-  font-size: 10.5px; font-weight: 700; letter-spacing: 0.14em;
-  text-transform: uppercase; color: var(--smoke);
-}
-.watch-device .icon { color: var(--smoke); }
-.watch-len { font-family: var(--mono); font-size: 11px; color: var(--smoke); }
-
-/* The device, drawn rather than photographed: a frame, a page of ruled script
-   inside it, and a play mark over the top. */
-.watch-frame {
-  position: relative;
-  margin-inline: auto;
-  width: 100%;
-  max-width: 152px;
-  height: 208px;
-  border: 2px solid var(--ink);
-  border-radius: 18px;
-  background: #fbf9f4;
-  overflow: hidden;
-  display: grid; align-content: start; gap: 8px;
-  padding: 16px 13px;
-}
-.watch-card--landscape .watch-frame {
-  max-width: 100%; width: 100%; border-radius: 12px; padding: 18px 20px;
-}
-.watch-rule { height: 7px; border-radius: 3px; background: rgba(16,16,20,0.11); }
-.watch-rule.w1 { width: 92%; }
-.watch-rule.w2 { width: 76%; }
-.watch-rule.w3 { width: 84%; }
-.watch-rule.w4 { width: 61%; }
-.watch-rule.is-cue { background: rgba(209,0,107,0.3); width: 40%; height: 6px; }
-.watch-play {
-  position: absolute; left: 50%; top: 50%;
-  transform: translate(-50%, -50%);
-  width: 52px; height: 52px; border-radius: 50%;
-  background: var(--ink);
-  display: grid; place-items: center;
-  box-shadow: 0 8px 24px rgba(16,16,20,0.28);
-  transition: transform .25s var(--ease), background .25s var(--ease);
-}
-.watch-play::after {
-  content: ""; margin-left: 3px;
-  border-style: solid; border-width: 8px 0 8px 13px;
-  border-color: transparent transparent transparent #fff;
-}
-.watch-card:hover .watch-play { transform: translate(-50%, -50%) scale(1.1); background: var(--cue); }
-.watch-go {
-  margin-top: auto; padding-top: 12px;
-  display: inline-flex; align-items: center; gap: 7px;
-  border-top: 1px solid var(--hairline);
-  font-family: var(--display); font-weight: 700; font-size: 12.5px;
-  color: var(--ash);
-  transition: color .2s var(--ease);
-}
-.watch-card:hover .watch-go { color: var(--cue); }
 
 /* ════════════════════════ THE CROSS-SELL PANEL ══════════════════════════ */
 /* One card, used wherever a page has to point at the other half of the
@@ -1569,7 +1507,6 @@ a.modes-card:hover .modes-go { color: var(--cue); }
 }
 .workflow-section, .setup-guide { padding: clamp(44px, 6vw, 68px) 0; }
 .setup-guide .body, .workflow-section .body { max-width: 64ch; }
-.tutorial-action { margin-top: 18px; }
 
 .setup-steps {
   display: grid;

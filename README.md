@@ -14,9 +14,13 @@ On iPhone, iPad and Apple Watch, read a scrolling script over the apps you film 
 [![Windows](https://img.shields.io/badge/Windows-10%2B-0078D6?logo=windows&logoColor=white)](https://cuecard.dev/desktop/#download)
 
 [![Website](https://img.shields.io/badge/Website-cuecard.dev-blue)](https://cuecard.dev)
-[![Demo Video](https://img.shields.io/badge/▶_Watch-the_floating_teleprompter-red?logo=youtube)](https://youtube.com/shorts/zSSABBm7K1Q)
+![Downloads](https://img.shields.io/badge/Downloads-25K%2B-brightgreen)
 
-<img src="./cuecard-website/src/assets/promo-mobile.jpg" alt="CueCard Teleprompter on iPhone: the script scrolling with cues in pink and a timer running, the floating prompter window sitting on top of the home screen, and the settings behind both." style="border-radius: 16px;">
+<img src="./cuecard-website/src/assets/mobile-float-560.webp" width="30%" alt="CueCard's script floating over the iPhone home screen, with a timer and a cue in pink.">&nbsp;
+<img src="./cuecard-website/src/assets/mobile-record-560.webp" width="30%" alt="Recording a video with CueCard's in-app camera while the script scrolls.">&nbsp;
+<img src="./cuecard-website/src/assets/mobile-cards-560.webp" width="30%" alt="A deck of cue cards in CueCard, with cues in pink.">
+
+*More screenshots, for iPhone, iPad and the computer app, at [cuecard.dev](https://cuecard.dev).*
 
 </div>
 
@@ -26,9 +30,9 @@ On iPhone, iPad and Apple Watch, read a scrolling script over the apps you film 
 
 CueCard is free and open source, with an app for your phone and an app for your computer.
 
-**On iPhone and iPad**, it has two modes. **Teleprompter** scrolls a script in a small window that floats on top of every other app, so you can read over the camera, Instagram, TikTok or a live stream without switching away. **Cards** gives you one short card at a time to speak from, on your phone, your Lock Screen or your Apple Watch.
+**On iPhone and iPad**, it has two modes. **Teleprompter** scrolls a script in a small window that floats on top of every other app, so you can read over the camera, Instagram, TikTok or a live stream without switching away, or record right in CueCard with its own camera. **Cards** gives you one short card at a time to speak from, on your phone, your Lock Screen or your Apple Watch.
 
-**On Mac and Windows**, the window is left out of screen capture by the operating system itself. On Zoom, Google Meet and Microsoft Teams the room sees your deck and never your notes, even though the window is right there on your screen.
+**On Mac and Windows**, the same two modes, plus Google Slides notes, in a window that is left out of screen capture by the operating system itself. On Zoom, Google Meet and Microsoft Teams the room sees your deck and never your notes, even though the window is right there on your screen.
 
 **Made for:**
 - 🎥 Reels, TikToks, Shorts and anything else filmed on a phone
@@ -85,15 +89,19 @@ CueCard is free and open source, with an app for your phone and an app for your 
 
 ### 🎬 A teleprompter and cue cards in one app
 
-Switch between **Teleprompter** and **Cards** from the top of the editor. Each mode keeps its own script and its own settings, so switching never mixes the two.
+Switch between **Teleprompter** and **Cards** from the top of the Library. Each mode keeps its own scripts and its own settings, so switching never mixes the two.
 
 ### 📲 Floats on top of every other app
 
 In Teleprompter mode, your script stays on screen while you record in the camera app, Instagram, TikTok or anything else. Drag the floating window anywhere, pick a rectangular or square layout, and set its text size. Put it just under the camera lens and your eyes stay close to the lens instead of drifting down.
 
-### ▶️ Scrolls on its own, at your pace
+### 🎥 Record in CueCard itself
 
-Set how fast the script moves in lines per minute and it scrolls by itself while you talk. Pause it or drag it back whenever you need a moment. It follows a set speed, not your voice. On an iPhone with an Action Button, you can play and pause from the button or Control Center.
+Open the camera in a small window over your script or cards and record. The script stays out of the video, and each take saves to Photos and stays with its script. Choose resolution, frame rate, stabilization and more in Settings.
+
+### ▶️ Scrolls at your pace, or follows your voice
+
+Set a speed in lines per minute and the script scrolls on its own, or turn on **Follow Me AI** (beta) to move it as you speak, using on-device speech recognition where supported. Pause it or drag it back whenever you need a moment. On an iPhone with an Action Button, you can play and pause from the button or Control Center.
 
 ### 🃏 Cards on your Lock Screen
 
@@ -109,11 +117,19 @@ CueCard counts you in before the script starts moving. A timer then runs while y
 
 ### 🎨 Cues you read but never say out loud
 
-Type something like `[cue smile]` or `[cue slow down]` in the middle of your script and it appears in colour. It is a reminder about how to say the next line, not a line to read.
+Type something like `[smile]` or `[slow down]` in the middle of your script and it appears in colour. It is a reminder about how to say the next line, not a line to read.
 
-### 💾 Saved notes, search and version history
+### ✍️ Suggestions for your script
 
-Save a script or deck by name and find it again by title or text. Every save keeps a version, so you can compare changes and restore an earlier draft. Import from a file or share the text, and optionally choose a notes folder in Files that keeps the latest copy of every saved note outside the app.
+On a supported Apple Intelligence device with iOS or iPadOS 26, **Suggestions AI** (beta) marks edits through your script for you to accept or reject, all on the device.
+
+### 💾 Collections, search and version history
+
+Save scripts and decks, sort them into collections, and find them again by title or text. Add images, bold and italic words, and anchors to jump between sections. Every save keeps a version, so you can compare changes and restore an earlier draft. Optionally choose a storage folder in Files that keeps the latest copy of every saved note outside the app.
+
+### 🪞 Ready for teleprompter glass
+
+Flip the text horizontally or vertically and drag the reading guide to the line you read from.
 
 > **One honest caveat:** the phone app is invisible to the *camera*, not to a screen recording. A screen recording or screen broadcast captures your whole screen, prompter included. Only the desktop app is genuinely excluded from screen capture.
 
@@ -121,13 +137,17 @@ Save a script or deck by name and find it again by title or text. Every save kee
 
 ## ⚡ On Mac and Windows
 
+<div align="center">
+<img src="./cuecard-website/src/assets/desktop-teleprompter-920.webp" width="80%" alt="CueCard for Mac and Windows: saved scripts in collections in the sidebar, and a script open with its cues in pink.">
+</div>
+
 ### 👻 Hidden from your screen share
 
 The CueCard window is left out of screen capture by the operating system itself. On Zoom, Google Meet, Microsoft Teams and anything else that shares a screen, everyone sees your slides and never your notes. **Invisible to Screen Sharing** is on by default; turn it off in Settings, or with the **Invisible** button in the toolbar, when you want to show the notes on purpose.
 
-### ▶️ A script that scrolls while you speak
+### 🎬 Teleprompter, Cards and Slides
 
-Press play to open the prompter, with a scroll speed, text size and start delay you choose. Pause, go back, restart or scroll by hand whenever you need.
+The same two modes as the phone app, and a third for Google Slides. Press play to scroll a script, with a speed, text size and start delay you choose, or step through cue cards one at a time with the arrow keys.
 
 ### ⏱️ A timer for your slot
 
@@ -135,11 +155,11 @@ Set a duration on the **Set Timer** pill and CueCard counts it down, warns you n
 
 ### 🎨 Cues you read but never say out loud
 
-Type something like `[cue slow down]` in your notes and it appears in colour, reminding you how to say the next part instead of giving you another line to read.
+Type something like `[slow down]` in your notes and it appears in colour, reminding you how to say the next part instead of giving you another line to read.
 
-### 💾 Saved scripts for the next presentation
+### 💾 The same scripts as your phone
 
-Name a script and open it again from the sidebar. Import and export text files with your cues included.
+Save scripts and decks in collections, with images, bold and italic text and version history. Point the desktop app and the phone app at the same storage folder, such as one in iCloud Drive, and both keep the same scripts.
 
 ### 📊 Google Slides notes that follow your slides
 
@@ -159,16 +179,16 @@ Show and hide the window, play and pause, move it, fade it back over your slides
 
 ### 📱 Filming with the teleprompter on iPhone or iPad
 
-1. Tap the mode name at the top left of the editor and pick **Teleprompter**
+1. Tap the mode name at the top left of the Library and pick **Teleprompter**
 2. Type or paste your script, or use **Import** in the ••• menu. Type `[` or tap **Add Cue** for a reminder
 3. Tap the gear to set **Scroll Speed**, **Text Size** and the floating window's layout
 4. Tap the timer beside the play button to set a duration and a countdown
 5. Tap the green play button, then the picture-in-picture button to float the script
-6. Open your camera app, drag the window up under the lens, and record
+6. Open your camera app, drag the window up under the lens, and record. Or record in CueCard with the camera button
 
 ### 🃏 Speaking from cue cards
 
-1. Tap the mode name at the top left of the editor and pick **Cards**
+1. Tap the mode name at the top left of the Library and pick **Cards**
 2. Write one thought per card, tapping **Create New Card** for the next
 3. Tap **Read Cards** and swipe or tap **Back** and **Next** to move through the deck
 4. To read with your phone locked, turn on **Show on Lock Screen** in Cards Settings. With the watch app installed, the deck is on your wrist too
@@ -185,21 +205,11 @@ Show and hide the window, play and pause, move it, fade it back over your slides
 ### 📊 Presenting from Google Slides
 
 1. Install the **CueCard** desktop app and the **CueCard browser extension**
-2. In CueCard, choose **Google Slides** and click **Connect Google Slides**
+2. In CueCard, choose **Slides** and click **Connect Google Slides**
 3. Allow read-only access to your presentations with Google
 4. Open your deck in the browser and present. The notes in CueCard follow the current slide
 
 > **Tip:** If notes don't appear immediately, move to the next slide and then return to the previous one.
-
-<br>
-
-## 🎬 Watch it
-
-| Screen | Film |
-|--------|------|
-| iPhone | [The floating teleprompter on iPhone](https://youtube.com/shorts/zSSABBm7K1Q) |
-| iPad | [CueCard Teleprompter on iPad](https://youtube.com/shorts/cHfZ-XLuz1E) |
-| Mac and Windows | [Speaker notes only you can see](https://youtu.be/lNKghjFrdTE) |
 
 <br>
 

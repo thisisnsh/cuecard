@@ -1,19 +1,6 @@
 // Serialize for a script element, including strings containing HTML delimiters.
 const jsonLd = value => JSON.stringify(value ?? null).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
 
-function tutorialUrl(value) {
-  try {
-    const url = new URL(value);
-    if (url.protocol !== 'https:' || url.username || url.password || url.port) return '';
-    const id = '[A-Za-z0-9_-]{11}';
-    if (url.hostname === 'youtu.be' && new RegExp(`^/${id}/?$`).test(url.pathname)) return url.href;
-    if (!['youtube.com', 'www.youtube.com', 'm.youtube.com'].includes(url.hostname)) return '';
-    if (url.pathname === '/watch' && new RegExp(`^${id}$`).test(url.searchParams.get('v') || '')) return url.href;
-    if (new RegExp(`^/shorts/${id}/?$`).test(url.pathname)) return url.href;
-  } catch {}
-  return '';
-}
-
 function softwareSchema(product, platformKey) {
   const shipping = product.platforms.filter(p => p.shipping && (!platformKey || p.key === platformKey));
   return {
@@ -41,4 +28,4 @@ function cueHtml(value) {
   return escaped.replace(/\[([^\]\n]+)\]/g, (_, cue) => `<span class="cue">${cue.trim()}</span>`);
 }
 
-module.exports = { jsonLd, tutorialUrl, softwareSchema, cueHtml };
+module.exports = { jsonLd, softwareSchema, cueHtml };

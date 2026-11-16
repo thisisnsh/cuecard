@@ -13,8 +13,8 @@ const products = {
     url: "https://cuecard.dev/mobile/", price: "0", currency: "USD",
     alternateName: "CueCard",
     description: "Write scripts, record videos and review takes in a free teleprompter and cue cards app for iPhone and iPad. Float notes over other apps or read cards on Apple Watch.",
-    image: "https://cuecard.dev/assets/promo-mobile.jpg",
-    screenshots: ["https://cuecard.dev/assets/promo-mobile.jpg", "https://cuecard.dev/assets/promo-teleprompter.jpg", "https://cuecard.dev/assets/promo-cards.jpg", "https://cuecard.dev/assets/promo-ipad.jpg"],
+    image: "https://cuecard.dev/assets/mobile-float.webp",
+    screenshots: ["float", "record", "cards", "suggestions", "library", "settings"].map(n => `https://cuecard.dev/assets/mobile-${n}.webp`),
     // The same list as features.mobile, in a line each. Keep the two in step.
     features: [
       "Teleprompter mode: a script that scrolls at a speed you set, in lines per minute",
@@ -47,7 +47,8 @@ const products = {
     id: "https://cuecard.dev/#desktopapp", name: "CueCard for Mac and Windows",
     url: "https://cuecard.dev/desktop/", price: "0", currency: "USD",
     description: "Free speaker notes that stay out of your screen share, with optional Google Slides note sync.",
-    image: "https://cuecard.dev/assets/og-image.png",
+    image: "https://cuecard.dev/assets/desktop-teleprompter.webp",
+    screenshots: ["teleprompter", "teleprompter-view", "cards", "cards-view", "slides"].map(n => `https://cuecard.dev/assets/desktop-${n}.webp`),
     features: ["Speaker notes excluded from screen capture", "Paste notes for any deck", "Google Slides note sync with the browser extension", "Automatic scrolling with adjustable speed, text size and start delay", "Colored cues and a countdown or elapsed timer", "Saved scripts with text file import and export", "Keyboard shortcuts"],
     platforms: [
       { key: "macos", shipping: true, os: "macOS 11 or later", storeUrl: "https://github.com/thisisnsh/cuecard/releases" },
@@ -96,87 +97,79 @@ const site = {
   requiresDesktop: products.desktop.platforms.map(p => p.os).join(", "),
   requiresDesktopShort: "macOS · Windows",
 
-  // ── The App Store artwork ───────────────────────────────────────────────
-  // The one place on the site that shows the app itself. The phone strip is
-  // the whole App Store set; `teleprompter` and `cards` are two phones each
-  // cut from it, for the pages about one mode.
+  // ── The App Store screenshots ───────────────────────────────────────────
+  // The phone app's screens, in App Store order. The same set serves the
+  // iPhone and the iPad pages. Each one carries its own headline in the image,
+  // so the alt text repeats it.
   shots: [
     {
-      id: "phone",
-      icon: "phone",
-      src: "/assets/promo-mobile.jpg",
-      small: "/assets/promo-mobile-1100.jpg",
-      width: 2200,
-      height: 794,
-      label: "On iPhone",
-      alt: "CueCard on iPhone: the floating script over the home screen, the teleprompter scrolling with cues in pink, a card being swiped in Cards mode, cards on the Lock Screen with Back and Next, and the settings for scroll speed, text size, layout and cue color.",
-      caption:
-        "The floating script, the teleprompter, cards in the app and on the Lock Screen, and the settings.",
+      id: "float",
+      src: "/assets/mobile-float.webp",
+      small: "/assets/mobile-float-560.webp",
+      alt: "Keep your script visible over any app, with AI voice tracking or auto-scrolling: the CueCard script with a timer and a pink cue, floating over the iPhone home screen.",
     },
     {
-      id: "teleprompter",
-      icon: "phone",
-      src: "/assets/promo-teleprompter.jpg",
-      small: "/assets/promo-teleprompter-1100.jpg",
-      width: 2200,
-      height: 1350,
-      label: "Teleprompter",
-      alt: "CueCard's teleprompter on iPhone: the script in a floating window over the home screen with a timer, and the full-screen teleprompter with cues such as smile and pause in pink.",
-      caption:
-        "Floating over another app, and full screen with the timer running.",
+      id: "record",
+      src: "/assets/mobile-record.webp",
+      small: "/assets/mobile-record-560.webp",
+      alt: "Record videos with the in-app camera and teleprompter: the script scrolling with cues in pink, and a small camera window recording over it.",
     },
     {
       id: "cards",
-      icon: "phone",
-      src: "/assets/promo-cards.jpg",
-      small: "/assets/promo-cards-1100.jpg",
-      width: 2200,
-      height: 1350,
-      label: "Cards",
-      alt: "CueCard's Cards mode on iPhone: a card being swiped away with the next one behind it and a timer at the top, and a card on the Lock Screen with the timer, 4 of 7, and Back and Next buttons.",
-      caption:
-        "Swipe through cards in the app, or turn them from the Lock Screen.",
+      src: "/assets/mobile-cards.webp",
+      small: "/assets/mobile-cards-560.webp",
+      alt: "Swipe through your cue cards, and read them from your Lock Screen: a deck of numbered cards with cues in pink.",
     },
     {
-      id: "ipad",
-      icon: "tablet",
-      src: "/assets/promo-ipad.jpg",
-      small: "/assets/promo-ipad-1100.jpg",
-      width: 2200,
-      height: 978,
-      label: "On iPad",
-      alt: "CueCard Teleprompter on iPad: the script filling the screen with play and restart controls, and the floating prompter window sitting on top of the home screen.",
-      caption:
-        "The same app on a bigger screen, easy to read from a few feet away.",
+      id: "suggestions",
+      src: "/assets/mobile-suggestions.webp",
+      small: "/assets/mobile-suggestions-560.webp",
+      alt: "Improve your script with AI suggestions: edits marked in red and green through the script, with Accept and Reject buttons.",
+    },
+    {
+      id: "library",
+      src: "/assets/mobile-library.webp",
+      small: "/assets/mobile-library-560.webp",
+      alt: "Keep scripts and recordings organized, and control playback with your Apple Watch: saved scripts filtered by collection.",
+    },
+    {
+      id: "settings",
+      src: "/assets/mobile-settings.webp",
+      small: "/assets/mobile-settings-560.webp",
+      alt: "Customize your teleprompter, camera and cue cards: settings for scroll speed, text sizes, floating window layout, cue color, reading guide and flipping.",
     },
   ],
 
   // ── The desktop app, a screen at a time ─────────────────────────────────
-  // The desktop counterpart of the shots above. Its pages show one screen in a
-  // pinned card and swap to the next as the reader scrolls (partials/reel.njk).
-  // The Slides reel ends on the same settings screen as the desktop one.
+  // The desktop counterpart of the shots above (partials/reel.njk).
   reels: {
     desktop: {
       label: "On Mac and Windows",
       icon: "monitor",
       frames: [
         {
-          src: "/assets/desktop-script.webp",
-          small: "/assets/desktop-script-820.webp",
-          alt: "CueCard for Mac and Windows with a script open, its [cue] directions in pink and a Set Timer button in the corner.",
+          src: "/assets/desktop-teleprompter.webp",
+          small: "/assets/desktop-teleprompter-920.webp",
+          alt: "CueCard for Mac and Windows in Teleprompter mode: saved scripts in the sidebar and a script open with its cues in pink.",
           caption: "Write the script, with your cues in brackets.",
         },
         {
-          src: "/assets/desktop-prompter.webp",
-          small: "/assets/desktop-prompter-820.webp",
-          alt: "The script scrolling in CueCard's prompter view, cues in pink, a countdown in the corner and pause, back and restart controls.",
+          src: "/assets/desktop-teleprompter-view.webp",
+          small: "/assets/desktop-teleprompter-view-920.webp",
+          alt: "The script in CueCard's teleprompter view, cues in pink beside the lines and a two-minute timer at the top.",
           caption: "Press play and it scrolls, with the clock running.",
         },
         {
-          src: "/assets/desktop-settings.webp",
-          small: "/assets/desktop-settings-820.webp",
-          alt: "CueCard's settings: start delay, scroll speed, cue colour, text size, invisible to screen sharing and window opacity.",
-          caption: "Set the speed, the cue colour and what screen share can see.",
+          src: "/assets/desktop-cards.webp",
+          small: "/assets/desktop-cards-920.webp",
+          alt: "CueCard for Mac and Windows in Cards mode: a deck of four cards being written, each with its character count.",
+          caption: "Or write one thought per card.",
+        },
+        {
+          src: "/assets/desktop-cards-view.webp",
+          small: "/assets/desktop-cards-view-920.webp",
+          alt: "A single cue card on screen, card 2 of 4, with a timer at the top and Back and Next buttons.",
+          caption: "And step through them as you speak.",
         },
       ],
     },
@@ -185,71 +178,20 @@ const site = {
       icon: "slides",
       frames: [
         {
-          src: "/assets/slides-live.webp",
-          small: "/assets/slides-live-820.webp",
-          alt: "CueCard with a live Google Slides deck in its sidebar, showing the speaker notes for slide 1.",
-          caption: "Present your deck and the slide's speaker notes arrive.",
+          src: "/assets/desktop-slides.webp",
+          small: "/assets/desktop-slides-920.webp",
+          alt: "CueCard's Slides mode waiting for a deck: open a presentation in Google Slides with the CueCard extension installed and the notes for the current slide show up here.",
+          caption: "Open your deck and the slide's speaker notes arrive.",
         },
         {
-          src: "/assets/slides-prompter.webp",
-          small: "/assets/slides-prompter-820.webp",
-          alt: "CueCard's prompter view on slide 3 of a Google Slides deck, the notes scrolling with cues in pink and a timer running.",
-          caption: "Change slides and the next slide's notes take over.",
-        },
-        {
-          src: "/assets/desktop-settings.webp",
-          small: "/assets/desktop-settings-820.webp",
-          alt: "CueCard's settings: start delay, scroll speed, cue colour, text size, invisible to screen sharing and window opacity.",
-          caption: "Set the speed, the cue colour and what screen share can see.",
+          src: "/assets/desktop-teleprompter-view.webp",
+          small: "/assets/desktop-teleprompter-view-920.webp",
+          alt: "Notes in CueCard's teleprompter view, cues in pink beside the lines and a two-minute timer at the top.",
+          caption: "Press play and the notes scroll, with the clock running.",
         },
       ],
     },
   },
-
-  // ── The demos ───────────────────────────────────────────────────────────
-  // Nothing is embedded anywhere on this site. Every demo is a link out to
-  // YouTube, so no third-party player script loads on any page.
-  //
-  // A card carries a title and nothing else. It used to carry a second line
-  // under the title as well, which only ever said the title again.
-  demos: [
-    {
-      id: "phone",
-      device: "iPhone",
-      icon: "phone",
-      url: "https://youtube.com/shorts/_mXAfHBMtA8",
-      title: "The floating teleprompter on iPhone",
-      shape: "portrait",
-      primary: true,
-    },
-    {
-      id: "ipad",
-      device: "iPad",
-      icon: "tablet",
-      url: "https://youtube.com/shorts/xgY0BW_E_aQ",
-      title: "CueCard Teleprompter on iPad",
-      shape: "portrait",
-    },
-    {
-      id: "desktop",
-      device: "Mac and Windows",
-      icon: "monitor",
-      url: "https://youtu.be/aXWEITjVD2Q",
-      title: "Speaker notes only you can see",
-      shape: "landscape",
-    },
-    // Only the pages that ask for it by id show this one. It is about the
-    // Slides sync, so it stays out of the everything grid on the phone pages.
-    {
-      id: "slides",
-      device: "Google Slides",
-      icon: "slides",
-      url: "https://youtu.be/YWTgq4Yh8us",
-      title: "Speaker notes that follow your deck",
-      shape: "landscape",
-      byIdOnly: true,
-    },
-  ],
 
   // ── Where CueCard can actually be had ───────────────────────────────────
   // One list, used in two places: the header's download menu and the download
@@ -360,8 +302,8 @@ const site = {
   // a live figure: the GitHub API only knows about desktop release assets, so
   // anything computed from it undercounts the App Store badly. Edit the
   // string and every page follows. The star count beside it *is* live.
-  downloadTotal: "22K+",
-  downloadsVerified: "2026-11-12",
+  downloadTotal: "25K+",
+  downloadsVerified: "2026-11-15",
 
   // ── The apps CueCard is read over, on a phone ───────────────────────────
   // Each has a page of its own; `icon` names a symbol in partials/icons.njk.
@@ -437,13 +379,5 @@ site.downloads = site.downloadGroups.reduce(
   (all, g) => all.concat(g.items.map((d) => ({ ...d, group: g.label }))),
   []
 );
-
-// The demos, addressable by id, for the pages that only want one of them.
-site.demo = site.demos.reduce((map, d) => Object.assign(map, { [d.id]: d }), {});
-
-// The shots, addressable by id. An id and its file name are not the same thing
-// — the phone shot lives in promo-mobile.jpg — so anything that wants one looks
-// it up here rather than rebuilding the path out of the id and missing.
-site.shot = site.shots.reduce((map, s) => Object.assign(map, { [s.id]: s }), {});
 
 module.exports = site;

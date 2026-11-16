@@ -98,11 +98,9 @@ eleventyComputed:
     {% set rowsId = "features" %}
     {% include "partials/rows.njk" %}
 
-    {% set shots = p.shotIds if p.shotIds else (["cards"] if p.kind == "speech" else []) %}
-    {% if shots | length %}
-    {% set shotIds = shots %}
+    {% if p.showShots or p.kind == "speech" %}
     {% set shotsHeading = "What it looks like." %}
-    {% set shotsNote = p.shotsNote or "Swiping to the next card in the app, and the same deck on the Lock Screen with Back and Next." %}
+    {% set shotsNote = p.shotsNote or "Swipe through cards in the app, or read and turn them from the Lock Screen and your Apple Watch." %}
     {% include "partials/shots.njk" %}
     {% endif %}
 

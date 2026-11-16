@@ -46,7 +46,7 @@
     {% set heroButtons = [
         { text: "Download for Mac", href: "#download", icon: "apple", style: "primary", os: "mac" },
         { text: "Download for Windows", href: "#download", icon: "windows", style: "primary", os: "windows" },
-        { text: "Watch the demo", href: "#demo", icon: "play", style: "ghost" }
+        { text: "See the app", href: "#shots", icon: "arrow", style: "ghost" }
     ] %}
     {% set heroNote = 'Free · No account required · <a href="#download">macOS 11+</a> and <a href="#download">Windows 10+</a>' %}
     {% set heroStrip = "meeting" %}
@@ -64,13 +64,8 @@
 
     {% set reelId = "slides" if isSlides else "desktop" %}
     {% set shotsHeading = "Your speaker notes, <em>straight from the deck.</em>" if isSlides else "What it looks like." %}
-    {% set shotsNote = ("Present from Google Slides and each slide's notes arrive in CueCard as you go." if isSlides else "Write the script, press play and it scrolls, then set it up the way you read.") %}
+    {% set shotsNote = ("Present from Google Slides and each slide's notes arrive in CueCard as you go." if isSlides else "Write a script and press play, or speak from cue cards one at a time.") %}
     {% include "partials/reel.njk" %}
-
-    {% set watchHeading = "A minute of it, on a shared screen" %}
-    {% set watchNote = ("Two short films: the notes following your deck, and staying off the screen everyone else can see. Each opens on YouTube." if isSlides else "A short film of the notes staying off the screen everyone else can see. It opens on YouTube.") %}
-    {% set demoIds = (["slides", "desktop"] if isSlides else ["desktop"]) %}
-    {% include "partials/watch.njk" %}
 
     {% include "partials/features.njk" %}
 

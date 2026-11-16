@@ -64,7 +64,7 @@ layout: layouts/mobile-profession.njk
             style: "primary",
             external: true
         },
-        { text: "Watch the demo", href: "#demo", icon: "play", style: "ghost" }
+        { text: "See the app", href: "#shots", icon: "arrow", style: "ghost" }
     ] %}
     {% set heroNote = 'Free · No account required · ' + site.requiresMobileShort + ' · <a href="/mobile/android/">Android coming soon</a>' %}
     {% set heroTagline = "No more forgetting your lines or switching apps mid-take." %}
@@ -82,13 +82,9 @@ layout: layouts/mobile-profession.njk
     {% include "partials/rows.njk" %}
 
     {% set shotsHeading = "What it looks like." %}
-    {% set shotsNote = "Read your script from the full screen, or shrink it into a small window that stays on top of whatever else you open." %}
+    {% set shotsNote = "Read your script from the full screen, or shrink it into a small window that stays on top of whatever else you open. The same app runs on iPhone and iPad." %}
     {% set shotsFoot = 'Looking for the computer app instead? <a href="/desktop/">CueCard for Mac and Windows</a> keeps your speaker notes on your screen and out of your screen share.' %}
     {% include "partials/shots.njk" %}
-
-    {% set watchHeading = "A minute of it, in use" %}
-    {% set watchNote = "Short films of the app doing the one thing it is for. Each opens on YouTube." %}
-    {% include "partials/watch.njk" %}
 
     {% set usesHeading = "What " + mobileProfession.name | lower + " use it for" %}
     {% set useItems = mobileProfession.useCases %}

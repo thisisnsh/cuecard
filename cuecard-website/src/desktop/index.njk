@@ -53,7 +53,7 @@ crumbs:
     {% set heroButtons = [
         { text: "Download for Mac", href: "#download", icon: "apple", style: "primary", os: "mac" },
         { text: "Download for Windows", href: "#download", icon: "windows", style: "primary", os: "windows" },
-        { text: "Watch the demo", href: "#demo", icon: "play", style: "ghost" }
+        { text: "See the app", href: "#shots", icon: "arrow", style: "ghost" }
     ] %}
     {% set heroNote = 'Free · No account required · <a href="#download">macOS 11+</a> and <a href="#download">Windows 10+</a>' %}
     {% set heroStrip = "meeting" %}
@@ -70,13 +70,8 @@ crumbs:
     {% set rowsId = "features" %}
     {% include "partials/rows.njk" %}
 
-    {% set shotsNote = "Write the script, press play and it scrolls, then set it up the way you read." %}
+    {% set shotsNote = "Write a script and press play, or speak from cue cards one at a time." %}
     {% include "partials/reel.njk" %}
-
-    {% set watchHeading = "Watch it disappear from a screen share" %}
-    {% set watchNote = "A short film of the notes staying off a shared screen, and two of the phone app for good measure. Each opens on YouTube." %}
-    {% set demoIds = ["desktop", "phone", "ipad"] %}
-    {% include "partials/watch.njk" %}
 
     {% include "partials/features.njk" %}
 

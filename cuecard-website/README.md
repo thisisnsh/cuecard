@@ -49,20 +49,11 @@ These are source-verified instructions, not a claim of device testing. Cue tags 
 
 Third-party controls were checked against [TikTok recording help](https://support.tiktok.com/en/using-tiktok/creating-videos/tiktok-stories) and [Snapchat's camera instructions](https://help.snapchat.com/hc/en-us/articles/7012326414612-How-do-I-create-a-Snap). Instagram's current Help Center page was access-blocked; the guide deliberately describes the Reel camera without asserting a specific button location. Other workflows avoid version-specific control labels. Recheck these flows on devices before release.
 
-## Optional tutorial videos
+## Screenshots
 
-Edit the matching object in `src/_data/apps.json`, such as `slug: "mobile/tiktok"` or `slug: "mobile/instagram"`:
+The phone app's six App Store screenshots (`src/assets/mobile-*.webp`, with `-560` versions) are listed in `site.shots` and shown together by `partials/shots.njk` on every phone, iPad and speaking page. The desktop screenshots (`src/assets/desktop-*.webp`, with `-920` versions) are grouped in `site.reels` and shown by `partials/reel.njk`. To replace a screenshot, export it again with `cwebp` at both sizes under the same name.
 
-```json
-"tutorial": {
-  "youtubeUrl": "",
-  "label": "Watch the TikTok tutorial on YouTube"
-}
-```
-
-Set `youtubeUrl` to the supplied HTTPS YouTube video URL and rebuild. Use “Watch the Instagram tutorial on YouTube” for Instagram. Production tutorial URLs are empty until supplied. The renderer accepts ordinary YouTube watch, Shorts and youtu.be video URLs with a valid video-ID shape; it does not verify video existence. Missing or invalid URLs produce no link, wrapper, disabled button or extra spacing.
-
-`partials/tutorial-link.njk` renders an accessible link beside the written guide in `partials/setup-guide.njk`. Written instructions remain. `site.demos` retains the existing iPhone, iPad and desktop films, clearly labeled as general product demos. No video player or iframe loads on the page.
+The site links to no demo or tutorial videos.
 
 ## Articles
 

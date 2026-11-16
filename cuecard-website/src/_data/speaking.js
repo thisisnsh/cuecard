@@ -74,8 +74,8 @@ const teleprompter = {
       p: "Reminders like [smile] show in color as they pass, telling you how to say the next line.",
     },
   ],
-  shotIds: ["teleprompter"],
-  shotsNote: "In a floating window over the home screen, and full screen with the timer running.",
+  showShots: true,
+  shotsNote: "In a floating window over any app, or full screen with the in-app camera recording.",
   guide: {
     heading: "How to use the teleprompter on iPhone",
     intro: "Six steps from an empty page to your first take.",
@@ -206,8 +206,8 @@ const cards = {
       p: "Save and search your decks, restore earlier versions, and keep text copies in a notes folder.",
     },
   ],
-  shotIds: ["cards"],
-  shotsNote: "Swiping to the next card in the app, and the same deck on the Lock Screen with Back and Next.",
+  showShots: true,
+  shotsNote: "Swipe through cards in the app, or read and turn them from the Lock Screen and your Apple Watch.",
   guide: {
     heading: "How to make cue cards on iPhone",
     intro: "From an empty deck to speaking from your Lock Screen or watch, in six steps.",
@@ -325,7 +325,6 @@ const watch = {
       p: "Nothing extra to buy or sign up for.",
     },
   ],
-  shotIds: [],
   guide: {
     heading: "How to set up CueCard on Apple Watch",
     intro: "Install it once, then open a script or a deck on your iPhone.",

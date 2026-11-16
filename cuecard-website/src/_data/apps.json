@@ -60,10 +60,6 @@
       }
     ],
     "icon": "phone",
-    "tutorial": {
-      "youtubeUrl": "",
-      "label": "Watch the CueCard tutorial on YouTube"
-    },
     "guide": {
       "heading": "How to set up CueCard on iPhone",
       "intro": "Pick a mode, write, set a timer, and go: the same few steps for filming and for speaking.",
@@ -224,12 +220,6 @@
       }
     ],
     "icon": "apple",
-    "shotId": "phone",
-    "demoId": "phone",
-    "tutorial": {
-      "youtubeUrl": "",
-      "label": "Watch the CueCard tutorial on YouTube"
-    },
     "guide": {
       "heading": "How to set up your iPhone teleprompter",
       "intro": "A saved script, a comfortable reading pace, and a window close to the lens are all you need to begin.",
@@ -331,8 +321,6 @@
     "appDescription": "Write and organize scripts, record with a teleprompter or cue cards, and review your takes. Float notes over other apps, read through teleprompter glass, or keep cards on Apple Watch. Free, with no ads or required account.",
     "showIos": true,
     "showAndroid": false,
-    "demoId": "ipad",
-    "shotId": "ipad",
     "faq": [
       {
         "question": "Is there a teleprompter app for iPad?",
@@ -373,10 +361,6 @@
       }
     ],
     "icon": "tablet",
-    "tutorial": {
-      "youtubeUrl": "",
-      "label": "Watch the CueCard tutorial on YouTube"
-    },
     "guide": {
       "heading": "Set up your iPad for comfortable reading",
       "intro": "Choose full-screen reading beside a separate camera, or a floating script when recording on the iPad itself.",
@@ -536,10 +520,6 @@
     ],
     "subject": "Instagram",
     "icon": "instagram",
-    "tutorial": {
-      "youtubeUrl": "",
-      "label": "Watch the Instagram tutorial on YouTube"
-    },
     "guide": {
       "heading": "Record an Instagram Reel with CueCard",
       "intro": "Start with a short script on iPhone or iPad. These steps take you from CueCard’s editor to your recording app.",
@@ -676,10 +656,6 @@
     ],
     "subject": "TikTok",
     "icon": "tiktok",
-    "tutorial": {
-      "youtubeUrl": "",
-      "label": "Watch the TikTok tutorial on YouTube"
-    },
     "guide": {
       "heading": "Record a TikTok with a floating script",
       "intro": "Start with a short script on iPhone or iPad. These steps take you from CueCard’s editor to your recording app.",
@@ -821,10 +797,6 @@
     ],
     "subject": "YouTube",
     "icon": "youtube",
-    "tutorial": {
-      "youtubeUrl": "",
-      "label": "Watch the YouTube tutorial on YouTube"
-    },
     "guide": {
       "heading": "Prepare a YouTube video or Short",
       "intro": "Start with a short script on iPhone or iPad. These steps take you from CueCard’s editor to your recording app.",
@@ -958,10 +930,6 @@
     ],
     "subject": "LinkedIn",
     "icon": "linkedin",
-    "tutorial": {
-      "youtubeUrl": "",
-      "label": "Watch the LinkedIn tutorial on YouTube"
-    },
     "guide": {
       "heading": "Record a clear LinkedIn video update",
       "intro": "Start with a short script on iPhone or iPad. These steps take you from CueCard’s editor to your recording app.",
@@ -1095,10 +1063,6 @@
     ],
     "subject": "Facebook",
     "icon": "facebook",
-    "tutorial": {
-      "youtubeUrl": "",
-      "label": "Watch the Facebook tutorial on YouTube"
-    },
     "guide": {
       "heading": "Film a Facebook Reel or prepare a live update",
       "intro": "Start with a short script on iPhone or iPad. These steps take you from CueCard’s editor to your recording app.",
@@ -1232,10 +1196,6 @@
     ],
     "subject": "Snapchat",
     "icon": "snapchat",
-    "tutorial": {
-      "youtubeUrl": "",
-      "label": "Watch the Snapchat tutorial on YouTube"
-    },
     "guide": {
       "heading": "Record a Snap for Stories or Spotlight",
       "intro": "Start with a short script on iPhone or iPad. These steps take you from CueCard’s editor to your recording app.",
@@ -1373,10 +1333,6 @@
     ],
     "subject": "X",
     "icon": "twitter",
-    "tutorial": {
-      "youtubeUrl": "",
-      "label": "Watch the X tutorial on YouTube"
-    },
     "guide": {
       "heading": "Record a focused video for X",
       "intro": "Start with a short script on iPhone or iPad. These steps take you from CueCard’s editor to your recording app.",
@@ -1473,7 +1429,6 @@
     "appDescription": "Keep your opening, talking points and transitions within reach during a camera-based stream. Float CueCard near your iPhone camera and check your broadcast view first: a screen broadcast can include the overlay.",
     "showIos": true,
     "showAndroid": true,
-    "demoId": "phone",
     "faq": [
       {
         "question": "Can I use a teleprompter while streaming on Twitch?",
@@ -1510,10 +1465,6 @@
     ],
     "subject": "Twitch",
     "icon": "twitch",
-    "tutorial": {
-      "youtubeUrl": "",
-      "label": "Watch the Twitch tutorial on YouTube"
-    },
     "guide": {
       "heading": "Prepare your notes for a mobile camera stream",
       "intro": "Start with a short script on iPhone or iPad. These steps take you from CueCard’s editor to your recording app.",

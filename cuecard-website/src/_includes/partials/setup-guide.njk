@@ -5,7 +5,6 @@
     <p class="micro">Written setup guide</p>
     <h2 class="section-h" id="how-to-h">{{ guide.heading }}</h2>
     <p class="body">{{ guide.intro }}</p>
-    {% include "partials/tutorial-link.njk" %}
     <ol class="setup-steps">
       {% for step in guide.steps %}
       <li class="setup-step reveal">

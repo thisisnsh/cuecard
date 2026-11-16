@@ -11,7 +11,7 @@
   Set bigscreenTo = "phone" for the reversed one.
 #}
 {% set toPhone = bigscreenTo == "phone" %}
-{% set d = site.demo.phone if toPhone else site.demo.ipad %}
+{% set shot = site.shots[0] %}
 <section class="bigscreen" id="{{ 'iphone' if toPhone else 'ipad' }}" aria-labelledby="{{ 'iphone' if toPhone else 'ipad' }}-h">
     <div class="wrap">
         <p class="micro">{{ icon("phone" if toPhone else "tablet", 13) }}{{ "Also in your pocket" if toPhone else "Also on big screens" }}</p>
@@ -35,25 +35,11 @@
                     {% else %}
                     <a href="/mobile/ipad/">{{ icon("tablet", 15) }} The iPad page {{ icon("arrow", 14) }}</a>
                     {% endif %}
-                    <a href="{{ d.url }}" target="_blank" rel="noopener">{{ icon("play", 15) }} Watch the {{ "iPhone" if toPhone else "iPad" }} demo {{ icon("external", 13) }}</a>
                 </p>
             </div>
 
-            <a class="watch-card watch-card--portrait reveal" href="{{ d.url }}" target="_blank" rel="noopener">
-                <span class="watch-top">
-                    <span class="watch-device">{{ icon("phone" if toPhone else "tablet", 13) }}{{ "iPhone" if toPhone else "iPad" }}</span>
-                    <span class="watch-len">YouTube</span>
-                </span>
-                <span class="watch-frame" aria-hidden="true">
-                    <i class="watch-rule w1"></i>
-                    <i class="watch-rule w2"></i>
-                    <i class="watch-rule is-cue"></i>
-                    <i class="watch-rule w3"></i>
-                    <i class="watch-rule w4"></i>
-                    <i class="watch-play"></i>
-                </span>
-                <span class="watch-go">{{ d.title }} {{ icon("external", 13) }}</span>
-            </a>
+            <img class="bigscreen-shot" src="{{ shot.small }}" width="560" height="1214"
+                 alt="{{ shot.alt }}" loading="lazy" decoding="async">
         </div>
     </div>
 </section>

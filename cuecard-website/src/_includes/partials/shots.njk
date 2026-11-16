@@ -1,12 +1,8 @@
 {% from "partials/icons.njk" import icon %}
 {#
-  The App Store artwork: one strip per device, side by side on a wide screen.
-  These are the only photographs on the site. They sit under the feature rows,
-  because "what does it actually look like" is the question that follows a list
-  of what it does.
-
-  Pass `shotIds` (a list) to choose which. The default is the phone alone:
-  the iPad artwork is the iPad page's to show.
+  The App Store screenshots: the phone app's six screens in one card, side by
+  side and scrolling sideways when they do not fit. Each image carries its own
+  headline, so there are no captions under them.
 #}
 <section class="shots" id="{{ shotsId or 'shots' }}" aria-labelledby="{{ shotsId or 'shots' }}-h">
     <div class="wrap">
@@ -14,21 +10,22 @@
         <h2 class="section-h" id="{{ shotsId or 'shots' }}-h">{{ (shotsHeading or "What it looks like.") | safe }}</h2>
         {% if shotsNote %}<p class="body">{{ shotsNote | safe }}</p>{% endif %}
 
-        <div class="shots-grid">
-            {% set showIds = shotIds or ["phone"] %}
-            {% for s in site.shots %}{% if s.id in showIds %}
-            <figure class="shot reveal">
-                <img class="shot-media" src="{{ s.src }}"
-                     srcset="{{ s.small }} 1100w, {{ s.src }} 2200w"
-                     sizes="(min-width: 1240px) 1140px, 94vw"
-                     width="{{ s.width }}" height="{{ s.height }}"
-                     alt="{{ s.alt }}" loading="lazy" decoding="async">
-                <figcaption class="shot-foot">
-                    <span class="shot-label">{{ icon(s.icon, 15) }}{{ s.label }}</span>
-                    <span class="shot-cap">{{ s.caption }}</span>
-                </figcaption>
-            </figure>
-            {% endif %}{% endfor %}
+        <div class="shots-card reveal">
+            <ul class="shots-strip" tabindex="0" aria-label="Screenshots of CueCard on iPhone">
+                {% for s in site.shots %}
+                <li class="shot">
+                    <img src="{{ s.src }}"
+                         srcset="{{ s.small }} 560w, {{ s.src }} 1120w"
+                         sizes="260px"
+                         width="1120" height="2428"
+                         alt="{{ s.alt }}" loading="lazy" decoding="async">
+                </li>
+                {% endfor %}
+            </ul>
+            <p class="shot-foot">
+                <span class="shot-label">{{ icon("phone", 15) }}On iPhone and iPad</span>
+                <span class="shot-cap">The same app on both, free on the App Store.</span>
+            </p>
         </div>
 
         {# A reader who came looking for a computer app should not have to
