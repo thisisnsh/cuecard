@@ -21,7 +21,7 @@ final class VoiceFollower: ObservableObject {
     /// How the session went, to report alongside the reader's rating.
     private(set) var metrics = VoiceSessionMetrics()
 
-    private let microphone = Microphone()
+    private let microphone = Microphone.shared
     private var recognizer: SFSpeechRecognizer?
     private var request: SFSpeechAudioBufferRecognitionRequest?
     private var task: SFSpeechRecognitionTask?
@@ -29,6 +29,8 @@ final class VoiceFollower: ObservableObject {
     private var contextualWords: [String] = []
     private var listeningSince: Date?
     private var configurationObserver: NSObjectProtocol?
+    private var sourceObserver: NSObjectProtocol?
+    private var routeObserver: NSObjectProtocol?
     /// Bumped for every start, stop and recognition task, so a late result
     /// from a task that was replaced is ignored, and a start still waiting on
     /// the microphone gives up if it was stopped or started again.
@@ -50,12 +52,13 @@ final class VoiceFollower: ObservableObject {
             contextualWords = VoiceTracker.distinctiveWords(in: text)
         }
 
-        guard await Self.requestPermissions() else {
+        let granted = await Self.requestPermissions()
+        guard current == generation else { return }
+        guard granted else {
             status = .unavailable(String(localized: "Allow mic and speech in Settings"))
             log("denied")
             return
         }
-        guard current == generation else { return }
         guard let recognizer = Self.recognizer(for: text) else {
             status = .unavailable(String(localized: "This language isn't supported yet"))
             log("unsupported_language")
@@ -74,11 +77,32 @@ final class VoiceFollower: ObservableObject {
             return
         }
 
-        // Another recorder taking the microphone — the camera — restarts the engine.
+        // Rebuild the input tap after a route change; its old format may no
+        // longer match (for example when Bluetooth disconnects).
         configurationObserver = NotificationCenter.default.addObserver(
             forName: .AVAudioEngineConfigurationChange, object: microphone.engine, queue: .main
         ) { [weak self] _ in
-            Task { @MainActor in await self?.restartEngine() }
+            Task { @MainActor in
+                self?.beginRecognition()
+                await self?.restartEngine()
+            }
+        }
+        sourceObserver = NotificationCenter.default.addObserver(
+            forName: Microphone.sourceDidChange, object: nil, queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                // Camera buffers and engine buffers may have different formats.
+                self?.beginRecognition()
+                await self?.restartEngine()
+            }
+        }
+        routeObserver = NotificationCenter.default.addObserver(
+            forName: AVAudioSession.routeChangeNotification, object: nil, queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.beginRecognition()
+                await self?.restartEngine()
+            }
         }
 
         status = .listening
@@ -95,14 +119,18 @@ final class VoiceFollower: ObservableObject {
         }
         listeningSince = nil
         generation += 1
+        audioTarget.set(nil)
         task?.cancel()
         task = nil
         request?.endAudio()
         request = nil
-        audioTarget.set(nil)
-        microphone.stop()
+        microphone.stop(target: audioTarget)
         if let configurationObserver { NotificationCenter.default.removeObserver(configurationObserver) }
         configurationObserver = nil
+        if let sourceObserver { NotificationCenter.default.removeObserver(sourceObserver) }
+        sourceObserver = nil
+        if let routeObserver { NotificationCenter.default.removeObserver(routeObserver) }
+        routeObserver = nil
         if isListening { status = .idle }
     }
 
@@ -121,6 +149,9 @@ final class VoiceFollower: ObservableObject {
         guard isListening, let recognizer else { return }
         generation += 1
         let current = generation
+        audioTarget.set(nil)
+        task?.cancel()
+        request?.endAudio()
 
         let request = SFSpeechAudioBufferRecognitionRequest()
         request.requiresOnDeviceRecognition = true
@@ -222,70 +253,120 @@ struct VoiceSessionMetrics {
     var progress: Double = 0
 }
 
-/// The audio session and engine, worked on one call at a time on their own
-/// queue: these calls can hang the main thread. A stop always lands after any
-/// start before it, so the microphone ends up off however the two overlap.
-private final class Microphone: @unchecked Sendable {
+/// One microphone owner at a time. Camera lifecycle and engine lifecycle share
+/// a queue, so opening the camera stops the engine before capture configures
+/// the audio session. With a camera open, recognition uses its sample buffers.
+final class Microphone: NSObject, @unchecked Sendable, AVCaptureAudioDataOutputSampleBufferDelegate {
+    static let shared = Microphone()
+    static let sourceDidChange = Notification.Name("Microphone.sourceDidChange")
     /// Only for watching its configuration changes from outside the queue.
     let engine = AVAudioEngine()
-    private let queue = DispatchQueue(label: "com.thisisnsh.cuecard.microphone", qos: .userInitiated)
+    let queue = DispatchQueue(label: "com.thisisnsh.cuecard.capture", qos: .userInitiated)
+    let samplesQueue = DispatchQueue(label: "com.thisisnsh.cuecard.speech-samples", qos: .userInitiated)
+    private var cameras = Set<UUID>()
+    private var hasTap = false
+    private let targetLock = NSLock()
+    private var target: AudioTarget?
+
+    private override init() { super.init() }
 
     func start(into target: AudioTarget) async throws {
         try await perform {
-            let session = AVAudioSession.sharedInstance()
-            // With the camera on, it has set the session up for its video.
-            // Changing it again as a take starts leaves the take without
-            // sound; listening works either way.
-            if !CameraCapture.isOn.withLock({ $0 }) || session.category != .playAndRecord {
-                try session.setCategory(.playAndRecord, mode: .default,
-                                        options: [.mixWithOthers, .defaultToSpeaker, .allowBluetoothHFP])
-            }
-            try session.setActive(true)
-            let input = self.engine.inputNode
-            input.removeTap(onBus: 0)
-            input.installTap(onBus: 0, bufferSize: 1024, format: input.outputFormat(forBus: 0)) { buffer, _ in
-                target.append(buffer)
-            }
-            self.engine.prepare()
-            try self.engine.start()
+            self.stopEngine()
+            self.targetLock.withLock { self.target = target }
+            target.select(self.cameras.isEmpty ? .engine : .camera)
+            if self.cameras.isEmpty { try self.startEngine(into: target) }
         }
     }
 
-    /// Start the engine again, if something has stopped it.
+    /// A stopped listener or an active camera must never restart the engine.
     func restart() async throws {
         try await perform {
-            guard !self.engine.isRunning else { return }
-            self.engine.prepare()
-            try self.engine.start()
+            guard self.cameras.isEmpty, !self.engine.isRunning,
+                  let target = self.targetLock.withLock({ self.target }) else { return }
+            self.stopEngine()
+            try self.startEngine(into: target)
         }
     }
 
-    func stop() {
-        queue.async {
-            self.engine.inputNode.removeTap(onBus: 0)
-            self.engine.stop()
+    /// A video loading from Photos may finish after its player was dismissed.
+    /// Never let that delayed playback setup take the microphone from capture.
+    func preparePlayback() async {
+        try? await perform {
+            guard self.cameras.isEmpty, self.targetLock.withLock({ self.target == nil }) else { return }
+            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback)
         }
+    }
+
+    func stop(target: AudioTarget) {
+        queue.async {
+            // A previous reader's delayed stop cannot stop a new reader.
+            let removed = self.targetLock.withLock {
+                guard self.target === target else { return false }
+                self.target = nil
+                return true
+            }
+            if removed { self.stopEngine() }
+        }
+    }
+
+    /// Called only on queue, before capture configuration or startRunning.
+    func useCamera(_ id: UUID) {
+        dispatchPrecondition(condition: .onQueue(queue))
+        guard cameras.insert(id).inserted, cameras.count == 1 else { return }
+        stopEngine()
+        changeSource(to: .camera)
+    }
+
+    /// Called only after capture has stopped, including preparation failures.
+    func releaseCamera(_ id: UUID) {
+        dispatchPrecondition(condition: .onQueue(queue))
+        guard cameras.remove(id) != nil, cameras.isEmpty else { return }
+        changeSource(to: .engine)
+        // The listener restarts the engine after receiving sourceDidChange.
+    }
+
+    private func changeSource(to source: AudioTarget.Source) {
+        targetLock.withLock { target }?.select(source)
+        NotificationCenter.default.post(name: Self.sourceDidChange, object: nil)
+    }
+
+    private func startEngine(into target: AudioTarget) throws {
+        let session = AVAudioSession.sharedInstance()
+        try session.setCategory(.playAndRecord, mode: .default,
+                                options: [.mixWithOthers, .defaultToSpeaker, .allowBluetoothHFP])
+        try session.setActive(true)
+        let input = engine.inputNode
+        let format = input.outputFormat(forBus: 0)
+        guard format.sampleRate > 0, format.channelCount > 0 else {
+            throw NSError(domain: "CueCard.Microphone", code: 1)
+        }
+        input.installTap(onBus: 0, bufferSize: 1024, format: format) { buffer, _ in
+            target.append(buffer)
+        }
+        hasTap = true
+        engine.prepare()
+        try engine.start()
+    }
+
+    private func stopEngine() {
+        guard hasTap || engine.isRunning else { return }
+        engine.stop()
+        if hasTap {
+            engine.inputNode.removeTap(onBus: 0)
+            hasTap = false
+        }
+    }
+
+    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer,
+                       from connection: AVCaptureConnection) {
+        targetLock.withLock { target }?.append(sampleBuffer)
     }
 
     private func perform(_ work: @escaping @Sendable () throws -> Void) async throws {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             queue.async { continuation.resume(with: Result(catching: work)) }
         }
-    }
-}
-
-/// The request the microphone's audio goes to, set on the main thread and
-/// read on the audio thread.
-private final class AudioTarget: @unchecked Sendable {
-    private let lock = NSLock()
-    private var request: SFSpeechAudioBufferRecognitionRequest?
-
-    func set(_ request: SFSpeechAudioBufferRecognitionRequest?) {
-        lock.withLock { self.request = request }
-    }
-
-    func append(_ buffer: AVAudioPCMBuffer) {
-        lock.withLock { request }?.append(buffer)
     }
 }
 

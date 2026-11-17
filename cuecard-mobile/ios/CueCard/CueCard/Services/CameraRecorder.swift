@@ -1,5 +1,4 @@
 import AVFoundation
-import os
 import Photos
 import UIKit
 
@@ -309,8 +308,18 @@ final class CameraRecorder: ObservableObject {
             message = String(localized: "Your video is kept in CueCard. Allow Photos access in Settings to save it.")
             return
         }
+        var missingAudio = false
         while let url = pendingURL {
             do {
+                // Keep the picture even if audio was lost, but don't tell the
+                // reader a silent file saved normally. Also covers recovered takes.
+                let tracks = try await AVURLAsset(url: url).loadTracks(withMediaType: .audio)
+                var hasAudio = false
+                for track in tracks {
+                    let range = try await track.load(.timeRange)
+                    if range.duration.isNumeric, range.duration > .zero { hasAudio = true }
+                }
+                missingAudio = missingAudio || !hasAudio
                 let created = (try? url.resourceValues(forKeys: [.creationDateKey]))?.creationDate ?? Date()
                 try await PHPhotoLibrary.shared().performChanges {
                     let request = PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: url)
@@ -324,7 +333,9 @@ final class CameraRecorder: ObservableObject {
                 return
             }
         }
-        message = String(localized: "Video saved to Photos")
+        message = missingAudio
+            ? String(localized: "Video saved to Photos, but microphone audio is missing. Close and reopen the camera before recording again.")
+            : String(localized: "Video saved to Photos")
     }
 
     private func handle(_ event: CameraCapture.Event) {
@@ -411,8 +422,11 @@ final class CameraCapture: NSObject, @unchecked Sendable, AVCaptureFileOutputRec
     }
     let session = AVCaptureSession()
     var onEvent: ((Event) -> Void)?
-    private let queue = DispatchQueue(label: "com.thisisnsh.cuecard.camera")
+    // Camera and speech must hand off the microphone before either starts.
+    private let queue = Microphone.shared.queue
+    private let microphoneID = UUID()
     private let output = AVCaptureMovieFileOutput()
+    private let speechOutput = AVCaptureAudioDataOutput()
     private var videoInput: AVCaptureDeviceInput?
     private var recordingRequested = false
     private var stopRequested = false
@@ -425,10 +439,6 @@ final class CameraCapture: NSObject, @unchecked Sendable, AVCaptureFileOutputRec
     private var observers: [NSObjectProtocol] = []
     /// What the reader asked for; each camera records the nearest it can.
     private var preferred = CameraSettings()
-
-    /// Whether a camera is on. It sets up the app's audio session for its
-    /// video, and Follow Me AI then leaves that alone.
-    static let isOn = OSAllocatedUnfairLock(initialState: false)
 
     override init() {
         super.init()
@@ -446,23 +456,35 @@ final class CameraCapture: NSObject, @unchecked Sendable, AVCaptureFileOutputRec
         })
     }
 
-    deinit { observers.forEach(NotificationCenter.default.removeObserver) }
+    deinit {
+        observers.forEach(NotificationCenter.default.removeObserver)
+        let session = session
+        let microphoneID = microphoneID
+        queue.async {
+            session.stopRunning()
+            Microphone.shared.releaseCamera(microphoneID)
+        }
+    }
 
     func prepare(settings: CameraSettings) async throws -> CameraState {
         try await withCheckedThrowingContinuation { continuation in
             queue.async {
                 do {
+                    Microphone.shared.useCamera(self.microphoneID)
                     let isNew = self.videoInput == nil
                     if isNew { try self.configure() }
                     if isNew || (settings != self.preferred && !self.recordingRequested) {
                         self.preferred = settings
                         self.applySettings()
                     }
-                    Self.isOn.withLock { $0 = true }
                     self.session.startRunning()
                     guard self.session.isRunning, let device = self.videoInput?.device else { throw CameraError.unavailable }
                     continuation.resume(returning: CameraState(device: device))
-                } catch { continuation.resume(throwing: error) }
+                } catch {
+                    self.session.stopRunning()
+                    Microphone.shared.releaseCamera(self.microphoneID)
+                    continuation.resume(throwing: error)
+                }
             }
         }
     }
@@ -695,6 +717,11 @@ final class CameraCapture: NSObject, @unchecked Sendable, AVCaptureFileOutputRec
         session.addInput(audio)
         guard session.canAddOutput(output) else { throw CameraError.unavailable }
         session.addOutput(output)
+        // Feed recognition from the same input that writes the movie. Opening
+        // a second microphone engine can disturb the movie's audio route.
+        guard session.canAddOutput(speechOutput) else { throw CameraError.unavailable }
+        speechOutput.setSampleBufferDelegate(Microphone.shared, queue: Microphone.shared.samplesQueue)
+        session.addOutput(speechOutput)
         videoInput = video
         Self.zoomToMainLens(camera)
     }
@@ -766,6 +793,11 @@ final class CameraCapture: NSObject, @unchecked Sendable, AVCaptureFileOutputRec
     func setPaused(_ paused: Bool) {
         queue.async {
             guard self.recordingRequested, !self.stopRequested else { return }
+            if !paused, !self.hasActiveMicrophone {
+                self.stopOnQueue()
+                self.onEvent?(.unavailable(String(localized: "Microphone is not ready. Close and reopen the camera to try again.")))
+                return
+            }
             if #available(iOS 18.0, *) {
                 if paused { self.output.pauseRecording() } else { self.output.resumeRecording() }
             } else if paused {
@@ -792,6 +824,10 @@ final class CameraCapture: NSObject, @unchecked Sendable, AVCaptureFileOutputRec
                 self.onEvent?(.finished(url, String(localized: "Camera is not ready. Try again.")))
                 return
             }
+            guard self.hasActiveMicrophone else {
+                self.onEvent?(.finished(url, String(localized: "Microphone is not ready. Close and reopen the camera to try again.")))
+                return
+            }
             if connection.isVideoRotationAngleSupported(rotation) { connection.videoRotationAngle = rotation }
             if connection.isVideoMirroringSupported {
                 connection.automaticallyAdjustsVideoMirroring = false
@@ -811,6 +847,11 @@ final class CameraCapture: NSObject, @unchecked Sendable, AVCaptureFileOutputRec
         queue.async { self.stopOnQueue() }
     }
 
+    private var hasActiveMicrophone: Bool {
+        guard let audio = output.connection(with: .audio) else { return false }
+        return audio.isEnabled && audio.isActive
+    }
+
     private func stopOnQueue() {
         stopRequested = true
         if fallbackPaused {
@@ -827,7 +868,7 @@ final class CameraCapture: NSObject, @unchecked Sendable, AVCaptureFileOutputRec
         queue.async {
             self.stopOnQueue()
             self.session.stopRunning()
-            Self.isOn.withLock { $0 = false }
+            Microphone.shared.releaseCamera(self.microphoneID)
         }
     }
 

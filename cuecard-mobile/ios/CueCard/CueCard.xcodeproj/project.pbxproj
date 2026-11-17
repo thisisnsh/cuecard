@@ -82,6 +82,7 @@
 		7A4E50000000000000000007 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 7A4E50000000000000000008 /* InfoPlist.xcstrings */; };
 		A1A000000000000000000001 /* ScriptSuggestions.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1A000000000000000000002 /* ScriptSuggestions.swift */; };
 		A1A000000000000000000003 /* SuggestionsPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1A000000000000000000004 /* SuggestionsPanel.swift */; };
+		A1A00000000000000000000D /* AudioTarget.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1A00000000000000000000E /* AudioTarget.swift */; };
 		A1A000000000000000000005 /* VoiceFollower.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1A000000000000000000006 /* VoiceFollower.swift */; };
 		A1A000000000000000000007 /* AIFeedbackSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1A000000000000000000008 /* AIFeedbackSheet.swift */; };
 		A1A000000000000000000009 /* HelpAssistantView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1A00000000000000000000A /* HelpAssistantView.swift */; };
@@ -209,6 +210,7 @@
 		7A4E50000000000000000008 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 		A1A000000000000000000002 /* ScriptSuggestions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScriptSuggestions.swift; sourceTree = "<group>"; };
 		A1A000000000000000000004 /* SuggestionsPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionsPanel.swift; sourceTree = "<group>"; };
+		A1A00000000000000000000E /* AudioTarget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioTarget.swift; sourceTree = "<group>"; };
 		A1A000000000000000000006 /* VoiceFollower.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VoiceFollower.swift; sourceTree = "<group>"; };
 		A1A000000000000000000008 /* AIFeedbackSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIFeedbackSheet.swift; sourceTree = "<group>"; };
 		A1A00000000000000000000A /* HelpAssistantView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpAssistantView.swift; sourceTree = "<group>"; };
@@ -330,6 +332,7 @@
 				128 /* DeviceModel.swift */,
 				119 /* RemoteNotificationService.swift */,
 				121 /* WhatsNewService.swift */,
+				A1A00000000000000000000E /* AudioTarget.swift */,
 				A1A000000000000000000006 /* VoiceFollower.swift */,
 				A1A000000000000000000002 /* ScriptSuggestions.swift */,
 			);
@@ -590,6 +593,7 @@
 				A1A000000000000000000009 /* HelpAssistantView.swift in Sources */,
 				A1A00000000000000000000B /* LibraryView.swift in Sources */,
 				A1A000000000000000000007 /* AIFeedbackSheet.swift in Sources */,
+				A1A00000000000000000000D /* AudioTarget.swift in Sources */,
 				A1A000000000000000000005 /* VoiceFollower.swift in Sources */,
 				A1A000000000000000000003 /* SuggestionsPanel.swift in Sources */,
 				A1A000000000000000000001 /* ScriptSuggestions.swift in Sources */,

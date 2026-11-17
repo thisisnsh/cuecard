@@ -565,10 +565,9 @@ private struct TakePlayerView: View {
     /// Play from the start once the video is on hand, heard even with the
     /// ringer off. The audio session is set off the main thread, where it can hang.
     private func startPlaying() async {
-        guard player.currentItem == nil, let item = await take.asset.playerItem() else { return }
-        await Task.detached {
-            try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback)
-        }.value
+        guard player.currentItem == nil, let item = await take.asset.playerItem(), !Task.isCancelled else { return }
+        await Microphone.shared.preparePlayback()
+        guard !Task.isCancelled else { return }
         player.replaceCurrentItem(with: item)
         player.play()
     }
