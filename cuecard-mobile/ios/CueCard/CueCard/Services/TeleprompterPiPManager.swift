@@ -66,6 +66,11 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
     /// The script moves with the reader's voice, not the clock. The clock
     /// still runs, for the timer.
     private(set) var followsVoice = false
+    /// The character Follow Me AI last brought to the reading line, until the
+    /// script is moved some other way. Each layout shows the whole line it's
+    /// on, so the reading line sits on a line's start rather than this
+    /// character, and this keeps where the voice actually is.
+    private var followedCharacter: Double?
 
     /// The overlay is repainted on the clock's tick. It is a view rather than a
     /// video, so there is no queue to fill ahead of time: each tick draws the
@@ -174,12 +179,14 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
     func updateReferenceLayout(_ starts: [Int]) {
         guard starts != referenceLineStarts else { return }
         advanceClock()
-        let character = characterPosition
+        let character = followedCharacter ?? characterPosition
         let hadLayout = !referenceLineStarts.isEmpty
         referenceLineStarts = starts
         if hadLayout && linesPerSecond > 0 {
+            var line = TeleprompterTextLayout.linePosition(forCharacter: character, starts: starts)
+            if followedCharacter != nil { line = Self.wholeLine(line) }
             var state = playback
-            state.scriptTime = TeleprompterTextLayout.linePosition(forCharacter: character, starts: starts) / linesPerSecond
+            state.scriptTime = line / linesPerSecond
             state.snapToken += 1
             playback = state
             reanchorPlayback()
@@ -230,6 +237,7 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
     func restart() {
         countdownDeadline = nil
         playbackAnchor = nil
+        followedCharacter = nil
         let nextSnap = playback.snapToken + 1
         playback = TeleprompterPlaybackState(snapToken: nextSnap)
         syncClock()
@@ -248,7 +256,9 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         guard follows != followsVoice else { return }
         advanceClock()
         followsVoice = follows
+        followedCharacter = nil
         reanchorPlayback()
+        repaintOverlay()
     }
 
     /// The script as the teleprompter sets it, which reading positions count
@@ -256,14 +266,32 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
     var readingText: String? { renderer?.string }
 
     /// Where the reading line is in `readingText`.
-    var readingCharacter: Double { characterPosition }
+    var readingCharacter: Double { followedCharacter ?? characterPosition }
 
-    /// Bring the character the reader's voice has reached to the reading
-    /// line, scrolling there rather than jumping.
+    /// Bring the line the reader's voice has reached to the reading line,
+    /// scrolling there rather than jumping: on the reading guide in the app,
+    /// and at the top of the floating window.
     func follow(toCharacter character: Double) {
-        guard linesPerSecond > 0, referenceLineStarts.count > 1 else { return }
+        guard character.isFinite, linesPerSecond > 0, referenceLineStarts.count > 1 else { return }
         let line = TeleprompterTextLayout.linePosition(forCharacter: character, starts: referenceLineStarts)
-        seek(toScriptTime: line / linesPerSecond, snaps: false)
+        seek(toScriptTime: Self.wholeLine(line) / linesPerSecond, snaps: false)
+        followedCharacter = character
+        repaintOverlay()
+    }
+
+    /// The line a fractional line position is on. A position that lands a
+    /// hair short of a line's start, after a round trip through seconds,
+    /// still counts as that line.
+    private static func wholeLine(_ position: Double) -> Double {
+        (position + 1e-6).rounded(.down)
+    }
+
+    /// The overlay line the floating window shows on its reading line.
+    /// Following a voice, that's the whole line the voice is on, read from
+    /// the top of the window.
+    private func shownOverlayLine(for state: TeleprompterPlaybackState) -> Double {
+        guard followsVoice, let renderer else { return overlayLine(for: state) }
+        return Self.wholeLine(renderer.linePosition(forCharacter: followedCharacter ?? characterPosition(for: state)))
     }
 
     /// A script is open in the teleprompter, so there is playback to control.
@@ -321,6 +349,7 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
     private func seek(toScriptTime seconds: Double, snaps: Bool = true) {
         guard seconds.isFinite else { return }
         advanceClock()
+        followedCharacter = nil
         var state = playback
         state.scriptTime = min(max(seconds, 0), scriptDuration)
         if snaps { state.snapToken += 1 }
@@ -517,6 +546,7 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
             guard hostNow - lastFrameTime >= 0.2 else { return }
         }
         contentView.present(linePosition: easedOverlayLine(at: hostNow, easing: renderingPiP), state: playback,
+                            readsFromTop: followsVoice,
                             isMirrored: settings.mirrorsText, isFlippedVertically: settings.flipsTextVertically)
         #if DEBUG
         os_signpost(.event, log: pipPerformanceLog, name: "PiP frame submitted")
@@ -528,7 +558,7 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
     /// after a snap, before the first paint, and off the overlay, where the
     /// mirrored view has to be exactly where the transition into it starts.
     private func easedOverlayLine(at hostNow: CFTimeInterval, easing: Bool) -> Double {
-        let target = overlayLine(for: playback)
+        let target = shownOverlayLine(for: playback)
         defer { displayedSnapToken = playback.snapToken }
         guard easing, let shown = displayedOverlayLine, displayedSnapToken == playback.snapToken else {
             displayedOverlayLine = target
@@ -625,6 +655,7 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         isStartingPiP = false
         isCameraPresented = false
         followsVoice = false
+        followedCharacter = nil
         lastFrameTime = 0
         displayedOverlayLine = nil
         syncWatch()
@@ -764,6 +795,7 @@ private final class TeleprompterPiPContentView: UIView {
     }
     private var linePosition: Double = 0
     private var state = TeleprompterPlaybackState()
+    private var readsFromTop = false
     private var isMirrored = false
     private var isFlippedVertically = false
 
@@ -778,11 +810,13 @@ private final class TeleprompterPiPContentView: UIView {
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
-    func present(linePosition: Double, state: TeleprompterPlaybackState, isMirrored: Bool, isFlippedVertically: Bool) {
-        guard linePosition != self.linePosition || state != self.state || isMirrored != self.isMirrored
-            || isFlippedVertically != self.isFlippedVertically else { return }
+    func present(linePosition: Double, state: TeleprompterPlaybackState, readsFromTop: Bool,
+                 isMirrored: Bool, isFlippedVertically: Bool) {
+        guard linePosition != self.linePosition || state != self.state || readsFromTop != self.readsFromTop
+            || isMirrored != self.isMirrored || isFlippedVertically != self.isFlippedVertically else { return }
         self.linePosition = linePosition
         self.state = state
+        self.readsFromTop = readsFromTop
         self.isMirrored = isMirrored
         self.isFlippedVertically = isFlippedVertically
         setNeedsDisplay()
@@ -799,7 +833,7 @@ private final class TeleprompterPiPContentView: UIView {
         context.translateBy(x: (bounds.width - size.width * scale) / 2,
                             y: (bounds.height - size.height * scale) / 2)
         context.scaleBy(x: scale, y: scale)
-        renderer.draw(in: context, linePosition: linePosition, state: state,
+        renderer.draw(in: context, linePosition: linePosition, state: state, readsFromTop: readsFromTop,
                       isMirrored: isMirrored, isFlippedVertically: isFlippedVertically)
         context.restoreGState()
     }
@@ -999,9 +1033,9 @@ private final class TeleprompterOverlayRenderer {
         fadeFormat.opaque = false
         fadeFormat.preferredRange = .standard
         let colors = [backgroundColor.cgColor, backgroundColor.withAlphaComponent(0).cgColor] as CFArray
-        edgeFade = UIGraphicsImageRenderer(size: CGSize(width: 296, height: 18), format: fadeFormat).image { context in
+        edgeFade = UIGraphicsImageRenderer(size: CGSize(width: 296, height: Self.edgeFadeHeight), format: fadeFormat).image { context in
             if let fade = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: colors, locations: [0, 1]) {
-                context.cgContext.drawLinearGradient(fade, start: .zero, end: CGPoint(x: 0, y: 18), options: [])
+                context.cgContext.drawLinearGradient(fade, start: .zero, end: CGPoint(x: 0, y: Self.edgeFadeHeight), options: [])
             }
         }
         // An image fits the space under the timer, as `draw` lays it out.
@@ -1035,10 +1069,15 @@ private final class TeleprompterOverlayRenderer {
         TeleprompterTextLayout.characterPosition(forLine: position, starts: lineStarts)
     }
 
+    /// How tall the fade is at each end of the script.
+    private static let edgeFadeHeight: CGFloat = 18
+
     /// Draw the script with `linePosition` (fractional, in this layout's lines)
     /// on the reading line, into a context already scaled to `logicalSize`.
+    /// The reading line is a little above the middle, or with `readsFromTop`,
+    /// at the top, just clear of the fade.
     func draw(in context: CGContext, linePosition: Double, state: TeleprompterPlaybackState,
-              isMirrored: Bool, isFlippedVertically: Bool) {
+              readsFromTop: Bool, isMirrored: Bool, isFlippedVertically: Bool) {
         context.setFillColor(backgroundColor.cgColor)
         context.fill(CGRect(origin: .zero, size: logicalSize))
         let remaining = timerDuration > 0 ? timerDuration - Int(state.elapsedTime) : Int(state.elapsedTime)
@@ -1057,7 +1096,7 @@ private final class TeleprompterOverlayRenderer {
 
         let viewportTop = 6 + timerHeight + 6
         let viewport = CGRect(x: 12, y: viewportTop, width: 296, height: logicalSize.height - viewportTop - 8)
-        let readingY = viewport.height * 0.45
+        let readingY = readsFromTop ? Self.edgeFadeHeight : viewport.height * 0.45
         let position = min(max(linePosition, 0), Double(max(lineOffsets.count - 1, 0)))
         let line = min(Int(position), max(lineOffsets.count - 1, 0))
         var offset: CGFloat = 0
@@ -1087,11 +1126,11 @@ private final class TeleprompterOverlayRenderer {
         layoutManager.drawGlyphs(forGlyphRange: glyphs, at: .zero)
         context.restoreGState()
 
-        edgeFade.draw(in: CGRect(x: viewport.minX, y: viewport.minY, width: viewport.width, height: 18))
+        edgeFade.draw(in: CGRect(x: viewport.minX, y: viewport.minY, width: viewport.width, height: Self.edgeFadeHeight))
         context.saveGState()
         context.translateBy(x: viewport.minX, y: viewport.maxY)
         context.scaleBy(x: 1, y: -1)
-        edgeFade.draw(in: CGRect(x: 0, y: 0, width: viewport.width, height: 18))
+        edgeFade.draw(in: CGRect(x: 0, y: 0, width: viewport.width, height: Self.edgeFadeHeight))
         context.restoreGState()
     }
 }
