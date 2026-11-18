@@ -55,6 +55,12 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
     private var isStartingPiP = false
     private var isCameraPresented = false
     private var lastFrameTime: CFTimeInterval = 0
+    /// The overlay line the floating window shows, easing toward the one
+    /// playback is at, as the in-app reader eases its scroll. Follow Me AI
+    /// moves the position in steps as words are heard; painted as they come,
+    /// each step is a jump. Nil until the next paint places it outright.
+    private var displayedOverlayLine: Double?
+    private var displayedSnapToken = 0
     /// What the watch was last told, so it is only told again on a change.
     private var watchTimer: TeleprompterTimerState?
     /// The script moves with the reader's voice, not the clock. The clock
@@ -65,6 +71,8 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
     /// video, so there is no queue to fill ahead of time: each tick draws the
     /// position the clock is at when it fires.
     private static let paintRate: Double = 1.0 / 30
+    /// The same easing as the in-app reader's scroll.
+    private static let easingTimeConstant: Double = 0.12
 
     private override init() { super.init() }
 
@@ -147,6 +155,7 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
             let redrawn = TeleprompterOverlayRenderer(text: text, settings: settings,
                                                     timerDuration: settings.timerDurationSeconds, isDarkMode: isDarkMode)
             renderer = redrawn
+            displayedOverlayLine = nil
             sourceView?.backgroundColor = redrawn.backgroundColor
             contentView?.renderer = redrawn
             pipViewController?.view.backgroundColor = redrawn.backgroundColor
@@ -507,12 +516,32 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         if !renderingPiP && !force {
             guard hostNow - lastFrameTime >= 0.2 else { return }
         }
-        contentView.present(linePosition: overlayLine(for: playback), state: playback,
+        contentView.present(linePosition: easedOverlayLine(at: hostNow, easing: renderingPiP), state: playback,
                             isMirrored: settings.mirrorsText, isFlippedVertically: settings.flipsTextVertically)
         #if DEBUG
         os_signpost(.event, log: pipPerformanceLog, name: "PiP frame submitted")
         #endif
         lastFrameTime = hostNow
+    }
+
+    /// The line to paint now: a step toward playback's own, or playback's own
+    /// after a snap, before the first paint, and off the overlay, where the
+    /// mirrored view has to be exactly where the transition into it starts.
+    private func easedOverlayLine(at hostNow: CFTimeInterval, easing: Bool) -> Double {
+        let target = overlayLine(for: playback)
+        defer { displayedSnapToken = playback.snapToken }
+        guard easing, let shown = displayedOverlayLine, displayedSnapToken == playback.snapToken else {
+            displayedOverlayLine = target
+            return target
+        }
+        // A late tick catches up no further than a regular one would have.
+        let elapsed = min(max(hostNow - lastFrameTime, 0), 0.1)
+        let distance = target - shown
+        let next = abs(distance) < 0.002
+            ? target
+            : shown + distance * (1 - exp(-elapsed / Self.easingTimeConstant))
+        displayedOverlayLine = next
+        return next
     }
 
     @discardableResult
@@ -597,6 +626,7 @@ final class TeleprompterPiPManager: NSObject, ObservableObject {
         isCameraPresented = false
         followsVoice = false
         lastFrameTime = 0
+        displayedOverlayLine = nil
         syncWatch()
     }
 
