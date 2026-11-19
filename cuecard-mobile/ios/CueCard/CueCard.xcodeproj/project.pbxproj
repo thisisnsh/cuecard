@@ -822,7 +822,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = CueCard/CueCard.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 34;
+				CURRENT_PROJECT_VERSION = 35;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -842,7 +842,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.15.2;
+				MARKETING_VERSION = 1.15.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.thisisnsh.cuecard.ios;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -862,7 +862,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = CueCard/CueCard.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 34;
+				CURRENT_PROJECT_VERSION = 35;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -882,7 +882,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.15.2;
+				MARKETING_VERSION = 1.15.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.thisisnsh.cuecard.ios;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -899,7 +899,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 34;
+				CURRENT_PROJECT_VERSION = 35;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = CueCardWidgets/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = CueCard;
@@ -909,7 +909,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.15.2;
+				MARKETING_VERSION = 1.15.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.thisisnsh.cuecard.ios.widgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -927,7 +927,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 34;
+				CURRENT_PROJECT_VERSION = 35;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = CueCardWidgets/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = CueCard;
@@ -937,7 +937,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 1.15.2;
+				MARKETING_VERSION = 1.15.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.thisisnsh.cuecard.ios.widgets;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -957,7 +957,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 34;
+				CURRENT_PROJECT_VERSION = 35;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = CueCard;
@@ -986,7 +986,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 34;
+				CURRENT_PROJECT_VERSION = 35;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = CueCard;
